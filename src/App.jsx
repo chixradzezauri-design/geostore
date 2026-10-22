@@ -6,60 +6,12 @@ import {
 } from 'lucide-react';
 
 const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    name: "Apple iPhone 15 Pro Max 256GB",
-    category: "ელექტრონიკა",
-    price: 4599,
-    image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
-    description: "ტიტანის კორპუსი, A17 Pro ჩიპი, ყველაზე ძლიერი კამერა აიფონის ისტორიაში. გარანტია 1 წელი.",
-    stock: 12
-  },
-  {
-    id: 2,
-    name: "პრემიუმ ტყავის კეტები",
-    category: "ტანსაცმელი და ფეხსაცმელი",
-    price: 280,
-    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80",
-    description: "100% ნატურალური ტყავი, კომფორტული ძირი და თანამედროვე დიზაინი ყოველდღიურობისთვის.",
-    stock: 25
-  },
-  {
-    id: 3,
-    name: "უსადენო ყურსასმენი ANC Pro",
-    category: "ელექტრონიკა",
-    price: 350,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80",
-    description: "აქტიური ხმაურის ჩახშობა (ANC), 30 საათიანი მუშაობა ერთჯერადი დატენვით.",
-    stock: 8
-  },
-  {
-    id: 4,
-    name: "მინიმალისტური ყავის აპარატი",
-    category: "სახლის ნივთები",
-    price: 620,
-    image: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=600&auto=format&fit=crop&q=80",
-    description: "მოამზადეთ იდეალური ესპრესო და კაპუჩინო სახლის პირობებში მარტივად.",
-    stock: 5
-  },
-  {
-    id: 5,
-    name: "ორგანული სახის მოვლის ნაკრები",
-    category: "სილამაზე და მოვლა",
-    price: 145,
-    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80",
-    description: "ბუნებრივი ინგრედიენტები ყველა ტიპის კანისთვის. ღრმა დატენიანება და კვება.",
-    stock: 19
-  },
-  {
-    id: 6,
-    name: "სპორტული ზურგჩანთა Urban",
-    category: "აქსესუარები",
-    price: 110,
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80",
-    description: "წყალგაუმტარი მასალა, ლეპტოპის ცალკე განყოფილება და ergonomic დიზაინი.",
-    stock: 30
-  }
+  { id: 1, name: "Apple iPhone 15 Pro Max 256GB", category: "ელექტრონიკა", price: 4599, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80", description: "ტიტანის კორპუსი, A17 Pro ჩიპი, გარანტია 1 წელი.", stock: 12 },
+  { id: 2, name: "პრემიუმ ტყავის კეტები", category: "ტანსაცმელი და ფეხსაცმელი", price: 280, image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80", description: "100% ნატურალური ტყავი, კომფორტული ძირი.", stock: 25 },
+  { id: 3, name: "უსადენო ყურსასმენი ANC Pro", category: "ელექტრონიკა", price: 350, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80", description: "აქტიური ხმაურის ჩახშობა (ANC), 30 სთ მუშაობა.", stock: 8 },
+  { id: 4, name: "მინიმალისტური ყავის აპარატი", category: "სახლის ნივთები", price: 620, image: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=600&auto=format&fit=crop&q=80", description: "მოამზადეთ იდეალური ესპრესო სახლში.", stock: 5 },
+  { id: 5, name: "ორგანული სახის მოვლის ნაკრები", category: "სილამაზე და მოვლა", price: 145, image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80", description: "ბუნებრივი ინგრედიენტები ყველა ტიპის კანისთვის.", stock: 19 },
+  { id: 6, name: "სპორტული ზურგჩანთა Urban", category: "აქსესუარები", price: 110, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80", description: "წყალგაუმტარი მასალა, ლეპტოპის განყოფილება.", stock: 30 }
 ];
 
 const CATEGORIES = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -70,7 +22,6 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("ყველა");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("shop"); 
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -165,12 +116,6 @@ export default function App() {
     alert("პროდუქტი წარმატებით დაემატა!");
   };
 
-  const deleteProduct = (id) => {
-    if (confirm("ნამდვილად გსურთ პროდუქტის წაშლა?")) {
-      setProducts(products.filter(p => p.id !== id));
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col font-sans">
       <div className="bg-black text-white text-xs py-2 px-4 text-center font-medium">
@@ -179,7 +124,7 @@ export default function App() {
 
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
-          <button onClick={() => { setActiveTab("shop"); setSelectedProduct(null); }} className="flex items-center gap-2 text-2xl font-black tracking-tighter">
+          <button onClick={() => setActiveTab("shop")} className="flex items-center gap-2 text-2xl font-black tracking-tighter">
             <span className="bg-black text-white px-3 py-1 rounded-lg">GEO</span>
             <span>STORE</span>
           </button>
@@ -190,7 +135,7 @@ export default function App() {
               type="text" 
               placeholder="მოძებნე პროდუქტი..." 
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setActiveTab("shop"); setSelectedProduct(null); }}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-gray-100 border border-transparent focus:border-black rounded-full pl-10 pr-4 py-2.5 text-sm outline-none"
             />
           </div>
@@ -221,7 +166,6 @@ export default function App() {
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
-
         {orderSuccess && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl">
@@ -325,7 +269,8 @@ export default function App() {
                   <div>
                     <img src={product.image} alt={product.name} className="w-full h-60 object-cover" />
                     <div className="p-5">
-                      <h3 className="font-bold text-base">{product.name}</h3>
+                      <span className="text-[10px] font-bold bg-gray-100 px-2.5 py-1 rounded-full uppercase">{product.category}</span>
+                      <h3 className="font-bold text-base mt-2">{product.name}</h3>
                       <p className="text-xs text-gray-500 mt-1">{product.description}</p>
                     </div>
                   </div>
@@ -340,14 +285,13 @@ export default function App() {
             </div>
           </div>
         )}
-
       </main>
 
       {isCartOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
           <div className="bg-white w-full max-w-md h-full flex flex-col shadow-2xl p-6">
             <div className="flex justify-between items-center border-b pb-4">
-              <h3 className="font-bold text-lg">კალათა ({cart.length})</h3>
+              <h3 className="font-bold text-lg">კალათა ({cart.reduce((s, i) => s + i.qty, 0)})</h3>
               <button onClick={() => setIsCartOpen(false)} className="text-gray-500 font-bold">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
