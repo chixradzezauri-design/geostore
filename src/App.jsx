@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Search, Plus, Minus, Trash2, Lock, CheckCircle, 
   Package, Tag, Eye, X, TrendingUp, User, LogOut, Phone, Mail, 
-  MapPin, Clock, Edit2, MessageSquare, Send, Users, ShieldAlert, FileText, Check, Download, Star, Heart, Zap, Globe, Filter, MessageCircle
+  MapPin, Clock, Edit2, MessageSquare, Send, Users, ShieldAlert, FileText, Check, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, CreditCard, Building2, Bell
 } from 'lucide-react';
 
 const CATEGORIES_KA = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -53,22 +53,18 @@ const INITIAL_PRODUCTS = [
 ];
 
 export default function App() {
-  // ენა: KA / EN
   const [lang, setLang] = useState("KA");
 
-  // პროდუქტები
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('geostore_products');
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
   });
 
-  // შეკვეთები
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem('geostore_orders');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // მომხმარებლები
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('geostore_users_list');
     return saved ? JSON.parse(saved) : [
@@ -76,19 +72,16 @@ export default function App() {
     ];
   });
 
-  // ავტორიზებული მომხმარებელი
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('geostore_current_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  // ჩათის შეტყობინებები
   const [chatMessages, setChatMessages] = useState(() => {
     const saved = localStorage.getItem('geostore_chat_messages');
     return saved ? JSON.parse(saved) : [];
   });
 
-  // წესები და პოლიტიკა
   const [policyText, setPolicyText] = useState(() => {
     const saved = localStorage.getItem('geostore_policy_text');
     return saved || "მიწოდება ხორციელდება თბილისში 24 საათში (5₾), ხოლო რეგიონებში 48 საათში (10₾). 100₾-ზე მეტი შეკვეთისას მიწოდება უფასოა. ნივთის დაბრუნება შესაძლებელია 14 კალენდარული დღის განმავლობაში.";
@@ -98,19 +91,22 @@ export default function App() {
   const [wishlist, setWishlist] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("ყველა");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("default"); // price-asc, price-desc, rating
+  const [sortBy, setSortBy] = useState("default");
   const [onlyInStock, setOnlyInStock] = useState(false);
+
+  // ფასის დიაპაზონის ფილტრი
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const [activeTab, setActiveTab] = useState("shop"); 
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   
-  // სწრაფი ყიდვა (1-Click)
   const [oneClickProduct, setOneClickProduct] = useState(null);
   const [oneClickForm, setOneClickForm] = useState({ name: "", phone: "" });
 
-  // ანიმაციური შეტყობინებები (Toast)
   const [toastMessage, setToastMessage] = useState("");
+  const [telegramAlert, setTelegramAlert] = useState(null);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -124,22 +120,41 @@ export default function App() {
   const [couponCode, setCouponCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
 
-  // ადმინ ავტორიზაცია
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminPin, setAdminPin] = useState("");
   const [adminError, setAdminError] = useState("");
   const [adminSubTab, setAdminSubTab] = useState("orders");
   
   const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", image: "", description: "", stock: "" });
-  const [orderForm, setOrderForm] = useState({ name: "", phone: "", city: "თბილისი", address: "", deliveryZone: "tbilisi", paymentMethod: "courier" });
-  const [orderSuccess, setOrderSuccess] = useState(null);
+  
+  const [orderForm, setOrderForm] = useState({ 
+    name: "", 
+    phone: "", 
+    city: "თბილისი", 
+    address: "", 
+    deliveryZone: "tbilisi", 
+    paymentMethod: "courier", 
+    cardNumber: "",
+    cardExp: "",
+    cardCvc: ""
+  });
 
-  // შეფასების დატოვების სტეიტი
+  const [orderSuccess, setOrderSuccess] = useState(null);
   const [newReview, setNewReview] = useState({ name: "", rating: 5, text: "" });
 
-  // ტაიმერი (Countdown)
   const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 32, seconds: 45 });
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev =>
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => { localStorage.setItem('geostore_products', JSON.stringify(products)); }, [products]);
+  useEffect(() =>
