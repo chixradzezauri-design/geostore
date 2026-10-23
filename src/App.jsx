@@ -289,7 +289,7 @@ export default function App() {
     }
   });
 
-  // Orders State (მონაცემების სრული დატვირთვა localStorage-დან)
+  // Orders State
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_orders');
@@ -343,7 +343,27 @@ export default function App() {
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
   const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
 
-  // სინქრონიზაციის ძლიერი მექანიზმი (LocalStorage & BroadcastChannel)
+  // ⚡ ავტომატური სინქრონიზაცია ადმინში გადასვლისას და BroadcastChannel
+  useEffect(() => {
+    if (activeTab === 'admin') {
+      try {
+        const savedOrders = localStorage.getItem('geostore_orders');
+        if (savedOrders) {
+          const parsed = JSON.parse(savedOrders);
+          if (Array.isArray(parsed)) setOrders(parsed);
+        }
+
+        const savedChat = localStorage.getItem('geostore_admin_chat_archive');
+        if (savedChat) {
+          const parsedChat = JSON.parse(savedChat);
+          if (Array.isArray(parsedChat)) setAdminChatArchive(parsedChat);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }, [activeTab, adminActiveSubTab]);
+
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'geostore_orders' && e.newValue) {
