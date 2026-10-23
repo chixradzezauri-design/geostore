@@ -219,21 +219,15 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // Chat Widget with Photo Support (LocalStorage synced)
+  // Chat Widget with Real File Upload Support
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState(() => {
     const saved = localStorage.getItem('geostore_chat_msgs');
     return saved ? JSON.parse(saved) : [
-      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', isAdmin: false, image: '' }
+      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
     ];
   });
   const [chatInput, setChatInput] = useState('');
-  const [chatImageInput, setChatImageInput] = useState('');
-  const [showChatImageField, setShowChatImageField] = useState(false);
-
-  const [adminReplyText, setAdminReplyText] = useState('');
-  const [adminReplyImage, setAdminReplyImage] = useState('');
-  const [showAdminChatImageField, setShowAdminChatImageField] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('geostore_chat_msgs', JSON.stringify(chatMessages));
@@ -966,7 +960,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. PRODUCTS (FULLY RESPONSIVE FOR MOBILE & DESKTOP) */}
+                {/* 2. PRODUCTS WITH REAL FILE UPLOAD */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
@@ -974,19 +968,33 @@ export default function App() {
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         const f = e.target;
-                        const newProd = {
-                          id: `prod-${Date.now()}`,
-                          sku: f.sku.value || `GEO-${Math.floor(Math.random() * 1000)}`,
-                          name: f.name.value,
-                          category: f.category.value,
-                          priceGEL: Number(f.priceGEL.value),
-                          stock: Number(f.stock.value),
-                          image: f.image.value || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600',
-                          description: f.description.value
+                        const fileInput = f.prodImageFile;
+                        
+                        const createProductObj = (imageUrl) => {
+                          const newProd = {
+                            id: `prod-${Date.now()}`,
+                            sku: f.sku.value || `GEO-${Math.floor(Math.random() * 1000)}`,
+                            name: f.name.value,
+                            category: f.category.value,
+                            priceGEL: Number(f.priceGEL.value),
+                            stock: Number(f.stock.value),
+                            image: imageUrl || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600',
+                            description: f.description.value
+                          };
+                          setProducts([newProd, ...products]);
+                          f.reset();
+                          showToast('პროდუქტი წარმატებით დაემატა!');
                         };
-                        setProducts([newProd, ...products]);
-                        f.reset();
-                        showToast('პროდუქტი წარმატებით დაემატა!');
+
+                        if (fileInput.files && fileInput.files[0]) {
+                          const reader = new FileReader();
+                          reader.onload = function(uploadEvent) {
+                            createProductObj(uploadEvent.target.result);
+                          };
+                          reader.readAsDataURL(fileInput.files[0]);
+                        } else {
+                          createProductObj('https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600');
+                        }
                       }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                         <input type="text" name="name" required placeholder="პროდუქტის დასახელება *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         <input type="text" name="sku" placeholder="SKU კოდი (მაგ: GEO-IP15)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
@@ -1003,7 +1011,13 @@ export default function App() {
                           <input type="number" name="stock" required placeholder="მარაგი *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         </div>
 
-                        <input type="url" name="image" placeholder="ფოტოს URL ბმული" className="md:col-span-2 bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        <div className="md:col-span-2 flex flex-col gap-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
+                          <label className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5">
+                            <ImageIcon className="w-4 h-4" /> ატვირთეთ პროდუქტის ფოტო (კომპიუტერიდან / ტელეფონიდან)
+                          </label>
+                          <input type="file" name="prodImageFile" accept="image/*" className="text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
+                        </div>
+
                         <textarea name="description" placeholder="დეტალური აღწერა..." className="md:col-span-2 bg-slate-900 border border-slate-700 p-3 rounded-xl text-white h-20 outline-none"/>
                         
                         <button type="submit" className="md:col-span-2 bg-amber-500 text-slate-950 font-extrabold py-3.5 rounded-xl text-sm transition hover:bg-amber-400">
@@ -1221,7 +1235,7 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET WITH PHOTO SUPPORT */}
+      {/* LIVE CHAT WIDGET WITH REAL FILE UPLOAD */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center">
@@ -1235,11 +1249,11 @@ export default function App() {
             </div>
             <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
               {chatMessages.map(m => (
-                <div key={m.id} className={`flex flex-col ${m.isAdmin ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.isAdmin ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
+                <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
+                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
                     <b>{m.sender}:</b> {m.text}
                     {m.image && (
-                      <img src={m.image} alt="Uploaded" className="mt-2 rounded-xl max-h-32 object-cover w-full border border-slate-700" />
+                      <img src={m.image} alt="Chat Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-700" />
                     )}
                   </div>
                   <span className="text-[9px] text-slate-500 mt-0.5 px-1">{m.time}</span>
@@ -1247,20 +1261,73 @@ export default function App() {
               ))}
             </div>
 
-            {/* Chat Input Area */}
+            {/* Chat Input Area with File Picker */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
-              {showChatImageField && (
-                <div className="flex gap-1">
-                  <input type="url" placeholder="ჩასვით ფოტოს URL ბმული..." value={chatImageInput} onChange={e => setChatImageInput(e.target.value)} className="w-full bg-slate-800 rounded-xl px-2.5 py-1.5 text-[11px] text-white outline-none border border-slate-700" />
-                  <button onClick={() => setShowChatImageField(false)} className="text-slate-400 px-2">✕</button>
-                </div>
-              )}
               <div className="flex gap-2 items-center">
-                <button onClick={() => setShowChatImageField(!showChatImageField)} className={`p-2 rounded-xl border ${showChatImageField ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-800 text-slate-300 border-slate-700'}`} title="ფოტოს დართვა">
+                <label className="p-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 cursor-pointer hover:bg-slate-700 transition" title="აირჩიეთ ფოტო">
                   <ImageIcon className="w-4 h-4" />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(evt) {
+                          const senderName = adminLoggedIn ? 'ადმინი' : (currentUser ? currentUser.name : 'სტუმარი');
+                          setChatMessages([...chatMessages, {
+                            id: Date.now(),
+                            sender: senderName,
+                            text: 'ფოტო:',
+                            image: evt.target.result,
+                            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                          }]);
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }} 
+                  />
+                </label>
+
+                <input 
+                  type="text" 
+                  placeholder="დაწერეთ შეტყობინება..." 
+                  value={chatInput} 
+                  onChange={e => setChatInput(e.target.value)} 
+                  onKeyDown={(e) => { 
+                    if(e.key === 'Enter') { 
+                      if(!chatInput.trim()) return; 
+                      const senderName = adminLoggedIn ? 'ადმინი' : (currentUser ? currentUser.name : 'სტუმარი');
+                      setChatMessages([...chatMessages, { 
+                        id: Date.now(), 
+                        sender: senderName, 
+                        text: chatInput, 
+                        image: '', 
+                        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                      }]); 
+                      setChatInput(''); 
+                    } 
+                  }} 
+                  className="flex-1 bg-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none border border-slate-700" 
+                />
+
+                <button 
+                  onClick={() => { 
+                    if(!chatInput.trim()) return; 
+                    const senderName = adminLoggedIn ? 'ადმინი' : (currentUser ? currentUser.name : 'სტუმარი');
+                    setChatMessages([...chatMessages, { 
+                      id: Date.now(), 
+                      sender: senderName, 
+                      text: chatInput, 
+                      image: '', 
+                      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                    }]); 
+                    setChatInput(''); 
+                  }} 
+                  className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"
+                >
+                  <Send className="w-3.5 h-3.5"/>
                 </button>
-                <input type="text" placeholder="დაწერეთ შეტყობინება..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter') { if(!chatInput.trim() && !chatImageInput.trim()) return; setChatMessages([...chatMessages, { id: Date.now(), sender: currentUser ? currentUser.name : 'სტუმარი', text: chatInput, image: chatImageInput, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), isAdmin: false }]); setChatInput(''); setChatImageInput(''); setShowChatImageField(false); } }} className="flex-1 bg-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none border border-slate-700" />
-                <button onClick={() => { if(!chatInput.trim() && !chatImageInput.trim()) return; setChatMessages([...chatMessages, { id: Date.now(), sender: currentUser ? currentUser.name : 'სტუმარი', text: chatInput, image: chatImageInput, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), isAdmin: false }]); setChatInput(''); setChatImageInput(''); setShowChatImageField(false); }} className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"><Send className="w-3.5 h-3.5"/></button>
               </div>
             </div>
           </div>
