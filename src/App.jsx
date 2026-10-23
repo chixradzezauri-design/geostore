@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { 
   ShoppingBag, Heart, Search, User, ShieldCheck, Truck, RefreshCw, 
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
@@ -6,6 +7,12 @@ import {
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
   Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell
 } from 'lucide-react';
+
+// ================= SUPABASE CONFIG =================
+const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
+const SUPABASE_ANON_KEY = "Sb_publishable_RsjexQAAjkdLYhtMwN4P6A_BWBVfV2d"; 
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- TELEGRAM CONFIG ---
 const TG_BOT_TOKEN = "8968372156:AAHe6OHQZfdChPXS4wQDQ5omSA1DNIS6VEY";
@@ -289,20 +296,8 @@ export default function App() {
     }
   });
 
-  // Orders State
-  const [orders, setOrders] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_orders');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return [];
-  });
-
+  // SUPABASE & REALTIME STATES
+  const [orders, setOrders] = useState([]);
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
   // Chat States
@@ -310,31 +305,8 @@ export default function App() {
   const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
   const [clientNameInput, setClientNameInput] = useState('');
   
-  const [clientChatView, setClientChatView] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_client_chat_view');
-      return saved ? JSON.parse(saved) : [
-        { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
-      ];
-    } catch {
-      return [];
-    }
-  });
-
-  const [adminChatArchive, setAdminChatArchive] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_admin_chat_archive');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      { id: 1, clientName: 'სტუმარი', sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
-    ];
-  });
+  const [clientChatView, setClientChatView] = useState([]);
+  const [adminChatArchive, setAdminChatArchive] = useState([]);
 
   const [chatInput, setChatInput] = useState('');
   const [adminSelectedClient, setAdminSelectedClient] = useState(null);
@@ -343,99 +315,86 @@ export default function App() {
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
   const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
 
-  // ⚡ ავტომატური სინქრონიზაცია ადმინში გადასვლისას და BroadcastChannel
-  useEffect(() => {
-    if (activeTab === 'admin') {
-      try {
-        const savedOrders = localStorage.getItem('geostore_orders');
-        if (savedOrders) {
-          const parsed = JSON.parse(savedOrders);
-          if (Array.isArray(parsed)) setOrders(parsed);
-        }
-
-        const savedChat = localStorage.getItem('geostore_admin_chat_archive');
-        if (savedChat) {
-          const parsedChat = JSON.parse(savedChat);
-          if (Array.isArray(parsedChat)) setAdminChatArchive(parsedChat);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }, [activeTab, adminActiveSubTab]);
-
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'geostore_orders' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setOrders(parsed);
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      if (e.key === 'geostore_admin_chat_archive' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) setAdminChatArchive(parsed);
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    let channel;
+  // 1. SUPABASE-დან შეკვეთების წამოღება
+  const fetchOrders = async () => {
     try {
-      channel = new BroadcastChannel('geostore_sync_channel');
-      channel.onmessage = (event) => {
-        const { type, payload } = event.data;
-        if (type === 'NEW_ORDER') {
-          setOrders(prev => {
-            if (!prev.some(o => o.id === payload.id)) {
-              const updated = [payload, ...prev];
-              localStorage.setItem('geostore_orders', JSON.stringify(updated));
-              return updated;
-            }
-            return prev;
-          });
-          setAdminNewOrderPopup(payload);
-        }
-        if (type === 'NEW_MESSAGE') {
-          setAdminChatArchive(prev => {
-            if (!prev.some(m => m.id === payload.id)) {
-              const updated = [...prev, payload];
-              localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updated));
-              return updated;
-            }
-            return prev;
-          });
-          setAdminNewMessagePopup(payload);
-        }
-      };
+      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        const formatted = data.map(o => ({
+          id: o.id,
+          date: new Date(o.created_at).toLocaleDateString('ka-GE'),
+          customerName: o.customer_name,
+          phone: o.phone,
+          address: o.address,
+          userEmail: o.user_email,
+          items: o.items,
+          totalGEL: o.total_gel,
+          status: o.status,
+          courier: o.courier
+        }));
+        setOrders(formatted);
+      }
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // 2. SUPABASE-დან მესიჯების წამოღება
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+      if (!error && data) {
+        const formatted = data.map(m => ({
+          id: m.id,
+          clientName: m.client_name,
+          sender: m.sender,
+          text: m.text,
+          image: m.image,
+          time: m.time
+        }));
+        setAdminChatArchive(formatted);
+        if (chatClientName) {
+          setClientChatView(formatted.filter(m => m.clientName === chatClientName || m.sender === 'bot'));
+        } else {
+          setClientChatView([
+            { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
+          ]);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    fetchMessages();
+
+    // REALTIME SUBSCRIPTIONS
+    const ordersSubscription = supabase
+      .channel('public:orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+        fetchOrders();
+        if (payload.eventType === 'INSERT') {
+          setAdminNewOrderPopup(payload.new);
+        }
+      })
+      .subscribe();
+
+    const messagesSubscription = supabase
+      .channel('public:messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload) => {
+        fetchMessages();
+        if (payload.eventType === 'INSERT' && payload.new.sender !== 'ადმინი') {
+          setAdminNewMessagePopup(payload.new);
+        }
+      })
+      .subscribe();
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      if (channel) channel.close();
+      supabase.removeChannel(ordersSubscription);
+      supabase.removeChannel(messagesSubscription);
     };
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('geostore_client_chat_view', JSON.stringify(clientChatView));
-  }, [clientChatView]);
-
-  useEffect(() => {
-    localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(adminChatArchive));
-  }, [adminChatArchive]);
-
-  useEffect(() => {
-    if (chatClientName) {
-      localStorage.setItem('geostore_chat_client_name', chatClientName);
-    }
   }, [chatClientName]);
 
   const [toastMessage, setToastMessage] = useState('');
@@ -445,19 +404,9 @@ export default function App() {
   };
 
   const handleManualRefresh = () => {
+    fetchOrders();
+    fetchMessages();
     try {
-      const savedOrders = localStorage.getItem('geostore_orders');
-      if (savedOrders) {
-        const parsed = JSON.parse(savedOrders);
-        if (Array.isArray(parsed)) setOrders(parsed);
-      }
-
-      const savedChat = localStorage.getItem('geostore_admin_chat_archive');
-      if (savedChat) {
-        const parsed = JSON.parse(savedChat);
-        if (Array.isArray(parsed)) setAdminChatArchive(parsed);
-      }
-
       const savedProducts = localStorage.getItem('geostore_products');
       if (savedProducts) setProducts(JSON.parse(savedProducts));
 
@@ -467,7 +416,6 @@ export default function App() {
       showToast('🔄 მონაცემები წარმატებით განახლდა!');
     } catch (err) {
       console.error(err);
-      showToast('❌ განახლების შეცდომა');
     }
   };
 
@@ -477,7 +425,6 @@ export default function App() {
   useEffect(() => localStorage.setItem('geostore_promos', JSON.stringify(promoSlots)), [promoSlots]);
   useEffect(() => localStorage.setItem('geostore_coupons', JSON.stringify(coupons)), [coupons]);
   useEffect(() => localStorage.setItem('geostore_sections', JSON.stringify(sections)), [sections]);
-  useEffect(() => localStorage.setItem('geostore_orders', JSON.stringify(orders)), [orders]);
   useEffect(() => localStorage.setItem('geostore_users_list', JSON.stringify(usersList)), [usersList]);
   useEffect(() => localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)), [currentUser]);
 
@@ -542,49 +489,45 @@ export default function App() {
     setCouponInput('');
   };
 
-  const handlePlaceOrder = (itemsToOrder, totalVal, isExpress = false) => {
+  // 📦 შეკვეთის გაფორმება Supabase-ში
+  const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       showToast('⚠️ გთხოვთ შეავსოთ ყველა ველი');
       return;
     }
 
-    const newOrder = {
-      id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      date: new Date().toLocaleDateString('ka-GE'),
-      customerName: checkoutForm.name,
-      phone: checkoutForm.phone,
-      address: checkoutForm.address,
-      userEmail: currentUser ? currentUser.email : 'guest',
-      items: itemsToOrder.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity || 1 })),
-      totalGEL: totalVal,
-      status: 'ახალი',
-      courier: 'არ არის დანიშნული'
-    };
+    const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const itemsData = itemsToOrder.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity || 1 }));
 
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    localStorage.setItem('geostore_orders', JSON.stringify(updatedOrders));
+    const { error } = await supabase.from('orders').insert([
+      {
+        id: orderId,
+        customer_name: checkoutForm.name,
+        phone: checkoutForm.phone,
+        address: checkoutForm.address,
+        user_email: currentUser ? currentUser.email : 'guest',
+        items: itemsData,
+        total_gel: totalVal,
+        status: 'ახალი',
+        courier: 'არ არის დანიშნული'
+      }
+    ]);
 
-    // Send Telegram Notification
-    const itemsListStr = newOrder.items.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
-    sendTelegramNotification(
-      `🚨 *ახალი შეკვეთა გაფორმდა!* (#${newOrder.id})\n\n` +
-      `👤 *მყიდველი:* ${newOrder.customerName}\n` +
-      `📞 *ტელეფონი:* ${newOrder.phone}\n` +
-      `📍 *მისამართი:* ${newOrder.address}\n` +
-      `💰 *სულ თანხა:* ${newOrder.totalGEL} ₾\n\n` +
-      `📦 *პროდუქტები:*\n${itemsListStr}`
-    );
-
-    try {
-      const channel = new BroadcastChannel('geostore_sync_channel');
-      channel.postMessage({ type: 'NEW_ORDER', payload: newOrder });
-      channel.close();
-    } catch (e) {
-      console.error(e);
+    if (error) {
+      console.error("Order error:", error);
+      showToast('❌ შეკვეთის შენახვა ვერ მოხერხდა');
+      return;
     }
 
-    setAdminNewOrderPopup(newOrder);
+    const itemsListStr = itemsData.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
+    sendTelegramNotification(
+      `🚨 *ახალი შეკვეთა გაფორმდა!* (#${orderId})\n\n` +
+      `👤 *მყიდველი:* ${checkoutForm.name}\n` +
+      `📞 *ტელეფონი:* ${checkoutForm.phone}\n` +
+      `📍 *მისამართი:* ${checkoutForm.address}\n` +
+      `💰 *სულ თანხა:* ${totalVal} ₾\n\n` +
+      `📦 *პროდუქტები:*\n${itemsListStr}`
+    );
 
     setProducts(prev => prev.map(p => {
       const ordItem = itemsToOrder.find(i => i.id === p.id);
@@ -599,6 +542,7 @@ export default function App() {
     if (!isExpress) setCart([]);
     setAppliedCoupon(null);
     showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
+    fetchOrders();
   };
 
   const handleAuthSubmit = (e) => {
@@ -734,6 +678,30 @@ export default function App() {
     return map;
   }, [adminChatArchive]);
 
+  // 💬 მესიჯის გაგზავნა Supabase-ში
+  const handleSendMessage = async (text, senderName, imageUrl = '') => {
+    if (!text.trim() && !imageUrl) return;
+
+    const newMsg = {
+      id: Date.now(),
+      client_name: chatClientName || 'სტუმარი',
+      sender: senderName,
+      text: text || 'ფოტო:',
+      image: imageUrl,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    const { error } = await supabase.from('messages').insert([newMsg]);
+    if (!error) {
+      if (senderName !== 'ადმინი') {
+        sendTelegramNotification(`💬 *ახალი მესიჯი ჩათში!*\n👤 *${chatClientName || 'სტუმარი'}:* ${text || 'ფოტო'}`);
+      }
+      setChatInput('');
+      setAdminIndividualReply('');
+      fetchMessages();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-amber-500 selection:text-slate-900 flex flex-col justify-between">
       
@@ -749,14 +717,14 @@ export default function App() {
           onClick={() => {
             setActiveTab('admin');
             setAdminActiveSubTab('adminChat');
-            setAdminSelectedClient(adminNewMessagePopup.clientName);
+            setAdminSelectedClient(adminNewMessagePopup.client_name);
             setAdminNewMessagePopup(null);
           }}
           className="fixed bottom-6 left-6 z-50 bg-slate-950 border-2 border-amber-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-950/90 transition animate-bounce flex items-center gap-3 text-xs md:text-sm max-w-sm"
         >
           <Bell className="w-6 h-6 text-amber-400 shrink-0 animate-spin" />
           <div>
-            <h4 className="font-black text-amber-400">💬 ახალი შეტყობინება! ({adminNewMessagePopup.clientName})</h4>
+            <h4 className="font-black text-amber-400">💬 ახალი შეტყობინება! ({adminNewMessagePopup.client_name})</h4>
             <p className="text-slate-300 line-clamp-1">{adminNewMessagePopup.text}</p>
           </div>
           <button onClick={(e) => { e.stopPropagation(); setAdminNewMessagePopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
@@ -775,7 +743,7 @@ export default function App() {
           <ShoppingBag className="w-6 h-6 text-emerald-400 shrink-0 animate-bounce" />
           <div>
             <h4 className="font-black text-emerald-400">📦 ახალი შეკვეთა! (#{adminNewOrderPopup.id})</h4>
-            <p className="text-slate-300">{adminNewOrderPopup.customerName} - {adminNewOrderPopup.totalGEL} ₾</p>
+            <p className="text-slate-300">{adminNewOrderPopup.customer_name} - {adminNewOrderPopup.total_gel} ₾</p>
           </div>
           <button onClick={(e) => { e.stopPropagation(); setAdminNewOrderPopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
         </div>
@@ -1432,11 +1400,10 @@ export default function App() {
                                 <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
                                 <select 
                                   value={o.status || 'ახალი'} 
-                                  onChange={(e) => {
+                                  onChange={async (e) => {
                                     const updatedStatus = e.target.value;
-                                    const updated = orders.map(ord => ord.id === o.id ? { ...ord, status: updatedStatus } : ord);
-                                    setOrders(updated);
-                                    localStorage.setItem('geostore_orders', JSON.stringify(updated));
+                                    await supabase.from('orders').update({ status: updatedStatus }).eq('id', o.id);
+                                    fetchOrders();
                                     showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
                                   }}
                                   className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
@@ -1583,21 +1550,6 @@ export default function App() {
                         <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
                           <RefreshCw className="w-3.5 h-3.5" /> განახლება
                         </button>
-                        {adminChatArchive.length > 0 && (
-                          <button 
-                            onClick={() => {
-                              if (window.confirm('ნამდვილად გსურთ მთელი არქივის წაშლა?')) {
-                                setAdminChatArchive([]);
-                                localStorage.removeItem('geostore_admin_chat_archive');
-                                setAdminSelectedClient(null);
-                                showToast('🗑️ არქივი გასუფთავდა');
-                              }
-                            }}
-                            className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition"
-                          >
-                            არქივის გასუფთავება
-                          </button>
-                        )}
                       </div>
                     </div>
 
@@ -1633,13 +1585,6 @@ export default function App() {
                           <>
                             <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
                               <h4 className="font-bold text-amber-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
-                              <button onClick={() => {
-                                const updatedArchive = adminChatArchive.filter(m => (m.clientName || 'სტუმარი') !== adminSelectedClient);
-                                setAdminChatArchive(updatedArchive);
-                                localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
-                                setAdminSelectedClient(null);
-                                showToast('მომხმარებლის ჩათი წაიშალა');
-                              }} className="text-rose-400 text-[11px] hover:underline">ამ მომხმარებლის წაშლა</button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto space-y-3 p-2 text-xs">
@@ -1659,23 +1604,7 @@ export default function App() {
                             <form onSubmit={(e) => {
                               e.preventDefault();
                               if(!adminIndividualReply.trim()) return;
-                              const replyMsg = {
-                                id: Date.now(),
-                                clientName: adminSelectedClient,
-                                sender: 'ადმინი',
-                                text: adminIndividualReply,
-                                image: '',
-                                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                              };
-                              const updatedArchive = [...adminChatArchive, replyMsg];
-                              setAdminChatArchive(updatedArchive);
-                              localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
-
-                              if (chatClientName === adminSelectedClient) {
-                                setClientChatView(prev => [...prev, replyMsg]);
-                              }
-                              setAdminIndividualReply('');
-                              showToast(`📤 პასუხი გაეგზავნა მომხმარებელს (${adminSelectedClient})!`);
+                              handleSendMessage(adminIndividualReply, 'ადმინი');
                             }} className="flex gap-2 mt-3 pt-2 border-t border-slate-800">
                               <input 
                                 type="text" 
@@ -1892,8 +1821,8 @@ export default function App() {
               <>
                 <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
                   {clientChatView.map(m => (
-                    <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
-                      <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
+                    <div key={m.id} className={`flex flex-col ${m.sender === chatClientName ? 'items-end' : 'items-start'}`}>
+                      <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === chatClientName ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
                         <b>{m.sender}:</b> {m.text}
                         {m.image && (
                           <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-700" />
@@ -1916,35 +1845,7 @@ export default function App() {
                           if (e.target.files && e.target.files[0]) {
                             const reader = new FileReader();
                             reader.onload = function(evt) {
-                              const newMsg = {
-                                id: Date.now(),
-                                clientName: chatClientName,
-                                sender: chatClientName,
-                                text: 'ფოტო:',
-                                image: evt.target.result,
-                                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                              };
-                              const updatedClientView = [...clientChatView, newMsg];
-                              const updatedArchive = [...adminChatArchive, newMsg];
-                              setClientChatView(updatedClientView);
-                              setAdminChatArchive(updatedArchive);
-                              localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
-
-                              sendTelegramNotification(
-                                `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
-                                `👤 *მომხმარებელი:* ${chatClientName}\n` +
-                                `✉️ *ტექსტი:* ფოტო მიმაგრებულია`
-                              );
-
-                              try {
-                                const channel = new BroadcastChannel('geostore_sync_channel');
-                                channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
-                                channel.close();
-                              } catch (err) {
-                                console.error(err);
-                              }
-
-                              setAdminNewMessagePopup(newMsg);
+                              handleSendMessage('ფოტო:', chatClientName, evt.target.result);
                             };
                             reader.readAsDataURL(e.target.files[0]);
                           }
@@ -1959,37 +1860,9 @@ export default function App() {
                       onChange={e => setChatInput(e.target.value)} 
                       onKeyDown={(e) => { 
                         if(e.key === 'Enter') { 
+                          e.preventDefault();
                           if(!chatInput.trim()) return; 
-                          const newMsg = { 
-                            id: Date.now(), 
-                            clientName: chatClientName,
-                            sender: chatClientName, 
-                            text: chatInput, 
-                            image: '', 
-                            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                          };
-                          const updatedClientView = [...clientChatView, newMsg];
-                          const updatedArchive = [...adminChatArchive, newMsg];
-                          setClientChatView(updatedClientView);
-                          setAdminChatArchive(updatedArchive);
-                          localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
-
-                          sendTelegramNotification(
-                            `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
-                            `👤 *მომხმარებელი:* ${chatClientName}\n` +
-                            `✉️ *ტექსტი:* ${chatInput}`
-                          );
-
-                          try {
-                            const channel = new BroadcastChannel('geostore_sync_channel');
-                            channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
-                            channel.close();
-                          } catch (err) {
-                            console.error(err);
-                          }
-
-                          setAdminNewMessagePopup(newMsg);
-                          setChatInput(''); 
+                          handleSendMessage(chatInput, chatClientName);
                         } 
                       }} 
                       className="flex-1 bg-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none border border-slate-700" 
@@ -1998,36 +1871,7 @@ export default function App() {
                     <button 
                       onClick={() => { 
                         if(!chatInput.trim()) return; 
-                        const newMsg = { 
-                          id: Date.now(), 
-                          clientName: chatClientName,
-                          sender: chatClientName, 
-                          text: chatInput, 
-                          image: '', 
-                          time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                        };
-                        const updatedClientView = [...clientChatView, newMsg];
-                        const updatedArchive = [...adminChatArchive, newMsg];
-                        setClientChatView(updatedClientView);
-                        setAdminChatArchive(updatedArchive);
-                        localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
-
-                        sendTelegramNotification(
-                          `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
-                          `👤 *მომხმარებელი:* ${chatClientName}\n` +
-                          `✉️ *ტექსტი:* ${chatInput}`
-                        );
-
-                        try {
-                          const channel = new BroadcastChannel('geostore_sync_channel');
-                          channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
-                          channel.close();
-                        } catch (err) {
-                          console.error(err);
-                        }
-
-                        setAdminNewMessagePopup(newMsg);
-                        setChatInput(''); 
+                        handleSendMessage(chatInput, chatClientName);
                       }} 
                       className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"
                     >
