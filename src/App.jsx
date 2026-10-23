@@ -14,29 +14,24 @@ const SUPABASE_ANON_KEY = "Sb_publishable_RsjexQAAjkdLYhtMwN4P6A_BWBVfV2d";
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation'
+  'Content-Type': 'application/json'
 };
 
 // --- TELEGRAM CONFIG ---
 const TG_BOT_TOKEN = "8968372156:AAHe6OHQZfdChPXS4wQDQ5omSA1DNIS6VEY";
 const TG_CHAT_ID = "8740008890";
 
-const sendTelegramNotification = async (text) => {
+const sendTelegramNotification = (text) => {
   if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
-  try {
-    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TG_CHAT_ID,
-        text: text,
-        parse_mode: 'Markdown'
-      })
-    });
-  } catch (err) {
-    console.error("Telegram error:", err);
-  }
+  fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: TG_CHAT_ID,
+      text: text,
+      parse_mode: 'Markdown'
+    })
+  }).catch(err => console.log("TG Error:", err));
 };
 
 // --- INITIAL MOCK DATA ---
@@ -475,7 +470,7 @@ export default function App() {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
-        headers,
+        headers: { ...headers, 'Prefer': 'return=minimal' },
         body: JSON.stringify({
           id: orderId,
           customer_name: checkoutForm.name,
@@ -503,6 +498,14 @@ export default function App() {
         `💰 *სულ თანხა:* ${totalVal} ₾\n\n` +
         `📦 *პროდუქტები:*\n${itemsListStr}`
       );
+
+      setProducts(prev => prev.map(p => {
+        const ordItem = itemsToOrder.find(i => i.id === p.id);
+        if (ordItem) {
+          return { ...p, stock: Math.max(0, p.stock - (ordItem.quantity || 1)) };
+        }
+        return p;
+      }));
 
       setIsCheckoutOpen(false);
       setQuickBuyProduct(null);
@@ -628,9 +631,9 @@ export default function App() {
   }, [products, selectedCategory, searchQuery]);
 
   const exportOrdersCSV = () => {
-    const headers = ['Order ID', 'Date', 'Customer', 'Phone', 'Total GEL', 'Status'];
+    const headersList = ['Order ID', 'Date', 'Customer', 'Phone', 'Total GEL', 'Status'];
     const rows = orders.map(o => [o.id, o.date, `"${o.customerName}"`, o.phone, o.totalGEL, o.status]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const csvContent = "data:text/csv;charset=utf-8," + [headersList.join(','), ...rows.map(e => e.join(','))].join('\n');
     const link = document.createElement('a');
     link.setAttribute('href', encodeURI(csvContent));
     link.setAttribute('download', `GEOSTORE_Orders.csv`);
@@ -656,7 +659,7 @@ export default function App() {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
         method: 'POST',
-        headers,
+        headers: { ...headers, 'Prefer': 'return=minimal' },
         body: JSON.stringify({
           id: Date.now(),
           client_name: chatClientName || 'სტუმარი',
@@ -993,7 +996,7 @@ export default function App() {
 
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">3. გარანტია და დაბრუნება</h3>
-                <p>ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ वადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.</p>
+                <p>ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ ვადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.</p>
               </div>
 
               <div>
@@ -1345,7 +1348,7 @@ export default function App() {
                                     const updatedStatus = e.target.value;
                                     await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
                                       method: 'PATCH',
-                                      headers,
+                                      headers: { ...headers, 'Prefer': 'return=minimal' },
                                       body: JSON.stringify({ status: updatedStatus })
                                     });
                                     fetchOrders();
@@ -1749,6 +1752,7 @@ export default function App() {
                   e.preventDefault();
                   if(!clientNameInput.trim()) return;
                   setChatClientName(clientNameInput.trim());
+                  localStorage.setItem('geostore_chat_client_name', clientNameInput.trim());
                   showToast('✅ სახელი დაფიქსირდა');
                 }} className="w-full space-y-2">
                   <input 
