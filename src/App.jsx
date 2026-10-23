@@ -184,6 +184,10 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
 
+  // Product Editing State in Admin Panel
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', priceGEL: 0, stock: 0, image: '', description: '' });
+
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductQuickView, setSelectedProductQuickView] = useState(null);
@@ -235,15 +239,16 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // Chat Widget with Real File Upload Support
+  // Chat Widget with Persistent Admin Messages and End Chat Feature
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState(() => {
     const saved = localStorage.getItem('geostore_chat_msgs');
     return saved ? JSON.parse(saved) : [
-      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
+      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '', isSystem: true }
     ];
   });
   const [chatInput, setChatInput] = useState('');
+  const [adminChatReplyInput, setAdminChatReplyInput] = useState('');
 
   useEffect(() => {
     localStorage.setItem('geostore_chat_msgs', JSON.stringify(chatMessages));
@@ -885,7 +890,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= ADMIN TAB WITH FULL CONTROL & ORDER STATUS & CMS ================= */}
+        {/* ================= ADMIN PANEL (10 TABS) ================= */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
@@ -933,7 +938,8 @@ export default function App() {
                     { id: 'crm', label: '6. CRM' },
                     { id: 'coupons', label: '7. პრომოები' },
                     { id: 'security', label: '8. უსაფრთხოება' },
-                    { id: 'cms', label: '9. საიტის რედაქტორი' }
+                    { id: 'cms', label: '9. საიტის რედაქტორი' },
+                    { id: 'adminChat', label: '10. მომხმარებელთა მესიჯები' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -978,7 +984,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. PRODUCTS WITH REAL FILE UPLOAD */}
+                {/* 2. PRODUCTS WITH PHOTO PREVIEW, SMART AUTO-CATEGORY & FULL EDITING */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
@@ -987,13 +993,30 @@ export default function App() {
                         e.preventDefault();
                         const f = e.target;
                         const fileInput = f.prodImageFile;
+                        const prodName = f.name.value;
+                        const userSelectedCat = f.category.value;
+
+                        // Smart Auto-Category by text matching if not manually chosen strictly
+                        let autoCategory = userSelectedCat;
+                        const lowerName = prodName.toLowerCase();
+                        if (lowerName.includes('iphone') || lowerName.includes('samsung') || lowerName.includes('xiaomi') || lowerName.includes('phone')) {
+                          autoCategory = 'სმარტფონები';
+                        } else if (lowerName.includes('macbook') || lowerName.includes('laptop') || lowerName.includes('asus') || lowerName.includes('acer')) {
+                          autoCategory = 'ლეპტოპები';
+                        } else if (lowerName.includes('watch') || lowerName.includes('საათი')) {
+                          autoCategory = 'ჭკვიანი საათები';
+                        } else if (lowerName.includes('tv') || lowerName.includes('ტელევიზორი')) {
+                          autoCategory = 'ტელევიზორები';
+                        } else if (lowerName.includes('airpods') || lowerName.includes('headphone') || lowerName.includes('ყურსასმენი') || lowerName.includes('case')) {
+                          autoCategory = 'აქსესუარები';
+                        }
                         
                         const createProductObj = (imageUrl) => {
                           const newProd = {
                             id: `prod-${Date.now()}`,
                             sku: f.sku.value || `GEO-${Math.floor(Math.random() * 1000)}`,
-                            name: f.name.value,
-                            category: f.category.value,
+                            name: prodName,
+                            category: autoCategory,
                             priceGEL: Number(f.priceGEL.value),
                             stock: Number(f.stock.value),
                             image: imageUrl || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600',
@@ -1001,7 +1024,7 @@ export default function App() {
                           };
                           setProducts([newProd, ...products]);
                           f.reset();
-                          showToast('პროდუქტი წარმატებით დაემატა!');
+                          showToast(`✅ პროდუქტი დაემატა (${autoCategory})!`);
                         };
 
                         if (fileInput.files && fileInput.files[0]) {
@@ -1014,11 +1037,11 @@ export default function App() {
                           createProductObj('https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600');
                         }
                       }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <input type="text" name="name" required placeholder="პროდუქტის დასახელება *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" name="name" required placeholder="პროდუქტის დასახელება (მაგ: iPhone 15) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         <input type="text" name="sku" placeholder="SKU კოდი (მაგ: GEO-IP15)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         
                         <div className="flex flex-col gap-1">
-                          <label className="text-[10px] text-slate-400">კატეგორია</label>
+                          <label className="text-[10px] text-slate-400">კატეგორია (ავტომატური ან არჩევითი)</label>
                           <select name="category" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none">
                             {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                           </select>
@@ -1044,15 +1067,34 @@ export default function App() {
                       </form>
                     </div>
 
+                    {/* Products List with Photo Previews and Full Edit/Delete */}
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-3">
                       <h3 className="font-bold text-base md:text-lg text-white">არსებული პროდუქტები ({products.length})</h3>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {products.map(p => (
-                          <div key={p.id} className="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
-                            <span className="font-bold text-white truncate pr-2">{p.name} ({p.priceGEL} ₾) — მარაგი: {p.stock} ცალი</span>
-                            <button onClick={() => setProducts(products.filter(x => x.id !== p.id))} className="text-rose-400 hover:text-rose-300 shrink-0">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                          <div key={p.id} className="bg-slate-900 p-3.5 rounded-2xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                            <div className="flex items-center gap-3">
+                              <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0" />
+                              <div>
+                                <span className="font-bold text-white text-sm">{p.name}</span>
+                                <p className="text-amber-400 font-semibold">{p.priceGEL} ₾ | კატეგორია: {p.category} | მარაგი: {p.stock}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                              <button 
+                                onClick={() => {
+                                  setEditingProductId(p.id);
+                                  setEditProductForm({ name: p.name, sku: p.sku || '', category: p.category, priceGEL: p.priceGEL, stock: p.stock, image: p.image, description: p.description || '' });
+                                }} 
+                                className="bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" /> რედაქტირება
+                              </button>
+                              <button onClick={() => setProducts(products.filter(x => x.id !== p.id))} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1060,7 +1102,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 3. ORDERS WITH STATUS CHANGER */}
+                {/* 3. ORDERS */}
                 {adminActiveSubTab === 'orders' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
@@ -1190,7 +1232,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 9. SITE CMS EDITOR (FULL SITE EDITING) */}
                 {adminActiveSubTab === 'cms' && (
                   <div className="bg-slate-800 p-6 rounded-3xl max-w-xl space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Settings className="w-5 h-5 text-amber-400"/> საიტის სრული რედაქტორი (CMS)</h3>
@@ -1219,12 +1260,147 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 10. ADMIN CHAT MANAGER */}
+                {adminActiveSubTab === 'adminChat' && (
+                  <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა შემოსული მესიჯები ({chatMessages.length})
+                      </h3>
+                      {chatMessages.length > 0 && (
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('ნამდვილად გსურთ ყველა მესიჯის (ჩათის) წაშლა და დასრულება?')) {
+                              setChatMessages([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '', isSystem: true }]);
+                              showToast('🗑️ ჩათი სრულად დასრულდა და გასუფთავდა');
+                            }
+                          }}
+                          className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition"
+                        >
+                          ჩათის დასრულება (გასუფთავება)
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 max-h-[450px] overflow-y-auto bg-slate-900 p-4 rounded-2xl border border-slate-700">
+                      {chatMessages.map(m => (
+                        <div key={m.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-start gap-3 text-xs">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`font-bold ${m.sender === 'ადმინი' ? 'text-amber-400' : 'text-blue-400'}`}>{m.sender}</span>
+                              <span className="text-[10px] text-slate-500">{m.time}</span>
+                            </div>
+                            <p className="text-white">{m.text}</p>
+                            {m.image && (
+                              <img src={m.image} alt="Attachment" className="mt-2 rounded-lg max-h-28 object-cover border border-slate-700" />
+                            )}
+                          </div>
+                          <button 
+                            onClick={() => {
+                              setChatMessages(chatMessages.filter(item => item.id !== m.id));
+                              showToast('მესიჯი წაიშალა');
+                            }}
+                            className="text-rose-400 hover:text-rose-300 p-1"
+                            title="მესიჯის წაშლა"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if(!adminChatReplyInput.trim()) return;
+                      const newMsg = {
+                        id: Date.now(),
+                        sender: 'ადმინი',
+                        text: adminChatReplyInput,
+                        image: '',
+                        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                      };
+                      setChatMessages([...chatMessages, newMsg]);
+                      setAdminChatReplyInput('');
+                      showToast('📤 პასუხი გაეგზავნა მომხმარებელს!');
+                    }} className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="დაწერეთ პასუხი მომხმარებელს..." 
+                        value={adminChatReplyInput} 
+                        onChange={e => setAdminChatReplyInput(e.target.value)} 
+                        className="flex-1 bg-slate-900 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none" 
+                      />
+                      <button type="submit" className="bg-amber-500 text-slate-950 px-5 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5">
+                        <Send className="w-4 h-4" /> გაგზავნა
+                      </button>
+                    </form>
+                  </div>
+                )}
+
               </div>
             )}
           </div>
         )}
 
       </main>
+
+      {/* PRODUCT EDIT MODAL */}
+      {editingProductId && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 relative space-y-4 text-xs">
+            <button onClick={() => setEditingProductId(null)} className="absolute top-4 right-4 text-slate-400">✕</button>
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-amber-400" /> პროდუქტის რედაქტირება
+            </h3>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setProducts(products.map(p => p.id === editingProductId ? {
+                ...p,
+                name: editProductForm.name,
+                sku: editProductForm.sku,
+                category: editProductForm.category,
+                priceGEL: Number(editProductForm.priceGEL),
+                stock: Number(editProductForm.stock),
+                image: editProductForm.image,
+                description: editProductForm.description
+              } : p));
+              setEditingProductId(null);
+              showToast('✅ პროდუქტი წარმატებით განახლდა!');
+            }} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-slate-400">დასახელება:</label>
+                <input type="text" required value={editProductForm.name} onChange={e => setEditProductForm({...editProductForm, name: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-slate-400">ფასი (₾):</label>
+                  <input type="number" required value={editProductForm.priceGEL} onChange={e => setEditProductForm({...editProductForm, priceGEL: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-slate-400">მარაგი:</label>
+                  <input type="number" required value={editProductForm.stock} onChange={e => setEditProductForm({...editProductForm, stock: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400">კატეგორია:</label>
+                <select value={editProductForm.category} onChange={e => setEditProductForm({...editProductForm, category: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none">
+                  {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400">ფოტოს URL:</label>
+                <input type="url" required value={editProductForm.image} onChange={e => setEditProductForm({...editProductForm, image: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400">აღწერა:</label>
+                <textarea value={editProductForm.description} onChange={e => setEditProductForm({...editProductForm, description: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none h-20" />
+              </div>
+              <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-xl text-xs">შენახვა</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {selectedProductQuickView && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1305,25 +1481,39 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET WITH REAL FILE UPLOAD */}
+      {/* LIVE CHAT WIDGET WITH END CHAT BUTTON */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center">
             <MessageSquare className="w-5 h-5" />
           </button>
         ) : (
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[420px]">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[440px]">
             <div className="bg-amber-500 p-3.5 text-slate-950 font-bold flex justify-between items-center text-xs">
               <span>მხარდაჭერა (ჩათი)</span>
-              <button onClick={() => setIsChatOpen(false)}>✕</button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    if(window.confirm('გსურთ ჩათის დასრულება?')) {
+                      setChatMessages([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '', isSystem: true }]);
+                      showToast('ჩათი დასრულდა');
+                    }
+                  }} 
+                  className="bg-slate-950 text-white px-2 py-0.5 rounded text-[10px]"
+                >
+                  დასრულება
+                </button>
+                <button onClick={() => setIsChatOpen(false)}>✕</button>
+              </div>
             </div>
+
             <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
               {chatMessages.map(m => (
                 <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
                   <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
                     <b>{m.sender}:</b> {m.text}
                     {m.image && (
-                      <img src={m.image} alt="Chat Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-700" />
+                      <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-700" />
                     )}
                   </div>
                   <span className="text-[9px] text-slate-500 mt-0.5 px-1">{m.time}</span>
@@ -1343,7 +1533,7 @@ export default function App() {
                       if (e.target.files && e.target.files[0]) {
                         const reader = new FileReader();
                         reader.onload = function(evt) {
-                          const senderName = adminLoggedIn ? 'ადმინი' : (currentUser ? currentUser.name : 'სტუმარი');
+                          const senderName = currentUser ? currentUser.name : 'სტუმარი';
                           setChatMessages([...chatMessages, {
                             id: Date.now(),
                             sender: senderName,
@@ -1366,7 +1556,7 @@ export default function App() {
                   onKeyDown={(e) => { 
                     if(e.key === 'Enter') { 
                       if(!chatInput.trim()) return; 
-                      const senderName = adminLoggedIn ? 'ადმინი' : (currentUser ? currentUser.name : 'სტუმარი');
+                      const senderName = currentUser ? currentUser.name : 'სტუმარი';
                       setChatMessages([...chatMessages, { 
                         id: Date.now(), 
                         sender: senderName, 
@@ -1383,7 +1573,7 @@ export default function App() {
                 <button 
                   onClick={() => { 
                     if(!chatInput.trim()) return; 
-                    const senderName = adminLoggedIn ? 'ადმინი' : (currentUser ? currentUser.name : 'სტუმარი');
+                    const senderName = currentUser ? currentUser.name : 'სტუმარი';
                     setChatMessages([...chatMessages, { 
                       id: Date.now(), 
                       sender: senderName, 
