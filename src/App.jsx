@@ -157,7 +157,7 @@ export default function App() {
   });
 
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('geostore_admin_remember'] === 'true';
+    return localStorage.getItem('geostore_admin_remember') === 'true';
   });
 
   const [adminLoginForm, setAdminLoginForm] = useState(() => {
@@ -289,7 +289,7 @@ export default function App() {
     }
   });
 
-  // Orders State (โหลด რეალური შენახული შეკვეთები localStorage-დან)
+  // Orders State
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_orders');
@@ -428,7 +428,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // Manual refresh function to reload all data from localStorage immediately
   const handleManualRefresh = () => {
     try {
       const savedOrders = localStorage.getItem('geostore_orders');
