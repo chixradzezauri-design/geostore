@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell
 } from 'lucide-react';
 
 // --- INITIAL MOCK DATA ---
@@ -128,7 +128,7 @@ export default function App() {
   });
 
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('geostore_admin_remember') === 'true';
+    return localStorage.getItem('geostore_admin_remember'] === 'true';
   });
 
   const [adminLoginForm, setAdminLoginForm] = useState(() => {
@@ -239,12 +239,11 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // --- CHAT WITH NAME PROMPT & PERSISTENT ADMIN ARCHIVE ---
+  // --- ADVANCED CHAT WITH ADMIN POPUP & INDIVIDUAL CLIENTS ARCHIVE ---
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
   const [clientNameInput, setClientNameInput] = useState('');
   
-  // Live local view for client (resets on End Chat)
   const [clientChatView, setClientChatView] = useState(() => {
     const saved = localStorage.getItem('geostore_client_chat_view');
     return saved ? JSON.parse(saved) : [
@@ -252,7 +251,6 @@ export default function App() {
     ];
   });
 
-  // Permanent Admin Archive (never deleted unless admin clears it)
   const [adminChatArchive, setAdminChatArchive] = useState(() => {
     const saved = localStorage.getItem('geostore_admin_chat_archive');
     return saved ? JSON.parse(saved) : [
@@ -261,7 +259,11 @@ export default function App() {
   });
 
   const [chatInput, setChatInput] = useState('');
-  const [adminChatReplyInput, setAdminChatReplyInput] = useState('');
+  const [adminSelectedClient, setAdminSelectedClient] = useState(null);
+  const [adminIndividualReply, setAdminIndividualReply] = useState('');
+
+  // Popup notification for Admin when a new message arrives
+  const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('geostore_client_chat_view', JSON.stringify(clientChatView));
@@ -512,6 +514,17 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  // Grouping archive by client names for Admin
+  const groupedClients = useMemo(() => {
+    const map = {};
+    adminChatArchive.forEach(m => {
+      const name = m.clientName || 'სტუმარი';
+      if (!map[name]) map[name] = [];
+      map[name].push(m);
+    });
+    return map;
+  }, [adminChatArchive]);
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-amber-500 selection:text-slate-900 flex flex-col justify-between">
       
@@ -519,6 +532,25 @@ export default function App() {
         <div className="fixed top-5 right-5 z-50 bg-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-2xl shadow-2xl border border-amber-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
           <Sparkles className="w-4 h-4" />
           {toastMessage}
+        </div>
+      )}
+
+      {/* ADMIN POPUP NOTIFICATION FOR NEW MESSAGES */}
+      {adminLoggedIn && adminNewMessagePopup && (
+        <div 
+          onClick={() => {
+            setAdminActiveSubTab('adminChat');
+            setAdminSelectedClient(adminNewMessagePopup.clientName);
+            setAdminNewMessagePopup(null);
+          }}
+          className="fixed bottom-6 left-6 z-50 bg-slate-950 border-2 border-amber-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-900 transition animate-bounce flex items-center gap-3 text-xs md:text-sm"
+        >
+          <Bell className="w-6 h-6 text-amber-400 shrink-0 animate-spin" />
+          <div>
+            <h4 className="font-black text-amber-400">ახალი შეტყობინება! ({adminNewMessagePopup.clientName})</h4>
+            <p className="text-slate-300 line-clamp-1">{adminNewMessagePopup.text}</p>
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); setAdminNewMessagePopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
         </div>
       )}
 
@@ -1281,18 +1313,19 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 10. PERSISTENT ADMIN CHAT ARCHIVE */}
+                {/* 10. INDIVIDUAL CLIENT CHATS FOR ADMIN */}
                 {adminActiveSubTab === 'adminChat' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა მუდმივი არქივი ({adminChatArchive.length})
+                        <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა ინდივიდუალური ჩათები
                       </h3>
                       {adminChatArchive.length > 0 && (
                         <button 
                           onClick={() => {
-                            if (window.confirm('ნამდვილად გსურთ არქივის სრულად წაშლა?')) {
+                            if (window.confirm('ნამდვილად გსურთ მთელი არქივის წაშლა?')) {
                               setAdminChatArchive([]);
+                              setAdminSelectedClient(null);
                               showToast('🗑️ არქივი გასუფთავდა');
                             }
                           }}
@@ -1303,61 +1336,92 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="space-y-3 max-h-[450px] overflow-y-auto bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                      {adminChatArchive.map(m => (
-                        <div key={m.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-start gap-3 text-xs">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded text-[10px]">👤 {m.clientName || 'სტუმარი'}</span>
-                              <span className={`font-bold ${m.sender === 'ადმინი' ? 'text-amber-400' : 'text-blue-400'}`}>მხარე: {m.sender}</span>
-                              <span className="text-[10px] text-slate-500">{m.time}</span>
-                            </div>
-                            <p className="text-white mt-1">{m.text}</p>
-                            {m.image && (
-                              <img src={m.image} alt="Attachment" className="mt-2 rounded-lg max-h-28 object-cover border border-slate-700" />
-                            )}
-                          </div>
-                          <button 
-                            onClick={() => {
-                              setAdminChatArchive(adminChatArchive.filter(item => item.id !== m.id));
-                              showToast('მესიჯი წაიშალა არქივიდან');
-                            }}
-                            className="text-rose-400 hover:text-rose-300 p-1"
-                            title="მესიჯის წაშლა"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Clients List */}
+                      <div className="bg-slate-900 p-3 rounded-2xl border border-slate-700 space-y-2 h-[400px] overflow-y-auto">
+                        <h4 className="text-[11px] font-bold text-slate-400 uppercase px-2 mb-2">მომხმარებლები ({Object.keys(groupedClients).length})</h4>
+                        {Object.keys(groupedClients).length === 0 ? (
+                          <p className="text-slate-500 text-xs p-2">მესიჯები არ არის.</p>
+                        ) : (
+                          Object.keys(groupedClients).map(clientName => (
+                            <button
+                              key={clientName}
+                              onClick={() => setAdminSelectedClient(clientName)}
+                              className={`w-full text-left p-3 rounded-xl text-xs font-bold transition flex justify-between items-center ${
+                                adminSelectedClient === clientName ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-white hover:bg-slate-700'
+                              }`}
+                            >
+                              <span>👤 {clientName}</span>
+                              <span className="text-[10px] opacity-80">({groupedClients[clientName].length})</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
 
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      if(!adminChatReplyInput.trim()) return;
-                      const newMsg = {
-                        id: Date.now(),
-                        clientName: 'მენეჯერი / ადმინი',
-                        sender: 'ადმინი',
-                        text: adminChatReplyInput,
-                        image: '',
-                        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                      };
-                      setAdminChatArchive([...adminChatArchive, newMsg]);
-                      setClientChatView(prev => [...prev, newMsg]);
-                      setAdminChatReplyInput('');
-                      showToast('📤 პასუხი გაეგზავნა მომხმარებელს!');
-                    }} className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="დაწერეთ პასუხი მომხმარებელს..." 
-                        value={adminChatReplyInput} 
-                        onChange={e => setAdminChatReplyInput(e.target.value)} 
-                        className="flex-1 bg-slate-900 border border-slate-700 p-3 rounded-xl text-xs text-white outline-none" 
-                      />
-                      <button type="submit" className="bg-amber-500 text-slate-950 px-5 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5">
-                        <Send className="w-4 h-4" /> გაგზავნა
-                      </button>
-                    </form>
+                      {/* Selected Client Chat Area */}
+                      <div className="md:col-span-2 bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col h-[400px]">
+                        {!adminSelectedClient ? (
+                          <div className="flex-1 flex items-center justify-center text-slate-500 text-xs">
+                            აირჩიეთ მომხმარებელი სიიდან, რომ ნახოთ მესიჯები და მიწეროთ პასუხი.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                              <h4 className="font-bold text-amber-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
+                              <button onClick={() => {
+                                setAdminChatArchive(adminChatArchive.filter(m => (m.clientName || 'სტუმარი') !== adminSelectedClient));
+                                setAdminSelectedClient(null);
+                                showToast('მომხმარებლის ჩათი წაიშალა');
+                              }} className="text-rose-400 text-[11px] hover:underline">ამ მომხმარებლის წაშლა</button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-3 p-2 text-xs">
+                              {(groupedClients[adminSelectedClient] || []).map(m => (
+                                <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
+                                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
+                                    <b>{m.sender}:</b> {m.text}
+                                    {m.image && (
+                                      <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-28 object-cover w-full border border-slate-700" />
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] text-slate-500 mt-0.5">{m.time}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <form onSubmit={(e) => {
+                              e.preventDefault();
+                              if(!adminIndividualReply.trim()) return;
+                              const replyMsg = {
+                                id: Date.now(),
+                                clientName: adminSelectedClient,
+                                sender: 'ადმინი',
+                                text: adminIndividualReply,
+                                image: '',
+                                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                              };
+                              setAdminChatArchive(prev => [...prev, replyMsg]);
+                              if (chatClientName === adminSelectedClient) {
+                                setClientChatView(prev => [...prev, replyMsg]);
+                              }
+                              setAdminIndividualReply('');
+                              showToast(`📤 პასუხი გაეგზავნა მომხმარებელს (${adminSelectedClient})!`);
+                            }} className="flex gap-2 mt-3 pt-2 border-t border-slate-800">
+                              <input 
+                                type="text" 
+                                placeholder={`მიწერეთ პასუხი ${adminSelectedClient}-ს...`}
+                                value={adminIndividualReply}
+                                onChange={e => setAdminIndividualReply(e.target.value)}
+                                className="flex-1 bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white outline-none"
+                              />
+                              <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1">
+                                <Send className="w-3.5 h-3.5" /> გაგზავნა
+                              </button>
+                            </form>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1505,10 +1569,10 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET WITH NAME PROMPT & PERSISTENT ARCHIVING */}
+      {/* LIVE CHAT WIDGET WITH CLIENT NAME PROMPT */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
-          <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center">
+          <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center relative">
             <MessageSquare className="w-5 h-5" />
           </button>
         ) : (
@@ -1518,7 +1582,7 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => {
-                    if(window.confirm('გსურთ ჩათის დასრულება და თქვენს ეკრანზე გასუფთავება? (ადმინის არქივში ინახება)')) {
+                    if(window.confirm('გსურთ ჩათის დასრულება და თქვენს ეკრანზე გასუფთავება?')) {
                       setClientChatView([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }]);
                       setChatClientName('');
                       localStorage.removeItem('geostore_chat_client_name');
@@ -1592,6 +1656,7 @@ export default function App() {
                               };
                               setClientChatView(prev => [...prev, newMsg]);
                               setAdminChatArchive(prev => [...prev, newMsg]);
+                              setAdminNewMessagePopup(newMsg);
                             };
                             reader.readAsDataURL(e.target.files[0]);
                           }
@@ -1617,6 +1682,7 @@ export default function App() {
                           };
                           setClientChatView(prev => [...prev, newMsg]);
                           setAdminChatArchive(prev => [...prev, newMsg]);
+                          setAdminNewMessagePopup(newMsg);
                           setChatInput(''); 
                         } 
                       }} 
@@ -1636,6 +1702,7 @@ export default function App() {
                         };
                         setClientChatView(prev => [...prev, newMsg]);
                         setAdminChatArchive(prev => [...prev, newMsg]);
+                        setAdminNewMessagePopup(newMsg);
                         setChatInput(''); 
                       }} 
                       className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"
