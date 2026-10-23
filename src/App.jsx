@@ -239,20 +239,43 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // Chat Widget with Persistent Admin Messages and End Chat Feature
+  // --- CHAT WITH NAME PROMPT & PERSISTENT ADMIN ARCHIVE ---
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState(() => {
-    const saved = localStorage.getItem('geostore_chat_msgs');
+  const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
+  const [clientNameInput, setClientNameInput] = useState('');
+  
+  // Live local view for client (resets on End Chat)
+  const [clientChatView, setClientChatView] = useState(() => {
+    const saved = localStorage.getItem('geostore_client_chat_view');
     return saved ? JSON.parse(saved) : [
-      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '', isSystem: true }
+      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
     ];
   });
+
+  // Permanent Admin Archive (never deleted unless admin clears it)
+  const [adminChatArchive, setAdminChatArchive] = useState(() => {
+    const saved = localStorage.getItem('geostore_admin_chat_archive');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, clientName: 'სტუმარი', sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
+    ];
+  });
+
   const [chatInput, setChatInput] = useState('');
   const [adminChatReplyInput, setAdminChatReplyInput] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('geostore_chat_msgs', JSON.stringify(chatMessages));
-  }, [chatMessages]);
+    localStorage.setItem('geostore_client_chat_view', JSON.stringify(clientChatView));
+  }, [clientChatView]);
+
+  useEffect(() => {
+    localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(adminChatArchive));
+  }, [adminChatArchive]);
+
+  useEffect(() => {
+    if (chatClientName) {
+      localStorage.setItem('geostore_chat_client_name', chatClientName);
+    }
+  }, [chatClientName]);
 
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (msg) => {
@@ -984,7 +1007,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. PRODUCTS WITH PHOTO PREVIEW, SMART AUTO-CATEGORY & FULL EDITING */}
+                {/* 2. PRODUCTS */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
@@ -996,7 +1019,6 @@ export default function App() {
                         const prodName = f.name.value;
                         const userSelectedCat = f.category.value;
 
-                        // Smart Auto-Category by text matching if not manually chosen strictly
                         let autoCategory = userSelectedCat;
                         const lowerName = prodName.toLowerCase();
                         if (lowerName.includes('iphone') || lowerName.includes('samsung') || lowerName.includes('xiaomi') || lowerName.includes('phone')) {
@@ -1067,7 +1089,6 @@ export default function App() {
                       </form>
                     </div>
 
-                    {/* Products List with Photo Previews and Full Edit/Delete */}
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-3">
                       <h3 className="font-bold text-base md:text-lg text-white">არსებული პროდუქტები ({products.length})</h3>
                       <div className="space-y-3">
@@ -1260,45 +1281,46 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 10. ADMIN CHAT MANAGER */}
+                {/* 10. PERSISTENT ADMIN CHAT ARCHIVE */}
                 {adminActiveSubTab === 'adminChat' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა შემოსული მესიჯები ({chatMessages.length})
+                        <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა მუდმივი არქივი ({adminChatArchive.length})
                       </h3>
-                      {chatMessages.length > 0 && (
+                      {adminChatArchive.length > 0 && (
                         <button 
                           onClick={() => {
-                            if (window.confirm('ნამდვილად გსურთ ყველა მესიჯის (ჩათის) წაშლა და დასრულება?')) {
-                              setChatMessages([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '', isSystem: true }]);
-                              showToast('🗑️ ჩათი სრულად დასრულდა და გასუფთავდა');
+                            if (window.confirm('ნამდვილად გსურთ არქივის სრულად წაშლა?')) {
+                              setAdminChatArchive([]);
+                              showToast('🗑️ არქივი გასუფთავდა');
                             }
                           }}
                           className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition"
                         >
-                          ჩათის დასრულება (გასუფთავება)
+                          არქივის გასუფთავება
                         </button>
                       )}
                     </div>
 
                     <div className="space-y-3 max-h-[450px] overflow-y-auto bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                      {chatMessages.map(m => (
+                      {adminChatArchive.map(m => (
                         <div key={m.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-start gap-3 text-xs">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`font-bold ${m.sender === 'ადმინი' ? 'text-amber-400' : 'text-blue-400'}`}>{m.sender}</span>
+                              <span className="bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded text-[10px]">👤 {m.clientName || 'სტუმარი'}</span>
+                              <span className={`font-bold ${m.sender === 'ადმინი' ? 'text-amber-400' : 'text-blue-400'}`}>მხარე: {m.sender}</span>
                               <span className="text-[10px] text-slate-500">{m.time}</span>
                             </div>
-                            <p className="text-white">{m.text}</p>
+                            <p className="text-white mt-1">{m.text}</p>
                             {m.image && (
                               <img src={m.image} alt="Attachment" className="mt-2 rounded-lg max-h-28 object-cover border border-slate-700" />
                             )}
                           </div>
                           <button 
                             onClick={() => {
-                              setChatMessages(chatMessages.filter(item => item.id !== m.id));
-                              showToast('მესიჯი წაიშალა');
+                              setAdminChatArchive(adminChatArchive.filter(item => item.id !== m.id));
+                              showToast('მესიჯი წაიშალა არქივიდან');
                             }}
                             className="text-rose-400 hover:text-rose-300 p-1"
                             title="მესიჯის წაშლა"
@@ -1314,12 +1336,14 @@ export default function App() {
                       if(!adminChatReplyInput.trim()) return;
                       const newMsg = {
                         id: Date.now(),
+                        clientName: 'მენეჯერი / ადმინი',
                         sender: 'ადმინი',
                         text: adminChatReplyInput,
                         image: '',
                         time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                       };
-                      setChatMessages([...chatMessages, newMsg]);
+                      setAdminChatArchive([...adminChatArchive, newMsg]);
+                      setClientChatView(prev => [...prev, newMsg]);
                       setAdminChatReplyInput('');
                       showToast('📤 პასუხი გაეგზავნა მომხმარებელს!');
                     }} className="flex gap-2">
@@ -1481,21 +1505,23 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET WITH END CHAT BUTTON */}
+      {/* LIVE CHAT WIDGET WITH NAME PROMPT & PERSISTENT ARCHIVING */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center">
             <MessageSquare className="w-5 h-5" />
           </button>
         ) : (
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[440px]">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[460px]">
             <div className="bg-amber-500 p-3.5 text-slate-950 font-bold flex justify-between items-center text-xs">
-              <span>მხარდაჭერა (ჩათი)</span>
+              <span>მხარდაჭერა (ჩათი) {chatClientName ? `(${chatClientName})` : ''}</span>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => {
-                    if(window.confirm('გსურთ ჩათის დასრულება?')) {
-                      setChatMessages([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '', isSystem: true }]);
+                    if(window.confirm('გსურთ ჩათის დასრულება და თქვენს ეკრანზე გასუფთავება? (ადმინის არქივში ინახება)')) {
+                      setClientChatView([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }]);
+                      setChatClientName('');
+                      localStorage.removeItem('geostore_chat_client_name');
                       showToast('ჩათი დასრულდა');
                     }
                   }} 
@@ -1507,88 +1533,119 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
-              {chatMessages.map(m => (
-                <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
-                    <b>{m.sender}:</b> {m.text}
-                    {m.image && (
-                      <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-700" />
-                    )}
-                  </div>
-                  <span className="text-[9px] text-slate-500 mt-0.5 px-1">{m.time}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
-              <div className="flex gap-2 items-center">
-                <label className="p-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 cursor-pointer hover:bg-slate-700 transition" title="აირჩიეთ ფოტო">
-                  <ImageIcon className="w-4 h-4" />
+            {!chatClientName ? (
+              <div className="flex-1 p-6 flex flex-col justify-center items-center text-center space-y-3 bg-slate-950 text-xs">
+                <h4 className="font-bold text-amber-400 text-sm">გამარჯობა! გთხოვთ შეიყვანოთ თქვენი სახელი</h4>
+                <p className="text-slate-400">რომ მენეჯერმა იცოდეს ვის ესაუბრება.</p>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if(!clientNameInput.trim()) return;
+                  setChatClientName(clientNameInput.trim());
+                  showToast('✅ სახელი დაფიქსირდა');
+                }} className="w-full space-y-2">
                   <input 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(evt) {
-                          const senderName = currentUser ? currentUser.name : 'სტუმარი';
-                          setChatMessages([...chatMessages, {
-                            id: Date.now(),
-                            sender: senderName,
-                            text: 'ფოტო:',
-                            image: evt.target.result,
-                            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                          }]);
-                        };
-                        reader.readAsDataURL(e.target.files[0]);
-                      }
-                    }} 
+                    type="text" 
+                    required 
+                    placeholder="თქვენი სახელი..." 
+                    value={clientNameInput} 
+                    onChange={e => setClientNameInput(e.target.value)} 
+                    className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white text-xs outline-none" 
                   />
-                </label>
-
-                <input 
-                  type="text" 
-                  placeholder="დაწერეთ შეტყობინება..." 
-                  value={chatInput} 
-                  onChange={e => setChatInput(e.target.value)} 
-                  onKeyDown={(e) => { 
-                    if(e.key === 'Enter') { 
-                      if(!chatInput.trim()) return; 
-                      const senderName = currentUser ? currentUser.name : 'სტუმარი';
-                      setChatMessages([...chatMessages, { 
-                        id: Date.now(), 
-                        sender: senderName, 
-                        text: chatInput, 
-                        image: '', 
-                        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                      }]); 
-                      setChatInput(''); 
-                    } 
-                  }} 
-                  className="flex-1 bg-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none border border-slate-700" 
-                />
-
-                <button 
-                  onClick={() => { 
-                    if(!chatInput.trim()) return; 
-                    const senderName = currentUser ? currentUser.name : 'სტუმარი';
-                    setChatMessages([...chatMessages, { 
-                      id: Date.now(), 
-                      sender: senderName, 
-                      text: chatInput, 
-                      image: '', 
-                      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                    }]); 
-                    setChatInput(''); 
-                  }} 
-                  className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"
-                >
-                  <Send className="w-3.5 h-3.5"/>
-                </button>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl">დაწყება</button>
+                </form>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
+                  {clientChatView.map(m => (
+                    <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
+                      <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
+                        <b>{m.sender}:</b> {m.text}
+                        {m.image && (
+                          <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-700" />
+                        )}
+                      </div>
+                      <span className="text-[9px] text-slate-500 mt-0.5 px-1">{m.time}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
+                  <div className="flex gap-2 items-center">
+                    <label className="p-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 cursor-pointer hover:bg-slate-700 transition" title="აირჩიეთ ფოტო">
+                      <ImageIcon className="w-4 h-4" />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const reader = new FileReader();
+                            reader.onload = function(evt) {
+                              const newMsg = {
+                                id: Date.now(),
+                                clientName: chatClientName,
+                                sender: chatClientName,
+                                text: 'ფოტო:',
+                                image: evt.target.result,
+                                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                              };
+                              setClientChatView(prev => [...prev, newMsg]);
+                              setAdminChatArchive(prev => [...prev, newMsg]);
+                            };
+                            reader.readAsDataURL(e.target.files[0]);
+                          }
+                        }} 
+                      />
+                    </label>
+
+                    <input 
+                      type="text" 
+                      placeholder="დაწერეთ შეტყობინება..." 
+                      value={chatInput} 
+                      onChange={e => setChatInput(e.target.value)} 
+                      onKeyDown={(e) => { 
+                        if(e.key === 'Enter') { 
+                          if(!chatInput.trim()) return; 
+                          const newMsg = { 
+                            id: Date.now(), 
+                            clientName: chatClientName,
+                            sender: chatClientName, 
+                            text: chatInput, 
+                            image: '', 
+                            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                          };
+                          setClientChatView(prev => [...prev, newMsg]);
+                          setAdminChatArchive(prev => [...prev, newMsg]);
+                          setChatInput(''); 
+                        } 
+                      }} 
+                      className="flex-1 bg-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none border border-slate-700" 
+                    />
+
+                    <button 
+                      onClick={() => { 
+                        if(!chatInput.trim()) return; 
+                        const newMsg = { 
+                          id: Date.now(), 
+                          clientName: chatClientName,
+                          sender: chatClientName, 
+                          text: chatInput, 
+                          image: '', 
+                          time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                        };
+                        setClientChatView(prev => [...prev, newMsg]);
+                        setAdminChatArchive(prev => [...prev, newMsg]);
+                        setChatInput(''); 
+                      }} 
+                      className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"
+                    >
+                      <Send className="w-3.5 h-3.5"/>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
