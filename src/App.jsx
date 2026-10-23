@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Search, Plus, Minus, Trash2, Lock, CheckCircle, 
   Package, Tag, Eye, X, TrendingUp, User, LogOut, Phone, Mail, 
-  MapPin, Clock, Edit2, MessageSquare, Send, Users, ShieldAlert, FileText, Check, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, CreditCard, Building2, Bell
+  MapPin, Clock, Edit2, MessageSquare, Send, Users, ShieldAlert, FileText, Check, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, CreditCard, Building2, Bell, BarChart2, Activity, Laptop, Smartphone
 } from 'lucide-react';
 
 const CATEGORIES_KA = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -55,6 +55,49 @@ const INITIAL_PRODUCTS = [
 export default function App() {
   const [lang, setLang] = useState("KA");
 
+  // ვიზიტორების სტატისტიკა (Analytics & Tracking)
+  const [analytics, setAnalytics] = useState(() => {
+    const saved = localStorage.getItem('geostore_analytics');
+    return saved ? JSON.parse(saved) : {
+      todayVisits: 142,
+      totalTimeSpentSeconds: 28400, // ჯამური წამები
+      mobileVisits: 98,
+      desktopVisits: 44,
+      pageViews: { shop: 412, quickView: 89, cart: 156, policy: 34 }
+    };
+  });
+
+  const [sessionTime, setSessionTime] = useState(0);
+
+  // საიტზე გატარებული დროის თვლა რეალურ დროში
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSessionTime(prev => prev + 1);
+      setAnalytics(prev => ({
+        ...prev,
+        totalTimeSpentSeconds: prev.totalTimeSpentSeconds + 1
+      }));
+    }, 1000);
+
+    // უნიკალური ვიზიტის დამატება სესიის დასაწყისში
+    if (!sessionStorage.getItem('geostore_visited_today')) {
+      sessionStorage.setItem('geostore_visited_today', 'true');
+      const isMobile = window.innerWidth < 768;
+      setAnalytics(prev => ({
+        ...prev,
+        todayVisits: prev.todayVisits + 1,
+        mobileVisits: isMobile ? prev.mobileVisits + 1 : prev.mobileVisits,
+        desktopVisits: !isMobile ? prev.desktopVisits + 1 : prev.desktopVisits
+      }));
+    }
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('geostore_analytics', JSON.stringify(analytics));
+  }, [analytics]);
+
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('geostore_products');
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
@@ -94,7 +137,6 @@ export default function App() {
   const [sortBy, setSortBy] = useState("default");
   const [onlyInStock, setOnlyInStock] = useState(false);
 
-  // ფასის დიაპაზონის ფილტრი
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
@@ -123,7 +165,7 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminPin, setAdminPin] = useState("");
   const [adminError, setAdminError] = useState("");
-  const [adminSubTab, setAdminSubTab] = useState("orders");
+  const [adminSubTab, setAdminSubTab] = useState("analytics");
   
   const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", image: "", description: "", stock: "" });
   
@@ -157,4 +199,68 @@ export default function App() {
   }, []);
 
   useEffect(() => { localStorage.setItem('geostore_products', JSON.stringify(products)); }, [products]);
-  useEffect(() =>
+  useEffect(() => { localStorage.setItem('geostore_orders', JSON.stringify(orders)); }, [orders]);
+  useEffect(() => { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); }, [usersList]);
+  useEffect(() => { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); }, [currentUser]);
+  useEffect(() => { localStorage.setItem('geostore_chat_messages', JSON.stringify(chatMessages)); }, [chatMessages]);
+  useEffect(() => { localStorage.setItem('geostore_policy_text', policyText); }, [policyText]);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 3000);
+  };
+
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    if (!authForm.email || !authForm.password || (authMode === 'register' && !authForm.name)) {
+      alert("გთხოვთ შეავსოთ ყველა ველი!");
+      return;
+    }
+    const userData = {
+      id: Date.now(),
+      name: authMode === 'register' ? authForm.name : authForm.email.split('@')[0],
+      phone: authForm.phone || "+995 500 00 00 00",
+      email: authForm.email,
+      date: new Date().toISOString().split('T')[0]
+    };
+    if (authMode === 'register') {
+      setUsersList([...usersList, userData]);
+    }
+    setCurrentUser(userData);
+    setIsAuthOpen(false);
+    setAuthForm({ name: "", phone: "", email: "", password: "" });
+    showToast(lang === "KA" ? "ავტორიზაცია წარმატებულია!" : "Logged in successfully!");
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setActiveTab("shop");
+  };
+
+  const deleteUserAccount = (userId) => {
+    if (confirm("ნამდვილად გსურთ ამ მომხმარებლის ანგარიშის გაუქმება?")) {
+      setUsersList(usersList.filter(u => u.id !== userId));
+      alert("მომხმარებლის ანგარიში გაუქმებულია!");
+    }
+  };
+
+  const handleSendChatMessage = (e) => {
+    e.preventDefault();
+    if (!userChatMessage.trim()) return;
+
+    const senderName = currentUser ? currentUser.name : (orderForm.name || "სტუმარი");
+    const senderPhone = currentUser ? currentUser.phone : (orderForm.phone || "არ არის მითითებული");
+
+    const newMsg = {
+      id: Date.now(),
+      sender: senderName,
+      phone: senderPhone,
+      text: userChatMessage,
+      time: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
+      isAutoReply: false
+    };
+
+    const autoReplyMsg = {
+      id: Date.now() + 1,
+      sender: "GEOSTORE ოპერატორი",
+      text: "გამარ
