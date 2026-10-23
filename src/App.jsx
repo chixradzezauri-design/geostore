@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShoppingBag, Search, Plus, Minus, Trash2, Lock, CheckCircle, 
-  Package, Tag, Eye, X, TrendingUp, User, LogOut, Phone, Mail, 
-  MapPin, Clock, Edit2, MessageSquare, Send, Users, ShieldAlert, FileText, Check, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, CreditCard, Building2, Bell, BarChart2, Activity, Laptop, Smartphone
+  ShoppingBag, Search, Plus, Minus, Lock, CheckCircle, 
+  Package, Eye, X, User, LogOut, Phone, Mail, 
+  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone
 } from 'lucide-react';
 
 const CATEGORIES_KA = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -55,12 +55,11 @@ const INITIAL_PRODUCTS = [
 export default function App() {
   const [lang, setLang] = useState("KA");
 
-  // ვიზიტორების სტატისტიკა (Analytics & Tracking)
   const [analytics, setAnalytics] = useState(() => {
     const saved = localStorage.getItem('geostore_analytics');
     return saved ? JSON.parse(saved) : {
       todayVisits: 142,
-      totalTimeSpentSeconds: 28400, // ჯამური წამები
+      totalTimeSpentSeconds: 28400,
       mobileVisits: 98,
       desktopVisits: 44,
       pageViews: { shop: 412, quickView: 89, cart: 156, policy: 34 }
@@ -69,7 +68,6 @@ export default function App() {
 
   const [sessionTime, setSessionTime] = useState(0);
 
-  // საიტზე გატარებული დროის თვლა რეალურ დროში
   useEffect(() => {
     const interval = setInterval(() => {
       setSessionTime(prev => prev + 1);
@@ -79,7 +77,6 @@ export default function App() {
       }));
     }, 1000);
 
-    // უნიკალური ვიზიტის დამატება სესიის დასაწყისში
     if (!sessionStorage.getItem('geostore_visited_today')) {
       sessionStorage.setItem('geostore_visited_today', 'true');
       const isMobile = window.innerWidth < 768;
@@ -158,6 +155,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState("login");
   const [authForm, setAuthForm] = useState({ name: "", phone: "", email: "", password: "" });
   const [userChatMessage, setUserChatMessage] = useState("");
+  const [adminReplyText, setAdminReplyText] = useState(""); // ადმინის საპასუხო ტექსტი
 
   const [couponCode, setCouponCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -223,9 +221,16 @@ export default function App() {
       email: authForm.email,
       date: new Date().toISOString().split('T')[0]
     };
+    
     if (authMode === 'register') {
-      setUsersList([...usersList, userData]);
+      setUsersList(prev => [userData, ...prev]);
+    } else {
+      // თუ უკვე არსებობს სისაში, თავში გადმოვიტანოთ ან უბრალოდ შევინარჩუნოთ
+      if (!usersList.some(u => u.email === userData.email)) {
+        setUsersList(prev => [userData, ...prev]);
+      }
     }
+
     setCurrentUser(userData);
     setIsAuthOpen(false);
     setAuthForm({ name: "", phone: "", email: "", password: "" });
@@ -270,6 +275,25 @@ export default function App() {
 
     setChatMessages(prev => [...prev, newMsg, autoReplyMsg]);
     setUserChatMessage("");
+  };
+
+  // ადმინის პასუხის გაგზავნა ჩათში
+  const handleAdminReplyMessage = (e) => {
+    e.preventDefault();
+    if (!adminReplyText.trim()) return;
+
+    const adminMsg = {
+      id: Date.now(),
+      sender: "GEOSTORE ადმინი",
+      phone: "მხარდაჭერა",
+      text: adminReplyText,
+      time: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
+      isAutoReply: true
+    };
+
+    setChatMessages(prev => [...prev, adminMsg]);
+    setAdminReplyText("");
+    showToast("შეტყობინება გაიგზავნა კლიენტთან!");
   };
 
   const filteredProducts = products.filter(p => {
@@ -481,13 +505,11 @@ export default function App() {
     ? products.filter(p => p.category === quickViewProduct.category && p.id !== quickViewProduct.id)
     : [];
 
-  // საშუალო დროის გამოთვლა
   const avgTimeMinutes = (analytics.totalTimeSpentSeconds / analytics.todayVisits / 60).toFixed(1);
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col font-sans">
       
-      {/* TELEGRAM ALERT */}
       {telegramAlert && (
         <div className="fixed top-24 right-6 z-50 bg-indigo-600 text-white p-4 rounded-2xl shadow-2xl border border-indigo-400 max-w-sm animate-bounce flex items-center gap-3">
           <Bell className="w-6 h-6 shrink-0" />
@@ -498,14 +520,12 @@ export default function App() {
         </div>
       )}
 
-      {/* TOAST NOTIFICATION */}
       {toastMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-6 py-3 rounded-full shadow-2xl text-xs font-bold">
           {toastMessage}
         </div>
       )}
 
-      {/* TOP BAR */}
       <div className="bg-black text-white text-xs py-2 px-4 text-center font-medium flex justify-between items-center max-w-7xl mx-auto w-full">
         <span>✨ {lang === "KA" ? "უფასო მიწოდება 100₾-ის ზემოთ | კუპონი:" : "Free delivery over 100₾ | Coupon:"} <strong>GEO2026</strong></span>
         <div className="flex gap-4 items-center">
@@ -517,7 +537,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* HEADER */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
           <button onClick={() => setActiveTab("shop")} className="flex items-center gap-2 text-2xl font-black tracking-tighter">
@@ -567,10 +586,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
 
-        {/* PROFILE TAB */}
         {activeTab === 'profile' && currentUser && (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="bg-white rounded-3xl p-6 border shadow-sm flex justify-between items-center">
@@ -610,7 +627,6 @@ export default function App() {
           </div>
         )}
 
-        {/* POLICY TAB */}
         {activeTab === 'policy' && (
           <div className="bg-white rounded-3xl p-8 border max-w-3xl mx-auto space-y-6">
             <h2 className="text-2xl font-black">წესები, პირობები და დაბრუნების პოლიტიკა</h2>
@@ -621,7 +637,6 @@ export default function App() {
           </div>
         )}
 
-        {/* CONTACT TAB */}
         {activeTab === 'contact' && (
           <div className="bg-white rounded-3xl p-8 border max-w-xl mx-auto space-y-4">
             <h2 className="text-2xl font-black">საკონტაქტო ინფორმაცია</h2>
@@ -631,7 +646,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ADMIN TAB */}
         {activeTab === 'admin' && (
           <div className="space-y-8">
             {!isAdminLoggedIn ? (
@@ -682,7 +696,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* ANALYTICS SUB TAB */}
                 {adminSubTab === 'analytics' && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -690,9 +703,9 @@ export default function App() {
                         <span className="text-xs font-bold text-gray-400 uppercase">დღიური ვიზიტები</span>
                         <div className="flex justify-between items-center">
                           <span className="text-3xl font-black">{analytics.todayVisits}</span>
-                          <Users className="w-6 h-6 text-indigo-600" />
+                          <User className="w-6 h-6 text-indigo-600" />
                         </div>
-                        <p className="text-[11px] text-green-600 font-bold">↑ +18% გუშინდელთან შედარებით</p>
+                        <p className="text-[11px] text-green-600 font-bold">↑ რეალურ დროში ტრეკირება</p>
                       </div>
 
                       <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
@@ -827,7 +840,7 @@ export default function App() {
                         <div key={u.id} className="border rounded-2xl p-4 bg-gray-50 flex justify-between items-center">
                           <div>
                             <h4 className="font-bold text-sm">{u.name}</h4>
-                            <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone}</p>
+                            <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone} | თარიღი: {u.date}</p>
                           </div>
                           <button onClick={() => deleteUserAccount(u.id)} className="bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">გაუქმება</button>
                         </div>
@@ -836,20 +849,38 @@ export default function App() {
                   </div>
                 )}
 
+                {/* ADMIN CHAT TAB WITH REPLY BOX */}
                 {adminSubTab === 'chat' && (
                   <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                    <h3 className="text-xl font-bold">ონლაინ ჩათი</h3>
-                    <div className="space-y-3">
-                      {chatMessages.map(m => (
-                        <div key={m.id} className={`p-4 rounded-2xl border ${m.isAutoReply ? 'bg-indigo-50' : 'bg-gray-50'}`}>
-                          <div className="flex justify-between text-xs font-bold text-gray-500">
-                            <span>{m.sender} ({m.phone})</span>
-                            <span>{m.time}</span>
+                    <h3 className="text-xl font-bold">ონლაინ ჩათის მართვა</h3>
+                    <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                      {chatMessages.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-6">შეტყობინებები არ არის</p>
+                      ) : (
+                        chatMessages.map(m => (
+                          <div key={m.id} className={`p-4 rounded-2xl border ${m.isAutoReply ? 'bg-indigo-50 border-indigo-100 ml-6' : 'bg-gray-50 mr-6'}`}>
+                            <div className="flex justify-between text-xs font-bold text-gray-500">
+                              <span>{m.sender} ({m.phone})</span>
+                              <span>{m.time}</span>
+                            </div>
+                            <p className="text-sm font-medium mt-1">{m.text}</p>
                           </div>
-                          <p className="text-sm font-medium mt-1">{m.text}</p>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
+                    {/* Admin Reply Form */}
+                    <form onSubmit={handleAdminReplyMessage} className="pt-3 border-t flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="უპასუხეთ კლიენტს როგორც ადმინმა..." 
+                        value={adminReplyText} 
+                        onChange={e => setAdminReplyText(e.target.value)} 
+                        className="flex-1 bg-gray-100 border rounded-xl px-4 py-3 text-xs outline-none"
+                      />
+                      <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5">
+                        <Send className="w-3.5 h-3.5"/> პასუხი
+                      </button>
+                    </form>
                   </div>
                 )}
 
@@ -865,11 +896,9 @@ export default function App() {
           </div>
         )}
 
-        {/* SHOP TAB */}
         {activeTab === 'shop' && (
           <div className="space-y-8">
             
-            {/* FLASH SALE HERO BANNER WITH TIMER */}
             <div className="bg-black text-white rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="relative z-10 max-w-xl space-y-3">
                 <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1 w-fit">
@@ -883,7 +912,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* COUNTDOWN TIMER */}
               <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 text-center flex gap-4">
                 <div>
                   <div className="text-3xl font-black">{timeLeft.hours}</div>
@@ -902,7 +930,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* CATEGORIES & FILTERS (MIN / MAX PRICE) */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
                 {categories.map(cat => (
@@ -912,7 +939,6 @@ export default function App() {
                 ))}
               </div>
 
-              {/* ADVANCED FILTER TOOLBAR */}
               <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs font-bold">
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-gray-400" />
@@ -938,7 +964,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* PRODUCTS GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map(product => (
                 <div key={product.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col justify-between group">
@@ -988,13 +1013,11 @@ export default function App() {
 
       </main>
 
-      {/* FLOAT CHAT BUTTON */}
       <button onClick={() => setIsChatOpen(!isChatOpen)} className="fixed bottom-6 right-6 z-50 bg-black text-white p-4 rounded-full shadow-2xl flex items-center gap-2 hover:bg-zinc-800 transition">
         <MessageCircle className="w-5 h-5" />
         <span className="text-xs font-bold hidden sm:inline">ონლაინ ჩათი</span>
       </button>
 
-      {/* LIVE CHAT MODAL */}
       {isChatOpen && (
         <div className="fixed bottom-20 right-6 z-50 bg-white w-80 sm:w-96 rounded-3xl shadow-2xl border overflow-hidden flex flex-col h-96">
           <div className="bg-black text-white p-4 flex justify-between items-center">
@@ -1004,7 +1027,7 @@ export default function App() {
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
             {chatMessages.length === 0 && <p className="text-xs text-gray-400 text-center py-6">მოგვწერეთ ნებისმიერი კითხვა!</p>}
             {chatMessages.map(m => (
-              <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl text-xs ${m.isAutoReply ? 'bg-indigo-600 text-white ml-auto' : 'bg-white border text-gray-800'}`}>
+              <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl text-xs ${m.sender.includes("ადმინი") || m.isAutoReply ? 'bg-indigo-600 text-white ml-auto' : 'bg-white border text-gray-800'}`}>
                 <p className="font-bold mb-1 opacity-80">{m.sender}</p>
                 <p>{m.text}</p>
               </div>
@@ -1017,7 +1040,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 1-CLICK QUICK BUY MODAL */}
       {oneClickProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative">
@@ -1033,7 +1055,6 @@ export default function App() {
         </div>
       )}
 
-      {/* QUICK VIEW, REVIEWS & RELATED PRODUCTS MODAL */}
       {quickViewProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative overflow-y-auto max-h-[90vh] space-y-6">
@@ -1051,7 +1072,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* RELATED PRODUCTS */}
             {relatedProducts.length > 0 && (
               <div className="border-t pt-4 space-y-3">
                 <h4 className="font-bold text-sm">🛍️ მსგავსი პროდუქტები</h4>
@@ -1069,7 +1089,6 @@ export default function App() {
               </div>
             )}
 
-            {/* REVIEWS SECTION */}
             <div className="border-t pt-4 space-y-4">
               <h4 className="font-bold text-lg">⭐ შეფასებები ({quickViewProduct.reviews ? quickViewProduct.reviews.length : 0})</h4>
               
@@ -1095,7 +1114,6 @@ export default function App() {
         </div>
       )}
 
-      {/* EDIT PRODUCT MODAL */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
@@ -1114,7 +1132,6 @@ export default function App() {
         </div>
       )}
 
-      {/* AUTH MODAL */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
@@ -1142,7 +1159,6 @@ export default function App() {
         </div>
       )}
 
-      {/* CART DRAWER */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
           <div className="bg-white w-full max-w-md h-full flex flex-col shadow-2xl p-6">
@@ -1190,7 +1206,6 @@ export default function App() {
         </div>
       )}
 
-      {/* CHECKOUT MODAL WITH 3 PAYMENT OPTIONS */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1211,7 +1226,6 @@ export default function App() {
                 <input type="text" required placeholder="მისამართი *" value={orderForm.address} onChange={e => setOrderForm({...orderForm, address: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
               </div>
 
-              {/* PAYMENT METHOD SELECTION */}
               <div className="space-y-2 pt-2">
                 <label className="text-xs font-bold text-gray-500">გადახდის მეთოდი:</label>
                 <div className="grid grid-cols-3 gap-2 text-xs font-bold">
@@ -1227,7 +1241,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CARD DETAILS IF SELECTED */}
               {orderForm.paymentMethod === 'card' && (
                 <div className="p-4 bg-gray-50 rounded-2xl border space-y-2">
                   <input type="text" placeholder="ბარათის ნომერი (16 ციფრი)" className="w-full bg-white border rounded-xl p-2.5 text-xs outline-none" />
@@ -1238,7 +1251,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* BANK TRANSFER DETAILS IF SELECTED */}
               {orderForm.paymentMethod === 'bank' && (
                 <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-xs space-y-1">
                   <p><strong>მიმღები:</strong> შპს GEOSTORE</p>
@@ -1255,7 +1267,6 @@ export default function App() {
         </div>
       )}
 
-      {/* SUCCESS MODAL */}
       {orderSuccess && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl">
@@ -1271,7 +1282,6 @@ export default function App() {
         </div>
       )}
 
-      {/* FOOTER */}
       <footer className="bg-white border-t mt-12 py-8 text-xs text-gray-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
