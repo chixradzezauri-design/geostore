@@ -9,7 +9,7 @@ import {
 
 // ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIcivbGUiOiJhbm9uIiwiaWF0IjoxNzkyNzM0NDQ5LCJleHAiOjIxMDgzMTA0NDl9.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -128,6 +128,13 @@ const INITIAL_COUPONS = [
   { code: 'WELCOME5', discountPercent: 5 }
 ];
 
+const INITIAL_POLICY = {
+  general: 'წინამდებარე წესები და პოლიტიკა არეგულირებს GEOSTORE-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს. საიტზე რეგისტრაციით ან შეკვეთის გაფორმებით თქვენ აცხადებთ თანხმობას აღნიშნულ პირობებზე.',
+  delivery: 'შეკვეთის განთავსების შემდეგ ჩვენი მენეჯერი დაგიკავშირდებათ დეტალების დასაზუსტებლად. მიწოდება ხორციელდება თბილისში 24 საათის განმავლობაში, ხოლო რეგიონებში 48 საათში. 100₾-ზე მეტი ღირებულების შეკვეთებზე მიწოდება უფასოა.',
+  warranty: 'ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ ვადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.',
+  privacy: 'GEOSTORE იცავს მომხმარებლის პერსონალურ მონაცემებს და არ გადასცემს მათ მესამე პირებს, გარდა კანონით გათვალისწინებული შემთხვევებისა.'
+};
+
 export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
@@ -151,6 +158,20 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings));
   }, [siteSettings]);
+
+  // Policy State
+  const [storePolicy, setStorePolicy] = useState(() => {
+    try {
+      const saved = localStorage.getItem('geostore_store_policy');
+      return saved ? JSON.parse(saved) : INITIAL_POLICY;
+    } catch {
+      return INITIAL_POLICY;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy));
+  }, [storePolicy]);
 
   // Admin Auth
   const [adminAuth, setAdminAuth] = useState(() => {
@@ -245,7 +266,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
-  const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
+  const [adminActiveSubTab, setAdminActiveSubTab] = useState('orders');
 
   // Product Editing State
   const [editingProductId, setEditingProductId] = useState(null);
@@ -699,7 +720,6 @@ export default function App() {
             <button onClick={handleManualRefresh} className="bg-slate-950/50 hover:bg-slate-950/80 px-2 py-0.5 rounded text-white text-[10px] flex items-center gap-1 font-bold">
               <RefreshCw className="w-3 h-3 animate-spin" /> განახლება
             </button>
-            <button onClick={() => setActiveTab('policy')} className="hover:underline font-bold text-[11px] mr-2">წესები და პოლიტიკა</button>
             <button 
               onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')}
               className="bg-slate-950/40 hover:bg-slate-950/70 px-2 py-0.5 rounded-full border border-white/20 transition flex items-center gap-1 font-bold text-amber-300 text-[10px]"
@@ -981,22 +1001,22 @@ export default function App() {
             <div className="space-y-4 text-slate-300">
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">1. ზოგადი დებულებები</h3>
-                <p>წინამდებარე წესები და პოლიტიკა არეგულირებს {siteSettings.storeName}-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს. საიტზე რეგისტრაციით ან შეკვეთის გაფორმებით თქვენ აცხადებთ თანხმობას აღნიშნულ პირობებზე.</p>
+                <p>{storePolicy.general}</p>
               </div>
 
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">2. შეკვეთა და მიწოდება</h3>
-                <p>შეკვეთის განთავსების შემდეგ ჩვენი მენეჯერი დაგიკავშირდებათ დეტალების დასაზუსტებლად. მიწოდება ხორციელდება თბილისში 24 საათის განმავლობაში, ხოლო რეგიონებში 48 საათში. 100₾-ზე მეტი ღირებულების შეკვეთებზე მიწოდება უფასოა.</p>
+                <p>{storePolicy.delivery}</p>
               </div>
 
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">3. გარანტია და დაბრუნება</h3>
-                <p>ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ ვადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.</p>
+                <p>{storePolicy.warranty}</p>
               </div>
 
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">4. კონფიდენციალურობა</h3>
-                <p>{siteSettings.storeName} იცავს მომხმარებლის პერსონალურ მონაცემებს და არ გადასცემს მათ მესამე პირებს, გარდა კანონით გათვალისწინებული შემთხვევებისა.</p>
+                <p>{storePolicy.privacy}</p>
               </div>
             </div>
 
@@ -1090,7 +1110,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= ADMIN PANEL (10 TABS) ================= */}
+        {/* ================= ADMIN PANEL (11 TABS) ================= */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
@@ -1131,22 +1151,23 @@ export default function App() {
                 <div className="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-2xl p-2 overflow-x-auto scrollbar-none">
                   <div className="flex gap-2">
                     {[
-                      { id: 'categories', label: '1. კატეგორიები' },
-                      { id: 'products', label: '2. პროდუქცია' },
-                      { id: 'orders', label: '3. შეკვეთები' },
-                      { id: 'banners', label: '4. ბანერები' },
-                      { id: 'builder', label: '5. Page Builder' },
-                      { id: 'crm', label: '6. CRM' },
-                      { id: 'coupons', label: '7. პრომოები' },
-                      { id: 'security', label: '8. უსაფრთხოება' },
-                      { id: 'cms', label: '9. საიტის რედაქტორი' },
-                      { id: 'adminChat', label: '10. მომხმარებელთა მესიჯები' }
+                      { id: 'orders', label: '📦 შეკვეთები' },
+                      { id: 'adminChat', label: '💬 მომხმარებელთა მესიჯები' },
+                      { id: 'categories', label: 'კატეგორიები' },
+                      { id: 'products', label: 'პროდუქცია' },
+                      { id: 'banners', label: 'ბანერები' },
+                      { id: 'builder', label: 'Page Builder' },
+                      { id: 'crm', label: 'CRM' },
+                      { id: 'coupons', label: 'პრომოები' },
+                      { id: 'security', label: 'უსაფრთხოება' },
+                      { id: 'cms', label: 'საიტის რედაქტორი' },
+                      { id: 'policyEditor', label: '📜 წესების რედაქტორი' }
                     ].map(tab => (
                       <button
                         key={tab.id}
                         onClick={() => setAdminActiveSubTab(tab.id)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                          adminActiveSubTab === tab.id ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300'
+                          adminActiveSubTab === tab.id ? 'bg-amber-500 text-slate-950 shadow-lg' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
                         }`}
                       >
                         {tab.label}
@@ -1160,6 +1181,153 @@ export default function App() {
                     <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold">გასვლა</button>
                   </div>
                 </div>
+
+                {/* 1. ORDERS */}
+                {adminActiveSubTab === 'orders' && (
+                  <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-base md:text-lg text-white">📦 შეკვეთების მართვა და სტატუსები ({orders.length})</h3>
+                      <div className="flex gap-2">
+                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
+                        </button>
+                        <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {orders.length === 0 ? (
+                        <p className="text-slate-500 text-xs">შეკვეთები არ არის.</p>
+                      ) : (
+                        orders.map(o => (
+                          <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
+                            <div>
+                              <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
+                              <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
+                              <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
+                              <div className="mt-1 text-slate-400">
+                                {o.items?.map(i => `${i.name} (${i.quantity}ც.)`).join(', ')}
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
+                                <select 
+                                  value={o.status || 'ახალი'} 
+                                  onChange={async (e) => {
+                                    const updatedStatus = e.target.value;
+                                    await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
+                                      method: 'PATCH',
+                                      headers: { ...headers, 'Prefer': 'return=minimal' },
+                                      body: JSON.stringify({ status: updatedStatus })
+                                    });
+                                    fetchOrders();
+                                    showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
+                                  }}
+                                  className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
+                                >
+                                  <option value="ახალი">🟢 ახალი</option>
+                                  <option value="მზადდება">🟡 მზადდება</option>
+                                  <option value="გზაშია">🔵 გზაშია</option>
+                                  <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
+                                  <option value="გაუქმებულია">❌ გაუქმებულია</option>
+                                </select>
+                              </div>
+
+                              <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
+                              <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. ADMIN CHAT */}
+                {adminActiveSubTab === 'adminChat' && (
+                  <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5 text-amber-400" /> 💬 მომხმარებელთა ინდივიდუალური ჩათები
+                      </h3>
+                      <div className="flex gap-2">
+                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Clients List */}
+                      <div className="bg-slate-900 p-3 rounded-2xl border border-slate-700 space-y-2 h-[400px] overflow-y-auto">
+                        <h4 className="text-[11px] font-bold text-slate-400 uppercase px-2 mb-2">მომხმარებლები ({Object.keys(groupedClients).length})</h4>
+                        {Object.keys(groupedClients).length === 0 ? (
+                          <p className="text-slate-500 text-xs p-2">მესიჯები არ არის.</p>
+                        ) : (
+                          Object.keys(groupedClients).map(clientName => (
+                            <button
+                              key={clientName}
+                              onClick={() => setAdminSelectedClient(clientName)}
+                              className={`w-full text-left p-3 rounded-xl text-xs font-bold transition flex justify-between items-center ${
+                                adminSelectedClient === clientName ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-white hover:bg-slate-700'
+                              }`}
+                            >
+                              <span>👤 {clientName}</span>
+                              <span className="text-[10px] opacity-80">({groupedClients[clientName].length})</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Selected Client Chat Area */}
+                      <div className="md:col-span-2 bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col h-[400px]">
+                        {!adminSelectedClient ? (
+                          <div className="flex-1 flex items-center justify-center text-slate-500 text-xs">
+                            აირჩიეთ მომხმარებელი სიიდან, რომ ნახოთ მესიჯები და მიწეროთ პასუხი.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+                              <h4 className="font-bold text-amber-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-3 p-2 text-xs">
+                              {(groupedClients[adminSelectedClient] || []).map(m => (
+                                <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
+                                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
+                                    <b>{m.sender}:</b> {m.text}
+                                    {m.image && (
+                                      <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-28 object-cover w-full border border-slate-700" />
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] text-slate-500 mt-0.5">{m.time}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <form onSubmit={(e) => {
+                              e.preventDefault();
+                              if(!adminIndividualReply.trim()) return;
+                              handleSendMessage(adminIndividualReply, 'ადმინი');
+                            }} className="flex gap-2 mt-3 pt-2 border-t border-slate-800">
+                              <input 
+                                type="text" 
+                                placeholder={`მიწერეთ პასუხი ${adminSelectedClient}-ს...`}
+                                value={adminIndividualReply}
+                                onChange={e => setAdminIndividualReply(e.target.value)}
+                                className="flex-1 bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white outline-none"
+                              />
+                              <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1">
+                                <Send className="w-3.5 h-3.5" /> გაგზავნა
+                              </button>
+                            </form>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {adminActiveSubTab === 'categories' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
@@ -1191,7 +1359,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. PRODUCTS */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
@@ -1303,68 +1470,6 @@ export default function App() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. ORDERS */}
-                {adminActiveSubTab === 'orders' && (
-                  <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-base md:text-lg text-white">შეკვეთების მართვა და სტატუსები ({orders.length})</h3>
-                      <div className="flex gap-2">
-                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
-                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
-                        </button>
-                        <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      {orders.length === 0 ? (
-                        <p className="text-slate-500 text-xs">შეკვეთები არ არის.</p>
-                      ) : (
-                        orders.map(o => (
-                          <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
-                            <div>
-                              <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
-                              <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
-                              <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
-                              <div className="mt-1 text-slate-400">
-                                {o.items?.map(i => `${i.name} (${i.quantity}ც.)`).join(', ')}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                              <div className="flex flex-col gap-1">
-                                <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
-                                <select 
-                                  value={o.status || 'ახალი'} 
-                                  onChange={async (e) => {
-                                    const updatedStatus = e.target.value;
-                                    await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
-                                      method: 'PATCH',
-                                      headers: { ...headers, 'Prefer': 'return=minimal' },
-                                      body: JSON.stringify({ status: updatedStatus })
-                                    });
-                                    fetchOrders();
-                                    showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
-                                  }}
-                                  className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
-                                >
-                                  <option value="ახალი">🟢 ახალი</option>
-                                  <option value="მზადდება">🟡 მზადდება</option>
-                                  <option value="გზაშია">🔵 გზაშია</option>
-                                  <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
-                                  <option value="გაუქმებულია">❌ გაუქმებულია</option>
-                                </select>
-                              </div>
-
-                              <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
-                              <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
-                            </div>
-                          </div>
-                        ))
-                      )}
                     </div>
                   </div>
                 )}
@@ -1482,88 +1587,34 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 10. INDIVIDUAL CLIENT CHATS FOR ADMIN */}
-                {adminActiveSubTab === 'adminChat' && (
-                  <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა ინდივიდუალური ჩათები
-                      </h3>
-                      <div className="flex gap-2">
-                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
-                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
-                        </button>
+                {/* POLICY EDITOR TAB */}
+                {adminActiveSubTab === 'policyEditor' && (
+                  <div className="bg-slate-800 p-6 rounded-3xl max-w-2xl space-y-4">
+                    <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-amber-400" /> წესების და პოლიტიკის რედაქტორი
+                    </h3>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      showToast('✅ წესები და პოლიტიკა წარმატებით განახლდა!');
+                    }} className="space-y-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold">1. ზოგადი დებულებები:</label>
+                        <textarea value={storePolicy.general} onChange={e => setStorePolicy({...storePolicy, general: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none h-20" />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Clients List */}
-                      <div className="bg-slate-900 p-3 rounded-2xl border border-slate-700 space-y-2 h-[400px] overflow-y-auto">
-                        <h4 className="text-[11px] font-bold text-slate-400 uppercase px-2 mb-2">მომხმარებლები ({Object.keys(groupedClients).length})</h4>
-                        {Object.keys(groupedClients).length === 0 ? (
-                          <p className="text-slate-500 text-xs p-2">მესიჯები არ არის.</p>
-                        ) : (
-                          Object.keys(groupedClients).map(clientName => (
-                            <button
-                              key={clientName}
-                              onClick={() => setAdminSelectedClient(clientName)}
-                              className={`w-full text-left p-3 rounded-xl text-xs font-bold transition flex justify-between items-center ${
-                                adminSelectedClient === clientName ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-white hover:bg-slate-700'
-                              }`}
-                            >
-                              <span>👤 {clientName}</span>
-                              <span className="text-[10px] opacity-80">({groupedClients[clientName].length})</span>
-                            </button>
-                          ))
-                        )}
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold">2. შეკვეთა და მიწოდება:</label>
+                        <textarea value={storePolicy.delivery} onChange={e => setStorePolicy({...storePolicy, delivery: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none h-20" />
                       </div>
-
-                      {/* Selected Client Chat Area */}
-                      <div className="md:col-span-2 bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col h-[400px]">
-                        {!adminSelectedClient ? (
-                          <div className="flex-1 flex items-center justify-center text-slate-500 text-xs">
-                            აირჩიეთ მომხმარებელი სიიდან, რომ ნახოთ მესიჯები და მიწეროთ პასუხი.
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
-                              <h4 className="font-bold text-amber-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto space-y-3 p-2 text-xs">
-                              {(groupedClients[adminSelectedClient] || []).map(m => (
-                                <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
-                                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
-                                    <b>{m.sender}:</b> {m.text}
-                                    {m.image && (
-                                      <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-28 object-cover w-full border border-slate-700" />
-                                    )}
-                                  </div>
-                                  <span className="text-[9px] text-slate-500 mt-0.5">{m.time}</span>
-                                </div>
-                              ))}
-                            </div>
-
-                            <form onSubmit={(e) => {
-                              e.preventDefault();
-                              if(!adminIndividualReply.trim()) return;
-                              handleSendMessage(adminIndividualReply, 'ადმინი');
-                            }} className="flex gap-2 mt-3 pt-2 border-t border-slate-800">
-                              <input 
-                                type="text" 
-                                placeholder={`მიწერეთ პასუხი ${adminSelectedClient}-ს...`}
-                                value={adminIndividualReply}
-                                onChange={e => setAdminIndividualReply(e.target.value)}
-                                className="flex-1 bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white outline-none"
-                              />
-                              <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1">
-                                <Send className="w-3.5 h-3.5" /> გაგზავნა
-                              </button>
-                            </form>
-                          </>
-                        )}
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold">3. გარანტია და დაბრუნება:</label>
+                        <textarea value={storePolicy.warranty} onChange={e => setStorePolicy({...storePolicy, warranty: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none h-20" />
                       </div>
-                    </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400 font-bold">4. კონფიდენციალურობა:</label>
+                        <textarea value={storePolicy.privacy} onChange={e => setStorePolicy({...storePolicy, privacy: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none h-20" />
+                      </div>
+                      <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-xl text-xs">ცვლილებების შენახვა</button>
+                    </form>
                   </div>
                 )}
 
@@ -1831,7 +1882,7 @@ export default function App() {
 
       <footer className="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12 space-y-2">
         <div className="flex justify-center gap-4">
-          <button onClick={() => setActiveTab('policy')} className="hover:text-amber-400 transition">წესები და პოლიტიკა</button>
+          <button onClick={() => setActiveTab('policy')} className="hover:text-amber-400 transition font-bold text-amber-500">წესები და პოლიტიკა</button>
           <button onClick={() => setActiveTab('store')} className="hover:text-amber-400 transition">მთავარი</button>
         </div>
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
