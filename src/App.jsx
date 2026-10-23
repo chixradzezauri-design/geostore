@@ -457,10 +457,10 @@ export default function App() {
     setCouponInput('');
   };
 
-  // 📦 Save Order to Supabase REST
+  // 📦 Save Order to Supabase REST (with Debug Alert)
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
-      showToast('⚠️ გთხოვთ შეავსოთ ყველა ველი');
+      alert('⚠️ გთხოვთ შეავსოთ ყველა ველი');
       return;
     }
 
@@ -468,9 +468,9 @@ export default function App() {
     const itemsData = itemsToOrder.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity || 1 }));
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
-        headers: { ...headers, 'Prefer': 'return=minimal' },
+        headers: { ...headers, 'Prefer': 'return=representation' },
         body: JSON.stringify({
           id: orderId,
           customer_name: checkoutForm.name,
@@ -484,28 +484,20 @@ export default function App() {
         })
       });
 
-      if (!res.ok) {
-        showToast('❌ შეკვეთის შენახვა ვერ მოხერხდა');
+      if (!response.ok) {
+        const errData = await response.text();
+        alert("❌ Supabase შეკვეთის შეცდომა: " + errData);
         return;
       }
 
-      const itemsListStr = itemsData.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
       sendTelegramNotification(
         `🚨 *ახალი შეკვეთა გაფორმდა!* (#${orderId})\n\n` +
         `👤 *მყიდველი:* ${checkoutForm.name}\n` +
         `📞 *ტელეფონი:* ${checkoutForm.phone}\n` +
         `📍 *მისამართი:* ${checkoutForm.address}\n` +
         `💰 *სულ თანხა:* ${totalVal} ₾\n\n` +
-        `📦 *პროდუქტები:*\n${itemsListStr}`
+        `📦 *პროდუქტები:*\n${itemsData.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n')}`
       );
-
-      setProducts(prev => prev.map(p => {
-        const ordItem = itemsToOrder.find(i => i.id === p.id);
-        if (ordItem) {
-          return { ...p, stock: Math.max(0, p.stock - (ordItem.quantity || 1)) };
-        }
-        return p;
-      }));
 
       setIsCheckoutOpen(false);
       setQuickBuyProduct(null);
@@ -514,8 +506,7 @@ export default function App() {
       showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
       fetchOrders();
     } catch (err) {
-      console.error(err);
-      showToast('❌ ტექნიკური შეცდომა');
+      alert("❌ ქსელის შეცდომა შეკვეთისას: " + err.message);
     }
   };
 
@@ -652,14 +643,14 @@ export default function App() {
     return map;
   }, [adminChatArchive]);
 
-  // 💬 Send Message via Supabase REST
+  // 💬 Send Message via Supabase REST (with Debug Alert)
   const handleSendMessage = async (text, senderName, imageUrl = '') => {
     if (!text.trim() && !imageUrl) return;
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
         method: 'POST',
-        headers: { ...headers, 'Prefer': 'return=minimal' },
+        headers: { ...headers, 'Prefer': 'return=representation' },
         body: JSON.stringify({
           id: Date.now(),
           client_name: chatClientName || 'სტუმარი',
@@ -670,16 +661,20 @@ export default function App() {
         })
       });
 
-      if (res.ok) {
-        if (senderName !== 'ადმინი') {
-          sendTelegramNotification(`💬 *ახალი მესიჯი ჩათში!*\n👤 *${chatClientName || 'სტუმარი'}:* ${text || 'ფოტო'}`);
-        }
-        setChatInput('');
-        setAdminIndividualReply('');
-        fetchMessages();
+      if (!response.ok) {
+        const errData = await response.text();
+        alert("❌ Supabase მესიჯის შეცდომა: " + errData);
+        return;
       }
+
+      if (senderName !== 'ადმინი') {
+        sendTelegramNotification(`💬 *ახალი მესიჯი ჩათში!*\n👤 *${chatClientName || 'სტუმარი'}:* ${text || 'ფოტო'}`);
+      }
+      setChatInput('');
+      setAdminIndividualReply('');
+      fetchMessages();
     } catch (err) {
-      console.error(err);
+      alert("❌ ქსელის შეცდომა მესიჯისას: " + err.message);
     }
   };
 
