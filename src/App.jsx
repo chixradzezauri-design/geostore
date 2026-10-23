@@ -105,13 +105,21 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  // ადმინის ავტორიზაცია (მომხმარებლის სახელი და პაროლი)
+  // ადმინის ავტორიზაცია და Remember Me (შენახვა localStorage-ში)
   const [adminAuth, setAdminAuth] = useState(() => {
     const saved = localStorage.getItem('geostore_admin_auth');
     return saved ? JSON.parse(saved) : { username: "admin", password: "admin123" };
   });
 
-  const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '' });
+  const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
+    return localStorage.getItem('geostore_admin_remember') === 'true';
+  });
+
+  const [adminLoginForm, setAdminLoginForm] = useState(() => {
+    const remembered = localStorage.getItem('geostore_admin_remember_creds');
+    return remembered ? JSON.parse(remembered) : { username: '', password: '', remember: false };
+  });
+
   const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
@@ -159,7 +167,6 @@ export default function App() {
 
   // App UI States
   const [activeTab, setActiveTab] = useState('store'); // 'store' | 'wishlist' | 'cart' | 'admin' | 'profile' | 'policy'
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
 
@@ -179,20 +186,25 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '', notes: '' });
 
-  // Users & Auth Modal
+  // Users & Auth Modal + Remember Me
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('geostore_users_list');
     return saved ? JSON.parse(saved) : [
       { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15' }
     ];
   });
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('geostore_current_user');
     return saved ? JSON.parse(saved) : null;
   });
+
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
-  const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '' });
+  const [authForm, setAuthForm] = useState(() => {
+    const rememberedUser = localStorage.getItem('geostore_user_remembered');
+    return rememberedUser ? JSON.parse(rememberedUser) : { name: '', phone: '', email: '', password: '', remember: false };
+  });
 
   // Orders & Invoices
   const [orders, setOrders] = useState(() => {
@@ -336,6 +348,7 @@ export default function App() {
     showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
   };
 
+  // User Auth Submit + Remember Me Logic
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     if (!authForm.email || !authForm.password) return;
@@ -362,15 +375,29 @@ export default function App() {
       };
       setUsersList([newUser, ...usersList]);
       setCurrentUser(newUser);
+
+      if (authForm.remember) {
+        localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true }));
+      } else {
+        localStorage.removeItem('geostore_user_remembered');
+      }
+
       setIsAuthOpen(false);
-      setAuthForm({ name: '', phone: '', email: '', password: '' });
+      setAuthForm({ name: '', phone: '', email: '', password: '', remember: false });
       showToast('🎉 რეგისტრაცია წარმატებულია!');
     } else {
       const found = usersList.find(u => u.email === authForm.email && u.password === authForm.password);
       if (found) {
         setCurrentUser(found);
+
+        if (authForm.remember) {
+          localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true }));
+        } else {
+          localStorage.removeItem('geostore_user_remembered');
+        }
+
         setIsAuthOpen(false);
-        setAuthForm({ name: '', phone: '', email: '', password: '' });
+        setAuthForm({ name: '', phone: '', email: '', password: '', remember: false });
         showToast('🔑 ავტორიზაცია წარმატებულია!');
       } else {
         alert('არასწორი ელ-ფოსტა ან პაროლი!');
@@ -378,16 +405,33 @@ export default function App() {
     }
   };
 
+  // Admin Login + Remember Me Logic
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (adminLoginForm.username === adminAuth.username && adminLoginForm.password === adminAuth.password) {
       setAdminLoggedIn(true);
       setAdminError('');
-      setAdminLoginForm({ username: '', password: '' });
+
+      if (adminLoginForm.remember) {
+        localStorage.setItem('geostore_admin_remember', 'true');
+        localStorage.setItem('geostore_admin_remember_creds', JSON.stringify(adminLoginForm));
+      } else {
+        localStorage.removeItem('geostore_admin_remember');
+        localStorage.removeItem('geostore_admin_remember_creds');
+      }
+
+      setAdminLoginForm({ username: '', password: '', remember: false });
       showToast('🔓 ადმინ პანელში შესვლა წარმატებულია!');
     } else {
       setAdminError('არასწორი მომხმარებლის სახელი ან პაროლი!');
     }
+  };
+
+  const handleAdminLogout = () => {
+    setAdminLoggedIn(false);
+    localStorage.removeItem('geostore_admin_remember');
+    localStorage.removeItem('geostore_admin_remember_creds');
+    showToast('გახვედით ადმინ პანელიდან');
   };
 
   const handleChangeAdminPassword = (e) => {
@@ -862,6 +906,16 @@ export default function App() {
                     onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white outline-none" 
                   />
+                  <div className="flex items-center gap-2 text-xs text-slate-300">
+                    <input 
+                      type="checkbox" 
+                      id="adminRemember"
+                      checked={adminLoginForm.remember} 
+                      onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
+                      className="rounded accent-amber-500"
+                    />
+                    <label htmlFor="adminRemember" className="cursor-pointer">მომიმახსოვრე სისტემაში</label>
+                  </div>
                   {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
                   <button type="submit" className="w-full bg-amber-500 text-slate-950 py-3 rounded-xl font-bold text-xs transition">შესვლა</button>
                 </form>
@@ -889,7 +943,7 @@ export default function App() {
                       {tab.label}
                     </button>
                   ))}
-                  <button onClick={() => setAdminLoggedIn(false)} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto shrink-0">გასვლა</button>
+                  <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto shrink-0">გასვლა</button>
                 </div>
 
                 {adminActiveSubTab === 'categories' && (
@@ -1101,7 +1155,7 @@ export default function App() {
         </div>
       )}
 
-      {/* AUTH MODAL (LOGIN / REGISTER) */}
+      {/* AUTH MODAL (LOGIN / REGISTER) + REMEMBER ME */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative space-y-4">
@@ -1119,6 +1173,18 @@ export default function App() {
               )}
               <input type="email" required placeholder="ელ-ფოსტა *" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
               <input type="password" required placeholder="პაროლი *" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
+              
+              <div className="flex items-center gap-2 text-xs text-slate-300">
+                <input 
+                  type="checkbox" 
+                  id="userRemember"
+                  checked={authForm.remember} 
+                  onChange={e => setAuthForm({...authForm, remember: e.target.checked})} 
+                  className="rounded accent-amber-500"
+                />
+                <label htmlFor="userRemember" className="cursor-pointer">მომიმახსოვრე</label>
+              </div>
+
               <button type="submit" className="w-full bg-amber-500 text-slate-950 py-3 rounded-xl font-bold text-xs">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
             </form>
           </div>
