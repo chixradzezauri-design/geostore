@@ -1182,64 +1182,116 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 1. ORDERS */}
+                {/* 1. ORDERS - SEPARATED ACTIVE AND COMPLETED */}
                 {adminActiveSubTab === 'orders' && (
-                  <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-base md:text-lg text-white">📦 შეკვეთების მართვა და სტატუსები ({orders.length})</h3>
-                      <div className="flex gap-2">
-                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
-                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
-                        </button>
-                        <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
+                  <div className="space-y-6">
+                    {/* ACTIVE ORDERS */}
+                    <div className="bg-slate-800 p-6 rounded-3xl space-y-4 border border-slate-700">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-base md:text-lg text-white">📦 აქტიური შეკვეთები ({orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length})</h3>
+                        <div className="flex gap-2">
+                          <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                            <RefreshCw className="w-3.5 h-3.5" /> განახლება
+                          </button>
+                          <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        {orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length === 0 ? (
+                          <p className="text-slate-500 text-xs">აქტიური შეკვეთები არ არის.</p>
+                        ) : (
+                          orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').map(o => (
+                            <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
+                              <div>
+                                <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
+                                <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
+                                <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
+                                <div className="mt-1 text-slate-400">
+                                  {o.items?.map(i => `${i.name} (${i.quantity}ც.)`).join(', ')}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
+                                  <select 
+                                    value={o.status || 'ახალი'} 
+                                    onChange={async (e) => {
+                                      const updatedStatus = e.target.value;
+                                      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
+                                        method: 'PATCH',
+                                        headers: { ...headers, 'Prefer': 'return=minimal' },
+                                        body: JSON.stringify({ status: updatedStatus })
+                                      });
+                                      fetchOrders();
+                                      showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
+                                    }}
+                                    className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
+                                  >
+                                    <option value="ახალი">🟢 ახალი</option>
+                                    <option value="მზადდება">🟡 მზადდება</option>
+                                    <option value="გზაშია">🔵 გზაშია</option>
+                                    <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
+                                    <option value="გაუქმებულია">❌ გაუქმებულია</option>
+                                  </select>
+                                </div>
+
+                                <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
+                                <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      {orders.length === 0 ? (
-                        <p className="text-slate-500 text-xs">შეკვეთები არ არის.</p>
-                      ) : (
-                        orders.map(o => (
-                          <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
-                            <div>
-                              <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
-                              <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
-                              <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
-                              <div className="mt-1 text-slate-400">
-                                {o.items?.map(i => `${i.name} (${i.quantity}ც.)`).join(', ')}
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                              <div className="flex flex-col gap-1">
-                                <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
-                                <select 
-                                  value={o.status || 'ახალი'} 
-                                  onChange={async (e) => {
-                                    const updatedStatus = e.target.value;
-                                    await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
-                                      method: 'PATCH',
-                                      headers: { ...headers, 'Prefer': 'return=minimal' },
-                                      body: JSON.stringify({ status: updatedStatus })
-                                    });
-                                    fetchOrders();
-                                    showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
-                                  }}
-                                  className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
-                                >
-                                  <option value="ახალი">🟢 ახალი</option>
-                                  <option value="მზადდება">🟡 მზადდება</option>
-                                  <option value="გზაშია">🔵 გზაშია</option>
-                                  <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
-                                  <option value="გაუქმებულია">❌ გაუქმებულია</option>
-                                </select>
-                              </div>
 
-                              <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
-                              <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
+                    {/* COMPLETED / ARCHIVED ORDERS */}
+                    <div className="bg-slate-800/60 p-6 rounded-3xl space-y-4 border border-slate-700/60">
+                      <h3 className="font-bold text-base md:text-lg text-slate-300">✅ დასრულებული შეკვეთები (არქივი) ({orders.filter(o => o.status === 'ჩაბარებულია' || o.status === 'გაუქმებულია').length})</h3>
+                      <div className="space-y-3">
+                        {orders.filter(o => o.status === 'ჩაბარებულია' || o.status === 'გაუქმებულია').length === 0 ? (
+                          <p className="text-slate-500 text-xs">არქივი ცარიელია.</p>
+                        ) : (
+                          orders.filter(o => o.status === 'ჩაბარებულია' || o.status === 'გაუქმებულია').map(o => (
+                            <div key={o.id} className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs opacity-80">
+                              <div>
+                                <span className="font-bold text-slate-400 text-sm">#{o.id} ({o.date})</span>
+                                <p className="text-slate-400 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
+                                <p className="text-slate-500 mt-0.5"><b>მისამართი:</b> {o.address}</p>
+                              </div>
+                              
+                              <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[10px] text-slate-500">სტატუსი:</label>
+                                  <select 
+                                    value={o.status} 
+                                    onChange={async (e) => {
+                                      const updatedStatus = e.target.value;
+                                      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
+                                        method: 'PATCH',
+                                        headers: { ...headers, 'Prefer': 'return=minimal' },
+                                        body: JSON.stringify({ status: updatedStatus })
+                                      });
+                                      fetchOrders();
+                                      showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
+                                    }}
+                                    className="bg-slate-800 border border-slate-700 text-emerald-400 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
+                                  >
+                                    <option value="ახალი">🟢 ახალი</option>
+                                    <option value="მზადდება">🟡 მზადდება</option>
+                                    <option value="გზაშია">🔵 გზაშია</option>
+                                    <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
+                                    <option value="გაუქმებულია">❌ გაუქმებულია</option>
+                                  </select>
+                                </div>
+
+                                <span className="font-black text-slate-300 text-sm shrink-0">{o.totalGEL} ₾</span>
+                                <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-xl text-slate-300 font-bold transition shrink-0">ინვოისი</button>
+                              </div>
                             </div>
-                          </div>
-                        ))
-                      )}
+                          ))
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
