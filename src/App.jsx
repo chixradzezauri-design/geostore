@@ -157,7 +157,7 @@ export default function App() {
   });
 
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('geostore_admin_remember') === 'true';
+    return localStorage.getItem('geostore_admin_remember'] === 'true';
   });
 
   const [adminLoginForm, setAdminLoginForm] = useState(() => {
@@ -289,31 +289,23 @@ export default function App() {
     }
   });
 
-  // Orders State with robust cross-device synchronization
+  // Orders State (โหลด რეალური შენახული შეკვეთები localStorage-დან)
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_orders');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'ORD-9821',
-          date: new Date().toLocaleDateString('ka-GE'),
-          customerName: 'გიორგი ბერიძე',
-          phone: '599 12 34 56',
-          address: 'თბილისი, ჭავჭავაძის გამზ. 15',
-          userEmail: 'giorgi@gmail.com',
-          items: [{ id: 'prod-1', name: 'iPhone 15 Pro Max', price: 3899, quantity: 1 }],
-          totalGEL: 3899,
-          status: 'ახალი',
-          courier: 'არ არის დანიშნული'
-        }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [];
   });
+
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // Chat States with synchronization
+  // Chat States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
   const [clientNameInput, setClientNameInput] = useState('');
@@ -332,12 +324,16 @@ export default function App() {
   const [adminChatArchive, setAdminChatArchive] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_admin_chat_archive');
-      return saved ? JSON.parse(saved) : [
-        { id: 1, clientName: 'სტუმარი', sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
-      ];
-    } catch {
-      return [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error(e);
     }
+    return [
+      { id: 1, clientName: 'სტუმარი', sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
+    ];
   });
 
   const [chatInput, setChatInput] = useState('');
@@ -347,26 +343,25 @@ export default function App() {
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
   const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
 
-  // Global Cross-Device & Storage Synchronization listener
+  // Robust Cross-Device & Storage Synchronization
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'geostore_orders' && e.newValue) {
         try {
-          setOrders(JSON.parse(e.newValue));
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setOrders(parsed);
+          }
         } catch (err) {
           console.error(err);
         }
       }
       if (e.key === 'geostore_admin_chat_archive' && e.newValue) {
         try {
-          setAdminChatArchive(JSON.parse(e.newValue));
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      if (e.key === 'geostore_products' && e.newValue) {
-        try {
-          setProducts(JSON.parse(e.newValue));
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setAdminChatArchive(parsed);
+          }
         } catch (err) {
           console.error(err);
         }
@@ -433,13 +428,20 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  // Manual refresh function to reload all data from localStorage immediately
   const handleManualRefresh = () => {
     try {
       const savedOrders = localStorage.getItem('geostore_orders');
-      if (savedOrders) setOrders(JSON.parse(savedOrders));
+      if (savedOrders) {
+        const parsed = JSON.parse(savedOrders);
+        if (Array.isArray(parsed)) setOrders(parsed);
+      }
 
       const savedChat = localStorage.getItem('geostore_admin_chat_archive');
-      if (savedChat) setAdminChatArchive(JSON.parse(savedChat));
+      if (savedChat) {
+        const parsed = JSON.parse(savedChat);
+        if (Array.isArray(parsed)) setAdminChatArchive(parsed);
+      }
 
       const savedProducts = localStorage.getItem('geostore_products');
       if (savedProducts) setProducts(JSON.parse(savedProducts));
