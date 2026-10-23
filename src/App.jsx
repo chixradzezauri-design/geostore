@@ -7,6 +7,27 @@ import {
   Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell
 } from 'lucide-react';
 
+// --- TELEGRAM CONFIG ---
+const TG_BOT_TOKEN = "8968372156:AAHe6OHQZfdChPXS4wQDQ5omSA1DNIS6VEY";
+const TG_CHAT_ID = "8740008890";
+
+const sendTelegramNotification = async (text) => {
+  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TG_CHAT_ID,
+        text: text,
+        parse_mode: 'Markdown'
+      })
+    });
+  } catch (err) {
+    console.error("Telegram error:", err);
+  }
+};
+
 // --- INITIAL MOCK DATA ---
 const INITIAL_CATEGORIES = [
   { id: 'cat-1', name: 'სმარტფონები', icon: '📱' },
@@ -473,6 +494,17 @@ export default function App() {
     setOrders(updatedOrders);
     localStorage.setItem('geostore_orders', JSON.stringify(updatedOrders));
 
+    // Send Telegram Notification for New Order
+    const itemsListStr = newOrder.items.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
+    sendTelegramNotification(
+      `🚨 *ახალი შეკვეთა გაფორმდა!* (#${newOrder.id})\n\n` +
+      `👤 *მყიდველი:* ${newOrder.customerName}\n` +
+      `📞 *ტელეფონი:* ${newOrder.phone}\n` +
+      `📍 *მისამართი:* ${newOrder.address}\n` +
+      `💰 *სულ თანხა:* ${newOrder.totalGEL} ₾\n\n` +
+      `📦 *პროდუქტები:*\n${itemsListStr}`
+    );
+
     // Broadcast channel sync
     try {
       const channel = new BroadcastChannel('geostore_sync_channel');
@@ -642,7 +674,7 @@ export default function App() {
         </div>
       )}
 
-      {/* POPUP NOTIFICATIONS FOR ADMIN (NEW ORDER & NEW MESSAGE) */}
+      {/* POPUP NOTIFICATIONS FOR ADMIN */}
       {adminNewMessagePopup && (
         <div 
           onClick={() => {
@@ -1794,6 +1826,13 @@ export default function App() {
                               setAdminChatArchive(updatedArchive);
                               localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
+                              // Send Telegram Notification for Chat Message
+                              sendTelegramNotification(
+                                `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
+                                `👤 *მომხმარებელი:* ${chatClientName}\n` +
+                                `✉️ *ტექსტი:* ფოტო მიმაგრებულია`
+                              );
+
                               try {
                                 const channel = new BroadcastChannel('geostore_sync_channel');
                                 channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
@@ -1832,6 +1871,13 @@ export default function App() {
                           setAdminChatArchive(updatedArchive);
                           localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
+                          // Send Telegram Notification for Chat Message
+                          sendTelegramNotification(
+                            `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
+                            `👤 *მომხმარებელი:* ${chatClientName}\n` +
+                            `✉️ *ტექსტი:* ${chatInput}`
+                          );
+
                           try {
                             const channel = new BroadcastChannel('geostore_sync_channel');
                             channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
@@ -1863,6 +1909,13 @@ export default function App() {
                         setClientChatView(updatedClientView);
                         setAdminChatArchive(updatedArchive);
                         localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
+
+                        // Send Telegram Notification for Chat Message
+                        sendTelegramNotification(
+                          `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
+                          `👤 *მომხმარებელი:* ${chatClientName}\n` +
+                          `✉️ *ტექსტი:* ${chatInput}`
+                        );
 
                         try {
                           const channel = new BroadcastChannel('geostore_sync_channel');
