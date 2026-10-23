@@ -156,7 +156,9 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings));
+    try {
+      localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings));
+    } catch (e) { console.error(e); }
   }, [siteSettings]);
 
   // Policy State
@@ -170,7 +172,9 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy));
+    try {
+      localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy));
+    } catch (e) { console.error(e); }
   }, [storePolicy]);
 
   // Admin Auth
@@ -199,7 +203,9 @@ export default function App() {
   const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
-    localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth));
+    try {
+      localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth));
+    } catch (e) { console.error(e); }
   }, [adminAuth]);
 
   const [categories, setCategories] = useState(() => {
@@ -346,15 +352,15 @@ export default function App() {
         const data = await res.json();
         const formatted = data.map(o => ({
           id: o.id,
-          date: new Date(o.created_at).toLocaleDateString('ka-GE'),
+          date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
           customerName: o.customer_name,
           phone: o.phone,
           address: o.address,
           userEmail: o.user_email,
-          items: o.items,
+          items: o.items || [],
           totalGEL: o.total_gel,
-          status: o.status,
-          courier: o.courier
+          status: o.status || 'ახალი',
+          courier: o.courier || ''
         }));
         setOrders(formatted);
       }
@@ -408,14 +414,14 @@ export default function App() {
     showToast('🔄 მონაცემები წარმატებით განახლდა!');
   };
 
-  useEffect(() => localStorage.setItem('geostore_cats', JSON.stringify(categories)), [categories]);
-  useEffect(() => localStorage.setItem('geostore_products', JSON.stringify(products)), [products]);
-  useEffect(() => localStorage.setItem('geostore_banners', JSON.stringify(banners)), [banners]);
-  useEffect(() => localStorage.setItem('geostore_promos', JSON.stringify(promoSlots)), [promoSlots]);
-  useEffect(() => localStorage.setItem('geostore_coupons', JSON.stringify(coupons)), [coupons]);
-  useEffect(() => localStorage.setItem('geostore_sections', JSON.stringify(sections)), [sections]);
-  useEffect(() => localStorage.setItem('geostore_users_list', JSON.stringify(usersList)), [usersList]);
-  useEffect(() => localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)), [currentUser]);
+  useEffect(() => { try { localStorage.setItem('geostore_cats', JSON.stringify(categories)); } catch(e){} }, [categories]);
+  useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch(e){} }, [products]);
+  useEffect(() => { try { localStorage.setItem('geostore_banners', JSON.stringify(banners)); } catch(e){} }, [banners]);
+  useEffect(() => { try { localStorage.setItem('geostore_promos', JSON.stringify(promoSlots)); } catch(e){} }, [promoSlots]);
+  useEffect(() => { try { localStorage.setItem('geostore_coupons', JSON.stringify(coupons)); } catch(e){} }, [coupons]);
+  useEffect(() => { try { localStorage.setItem('geostore_sections', JSON.stringify(sections)); } catch(e){} }, [sections]);
+  useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
+  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
 
   const formatPrice = (priceInGEL) => {
     if (currency === 'USD') {
@@ -559,7 +565,7 @@ export default function App() {
       setCurrentUser(newUser);
 
       if (authForm.remember) {
-        localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true }));
+        try { localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true })); } catch(e){}
       } else {
         localStorage.removeItem('geostore_user_remembered');
       }
@@ -573,7 +579,7 @@ export default function App() {
         setCurrentUser(found);
 
         if (authForm.remember) {
-          localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true }));
+          try { localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true })); } catch(e){}
         } else {
           localStorage.removeItem('geostore_user_remembered');
         }
@@ -595,7 +601,7 @@ export default function App() {
 
       if (adminLoginForm.remember) {
         localStorage.setItem('geostore_admin_remember', 'true');
-        localStorage.setItem('geostore_admin_remember_creds', JSON.stringify(adminLoginForm));
+        try { localStorage.setItem('geostore_admin_remember_creds', JSON.stringify(adminLoginForm)); } catch(e){}
       } else {
         localStorage.removeItem('geostore_admin_remember');
         localStorage.removeItem('geostore_admin_remember_creds');
@@ -1063,7 +1069,7 @@ export default function App() {
                     <div key={o.id} className="p-3 bg-slate-900 rounded-xl flex justify-between items-center">
                       <div>
                         <p className="font-bold text-amber-400">#{o.id} ({o.date}) - <span className="text-emerald-400">{o.status}</span></p>
-                        <p className="text-slate-400">{o.items.map(i => i.name).join(', ')}</p>
+                        <p className="text-slate-400">{o.items?.map(i => i.name).join(', ')}</p>
                       </div>
                       <span className="font-black text-white">{o.totalGEL} ₾</span>
                     </div>
@@ -1110,7 +1116,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= ADMIN PANEL (11 TABS) ================= */}
+        {/* ================= ADMIN PANEL ================= */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
@@ -1850,7 +1856,7 @@ export default function App() {
                   e.preventDefault();
                   if(!clientNameInput.trim()) return;
                   setChatClientName(clientNameInput.trim());
-                  localStorage.setItem('geostore_chat_client_name', clientNameInput.trim());
+                  try { localStorage.setItem('geostore_chat_client_name', clientNameInput.trim()); } catch(e){}
                   showToast('✅ სახელი დაფიქსირდა');
                 }} className="w-full space-y-2">
                   <input 
