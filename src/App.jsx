@@ -105,6 +105,22 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
+  // Site Settings (CMS for Admin Panel)
+  const [siteSettings, setSiteSettings] = useState(() => {
+    const saved = localStorage.getItem('geostore_site_settings');
+    return saved ? JSON.parse(saved) : {
+      storeName: 'GEOSTORE',
+      topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია',
+      supportPhone: '+995 32 200 00 00',
+      heroTitle: 'ინოვაციური ტექნიკა საუკეთესო ფასად GEOSTORE-ში',
+      heroSubtitle: 'მიიღე 20%-მდე ფასდაკლება შერჩეულ Apple-ის პროდუქციაზე!'
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings));
+  }, [siteSettings]);
+
   // ადმინის ავტორიზაცია და Remember Me
   const [adminAuth, setAdminAuth] = useState(() => {
     const saved = localStorage.getItem('geostore_admin_auth');
@@ -483,7 +499,7 @@ export default function App() {
         <div className="bg-gradient-to-r from-red-600 via-amber-600 to-amber-500 text-white text-[10px] md:text-xs py-1.5 px-3 font-medium flex justify-between items-center">
           <div className="flex items-center gap-1.5 truncate">
             <span>🇬🇪</span>
-            <span className="truncate">GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია</span>
+            <span className="truncate">{siteSettings.topBarText}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button onClick={() => setActiveTab('policy')} className="hover:underline font-bold text-[11px] mr-2">წესები და პოლიტიკა</button>
@@ -499,10 +515,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2 md:gap-4 w-full">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('store')}>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-red-600 flex items-center justify-center shadow-lg shadow-amber-500/20 font-black text-lg md:text-xl text-slate-950">
-              G
+              {siteSettings.storeName ? siteSettings.storeName.charAt(0) : 'G'}
             </div>
             <span className="text-xl md:text-2xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-amber-200 to-white bg-clip-text text-transparent">
-              GEOSTORE
+              {siteSettings.storeName}
             </span>
           </div>
 
@@ -593,10 +609,10 @@ export default function App() {
                           🔥 სპეც შეთავაზება
                         </span>
                         <h1 className="text-2xl md:text-5xl font-black text-white leading-tight">
-                          {banners[0]?.title || 'ინოვაციური ტექნიკა საუკეთესო ფასად'}
+                          {siteSettings.heroTitle}
                         </h1>
                         <p className="text-slate-400 text-xs md:text-base">
-                          {banners[0]?.subtitle || 'ოფიციალური გარანტია, სწრაფი მიწოდება და 0% განვადება.'}
+                          {siteSettings.heroSubtitle}
                         </p>
                         <a href="#products" className="inline-flex items-center gap-2 bg-amber-500 text-slate-950 font-extrabold px-5 py-2.5 rounded-2xl shadow-lg transition text-xs md:text-sm">
                           <span>{banners[0]?.buttonText || 'შეიძინე ახლავე'}</span>
@@ -760,7 +776,7 @@ export default function App() {
             <div className="space-y-4 text-slate-300">
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">1. ზოგადი დებულებები</h3>
-                <p>წინამდებარე წესები და პოლიტიკა არეგულირებს GEOSTORE-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს. საიტზე რეგისტრაციით ან შეკვეთის გაფორმებით თქვენ აცხადებთ თანხმობას აღნიშნულ პირობებზე.</p>
+                <p>წინამდებარე წესები და პოლიტიკა არეგულირებს {siteSettings.storeName}-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს. საიტზე რეგისტრაციით ან შეკვეთის გაფორმებით თქვენ აცხადებთ თანხმობას აღნიშნულ პირობებზე.</p>
               </div>
 
               <div>
@@ -775,7 +791,7 @@ export default function App() {
 
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">4. კონფიდენციალურობა</h3>
-                <p>GEOSTORE იცავს მომხმარებლის პერსონალურ მონაცემებს და არ გადასცემს მათ მესამე პირებს, გარდა კანონით გათვალისწინებული შემთხვევებისა.</p>
+                <p>{siteSettings.storeName} იცავს მომხმარებლის პერსონალურ მონაცემებს და არ გადასცემს მათ მესამე პირებს, გარდა კანონით გათვალისწინებული შემთხვევებისა.</p>
               </div>
             </div>
 
@@ -821,7 +837,7 @@ export default function App() {
                   {orders.filter(o => o.userEmail === currentUser.email).map(o => (
                     <div key={o.id} className="p-3 bg-slate-900 rounded-xl flex justify-between items-center">
                       <div>
-                        <p className="font-bold text-amber-400">#{o.id} ({o.date})</p>
+                        <p className="font-bold text-amber-400">#{o.id} ({o.date}) - <span className="text-emerald-400">{o.status}</span></p>
                         <p className="text-slate-400">{o.items.map(i => i.name).join(', ')}</p>
                       </div>
                       <span className="font-black text-white">{o.totalGEL} ₾</span>
@@ -869,6 +885,7 @@ export default function App() {
           </div>
         )}
 
+        {/* ================= ADMIN TAB WITH FULL CONTROL & ORDER STATUS & CMS ================= */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
@@ -915,7 +932,8 @@ export default function App() {
                     { id: 'builder', label: '5. Page Builder' },
                     { id: 'crm', label: '6. CRM' },
                     { id: 'coupons', label: '7. პრომოები' },
-                    { id: 'security', label: '8. უსაფრთხოება' }
+                    { id: 'security', label: '8. უსაფრთხოება' },
+                    { id: 'cms', label: '9. საიტის რედაქტორი' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -1042,22 +1060,44 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 3. ORDERS WITH STATUS CHANGER */}
                 {adminActiveSubTab === 'orders' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-base md:text-lg text-white">შეკვეთების მართვა</h3>
+                      <h3 className="font-bold text-base md:text-lg text-white">შეკვეთების მართვა და სტატუსები</h3>
                       <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {orders.map(o => (
-                        <div key={o.id} className="bg-slate-900 p-3 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                        <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
                           <div>
-                            <span className="font-bold text-amber-400">#{o.id} ({o.date})</span>
-                            <p className="text-slate-300">{o.customerName} | 📞 {o.phone}</p>
+                            <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
+                            <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
+                            <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-white">{o.totalGEL} ₾</span>
-                            <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 px-3 py-1 rounded text-white font-bold">ინვოისი</button>
+                          
+                          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
+                              <select 
+                                value={o.status || 'ახალი'} 
+                                onChange={(e) => {
+                                  const updatedStatus = e.target.value;
+                                  setOrders(orders.map(ord => ord.id === o.id ? { ...ord, status: updatedStatus } : ord));
+                                  showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
+                                }}
+                                className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
+                              >
+                                <option value="ახალი">🟢 ახალი</option>
+                                <option value="მზადდება">🟡 მზადდება</option>
+                                <option value="გზაშია">🔵 გზაშია</option>
+                                <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
+                                <option value="გაუქმებულია">❌ გაუქმებულია</option>
+                              </select>
+                            </div>
+
+                            <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
+                            <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
                           </div>
                         </div>
                       ))}
@@ -1150,6 +1190,35 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 9. SITE CMS EDITOR (FULL SITE EDITING) */}
+                {adminActiveSubTab === 'cms' && (
+                  <div className="bg-slate-800 p-6 rounded-3xl max-w-xl space-y-4">
+                    <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Settings className="w-5 h-5 text-amber-400"/> საიტის სრული რედაქტორი (CMS)</h3>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      showToast('✅ საიტის მონაცემები წარმატებით განახლდა!');
+                    }} className="space-y-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-slate-400">მაღაზიის სათაური (ლოგო):</label>
+                        <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400">ზედა ზოლის ტექსტი (Header Ticker):</label>
+                        <input type="text" value={siteSettings.topBarText} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400">მთავარი ბანერის სათაური (Hero Title):</label>
+                        <input type="text" value={siteSettings.heroTitle} onChange={e => setSiteSettings({...siteSettings, heroTitle: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-slate-400">მთავარი ბანერის აღწერა (Hero Subtitle):</label>
+                        <textarea value={siteSettings.heroSubtitle} onChange={e => setSiteSettings({...siteSettings, heroSubtitle: e.target.value})} className="w-full bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none h-20" />
+                      </div>
+                      <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-xl text-xs">ცვლილებების შენახვა</button>
+                    </form>
+                  </div>
+                )}
+
               </div>
             )}
           </div>
@@ -1229,6 +1298,7 @@ export default function App() {
             </div>
             <p className="text-xs"><b>მყიდველი:</b> {activeInvoiceOrder.customerName} ({activeInvoiceOrder.phone})</p>
             <p className="text-xs"><b>მისამართი:</b> {activeInvoiceOrder.address}</p>
+            <p className="text-xs"><b>სტატუსი:</b> {activeInvoiceOrder.status}</p>
             <div className="text-sm font-bold text-amber-600">სულ: {activeInvoiceOrder.totalGEL} ₾</div>
             <button onClick={() => window.print()} className="w-full bg-slate-900 text-white py-2 rounded-xl text-xs font-bold">ბეჭდვა</button>
           </div>
@@ -1261,7 +1331,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Chat Input Area with File Picker */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
               <div className="flex gap-2 items-center">
                 <label className="p-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 cursor-pointer hover:bg-slate-700 transition" title="აირჩიეთ ფოტო">
@@ -1339,7 +1408,7 @@ export default function App() {
           <button onClick={() => setActiveTab('policy')} className="hover:text-amber-400 transition">წესები და პოლიტიკა</button>
           <button onClick={() => setActiveTab('store')} className="hover:text-amber-400 transition">მთავარი</button>
         </div>
-        <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
+        <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 md:hidden z-40 py-2.5 px-4 flex justify-around items-center">
