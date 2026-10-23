@@ -139,13 +139,35 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  // Safe Storage Loader Utility to prevent crashes from corrupted cache
+  // AUTO-VERSION CLEANER: Clears corrupted local storage automatically on version mismatch
+  useEffect(() => {
+    const CURRENT_VERSION = 'v2.6';
+    const savedVer = localStorage.getItem('geostore_app_version');
+    if (savedVer !== CURRENT_VERSION) {
+      // Clear potentially corrupted layout/settings keys without destroying everything
+      const keepKeys = ['geostore_admin_remember', 'geostore_admin_remember_creds'];
+      const preservedData = {};
+      keepKeys.forEach(k => {
+        try { preservedData[k] = localStorage.getItem(k); } catch(e){}
+      });
+      
+      localStorage.clear();
+
+      Object.keys(preservedData).forEach(k => {
+        if (preservedData[k]) {
+          try { localStorage.setItem(k, preservedData[k]); } catch(e){}
+        }
+      });
+
+      localStorage.setItem('geostore_app_version', CURRENT_VERSION);
+    }
+  }, []);
+
   const loadSafeStorage = (key, fallback) => {
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : fallback;
     } catch (e) {
-      console.warn("Storage error for key:", key, e);
       localStorage.removeItem(key);
       return fallback;
     }
