@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
@@ -141,11 +141,10 @@ export default function App() {
 
   // AUTO-VERSION CLEANER: Clears corrupted local storage automatically on version mismatch
   useEffect(() => {
-    const CURRENT_VERSION = 'v2.6';
+    const CURRENT_VERSION = 'v2.7';
     const savedVer = localStorage.getItem('geostore_app_version');
     if (savedVer !== CURRENT_VERSION) {
-      // Clear potentially corrupted layout/settings keys without destroying everything
-      const keepKeys = ['geostore_admin_remember', 'geostore_admin_remember_creds'];
+      const keepKeys = ['geostore_admin_remember', 'geostore_admin_remember_creds', 'geostore_visitors_count'];
       const preservedData = {};
       keepKeys.forEach(k => {
         try { preservedData[k] = localStorage.getItem(k); } catch(e){}
@@ -162,6 +161,23 @@ export default function App() {
       localStorage.setItem('geostore_app_version', CURRENT_VERSION);
     }
   }, []);
+
+  // Real Visitor Tracker
+  const [visitorCount, setVisitorCount] = useState(() => {
+    try {
+      const current = Number(localStorage.getItem('geostore_visitors_count') || 1);
+      const isSessionTracked = sessionStorage.getItem('geostore_session_tracked');
+      if (!isSessionTracked) {
+        const updated = current + 1;
+        localStorage.setItem('geostore_visitors_count', updated.toString());
+        sessionStorage.setItem('geostore_session_tracked', 'true');
+        return updated;
+      }
+      return current;
+    } catch {
+      return 1;
+    }
+  });
 
   const loadSafeStorage = (key, fallback) => {
     try {
@@ -226,7 +242,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
-  const [adminActiveSubTab, setAdminActiveSubTab] = useState('orders');
+  const [adminActiveSubTab, setAdminActiveSubTab] = useState('analytics');
 
   // Product Editing State
   const [editingProductId, setEditingProductId] = useState(null);
@@ -369,6 +385,38 @@ export default function App() {
   const discountAmountGEL = useMemo(() => appliedCoupon ? (cartSubtotalGEL * appliedCoupon.discountPercent) / 100 : 0, [cartSubtotalGEL, appliedCoupon]);
   const cartTotalGEL = cartSubtotalGEL - discountAmountGEL;
 
+  // Real Analytics Aggregation
+  const salesAnalytics = useMemo(() => {
+    const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
+    const totalRevenueGEL = completedOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
+    
+    let totalItemsSold = 0;
+    const soldItemsMap = {};
+
+    completedOrders.forEach(o => {
+      (o.items || []).forEach(item => {
+        const qty = Number(item.quantity) || 1;
+        totalItemsSold += qty;
+        if (!soldItemsMap[item.name]) {
+          soldItemsMap[item.name] = { name: item.name, count: 0, totalRevenue: 0 };
+        }
+        soldItemsMap[item.name].count += qty;
+        soldItemsMap[item.name].totalRevenue += (Number(item.price) || 0) * qty;
+      });
+    });
+
+    const topProducts = Object.values(soldItemsMap).sort((a, b) => b.count - a.count);
+
+    return {
+      completedOrdersCount: completedOrders.length,
+      totalOrdersCount: orders.length,
+      totalRevenueGEL,
+      totalItemsSold,
+      topProducts,
+      averageOrderValue: completedOrders.length > 0 ? (totalRevenueGEL / completedOrders.length).toFixed(2) : 0
+    };
+  }, [orders]);
+
   const addToCart = (product, quantity = 1) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -419,7 +467,7 @@ export default function App() {
     setCouponInput('');
   };
 
-  // 📦 Save Order to Supabase REST
+  // 📦 Save Order to Supabase REST & Update Local Stock
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       alert('⚠️ გთხოვთ შეავსოთ ყველა ველი');
@@ -451,6 +499,18 @@ export default function App() {
         alert("❌ Supabase შეკვეთის შეცდომა: " + errData);
         return;
       }
+
+      // Auto update stock locally
+      setProducts(prevProducts => {
+        return prevProducts.map(p => {
+          const orderedItem = itemsToOrder.find(item => item.id === p.id);
+          if (orderedItem) {
+            const newStock = Math.max(0, p.stock - (orderedItem.quantity || 1));
+            return { ...p, stock: newStock };
+          }
+          return p;
+        });
+      });
 
       sendTelegramNotification(
         `🚨 *ახალი შეკვეთა გაფორმდა!* (#${orderId})\n\n` +
@@ -872,16 +932,23 @@ export default function App() {
                                   <Eye className="w-3 h-3 inline mr-1" /> სწრაფი ნახვა
                                 </button>
                               </div>
-                              <span className="text-[10px] text-amber-400 font-semibold uppercase">{prod.category}</span>
+                              
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-[10px] text-amber-400 font-semibold uppercase">{prod.category}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${prod.stock < 3 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                  {prod.stock > 0 ? `მარაგშია: ${prod.stock} ც.` : 'ამოიწურა'}
+                                </span>
+                              </div>
+
                               <h3 className="font-bold text-white text-sm md:text-base mb-2 line-clamp-2">{prod.name}</h3>
                             </div>
                             <div className="pt-3 border-t border-slate-700/50 space-y-3">
                               <div className="text-lg md:text-xl font-black text-amber-400">{formatPrice(prod.priceGEL)}</div>
                               <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => addToCart(prod)} className="py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-slate-950">
-                                  კალათაში
+                                <button disabled={prod.stock <= 0} onClick={() => addToCart(prod)} className={`py-2 rounded-xl text-xs font-extrabold ${prod.stock > 0 ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}>
+                                  {prod.stock > 0 ? 'კალათაში' : 'არ არის'}
                                 </button>
-                                <button onClick={() => { setQuickBuyProduct(prod); setIsCheckoutOpen(true); }} className="py-2 rounded-xl text-xs font-extrabold bg-slate-900 border border-amber-500/40 text-amber-300">
+                                <button disabled={prod.stock <= 0} onClick={() => { setQuickBuyProduct(prod); setIsCheckoutOpen(true); }} className={`py-2 rounded-xl text-xs font-extrabold border ${prod.stock > 0 ? 'bg-slate-900 border-amber-500/40 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'}`}>
                                   1-Click ყიდვა
                                 </button>
                               </div>
@@ -1092,10 +1159,11 @@ export default function App() {
                 <div className="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-2xl p-2 overflow-x-auto scrollbar-none">
                   <div className="flex gap-2">
                     {[
+                      { id: 'analytics', label: '📊 რეალური სტატისტიკა' },
                       { id: 'orders', label: '📦 შეკვეთები' },
                       { id: 'adminChat', label: '💬 მომხმარებელთა მესიჯები' },
                       { id: 'categories', label: 'კატეგორიები' },
-                      { id: 'products', label: 'პროდუქცია' },
+                      { id: 'products', label: 'პროდუქცია & მარაგები' },
                       { id: 'banners', label: 'ბანერები' },
                       { id: 'builder', label: 'Page Builder' },
                       { id: 'crm', label: 'CRM' },
@@ -1122,6 +1190,74 @@ export default function App() {
                     <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold">გასვლა</button>
                   </div>
                 </div>
+
+                {/* 0. REAL ANALYTICAL DASHBOARD */}
+                {adminActiveSubTab === 'analytics' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex flex-col justify-between">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>💰 რეალური შემოსავალი</span>
+                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <div className="text-2xl font-black text-emerald-400 mt-2">{salesAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</div>
+                        <p className="text-[10px] text-slate-500 mt-1">მხოლოდ ჩაბარებული შეკვეთებიდან</p>
+                      </div>
+
+                      <div className="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex flex-col justify-between">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>📦 გაყიდული ნივთები</span>
+                          <PackageCheck className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div className="text-2xl font-black text-amber-400 mt-2">{salesAnalytics.totalItemsSold} ცალი</div>
+                        <p className="text-[10px] text-slate-500 mt-1">სულ გაყიდული პროდუქცია</p>
+                      </div>
+
+                      <div className="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex flex-col justify-between">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>👥 რეალური ვიზიტორები</span>
+                          <Globe className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <div className="text-2xl font-black text-blue-400 mt-2">{visitorCount}</div>
+                        <p className="text-[10px] text-slate-500 mt-1">საიტზე შემოსვლების თვლა</p>
+                      </div>
+
+                      <div className="bg-slate-800 p-5 rounded-3xl border border-slate-700 flex flex-col justify-between">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>📊 საშუალო ჩეკი</span>
+                          <BarChart2 className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <div className="text-2xl font-black text-purple-400 mt-2">{salesAnalytics.averageOrderValue} ₾</div>
+                        <p className="text-[10px] text-slate-500 mt-1">თითო შეკვეთის საშუალო ფასი</p>
+                      </div>
+                    </div>
+
+                    {/* Top Selling Products List */}
+                    <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-4">
+                      <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-400" /> რეალურად ყველაზე გაყიდვადი ნივთები (Top Sales)
+                      </h3>
+                      {salesAnalytics.topProducts.length === 0 ? (
+                        <p className="text-slate-500 text-xs">ჯერ არ არის დასრულებული შეკვეთები.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {salesAnalytics.topProducts.map((prod, idx) => (
+                            <div key={idx} className="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                              <div className="flex items-center gap-3">
+                                <span className="font-black text-amber-400 text-sm">#{idx + 1}</span>
+                                <span className="font-bold text-white">{prod.name}</span>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <span className="bg-amber-500/20 text-amber-300 font-bold px-3 py-1 rounded-xl">გაყიდულია: {prod.count} ცალი</span>
+                                <span className="font-black text-emerald-400">{prod.totalRevenue} ₾</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* 1. ORDERS - SEPARATED ACTIVE AND COMPLETED */}
                 {adminActiveSubTab === 'orders' && (
@@ -1415,7 +1551,7 @@ export default function App() {
 
                         <div className="grid grid-cols-2 gap-2">
                           <input type="number" name="priceGEL" required placeholder="ფასი (₾) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
-                          <input type="number" name="stock" required placeholder="მარაგი *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                          <input type="number" name="stock" required placeholder="საწყისი მარაგი *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         </div>
 
                         <div className="md:col-span-2 flex flex-col gap-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
@@ -1434,7 +1570,7 @@ export default function App() {
                     </div>
 
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-3">
-                      <h3 className="font-bold text-base md:text-lg text-white">არსებული პროდუქტები ({products.length})</h3>
+                      <h3 className="font-bold text-base md:text-lg text-white">არსებული პროდუქტები და მარაგები ({products.length})</h3>
                       <div className="space-y-3">
                         {products.map(p => (
                           <div key={p.id} className="bg-slate-900 p-3.5 rounded-2xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
@@ -1442,11 +1578,17 @@ export default function App() {
                               <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0" />
                               <div>
                                 <span className="font-bold text-white text-sm">{p.name}</span>
-                                <p className="text-amber-400 font-semibold">{p.priceGEL} ₾ | კატეგორია: {p.category} | მარაგი: {p.stock}</p>
+                                <p className="text-amber-400 font-semibold">{p.priceGEL} ₾ | კატეგორია: {p.category}</p>
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                              <div className="text-right">
+                                <span className={`font-extrabold px-2.5 py-1 rounded-xl border ${p.stock < 3 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                                  მარაგი: {p.stock} ც. {p.stock < 3 && '⚠️'}
+                                </span>
+                              </div>
+
                               <button 
                                 onClick={() => {
                                   setEditingProductId(p.id);
@@ -1684,7 +1826,7 @@ export default function App() {
             <h3 className="text-lg font-bold text-white">{selectedProductQuickView.name}</h3>
             <p className="text-slate-400">{selectedProductQuickView.description}</p>
             <div className="text-xl font-black text-amber-400">{formatPrice(selectedProductQuickView.priceGEL)}</div>
-            <button onClick={() => { addToCart(selectedProductQuickView); setSelectedProductQuickView(null); }} className="w-full bg-amber-500 text-slate-950 py-3 rounded-xl font-bold">კალათაში დამატება</button>
+            <button disabled={selectedProductQuickView.stock <= 0} onClick={() => { addToCart(selectedProductQuickView); setSelectedProductQuickView(null); }} className="w-full bg-amber-500 text-slate-950 py-3 rounded-xl font-bold">კალათაში დამატება</button>
           </div>
         </div>
       )}
