@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen
 } from 'lucide-react';
 
 // --- INITIAL MOCK DATA ---
@@ -158,7 +158,7 @@ export default function App() {
   });
 
   // App UI States
-  const [activeTab, setActiveTab] = useState('store'); // 'store' | 'wishlist' | 'cart' | 'admin' | 'profile'
+  const [activeTab, setActiveTab] = useState('store'); // 'store' | 'wishlist' | 'cart' | 'admin' | 'profile' | 'policy'
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
@@ -430,7 +430,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-amber-500 selection:text-slate-900">
+    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-amber-500 selection:text-slate-900 flex flex-col justify-between">
       
       {/* Toast Alert */}
       {toastMessage && (
@@ -448,6 +448,7 @@ export default function App() {
             <span className="truncate">GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
+            <button onClick={() => setActiveTab('policy')} className="hover:underline font-bold text-[11px] mr-2">წესები და პოლიტიკა</button>
             <button 
               onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')}
               className="bg-slate-950/40 hover:bg-slate-950/70 px-2 py-0.5 rounded-full border border-white/20 transition flex items-center gap-1 font-bold text-amber-300 text-[10px]"
@@ -458,7 +459,7 @@ export default function App() {
         </div>
 
         {/* Main Header Content */}
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2 md:gap-4">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2 md:gap-4 w-full">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('store')}>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-red-600 flex items-center justify-center shadow-lg shadow-amber-500/20 font-black text-lg md:text-xl text-slate-950">
               G
@@ -544,7 +545,7 @@ export default function App() {
       </header>
 
       {/* --- MAIN CONTENT SWITCHER --- */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1">
         
         {/* ================= STORE TAB ================= */}
         {activeTab === 'store' && (
@@ -716,6 +717,42 @@ export default function App() {
           </div>
         )}
 
+        {/* ================= POLICY TAB ================= */}
+        {activeTab === 'policy' && (
+          <div className="max-w-3xl mx-auto bg-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-10 space-y-6 text-xs md:text-sm leading-relaxed">
+            <div className="flex items-center gap-3 border-b border-slate-700 pb-4">
+              <BookOpen className="w-7 h-7 text-amber-400" />
+              <h2 className="text-xl md:text-2xl font-black text-white">წესები და პოლიტიკა</h2>
+            </div>
+            
+            <div className="space-y-4 text-slate-300">
+              <div>
+                <h3 className="font-bold text-amber-400 text-sm mb-1">1. ზოგადი დებულებები</h3>
+                <p>წინამდებარე წესები და პოლიტიკა არეგულირებს GEOSTORE-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს. საიტზე რეგისტრაციით ან შეკვეთის გაფორმებით თქვენ აცხადებთ თანხმობას აღნიშნულ პირობებზე.</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-amber-400 text-sm mb-1">2. შეკვეთა და მიწოდება</h3>
+                <p>შეკვეთის განთავსების შემდეგ ჩვენი მენეჯერი დაგიკავშირდებათ დეტალების დასაზუსტებლად. მიწოდება ხორციელდება თბილისში 24 საათის განმავლობაში, ხოლო რეგიონებში 48 საათში. 100₾-ზე მეტი ღირებულების შეკვეთებზე მიწოდება უფასოა.</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-amber-400 text-sm mb-1">3. გარანტია და დაბრუნება</h3>
+                <p>ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ ვადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-amber-400 text-sm mb-1">4. კონფიდენციალურობა</h3>
+                <p>GEOSTORE იცავს მომხმარებლის პერსონალურ მონაცემებს და არ გადასცემს მათ მესამე პირებს, გარდა კანონით გათვალისწინებული შემთხვევებისა.</p>
+              </div>
+            </div>
+
+            <button onClick={() => setActiveTab('store')} className="bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs">
+              &larr; მთავარ გვერდზე დაბრუნება
+            </button>
+          </div>
+        )}
+
         {/* ================= WISHLIST TAB ================= */}
         {activeTab === 'wishlist' && (
           <div className="space-y-6">
@@ -807,7 +844,6 @@ export default function App() {
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
-              /* LOGIN FORM WITHOUT PUBLIC PASSWORD TEXT */
               <div className="max-w-md mx-auto bg-slate-800 border border-slate-700 rounded-3xl p-6 md:p-8 space-y-4 text-center">
                 <Shield className="w-10 h-10 text-amber-400 mx-auto" />
                 <h2 className="text-lg font-bold text-white">ადმინისტრატორის შესვლა</h2>
@@ -831,9 +867,7 @@ export default function App() {
                 </form>
               </div>
             ) : (
-              /* ADMIN DASHBOARD WITH ALL 8 SUB-TABS */
               <div className="space-y-6">
-                {/* Admin Header Sub-Nav */}
                 <div className="bg-slate-800 border border-slate-700 rounded-2xl p-2 flex gap-2 overflow-x-auto scrollbar-none">
                   {[
                     { id: 'categories', label: '1. კატეგორიები' },
@@ -858,7 +892,6 @@ export default function App() {
                   <button onClick={() => setAdminLoggedIn(false)} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto shrink-0">გასვლა</button>
                 </div>
 
-                {/* 1. CATEGORIES */}
                 {adminActiveSubTab === 'categories' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white">კატეგორიების მართვა</h3>
@@ -889,7 +922,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. PRODUCTS */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
@@ -940,7 +972,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 3. ORDERS */}
                 {adminActiveSubTab === 'orders' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
@@ -964,7 +995,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 4. BANNERS */}
                 {adminActiveSubTab === 'banners' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white">მთავარი ბანერის რედაქტირება</h3>
@@ -976,7 +1006,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 5. PAGE BUILDER */}
                 {adminActiveSubTab === 'builder' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-3 max-w-xl">
                     <h3 className="font-bold text-base md:text-lg text-white">🎨 Page Builder (სექციები)</h3>
@@ -993,7 +1022,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 6. CRM */}
                 {adminActiveSubTab === 'crm' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-3">
                     <h3 className="font-bold text-base md:text-lg text-white">👥 მომხმარებლები ({usersList.length})</h3>
@@ -1013,7 +1041,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 7. COUPONS */}
                 {adminActiveSubTab === 'coupons' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white">პრომო კოდები</h3>
@@ -1041,7 +1068,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 8. SECURITY */}
                 {adminActiveSubTab === 'security' && (
                   <div className="bg-slate-800 p-6 rounded-3xl max-w-md space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Key className="w-5 h-5 text-amber-400"/> ადმინის პაროლის შეცვლა</h3>
@@ -1157,6 +1183,15 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* FOOTER */}
+      <footer className="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12 space-y-2">
+        <div className="flex justify-center gap-4">
+          <button onClick={() => setActiveTab('policy')} className="hover:text-amber-400 transition">წესები და პოლიტიკა</button>
+          <button onClick={() => setActiveTab('store')} className="hover:text-amber-400 transition">მთავარი</button>
+        </div>
+        <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
+      </footer>
 
       {/* MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 md:hidden z-40 py-2.5 px-4 flex justify-around items-center">
