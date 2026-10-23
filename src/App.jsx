@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Search, Plus, Minus, Lock, CheckCircle, 
   Package, Eye, X, User, LogOut, Phone, Mail, 
-  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone, DollarSign, AlertTriangle, Image as ImageIcon, Layout, Tag, ArrowUp, ArrowDown, EyeOff, Printer, Truck, Percent
+  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone, DollarSign, AlertTriangle, Image as ImageIcon, Layout, Tag, ArrowUp, ArrowDown, Printer, Truck, Percent, Users, Settings
 } from 'lucide-react';
 
 const CATEGORIES_KA = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -74,18 +74,21 @@ export default function App() {
     ];
   });
 
+  useEffect(() => {
+    localStorage.setItem('geostore_users_list', JSON.stringify(usersList));
+  }, [usersList]);
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('geostore_current_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [banners, setBanners] = useState(() => {
+  const [banners] = useState(() => {
     const saved = localStorage.getItem('geostore_banners');
     return saved ? JSON.parse(saved) : [{ id: 1, title: "გრანდიოზული ფასდაკლება 2026!", subtitle: "ისარგებლეთ 10%-იანი ფასდაკლებით კოდით: GEO2026", image: "" }];
   });
   const [currentBannerIndex] = useState(0);
 
-  // პრომოკოდების მართვის სისტემა
   const [promoCodes, setPromoCodes] = useState(() => {
     const saved = localStorage.getItem('geostore_promos');
     return saved ? JSON.parse(saved) : [{ id: 1, code: "GEO2026", discount: 10 }];
@@ -96,6 +99,16 @@ export default function App() {
   }, [promoCodes]);
 
   const [newPromo, setNewPromo] = useState({ code: "", discount: "" });
+
+  // გლობალური პარამეტრები (პოლიტიკა და ა.შ.)
+  const [policyText, setPolicyText] = useState(() => {
+    const saved = localStorage.getItem('geostore_policy_text');
+    return saved || "მიწოდება ხორციელდება თბილისში 24 საათში (5₾), ხოლო რეგიონებში 48 საათში (10₾). 100₾-ზე მეტი შეკვეთისას მიწოდება უფასოა.";
+  });
+
+  useEffect(() => {
+    localStorage.setItem('geostore_policy_text', policyText);
+  }, [policyText]);
 
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("ყველა");
@@ -116,9 +129,8 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminPin, setAdminPin] = useState("");
   const [adminError, setAdminError] = useState("");
-  const [adminSubTab, setAdminSubTab] = useState("promos"); // მარკეტინგი და პრომოკოდები
+  const [adminSubTab, setAdminSubTab] = useState("crm"); // CRM პრიორიტეტი
   
-  const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", stock: "" });
   const [orderForm, setOrderForm] = useState({ name: "", phone: "", address: "", deliveryZone: "tbilisi" });
   const [orderSuccess, setOrderSuccess] = useState(null);
 
@@ -131,6 +143,13 @@ export default function App() {
     e.preventDefault();
     if (!authForm.email || !authForm.password) return;
     const userData = { id: Date.now(), name: authForm.name || "მომხმარებელი", email: authForm.email, phone: "+995 500 00 00 00", date: new Date().toISOString().split('T')[0] };
+    
+    setUsersList(prev => {
+      const exists = prev.some(u => u.email === userData.email);
+      if (!exists) return [userData, ...prev];
+      return prev;
+    });
+
     setCurrentUser(userData);
     setIsAuthOpen(false);
     showToast("ავტორიზაცია წარმატებულია!");
@@ -197,16 +216,10 @@ export default function App() {
     setIsCheckoutOpen(false);
   };
 
-  const handleAddPromoCode = (e) => {
-    e.preventDefault();
-    if (!newPromo.code || !newPromo.discount) return;
-    setPromoCodes([...promoCodes, { id: Date.now(), code: newPromo.code.toUpperCase(), discount: Number(newPromo.discount) }]);
-    setNewPromo({ code: "", discount: "" });
-    showToast("პრომოკოდი წარმატებით შეიქმნა!");
-  };
-
-  const deletePromoCode = (id) => {
-    setPromoCodes(promoCodes.filter(p => p.id !== id));
+  const deleteUser = (id) => {
+    if (confirm("ნამდვილად გსურთ მომხმარებლის წაშლა?")) {
+      setUsersList(usersList.filter(u => u.id !== id));
+    }
   };
 
   return (
@@ -226,6 +239,16 @@ export default function App() {
           </button>
 
           <div className="flex items-center gap-2">
+            {currentUser ? (
+              <button onClick={() => setActiveTab("profile")} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-gray-100">
+                <User className="w-4 h-4" /> {currentUser.name}
+              </button>
+            ) : (
+              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-gray-100">
+                <User className="w-4 h-4" /> შესვლა
+              </button>
+            )}
+
             <button onClick={() => setActiveTab("admin")} className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold ${activeTab === 'admin' ? 'bg-black text-white' : 'bg-gray-100'}`}>
               <Lock className="w-3.5 h-3.5" /> ადმინი
             </button>
@@ -243,6 +266,24 @@ export default function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
 
+        {activeTab === 'profile' && currentUser && (
+          <div className="max-w-2xl mx-auto bg-white p-8 rounded-3xl border shadow-sm space-y-4">
+            <h2 className="text-2xl font-black">მომხმარებლის პროფილი</h2>
+            <p className="text-sm"><b>სახელი:</b> {currentUser.name}</p>
+            <p className="text-sm"><b>ელ-ფოსტა:</b> {currentUser.email}</p>
+            <p className="text-sm"><b>ტელეფონი:</b> {currentUser.phone}</p>
+            <button onClick={() => { setCurrentUser(null); setActiveTab("shop"); }} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold">გასვლა</button>
+          </div>
+        )}
+
+        {activeTab === 'policy' && (
+          <div className="bg-white rounded-3xl p-8 border max-w-3xl mx-auto space-y-4">
+            <h2 className="text-2xl font-black">პოლიტიკა და პირობები</h2>
+            <p className="text-sm text-gray-700 whitespace-pre-line">{policyText}</p>
+            <button onClick={() => setActiveTab("shop")} className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-bold">უკან</button>
+          </div>
+        )}
+
         {activeTab === 'admin' && (
           <div className="space-y-8">
             {!isAdminLoggedIn ? (
@@ -257,13 +298,16 @@ export default function App() {
             ) : (
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
-                  <h2 className="text-3xl font-black">მარკეტინგი & CRM ადმინ პანელი</h2>
+                  <h2 className="text-3xl font-black">CRM & ადმინ პანელი</h2>
                   <button onClick={() => setIsAdminLoggedIn(false)} className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold">გასვლა</button>
                 </div>
 
                 <div className="flex gap-2 border-b pb-3 overflow-x-auto">
-                  <button onClick={() => setAdminSubTab('promos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'promos' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    🎟️ პრომოკოდები & ფასდაკლებები
+                  <button onClick={() => setAdminSubTab('crm')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'crm' ? 'bg-black text-white' : 'bg-gray-100'}`}>
+                    👥 მომხმარებლები (CRM) ({usersList.length})
+                  </button>
+                  <button onClick={() => setAdminSubTab('settings')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'settings' ? 'bg-black text-white' : 'bg-gray-100'}`}>
+                    ⚙️ პოლიტიკა & პარამეტრები
                   </button>
                   <button onClick={() => setAdminSubTab('builder')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'builder' ? 'bg-black text-white' : 'bg-gray-100'}`}>
                     🎨 Page Builder
@@ -273,31 +317,32 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* მარკეტინგი და პრომოკოდები */}
-                {adminSubTab === 'promos' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                      <h3 className="text-lg font-bold">+ ახალი პრომოკოდის შექმნა</h3>
-                      <form onSubmit={handleAddPromoCode} className="flex gap-2">
-                        <input type="text" placeholder="კოდი (მაგ: SALE50)" value={newPromo.code} onChange={e => setNewPromo({...newPromo, code: e.target.value})} className="flex-1 bg-gray-100 border rounded-xl p-3 text-sm outline-none uppercase font-bold" />
-                        <input type="number" placeholder="ფასდაკლება %" value={newPromo.discount} onChange={e => setNewPromo({...newPromo, discount: e.target.value})} className="w-32 bg-gray-100 border rounded-xl p-3 text-sm outline-none font-bold" />
-                        <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-sm">დამატება</button>
-                      </form>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                      <h3 className="text-lg font-bold">აქტიური პრომოკოდები</h3>
-                      <div className="space-y-3">
-                        {promoCodes.map(pr => (
-                          <div key={pr.id} className="border p-4 rounded-2xl bg-gray-50 flex justify-between items-center">
-                            <div>
-                              <h4 className="font-bold text-sm flex items-center gap-1"><Percent className="w-4 h-4 text-indigo-600"/> {pr.code}</h4>
-                              <p className="text-xs text-indigo-600 font-bold">{pr.discount}% ფასდაკლება</p>
-                            </div>
-                            <button onClick={() => deletePromoCode(pr.id)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">წაშლა</button>
+                {/* მომხმარებელთა CRM */}
+                {adminSubTab === 'crm' && (
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                    <h3 className="text-xl font-bold">რეგისტრირებული მომხმარებლები ({usersList.length})</h3>
+                    <div className="space-y-3">
+                      {usersList.map(u => (
+                        <div key={u.id} className="border p-4 rounded-2xl bg-gray-50 flex justify-between items-center">
+                          <div>
+                            <h4 className="font-bold text-sm">{u.name}</h4>
+                            <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone} | თარიღი: {u.date}</p>
                           </div>
-                        ))}
-                      </div>
+                          <button onClick={() => deleteUser(u.id)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">წაშლა</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* პოლიტიკისა და ზოგადი პარამეტრების მართვა */}
+                {adminSubTab === 'settings' && (
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                    <h3 className="text-xl font-bold">⚙️ საიტის პოლიტიკისა და პირობების მართვა</h3>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-500">მიწოდების და დაბრუნების პოლიტიკის ტექსტი:</label>
+                      <textarea value={policyText} onChange={e => setPolicyText(e.target.value)} className="w-full bg-gray-100 border rounded-2xl p-4 text-sm outline-none h-32" />
+                      <button onClick={() => showToast("პოლიტიკა წარმატებით განახლდა!")} className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-bold">შენახვა</button>
                     </div>
                   </div>
                 )}
@@ -399,6 +444,27 @@ export default function App() {
         )}
 
       </main>
+
+      {/* ავტორიზაციის / რეგისტრაციის მოდალი */}
+      {isAuthOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
+            <button onClick={() => setIsAuthOpen(false)} className="absolute top-4 right-4 text-gray-400">✕</button>
+            <h3 className="text-2xl font-bold text-center">{authMode === 'login' ? 'ავტორიზაცია' : 'რეგისტრაცია'}</h3>
+            <form onSubmit={handleAuthSubmit} className="space-y-3">
+              {authMode === 'register' && (
+                <input type="text" placeholder="სახელი და გვარი" value={authForm.name} onChange={e => setAuthForm({...authForm, name: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+              )}
+              <input type="email" required placeholder="ელ-ფოსტა" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+              <input type="password" required placeholder="პაროლი" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+              <button type="submit" className="w-full bg-black text-white py-3.5 rounded-2xl font-bold text-sm">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
+            </form>
+            <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} className="w-full text-xs font-bold text-indigo-600 mt-2">
+              {authMode === 'login' ? 'არ გაქვთ ანგარიში? დარეგისტრირდით' : 'უკვე გაქვთ ანგარიში? შესვლა'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* კალათის მოდალი */}
       {isCartOpen && (
