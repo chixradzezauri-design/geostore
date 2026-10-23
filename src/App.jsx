@@ -289,13 +289,13 @@ export default function App() {
     }
   });
 
-  // Orders State
+  // Orders State (მონაცემების სრული დატვირთვა localStorage-დან)
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_orders');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error(e);
@@ -326,7 +326,7 @@ export default function App() {
       const saved = localStorage.getItem('geostore_admin_chat_archive');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error(e);
@@ -343,15 +343,13 @@ export default function App() {
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
   const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
 
-  // Robust Cross-Device & Storage Synchronization
+  // სინქრონიზაციის ძლიერი მექანიზმი (LocalStorage & BroadcastChannel)
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'geostore_orders' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) {
-            setOrders(parsed);
-          }
+          if (Array.isArray(parsed)) setOrders(parsed);
         } catch (err) {
           console.error(err);
         }
@@ -359,9 +357,7 @@ export default function App() {
       if (e.key === 'geostore_admin_chat_archive' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) {
-            setAdminChatArchive(parsed);
-          }
+          if (Array.isArray(parsed)) setAdminChatArchive(parsed);
         } catch (err) {
           console.error(err);
         }
