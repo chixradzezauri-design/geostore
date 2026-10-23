@@ -37,19 +37,17 @@ const INITIAL_BANNERS = [
 export default function App() {
   const [lang, setLang] = useState("KA");
 
-  // რეალური ვიზიტორების სტატისტიკა localStorage-დან
+  // რეალური ვიზიტორების მრიცხველი
   const [analytics, setAnalytics] = useState(() => {
     const saved = localStorage.getItem('geostore_real_analytics');
     return saved ? JSON.parse(saved) : {
       totalVisits: 1,
       mobileVisits: window.innerWidth < 768 ? 1 : 0,
       desktopVisits: window.innerWidth >= 768 ? 1 : 0,
-      countries: { "საქართველო (თბილისი)": 1 }
     };
   });
 
   useEffect(() => {
-    // ყოველ ვიზიტზე (სესიის მიხედვით) ვზრდით რეალურ მრიცხველს
     if (!sessionStorage.getItem('geostore_counted_visit')) {
       sessionStorage.setItem('geostore_counted_visit', 'true');
       const isMob = window.innerWidth < 768;
@@ -76,7 +74,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // მომხმარებელთა ზუსტი სინქრონიზებული სია
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('geostore_users_list');
     return saved ? JSON.parse(saved) : [
@@ -95,7 +92,6 @@ export default function App() {
   });
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  // მცირე სარეკლამო ადგილები (Promo Slots)
   const [promoSlots, setPromoSlots] = useState(() => {
     const saved = localStorage.getItem('geostore_promo_slots');
     return saved ? JSON.parse(saved) : [
@@ -215,7 +211,6 @@ export default function App() {
       date: new Date().toISOString().split('T')[0]
     };
     
-    // მყისიერი სინქრონიზაცია მომხმარებელთა ბაზაში
     setUsersList(prev => {
       const exists = prev.some(u => u.email === userData.email);
       if (!exists) {
@@ -498,7 +493,6 @@ export default function App() {
     }
   };
 
-  // ბანერების მართვა და გადაადგილება
   const handleAddBanner = (e) => {
     e.preventDefault();
     if (!newBanner.title) return;
@@ -522,7 +516,6 @@ export default function App() {
     }
   };
 
-  // სარეკლამო ადგილების მართვა
   const handleAddSlot = (e) => {
     e.preventDefault();
     if (!newSlot.title) return;
@@ -580,7 +573,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ბანერების სლაიდერი ზემოთ */}
       <div className="bg-black text-white text-xs py-2.5 px-4 text-center font-medium flex justify-between items-center max-w-7xl mx-auto w-full">
         <span>✨ {banners[currentBannerIndex]?.subtitle || "უფასო მიწოდება 100₾-ის ზემოთ"}</span>
         <div className="flex gap-4 items-center">
@@ -867,7 +859,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* ბანერების მართვა და ვიზუალური გადაადგილება */}
                 {adminSubTab === 'banners' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
@@ -909,7 +900,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* მცირე სარეკლამო ადგილების (Promo Slots) მართვა */}
                 {adminSubTab === 'slots' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
@@ -1018,7 +1008,6 @@ export default function App() {
         {activeTab === 'shop' && (
           <div className="space-y-8">
             
-            {/* მთავარი ბანერი (მხარდაჭერილია სურათი და სათაური) */}
             <div className={`rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-xl flex flex-col md:flex-row justify-between items-center gap-6 ${banners[currentBannerIndex]?.image ? 'bg-cover bg-center text-white' : 'bg-black text-white'}`} style={banners[currentBannerIndex]?.image ? { backgroundImage: `url(${banners[currentBannerIndex].image})` } : {}}>
               <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
               <div className="relative z-10 max-w-xl space-y-3">
@@ -1049,7 +1038,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* მცირე სარეკლამო ადგილების გამოჩენა საიტზე */}
             {promoSlots.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {promoSlots.map(slot => (
