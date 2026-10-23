@@ -126,7 +126,7 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  // Site Settings (CMS for Admin Panel)
+  // Site Settings
   const [siteSettings, setSiteSettings] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_site_settings');
@@ -146,7 +146,7 @@ export default function App() {
     localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings));
   }, [siteSettings]);
 
-  // ადმინის ავტორიზაცია და Remember Me
+  // Admin Auth
   const [adminAuth, setAdminAuth] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_admin_auth');
@@ -241,7 +241,7 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
 
-  // Product Editing State in Admin Panel
+  // Product Editing State
   const [editingProductId, setEditingProductId] = useState(null);
   const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', priceGEL: 0, stock: 0, image: '', description: '' });
 
@@ -289,7 +289,7 @@ export default function App() {
     }
   });
 
-  // Orders State
+  // Orders State with robust cross-device synchronization
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_orders');
@@ -313,7 +313,7 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // --- CHAT STATES ---
+  // Chat States with synchronization
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
   const [clientNameInput, setClientNameInput] = useState('');
@@ -344,39 +344,73 @@ export default function App() {
   const [adminSelectedClient, setAdminSelectedClient] = useState(null);
   const [adminIndividualReply, setAdminIndividualReply] = useState('');
 
-  // Notifications popup for Admin
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
   const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
 
-  // Real-time synchronization across tabs/devices using BroadcastChannel & Storage Event
+  // Global Cross-Device & Storage Synchronization listener
   useEffect(() => {
-    const channel = new BroadcastChannel('geostore_sync_channel');
-
-    channel.onmessage = (event) => {
-      const { type, payload } = event.data;
-      if (type === 'NEW_ORDER') {
-        setOrders(prev => [payload, ...prev]);
-        setAdminNewOrderPopup(payload);
-      }
-      if (type === 'NEW_MESSAGE') {
-        setAdminChatArchive(prev => [...prev, payload]);
-        setAdminNewMessagePopup(payload);
-      }
-    };
-
-    const handleStorage = (e) => {
+    const handleStorageChange = (e) => {
       if (e.key === 'geostore_orders' && e.newValue) {
-        setOrders(JSON.parse(e.newValue));
+        try {
+          setOrders(JSON.parse(e.newValue));
+        } catch (err) {
+          console.error(err);
+        }
       }
       if (e.key === 'geostore_admin_chat_archive' && e.newValue) {
-        setAdminChatArchive(JSON.parse(e.newValue));
+        try {
+          setAdminChatArchive(JSON.parse(e.newValue));
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (e.key === 'geostore_products' && e.newValue) {
+        try {
+          setProducts(JSON.parse(e.newValue));
+        } catch (err) {
+          console.error(err);
+        }
       }
     };
-    window.addEventListener('storage', handleStorage);
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also use BroadcastChannel for instant local & cross-tab sync
+    let channel;
+    try {
+      channel = new BroadcastChannel('geostore_sync_channel');
+      channel.onmessage = (event) => {
+        const { type, payload } = event.data;
+        if (type === 'NEW_ORDER') {
+          setOrders(prev => {
+            if (!prev.some(o => o.id === payload.id)) {
+              const updated = [payload, ...prev];
+              localStorage.setItem('geostore_orders', JSON.stringify(updated));
+              return updated;
+            }
+            return prev;
+          });
+          setAdminNewOrderPopup(payload);
+        }
+        if (type === 'NEW_MESSAGE') {
+          setAdminChatArchive(prev => {
+            if (!prev.some(m => m.id === payload.id)) {
+              const updated = [...prev, payload];
+              localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updated));
+              return updated;
+            }
+            return prev;
+          });
+          setAdminNewMessagePopup(payload);
+        }
+      };
+    } catch (err) {
+      console.error(err);
+    }
 
     return () => {
-      channel.close();
-      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('storage', handleStorageChange);
+      if (channel) channel.close();
     };
   }, []);
 
@@ -398,6 +432,28 @@ export default function App() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  // Manual refresh function to reload all data from localStorage
+  const handleManualRefresh = () => {
+    try {
+      const savedOrders = localStorage.getItem('geostore_orders');
+      if (savedOrders) setOrders(JSON.parse(savedOrders));
+
+      const savedChat = localStorage.getItem('geostore_admin_chat_archive');
+      if (savedChat) setAdminChatArchive(JSON.parse(savedChat));
+
+      const savedProducts = localStorage.getItem('geostore_products');
+      if (savedProducts) setProducts(JSON.parse(savedProducts));
+
+      const savedCats = localStorage.getItem('geostore_cats');
+      if (savedCats) setCategories(JSON.parse(savedCats));
+
+      showToast('🔄 მონაცემები წარმატებით განახლდა!');
+    } catch (err) {
+      console.error(err);
+      showToast('❌ განახლების შეცდომა');
+    }
   };
 
   useEffect(() => localStorage.setItem('geostore_cats', JSON.stringify(categories)), [categories]);
@@ -494,7 +550,7 @@ export default function App() {
     setOrders(updatedOrders);
     localStorage.setItem('geostore_orders', JSON.stringify(updatedOrders));
 
-    // Send Telegram Notification for New Order
+    // Send Telegram Notification
     const itemsListStr = newOrder.items.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
     sendTelegramNotification(
       `🚨 *ახალი შეკვეთა გაფორმდა!* (#${newOrder.id})\n\n` +
@@ -720,6 +776,9 @@ export default function App() {
             <span className="truncate">{siteSettings.topBarText}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
+            <button onClick={handleManualRefresh} className="bg-slate-950/50 hover:bg-slate-950/80 px-2 py-0.5 rounded text-white text-[10px] flex items-center gap-1 font-bold">
+              <RefreshCw className="w-3 h-3 animate-spin" /> განახლება
+            </button>
             <button onClick={() => setActiveTab('policy')} className="hover:underline font-bold text-[11px] mr-2">წესები და პოლიტიკა</button>
             <button 
               onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')}
@@ -798,8 +857,8 @@ export default function App() {
           </div>
         </div>
 
-        <div className="px-4 pb-3 md:hidden">
-          <div className="relative">
+        <div className="px-4 pb-3 md:hidden flex items-center gap-2">
+          <div className="relative flex-1">
             <input
               type="text"
               placeholder="ძებნა: iPhone, SKU..."
@@ -809,6 +868,9 @@ export default function App() {
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
           </div>
+          <button onClick={handleManualRefresh} className="bg-slate-800 text-amber-400 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-slate-700">
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
         </div>
       </header>
 
@@ -906,9 +968,14 @@ export default function App() {
               if (sec.id === 'products') {
                 return (
                   <div key={sec.id} id="products" className="space-y-6">
-                    <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
-                      <ShoppingBag className="w-5 h-5 text-amber-400" /> პროდუქციის კატალოგი
-                    </h2>
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+                        <ShoppingBag className="w-5 h-5 text-amber-400" /> პროდუქციის კატალოგი
+                      </h2>
+                      <button onClick={handleManualRefresh} className="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-700">
+                        <RefreshCw className="w-3.5 h-3.5" /> განახლება
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredProducts.map(prod => {
                         const isWish = wishlist.some(w => w.id === prod.id);
@@ -1141,30 +1208,37 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="bg-slate-800 border border-slate-700 rounded-2xl p-2 flex gap-2 overflow-x-auto scrollbar-none">
-                  {[
-                    { id: 'categories', label: '1. კატეგორიები' },
-                    { id: 'products', label: '2. პროდუქცია' },
-                    { id: 'orders', label: '3. შეკვეთები' },
-                    { id: 'banners', label: '4. ბანერები' },
-                    { id: 'builder', label: '5. Page Builder' },
-                    { id: 'crm', label: '6. CRM' },
-                    { id: 'coupons', label: '7. პრომოები' },
-                    { id: 'security', label: '8. უსაფრთხოება' },
-                    { id: 'cms', label: '9. საიტის რედაქტორი' },
-                    { id: 'adminChat', label: '10. მომხმარებელთა მესიჯები' }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setAdminActiveSubTab(tab.id)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                        adminActiveSubTab === tab.id ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300'
-                      }`}
-                    >
-                      {tab.label}
+                <div className="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-2xl p-2 overflow-x-auto scrollbar-none">
+                  <div className="flex gap-2">
+                    {[
+                      { id: 'categories', label: '1. კატეგორიები' },
+                      { id: 'products', label: '2. პროდუქცია' },
+                      { id: 'orders', label: '3. შეკვეთები' },
+                      { id: 'banners', label: '4. ბანერები' },
+                      { id: 'builder', label: '5. Page Builder' },
+                      { id: 'crm', label: '6. CRM' },
+                      { id: 'coupons', label: '7. პრომოები' },
+                      { id: 'security', label: '8. უსაფრთხოება' },
+                      { id: 'cms', label: '9. საიტის რედაქტორი' },
+                      { id: 'adminChat', label: '10. მომხმარებელთა მესიჯები' }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setAdminActiveSubTab(tab.id)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                          adminActiveSubTab === tab.id ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <button onClick={handleManualRefresh} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1">
+                      <RefreshCw className="w-3.5 h-3.5" /> განახლება
                     </button>
-                  ))}
-                  <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold ml-auto shrink-0">გასვლა</button>
+                    <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl text-xs font-bold">გასვლა</button>
+                  </div>
                 </div>
 
                 {adminActiveSubTab === 'categories' && (
@@ -1317,45 +1391,57 @@ export default function App() {
                 {adminActiveSubTab === 'orders' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-base md:text-lg text-white">შეკვეთების მართვა და სტატუსები</h3>
-                      <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
+                      <h3 className="font-bold text-base md:text-lg text-white">შეკვეთების მართვა და სტატუსები ({orders.length})</h3>
+                      <div className="flex gap-2">
+                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
+                        </button>
+                        <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
+                      </div>
                     </div>
                     <div className="space-y-3">
-                      {orders.map(o => (
-                        <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
-                          <div>
-                            <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
-                            <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
-                            <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
-                              <select 
-                                value={o.status || 'ახალი'} 
-                                onChange={(e) => {
-                                  const updatedStatus = e.target.value;
-                                  const updated = orders.map(ord => ord.id === o.id ? { ...ord, status: updatedStatus } : ord);
-                                  setOrders(updated);
-                                  localStorage.setItem('geostore_orders', JSON.stringify(updated));
-                                  showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
-                                }}
-                                className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
-                              >
-                                <option value="ახალი">🟢 ახალი</option>
-                                <option value="მზადდება">🟡 მზადდება</option>
-                                <option value="გზაშია">🔵 გზაშია</option>
-                                <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
-                                <option value="გაუქმებულია">❌ გაუქმებულია</option>
-                              </select>
+                      {orders.length === 0 ? (
+                        <p className="text-slate-500 text-xs">შეკვეთები არ არის.</p>
+                      ) : (
+                        orders.map(o => (
+                          <div key={o.id} className="bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
+                            <div>
+                              <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
+                              <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
+                              <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
+                              <div className="mt-1 text-slate-400">
+                                {o.items?.map(i => `${i.name} (${i.quantity}ც.)`).join(', ')}
+                              </div>
                             </div>
+                            
+                            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[10px] text-slate-400">სტატუსის შეცვლა:</label>
+                                <select 
+                                  value={o.status || 'ახალი'} 
+                                  onChange={(e) => {
+                                    const updatedStatus = e.target.value;
+                                    const updated = orders.map(ord => ord.id === o.id ? { ...ord, status: updatedStatus } : ord);
+                                    setOrders(updated);
+                                    localStorage.setItem('geostore_orders', JSON.stringify(updated));
+                                    showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
+                                  }}
+                                  className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
+                                >
+                                  <option value="ახალი">🟢 ახალი</option>
+                                  <option value="მზადდება">🟡 მზადდება</option>
+                                  <option value="გზაშია">🔵 გზაშია</option>
+                                  <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
+                                  <option value="გაუქმებულია">❌ გაუქმებულია</option>
+                                </select>
+                              </div>
 
-                            <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
-                            <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
+                              <span className="font-black text-white text-sm shrink-0">{o.totalGEL} ₾</span>
+                              <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-white font-bold transition shrink-0">ინვოისი</button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
@@ -1480,21 +1566,26 @@ export default function App() {
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                         <MessageSquare className="w-5 h-5 text-amber-400" /> მომხმარებელთა ინდივიდუალური ჩათები
                       </h3>
-                      {adminChatArchive.length > 0 && (
-                        <button 
-                          onClick={() => {
-                            if (window.confirm('ნამდვილად გსურთ მთელი არქივის წაშლა?')) {
-                              setAdminChatArchive([]);
-                              localStorage.removeItem('geostore_admin_chat_archive');
-                              setAdminSelectedClient(null);
-                              showToast('🗑️ არქივი გასუფთავდა');
-                            }
-                          }}
-                          className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition"
-                        >
-                          არქივის გასუფთავება
+                      <div className="flex gap-2">
+                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
                         </button>
-                      )}
+                        {adminChatArchive.length > 0 && (
+                          <button 
+                            onClick={() => {
+                              if (window.confirm('ნამდვილად გსურთ მთელი არქივის წაშლა?')) {
+                                setAdminChatArchive([]);
+                                localStorage.removeItem('geostore_admin_chat_archive');
+                                setAdminSelectedClient(null);
+                                showToast('🗑️ არქივი გასუფთავდა');
+                              }
+                            }}
+                            className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition"
+                          >
+                            არქივის გასუფთავება
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1826,7 +1917,7 @@ export default function App() {
                               setAdminChatArchive(updatedArchive);
                               localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
-                              // Send Telegram Notification for Chat Message
+                              // Telegram Notification
                               sendTelegramNotification(
                                 `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
                                 `👤 *მომხმარებელი:* ${chatClientName}\n` +
@@ -1871,7 +1962,7 @@ export default function App() {
                           setAdminChatArchive(updatedArchive);
                           localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
-                          // Send Telegram Notification for Chat Message
+                          // Telegram Notification
                           sendTelegramNotification(
                             `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
                             `👤 *მომხმარებელი:* ${chatClientName}\n` +
@@ -1910,7 +2001,7 @@ export default function App() {
                         setAdminChatArchive(updatedArchive);
                         localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
-                        // Send Telegram Notification for Chat Message
+                        // Telegram Notification
                         sendTelegramNotification(
                           `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
                           `👤 *მომხმარებელი:* ${chatClientName}\n` +
@@ -1971,6 +2062,7 @@ export default function App() {
         </button>
 
         <button
+          onClick={() =>.setActiveTab ? setActiveTab('cart') : null}
           onClick={() => setActiveTab('cart')}
           className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === 'cart' ? 'text-amber-400' : 'text-slate-400'}`}
         >
