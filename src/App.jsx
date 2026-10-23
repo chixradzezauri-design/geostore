@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Search, Plus, Minus, Lock, CheckCircle, 
   Package, Eye, X, User, LogOut, Phone, Mail, 
-  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone, DollarSign, AlertTriangle, Image as ImageIcon, Layout
+  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone, DollarSign, AlertTriangle, Image as ImageIcon, Layout, Tag
 } from 'lucide-react';
 
 const CATEGORIES_KA = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -19,8 +19,7 @@ const INITIAL_PRODUCTS = [
     costPrice: 3800,
     image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80", 
     gallery: [
-      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&auto=format&fit=crop&q=80"
+      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80"
     ],
     description: "ტიტანის კორპუსი, A17 Pro ჩიპი. ოფიციალური გარანტია 1 წელი.", 
     stock: 12,
@@ -28,41 +27,24 @@ const INITIAL_PRODUCTS = [
     reviews: [
       { id: 1, name: "დავითი", rating: 5, text: "საუკეთესო ტელეფონია, ძალიან სწრაფად მომიტანეს!" }
     ]
-  },
-  { 
-    id: 2, 
-    sku: "GEO-SHO-002", 
-    name: "პრემიუმ ტყავის კეტები Urban", 
-    category: "ტანსაცმელი და ფეხსაცმელი", 
-    price: 280, 
-    oldPrice: 350,
-    costPrice: 150,
-    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80", 
-    gallery: ["https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80"],
-    description: "100% ნატურალური ტყავი, კომფორტული ძირი.", 
-    stock: 3,
-    rating: 4.7,
-    reviews: []
   }
 ];
 
 const INITIAL_BANNERS = [
-  { id: 1, title: "გრანდიოზული ფასდაკლება 2026!", subtitle: "ისარგებლეთ 10%-იანი ფასდაკლებით კოდით: GEO2026", bg: "bg-black text-white" },
-  { id: 2, title: "ახალი კოლექცია უკვე საიტზეა", subtitle: "საუკეთესო ხარისხი და სწრაფი მიწოდება მთელს საქართველოში", bg: "bg-indigo-900 text-white" }
+  { id: 1, title: "გრანდიოზული ფასდაკლება 2026!", subtitle: "ისარგებლეთ 10%-იანი ფასდაკლებით კოდით: GEO2026", bg: "bg-black text-white" }
 ];
 
 export default function App() {
   const [lang, setLang] = useState("KA");
 
-  // ანალიტიკა და ქვეყნები
   const [analytics, setAnalytics] = useState(() => {
     const saved = localStorage.getItem('geostore_analytics');
     return saved ? JSON.parse(saved) : {
-      todayVisits: 240,
-      totalTimeSpentSeconds: 51200,
-      mobileVisits: 168,
-      desktopVisits: 72,
-      countries: { "საქართველო (თბილისი)": 195, "გერმანია (ბერლინი)": 24, "აშშ (ნიუ-იორკი)": 21 }
+      todayVisits: 310,
+      totalTimeSpentSeconds: 64000,
+      mobileVisits: 210,
+      desktopVisits: 100,
+      countries: { "საქართველო (თბილისი)": 260, "გერმანია (ბერლინი)": 30, "აშშ (ნიუ-იორკი)": 20 }
     };
   });
 
@@ -105,7 +87,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // მომხმარებელთა ბაზა (ავტომატური სინქრონიზაცია)
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('geostore_users_list');
     return saved ? JSON.parse(saved) : [
@@ -118,14 +99,12 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // ბანერების მართვა
   const [banners, setBanners] = useState(() => {
     const saved = localStorage.getItem('geostore_banners');
     return saved ? JSON.parse(saved) : INITIAL_BANNERS;
   });
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  // ჩათის მენეჯმენტი
   const [chatMessages, setChatMessages] = useState(() => {
     const saved = localStorage.getItem('geostore_chat_messages');
     return saved ? JSON.parse(saved) : [];
@@ -135,6 +114,11 @@ export default function App() {
     const saved = localStorage.getItem('geostore_policy_text');
     return saved || "მიწოდება ხორციელდება თბილისში 24 საათში (5₾), ხოლო რეგიონებში 48 საათში (10₾). 100₾-ზე მეტი შეკვეთისას მიწოდება უფასოა.";
   });
+
+  const [promoCodes, setPromoCodes] = useState([
+    { id: 1, code: "GEO2026", discount: 10 }
+  ]);
+  const [newPromoCode, setNewPromoCode] = useState({ code: "", discount: "" });
 
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
@@ -154,7 +138,7 @@ export default function App() {
   const [oneClickForm, setOneClickForm] = useState({ name: "", phone: "" });
 
   const [toastMessage, setToastMessage] = useState("");
-  const [desktopPopupAlert, setDesktopPopupAlert] = useState(null); // დესკტოპ პოაპი შეტყობინებისთვის
+  const [desktopPopupAlert, setDesktopPopupAlert] = useState(null);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -174,7 +158,8 @@ export default function App() {
   const [adminError, setAdminError] = useState("");
   const [adminSubTab, setAdminSubTab] = useState("analytics");
   
-  const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", image: "", galleryStr: "", description: "", stock: "" });
+  // ფაილების ატვირთვისთვის მდგომარეობები
+  const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", imageFile: null, description: "", stock: "" });
   const [newBanner, setNewBanner] = useState({ title: "", subtitle: "", bg: "bg-black text-white" });
 
   const [orderForm, setOrderForm] = useState({ 
@@ -234,7 +219,6 @@ export default function App() {
       date: new Date().toISOString().split('T')[0]
     };
     
-    // ახალი მომხმარებლის დამატება სიაში მყისიერად (რომ ჩანდეს ადმინთან)
     const exists = usersList.some(u => u.email === userData.email);
     if (!exists) {
       setUsersList(prev => [userData, ...prev]);
@@ -277,7 +261,6 @@ export default function App() {
     setChatMessages(prev => [...prev, newMsg]);
     setUserChatMessage("");
 
-    // დესკტოპ პოაპი ადმინისთვის/სისტემისთვის რომ შეტყობინება მოვიდა
     setDesktopPopupAlert({
       title: "💬 ახალი შეტყობინება ჩათში!",
       msg: `${senderName}: ${userChatMessage}`
@@ -285,7 +268,6 @@ export default function App() {
     setTimeout(() => setDesktopPopupAlert(null), 5000);
   };
 
-  // ადმინის პასუხი, რომელიც მყისიერად ემატება ჩათს და ჩანს კლიენტთან
   const handleAdminReplyMessage = (e) => {
     e.preventDefault();
     if (!adminReplyText.trim()) return;
@@ -352,11 +334,12 @@ export default function App() {
   };
 
   const applyCoupon = () => {
-    if (couponCode.toUpperCase() === "GEO2026") {
-      setDiscountPercent(10);
-      showToast("🎉 კუპონი გააქტიურდა! (-10%)");
+    const found = promoCodes.find(p => p.code.toUpperCase() === couponCode.toUpperCase());
+    if (found) {
+      setDiscountPercent(found.discount);
+      showToast(`🎉 კუპონი გააქტიურდა! (-${found.discount}%)`);
     } else {
-      alert("არასწორი კუპონი! გამოიყენეთ: GEO2026");
+      alert("არასწორი ან ვადაგასული კუპონი!");
     }
   };
 
@@ -462,13 +445,24 @@ export default function App() {
     }
   };
 
+  // ფოტოს ფაილად ატვირთვის ფუნქცია (Base64 კონვერტაცია)
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProd({ ...newProd, imageFile: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddProduct = (e) => {
     e.preventDefault();
-    if (!newProd.name || !newProd.price || !newProd.image) {
-      alert("გთხოვთ შეავსოთ სავალდებულო ველები!");
+    if (!newProd.name || !newProd.price || !newProd.imageFile) {
+      alert("გთხოვთ შეავსოთ ყველა ველი და ატვირთოთ ფოტო კომპიუტერიდან!");
       return;
     }
-    const galleryArr = newProd.galleryStr ? newProd.galleryStr.split(',').map(s => s.trim()) : [newProd.image];
     const productToAdd = {
       id: Date.now(),
       sku: newProd.sku || `GEO-${Math.floor(Math.random() * 1000)}`,
@@ -476,16 +470,16 @@ export default function App() {
       category: newProd.category,
       price: Number(newProd.price),
       costPrice: Number(newProd.costPrice) || Number(newProd.price) * 0.6,
-      image: newProd.image,
-      gallery: galleryArr,
+      image: newProd.imageFile, // ატვირთული სურათი
+      gallery: [newProd.imageFile],
       description: newProd.description || "აღწერა არ არის",
       stock: Number(newProd.stock) || 10,
       rating: 5.0,
       reviews: []
     };
     setProducts([productToAdd, ...products]);
-    setNewProd({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", image: "", galleryStr: "", description: "", stock: "" });
-    alert("პროდუქტი წარმატებით დაემატა!");
+    setNewProd({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", imageFile: null, description: "", stock: "" });
+    alert("პროდუქტი წარმატებით დაემატა ატვირთული ფოტოთი!");
   };
 
   const handleSaveEditedProduct = (e) => {
@@ -513,6 +507,18 @@ export default function App() {
     setBanners(banners.filter(b => b.id !== id));
   };
 
+  const handleAddPromo = (e) => {
+    e.preventDefault();
+    if (!newPromoCode.code || !newPromoCode.discount) return;
+    setPromoCodes([...promoCodes, { id: Date.now(), code: newPromoCode.code.toUpperCase(), discount: Number(newPromoCode.discount) }]);
+    setNewPromoCode({ code: "", discount: "" });
+    alert("პრომოკოდი შეიქმნა!");
+  };
+
+  const deletePromo = (id) => {
+    setPromoCodes(promoCodes.filter(p => p.id !== id));
+  };
+
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
@@ -534,7 +540,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col font-sans">
       
-      {/* დესკტოპ მცურავი შეტყობინება (Popup) */}
       {desktopPopupAlert && (
         <div className="fixed top-24 right-6 z-50 bg-indigo-600 text-white p-4 rounded-3xl shadow-2xl border border-indigo-400 max-w-sm animate-bounce flex items-center gap-3">
           <Bell className="w-6 h-6 shrink-0" />
@@ -551,7 +556,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ზედა ბანერების სლაიდერი */}
       <div className="bg-black text-white text-xs py-2.5 px-4 text-center font-medium flex justify-between items-center max-w-7xl mx-auto w-full">
         <span>✨ {banners[currentBannerIndex]?.subtitle || "უფასო მიწოდება 100₾-ის ზემოთ"}</span>
         <div className="flex gap-4 items-center">
@@ -692,7 +696,7 @@ export default function App() {
             ) : (
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
-                  <h2 className="text-3xl font-black">ადმინ პანელი</h2>
+                  <h2 className="text-3xl font-black">პროფესიონალური ადმინ პანელი</h2>
                   <div className="flex gap-2">
                     <button onClick={exportOrdersToCSV} className="bg-green-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
                       <Download className="w-4 h-4" /> CSV ექსპორტი
@@ -714,14 +718,14 @@ export default function App() {
                   <button onClick={() => setAdminSubTab('banners')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'banners' ? 'bg-black text-white' : 'bg-gray-100'}`}>
                     ბანერები ({banners.length})
                   </button>
+                  <button onClick={() => setAdminSubTab('promos')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'promos' ? 'bg-black text-white' : 'bg-gray-100'}`}>
+                    პრომოკოდები ({promoCodes.length})
+                  </button>
                   <button onClick={() => setAdminSubTab('users')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'users' ? 'bg-black text-white' : 'bg-gray-100'}`}>
                     მომხმარებლები ({usersList.length})
                   </button>
                   <button onClick={() => setAdminSubTab('chat')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'chat' ? 'bg-black text-white' : 'bg-gray-100'}`}>
                     ონლაინ ჩათი ({chatMessages.length})
-                  </button>
-                  <button onClick={() => setAdminSubTab('settings')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'settings' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    პოლიტიკა
                   </button>
                 </div>
 
@@ -809,10 +813,11 @@ export default function App() {
                   </div>
                 )}
 
+                {/* პროდუქტების დამატება ფოტოს პირდაპირი ატვირთვით */}
                 {adminSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                      <h3 className="text-lg font-bold">+ პროდუქტის დამატება (მრავალი სურათის მხარდაჭერით)</h3>
+                      <h3 className="text-lg font-bold">+ პროდუქტის დამატება (ფოტოს კომპიუტერიდან ატვირთვით)</h3>
                       <form onSubmit={handleAddProduct} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         <input type="text" placeholder="SKU კოდი" value={newProd.sku} onChange={e => setNewProd({...newProd, sku: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <input type="text" placeholder="დასახელება *" value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
@@ -820,11 +825,18 @@ export default function App() {
                           {CATEGORIES_KA.filter(c => c !== "ყველა").map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                         <input type="number" placeholder="ფასი (₾) *" value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <input type="number" placeholder="თვითღირებულება (₾)" value={newProd.costPrice} onChange={e => setNewProd({...newProd, costPrice: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <input type="number" placeholder="მარაგი" value={newProd.stock} onChange={e => setNewProd({...newProd, stock: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <input type="text" placeholder="მთავარი ფოტოს URL *" value={newProd.image} onChange={e => setNewProd({...newProd, image: e.target.value})} className="sm:col-span-2 bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <input type="text" placeholder="დამატებითი ფოტოების URL-ები (მძიმით გამოყოფილი)" value={newProd.galleryStr} onChange={e => setNewProd({...newProd, galleryStr: e.target.value})} className="sm:col-span-3 bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <button type="submit" className="bg-black text-white py-3 rounded-xl font-bold text-sm">დამატება</button>
+                        
+                        {/* ფაილის ასატვირთი ინპუტი */}
+                        <div className="sm:col-span-2 bg-gray-100 border rounded-xl p-3 flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
+                            <ImageIcon className="w-4 h-4"/> აირჩიეთ ფოტო კომპიუტერიდან *
+                          </label>
+                          <input type="file" accept="image/*" onChange={handleImageUpload} className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-black file:text-white hover:file:bg-zinc-800 cursor-pointer"/>
+                        </div>
+
+                        <textarea placeholder="პროდუქტის აღწერა..." value={newProd.description} onChange={e => setNewProd({...newProd, description: e.target.value})} className="sm:col-span-3 bg-gray-100 border rounded-xl p-3 text-sm outline-none h-20"/>
+                        <button type="submit" className="bg-black text-white py-3 rounded-xl font-bold text-sm sm:col-span-3">პროდუქტის დამატება</button>
                       </form>
                     </div>
 
@@ -851,15 +863,15 @@ export default function App() {
                   </div>
                 )}
 
-                {/* ბანერების მართვის სექცია */}
+                {/* ბანერების მართვა */}
                 {adminSubTab === 'banners' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                      <h3 className="text-lg font-bold">+ ახალი სარეკლამო ბანერის დამატება</h3>
+                      <h3 className="text-lg font-bold">+ ბანერის დამატება</h3>
                       <form onSubmit={handleAddBanner} className="space-y-3">
                         <input type="text" placeholder="სათაური *" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <input type="text" placeholder="ქვეტექსტი / აღწერა" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-sm">ბანერის დამატება</button>
+                        <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-sm">დამატება</button>
                       </form>
                     </div>
 
@@ -873,6 +885,35 @@ export default function App() {
                               <p className="text-xs text-gray-500">{b.subtitle}</p>
                             </div>
                             <button onClick={() => deleteBanner(b.id)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">წაშლა</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* პრომოკოდების მართვა */}
+                {adminSubTab === 'promos' && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                      <h3 className="text-lg font-bold">+ ახალი პრომოკოდის შექმნა</h3>
+                      <form onSubmit={handleAddPromo} className="flex gap-2">
+                        <input type="text" placeholder="კოდი (მაგ: SALE50)" value={newPromoCode.code} onChange={e => setNewPromoCode({...newPromoCode, code: e.target.value})} className="flex-1 bg-gray-100 border rounded-xl p-3 text-sm outline-none uppercase font-bold" />
+                        <input type="number" placeholder="ფასდაკლება %" value={newPromoCode.discount} onChange={e => setNewPromoCode({...newPromoCode, discount: e.target.value})} className="w-32 bg-gray-100 border rounded-xl p-3 text-sm outline-none font-bold" />
+                        <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-sm">შექმნა</button>
+                      </form>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                      <h3 className="text-lg font-bold">აქტიური პრომოკოდები</h3>
+                      <div className="space-y-3">
+                        {promoCodes.map(pr => (
+                          <div key={pr.id} className="border p-4 rounded-2xl bg-gray-50 flex justify-between items-center">
+                            <div>
+                              <h4 className="font-bold text-sm flex items-center gap-1"><Tag className="w-4 h-4 text-indigo-600"/> {pr.code}</h4>
+                              <p className="text-xs text-indigo-600 font-bold">{pr.discount}% ფასდაკლება</p>
+                            </div>
+                            <button onClick={() => deletePromo(pr.id)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">წაშლა</button>
                           </div>
                         ))}
                       </div>
@@ -897,7 +938,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* ADVANCED ADMIN CHAT TAB */}
                 {adminSubTab === 'chat' && (
                   <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
                     <h3 className="text-xl font-bold">ონლაინ ჩათი (რეალურ დროში)</h3>
@@ -926,17 +966,9 @@ export default function App() {
                         className="flex-1 bg-gray-100 border rounded-xl px-4 py-3 text-xs outline-none"
                       />
                       <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5">
-                        <Send className="w-3.5 h-3.5"/> პასუხის გაგზავნა
+                        <Send className="w-3.5 h-3.5"/> გაგზავნა
                       </button>
                     </form>
-                  </div>
-                )}
-
-                {adminSubTab === 'settings' && (
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                    <h3 className="text-xl font-bold">წესების რედაქტირება</h3>
-                    <textarea rows={6} value={policyText} onChange={e => setPolicyText(e.target.value)} className="w-full bg-gray-100 border rounded-2xl p-4 text-sm outline-none"/>
-                    <button onClick={() => alert("შენახულია!")} className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-bold">შენახვა</button>
                   </div>
                 )}
               </div>
@@ -947,7 +979,6 @@ export default function App() {
         {activeTab === 'shop' && (
           <div className="space-y-8">
             
-            {/* მთავარი დინამიკური ბანერის ჩვენება */}
             <div className="bg-black text-white rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="relative z-10 max-w-xl space-y-3">
                 <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1 w-fit">
@@ -1065,7 +1096,6 @@ export default function App() {
         <span className="text-xs font-bold hidden sm:inline">ონლაინ ჩათი</span>
       </button>
 
-      {/* ონლაინ ჩათი მომხმარებლისთვის */}
       {isChatOpen && (
         <div className="fixed bottom-20 right-6 z-50 bg-white w-80 sm:w-96 rounded-3xl shadow-2xl border overflow-hidden flex flex-col h-96">
           <div className="bg-black text-white p-4 flex justify-between items-center">
@@ -1103,25 +1133,12 @@ export default function App() {
         </div>
       )}
 
-      {/* პროდუქტის სწრაფი ნახვისა და მრავალი სურათის (გალერეის) ფანჯარა */}
       {quickViewProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative overflow-y-auto max-h-[90vh] space-y-6">
             <button onClick={() => setQuickViewProduct(null)} className="absolute top-4 right-4 text-gray-400"><X className="w-6 h-6"/></button>
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="w-full md:w-1/2 space-y-3">
-                <img src={quickViewProduct.image} alt={quickViewProduct.name} className="w-full h-64 object-cover rounded-2xl" />
-                {quickViewProduct.gallery && quickViewProduct.gallery.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto">
-                    {quickViewProduct.gallery.map((imgUrl, idx) => (
-                      <img key={idx} src={imgUrl} alt="" className="w-16 h-16 object-cover rounded-xl border cursor-pointer hover:border-black" onClick={() => {
-                        const updated = { ...quickViewProduct, image: imgUrl };
-                        setQuickViewProduct(updated);
-                      }} />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <img src={quickViewProduct.image} alt={quickViewProduct.name} className="w-full md:w-1/2 h-64 object-cover rounded-2xl" />
               <div className="flex-1 space-y-3">
                 <span className="text-xs font-bold bg-gray-100 px-3 py-1 rounded-full">{quickViewProduct.category}</span>
                 <h3 className="text-xl font-bold">{quickViewProduct.name}</h3>
@@ -1132,7 +1149,7 @@ export default function App() {
                 </button>
               </div>
             </div>
-
+            
             <div className="border-t pt-4 space-y-4">
               <h4 className="font-bold text-lg">⭐ შეფასებები ({quickViewProduct.reviews ? quickViewProduct.reviews.length : 0})</h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -1232,7 +1249,7 @@ export default function App() {
             {cart.length > 0 && (
               <div className="pt-4 border-t space-y-3">
                 <div className="flex gap-2">
-                  <input type="text" placeholder="კუპონი (GEO2026)" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="flex-1 bg-gray-100 border rounded-xl px-3 py-2 text-xs outline-none uppercase font-bold"/>
+                  <input type="text" placeholder="პრომოკოდი (GEO2026)" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="flex-1 bg-gray-100 border rounded-xl px-3 py-2 text-xs outline-none uppercase font-bold"/>
                   <button onClick={applyCoupon} className="bg-gray-200 px-3 py-2 rounded-xl text-xs font-bold">გამოყენება</button>
                 </div>
                 <div className="flex justify-between font-black text-lg pt-2 border-t">
@@ -1282,23 +1299,6 @@ export default function App() {
                   </button>
                 </div>
               </div>
-
-              {orderForm.paymentMethod === 'card' && (
-                <div className="p-4 bg-gray-50 rounded-2xl border space-y-2">
-                  <input type="text" placeholder="ბარათის ნომერი (16 ციფრი)" className="w-full bg-white border rounded-xl p-2.5 text-xs outline-none" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="MM/YY" className="bg-white border rounded-xl p-2.5 text-xs outline-none" />
-                    <input type="password" placeholder="CVC" className="bg-white border rounded-xl p-2.5 text-xs outline-none" />
-                  </div>
-                </div>
-              )}
-
-              {orderForm.paymentMethod === 'bank' && (
-                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-xs space-y-1">
-                  <p><strong>მიმღები:</strong> შპს GEOSTORE</p>
-                  <p><strong>IBAN:</strong> GE12TB0000000123456789</p>
-                </div>
-              )}
 
               <button type="submit" className="w-full bg-black text-white py-3.5 rounded-2xl font-bold text-sm">
                 დადასტურება ({grandTotal} ₾)
