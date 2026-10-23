@@ -105,7 +105,7 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  // ადმინის ავტორიზაცია და Remember Me (შენახვა localStorage-ში)
+  // ადმინის ავტორიზაცია და Remember Me
   const [adminAuth, setAdminAuth] = useState(() => {
     const saved = localStorage.getItem('geostore_admin_auth');
     return saved ? JSON.parse(saved) : { username: "admin", password: "admin123" };
@@ -151,7 +151,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_COUPONS;
   });
 
-  // Page Builder სექციების თანმიმდევრობა და გამოჩენა
   const [sections, setSections] = useState(() => {
     const saved = localStorage.getItem('geostore_sections');
     return saved ? JSON.parse(saved) : [
@@ -165,28 +164,23 @@ export default function App() {
     ];
   });
 
-  // App UI States
-  const [activeTab, setActiveTab] = useState('store'); // 'store' | 'wishlist' | 'cart' | 'admin' | 'profile' | 'policy'
+  const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
 
-  // Front Filtering
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductQuickView, setSelectedProductQuickView] = useState(null);
 
-  // Cart & Wishlist & Quick Buy
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponInput, setCouponInput] = useState('');
   const [quickBuyProduct, setQuickBuyProduct] = useState(null);
 
-  // Checkout Modal
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '', notes: '' });
 
-  // Users & Auth Modal + Remember Me
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('geostore_users_list');
     return saved ? JSON.parse(saved) : [
@@ -200,13 +194,12 @@ export default function App() {
   });
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login'); 
   const [authForm, setAuthForm] = useState(() => {
     const rememberedUser = localStorage.getItem('geostore_user_remembered');
     return rememberedUser ? JSON.parse(rememberedUser) : { name: '', phone: '', email: '', password: '', remember: false };
   });
 
-  // Orders & Invoices
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem('geostore_orders');
     return saved ? JSON.parse(saved) : [
@@ -226,21 +219,18 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // Chat Widget
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', isAdmin: false }
   ]);
   const [chatInput, setChatInput] = useState('');
 
-  // Toast
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // Sync LocalStorage
   useEffect(() => localStorage.setItem('geostore_cats', JSON.stringify(categories)), [categories]);
   useEffect(() => localStorage.setItem('geostore_products', JSON.stringify(products)), [products]);
   useEffect(() => localStorage.setItem('geostore_banners', JSON.stringify(banners)), [banners]);
@@ -251,7 +241,6 @@ export default function App() {
   useEffect(() => localStorage.setItem('geostore_users_list', JSON.stringify(usersList)), [usersList]);
   useEffect(() => localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)), [currentUser]);
 
-  // Format Price
   const formatPrice = (priceInGEL) => {
     if (currency === 'USD') {
       return `$${(priceInGEL / usdRate).toFixed(2)}`;
@@ -348,7 +337,6 @@ export default function App() {
     showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
   };
 
-  // User Auth Submit + Remember Me Logic
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     if (!authForm.email || !authForm.password) return;
@@ -405,7 +393,6 @@ export default function App() {
     }
   };
 
-  // Admin Login + Remember Me Logic
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (adminLoginForm.username === adminAuth.username && adminLoginForm.password === adminAuth.password) {
@@ -476,7 +463,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-amber-500 selection:text-slate-900 flex flex-col justify-between">
       
-      {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-2xl shadow-2xl border border-amber-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
           <Sparkles className="w-4 h-4" />
@@ -484,7 +470,7 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER / NAVIGATION */}
+      {/* HEADER */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
         <div className="bg-gradient-to-r from-red-600 via-amber-600 to-amber-500 text-white text-[10px] md:text-xs py-1.5 px-3 font-medium flex justify-between items-center">
           <div className="flex items-center gap-1.5 truncate">
@@ -502,7 +488,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Main Header Content */}
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2 md:gap-4 w-full">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('store')}>
             <div className="w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-red-600 flex items-center justify-center shadow-lg shadow-amber-500/20 font-black text-lg md:text-xl text-slate-950">
@@ -513,7 +498,6 @@ export default function App() {
             </span>
           </div>
 
-          {/* Search Bar (Desktop) */}
           <div className="flex-1 max-w-md relative hidden md:block">
             <input
               type="text"
@@ -525,7 +509,6 @@ export default function App() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           </div>
 
-          {/* Desktop Navigation Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <button 
               onClick={() => setActiveTab('wishlist')}
@@ -573,7 +556,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Search Bar (Mobile) */}
         <div className="px-4 pb-3 md:hidden">
           <div className="relative">
             <input
@@ -588,10 +570,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* --- MAIN CONTENT SWITCHER --- */}
+      {/* MAIN */}
       <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1">
         
-        {/* ================= STORE TAB ================= */}
         {activeTab === 'store' && (
           <div className="space-y-8">
             {sections.filter(s => s.visible).map(sec => {
@@ -761,7 +742,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= POLICY TAB ================= */}
         {activeTab === 'policy' && (
           <div className="max-w-3xl mx-auto bg-slate-800/80 border border-slate-700 rounded-3xl p-6 md:p-10 space-y-6 text-xs md:text-sm leading-relaxed">
             <div className="flex items-center gap-3 border-b border-slate-700 pb-4">
@@ -797,7 +777,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= WISHLIST TAB ================= */}
         {activeTab === 'wishlist' && (
           <div className="space-y-6">
             <h2 className="text-xl md:text-2xl font-black text-white">❤️ სურვილების სია ({wishlist.length})</h2>
@@ -818,7 +797,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= PROFILE TAB ================= */}
         {activeTab === 'profile' && currentUser && (
           <div className="max-w-xl mx-auto bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-700 space-y-4 text-xs md:text-sm">
             <h2 className="text-xl font-black text-white">👤 მომხმარებლის პროფილი</h2>
@@ -849,7 +827,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= CART TAB ================= */}
         {activeTab === 'cart' && (
           <div className="space-y-6">
             <h2 className="text-xl md:text-2xl font-black text-white">🛒 საყიდლების კალათა</h2>
@@ -884,7 +861,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= ADMIN TAB (FULL CONTROL PANEL) ================= */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
@@ -1141,7 +1117,6 @@ export default function App() {
 
       </main>
 
-      {/* QUICK VIEW MODAL */}
       {selectedProductQuickView && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 relative space-y-4 text-xs">
@@ -1155,7 +1130,6 @@ export default function App() {
         </div>
       )}
 
-      {/* AUTH MODAL (LOGIN / REGISTER) + REMEMBER ME */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative space-y-4">
@@ -1191,7 +1165,6 @@ export default function App() {
         </div>
       )}
 
-      {/* CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 relative space-y-4">
@@ -1207,7 +1180,6 @@ export default function App() {
         </div>
       )}
 
-      {/* INVOICE MODAL */}
       {activeInvoiceOrder && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white text-slate-900 rounded-3xl max-w-md w-full p-6 space-y-4">
@@ -1223,7 +1195,6 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center">
@@ -1250,7 +1221,6 @@ export default function App() {
         )}
       </div>
 
-      {/* FOOTER */}
       <footer className="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-12 space-y-2">
         <div className="flex justify-center gap-4">
           <button onClick={() => setActiveTab('policy')} className="hover:text-amber-400 transition">წესები და პოლიტიკა</button>
@@ -1259,7 +1229,6 @@ export default function App() {
         <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
       </footer>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 md:hidden z-40 py-2.5 px-4 flex justify-around items-center">
         <button
           onClick={() => setActiveTab('store')}
