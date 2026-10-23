@@ -55,6 +55,7 @@ const INITIAL_PRODUCTS = [
 export default function App() {
   const [lang, setLang] = useState("KA");
 
+  // ვიზიტორების სტატისტიკა და ქვეყნების განსაზღვრა
   const [analytics, setAnalytics] = useState(() => {
     const saved = localStorage.getItem('geostore_analytics');
     return saved ? JSON.parse(saved) : {
@@ -62,7 +63,7 @@ export default function App() {
       totalTimeSpentSeconds: 28400,
       mobileVisits: 98,
       desktopVisits: 44,
-      pageViews: { shop: 412, quickView: 89, cart: 156, policy: 34 }
+      countries: { "საქართველო (თბილისი)": 120, "გერმანია (ბერლინი)": 14, "აშშ (ნიუ-იორკი)": 8 }
     };
   });
 
@@ -155,7 +156,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState("login");
   const [authForm, setAuthForm] = useState({ name: "", phone: "", email: "", password: "" });
   const [userChatMessage, setUserChatMessage] = useState("");
-  const [adminReplyText, setAdminReplyText] = useState(""); // ადმინის საპასუხო ტექსტი
+  const [adminReplyText, setAdminReplyText] = useState("");
 
   const [couponCode, setCouponCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -225,7 +226,6 @@ export default function App() {
     if (authMode === 'register') {
       setUsersList(prev => [userData, ...prev]);
     } else {
-      // თუ უკვე არსებობს სისაში, თავში გადმოვიტანოთ ან უბრალოდ შევინარჩუნოთ
       if (!usersList.some(u => u.email === userData.email)) {
         setUsersList(prev => [userData, ...prev]);
       }
@@ -262,22 +262,14 @@ export default function App() {
       phone: senderPhone,
       text: userChatMessage,
       time: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
-      isAutoReply: false
+      isAdmin: false
     };
 
-    const autoReplyMsg = {
-      id: Date.now() + 1,
-      sender: "GEOSTORE ოპერატორი",
-      text: "გამარჯობა! გმადლობთ დაკავშირებისთვის. ჩვენი ოპერატორი უახლოეს წუთებში უპასუხებს თქვენს შეტყობინებას.",
-      time: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
-      isAutoReply: true
-    };
-
-    setChatMessages(prev => [...prev, newMsg, autoReplyMsg]);
+    setChatMessages(prev => [...prev, newMsg]);
     setUserChatMessage("");
   };
 
-  // ადმინის პასუხის გაგზავნა ჩათში
+  // ადმინის პასუხი, რომელიც უჩანს კლიენტს ჩათში
   const handleAdminReplyMessage = (e) => {
     e.preventDefault();
     if (!adminReplyText.trim()) return;
@@ -285,15 +277,15 @@ export default function App() {
     const adminMsg = {
       id: Date.now(),
       sender: "GEOSTORE ადმინი",
-      phone: "მხარდაჭერა",
+      phone: "ოფიციალური მხარდაჭერა",
       text: adminReplyText,
       time: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
-      isAutoReply: true
+      isAdmin: true
     };
 
     setChatMessages(prev => [...prev, adminMsg]);
     setAdminReplyText("");
-    showToast("შეტყობინება გაიგზავნა კლიენტთან!");
+    showToast("პასუხი გაიგზავნა ჩათში!");
   };
 
   const filteredProducts = products.filter(p => {
@@ -677,7 +669,7 @@ export default function App() {
 
                 <div className="flex gap-2 border-b pb-3 overflow-x-auto">
                   <button onClick={() => setAdminSubTab('analytics')} className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 ${adminSubTab === 'analytics' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    <BarChart2 className="w-3.5 h-3.5"/> სტატისტიკა & Analytics
+                    <BarChart2 className="w-3.5 h-3.5"/> სტატისტიკა & ქვეყნები
                   </button>
                   <button onClick={() => setAdminSubTab('orders')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'orders' ? 'bg-black text-white' : 'bg-gray-100'}`}>
                     შეკვეთები ({orders.length})
@@ -705,7 +697,7 @@ export default function App() {
                           <span className="text-3xl font-black">{analytics.todayVisits}</span>
                           <User className="w-6 h-6 text-indigo-600" />
                         </div>
-                        <p className="text-[11px] text-green-600 font-bold">↑ რეალურ დროში ტრეკირება</p>
+                        <p className="text-[11px] text-green-600 font-bold">რეალური ტრეკირება</p>
                       </div>
 
                       <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
@@ -739,27 +731,16 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* ქვეყნების სტატისტიკა */}
                     <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                      <h3 className="font-bold text-lg">📊 ყველაზე ნახვადი სექციები</h3>
+                      <h3 className="font-bold text-lg">🌍 საიტის ვიზიტორები ქვეყნების მიხედვით</h3>
                       <div className="space-y-3 text-xs font-bold">
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span>მთავარი მაღაზია (Shop)</span>
-                            <span>{analytics.pageViews.shop} ნახვა</span>
+                        {Object.entries(analytics.countries).map(([country, count]) => (
+                          <div key={country} className="flex justify-between items-center border-b pb-2">
+                            <span>{country}</span>
+                            <span className="bg-gray-100 px-3 py-1 rounded-full text-indigo-600">{count} ვიზიტორი</span>
                           </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div className="bg-black h-full w-[80%]"></div>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span>კალათა & Checkout</span>
-                            <span>{analytics.pageViews.cart} ნახვა</span>
-                          </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div className="bg-indigo-600 h-full w-[45%]"></div>
-                          </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -840,7 +821,7 @@ export default function App() {
                         <div key={u.id} className="border rounded-2xl p-4 bg-gray-50 flex justify-between items-center">
                           <div>
                             <h4 className="font-bold text-sm">{u.name}</h4>
-                            <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone} | თარიღი: {u.date}</p>
+                            <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone} | რეგისტრაცია: {u.date}</p>
                           </div>
                           <button onClick={() => deleteUserAccount(u.id)} className="bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">გაუქმება</button>
                         </div>
@@ -852,13 +833,13 @@ export default function App() {
                 {/* ADMIN CHAT TAB WITH REPLY BOX */}
                 {adminSubTab === 'chat' && (
                   <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                    <h3 className="text-xl font-bold">ონლაინ ჩათის მართვა</h3>
+                    <h3 className="text-xl font-bold">ონლაინ ჩათი (მომხმარებლებთან კომუნიკაცია)</h3>
                     <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                       {chatMessages.length === 0 ? (
-                        <p className="text-xs text-gray-400 text-center py-6">შეტყობინებები არ არის</p>
+                        <p className="text-xs text-gray-400 text-center py-6">შეტყობინებები ჯერ არ არის</p>
                       ) : (
                         chatMessages.map(m => (
-                          <div key={m.id} className={`p-4 rounded-2xl border ${m.isAutoReply ? 'bg-indigo-50 border-indigo-100 ml-6' : 'bg-gray-50 mr-6'}`}>
+                          <div key={m.id} className={`p-4 rounded-2xl border ${m.isAdmin ? 'bg-indigo-50 border-indigo-100 ml-6' : 'bg-gray-50 mr-6'}`}>
                             <div className="flex justify-between text-xs font-bold text-gray-500">
                               <span>{m.sender} ({m.phone})</span>
                               <span>{m.time}</span>
@@ -868,17 +849,17 @@ export default function App() {
                         ))
                       )}
                     </div>
-                    {/* Admin Reply Form */}
+                    
                     <form onSubmit={handleAdminReplyMessage} className="pt-3 border-t flex gap-2">
                       <input 
                         type="text" 
-                        placeholder="უპასუხეთ კლიენტს როგორც ადმინმა..." 
+                        placeholder="მიწერეთ პასუხი კლიენტს..." 
                         value={adminReplyText} 
                         onChange={e => setAdminReplyText(e.target.value)} 
                         className="flex-1 bg-gray-100 border rounded-xl px-4 py-3 text-xs outline-none"
                       />
                       <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5">
-                        <Send className="w-3.5 h-3.5"/> პასუხი
+                        <Send className="w-3.5 h-3.5"/> გაგზავნა
                       </button>
                     </form>
                   </div>
@@ -1018,6 +999,7 @@ export default function App() {
         <span className="text-xs font-bold hidden sm:inline">ონლაინ ჩათი</span>
       </button>
 
+      {/* LIVE CHAT MODAL FOR CUSTOMERS */}
       {isChatOpen && (
         <div className="fixed bottom-20 right-6 z-50 bg-white w-80 sm:w-96 rounded-3xl shadow-2xl border overflow-hidden flex flex-col h-96">
           <div className="bg-black text-white p-4 flex justify-between items-center">
@@ -1027,7 +1009,7 @@ export default function App() {
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
             {chatMessages.length === 0 && <p className="text-xs text-gray-400 text-center py-6">მოგვწერეთ ნებისმიერი კითხვა!</p>}
             {chatMessages.map(m => (
-              <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl text-xs ${m.sender.includes("ადმინი") || m.isAutoReply ? 'bg-indigo-600 text-white ml-auto' : 'bg-white border text-gray-800'}`}>
+              <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl text-xs ${m.isAdmin ? 'bg-indigo-600 text-white ml-auto' : 'bg-white border text-gray-800'}`}>
                 <p className="font-bold mb-1 opacity-80">{m.sender}</p>
                 <p>{m.text}</p>
               </div>
