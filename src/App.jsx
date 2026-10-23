@@ -139,136 +139,68 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  // Site Settings
-  const [siteSettings, setSiteSettings] = useState(() => {
+  // Safe Storage Loader Utility to prevent crashes from corrupted cache
+  const loadSafeStorage = (key, fallback) => {
     try {
-      const saved = localStorage.getItem('geostore_site_settings');
-      return saved ? JSON.parse(saved) : {
-        storeName: 'GEOSTORE',
-        topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია',
-        supportPhone: '+995 32 200 00 00',
-        heroTitle: 'ინოვაციური ტექნიკა საუკეთესო ფასად GEOSTORE-ში',
-        heroSubtitle: 'მიიღე 20%-მდე ფასდაკლება შერჩეულ Apple-ის პროდუქციაზე!'
-      };
-    } catch {
-      return { storeName: 'GEOSTORE' };
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      console.warn("Storage error for key:", key, e);
+      localStorage.removeItem(key);
+      return fallback;
     }
-  });
+  };
+
+  // Site Settings
+  const [siteSettings, setSiteSettings] = useState(() => loadSafeStorage('geostore_site_settings', {
+    storeName: 'GEOSTORE',
+    topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია',
+    supportPhone: '+995 32 200 00 00',
+    heroTitle: 'ინოვაციური ტექნიკა საუკეთესო ფასად GEOSTORE-ში',
+    heroSubtitle: 'მიიღე 20%-მდე ფასდაკლება შერჩეულ Apple-ის პროდუქციაზე!'
+  }));
 
   useEffect(() => {
-    try {
-      localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings));
-    } catch (e) { console.error(e); }
+    try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch (e) {}
   }, [siteSettings]);
 
   // Policy State
-  const [storePolicy, setStorePolicy] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_store_policy');
-      return saved ? JSON.parse(saved) : INITIAL_POLICY;
-    } catch {
-      return INITIAL_POLICY;
-    }
-  });
+  const [storePolicy, setStorePolicy] = useState(() => loadSafeStorage('geostore_store_policy', INITIAL_POLICY));
 
   useEffect(() => {
-    try {
-      localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy));
-    } catch (e) { console.error(e); }
+    try { localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy)); } catch (e) {}
   }, [storePolicy]);
 
   // Admin Auth
-  const [adminAuth, setAdminAuth] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_admin_auth');
-      return saved ? JSON.parse(saved) : { username: "admin", password: "admin123" };
-    } catch {
-      return { username: "admin", password: "admin123" };
-    }
-  });
+  const [adminAuth, setAdminAuth] = useState(() => loadSafeStorage('geostore_admin_auth', { username: "admin", password: "admin123" }));
 
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('geostore_admin_remember') === 'true';
+    try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
   });
 
-  const [adminLoginForm, setAdminLoginForm] = useState(() => {
-    try {
-      const remembered = localStorage.getItem('geostore_admin_remember_creds');
-      return remembered ? JSON.parse(remembered) : { username: '', password: '', remember: false };
-    } catch {
-      return { username: '', password: '', remember: false };
-    }
-  });
+  const [adminLoginForm, setAdminLoginForm] = useState(() => loadSafeStorage('geostore_admin_remember_creds', { username: '', password: '', remember: false }));
 
   const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
-    try {
-      localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth));
-    } catch (e) { console.error(e); }
+    try { localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth)); } catch (e) {}
   }, [adminAuth]);
 
-  const [categories, setCategories] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_cats');
-      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-    } catch {
-      return INITIAL_CATEGORIES;
-    }
-  });
-
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_products');
-      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-    } catch {
-      return INITIAL_PRODUCTS;
-    }
-  });
-
-  const [banners, setBanners] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_banners');
-      return saved ? JSON.parse(saved) : INITIAL_BANNERS;
-    } catch {
-      return INITIAL_BANNERS;
-    }
-  });
-
-  const [promoSlots, setPromoSlots] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_promos');
-      return saved ? JSON.parse(saved) : INITIAL_PROMO_SLOTS;
-    } catch {
-      return INITIAL_PROMO_SLOTS;
-    }
-  });
-
-  const [coupons, setCoupons] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_coupons');
-      return saved ? JSON.parse(saved) : INITIAL_COUPONS;
-    } catch {
-      return INITIAL_COUPONS;
-    }
-  });
-
-  const [sections, setSections] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_sections');
-      return saved ? JSON.parse(saved) : [
-        { id: 'hero', name: 'მთავარი ბანერი', visible: true },
-        { id: 'promos', name: 'პრომო ბლოკები', visible: true },
-        { id: 'ticker', name: 'ცხელი შეთავაზებები (Ticker)', visible: true },
-        { id: 'categories', name: 'კატეგორიების სექცია', visible: true },
-        { id: 'products', name: 'პროდუქციის კატალოგი', visible: true },
-        { id: 'badges', name: 'სანდოობის ბეჯები', visible: true },
-        { id: 'faq', name: 'ხშირად დასმული კითხვები', visible: true }
-      ];
-    } catch {
-      return [];
-    }
-  });
+  const [categories, setCategories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
+  const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
+  const [banners, setBanners] = useState(() => loadSafeStorage('geostore_banners', INITIAL_BANNERS));
+  const [promoSlots, setPromoSlots] = useState(() => loadSafeStorage('geostore_promos', INITIAL_PROMO_SLOTS));
+  const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', INITIAL_COUPONS));
+  
+  const [sections, setSections] = useState(() => loadSafeStorage('geostore_sections', [
+    { id: 'hero', name: 'მთავარი ბანერი', visible: true },
+    { id: 'promos', name: 'პრომო ბლოკები', visible: true },
+    { id: 'ticker', name: 'ცხელი შეთავაზებები (Ticker)', visible: true },
+    { id: 'categories', name: 'კატეგორიების სექცია', visible: true },
+    { id: 'products', name: 'პროდუქციის კატალოგი', visible: true },
+    { id: 'badges', name: 'სანდოობის ბეჯები', visible: true },
+    { id: 'faq', name: 'ხშირად დასმული კითხვები', visible: true }
+  ]));
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
@@ -291,36 +223,15 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '', notes: '' });
 
-  const [usersList, setUsersList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_users_list');
-      return saved ? JSON.parse(saved) : [
-        { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15' }
-      ];
-    } catch {
-      return [];
-    }
-  });
+  const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', [
+    { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15' }
+  ]));
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_current_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); 
-  const [authForm, setAuthForm] = useState(() => {
-    try {
-      const rememberedUser = localStorage.getItem('geostore_user_remembered');
-      return rememberedUser ? JSON.parse(rememberedUser) : { name: '', phone: '', email: '', password: '', remember: false };
-    } catch {
-      return { name: '', phone: '', email: '', password: '', remember: false };
-    }
-  });
+  const [authForm, setAuthForm] = useState(() => loadSafeStorage('geostore_user_remembered', { name: '', phone: '', email: '', password: '', remember: false }));
 
   // SUPABASE REST STATES
   const [orders, setOrders] = useState([]);
@@ -328,7 +239,9 @@ export default function App() {
 
   // Chat States
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
+  const [chatClientName, setChatClientName] = useState(() => {
+    try { return localStorage.getItem('geostore_chat_client_name') || ''; } catch { return ''; }
+  });
   const [clientNameInput, setClientNameInput] = useState('');
   
   const [clientChatView, setClientChatView] = useState([]);
