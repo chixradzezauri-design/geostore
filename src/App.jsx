@@ -220,6 +220,7 @@ export default function App() {
     return rememberedUser ? JSON.parse(rememberedUser) : { name: '', phone: '', email: '', password: '', remember: false };
   });
 
+  // Orders State with cross-device synchronization listener
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem('geostore_orders');
     return saved ? JSON.parse(saved) : [
@@ -264,6 +265,20 @@ export default function App() {
 
   // Popup notification for Admin when a new message arrives
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
+
+  // Cross-device sync listener using window storage event
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'geostore_orders' && e.newValue) {
+        setOrders(JSON.parse(e.newValue));
+      }
+      if (e.key === 'geostore_admin_chat_archive' && e.newValue) {
+        setAdminChatArchive(JSON.parse(e.newValue));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('geostore_client_chat_view', JSON.stringify(clientChatView));
@@ -375,6 +390,10 @@ export default function App() {
       courier: 'არ არის დანიშნული'
     };
 
+    const updatedOrders = [newOrder, ...orders];
+    setOrders(updatedOrders);
+    localStorage.setItem('geostore_orders', JSON.stringify(updatedOrders));
+
     setProducts(prev => prev.map(p => {
       const ordItem = itemsToOrder.find(i => i.id === p.id);
       if (ordItem) {
@@ -383,7 +402,6 @@ export default function App() {
       return p;
     }));
 
-    setOrders([newOrder, ...orders]);
     setIsCheckoutOpen(false);
     setQuickBuyProduct(null);
     if (!isExpress) setCart([]);
@@ -1178,7 +1196,9 @@ export default function App() {
                                 value={o.status || 'ახალი'} 
                                 onChange={(e) => {
                                   const updatedStatus = e.target.value;
-                                  setOrders(orders.map(ord => ord.id === o.id ? { ...ord, status: updatedStatus } : ord));
+                                  const updated = orders.map(ord => ord.id === o.id ? { ...ord, status: updatedStatus } : ord);
+                                  setOrders(updated);
+                                  localStorage.setItem('geostore_orders', JSON.stringify(updated));
                                   showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
                                 }}
                                 className="bg-slate-800 border border-slate-600 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
@@ -1325,6 +1345,7 @@ export default function App() {
                           onClick={() => {
                             if (window.confirm('ნამდვილად გსურთ მთელი არქივის წაშლა?')) {
                               setAdminChatArchive([]);
+                              localStorage.removeItem('geostore_admin_chat_archive');
                               setAdminSelectedClient(null);
                               showToast('🗑️ არქივი გასუფთავდა');
                             }
@@ -1369,7 +1390,9 @@ export default function App() {
                             <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
                               <h4 className="font-bold text-amber-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
                               <button onClick={() => {
-                                setAdminChatArchive(adminChatArchive.filter(m => (m.clientName || 'სტუმარი') !== adminSelectedClient));
+                                const updatedArchive = adminChatArchive.filter(m => (m.clientName || 'სტუმარი') !== adminSelectedClient);
+                                setAdminChatArchive(updatedArchive);
+                                localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
                                 setAdminSelectedClient(null);
                                 showToast('მომხმარებლის ჩათი წაიშალა');
                               }} className="text-rose-400 text-[11px] hover:underline">ამ მომხმარებლის წაშლა</button>
@@ -1400,7 +1423,10 @@ export default function App() {
                                 image: '',
                                 time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                               };
-                              setAdminChatArchive(prev => [...prev, replyMsg]);
+                              const updatedArchive = [...adminChatArchive, replyMsg];
+                              setAdminChatArchive(updatedArchive);
+                              localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
+
                               if (chatClientName === adminSelectedClient) {
                                 setClientChatView(prev => [...prev, replyMsg]);
                               }
@@ -1654,8 +1680,11 @@ export default function App() {
                                 image: evt.target.result,
                                 time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                               };
-                              setClientChatView(prev => [...prev, newMsg]);
-                              setAdminChatArchive(prev => [...prev, newMsg]);
+                              const updatedClientView = [...clientChatView, newMsg];
+                              const updatedArchive = [...adminChatArchive, newMsg];
+                              setClientChatView(updatedClientView);
+                              setAdminChatArchive(updatedArchive);
+                              localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
                               setAdminNewMessagePopup(newMsg);
                             };
                             reader.readAsDataURL(e.target.files[0]);
@@ -1680,8 +1709,11 @@ export default function App() {
                             image: '', 
                             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                           };
-                          setClientChatView(prev => [...prev, newMsg]);
-                          setAdminChatArchive(prev => [...prev, newMsg]);
+                          const updatedClientView = [...clientChatView, newMsg];
+                          const updatedArchive = [...adminChatArchive, newMsg];
+                          setClientChatView(updatedClientView);
+                          setAdminChatArchive(updatedArchive);
+                          localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
                           setAdminNewMessagePopup(newMsg);
                           setChatInput(''); 
                         } 
@@ -1700,8 +1732,11 @@ export default function App() {
                           image: '', 
                           time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
                         };
-                        setClientChatView(prev => [...prev, newMsg]);
-                        setAdminChatArchive(prev => [...prev, newMsg]);
+                        const updatedClientView = [...clientChatView, newMsg];
+                        const updatedArchive = [...adminChatArchive, newMsg];
+                        setClientChatView(updatedClientView);
+                        setAdminChatArchive(updatedArchive);
+                        localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
                         setAdminNewMessagePopup(newMsg);
                         setChatInput(''); 
                       }} 
