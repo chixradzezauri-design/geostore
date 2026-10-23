@@ -128,7 +128,7 @@ export default function App() {
   });
 
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('geostore_admin_remember'] === 'true';
+    return localStorage.getItem('geostore_admin_remember') === 'true';
   });
 
   const [adminLoginForm, setAdminLoginForm] = useState(() => {
