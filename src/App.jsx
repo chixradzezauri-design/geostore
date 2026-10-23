@@ -107,14 +107,18 @@ export default function App() {
 
   // Site Settings (CMS for Admin Panel)
   const [siteSettings, setSiteSettings] = useState(() => {
-    const saved = localStorage.getItem('geostore_site_settings');
-    return saved ? JSON.parse(saved) : {
-      storeName: 'GEOSTORE',
-      topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია',
-      supportPhone: '+995 32 200 00 00',
-      heroTitle: 'ინოვაციური ტექნიკა საუკეთესო ფასად GEOSTORE-ში',
-      heroSubtitle: 'მიიღე 20%-მდე ფასდაკლება შერჩეულ Apple-ის პროდუქციაზე!'
-    };
+    try {
+      const saved = localStorage.getItem('geostore_site_settings');
+      return saved ? JSON.parse(saved) : {
+        storeName: 'GEOSTORE',
+        topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია',
+        supportPhone: '+995 32 200 00 00',
+        heroTitle: 'ინოვაციური ტექნიკა საუკეთესო ფასად GEOSTORE-ში',
+        heroSubtitle: 'მიიღე 20%-მდე ფასდაკლება შერჩეულ Apple-ის პროდუქციაზე!'
+      };
+    } catch {
+      return { storeName: 'GEOSTORE' };
+    }
   });
 
   useEffect(() => {
@@ -123,8 +127,12 @@ export default function App() {
 
   // ადმინის ავტორიზაცია და Remember Me
   const [adminAuth, setAdminAuth] = useState(() => {
-    const saved = localStorage.getItem('geostore_admin_auth');
-    return saved ? JSON.parse(saved) : { username: "admin", password: "admin123" };
+    try {
+      const saved = localStorage.getItem('geostore_admin_auth');
+      return saved ? JSON.parse(saved) : { username: "admin", password: "admin123" };
+    } catch {
+      return { username: "admin", password: "admin123" };
+    }
   });
 
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
@@ -132,8 +140,12 @@ export default function App() {
   });
 
   const [adminLoginForm, setAdminLoginForm] = useState(() => {
-    const remembered = localStorage.getItem('geostore_admin_remember_creds');
-    return remembered ? JSON.parse(remembered) : { username: '', password: '', remember: false };
+    try {
+      const remembered = localStorage.getItem('geostore_admin_remember_creds');
+      return remembered ? JSON.parse(remembered) : { username: '', password: '', remember: false };
+    } catch {
+      return { username: '', password: '', remember: false };
+    }
   });
 
   const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
@@ -143,41 +155,65 @@ export default function App() {
   }, [adminAuth]);
 
   const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('geostore_cats');
-    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+    try {
+      const saved = localStorage.getItem('geostore_cats');
+      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+    } catch {
+      return INITIAL_CATEGORIES;
+    }
   });
 
   const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('geostore_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    try {
+      const saved = localStorage.getItem('geostore_products');
+      return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    } catch {
+      return INITIAL_PRODUCTS;
+    }
   });
 
   const [banners, setBanners] = useState(() => {
-    const saved = localStorage.getItem('geostore_banners');
-    return saved ? JSON.parse(saved) : INITIAL_BANNERS;
+    try {
+      const saved = localStorage.getItem('geostore_banners');
+      return saved ? JSON.parse(saved) : INITIAL_BANNERS;
+    } catch {
+      return INITIAL_BANNERS;
+    }
   });
 
   const [promoSlots, setPromoSlots] = useState(() => {
-    const saved = localStorage.getItem('geostore_promos');
-    return saved ? JSON.parse(saved) : INITIAL_PROMO_SLOTS;
+    try {
+      const saved = localStorage.getItem('geostore_promos');
+      return saved ? JSON.parse(saved) : INITIAL_PROMO_SLOTS;
+    } catch {
+      return INITIAL_PROMO_SLOTS;
+    }
   });
 
   const [coupons, setCoupons] = useState(() => {
-    const saved = localStorage.getItem('geostore_coupons');
-    return saved ? JSON.parse(saved) : INITIAL_COUPONS;
+    try {
+      const saved = localStorage.getItem('geostore_coupons');
+      return saved ? JSON.parse(saved) : INITIAL_COUPONS;
+    } catch {
+      return INITIAL_COUPONS;
+    }
   });
 
   const [sections, setSections] = useState(() => {
-    const saved = localStorage.getItem('geostore_sections');
-    return saved ? JSON.parse(saved) : [
-      { id: 'hero', name: 'მთავარი ბანერი', visible: true },
-      { id: 'promos', name: 'პრომო ბლოკები', visible: true },
-      { id: 'ticker', name: 'ცხელი შეთავაზებები (Ticker)', visible: true },
-      { id: 'categories', name: 'კატეგორიების სექცია', visible: true },
-      { id: 'products', name: 'პროდუქციის კატალოგი', visible: true },
-      { id: 'badges', name: 'სანდოობის ბეჯები', visible: true },
-      { id: 'faq', name: 'ხშირად დასმული კითხვები', visible: true }
-    ];
+    try {
+      const saved = localStorage.getItem('geostore_sections');
+      return saved ? JSON.parse(saved) : [
+        { id: 'hero', name: 'მთავარი ბანერი', visible: true },
+        { id: 'promos', name: 'პრომო ბლოკები', visible: true },
+        { id: 'ticker', name: 'ცხელი შეთავაზებები (Ticker)', visible: true },
+        { id: 'categories', name: 'კატეგორიების სექცია', visible: true },
+        { id: 'products', name: 'პროდუქციის კატალოგი', visible: true },
+        { id: 'badges', name: 'სანდოობის ბეჯები', visible: true },
+        { id: 'faq', name: 'ხშირად დასმული კითხვები', visible: true }
+      ];
+    } catch {
+      return [];
+    }
   });
 
   const [activeTab, setActiveTab] = useState('store'); 
@@ -202,73 +238,112 @@ export default function App() {
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '', notes: '' });
 
   const [usersList, setUsersList] = useState(() => {
-    const saved = localStorage.getItem('geostore_users_list');
-    return saved ? JSON.parse(saved) : [
-      { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15' }
-    ];
+    try {
+      const saved = localStorage.getItem('geostore_users_list');
+      return saved ? JSON.parse(saved) : [
+        { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15' }
+      ];
+    } catch {
+      return [];
+    }
   });
 
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('geostore_current_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('geostore_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); 
   const [authForm, setAuthForm] = useState(() => {
-    const rememberedUser = localStorage.getItem('geostore_user_remembered');
-    return rememberedUser ? JSON.parse(rememberedUser) : { name: '', phone: '', email: '', password: '', remember: false };
+    try {
+      const rememberedUser = localStorage.getItem('geostore_user_remembered');
+      return rememberedUser ? JSON.parse(rememberedUser) : { name: '', phone: '', email: '', password: '', remember: false };
+    } catch {
+      return { name: '', phone: '', email: '', password: '', remember: false };
+    }
   });
 
-  // Orders State with cross-device synchronization listener
+  // Orders State
   const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('geostore_orders');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'ORD-9821',
-        date: new Date().toLocaleDateString('ka-GE'),
-        customerName: 'გიორგი ბერიძე',
-        phone: '599 12 34 56',
-        address: 'თბილისი, ჭავჭავაძის გამზ. 15',
-        userEmail: 'giorgi@gmail.com',
-        items: [{ id: 'prod-1', name: 'iPhone 15 Pro Max', price: 3899, quantity: 1 }],
-        totalGEL: 3899,
-        status: 'ახალი',
-        courier: 'არ არის დანიშნული'
-      }
-    ];
+    try {
+      const saved = localStorage.getItem('geostore_orders');
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 'ORD-9821',
+          date: new Date().toLocaleDateString('ka-GE'),
+          customerName: 'გიორგი ბერიძე',
+          phone: '599 12 34 56',
+          address: 'თბილისი, ჭავჭავაძის გამზ. 15',
+          userEmail: 'giorgi@gmail.com',
+          items: [{ id: 'prod-1', name: 'iPhone 15 Pro Max', price: 3899, quantity: 1 }],
+          totalGEL: 3899,
+          status: 'ახალი',
+          courier: 'არ არის დანიშნული'
+        }
+      ];
+    } catch {
+      return [];
+    }
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // --- ADVANCED CHAT WITH ADMIN POPUP & INDIVIDUAL CLIENTS ARCHIVE ---
+  // --- CHAT STATES ---
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => localStorage.getItem('geostore_chat_client_name') || '');
   const [clientNameInput, setClientNameInput] = useState('');
   
   const [clientChatView, setClientChatView] = useState(() => {
-    const saved = localStorage.getItem('geostore_client_chat_view');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
-    ];
+    try {
+      const saved = localStorage.getItem('geostore_client_chat_view');
+      return saved ? JSON.parse(saved) : [
+        { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
+      ];
+    } catch {
+      return [];
+    }
   });
 
   const [adminChatArchive, setAdminChatArchive] = useState(() => {
-    const saved = localStorage.getItem('geostore_admin_chat_archive');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, clientName: 'სტუმარი', sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
-    ];
+    try {
+      const saved = localStorage.getItem('geostore_admin_chat_archive');
+      return saved ? JSON.parse(saved) : [
+        { id: 1, clientName: 'სტუმარი', sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }
+      ];
+    } catch {
+      return [];
+    }
   });
 
   const [chatInput, setChatInput] = useState('');
   const [adminSelectedClient, setAdminSelectedClient] = useState(null);
   const [adminIndividualReply, setAdminIndividualReply] = useState('');
 
-  // Popup notification for Admin when a new message arrives
+  // Notifications popup for Admin
   const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
+  const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
 
-  // Cross-device sync listener using window storage event
+  // Real-time synchronization across tabs/devices using BroadcastChannel & Storage Event
   useEffect(() => {
-    const handleStorageChange = (e) => {
+    const channel = new BroadcastChannel('geostore_sync_channel');
+
+    channel.onmessage = (event) => {
+      const { type, payload } = event.data;
+      if (type === 'NEW_ORDER') {
+        setOrders(prev => [payload, ...prev]);
+        setAdminNewOrderPopup(payload);
+      }
+      if (type === 'NEW_MESSAGE') {
+        setAdminChatArchive(prev => [...prev, payload]);
+        setAdminNewMessagePopup(payload);
+      }
+    };
+
+    const handleStorage = (e) => {
       if (e.key === 'geostore_orders' && e.newValue) {
         setOrders(JSON.parse(e.newValue));
       }
@@ -276,8 +351,12 @@ export default function App() {
         setAdminChatArchive(JSON.parse(e.newValue));
       }
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      channel.close();
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   useEffect(() => {
@@ -393,6 +472,17 @@ export default function App() {
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
     localStorage.setItem('geostore_orders', JSON.stringify(updatedOrders));
+
+    // Broadcast channel sync
+    try {
+      const channel = new BroadcastChannel('geostore_sync_channel');
+      channel.postMessage({ type: 'NEW_ORDER', payload: newOrder });
+      channel.close();
+    } catch (e) {
+      console.error(e);
+    }
+
+    setAdminNewOrderPopup(newOrder);
 
     setProducts(prev => prev.map(p => {
       const ordItem = itemsToOrder.find(i => i.id === p.id);
@@ -532,7 +622,6 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  // Grouping archive by client names for Admin
   const groupedClients = useMemo(() => {
     const map = {};
     adminChatArchive.forEach(m => {
@@ -553,22 +642,41 @@ export default function App() {
         </div>
       )}
 
-      {/* ADMIN POPUP NOTIFICATION FOR NEW MESSAGES */}
-      {adminLoggedIn && adminNewMessagePopup && (
+      {/* POPUP NOTIFICATIONS FOR ADMIN (NEW ORDER & NEW MESSAGE) */}
+      {adminNewMessagePopup && (
         <div 
           onClick={() => {
+            setActiveTab('admin');
             setAdminActiveSubTab('adminChat');
             setAdminSelectedClient(adminNewMessagePopup.clientName);
             setAdminNewMessagePopup(null);
           }}
-          className="fixed bottom-6 left-6 z-50 bg-slate-950 border-2 border-amber-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-900 transition animate-bounce flex items-center gap-3 text-xs md:text-sm"
+          className="fixed bottom-6 left-6 z-50 bg-slate-950 border-2 border-amber-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-950/90 transition animate-bounce flex items-center gap-3 text-xs md:text-sm max-w-sm"
         >
           <Bell className="w-6 h-6 text-amber-400 shrink-0 animate-spin" />
           <div>
-            <h4 className="font-black text-amber-400">ახალი შეტყობინება! ({adminNewMessagePopup.clientName})</h4>
+            <h4 className="font-black text-amber-400">💬 ახალი შეტყობინება! ({adminNewMessagePopup.clientName})</h4>
             <p className="text-slate-300 line-clamp-1">{adminNewMessagePopup.text}</p>
           </div>
           <button onClick={(e) => { e.stopPropagation(); setAdminNewMessagePopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
+        </div>
+      )}
+
+      {adminNewOrderPopup && (
+        <div 
+          onClick={() => {
+            setActiveTab('admin');
+            setAdminActiveSubTab('orders');
+            setAdminNewOrderPopup(null);
+          }}
+          className="fixed bottom-24 left-6 z-50 bg-slate-950 border-2 border-emerald-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-950/90 transition animate-bounce flex items-center gap-3 text-xs md:text-sm max-w-sm"
+        >
+          <ShoppingBag className="w-6 h-6 text-emerald-400 shrink-0 animate-bounce" />
+          <div>
+            <h4 className="font-black text-emerald-400">📦 ახალი შეკვეთა! (#{adminNewOrderPopup.id})</h4>
+            <p className="text-slate-300">{adminNewOrderPopup.customerName} - {adminNewOrderPopup.totalGEL} ₾</p>
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); setAdminNewOrderPopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
         </div>
       )}
 
@@ -1595,7 +1703,7 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET WITH CLIENT NAME PROMPT */}
+      {/* LIVE CHAT WIDGET */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center relative">
@@ -1685,6 +1793,15 @@ export default function App() {
                               setClientChatView(updatedClientView);
                               setAdminChatArchive(updatedArchive);
                               localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
+
+                              try {
+                                const channel = new BroadcastChannel('geostore_sync_channel');
+                                channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
+                                channel.close();
+                              } catch (err) {
+                                console.error(err);
+                              }
+
                               setAdminNewMessagePopup(newMsg);
                             };
                             reader.readAsDataURL(e.target.files[0]);
@@ -1714,6 +1831,15 @@ export default function App() {
                           setClientChatView(updatedClientView);
                           setAdminChatArchive(updatedArchive);
                           localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
+
+                          try {
+                            const channel = new BroadcastChannel('geostore_sync_channel');
+                            channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
+                            channel.close();
+                          } catch (err) {
+                            console.error(err);
+                          }
+
                           setAdminNewMessagePopup(newMsg);
                           setChatInput(''); 
                         } 
@@ -1737,6 +1863,15 @@ export default function App() {
                         setClientChatView(updatedClientView);
                         setAdminChatArchive(updatedArchive);
                         localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
+
+                        try {
+                          const channel = new BroadcastChannel('geostore_sync_channel');
+                          channel.postMessage({ type: 'NEW_MESSAGE', payload: newMsg });
+                          channel.close();
+                        } catch (err) {
+                          console.error(err);
+                        }
+
                         setAdminNewMessagePopup(newMsg);
                         setChatInput(''); 
                       }} 
