@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 // --- INITIAL MOCK DATA ---
@@ -154,7 +154,7 @@ export default function App() {
   });
 
   // App UI states
-  const [activeTab, setActiveTab] = useState('store'); // 'store' | 'wishlist' | 'cart' | 'admin' | 'profile'
+  const [activeTab, setActiveTab] = useState('store'); 
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('categories');
@@ -187,7 +187,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login'); 
   const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '' });
 
   // Orders
@@ -291,7 +291,7 @@ export default function App() {
     const found = coupons.find(c => c.code.toUpperCase() === couponInput.trim().toUpperCase());
     if (found) {
       setAppliedCoupon(found);
-      showToast(`🎉 პრომო კოდი ${found.code} გააქტიურდა (-{found.discountPercent}%)!`);
+      showToast(`🎉 პრომო კოდი ${found.code} გააქტიურდა (-${found.discountPercent}%)!`);
     } else {
       showToast('❌ არასწორი პრომო კოდი');
     }
@@ -728,7 +728,7 @@ export default function App() {
                 </div>
                 <div className="bg-slate-800 p-6 rounded-3xl h-fit space-y-4">
                   <div className="flex gap-2">
-                    <input type="text" placeholder="პრომო კოდი" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="bg-slate-900 px-3 py-2 rounded-xl text-xs flex-1 uppercase" />
+                    <input type="text" placeholder="პრომო კოდი" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="bg-slate-900 px-3 py-2 rounded-xl text-xs flex-1 uppercase text-white" />
                     <button onClick={applyCouponCode} className="bg-slate-700 px-3 py-2 rounded-xl text-xs font-bold">გამოყენება</button>
                   </div>
                   <div className="text-xl font-black text-amber-400">სულ: {formatPrice(cartTotalGEL)}</div>
