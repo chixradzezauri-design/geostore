@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { 
   ShoppingBag, Heart, Search, User, ShieldCheck, Truck, RefreshCw, 
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
@@ -8,11 +7,16 @@ import {
   Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell
 } from 'lucide-react';
 
-// ================= SUPABASE CONFIG =================
+// ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "Sb_publishable_RsjexQAAjkdLYhtMwN4P6A_BWBVfV2d"; 
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
 
 // --- TELEGRAM CONFIG ---
 const TG_BOT_TOKEN = "8968372156:AAHe6OHQZfdChPXS4wQDQ5omSA1DNIS6VEY";
@@ -296,7 +300,7 @@ export default function App() {
     }
   });
 
-  // SUPABASE & REALTIME STATES
+  // SUPABASE REST STATES
   const [orders, setOrders] = useState([]);
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
@@ -312,14 +316,18 @@ export default function App() {
   const [adminSelectedClient, setAdminSelectedClient] = useState(null);
   const [adminIndividualReply, setAdminIndividualReply] = useState('');
 
-  const [adminNewMessagePopup, setAdminNewMessagePopup] = useState(null);
-  const [adminNewOrderPopup, setAdminNewOrderPopup] = useState(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
 
-  // 1. SUPABASE-დან შეკვეთების წამოღება
+  // 1. Fetch Orders via Supabase REST API
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
         const formatted = data.map(o => ({
           id: o.id,
           date: new Date(o.created_at).toLocaleDateString('ka-GE'),
@@ -339,11 +347,12 @@ export default function App() {
     }
   };
 
-  // 2. SUPABASE-დან მესიჯების წამოღება
+  // 2. Fetch Messages via Supabase REST API
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
-      if (!error && data) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.asc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
         const formatted = data.map(m => ({
           id: m.id,
           clientName: m.client_name,
@@ -366,57 +375,21 @@ export default function App() {
     }
   };
 
+  // Auto Polling Every 3 Seconds for Realtime updates
   useEffect(() => {
     fetchOrders();
     fetchMessages();
-
-    // REALTIME SUBSCRIPTIONS
-    const ordersSubscription = supabase
-      .channel('public:orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        fetchOrders();
-        if (payload.eventType === 'INSERT') {
-          setAdminNewOrderPopup(payload.new);
-        }
-      })
-      .subscribe();
-
-    const messagesSubscription = supabase
-      .channel('public:messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload) => {
-        fetchMessages();
-        if (payload.eventType === 'INSERT' && payload.new.sender !== 'ადმინი') {
-          setAdminNewMessagePopup(payload.new);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(ordersSubscription);
-      supabase.removeChannel(messagesSubscription);
-    };
+    const interval = setInterval(() => {
+      fetchOrders();
+      fetchMessages();
+    }, 3000);
+    return () => clearInterval(interval);
   }, [chatClientName]);
-
-  const [toastMessage, setToastMessage] = useState('');
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
-  };
 
   const handleManualRefresh = () => {
     fetchOrders();
     fetchMessages();
-    try {
-      const savedProducts = localStorage.getItem('geostore_products');
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
-
-      const savedCats = localStorage.getItem('geostore_cats');
-      if (savedCats) setCategories(JSON.parse(savedCats));
-
-      showToast('🔄 მონაცემები წარმატებით განახლდა!');
-    } catch (err) {
-      console.error(err);
-    }
+    showToast('🔄 მონაცემები წარმატებით განახლდა!');
   };
 
   useEffect(() => localStorage.setItem('geostore_cats', JSON.stringify(categories)), [categories]);
@@ -489,7 +462,7 @@ export default function App() {
     setCouponInput('');
   };
 
-  // 📦 შეკვეთის გაფორმება Supabase-ში
+  // 📦 Save Order to Supabase REST
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       showToast('⚠️ გთხოვთ შეავსოთ ყველა ველი');
@@ -499,50 +472,48 @@ export default function App() {
     const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const itemsData = itemsToOrder.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity || 1 }));
 
-    const { error } = await supabase.from('orders').insert([
-      {
-        id: orderId,
-        customer_name: checkoutForm.name,
-        phone: checkoutForm.phone,
-        address: checkoutForm.address,
-        user_email: currentUser ? currentUser.email : 'guest',
-        items: itemsData,
-        total_gel: totalVal,
-        status: 'ახალი',
-        courier: 'არ არის დანიშნული'
-      }
-    ]);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          id: orderId,
+          customer_name: checkoutForm.name,
+          phone: checkoutForm.phone,
+          address: checkoutForm.address,
+          user_email: currentUser ? currentUser.email : 'guest',
+          items: itemsData,
+          total_gel: totalVal,
+          status: 'ახალი',
+          courier: 'არ არის დანიშნული'
+        })
+      });
 
-    if (error) {
-      console.error("Order error:", error);
-      showToast('❌ შეკვეთის შენახვა ვერ მოხერხდა');
-      return;
+      if (!res.ok) {
+        showToast('❌ შეკვეთის შენახვა ვერ მოხერხდა');
+        return;
+      }
+
+      const itemsListStr = itemsData.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
+      sendTelegramNotification(
+        `🚨 *ახალი შეკვეთა გაფორმდა!* (#${orderId})\n\n` +
+        `👤 *მყიდველი:* ${checkoutForm.name}\n` +
+        `📞 *ტელეფონი:* ${checkoutForm.phone}\n` +
+        `📍 *მისამართი:* ${checkoutForm.address}\n` +
+        `💰 *სულ თანხა:* ${totalVal} ₾\n\n` +
+        `📦 *პროდუქტები:*\n${itemsListStr}`
+      );
+
+      setIsCheckoutOpen(false);
+      setQuickBuyProduct(null);
+      if (!isExpress) setCart([]);
+      setAppliedCoupon(null);
+      showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      showToast('❌ ტექნიკური შეცდომა');
     }
-
-    const itemsListStr = itemsData.map(i => `- ${i.name} (${i.quantity} ც.)`).join('\n');
-    sendTelegramNotification(
-      `🚨 *ახალი შეკვეთა გაფორმდა!* (#${orderId})\n\n` +
-      `👤 *მყიდველი:* ${checkoutForm.name}\n` +
-      `📞 *ტელეფონი:* ${checkoutForm.phone}\n` +
-      `📍 *მისამართი:* ${checkoutForm.address}\n` +
-      `💰 *სულ თანხა:* ${totalVal} ₾\n\n` +
-      `📦 *პროდუქტები:*\n${itemsListStr}`
-    );
-
-    setProducts(prev => prev.map(p => {
-      const ordItem = itemsToOrder.find(i => i.id === p.id);
-      if (ordItem) {
-        return { ...p, stock: Math.max(0, p.stock - (ordItem.quantity || 1)) };
-      }
-      return p;
-    }));
-
-    setIsCheckoutOpen(false);
-    setQuickBuyProduct(null);
-    if (!isExpress) setCart([]);
-    setAppliedCoupon(null);
-    showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
-    fetchOrders();
   };
 
   const handleAuthSubmit = (e) => {
@@ -678,27 +649,34 @@ export default function App() {
     return map;
   }, [adminChatArchive]);
 
-  // 💬 მესიჯის გაგზავნა Supabase-ში
+  // 💬 Send Message via Supabase REST
   const handleSendMessage = async (text, senderName, imageUrl = '') => {
     if (!text.trim() && !imageUrl) return;
 
-    const newMsg = {
-      id: Date.now(),
-      client_name: chatClientName || 'სტუმარი',
-      sender: senderName,
-      text: text || 'ფოტო:',
-      image: imageUrl,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          id: Date.now(),
+          client_name: chatClientName || 'სტუმარი',
+          sender: senderName,
+          text: text || 'ფოტო:',
+          image: imageUrl,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        })
+      });
 
-    const { error } = await supabase.from('messages').insert([newMsg]);
-    if (!error) {
-      if (senderName !== 'ადმინი') {
-        sendTelegramNotification(`💬 *ახალი მესიჯი ჩათში!*\n👤 *${chatClientName || 'სტუმარი'}:* ${text || 'ფოტო'}`);
+      if (res.ok) {
+        if (senderName !== 'ადმინი') {
+          sendTelegramNotification(`💬 *ახალი მესიჯი ჩათში!*\n👤 *${chatClientName || 'სტუმარი'}:* ${text || 'ფოტო'}`);
+        }
+        setChatInput('');
+        setAdminIndividualReply('');
+        fetchMessages();
       }
-      setChatInput('');
-      setAdminIndividualReply('');
-      fetchMessages();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -709,43 +687,6 @@ export default function App() {
         <div className="fixed top-5 right-5 z-50 bg-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-2xl shadow-2xl border border-amber-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
           <Sparkles className="w-4 h-4" />
           {toastMessage}
-        </div>
-      )}
-
-      {adminNewMessagePopup && (
-        <div 
-          onClick={() => {
-            setActiveTab('admin');
-            setAdminActiveSubTab('adminChat');
-            setAdminSelectedClient(adminNewMessagePopup.client_name);
-            setAdminNewMessagePopup(null);
-          }}
-          className="fixed bottom-6 left-6 z-50 bg-slate-950 border-2 border-amber-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-950/90 transition animate-bounce flex items-center gap-3 text-xs md:text-sm max-w-sm"
-        >
-          <Bell className="w-6 h-6 text-amber-400 shrink-0 animate-spin" />
-          <div>
-            <h4 className="font-black text-amber-400">💬 ახალი შეტყობინება! ({adminNewMessagePopup.client_name})</h4>
-            <p className="text-slate-300 line-clamp-1">{adminNewMessagePopup.text}</p>
-          </div>
-          <button onClick={(e) => { e.stopPropagation(); setAdminNewMessagePopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
-        </div>
-      )}
-
-      {adminNewOrderPopup && (
-        <div 
-          onClick={() => {
-            setActiveTab('admin');
-            setAdminActiveSubTab('orders');
-            setAdminNewOrderPopup(null);
-          }}
-          className="fixed bottom-24 left-6 z-50 bg-slate-950 border-2 border-emerald-500 text-white p-4 rounded-2xl shadow-2xl cursor-pointer hover:bg-slate-950/90 transition animate-bounce flex items-center gap-3 text-xs md:text-sm max-w-sm"
-        >
-          <ShoppingBag className="w-6 h-6 text-emerald-400 shrink-0 animate-bounce" />
-          <div>
-            <h4 className="font-black text-emerald-400">📦 ახალი შეკვეთა! (#{adminNewOrderPopup.id})</h4>
-            <p className="text-slate-300">{adminNewOrderPopup.customer_name} - {adminNewOrderPopup.total_gel} ₾</p>
-          </div>
-          <button onClick={(e) => { e.stopPropagation(); setAdminNewOrderPopup(null); }} className="text-slate-400 hover:text-white ml-2">✕</button>
         </div>
       )}
 
@@ -1052,7 +993,7 @@ export default function App() {
 
               <div>
                 <h3 className="font-bold text-amber-400 text-sm mb-1">3. გარანტია და დაბრუნება</h3>
-                <p>ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ ვადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.</p>
+                <p>ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ वადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.</p>
               </div>
 
               <div>
@@ -1402,7 +1343,11 @@ export default function App() {
                                   value={o.status || 'ახალი'} 
                                   onChange={async (e) => {
                                     const updatedStatus = e.target.value;
-                                    await supabase.from('orders').update({ status: updatedStatus }).eq('id', o.id);
+                                    await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
+                                      method: 'PATCH',
+                                      headers,
+                                      body: JSON.stringify({ status: updatedStatus })
+                                    });
                                     fetchOrders();
                                     showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
                                   }}
