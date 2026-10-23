@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon
 } from 'lucide-react';
 
 // --- INITIAL MOCK DATA ---
@@ -219,11 +219,25 @@ export default function App() {
   });
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
+  // Chat Widget with Photo Support (LocalStorage synced)
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', isAdmin: false }
-  ]);
+  const [chatMessages, setChatMessages] = useState(() => {
+    const saved = localStorage.getItem('geostore_chat_msgs');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', isAdmin: false, image: '' }
+    ];
+  });
   const [chatInput, setChatInput] = useState('');
+  const [chatImageInput, setChatImageInput] = useState('');
+  const [showChatImageField, setShowChatImageField] = useState(false);
+
+  const [adminReplyText, setAdminReplyText] = useState('');
+  const [adminReplyImage, setAdminReplyImage] = useState('');
+  const [showAdminChatImageField, setShowAdminChatImageField] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('geostore_chat_msgs', JSON.stringify(chatMessages));
+  }, [chatMessages]);
 
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (msg) => {
@@ -952,9 +966,10 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 2. PRODUCTS (FULLY RESPONSIVE FOR MOBILE & DESKTOP) */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
-                    <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
+                    <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
                       <h3 className="font-bold text-base md:text-lg text-white">+ ახალი პროდუქტის დამატება</h3>
                       <form onSubmit={(e) => {
                         e.preventDefault();
@@ -971,22 +986,33 @@ export default function App() {
                         };
                         setProducts([newProd, ...products]);
                         f.reset();
-                        showToast('პროდუქტი დაემატა');
-                      }} className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <input type="text" name="name" required placeholder="დასახელება *" className="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" />
-                        <input type="text" name="sku" placeholder="SKU კოდი" className="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" />
-                        <select name="category" className="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white">
-                          {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
-                        </select>
-                        <input type="number" name="priceGEL" required placeholder="ფასი (₾) *" className="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" />
-                        <input type="number" name="stock" required placeholder="მარაგი *" className="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" />
-                        <input type="url" name="image" placeholder="ფოტოს URL" className="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" />
-                        <textarea name="description" placeholder="აღწერა..." className="sm:col-span-3 bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white h-16"/>
-                        <button type="submit" className="sm:col-span-3 bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl">შენახვა</button>
+                        showToast('პროდუქტი წარმატებით დაემატა!');
+                      }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        <input type="text" name="name" required placeholder="პროდუქტის დასახელება *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" name="sku" placeholder="SKU კოდი (მაგ: GEO-IP15)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] text-slate-400">კატეგორია</label>
+                          <select name="category" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none">
+                            {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <input type="number" name="priceGEL" required placeholder="ფასი (₾) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                          <input type="number" name="stock" required placeholder="მარაგი *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        </div>
+
+                        <input type="url" name="image" placeholder="ფოტოს URL ბმული" className="md:col-span-2 bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        <textarea name="description" placeholder="დეტალური აღწერა..." className="md:col-span-2 bg-slate-900 border border-slate-700 p-3 rounded-xl text-white h-20 outline-none"/>
+                        
+                        <button type="submit" className="md:col-span-2 bg-amber-500 text-slate-950 font-extrabold py-3.5 rounded-xl text-sm transition hover:bg-amber-400">
+                          დამატება პროდუქტებში
+                        </button>
                       </form>
                     </div>
 
-                    <div className="bg-slate-800 p-6 rounded-3xl space-y-3">
+                    <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-3">
                       <h3 className="font-bold text-base md:text-lg text-white">არსებული პროდუქტები ({products.length})</h3>
                       <div className="space-y-2">
                         {products.map(p => (
@@ -1029,9 +1055,9 @@ export default function App() {
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white">მთავარი ბანერის რედაქტირება</h3>
                     <div className="space-y-3 text-xs">
-                      <input type="text" value={banners[0]?.title || ''} onChange={e => setBanners([{ ...banners[0], title: e.target.value }])} className="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" placeholder="სათაური" />
-                      <input type="text" value={banners[0]?.subtitle || ''} onChange={e => setBanners([{ ...banners[0], subtitle: e.target.value }])} className="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" placeholder="ქვესათაური" />
-                      <input type="url" value={banners[0]?.image || ''} onChange={e => setBanners([{ ...banners[0], image: e.target.value }])} className="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white" placeholder="სურათის URL" />
+                      <input type="text" value={banners[0]?.title || ''} onChange={e => setBanners([{ ...banners[0], title: e.target.value }])} className="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white outline-none" placeholder="სათაური" />
+                      <input type="text" value={banners[0]?.subtitle || ''} onChange={e => setBanners([{ ...banners[0], subtitle: e.target.value }])} className="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white outline-none" placeholder="ქვესათაური" />
+                      <input type="url" value={banners[0]?.image || ''} onChange={e => setBanners([{ ...banners[0], image: e.target.value }])} className="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-white outline-none" placeholder="სურათის URL" />
                     </div>
                   </div>
                 )}
@@ -1083,8 +1109,8 @@ export default function App() {
                       e.target.reset();
                       showToast('პრომო კოდი დაემატა');
                     }} className="flex gap-2">
-                      <input type="text" name="code" required placeholder="კოდი (GEO10)" className="bg-slate-900 border border-slate-700 p-2 rounded-xl text-xs uppercase text-white" />
-                      <input type="number" name="disc" required placeholder="%" className="bg-slate-900 border border-slate-700 p-2 rounded-xl text-xs w-20 text-white" />
+                      <input type="text" name="code" required placeholder="კოდი (GEO10)" className="bg-slate-900 border border-slate-700 p-2 rounded-xl text-xs uppercase text-white outline-none" />
+                      <input type="number" name="disc" required placeholder="%" className="bg-slate-900 border border-slate-700 p-2 rounded-xl text-xs w-20 text-white outline-none" />
                       <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">დამატება</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
@@ -1195,27 +1221,47 @@ export default function App() {
         </div>
       )}
 
+      {/* LIVE CHAT WIDGET WITH PHOTO SUPPORT */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-amber-500 text-slate-950 p-3.5 rounded-full shadow-2xl flex items-center justify-center">
             <MessageSquare className="w-5 h-5" />
           </button>
         ) : (
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[380px]">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[420px]">
             <div className="bg-amber-500 p-3.5 text-slate-950 font-bold flex justify-between items-center text-xs">
-              <span>მხარდაჭერა</span>
+              <span>მხარდაჭერა (ჩათი)</span>
               <button onClick={() => setIsChatOpen(false)}>✕</button>
             </div>
-            <div className="flex-1 p-3 overflow-y-auto space-y-2 text-xs bg-slate-950">
+            <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
               {chatMessages.map(m => (
-                <div key={m.id} className={m.isAdmin ? 'text-amber-400 text-right' : 'text-white'}>
-                  <b>{m.sender}:</b> {m.text}
+                <div key={m.id} className={`flex flex-col ${m.isAdmin ? 'items-end' : 'items-start'}`}>
+                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.isAdmin ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-white'}`}>
+                    <b>{m.sender}:</b> {m.text}
+                    {m.image && (
+                      <img src={m.image} alt="Uploaded" className="mt-2 rounded-xl max-h-32 object-cover w-full border border-slate-700" />
+                    )}
+                  </div>
+                  <span className="text-[9px] text-slate-500 mt-0.5 px-1">{m.time}</span>
                 </div>
               ))}
             </div>
-            <div className="p-3 bg-slate-900 border-t border-slate-800 flex gap-2">
-              <input type="text" placeholder="ტექსტი..." value={chatInput} onChange={e => setChatInput(e.target.value)} className="flex-1 bg-slate-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none" />
-              <button onClick={() => { if(!chatInput.trim()) return; setChatMessages([...chatMessages, { id: Date.now(), sender: currentUser ? currentUser.name : 'სტუმარი', text: chatInput, isAdmin: false }]); setChatInput(''); }} className="bg-amber-500 text-slate-950 p-2 rounded-xl"><Send className="w-3.5 h-3.5"/></button>
+
+            {/* Chat Input Area */}
+            <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
+              {showChatImageField && (
+                <div className="flex gap-1">
+                  <input type="url" placeholder="ჩასვით ფოტოს URL ბმული..." value={chatImageInput} onChange={e => setChatImageInput(e.target.value)} className="w-full bg-slate-800 rounded-xl px-2.5 py-1.5 text-[11px] text-white outline-none border border-slate-700" />
+                  <button onClick={() => setShowChatImageField(false)} className="text-slate-400 px-2">✕</button>
+                </div>
+              )}
+              <div className="flex gap-2 items-center">
+                <button onClick={() => setShowChatImageField(!showChatImageField)} className={`p-2 rounded-xl border ${showChatImageField ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-800 text-slate-300 border-slate-700'}`} title="ფოტოს დართვა">
+                  <ImageIcon className="w-4 h-4" />
+                </button>
+                <input type="text" placeholder="დაწერეთ შეტყობინება..." value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter') { if(!chatInput.trim() && !chatImageInput.trim()) return; setChatMessages([...chatMessages, { id: Date.now(), sender: currentUser ? currentUser.name : 'სტუმარი', text: chatInput, image: chatImageInput, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), isAdmin: false }]); setChatInput(''); setChatImageInput(''); setShowChatImageField(false); } }} className="flex-1 bg-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none border border-slate-700" />
+                <button onClick={() => { if(!chatInput.trim() && !chatImageInput.trim()) return; setChatMessages([...chatMessages, { id: Date.now(), sender: currentUser ? currentUser.name : 'სტუმარი', text: chatInput, image: chatImageInput, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), isAdmin: false }]); setChatInput(''); setChatImageInput(''); setShowChatImageField(false); }} className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"><Send className="w-3.5 h-3.5"/></button>
+              </div>
             </div>
           </div>
         )}
