@@ -9,7 +9,7 @@ import {
 
 // ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "Sb_publishable_RsjexQAAjkdLYhtMwN4P6A_BWBVfV2d"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -457,7 +457,7 @@ export default function App() {
     setCouponInput('');
   };
 
-  // 📦 Save Order to Supabase REST (with Debug Alert)
+  // 📦 Save Order to Supabase REST
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       alert('⚠️ გთხოვთ შეავსოთ ყველა ველი');
@@ -643,7 +643,7 @@ export default function App() {
     return map;
   }, [adminChatArchive]);
 
-  // 💬 Send Message via Supabase REST (with Debug Alert)
+  // 💬 Send Message via Supabase REST
   const handleSendMessage = async (text, senderName, imageUrl = '') => {
     if (!text.trim() && !imageUrl) return;
 
