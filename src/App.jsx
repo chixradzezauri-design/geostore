@@ -375,7 +375,6 @@ export default function App() {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Also use BroadcastChannel for instant local & cross-tab sync
     let channel;
     try {
       channel = new BroadcastChannel('geostore_sync_channel');
@@ -434,7 +433,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // Manual refresh function to reload all data from localStorage
   const handleManualRefresh = () => {
     try {
       const savedOrders = localStorage.getItem('geostore_orders');
@@ -561,7 +559,6 @@ export default function App() {
       `📦 *პროდუქტები:*\n${itemsListStr}`
     );
 
-    // Broadcast channel sync
     try {
       const channel = new BroadcastChannel('geostore_sync_channel');
       channel.postMessage({ type: 'NEW_ORDER', payload: newOrder });
@@ -730,7 +727,6 @@ export default function App() {
         </div>
       )}
 
-      {/* POPUP NOTIFICATIONS FOR ADMIN */}
       {adminNewMessagePopup && (
         <div 
           onClick={() => {
@@ -1917,7 +1913,6 @@ export default function App() {
                               setAdminChatArchive(updatedArchive);
                               localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
-                              // Telegram Notification
                               sendTelegramNotification(
                                 `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
                                 `👤 *მომხმარებელი:* ${chatClientName}\n` +
@@ -1962,7 +1957,6 @@ export default function App() {
                           setAdminChatArchive(updatedArchive);
                           localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
-                          // Telegram Notification
                           sendTelegramNotification(
                             `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
                             `👤 *მომხმარებელი:* ${chatClientName}\n` +
@@ -2001,7 +1995,6 @@ export default function App() {
                         setAdminChatArchive(updatedArchive);
                         localStorage.setItem('geostore_admin_chat_archive', JSON.stringify(updatedArchive));
 
-                        // Telegram Notification
                         sendTelegramNotification(
                           `💬 *ახალი შეტყობინება ჩათში!*\n\n` +
                           `👤 *მომხმარებელი:* ${chatClientName}\n` +
@@ -2062,7 +2055,6 @@ export default function App() {
         </button>
 
         <button
-          onClick={() =>.setActiveTab ? setActiveTab('cart') : null}
           onClick={() => setActiveTab('cart')}
           className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === 'cart' ? 'text-amber-400' : 'text-slate-400'}`}
         >
