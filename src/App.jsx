@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Search, Plus, Minus, Lock, CheckCircle, 
   Package, Eye, X, User, LogOut, Phone, Mail, 
-  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone, TrendingUp, DollarSign, AlertTriangle, Truck, ShieldCheck
+  MapPin, Clock, Edit2, MessageSquare, Send, Download, Star, Heart, Zap, Globe, Filter, MessageCircle, Bell, BarChart2, Activity, Laptop, Smartphone, DollarSign, AlertTriangle, Image as ImageIcon, Layout
 } from 'lucide-react';
 
 const CATEGORIES_KA = ["ყველა", "ელექტრონიკა", "ტანსაცმელი და ფეხსაცმელი", "სახლის ნივთები", "სილამაზე და მოვლა", "აქსესუარები", "სპორტი", "სხვა პროდუქტები"];
@@ -18,6 +18,10 @@ const INITIAL_PRODUCTS = [
     oldPrice: 4899,
     costPrice: 3800,
     image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80", 
+    gallery: [
+      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&auto=format&fit=crop&q=80"
+    ],
     description: "ტიტანის კორპუსი, A17 Pro ჩიპი. ოფიციალური გარანტია 1 წელი.", 
     stock: 12,
     rating: 4.9,
@@ -34,39 +38,31 @@ const INITIAL_PRODUCTS = [
     oldPrice: 350,
     costPrice: 150,
     image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80", 
+    gallery: ["https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80"],
     description: "100% ნატურალური ტყავი, კომფორტული ძირი.", 
-    stock: 2,
+    stock: 3,
     rating: 4.7,
     reviews: []
-  },
-  { 
-    id: 3, 
-    sku: "GEO-EAR-ANC", 
-    name: "უსადენო ყურსასმენი ANC Pro", 
-    category: "ელექტრონიკა", 
-    price: 350, 
-    oldPrice: 420,
-    costPrice: 200,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80", 
-    description: "აქტიური ხმაურის ჩახშობა (ANC), 30 საათიანი ელემენტი.", 
-    stock: 1,
-    rating: 4.5,
-    reviews: []
   }
+];
+
+const INITIAL_BANNERS = [
+  { id: 1, title: "გრანდიოზული ფასდაკლება 2026!", subtitle: "ისარგებლეთ 10%-იანი ფასდაკლებით კოდით: GEO2026", bg: "bg-black text-white" },
+  { id: 2, title: "ახალი კოლექცია უკვე საიტზეა", subtitle: "საუკეთესო ხარისხი და სწრაფი მიწოდება მთელს საქართველოში", bg: "bg-indigo-900 text-white" }
 ];
 
 export default function App() {
   const [lang, setLang] = useState("KA");
 
-  // ანალიტიკა და ქვეყნების ზუსტი სტატისტიკა
+  // ანალიტიკა და ქვეყნები
   const [analytics, setAnalytics] = useState(() => {
     const saved = localStorage.getItem('geostore_analytics');
     return saved ? JSON.parse(saved) : {
-      todayVisits: 215,
-      totalTimeSpentSeconds: 45200,
-      mobileVisits: 150,
-      desktopVisits: 65,
-      countries: { "საქართველო (თბილისი)": 182, "გერმანია (ბერლინი)": 19, "აშშ (ნიუ-იორკი)": 14 }
+      todayVisits: 240,
+      totalTimeSpentSeconds: 51200,
+      mobileVisits: 168,
+      desktopVisits: 72,
+      countries: { "საქართველო (თბილისი)": 195, "გერმანია (ბერლინი)": 24, "აშშ (ნიუ-იორკი)": 21 }
     };
   });
 
@@ -109,6 +105,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  // მომხმარებელთა ბაზა (ავტომატური სინქრონიზაცია)
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('geostore_users_list');
     return saved ? JSON.parse(saved) : [
@@ -121,6 +118,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // ბანერების მართვა
+  const [banners, setBanners] = useState(() => {
+    const saved = localStorage.getItem('geostore_banners');
+    return saved ? JSON.parse(saved) : INITIAL_BANNERS;
+  });
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+
   // ჩათის მენეჯმენტი
   const [chatMessages, setChatMessages] = useState(() => {
     const saved = localStorage.getItem('geostore_chat_messages');
@@ -129,12 +133,7 @@ export default function App() {
 
   const [policyText, setPolicyText] = useState(() => {
     const saved = localStorage.getItem('geostore_policy_text');
-    return saved || "მიწოდება ხორციელდება თბილისში 24 საათში (5₾), ხოლო რეგიონებში 48 საათში (10₾). 100₾-ზე მეტი შეკვეთისას მიწოდება უფასოა. ნივთის დაბრუნება შესაძლებელია 14 კალენდარული დღის განმავლობაში.";
-  });
-
-  const [storeBannerText, setStoreBannerText] = useState(() => {
-    const saved = localStorage.getItem('geostore_banner_text');
-    return saved || "გრანდიოზული ფასდაკლება! ისარგებლეთ 10%-იანი ფასდაკლებით კოდით: GEO2026";
+    return saved || "მიწოდება ხორციელდება თბილისში 24 საათში (5₾), ხოლო რეგიონებში 48 საათში (10₾). 100₾-ზე მეტი შეკვეთისას მიწოდება უფასოა.";
   });
 
   const [cart, setCart] = useState([]);
@@ -155,7 +154,7 @@ export default function App() {
   const [oneClickForm, setOneClickForm] = useState({ name: "", phone: "" });
 
   const [toastMessage, setToastMessage] = useState("");
-  const [telegramAlert, setTelegramAlert] = useState(null);
+  const [desktopPopupAlert, setDesktopPopupAlert] = useState(null); // დესკტოპ პოაპი შეტყობინებისთვის
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -175,8 +174,9 @@ export default function App() {
   const [adminError, setAdminError] = useState("");
   const [adminSubTab, setAdminSubTab] = useState("analytics");
   
-  const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", image: "", description: "", stock: "" });
-  
+  const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", image: "", galleryStr: "", description: "", stock: "" });
+  const [newBanner, setNewBanner] = useState({ title: "", subtitle: "", bg: "bg-black text-white" });
+
   const [orderForm, setOrderForm] = useState({ 
     name: "", 
     phone: "", 
@@ -213,7 +213,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); }, [currentUser]);
   useEffect(() => { localStorage.setItem('geostore_chat_messages', JSON.stringify(chatMessages)); }, [chatMessages]);
   useEffect(() => { localStorage.setItem('geostore_policy_text', policyText); }, [policyText]);
-  useEffect(() => { localStorage.setItem('geostore_banner_text', storeBannerText); }, [storeBannerText]);
+  useEffect(() => { localStorage.setItem('geostore_banners', JSON.stringify(banners)); }, [banners]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -234,12 +234,10 @@ export default function App() {
       date: new Date().toISOString().split('T')[0]
     };
     
-    if (authMode === 'register') {
+    // ახალი მომხმარებლის დამატება სიაში მყისიერად (რომ ჩანდეს ადმინთან)
+    const exists = usersList.some(u => u.email === userData.email);
+    if (!exists) {
       setUsersList(prev => [userData, ...prev]);
-    } else {
-      if (!usersList.some(u => u.email === userData.email)) {
-        setUsersList(prev => [userData, ...prev]);
-      }
     }
 
     setCurrentUser(userData);
@@ -278,9 +276,16 @@ export default function App() {
 
     setChatMessages(prev => [...prev, newMsg]);
     setUserChatMessage("");
+
+    // დესკტოპ პოაპი ადმინისთვის/სისტემისთვის რომ შეტყობინება მოვიდა
+    setDesktopPopupAlert({
+      title: "💬 ახალი შეტყობინება ჩათში!",
+      msg: `${senderName}: ${userChatMessage}`
+    });
+    setTimeout(() => setDesktopPopupAlert(null), 5000);
   };
 
-  // ადმინის პასუხი ჩათში, რომელიც რეალურ დროში ჩნდება კლიენტთან
+  // ადმინის პასუხი, რომელიც მყისიერად ემატება ჩათს და ჩანს კლიენტთან
   const handleAdminReplyMessage = (e) => {
     e.preventDefault();
     if (!adminReplyText.trim()) return;
@@ -288,7 +293,7 @@ export default function App() {
     const adminMsg = {
       id: Date.now(),
       sender: "GEOSTORE ადმინი",
-      phone: "ოფიციალური მხარდაჭერა",
+      phone: "მხარდაჭერა",
       text: adminReplyText,
       time: new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' }),
       isAdmin: true
@@ -296,7 +301,7 @@ export default function App() {
 
     setChatMessages(prev => [...prev, adminMsg]);
     setAdminReplyText("");
-    showToast("პასუხი გაიგზავნა წარმატებით!");
+    showToast("პასუხი წარმატებით გაიგზავნა!");
   };
 
   const filteredProducts = products.filter(p => {
@@ -389,11 +394,11 @@ export default function App() {
     setOrders([newOrder, ...orders]);
     setOrderSuccess(newOrder);
 
-    setTelegramAlert({
-      title: "📲 ახალი შეკვეთა Telegram-ში!",
-      msg: `მყიდველი: ${newOrder.customer.name} (${newOrder.customer.phone}), თანხა: ${newOrder.total}₾`
+    setDesktopPopupAlert({
+      title: "📦 ახალი შეკვეთა მიღებულია!",
+      msg: `მყიდველი: ${newOrder.customer.name} - ${newOrder.total}₾`
     });
-    setTimeout(() => setTelegramAlert(null), 5000);
+    setTimeout(() => setDesktopPopupAlert(null), 5000);
 
     setCart([]);
     setIsCheckoutOpen(false);
@@ -417,12 +422,6 @@ export default function App() {
     };
     setOrders([newOrder, ...orders]);
     setOrderSuccess(newOrder);
-
-    setTelegramAlert({
-      title: "📲 სწრაფი 1-Click შეკვეთა!",
-      msg: `${oneClickForm.name} - ${oneClickForm.phone}`
-    });
-    setTimeout(() => setTelegramAlert(null), 5000);
 
     setOneClickProduct(null);
     setOneClickForm({ name: "", phone: "" });
@@ -469,6 +468,7 @@ export default function App() {
       alert("გთხოვთ შეავსოთ სავალდებულო ველები!");
       return;
     }
+    const galleryArr = newProd.galleryStr ? newProd.galleryStr.split(',').map(s => s.trim()) : [newProd.image];
     const productToAdd = {
       id: Date.now(),
       sku: newProd.sku || `GEO-${Math.floor(Math.random() * 1000)}`,
@@ -477,13 +477,14 @@ export default function App() {
       price: Number(newProd.price),
       costPrice: Number(newProd.costPrice) || Number(newProd.price) * 0.6,
       image: newProd.image,
+      gallery: galleryArr,
       description: newProd.description || "აღწერა არ არის",
       stock: Number(newProd.stock) || 10,
       rating: 5.0,
       reviews: []
     };
     setProducts([productToAdd, ...products]);
-    setNewProd({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", image: "", description: "", stock: "" });
+    setNewProd({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", image: "", galleryStr: "", description: "", stock: "" });
     alert("პროდუქტი წარმატებით დაემატა!");
   };
 
@@ -498,6 +499,18 @@ export default function App() {
     if (confirm("ნამდვილად გსურთ წაშლა?")) {
       setProducts(products.filter(p => p.id !== id));
     }
+  };
+
+  const handleAddBanner = (e) => {
+    e.preventDefault();
+    if (!newBanner.title) return;
+    setBanners([...banners, { id: Date.now(), ...newBanner }]);
+    setNewBanner({ title: "", subtitle: "", bg: "bg-black text-white" });
+    alert("ბანერი დაემატა!");
+  };
+
+  const deleteBanner = (id) => {
+    setBanners(banners.filter(b => b.id !== id));
   };
 
   const updateOrderStatus = (orderId, newStatus) => {
@@ -521,12 +534,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col font-sans">
       
-      {telegramAlert && (
-        <div className="fixed top-24 right-6 z-50 bg-indigo-600 text-white p-4 rounded-2xl shadow-2xl border border-indigo-400 max-w-sm animate-bounce flex items-center gap-3">
+      {/* დესკტოპ მცურავი შეტყობინება (Popup) */}
+      {desktopPopupAlert && (
+        <div className="fixed top-24 right-6 z-50 bg-indigo-600 text-white p-4 rounded-3xl shadow-2xl border border-indigo-400 max-w-sm animate-bounce flex items-center gap-3">
           <Bell className="w-6 h-6 shrink-0" />
           <div>
-            <h4 className="font-bold text-xs">{telegramAlert.title}</h4>
-            <p className="text-[11px] opacity-90 mt-0.5">{telegramAlert.msg}</p>
+            <h4 className="font-bold text-xs">{desktopPopupAlert.title}</h4>
+            <p className="text-[11px] opacity-90 mt-0.5">{desktopPopupAlert.msg}</p>
           </div>
         </div>
       )}
@@ -537,8 +551,9 @@ export default function App() {
         </div>
       )}
 
-      <div className="bg-black text-white text-xs py-2 px-4 text-center font-medium flex justify-between items-center max-w-7xl mx-auto w-full">
-        <span>✨ {storeBannerText}</span>
+      {/* ზედა ბანერების სლაიდერი */}
+      <div className="bg-black text-white text-xs py-2.5 px-4 text-center font-medium flex justify-between items-center max-w-7xl mx-auto w-full">
+        <span>✨ {banners[currentBannerIndex]?.subtitle || "უფასო მიწოდება 100₾-ის ზემოთ"}</span>
         <div className="flex gap-4 items-center">
           <button onClick={() => setLang(lang === "KA" ? "EN" : "KA")} className="flex items-center gap-1 font-bold bg-white/20 px-2 py-0.5 rounded">
             <Globe className="w-3 h-3" /> {lang}
@@ -677,7 +692,7 @@ export default function App() {
             ) : (
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b pb-4">
-                  <h2 className="text-3xl font-black">პროფესიონალური ადმინ პანელი</h2>
+                  <h2 className="text-3xl font-black">ადმინ პანელი</h2>
                   <div className="flex gap-2">
                     <button onClick={exportOrdersToCSV} className="bg-green-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
                       <Download className="w-4 h-4" /> CSV ექსპორტი
@@ -691,19 +706,22 @@ export default function App() {
                     <BarChart2 className="w-3.5 h-3.5"/> ფინანსები & ანალიტიკა
                   </button>
                   <button onClick={() => setAdminSubTab('orders')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'orders' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    შეკვეთები & კურიერები ({orders.length})
+                    შეკვეთები ({orders.length})
                   </button>
                   <button onClick={() => setAdminSubTab('products')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'products' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    პროდუქტები & მარაგები ({products.length})
+                    პროდუქტები ({products.length})
+                  </button>
+                  <button onClick={() => setAdminSubTab('banners')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'banners' ? 'bg-black text-white' : 'bg-gray-100'}`}>
+                    ბანერები ({banners.length})
                   </button>
                   <button onClick={() => setAdminSubTab('users')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'users' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    მომხმარებლები & CRM ({usersList.length})
+                    მომხმარებლები ({usersList.length})
                   </button>
                   <button onClick={() => setAdminSubTab('chat')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'chat' ? 'bg-black text-white' : 'bg-gray-100'}`}>
                     ონლაინ ჩათი ({chatMessages.length})
                   </button>
                   <button onClick={() => setAdminSubTab('settings')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminSubTab === 'settings' ? 'bg-black text-white' : 'bg-gray-100'}`}>
-                    საიტის პარამეტრები
+                    პოლიტიკა
                   </button>
                 </div>
 
@@ -716,36 +734,26 @@ export default function App() {
                           <span className="text-3xl font-black text-green-600">{totalRevenue} ₾</span>
                           <DollarSign className="w-6 h-6 text-green-600" />
                         </div>
-                        <p className="text-[11px] text-gray-500">ყველა წარმატებული შეკვეთიდან</p>
                       </div>
-
                       <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
                         <span className="text-xs font-bold text-gray-400 uppercase">დღიური ვიზიტები</span>
                         <div className="flex justify-between items-center">
                           <span className="text-3xl font-black">{analytics.todayVisits}</span>
                           <User className="w-6 h-6 text-indigo-600" />
                         </div>
-                        <p className="text-[11px] text-green-600 font-bold">აქტიური ტრეკინგი</p>
                       </div>
-
                       <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
                         <span className="text-xs font-bold text-gray-400 uppercase">საშუალო დრო საიტზე</span>
                         <div className="flex justify-between items-center">
                           <span className="text-3xl font-black">{avgTimeMinutes} წთ</span>
                           <Clock className="w-6 h-6 text-indigo-600" />
                         </div>
-                        <p className="text-[11px] text-gray-500">თითო მომხმარებელზე</p>
                       </div>
-
                       <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-2">
-                        <span className="text-xs font-bold text-gray-400 uppercase">مობილური vs Desktop</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase">მობილური vs Desktop</span>
                         <div className="flex justify-between items-center text-sm font-bold">
                           <span className="flex items-center gap-1"><Smartphone className="w-4 h-4"/> {analytics.mobileVisits}</span>
                           <span className="flex items-center gap-1"><Laptop className="w-4 h-4"/> {analytics.desktopVisits}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex mt-1">
-                          <div style={{ width: `${(analytics.mobileVisits / (analytics.mobileVisits + analytics.desktopVisits)) * 100}%` }} className="bg-black h-full"></div>
-                          <div style={{ width: `${(analytics.desktopVisits / (analytics.mobileVisits + analytics.desktopVisits)) * 100}%` }} className="bg-indigo-500 h-full"></div>
                         </div>
                       </div>
                     </div>
@@ -783,9 +791,8 @@ export default function App() {
                               <div className="flex gap-2">
                                 <select value={o.courierName || "მიუნიჭებელია"} onChange={(e) => updateOrderCourier(o.id, e.target.value)} className="bg-white border rounded-lg px-2 py-1 text-[11px] font-bold text-gray-700">
                                   <option value="მიუნიჭებელია">კურიერი: არ არის</option>
-                                  <option value="ლევანი (თბილისი)">ლევანი (თბილისი)</option>
-                                  <option value="გიორგი (რეგიონები)">გიორგი (რეგიონები)</option>
-                                  <option value="დაჩი (ექსპრესი)">დაჩი (ექსპრესი)</option>
+                                  <option value="ლევანი (თბილისი)">ლევანი</option>
+                                  <option value="გიორგი (რეგიონები)">გიორგი</option>
                                 </select>
                                 <select value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value)} className="bg-white border rounded-xl px-3 py-1 text-xs font-bold text-indigo-600">
                                   <option value="ახალი">ახალი</option>
@@ -805,37 +812,31 @@ export default function App() {
                 {adminSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                      <h3 className="text-lg font-bold">+ პროდუქტის დამატება (თვითღირებულებით)</h3>
+                      <h3 className="text-lg font-bold">+ პროდუქტის დამატება (მრავალი სურათის მხარდაჭერით)</h3>
                       <form onSubmit={handleAddProduct} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         <input type="text" placeholder="SKU კოდი" value={newProd.sku} onChange={e => setNewProd({...newProd, sku: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <input type="text" placeholder="დასახელება *" value={newProd.name} onChange={e => setNewProd({...newProd, name: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <select value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none">
                           {CATEGORIES_KA.filter(c => c !== "ყველა").map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
-                        <input type="number" placeholder="გაყიდვის ფასი (₾) *" value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+                        <input type="number" placeholder="ფასი (₾) *" value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <input type="number" placeholder="თვითღირებულება (₾)" value={newProd.costPrice} onChange={e => setNewProd({...newProd, costPrice: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <input type="number" placeholder="საწყობი (მარაგი)" value={newProd.stock} onChange={e => setNewProd({...newProd, stock: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
-                        <input type="text" placeholder="ფოტოს ბმული (URL) *" value={newProd.image} onChange={e => setNewProd({...newProd, image: e.target.value})} className="sm:col-span-2 bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+                        <input type="number" placeholder="მარაგი" value={newProd.stock} onChange={e => setNewProd({...newProd, stock: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+                        <input type="text" placeholder="მთავარი ფოტოს URL *" value={newProd.image} onChange={e => setNewProd({...newProd, image: e.target.value})} className="sm:col-span-2 bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+                        <input type="text" placeholder="დამატებითი ფოტოების URL-ები (მძიმით გამოყოფილი)" value={newProd.galleryStr} onChange={e => setNewProd({...newProd, galleryStr: e.target.value})} className="sm:col-span-3 bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <button type="submit" className="bg-black text-white py-3 rounded-xl font-bold text-sm">დამატება</button>
                       </form>
                     </div>
 
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                      <h3 className="text-lg font-bold">არსებული პროდუქტები & მარაგების კონტროლი</h3>
+                      <h3 className="text-lg font-bold">არსებული პროდუქტები</h3>
                       <div className="space-y-3">
                         {products.map(p => (
                           <div key={p.id} className="border p-4 rounded-2xl bg-gray-50 flex justify-between items-center">
                             <div className="flex items-center gap-3">
                               <img src={p.image} alt={p.name} className="w-12 h-12 object-cover rounded-xl" />
                               <div>
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-sm">{p.name}</h4>
-                                  {p.stock <= 2 && (
-                                    <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                                      <AlertTriangle className="w-3 h-3"/> მარაგი იწურება! ({p.stock})
-                                    </span>
-                                  )}
-                                </div>
+                                <h4 className="font-bold text-sm">{p.name}</h4>
                                 <p className="text-xs text-indigo-600 font-bold">{p.price} ₾ (მარაგი: {p.stock})</p>
                               </div>
                             </div>
@@ -850,32 +851,53 @@ export default function App() {
                   </div>
                 )}
 
-                {adminSubTab === 'users' && (
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
-                    <h3 className="text-xl font-bold">რეგისტრირებული მომხმარებლები (CRM)</h3>
-                    <div className="space-y-3">
-                      {usersList.map(u => {
-                        const userOrdersCount = orders.filter(o => o.userEmail === u.email || o.customer.phone === u.phone).length;
-                        return (
-                          <div key={u.id} className="border rounded-2xl p-4 bg-gray-50 flex justify-between items-center">
+                {/* ბანერების მართვის სექცია */}
+                {adminSubTab === 'banners' && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                      <h3 className="text-lg font-bold">+ ახალი სარეკლამო ბანერის დამატება</h3>
+                      <form onSubmit={handleAddBanner} className="space-y-3">
+                        <input type="text" placeholder="სათაური *" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+                        <input type="text" placeholder="ქვეტექსტი / აღწერა" value={newBanner.subtitle} onChange={e => setNewBanner({...newBanner, subtitle: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
+                        <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-sm">ბანერის დამატება</button>
+                      </form>
+                    </div>
+
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                      <h3 className="text-lg font-bold">აქტიური ბანერები</h3>
+                      <div className="space-y-3">
+                        {banners.map(b => (
+                          <div key={b.id} className="border p-4 rounded-2xl bg-gray-50 flex justify-between items-center">
                             <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-sm">{u.name}</h4>
-                                {userOrdersCount > 0 && (
-                                  <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">VIP კლიენტი</span>
-                                )}
-                              </div>
-                              <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone} | რეგისტრაცია: {u.date} | შეკვეთები: {userOrdersCount}</p>
+                              <h4 className="font-bold text-sm">{b.title}</h4>
+                              <p className="text-xs text-gray-500">{b.subtitle}</p>
                             </div>
-                            <button onClick={() => deleteUserAccount(u.id)} className="bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">გაუქმება</button>
+                            <button onClick={() => deleteBanner(b.id)} className="bg-red-50 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">წაშლა</button>
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* ADVANCED ADMIN CHAT TAB WITH LIVE REPLY */}
+                {adminSubTab === 'users' && (
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                    <h3 className="text-xl font-bold">რეგისტრირებული მომხმარებლები ({usersList.length})</h3>
+                    <div className="space-y-3">
+                      {usersList.map(u => (
+                        <div key={u.id} className="border rounded-2xl p-4 bg-gray-50 flex justify-between items-center">
+                          <div>
+                            <h4 className="font-bold text-sm">{u.name}</h4>
+                            <p className="text-xs text-gray-500">📧 {u.email} | 📞 {u.phone} | რეგისტრაცია: {u.date}</p>
+                          </div>
+                          <button onClick={() => deleteUserAccount(u.id)} className="bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-bold">გაუქმება</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ADVANCED ADMIN CHAT TAB */}
                 {adminSubTab === 'chat' && (
                   <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
                     <h3 className="text-xl font-bold">ონლაინ ჩათი (რეალურ დროში)</h3>
@@ -898,29 +920,23 @@ export default function App() {
                     <form onSubmit={handleAdminReplyMessage} className="pt-3 border-t flex gap-2">
                       <input 
                         type="text" 
-                        placeholder="მიწერეთ პასუხი კლიენტს (გამოჩნდება მის ჩათში მყისიერად)..." 
+                        placeholder="უპასუხეთ კლიენტს (გამოჩნდება მის ჩათში მყისიერად)..." 
                         value={adminReplyText} 
                         onChange={e => setAdminReplyText(e.target.value)} 
                         className="flex-1 bg-gray-100 border rounded-xl px-4 py-3 text-xs outline-none"
                       />
                       <button type="submit" className="bg-black text-white px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5">
-                        <Send className="w-3.5 h-3.5"/> გაგზავნა
+                        <Send className="w-3.5 h-3.5"/> პასუხის გაგზავნა
                       </button>
                     </form>
                   </div>
                 )}
 
                 {adminSubTab === 'settings' && (
-                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-6">
-                    <div className="space-y-3">
-                      <h3 className="text-xl font-bold">ზედა ბანერის ტექსტი</h3>
-                      <input type="text" value={storeBannerText} onChange={e => setStoreBannerText(e.target.value)} className="w-full bg-gray-100 border rounded-xl p-3 text-sm outline-none"/>
-                    </div>
-                    <div className="space-y-3">
-                      <h3 className="text-xl font-bold">წესების & პოლიტიკის ტექსტი</h3>
-                      <textarea rows={5} value={policyText} onChange={e => setPolicyText(e.target.value)} className="w-full bg-gray-100 border rounded-2xl p-4 text-sm outline-none"/>
-                    </div>
-                    <button onClick={() => alert("ცვლილებები შენახულია!")} className="bg-black text-white px-6 py-3 rounded-xl text-xs font-bold">შენახვა</button>
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
+                    <h3 className="text-xl font-bold">წესების რედაქტირება</h3>
+                    <textarea rows={6} value={policyText} onChange={e => setPolicyText(e.target.value)} className="w-full bg-gray-100 border rounded-2xl p-4 text-sm outline-none"/>
+                    <button onClick={() => alert("შენახულია!")} className="bg-black text-white px-6 py-2.5 rounded-xl text-xs font-bold">შენახვა</button>
                   </div>
                 )}
               </div>
@@ -931,31 +947,32 @@ export default function App() {
         {activeTab === 'shop' && (
           <div className="space-y-8">
             
+            {/* მთავარი დინამიკური ბანერის ჩვენება */}
             <div className="bg-black text-white rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
               <div className="relative z-10 max-w-xl space-y-3">
                 <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1 w-fit">
                   <Zap className="w-3.5 h-3.5 fill-white" /> FLASH SALE 2026
                 </span>
                 <h1 className="text-3xl md:text-5xl font-black leading-tight">
-                  {lang === "KA" ? "გრანდიოზული ფასდაკლება!" : "Grand Discounts!"}
+                  {banners[currentBannerIndex]?.title || "გრანდიოზული ფასდაკლება!"}
                 </h1>
-                <p className="text-gray-300 text-sm">{storeBannerText}</p>
+                <p className="text-gray-300 text-sm">{banners[currentBannerIndex]?.subtitle}</p>
               </div>
 
               <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 text-center flex gap-4">
                 <div>
                   <div className="text-3xl font-black">{timeLeft.hours}</div>
-                  <div className="text-[10px] uppercase text-gray-400">{lang === "KA" ? "საათი" : "Hours"}</div>
+                  <div className="text-[10px] uppercase text-gray-400">საათი</div>
                 </div>
                 <div className="text-3xl font-black">:</div>
                 <div>
                   <div className="text-3xl font-black">{timeLeft.minutes}</div>
-                  <div className="text-[10px] uppercase text-gray-400">{lang === "KA" ? "წუთი" : "Mins"}</div>
+                  <div className="text-[10px] uppercase text-gray-400">წუთი</div>
                 </div>
                 <div className="text-3xl font-black">:</div>
                 <div>
                   <div className="text-3xl font-black">{timeLeft.seconds}</div>
-                  <div className="text-[10px] uppercase text-gray-400">{lang === "KA" ? "წამი" : "Secs"}</div>
+                  <div className="text-[10px] uppercase text-gray-400">წამი</div>
                 </div>
               </div>
             </div>
@@ -972,7 +989,7 @@ export default function App() {
               <div className="bg-white p-4 rounded-2xl border shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs font-bold">
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-gray-400" />
-                  <span>{lang === "KA" ? "ფასი (₾):" : "Price (₾):"}</span>
+                  <span>ფასი (₾):</span>
                   <input type="number" placeholder="Min" value={minPrice} onChange={e => setMinPrice(e.target.value)} className="w-16 bg-gray-100 border rounded-lg px-2 py-1 outline-none"/>
                   <span>-</span>
                   <input type="number" placeholder="Max" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className="w-16 bg-gray-100 border rounded-lg px-2 py-1 outline-none"/>
@@ -981,14 +998,14 @@ export default function App() {
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" checked={onlyInStock} onChange={e => setOnlyInStock(e.target.checked)} className="rounded" />
-                    <span>{lang === "KA" ? "მარაგშია" : "In Stock"}</span>
+                    <span>მარაგშია</span>
                   </label>
                   
                   <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="bg-gray-100 border rounded-xl px-3 py-1.5 outline-none font-bold">
-                    <option value="default">{lang === "KA" ? "სორტირება" : "Sort By"}</option>
-                    <option value="price-asc">{lang === "KA" ? "ფასი: დაბლიდან მაღლა" : "Price: Low to High"}</option>
-                    <option value="price-desc">{lang === "KA" ? "ფასი: მაღლიდან დაბლა" : "Price: High to Low"}</option>
-                    <option value="rating">{lang === "KA" ? "რეიტინგით" : "By Rating"}</option>
+                    <option value="default">სორტირება</option>
+                    <option value="price-asc">ფასი: დაბლიდან მაღლა</option>
+                    <option value="price-desc">ფასი: მაღლიდან დაბლა</option>
+                    <option value="rating">რეიტინგით</option>
                   </select>
                 </div>
               </div>
@@ -1027,12 +1044,12 @@ export default function App() {
 
                       <button onClick={() => addToCart(product)} disabled={product.stock === 0} className={`px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition ${product.stock > 0 ? 'bg-black text-white hover:bg-zinc-800' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>
                         <ShoppingBag className="w-3.5 h-3.5" />
-                        {product.stock > 0 ? (lang === "KA" ? 'კალათაში' : 'Add to Cart') : 'ამოწურულია'}
+                        {product.stock > 0 ? 'კალათაში' : 'ამოწურულია'}
                       </button>
                     </div>
 
                     <button onClick={() => setOneClickProduct(product)} className="w-full bg-indigo-50 text-indigo-600 py-2 rounded-xl text-xs font-bold hover:bg-indigo-100 transition flex items-center justify-center gap-1">
-                      <Zap className="w-3.5 h-3.5" /> {lang === "KA" ? "1-Click სწრაფი ყიდვა" : "1-Click Buy Now"}
+                      <Zap className="w-3.5 h-3.5" /> 1-Click სწრაფი ყიდვა
                     </button>
                   </div>
                 </div>
@@ -1048,7 +1065,7 @@ export default function App() {
         <span className="text-xs font-bold hidden sm:inline">ონლაინ ჩათი</span>
       </button>
 
-      {/* CLIENT LIVE CHAT MODAL */}
+      {/* ონლაინ ჩათი მომხმარებლისთვის */}
       {isChatOpen && (
         <div className="fixed bottom-20 right-6 z-50 bg-white w-80 sm:w-96 rounded-3xl shadow-2xl border overflow-hidden flex flex-col h-96">
           <div className="bg-black text-white p-4 flex justify-between items-center">
@@ -1086,12 +1103,25 @@ export default function App() {
         </div>
       )}
 
+      {/* პროდუქტის სწრაფი ნახვისა და მრავალი სურათის (გალერეის) ფანჯარა */}
       {quickViewProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative overflow-y-auto max-h-[90vh] space-y-6">
             <button onClick={() => setQuickViewProduct(null)} className="absolute top-4 right-4 text-gray-400"><X className="w-6 h-6"/></button>
             <div className="flex flex-col md:flex-row gap-6">
-              <img src={quickViewProduct.image} alt={quickViewProduct.name} className="w-full md:w-1/2 h-64 object-cover rounded-2xl" />
+              <div className="w-full md:w-1/2 space-y-3">
+                <img src={quickViewProduct.image} alt={quickViewProduct.name} className="w-full h-64 object-cover rounded-2xl" />
+                {quickViewProduct.gallery && quickViewProduct.gallery.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto">
+                    {quickViewProduct.gallery.map((imgUrl, idx) => (
+                      <img key={idx} src={imgUrl} alt="" className="w-16 h-16 object-cover rounded-xl border cursor-pointer hover:border-black" onClick={() => {
+                        const updated = { ...quickViewProduct, image: imgUrl };
+                        setQuickViewProduct(updated);
+                      }} />
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex-1 space-y-3">
                 <span className="text-xs font-bold bg-gray-100 px-3 py-1 rounded-full">{quickViewProduct.category}</span>
                 <h3 className="text-xl font-bold">{quickViewProduct.name}</h3>
@@ -1103,26 +1133,8 @@ export default function App() {
               </div>
             </div>
 
-            {relatedProducts.length > 0 && (
-              <div className="border-t pt-4 space-y-3">
-                <h4 className="font-bold text-sm">🛍️ მსგავსი პროდუქტები</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  {relatedProducts.slice(0, 2).map(rp => (
-                    <div key={rp.id} onClick={() => setQuickViewProduct(rp)} className="border p-2 rounded-2xl bg-gray-50 flex items-center gap-2 cursor-pointer hover:bg-gray-100">
-                      <img src={rp.image} alt={rp.name} className="w-12 h-12 object-cover rounded-xl" />
-                      <div>
-                        <h5 className="font-bold text-xs line-clamp-1">{rp.name}</h5>
-                        <p className="text-xs font-black text-indigo-600">{rp.price} ₾</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="border-t pt-4 space-y-4">
               <h4 className="font-bold text-lg">⭐ შეფასებები ({quickViewProduct.reviews ? quickViewProduct.reviews.length : 0})</h4>
-              
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {quickViewProduct.reviews && quickViewProduct.reviews.map(r => (
                   <div key={r.id} className="bg-gray-50 p-3 rounded-xl border text-xs">
@@ -1134,7 +1146,6 @@ export default function App() {
                   </div>
                 ))}
               </div>
-
               <form onSubmit={handleAddReview} className="space-y-2">
                 <input type="text" placeholder="თქვენი სახელი" value={newReview.name} onChange={e => setNewReview({...newReview, name: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-2 text-xs outline-none" />
                 <textarea placeholder="დაწერეთ შეფასება..." value={newReview.text} onChange={e => setNewReview({...newReview, text: e.target.value})} className="w-full bg-gray-100 border rounded-xl p-2 text-xs outline-none h-16"/>
@@ -1286,7 +1297,6 @@ export default function App() {
                 <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-xs space-y-1">
                   <p><strong>მიმღები:</strong> შპს GEOSTORE</p>
                   <p><strong>IBAN:</strong> GE12TB0000000123456789</p>
-                  <p><strong>დანიშნულება:</strong> შეკვეთა #{Date.now().toString().slice(-6)}</p>
                 </div>
               )}
 
