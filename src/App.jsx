@@ -158,7 +158,6 @@ export default function App() {
   const [adminError, setAdminError] = useState("");
   const [adminSubTab, setAdminSubTab] = useState("analytics");
   
-  // ფაილების ატვირთვისთვის მდგომარეობები
   const [newProd, setNewProd] = useState({ sku: "", name: "", category: "ელექტრონიკა", price: "", costPrice: "", imageFile: null, description: "", stock: "" });
   const [newBanner, setNewBanner] = useState({ title: "", subtitle: "", bg: "bg-black text-white" });
 
@@ -445,7 +444,6 @@ export default function App() {
     }
   };
 
-  // ფოტოს ფაილად ატვირთვის ფუნქცია (Base64 კონვერტაცია)
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -470,7 +468,7 @@ export default function App() {
       category: newProd.category,
       price: Number(newProd.price),
       costPrice: Number(newProd.costPrice) || Number(newProd.price) * 0.6,
-      image: newProd.imageFile, // ატვირთული სურათი
+      image: newProd.imageFile,
       gallery: [newProd.imageFile],
       description: newProd.description || "აღწერა არ არის",
       stock: Number(newProd.stock) || 10,
@@ -529,10 +527,6 @@ export default function App() {
 
   const myOrders = currentUser ? orders.filter(o => o.userEmail === currentUser.email || o.customer.phone === currentUser.phone) : [];
   const categories = lang === "KA" ? CATEGORIES_KA : CATEGORIES_EN;
-
-  const relatedProducts = quickViewProduct 
-    ? products.filter(p => p.category === quickViewProduct.category && p.id !== quickViewProduct.id)
-    : [];
 
   const avgTimeMinutes = (analytics.totalTimeSpentSeconds / analytics.todayVisits / 60).toFixed(1);
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
@@ -813,7 +807,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* პროდუქტების დამატება ფოტოს პირდაპირი ატვირთვით */}
                 {adminSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
@@ -827,7 +820,6 @@ export default function App() {
                         <input type="number" placeholder="ფასი (₾) *" value={newProd.price} onChange={e => setNewProd({...newProd, price: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         <input type="number" placeholder="მარაგი" value={newProd.stock} onChange={e => setNewProd({...newProd, stock: e.target.value})} className="bg-gray-100 border rounded-xl p-3 text-sm outline-none" />
                         
-                        {/* ფაილის ასატვირთი ინპუტი */}
                         <div className="sm:col-span-2 bg-gray-100 border rounded-xl p-3 flex flex-col gap-1">
                           <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
                             <ImageIcon className="w-4 h-4"/> აირჩიეთ ფოტო კომპიუტერიდან *
@@ -863,7 +855,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* ბანერების მართვა */}
                 {adminSubTab === 'banners' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
@@ -892,7 +883,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* პრომოკოდების მართვა */}
                 {adminSubTab === 'promos' && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-3xl p-6 shadow-sm border space-y-4">
