@@ -93,9 +93,9 @@ const INITIAL_BANNERS = [
 ];
 
 const INITIAL_PROMO_SLOTS = [
-  { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-amber-500/20 to-red-500/20' },
-  { id: 'ps2', title: '0% განვადება 24 თვემდე', tag: 'FINANCE', bgGradient: 'from-blue-600/20 to-indigo-600/20' },
-  { id: 'ps3', title: 'უფასო მიწოდება თბილისში', tag: 'EXPRESS', bgGradient: 'from-emerald-500/20 to-teal-500/20' }
+  { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-emerald-600/30 to-teal-800/40' },
+  { id: 'ps2', title: '0% განვადება 24 თვემდე', tag: 'FINANCE', bgGradient: 'from-cyan-600/30 to-blue-800/40' },
+  { id: 'ps3', title: 'უფასო მიწოდება თბილისში', tag: 'EXPRESS', bgGradient: 'from-green-600/30 to-emerald-900/40' }
 ];
 
 const INITIAL_COUPONS = [
@@ -663,29 +663,29 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-amber-500 selection:text-slate-950 flex flex-col justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-emerald-500 selection:text-slate-950 flex flex-col justify-between">
       
       {toastMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-amber-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
+        <div className="fixed top-5 right-5 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
           <Sparkles className="w-5 h-5 text-slate-950" />
           {toastMessage}
         </div>
       )}
 
       {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-amber-500/10 shadow-2xl">
-        <div className="bg-gradient-to-r from-red-600 via-amber-600 to-amber-500 text-white text-[10px] md:text-xs py-1.5 px-4 font-medium flex justify-between items-center">
+      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-2xl">
+        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-slate-950 text-[10px] md:text-xs py-1.5 px-4 font-black flex justify-between items-center">
           <div className="flex items-center gap-2 truncate">
             <span>🇬🇪</span>
-            <span className="truncate font-bold">{siteSettings.topBarText}</span>
+            <span className="truncate">{siteSettings.topBarText}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button onClick={handleManualRefresh} className="bg-slate-950/60 hover:bg-slate-950 px-2.5 py-0.5 rounded-lg text-white text-[10px] flex items-center gap-1 font-bold border border-white/10 transition">
+            <button onClick={handleManualRefresh} className="bg-slate-950/80 hover:bg-slate-950 px-2.5 py-0.5 rounded-lg text-emerald-400 text-[10px] flex items-center gap-1 font-bold border border-emerald-500/30 transition">
               <RefreshCw className="w-3 h-3 animate-spin" /> განახლება
             </button>
             <button 
               onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')}
-              className="bg-slate-950/60 hover:bg-slate-950 px-2.5 py-0.5 rounded-full border border-amber-400/30 transition flex items-center gap-1 font-black text-amber-300 text-[10px]"
+              className="bg-slate-950/80 hover:bg-slate-950 px-2.5 py-0.5 rounded-full border border-emerald-400/40 transition flex items-center gap-1 font-black text-emerald-300 text-[10px]"
             >
               <span>{currency === 'GEL' ? '₾ GEL' : '$ USD'}</span>
             </button>
@@ -694,10 +694,10 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3 md:gap-6 w-full">
           <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setActiveTab('store')}>
-            <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 flex items-center justify-center shadow-lg shadow-amber-500/20 font-black text-xl text-slate-950 group-hover:scale-105 transition transform">
+            <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center shadow-lg shadow-emerald-500/20 font-black text-xl text-slate-950 group-hover:scale-105 transition transform">
               {siteSettings.storeName ? siteSettings.storeName.charAt(0) : 'G'}
             </div>
-            <span className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-amber-400 via-yellow-200 to-white bg-clip-text text-transparent">
+            <span className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-white bg-clip-text text-transparent">
               {siteSettings.storeName}
             </span>
           </div>
@@ -708,15 +708,15 @@ export default function App() {
               placeholder="ძებნა: iPhone, MacBook, SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl pl-11 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50 shadow-inner"
+              className="w-full bg-slate-900 border border-emerald-500/30 rounded-2xl pl-11 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-400 shadow-inner"
             />
-            <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
+            <Search className="w-4 h-4 text-emerald-400 absolute left-4 top-3.5" />
           </div>
 
           <div className="hidden md:flex items-center gap-3">
             <button 
               onClick={() => setActiveTab('wishlist')}
-              className="p-3 rounded-2xl border relative bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 transition"
+              className="p-3 rounded-2xl border relative bg-slate-900 border-emerald-500/30 text-slate-300 hover:border-emerald-400 transition"
             >
               <Heart className="w-5 h-5 text-rose-500 fill-rose-500/20" />
               {wishlist.length > 0 && (
@@ -727,22 +727,22 @@ export default function App() {
             </button>
 
             {currentUser ? (
-              <button onClick={() => setActiveTab('profile')} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-slate-950/80 border border-amber-500/30 text-amber-300 hover:bg-slate-900 transition">
+              <button onClick={() => setActiveTab('profile')} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-slate-900 border border-emerald-500/40 text-emerald-400 hover:bg-slate-800 transition">
                 <User className="w-4 h-4" /> {currentUser.name}
               </button>
             ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-slate-950/80 border border-slate-800 text-slate-200 hover:border-amber-500/50 transition">
+              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-200 hover:border-emerald-500/50 transition">
                 <User className="w-4 h-4" /> შესვლა / რეგისტრაცია
               </button>
             )}
 
             <button 
               onClick={() => setActiveTab('cart')}
-              className="p-3 rounded-2xl border relative bg-slate-950/60 border-slate-800 text-slate-300 hover:border-amber-500/40 transition"
+              className="p-3 rounded-2xl border relative bg-slate-900 border-emerald-500/30 text-slate-300 hover:border-emerald-400 transition"
             >
-              <ShoppingBag className="w-5 h-5 text-amber-400" />
+              <ShoppingBag className="w-5 h-5 text-emerald-400" />
               {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-slate-950 text-xs font-black w-5 h-5 rounded-full flex items-center justify-center shadow">
+                <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-slate-950 text-xs font-black w-5 h-5 rounded-full flex items-center justify-center shadow">
                   {cart.reduce((a, b) => a + b.quantity, 0)}
                 </span>
               )}
@@ -751,7 +751,7 @@ export default function App() {
             <button
               onClick={() => setActiveTab('admin')}
               className={`p-3 rounded-2xl border transition flex items-center gap-2 shadow-lg ${
-                activeTab === 'admin' ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black border-amber-300' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700'
+                activeTab === 'admin' ? 'bg-emerald-500 text-slate-950 font-black border-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
               }`}
             >
               <Settings className="w-5 h-5" />
@@ -767,11 +767,11 @@ export default function App() {
               placeholder="ძებნა: iPhone, SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500"
             />
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-2.5" />
           </div>
-          <button onClick={handleManualRefresh} className="bg-slate-950 text-amber-400 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-slate-800">
+          <button onClick={handleManualRefresh} className="bg-slate-900 text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-slate-800">
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -785,10 +785,10 @@ export default function App() {
             {sections.filter(s => s.visible).map(sec => {
               if (sec.id === 'hero') {
                 return (
-                  <div key={sec.id} className="relative rounded-3xl overflow-hidden border border-amber-500/20 shadow-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
+                  <div key={sec.id} className="relative rounded-3xl overflow-hidden border border-emerald-500/30 shadow-2xl bg-slate-900">
                     <div className="grid grid-cols-1 md:grid-cols-2 items-center">
                       <div className="p-8 md:p-14 z-10 space-y-4">
-                        <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
                           <Sparkles className="w-3.5 h-3.5" /> სპეც შეთავაზება
                         </span>
                         <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
@@ -797,14 +797,14 @@ export default function App() {
                         <p className="text-slate-400 text-xs md:text-base leading-relaxed">
                           {siteSettings.heroSubtitle}
                         </p>
-                        <a href="#products" className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-xl hover:shadow-amber-500/20 transition text-xs md:text-sm transform hover:-translate-y-0.5">
+                        <a href="#products" className="inline-flex items-center gap-2 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-xl hover:bg-emerald-400 transition text-xs md:text-sm transform hover:-translate-y-0.5">
                           <span>{banners[0]?.buttonText || 'შეიძინე ახლავე'}</span>
                           <ArrowRight className="w-4 h-4" />
                         </a>
                       </div>
                       <div className="relative h-56 md:h-96 w-full">
                         <img src={banners[0]?.image} alt="Hero" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-950 via-transparent to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-900 via-transparent to-transparent"></div>
                       </div>
                     </div>
                   </div>
@@ -815,8 +815,8 @@ export default function App() {
                 return (
                   <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     {promoSlots.map(slot => (
-                      <div key={slot.id} className={`rounded-3xl p-6 bg-slate-900/60 border border-slate-800 hover:border-amber-500/30 transition shadow-xl flex flex-col justify-between backdrop-blur-md`}>
-                        <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 self-start text-[10px] font-black px-3 py-1 rounded-full">{slot.tag}</span>
+                      <div key={slot.id} className={`rounded-3xl p-6 bg-gradient-to-br ${slot.bgGradient} border border-emerald-500/20 hover:border-emerald-500/40 transition shadow-xl flex flex-col justify-between backdrop-blur-md`}>
+                        <span className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 self-start text-[10px] font-black px-3 py-1 rounded-full">{slot.tag}</span>
                         <h3 className="text-lg font-extrabold text-white mt-8">{slot.title}</h3>
                       </div>
                     ))}
@@ -826,9 +826,9 @@ export default function App() {
 
               if (sec.id === 'ticker') {
                 return (
-                  <div key={sec.id} className="bg-gradient-to-r from-red-950/40 via-slate-900 to-slate-950 border border-red-500/20 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                  <div key={sec.id} className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-red-500 animate-pulse shrink-0" />
+                      <Clock className="w-5 h-5 text-emerald-400 animate-pulse shrink-0" />
                       <div>
                         <h4 className="font-extrabold text-white text-xs md:text-base">⚡ FLASH SALE - დღის ცხელი შეთავაზებები</h4>
                         <p className="text-[10px] md:text-xs text-slate-400">ფასდაკლებები მოქმედებს შეზღუდული რაოდენობით!</p>
@@ -842,13 +842,13 @@ export default function App() {
                 return (
                   <div key={sec.id} className="space-y-4">
                     <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
-                      <Grid className="w-5 h-5 text-amber-400" /> კატეგორიები
+                      <Grid className="w-5 h-5 text-emerald-400" /> კატეგორიები
                     </h2>
                     <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
                       <button
                         onClick={() => setSelectedCategory('ყველა')}
                         className={`px-5 py-2.5 rounded-2xl font-black text-xs whitespace-nowrap transition border ${
-                          selectedCategory === 'ყველა' ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 border-amber-300 shadow-lg' : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                          selectedCategory === 'ყველა' ? 'bg-emerald-500 text-slate-950 border-emerald-300 shadow-lg' : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                         }`}
                       >
                         ✨ ყველა
@@ -858,7 +858,7 @@ export default function App() {
                           key={cat.id || cat}
                           onClick={() => setSelectedCategory(cat.name || cat)}
                           className={`px-5 py-2.5 rounded-2xl font-black text-xs whitespace-nowrap transition border ${
-                            selectedCategory === (cat.name || cat) ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 border-amber-300 shadow-lg' : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                            selectedCategory === (cat.name || cat) ? 'bg-emerald-500 text-slate-950 border-emerald-300 shadow-lg' : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700'
                           }`}
                         >
                           {cat.icon || ''} {cat.name || cat}
@@ -874,9 +874,9 @@ export default function App() {
                   <div key={sec.id} id="products" className="space-y-6">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
-                        <ShoppingBag className="w-5 h-5 text-amber-400" /> პროდუქციის კატალოგი
+                        <ShoppingBag className="w-5 h-5 text-emerald-400" /> პროდუქციის კატალოგი
                       </h2>
-                      <button onClick={handleManualRefresh} className="bg-slate-900 hover:bg-slate-800 text-amber-400 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-slate-800 transition">
+                      <button onClick={handleManualRefresh} className="bg-slate-900 hover:bg-slate-800 text-emerald-400 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 border border-slate-800 transition">
                         <RefreshCw className="w-3.5 h-3.5" /> განახლება
                       </button>
                     </div>
@@ -885,26 +885,26 @@ export default function App() {
                       {filteredProducts.map(prod => {
                         const isWish = wishlist.some(w => w.id === prod.id);
                         return (
-                          <div key={prod.id} className="bg-slate-900/70 border border-slate-800 hover:border-amber-500/40 rounded-3xl p-4 flex flex-col justify-between group transition duration-300 shadow-xl backdrop-blur-md">
+                          <div key={prod.id} className="bg-slate-900 border border-emerald-500/20 hover:border-emerald-400/60 rounded-3xl p-4 flex flex-col justify-between group transition duration-300 shadow-xl">
                             <div>
-                              <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-950 mb-4 p-4 flex items-center justify-center border border-slate-800/80">
+                              <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-950 mb-4 p-4 flex items-center justify-center border border-slate-800">
                                 <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition duration-500" />
                                 {prod.discountPercent > 0 && (
-                                  <span className="absolute top-3 left-3 bg-gradient-to-r from-rose-600 to-rose-500 text-white font-black text-[10px] px-2.5 py-1 rounded-full shadow-lg">
+                                  <span className="absolute top-3 left-3 bg-emerald-500 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-full shadow-lg">
                                     -{prod.discountPercent}%
                                   </span>
                                 )}
                                 <button onClick={() => toggleWishlist(prod)} className="absolute top-3 right-3 p-2.5 bg-slate-950/80 hover:bg-slate-950 rounded-full text-white border border-slate-800 transition">
                                   <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
                                 </button>
-                                <button onClick={() => setSelectedProductQuickView(prod)} className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition duration-300 bg-slate-950/90 text-amber-300 text-[10px] font-bold px-3.5 py-1.5 rounded-xl border border-amber-500/30 backdrop-blur-md">
+                                <button onClick={() => setSelectedProductQuickView(prod)} className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition duration-300 bg-slate-950 text-emerald-400 text-[10px] font-bold px-3.5 py-1.5 rounded-xl border border-emerald-500/40">
                                   <Eye className="w-3 h-3 inline mr-1" /> სწრაფი ნახვა
                                 </button>
                               </div>
                               
                               <div className="flex justify-between items-center mb-1.5">
-                                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">{prod.category} {prod.brand ? `• ${prod.brand}` : ''}</span>
-                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${prod.stock < 3 ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">{prod.category} {prod.brand ? `• ${prod.brand}` : ''}</span>
+                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${prod.stock < 3 ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
                                   {prod.stock > 0 ? `მარაგშია: ${prod.stock} ც.` : 'ამოიწურა'}
                                 </span>
                               </div>
@@ -914,16 +914,16 @@ export default function App() {
 
                             <div className="pt-3 border-t border-slate-800/80 space-y-3">
                               <div className="flex items-center gap-2.5">
-                                <div className="text-xl font-black text-amber-400">{formatPrice(prod.priceGEL)}</div>
+                                <div className="text-xl font-black text-emerald-400">{formatPrice(prod.priceGEL)}</div>
                                 {prod.oldPriceGEL > prod.priceGEL && (
                                   <div className="text-xs text-slate-500 line-through font-medium">{formatPrice(prod.oldPriceGEL)}</div>
                                 )}
                               </div>
                               <div className="grid grid-cols-2 gap-2">
-                                <button disabled={prod.stock <= 0} onClick={() => addToCart(prod)} className={`py-2.5 rounded-xl text-xs font-black transition ${prod.stock > 0 ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 shadow-md hover:brightness-110' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}>
+                                <button disabled={prod.stock <= 0} onClick={() => addToCart(prod)} className={`py-2.5 rounded-xl text-xs font-black transition ${prod.stock > 0 ? 'bg-emerald-500 text-slate-950 shadow-md hover:bg-emerald-400' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}>
                                   {prod.stock > 0 ? 'კალათაში' : 'არ არის'}
                                 </button>
-                                <button disabled={prod.stock <= 0} onClick={() => { setQuickBuyProduct(prod); setIsCheckoutOpen(true); }} className={`py-2.5 rounded-xl text-xs font-black border transition ${prod.stock > 0 ? 'bg-slate-950 border-amber-500/40 text-amber-300 hover:bg-slate-900' : 'bg-slate-950 border-slate-800 text-slate-700 cursor-not-allowed'}`}>
+                                <button disabled={prod.stock <= 0} onClick={() => { setQuickBuyProduct(prod); setIsCheckoutOpen(true); }} className={`py-2.5 rounded-xl text-xs font-black border transition ${prod.stock > 0 ? 'bg-slate-950 border-emerald-500/40 text-emerald-300 hover:bg-slate-900' : 'bg-slate-950 border-slate-800 text-slate-700 cursor-not-allowed'}`}>
                                   1-Click ყიდვა
                                 </button>
                               </div>
@@ -939,12 +939,12 @@ export default function App() {
               if (sec.id === 'badges') {
                 return (
                   <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5 backdrop-blur-md">
-                      <Truck className="w-6 h-6 text-amber-400 shrink-0" />
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+                      <Truck className="w-6 h-6 text-emerald-400 shrink-0" />
                       <div><h4 className="font-bold text-white text-xs">სწრაფი მიწოდება</h4><p className="text-[10px] text-slate-400">მთელ საქართველოში</p></div>
                     </div>
-                    <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5 backdrop-blur-md">
-                      <ShieldCheck className="w-6 h-6 text-amber-400 shrink-0" />
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+                      <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
                       <div><h4 className="font-bold text-white text-xs">1 წლიანი გარანტია</h4><p className="text-[10px] text-slate-400">ოფიციალური სერვისი</p></div>
                     </div>
                   </div>
@@ -953,15 +953,15 @@ export default function App() {
 
               if (sec.id === 'faq') {
                 return (
-                  <div key={sec.id} className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4 backdrop-blur-md">
+                  <div key={sec.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4">
                     <h2 className="text-xl font-black text-white">ხშირად დასმული კითხვები</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
                       <div>
-                        <h4 className="font-bold text-amber-400 text-sm mb-1">როგორ ხდება მიწოდება?</h4>
+                        <h4 className="font-bold text-emerald-400 text-sm mb-1">როგორ ხდება მიწოდება?</h4>
                         <p className="text-slate-400">თბილისში მიწოდება ხდება იმავე დღეს, ხოლო რეგიონებში 1-2 სამუშაო დღეში.</p>
                       </div>
                       <div>
-                        <h4 className="font-bold text-amber-400 text-sm mb-1">მოქმედებს თუ არა გარანტია?</h4>
+                        <h4 className="font-bold text-emerald-400 text-sm mb-1">მოქმედებს თუ არა გარანტია?</h4>
                         <p className="text-slate-400">ყველა პროდუქტზე ვრცელდება 1 წლიანი ოფიციალური გარანტია.</p>
                       </div>
                     </div>
@@ -975,35 +975,35 @@ export default function App() {
         )}
 
         {activeTab === 'policy' && (
-          <div className="max-w-3xl mx-auto bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-10 space-y-6 text-xs md:text-sm leading-relaxed backdrop-blur-md shadow-2xl">
+          <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-10 space-y-6 text-xs md:text-sm leading-relaxed shadow-2xl">
             <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-              <BookOpen className="w-7 h-7 text-amber-400" />
+              <BookOpen className="w-7 h-7 text-emerald-400" />
               <h2 className="text-xl md:text-2xl font-black text-white">წესები და პოლიტიკა</h2>
             </div>
             
             <div className="space-y-5 text-slate-300">
               <div>
-                <h3 className="font-bold text-amber-400 text-sm mb-1">1. ზოგადი დებულებები</h3>
+                <h3 className="font-bold text-emerald-400 text-sm mb-1">1. ზოგადი დებულებები</h3>
                 <p>{storePolicy.general}</p>
               </div>
 
               <div>
-                <h3 className="font-bold text-amber-400 text-sm mb-1">2. შეკვეთა და მიწოდება</h3>
+                <h3 className="font-bold text-emerald-400 text-sm mb-1">2. შეკვეთა და მიწოდება</h3>
                 <p>{storePolicy.delivery}</p>
               </div>
 
               <div>
-                <h3 className="font-bold text-amber-400 text-sm mb-1">3. გარანტია და დაბრუნება</h3>
+                <h3 className="font-bold text-emerald-400 text-sm mb-1">3. გარანტია და დაბრუნება</h3>
                 <p>{storePolicy.warranty}</p>
               </div>
 
               <div>
-                <h3 className="font-bold text-amber-400 text-sm mb-1">4. კონფიდენციალურობა</h3>
+                <h3 className="font-bold text-emerald-400 text-sm mb-1">4. კონფიდენციალურობა</h3>
                 <p>{storePolicy.privacy}</p>
               </div>
             </div>
 
-            <button onClick={() => setActiveTab('store')} className="bg-amber-500 text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs shadow-lg">
+            <button onClick={() => setActiveTab('store')} className="bg-emerald-500 text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs shadow-lg">
               &larr; მთავარ გვერდზე დაბრუნება
             </button>
           </div>
@@ -1015,12 +1015,12 @@ export default function App() {
             {wishlist.length === 0 ? <p className="text-slate-500 text-xs">სია ცარიელია.</p> : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map(prod => (
-                  <div key={prod.id} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
+                  <div key={prod.id} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
                     <img src={prod.image} alt="" className="w-16 h-16 object-contain bg-slate-950 rounded-xl p-1 border border-slate-800" />
                     <div>
                       <h4 className="font-bold text-xs">{prod.name}</h4>
-                      <p className="text-amber-400 font-black text-xs mt-1">{formatPrice(prod.priceGEL)}</p>
-                      <button onClick={() => addToCart(prod)} className="mt-2 bg-amber-500 text-slate-950 px-3 py-1 rounded-lg text-xs font-bold">კალათაში</button>
+                      <p className="text-emerald-400 font-black text-xs mt-1">{formatPrice(prod.priceGEL)}</p>
+                      <button onClick={() => addToCart(prod)} className="mt-2 bg-emerald-500 text-slate-950 px-3 py-1 rounded-lg text-xs font-bold">კალათაში</button>
                     </div>
                   </div>
                 ))}
@@ -1030,7 +1030,7 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-xl mx-auto bg-slate-900/80 p-6 md:p-8 rounded-3xl border border-slate-800 space-y-4 text-xs md:text-sm shadow-2xl backdrop-blur-md">
+          <div className="max-w-xl mx-auto bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 space-y-4 text-xs md:text-sm shadow-2xl">
             <h2 className="text-xl font-black text-white">👤 მომხმარებლის პროფილი</h2>
             <p><b>სახელი:</b> {currentUser.name}</p>
             <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
@@ -1045,7 +1045,7 @@ export default function App() {
                   {orders.filter(o => o.userEmail === currentUser.email).map(o => (
                     <div key={o.id} className="p-3 bg-slate-950 rounded-xl flex justify-between items-center border border-slate-800">
                       <div>
-                        <p className="font-bold text-amber-400">#{o.id} ({o.date}) - <span className="text-emerald-400">{o.status}</span></p>
+                        <p className="font-bold text-emerald-400">#{o.id} ({o.date}) - <span className="text-emerald-400">{o.status}</span></p>
                         <p className="text-slate-400">{o.items?.map(i => i.name).join(', ')}</p>
                       </div>
                       <span className="font-black text-white">{o.totalGEL} ₾</span>
@@ -1066,10 +1066,10 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-3">
                   {cart.map(item => (
-                    <div key={item.id} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex justify-between items-center text-xs">
+                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center text-xs">
                       <div>
                         <h4 className="font-bold text-xs md:text-sm text-white">{item.name}</h4>
-                        <p className="text-amber-400 font-bold mt-1">{formatPrice(item.priceGEL)} x {item.quantity}</p>
+                        <p className="text-emerald-400 font-bold mt-1">{formatPrice(item.priceGEL)} x {item.quantity}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={() => updateCartQuantity(item.id, -1)} className="px-2.5 py-1 bg-slate-800 rounded-lg text-white font-bold">-</button>
@@ -1080,13 +1080,13 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-                <div className="bg-slate-900/80 border border-slate-800 p-6 rounded-3xl h-fit space-y-4 shadow-xl">
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl h-fit space-y-4 shadow-xl">
                   <div className="flex gap-2">
                     <input type="text" placeholder="პრომო კოდი" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs flex-1 uppercase text-white outline-none" />
                     <button onClick={applyCouponCode} className="bg-slate-800 px-3 py-2 rounded-xl text-xs font-bold text-white">გამოყენება</button>
                   </div>
-                  <div className="text-xl font-black text-amber-400">სულ: {formatPrice(cartTotalGEL)}</div>
-                  <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black py-3 rounded-2xl text-xs shadow-lg">შეკვეთა</button>
+                  <div className="text-xl font-black text-emerald-400">სულ: {formatPrice(cartTotalGEL)}</div>
+                  <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-2xl text-xs shadow-lg">შეკვეთა</button>
                 </div>
               </div>
             )}
@@ -1097,8 +1097,8 @@ export default function App() {
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
-              <div className="max-w-md mx-auto bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4 text-center shadow-2xl backdrop-blur-md">
-                <Shield className="w-12 h-12 text-amber-400 mx-auto" />
+              <div className="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4 text-center shadow-2xl">
+                <Shield className="w-12 h-12 text-emerald-400 mx-auto" />
                 <h2 className="text-lg font-bold text-white">ადმინისტრატორის შესვლა</h2>
                 <form onSubmit={handleAdminLogin} className="space-y-3">
                   <input 
@@ -1121,17 +1121,17 @@ export default function App() {
                       id="adminRemember"
                       checked={adminLoginForm.remember} 
                       onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
-                      className="rounded accent-amber-500"
+                      className="rounded accent-emerald-500"
                     />
                     <label htmlFor="adminRemember" className="cursor-pointer">მომიმახსოვრე სისტემაში</label>
                   </div>
                   {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
-                  <button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 py-3 rounded-xl font-bold text-xs transition shadow-lg">შესვლა</button>
+                  <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-3 rounded-xl font-bold text-xs transition shadow-lg">შესვლა</button>
                 </form>
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="flex justify-between items-center bg-slate-900/90 border border-slate-800 rounded-2xl p-2 overflow-x-auto scrollbar-none shadow-lg">
+                <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-2xl p-2 overflow-x-auto scrollbar-none shadow-lg">
                   <div className="flex gap-2">
                     {[
                       { id: 'analytics', label: '📊 რეალური სტატისტიკა' },
@@ -1151,7 +1151,7 @@ export default function App() {
                         key={tab.id}
                         onClick={() => setAdminActiveSubTab(tab.id)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                          adminActiveSubTab === tab.id ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 shadow-lg' : 'bg-slate-950 text-slate-300 hover:bg-slate-800'
+                          adminActiveSubTab === tab.id ? 'bg-emerald-500 text-slate-950 shadow-lg' : 'bg-slate-950 text-slate-300 hover:bg-slate-800'
                         }`}
                       >
                         {tab.label}
@@ -1181,9 +1181,9 @@ export default function App() {
                       <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 flex flex-col justify-between">
                         <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
                           <span>📦 გაყიდული ნივთები</span>
-                          <PackageCheck className="w-4 h-4 text-amber-400" />
+                          <PackageCheck className="w-4 h-4 text-emerald-400" />
                         </div>
-                        <div className="text-2xl font-black text-amber-400 mt-2">{salesAnalytics.totalItemsSold} ცალი</div>
+                        <div className="text-2xl font-black text-emerald-400 mt-2">{salesAnalytics.totalItemsSold} ცალი</div>
                         <p className="text-[10px] text-slate-500 mt-1">სულ გაყიდული პროდუქცია</p>
                       </div>
 
@@ -1208,7 +1208,7 @@ export default function App() {
 
                     <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                        <Star className="w-5 h-5 text-amber-400" /> რეალურად ყველაზე გაყიდვადი ნივთები (Top Sales)
+                        <Star className="w-5 h-5 text-emerald-400" /> რეალურად ყველაზე გაყიდვადი ნივთები (Top Sales)
                       </h3>
                       {salesAnalytics.topProducts.length === 0 ? (
                         <p className="text-slate-500 text-xs">ჯერ არ არის დასრულებული შეკვეთები.</p>
@@ -1217,11 +1217,11 @@ export default function App() {
                           {salesAnalytics.topProducts.map((prod, idx) => (
                             <div key={idx} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
                               <div className="flex items-center gap-3">
-                                <span className="font-black text-amber-400 text-sm">#{idx + 1}</span>
+                                <span className="font-black text-emerald-400 text-sm">#{idx + 1}</span>
                                 <span className="font-bold text-white">{prod.name}</span>
                               </div>
                               <div className="flex items-center gap-4">
-                                <span className="bg-amber-500/20 text-amber-300 font-bold px-3 py-1 rounded-xl">გაყიდულია: {prod.count} ცალი</span>
+                                <span className="bg-emerald-500/20 text-emerald-300 font-bold px-3 py-1 rounded-xl">გაყიდულია: {prod.count} ცალი</span>
                                 <span className="font-black text-emerald-400">{prod.totalRevenue} ₾</span>
                               </div>
                             </div>
@@ -1238,7 +1238,7 @@ export default function App() {
                       <div className="flex justify-between items-center">
                         <h3 className="font-bold text-base md:text-lg text-white">📦 აქტიური შეკვეთები ({orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length})</h3>
                         <div className="flex gap-2">
-                          <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                          <button onClick={handleManualRefresh} className="bg-emerald-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
                             <RefreshCw className="w-3.5 h-3.5" /> განახლება
                           </button>
                           <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">CSV ექსპორტი</button>
@@ -1251,7 +1251,7 @@ export default function App() {
                           orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').map(o => (
                             <div key={o.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
                               <div>
-                                <span className="font-bold text-amber-400 text-sm">#{o.id} ({o.date})</span>
+                                <span className="font-bold text-emerald-400 text-sm">#{o.id} ({o.date})</span>
                                 <p className="text-slate-300 mt-1"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
                                 <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
                                 <div className="mt-1 text-slate-400">
@@ -1274,7 +1274,7 @@ export default function App() {
                                       fetchOrders();
                                       showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
                                     }}
-                                    className="bg-slate-900 border border-slate-700 text-amber-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
+                                    className="bg-slate-900 border border-slate-700 text-emerald-300 font-bold px-3 py-1.5 rounded-xl outline-none text-xs"
                                   >
                                     <option value="ახალი">🟢 ახალი</option>
                                     <option value="მზადდება">🟡 მზადდება</option>
@@ -1293,7 +1293,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-900/60 p-6 rounded-3xl space-y-4 border border-slate-800/80">
+                    <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
                       <h3 className="font-bold text-base md:text-lg text-slate-300">✅ დასრულებული შეკვეთები (არქივი) ({orders.filter(o => o.status === 'ჩაბარებულია' || o.status === 'გაუქმებულია').length})</h3>
                       <div className="space-y-3">
                         {orders.filter(o => o.status === 'ჩაბარებულია' || o.status === 'გაუქმებულია').length === 0 ? (
@@ -1347,10 +1347,10 @@ export default function App() {
                   <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-amber-400" /> 💬 მომხმარებელთა ინდივიდუალური ჩათები
+                        <MessageSquare className="w-5 h-5 text-emerald-400" /> 💬 მომხმარებელთა ინდივიდუალური ჩათები
                       </h3>
                       <div className="flex gap-2">
-                        <button onClick={handleManualRefresh} className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                        <button onClick={handleManualRefresh} className="bg-emerald-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
                           <RefreshCw className="w-3.5 h-3.5" /> განახლება
                         </button>
                       </div>
@@ -1367,7 +1367,7 @@ export default function App() {
                               key={clientName}
                               onClick={() => setAdminSelectedClient(clientName)}
                               className={`w-full text-left p-3 rounded-xl text-xs font-bold transition flex justify-between items-center ${
-                                adminSelectedClient === clientName ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-white hover:bg-slate-800'
+                                adminSelectedClient === clientName ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-white hover:bg-slate-800'
                               }`}
                             >
                               <span>👤 {clientName}</span>
@@ -1385,13 +1385,13 @@ export default function App() {
                         ) : (
                           <>
                             <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
-                              <h4 className="font-bold text-amber-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
+                              <h4 className="font-bold text-emerald-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
                             </div>
 
                             <div className="flex-1 overflow-y-auto space-y-3 p-2 text-xs">
                               {(groupedClients[adminSelectedClient] || []).map(m => (
                                 <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
-                                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-900 text-white border border-slate-800'}`}>
+                                  <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-900 text-white border border-slate-800'}`}>
                                     <b>{m.sender}:</b> {m.text}
                                     {m.image && (
                                       <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-28 object-cover w-full border border-slate-800" />
@@ -1414,7 +1414,7 @@ export default function App() {
                                 onChange={e => setAdminIndividualReply(e.target.value)}
                                 className="flex-1 bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs text-white outline-none"
                               />
-                              <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1">
+                              <button type="submit" className="bg-emerald-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1">
                                 <Send className="w-3.5 h-3.5" /> გაგზავნა
                               </button>
                             </form>
@@ -1437,7 +1437,7 @@ export default function App() {
                       showToast('კატეგორია დაემატა');
                     }} className="flex gap-2">
                       <input type="text" name="catName" required placeholder="ახალი კატეგორია..." className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs flex-1 text-white outline-none" />
-                      <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">დამატება</button>
+                      <button type="submit" className="bg-emerald-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">დამატება</button>
                     </form>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -1546,18 +1546,18 @@ export default function App() {
 
                         {/* Direct File Upload for Main Image */}
                         <div className="md:col-span-2 space-y-2 bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
-                          <label className="text-[11px] text-amber-400 font-bold flex items-center gap-2">
+                          <label className="text-[11px] text-emerald-400 font-bold flex items-center gap-2">
                             <Upload className="w-4 h-4" /> 1. მთავარი ფოტოს ატვირთვა კომპიუტერიდან / ტელეფონიდან:
                           </label>
                           <input 
                             type="file" 
                             accept="image/*" 
                             onChange={handleMainImageUpload}
-                            className="w-full bg-slate-900 p-2 rounded-xl text-xs text-slate-300 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-slate-950 file:font-bold" 
+                            className="w-full bg-slate-900 p-2 rounded-xl text-xs text-slate-300 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-bold" 
                           />
                           {uploadedMainImg && (
                             <div className="flex items-center gap-2 mt-2">
-                              <img src={uploadedMainImg} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-amber-500" />
+                              <img src={uploadedMainImg} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-emerald-500" />
                               <span className="text-[10px] text-emerald-400 font-bold">✓ აიტვირთა</span>
                             </div>
                           )}
@@ -1567,7 +1567,7 @@ export default function App() {
 
                         {/* Direct Multiple Files Upload for Gallery */}
                         <div className="md:col-span-2 space-y-2 bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
-                          <label className="text-[11px] text-amber-400 font-bold flex items-center gap-2">
+                          <label className="text-[11px] text-emerald-400 font-bold flex items-center gap-2">
                             <ImageIcon className="w-4 h-4" /> 2. დამატებითი ფოტოების ატვირთვა (გალერეა):
                           </label>
                           <input 
@@ -1575,7 +1575,7 @@ export default function App() {
                             accept="image/*" 
                             multiple
                             onChange={handleExtraImagesUpload}
-                            className="w-full bg-slate-900 p-2 rounded-xl text-xs text-slate-300 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-800 file:text-amber-300 file:font-bold" 
+                            className="w-full bg-slate-900 p-2 rounded-xl text-xs text-slate-300 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-800 file:text-emerald-400 file:font-bold" 
                           />
                           {uploadedExtraImgs.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto py-1">
@@ -1590,7 +1590,7 @@ export default function App() {
 
                         <textarea name="description" placeholder="დეტალური აღწერა..." className="md:col-span-2 bg-slate-950 border border-slate-800 p-3 rounded-xl text-white h-20 outline-none"/>
                         
-                        <button type="submit" className="md:col-span-2 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black py-3.5 rounded-xl text-sm transition shadow-lg">
+                        <button type="submit" className="md:col-span-2 bg-emerald-500 text-slate-950 font-black py-3.5 rounded-xl text-sm transition shadow-lg">
                           დამატება პროდუქტებში
                         </button>
                       </form>
@@ -1605,7 +1605,7 @@ export default function App() {
                               <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0" />
                               <div>
                                 <span className="font-bold text-white text-sm">{p.name}</span>
-                                <p className="text-amber-400 font-semibold">{p.priceGEL} ₾ {p.oldPriceGEL > p.priceGEL ? `(ძველი: ${p.oldPriceGEL} ₾)` : ''} | კატეგორია: {p.category}</p>
+                                <p className="text-emerald-400 font-semibold">{p.priceGEL} ₾ {p.oldPriceGEL > p.priceGEL ? `(ძველი: ${p.oldPriceGEL} ₾)` : ''} | კატეგორია: {p.category}</p>
                               </div>
                             </div>
                             
@@ -1631,7 +1631,7 @@ export default function App() {
                                     warranty: p.warranty || ''
                                   });
                                 }} 
-                                className="bg-slate-900 hover:bg-slate-800 text-amber-300 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition"
+                                className="bg-slate-900 hover:bg-slate-800 text-emerald-300 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition border border-slate-800"
                               >
                                 <Edit3 className="w-3.5 h-3.5" /> რედაქტირება
                               </button>
@@ -1706,11 +1706,11 @@ export default function App() {
                     }} className="flex gap-2">
                       <input type="text" name="code" required placeholder="კოდი (GEO10)" className="bg-slate-950 border border-slate-800 p-2 rounded-xl text-xs uppercase text-white outline-none" />
                       <input type="number" name="disc" required placeholder="%" className="bg-slate-950 border border-slate-800 p-2 rounded-xl text-xs w-20 text-white outline-none" />
-                      <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">დამატება</button>
+                      <button type="submit" className="bg-emerald-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold">დამატება</button>
                     </form>
                     <div className="flex flex-wrap gap-2">
                       {coupons.map((c, i) => (
-                        <span key={i} className="bg-slate-950 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-800 flex items-center gap-2 text-amber-400">
+                        <span key={i} className="bg-slate-950 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-800 flex items-center gap-2 text-emerald-400">
                           {c.code} (-{c.discountPercent}%)
                           <button onClick={() => setCoupons(coupons.filter((_, idx) => idx !== i))} className="text-rose-400">×</button>
                         </span>
@@ -1721,19 +1721,19 @@ export default function App() {
 
                 {adminActiveSubTab === 'security' && (
                   <div className="bg-slate-900 p-6 rounded-3xl max-w-md space-y-4 border border-slate-800">
-                    <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Key className="w-5 h-5 text-amber-400"/> ადმინის პაროლის შეცვლა</h3>
+                    <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Key className="w-5 h-5 text-emerald-400"/> ადმინის პაროლის შეცვლა</h3>
                     <form onSubmit={handleChangeAdminPassword} className="space-y-3">
                       <input type="text" value={adminSecurityForm.username} onChange={e => setAdminSecurityForm({...adminSecurityForm, username: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
                       <input type="password" required placeholder="ძველი პაროლი" value={adminSecurityForm.oldPassword} onChange={e => setAdminSecurityForm({...adminSecurityForm, oldPassword: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
                       <input type="password" required placeholder="ახალი პაროლი" value={adminSecurityForm.newPassword} onChange={e => setAdminSecurityForm({...adminSecurityForm, newPassword: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
-                      <button type="submit" className="w-full bg-amber-500 text-slate-950 py-3 rounded-xl font-bold text-xs">განახლება</button>
+                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-3 rounded-xl font-bold text-xs">განახლება</button>
                     </form>
                   </div>
                 )}
 
                 {adminActiveSubTab === 'cms' && (
                   <div className="bg-slate-900 p-6 rounded-3xl max-w-xl space-y-4 border border-slate-800">
-                    <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Settings className="w-5 h-5 text-amber-400"/> საიტის სრული რედაქტორი (CMS)</h3>
+                    <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Settings className="w-5 h-5 text-emerald-400"/> საიტის სრული რედაქტორი (CMS)</h3>
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       showToast('✅ საიტის მონაცემები წარმატებით განახლდა!');
@@ -1754,7 +1754,7 @@ export default function App() {
                         <label className="text-slate-400">მთავარი ბანერის აღწერა (Hero Subtitle):</label>
                         <textarea value={siteSettings.heroSubtitle} onChange={e => setSiteSettings({...siteSettings, heroSubtitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none h-20" />
                       </div>
-                      <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-xl text-xs">ცვლილებების შენახვა</button>
+                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl text-xs">ცვლილებების შენახვა</button>
                     </form>
                   </div>
                 )}
@@ -1762,7 +1762,7 @@ export default function App() {
                 {adminActiveSubTab === 'policyEditor' && (
                   <div className="bg-slate-900 p-6 rounded-3xl max-w-2xl space-y-4 border border-slate-800">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-amber-400" /> წესების და პოლიტიკის რედაქტორი
+                      <BookOpen className="w-5 h-5 text-emerald-400" /> წესების და პოლიტიკის რედაქტორი
                     </h3>
                     <form onSubmit={(e) => {
                       e.preventDefault();
@@ -1784,7 +1784,7 @@ export default function App() {
                         <label className="text-slate-400 font-bold">4. კონფიდენციალურობა:</label>
                         <textarea value={storePolicy.privacy} onChange={e => setStorePolicy({...storePolicy, privacy: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none h-20" />
                       </div>
-                      <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-xl text-xs">ცვლილებების შენახვა</button>
+                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl text-xs">ცვლილებების შენახვა</button>
                     </form>
                   </div>
                 )}
@@ -1802,7 +1802,7 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 relative space-y-4 text-xs shadow-2xl">
             <button onClick={() => setEditingProductId(null)} className="absolute top-4 right-4 text-slate-400">✕</button>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-amber-400" /> პროდუქტის რედაქტირება
+              <Edit3 className="w-5 h-5 text-emerald-400" /> პროდუქტის რედაქტირება
             </h3>
             
             <form onSubmit={(e) => {
@@ -1860,7 +1860,7 @@ export default function App() {
                 <label className="text-slate-400">აღწერა:</label>
                 <textarea value={editProductForm.description} onChange={e => setEditProductForm({...editProductForm, description: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none h-20" />
               </div>
-              <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs">შენახვა</button>
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl text-xs">შენახვა</button>
             </form>
           </div>
         </div>
@@ -1875,14 +1875,14 @@ export default function App() {
             {selectedProductQuickView.images && selectedProductQuickView.images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto py-1">
                 {selectedProductQuickView.images.map((imgUrl, i) => (
-                  <img key={i} src={imgUrl} alt="" onClick={() => setSelectedProductQuickView({...selectedProductQuickView, image: imgUrl})} className="w-12 h-12 object-contain bg-slate-950 rounded-xl cursor-pointer border border-slate-800 hover:border-amber-500 p-1" />
+                  <img key={i} src={imgUrl} alt="" onClick={() => setSelectedProductQuickView({...selectedProductQuickView, image: imgUrl})} className="w-12 h-12 object-contain bg-slate-950 rounded-xl cursor-pointer border border-slate-800 hover:border-emerald-500 p-1" />
                 ))}
               </div>
             )}
             <p className="text-slate-400 leading-relaxed">{selectedProductQuickView.description}</p>
-            {selectedProductQuickView.warranty && <p className="text-amber-300 font-bold">🛡️ გარანტია: {selectedProductQuickView.warranty}</p>}
-            <div className="text-xl font-black text-amber-400">{formatPrice(selectedProductQuickView.priceGEL)}</div>
-            <button disabled={selectedProductQuickView.stock <= 0} onClick={() => { addToCart(selectedProductQuickView); setSelectedProductQuickView(null); }} className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 py-3 rounded-xl font-black text-xs shadow-lg">კალათაში დამატება</button>
+            {selectedProductQuickView.warranty && <p className="text-emerald-300 font-bold">🛡️ გარანტია: {selectedProductQuickView.warranty}</p>}
+            <div className="text-xl font-black text-emerald-400">{formatPrice(selectedProductQuickView.priceGEL)}</div>
+            <button disabled={selectedProductQuickView.stock <= 0} onClick={() => { addToCart(selectedProductQuickView); setSelectedProductQuickView(null); }} className="w-full bg-emerald-500 text-slate-950 py-3 rounded-xl font-black text-xs shadow-lg">კალათაში დამატება</button>
           </div>
         </div>
       )}
@@ -1892,8 +1892,8 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative space-y-4 shadow-2xl">
             <button onClick={() => setIsAuthOpen(false)} className="absolute top-4 right-4 text-slate-400">✕</button>
             <div className="flex gap-4 border-b border-slate-800 pb-2 font-bold text-sm">
-              <button onClick={() => setAuthMode('login')} className={authMode === 'login' ? 'text-amber-400 border-b-2 border-amber-400 pb-1' : 'text-slate-500'}>შესვლა</button>
-              <button onClick={() => setAuthMode('register')} className={authMode === 'register' ? 'text-amber-400 border-b-2 border-amber-400 pb-1' : 'text-slate-500'}>რეგისტრაცია</button>
+              <button onClick={() => setAuthMode('login')} className={authMode === 'login' ? 'text-emerald-400 border-b-2 border-emerald-400 pb-1' : 'text-slate-500'}>შესვლა</button>
+              <button onClick={() => setAuthMode('register')} className={authMode === 'register' ? 'text-emerald-400 border-b-2 border-emerald-400 pb-1' : 'text-slate-500'}>რეგისტრაცია</button>
             </div>
             <form onSubmit={handleAuthSubmit} className="space-y-3">
               {authMode === 'register' && (
@@ -1911,12 +1911,12 @@ export default function App() {
                   id="userRemember"
                   checked={authForm.remember} 
                   onChange={e => setAuthForm({...authForm, remember: e.target.checked})} 
-                  className="rounded accent-amber-500"
+                  className="rounded accent-emerald-500"
                 />
                 <label htmlFor="userRemember" className="cursor-pointer">მომიმახსოვრე</label>
               </div>
 
-              <button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 py-3 rounded-xl font-bold text-xs shadow-lg">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-3 rounded-xl font-bold text-xs shadow-lg">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
             </form>
           </div>
         </div>
@@ -1931,7 +1931,7 @@ export default function App() {
               <input type="text" required placeholder="სახელი და გვარი *" value={checkoutForm.name} onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
               <input type="tel" required placeholder="ტელეფონი *" value={checkoutForm.phone} onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
               <input type="text" required placeholder="მისამართი *" value={checkoutForm.address} onChange={e => setCheckoutForm({...checkoutForm, address: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
-              <button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 py-3 rounded-xl font-black text-xs shadow-lg">დადასტურება</button>
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-3 rounded-xl font-black text-xs shadow-lg">დადასტურება</button>
             </form>
           </div>
         </div>
@@ -1947,7 +1947,7 @@ export default function App() {
             <p className="text-xs"><b>მყიდველი:</b> {activeInvoiceOrder.customerName} ({activeInvoiceOrder.phone})</p>
             <p className="text-xs"><b>მისამართი:</b> {activeInvoiceOrder.address}</p>
             <p className="text-xs"><b>სტატუსი:</b> {activeInvoiceOrder.status}</p>
-            <div className="text-sm font-bold text-amber-600">სულ: {activeInvoiceOrder.totalGEL} ₾</div>
+            <div className="text-sm font-bold text-emerald-600">სულ: {activeInvoiceOrder.totalGEL} ₾</div>
             <button onClick={() => window.print()} className="w-full bg-slate-900 text-white py-2 rounded-xl text-xs font-bold">ბეჭდვა</button>
           </div>
         </div>
@@ -1956,12 +1956,12 @@ export default function App() {
       {/* LIVE CHAT WIDGET */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
-          <button onClick={() => setIsChatOpen(true)} className="bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 p-4 rounded-full shadow-2xl flex items-center justify-center relative hover:scale-105 transition transform">
+          <button onClick={() => setIsChatOpen(true)} className="bg-emerald-500 text-slate-950 p-4 rounded-full shadow-2xl flex items-center justify-center relative hover:scale-105 transition transform">
             <MessageSquare className="w-6 h-6" />
           </button>
         ) : (
           <div className="bg-slate-900/95 border border-slate-800 rounded-3xl shadow-2xl w-72 sm:w-80 md:w-96 overflow-hidden flex flex-col h-[460px] backdrop-blur-xl">
-            <div className="bg-gradient-to-r from-amber-500 to-amber-400 p-3.5 text-slate-950 font-bold flex justify-between items-center text-xs shadow-md">
+            <div className="bg-emerald-500 p-3.5 text-slate-950 font-bold flex justify-between items-center text-xs shadow-md">
               <span>მხარდაჭერა (ჩათი) {chatClientName ? `(${chatClientName})` : ''}</span>
               <div className="flex items-center gap-2">
                 <button 
@@ -1983,7 +1983,7 @@ export default function App() {
 
             {!chatClientName ? (
               <div className="flex-1 p-6 flex flex-col justify-center items-center text-center space-y-3 bg-slate-950 text-xs">
-                <h4 className="font-bold text-amber-400 text-sm">გამარჯობა! გთხოვთ შეიყვანოთ თქვენი სახელი</h4>
+                <h4 className="font-bold text-emerald-400 text-sm">გამარჯობა! გთხოვთ შეიყვანოთ თქვენი სახელი</h4>
                 <p className="text-slate-400">რომ მენეჯერმა იცოდეს ვის ესაუბრება.</p>
                 <form onSubmit={(e) => {
                   e.preventDefault();
@@ -2000,7 +2000,7 @@ export default function App() {
                     onChange={e => setClientNameInput(e.target.value)} 
                     className="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-white text-xs outline-none" 
                   />
-                  <button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-bold py-2.5 rounded-xl">დაწყება</button>
+                  <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl">დაწყება</button>
                 </form>
               </div>
             ) : (
@@ -2008,7 +2008,7 @@ export default function App() {
                 <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs bg-slate-950">
                   {clientChatView.map(m => (
                     <div key={m.id} className={`flex flex-col ${m.sender === chatClientName ? 'items-end' : 'items-start'}`}>
-                      <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === chatClientName ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-900 text-white border border-slate-800'}`}>
+                      <div className={`p-3 rounded-2xl max-w-[85%] ${m.sender === chatClientName ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-900 text-white border border-slate-800'}`}>
                         <b>{m.sender}:</b> {m.text}
                         {m.image && (
                           <img src={m.image} alt="Attachment" className="mt-2 rounded-xl max-h-36 object-cover w-full border border-slate-800" />
@@ -2059,7 +2059,7 @@ export default function App() {
                         if(!chatInput.trim()) return; 
                         handleSendMessage(chatInput, chatClientName);
                       }} 
-                      className="bg-amber-500 text-slate-950 p-2.5 rounded-xl font-bold"
+                      className="bg-emerald-500 text-slate-950 p-2.5 rounded-xl font-bold"
                     >
                       <Send className="w-3.5 h-3.5"/>
                     </button>
@@ -2073,8 +2073,8 @@ export default function App() {
 
       <footer className="bg-slate-950 border-t border-slate-900 py-8 text-center text-xs text-slate-500 mt-16 space-y-2">
         <div className="flex justify-center gap-6">
-          <button onClick={() => setActiveTab('policy')} className="hover:text-amber-400 transition font-bold text-amber-500">წესები და პოლიტიკა</button>
-          <button onClick={() => setActiveTab('store')} className="hover:text-amber-400 transition">მთავარი</button>
+          <button onClick={() => setActiveTab('policy')} className="hover:text-emerald-400 transition font-bold text-emerald-500">წესები და პოლიტიკა</button>
+          <button onClick={() => setActiveTab('store')} className="hover:text-emerald-400 transition">მთავარი</button>
         </div>
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
@@ -2082,7 +2082,7 @@ export default function App() {
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 md:hidden z-40 py-2.5 px-4 flex justify-around items-center">
         <button
           onClick={() => setActiveTab('store')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === 'store' ? 'text-amber-400' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === 'store' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <Grid className="w-5 h-5" />
           <span>მაღაზია</span>
@@ -2090,7 +2090,7 @@ export default function App() {
 
         <button
           onClick={() => setActiveTab('wishlist')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === 'wishlist' ? 'text-amber-400' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === 'wishlist' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <Heart className="w-5 h-5" />
           <span>სურვილები</span>
@@ -2103,12 +2103,12 @@ export default function App() {
 
         <button
           onClick={() => setActiveTab('cart')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === 'cart' ? 'text-amber-400' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold relative ${activeTab === 'cart' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <ShoppingBag className="w-5 h-5" />
           <span>კალათა</span>
           {cart.length > 0 && (
-            <span className="absolute -top-1 right-2 bg-amber-500 text-slate-950 text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+            <span className="absolute -top-1 right-2 bg-emerald-500 text-slate-950 text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
               {cart.reduce((a, b) => a + b.quantity, 0)}
             </span>
           )}
@@ -2123,7 +2123,7 @@ export default function App() {
               setIsAuthOpen(true);
             }
           }}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === 'profile' ? 'text-amber-400' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === 'profile' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <User className="w-5 h-5" />
           <span>{currentUser ? 'პროფილი' : 'შესვლა'}</span>
@@ -2131,7 +2131,7 @@ export default function App() {
 
         <button
           onClick={() => setActiveTab('admin')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === 'admin' ? 'text-amber-400' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${activeTab === 'admin' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
           <Settings className="w-5 h-5" />
           <span>ადმინი</span>
