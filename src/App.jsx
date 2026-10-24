@@ -9,7 +9,7 @@ import {
 
 // ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -49,60 +49,36 @@ const INITIAL_PRODUCTS = [
     sku: 'GEO-IP15P',
     name: 'iPhone 15 Pro Max 256GB Titanium',
     category: 'სმარტფონები',
+    brand: 'Apple',
     priceGEL: 3899,
     oldPriceGEL: 4299,
     stock: 8,
     rating: 4.9,
     reviewsCount: 24,
     image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
+    images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600'],
     description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით და ტიტანის კორპუსით. საუკეთესო კამერა და ბატარეის ხანგრძლივობა.',
     isHot: true,
-    discountPercent: 10
+    discountPercent: 10,
+    warranty: '1 წელი'
   },
   {
     id: 'prod-2',
     sku: 'GEO-MBA-M3',
     name: 'MacBook Air 15" M3 16GB / 512GB',
     category: 'ლეპტოპები',
+    brand: 'Apple',
     priceGEL: 4499,
     oldPriceGEL: 4899,
     stock: 4,
     rating: 5.0,
     reviewsCount: 18,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600',
+    images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600'],
     description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით. 18 საათამდე ავტონომიური მუშაობა.',
     isHot: true,
-    discountPercent: 8
-  },
-  {
-    id: 'prod-3',
-    sku: 'GEO-APMX',
-    name: 'AirPods Max Space Gray',
-    category: 'აქსესუარები',
-    priceGEL: 1699,
-    oldPriceGEL: 1899,
-    stock: 2,
-    rating: 4.7,
-    reviewsCount: 31,
-    image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&q=80&w=600',
-    description: 'მაღალი კლასის უსადენო ყურსასმენები აქტიური ხმაურის დახშობითა და სივრცული აუდიოთი.',
-    isHot: false,
-    discountPercent: 11
-  },
-  {
-    id: 'prod-4',
-    sku: 'GEO-AWU2',
-    name: 'Apple Watch Ultra 2 GPS + Cellular',
-    category: 'ჭკვიანი საათები',
-    priceGEL: 2499,
-    oldPriceGEL: 2799,
-    stock: 12,
-    rating: 4.8,
-    reviewsCount: 15,
-    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&q=80&w=600',
-    description: 'ექსტრემალური პირობებისთვის შექმნილი ჭკვიანი საათი ტიტანის კორპუსით და 3000-ნიტიანი ეკრანით.',
-    isHot: true,
-    discountPercent: 11
+    discountPercent: 8,
+    warranty: '1 წელი'
   }
 ];
 
@@ -139,9 +115,8 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  // AUTO-VERSION CLEANER: Clears corrupted local storage automatically on version mismatch
   useEffect(() => {
-    const CURRENT_VERSION = 'v2.7';
+    const CURRENT_VERSION = 'v2.8';
     const savedVer = localStorage.getItem('geostore_app_version');
     if (savedVer !== CURRENT_VERSION) {
       const keepKeys = ['geostore_admin_remember', 'geostore_admin_remember_creds', 'geostore_visitors_count'];
@@ -149,20 +124,16 @@ export default function App() {
       keepKeys.forEach(k => {
         try { preservedData[k] = localStorage.getItem(k); } catch(e){}
       });
-      
       localStorage.clear();
-
       Object.keys(preservedData).forEach(k => {
         if (preservedData[k]) {
           try { localStorage.setItem(k, preservedData[k]); } catch(e){}
         }
       });
-
       localStorage.setItem('geostore_app_version', CURRENT_VERSION);
     }
   }, []);
 
-  // Real Visitor Tracker
   const [visitorCount, setVisitorCount] = useState(() => {
     try {
       const current = Number(localStorage.getItem('geostore_visitors_count') || 1);
@@ -189,7 +160,6 @@ export default function App() {
     }
   };
 
-  // Site Settings
   const [siteSettings, setSiteSettings] = useState(() => loadSafeStorage('geostore_site_settings', {
     storeName: 'GEOSTORE',
     topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მაღაზია',
@@ -202,22 +172,17 @@ export default function App() {
     try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch (e) {}
   }, [siteSettings]);
 
-  // Policy State
   const [storePolicy, setStorePolicy] = useState(() => loadSafeStorage('geostore_store_policy', INITIAL_POLICY));
 
   useEffect(() => {
     try { localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy)); } catch (e) {}
   }, [storePolicy]);
 
-  // Admin Auth
   const [adminAuth, setAdminAuth] = useState(() => loadSafeStorage('geostore_admin_auth', { username: "admin", password: "admin123" }));
-
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
     try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
   });
-
   const [adminLoginForm, setAdminLoginForm] = useState(() => loadSafeStorage('geostore_admin_remember_creds', { username: '', password: '', remember: false }));
-
   const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
@@ -244,9 +209,8 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('analytics');
 
-  // Product Editing State
   const [editingProductId, setEditingProductId] = useState(null);
-  const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', priceGEL: 0, stock: 0, image: '', description: '' });
+  const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', brand: '', priceGEL: 0, oldPriceGEL: 0, discountPercent: 0, stock: 0, image: '', description: '', warranty: '' });
 
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,25 +230,20 @@ export default function App() {
   ]));
 
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
-
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); 
   const [authForm, setAuthForm] = useState(() => loadSafeStorage('geostore_user_remembered', { name: '', phone: '', email: '', password: '', remember: false }));
 
-  // SUPABASE REST STATES
   const [orders, setOrders] = useState([]);
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // Chat States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => {
     try { return localStorage.getItem('geostore_chat_client_name') || ''; } catch { return ''; }
   });
   const [clientNameInput, setClientNameInput] = useState('');
-  
   const [clientChatView, setClientChatView] = useState([]);
   const [adminChatArchive, setAdminChatArchive] = useState([]);
-
   const [chatInput, setChatInput] = useState('');
   const [adminSelectedClient, setAdminSelectedClient] = useState(null);
   const [adminIndividualReply, setAdminIndividualReply] = useState('');
@@ -295,7 +254,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // 1. Fetch Orders via Supabase REST API
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -320,7 +278,6 @@ export default function App() {
     }
   };
 
-  // 2. Fetch Messages via Supabase REST API
   const fetchMessages = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.asc`, { headers });
@@ -348,7 +305,6 @@ export default function App() {
     }
   };
 
-  // Auto Polling Every 3 Seconds for Realtime updates
   useEffect(() => {
     fetchOrders();
     fetchMessages();
@@ -385,7 +341,6 @@ export default function App() {
   const discountAmountGEL = useMemo(() => appliedCoupon ? (cartSubtotalGEL * appliedCoupon.discountPercent) / 100 : 0, [cartSubtotalGEL, appliedCoupon]);
   const cartTotalGEL = cartSubtotalGEL - discountAmountGEL;
 
-  // Real Analytics Aggregation
   const salesAnalytics = useMemo(() => {
     const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
     const totalRevenueGEL = completedOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
@@ -467,7 +422,6 @@ export default function App() {
     setCouponInput('');
   };
 
-  // 📦 Save Order to Supabase REST & Update Local Stock
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       alert('⚠️ გთხოვთ შეავსოთ ყველა ველი');
@@ -500,7 +454,6 @@ export default function App() {
         return;
       }
 
-      // Auto update stock locally
       setProducts(prevProducts => {
         return prevProducts.map(p => {
           const orderedItem = itemsToOrder.find(item => item.id === p.id);
@@ -572,13 +525,11 @@ export default function App() {
       const found = usersList.find(u => u.email === authForm.email && u.password === authForm.password);
       if (found) {
         setCurrentUser(found);
-
         if (authForm.remember) {
           try { localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true })); } catch(e){}
         } else {
           localStorage.removeItem('geostore_user_remembered');
         }
-
         setIsAuthOpen(false);
         setAuthForm({ name: '', phone: '', email: '', password: '', remember: false });
         showToast('🔑 ავტორიზაცია წარმატებულია!');
@@ -593,7 +544,6 @@ export default function App() {
     if (adminLoginForm.username === adminAuth.username && adminLoginForm.password === adminAuth.password) {
       setAdminLoggedIn(true);
       setAdminError('');
-
       if (adminLoginForm.remember) {
         localStorage.setItem('geostore_admin_remember', 'true');
         try { localStorage.setItem('geostore_admin_remember_creds', JSON.stringify(adminLoginForm)); } catch(e){}
@@ -601,7 +551,6 @@ export default function App() {
         localStorage.removeItem('geostore_admin_remember');
         localStorage.removeItem('geostore_admin_remember_creds');
       }
-
       setAdminLoginForm({ username: '', password: '', remember: false });
       showToast('🔓 ადმინ პანელში შესვლა წარმატებულია!');
     } else {
@@ -665,7 +614,6 @@ export default function App() {
     return map;
   }, [adminChatArchive]);
 
-  // 💬 Send Message via Supabase REST
   const handleSendMessage = async (text, senderName, imageUrl = '') => {
     if (!text.trim() && !imageUrl) return;
 
@@ -925,6 +873,11 @@ export default function App() {
                             <div>
                               <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-900 mb-3 p-4 flex items-center justify-center">
                                 <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition" />
+                                {prod.discountPercent > 0 && (
+                                  <span className="absolute top-3 left-3 bg-rose-500 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow">
+                                    -{prod.discountPercent}%
+                                  </span>
+                                )}
                                 <button onClick={() => toggleWishlist(prod)} className="absolute top-3 right-3 p-2 bg-slate-950/60 rounded-full text-white">
                                   <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                                 </button>
@@ -934,7 +887,7 @@ export default function App() {
                               </div>
                               
                               <div className="flex justify-between items-center mb-1">
-                                <span className="text-[10px] text-amber-400 font-semibold uppercase">{prod.category}</span>
+                                <span className="text-[10px] text-amber-400 font-semibold uppercase">{prod.category} {prod.brand ? `• ${prod.brand}` : ''}</span>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${prod.stock < 3 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400'}`}>
                                   {prod.stock > 0 ? `მარაგშია: ${prod.stock} ც.` : 'ამოიწურა'}
                                 </span>
@@ -943,7 +896,12 @@ export default function App() {
                               <h3 className="font-bold text-white text-sm md:text-base mb-2 line-clamp-2">{prod.name}</h3>
                             </div>
                             <div className="pt-3 border-t border-slate-700/50 space-y-3">
-                              <div className="text-lg md:text-xl font-black text-amber-400">{formatPrice(prod.priceGEL)}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="text-lg md:text-xl font-black text-amber-400">{formatPrice(prod.priceGEL)}</div>
+                                {prod.oldPriceGEL > prod.priceGEL && (
+                                  <div className="text-xs text-slate-500 line-through">{formatPrice(prod.oldPriceGEL)}</div>
+                                )}
+                              </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <button disabled={prod.stock <= 0} onClick={() => addToCart(prod)} className={`py-2 rounded-xl text-xs font-extrabold ${prod.stock > 0 ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}`}>
                                   {prod.stock > 0 ? 'კალათაში' : 'არ არის'}
@@ -1191,7 +1149,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 0. REAL ANALYTICAL DASHBOARD */}
                 {adminActiveSubTab === 'analytics' && (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1232,7 +1189,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Top Selling Products List */}
                     <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 space-y-4">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                         <Star className="w-5 h-5 text-amber-400" /> რეალურად ყველაზე გაყიდვადი ნივთები (Top Sales)
@@ -1259,10 +1215,8 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 1. ORDERS - SEPARATED ACTIVE AND COMPLETED */}
                 {adminActiveSubTab === 'orders' && (
                   <div className="space-y-6">
-                    {/* ACTIVE ORDERS */}
                     <div className="bg-slate-800 p-6 rounded-3xl space-y-4 border border-slate-700">
                       <div className="flex justify-between items-center">
                         <h3 className="font-bold text-base md:text-lg text-white">📦 აქტიური შეკვეთები ({orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length})</h3>
@@ -1322,7 +1276,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* COMPLETED / ARCHIVED ORDERS */}
                     <div className="bg-slate-800/60 p-6 rounded-3xl space-y-4 border border-slate-700/60">
                       <h3 className="font-bold text-base md:text-lg text-slate-300">✅ დასრულებული შეკვეთები (არქივი) ({orders.filter(o => o.status === 'ჩაბარებულია' || o.status === 'გაუქმებულია').length})</h3>
                       <div className="space-y-3">
@@ -1373,7 +1326,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 2. ADMIN CHAT */}
                 {adminActiveSubTab === 'adminChat' && (
                   <div className="bg-slate-800 p-6 rounded-3xl space-y-4">
                     <div className="flex justify-between items-center">
@@ -1388,7 +1340,6 @@ export default function App() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Clients List */}
                       <div className="bg-slate-900 p-3 rounded-2xl border border-slate-700 space-y-2 h-[400px] overflow-y-auto">
                         <h4 className="text-[11px] font-bold text-slate-400 uppercase px-2 mb-2">მომხმარებლები ({Object.keys(groupedClients).length})</h4>
                         {Object.keys(groupedClients).length === 0 ? (
@@ -1409,7 +1360,6 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Selected Client Chat Area */}
                       <div className="md:col-span-2 bg-slate-900 p-4 rounded-2xl border border-slate-700 flex flex-col h-[400px]">
                         {!adminSelectedClient ? (
                           <div className="flex-1 flex items-center justify-center text-slate-500 text-xs">
@@ -1488,16 +1438,26 @@ export default function App() {
                   </div>
                 )}
 
+                {/* PRODUCT CREATION TAB WITH DISCOUNT & MULTI-IMAGES */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
-                      <h3 className="font-bold text-base md:text-lg text-white">+ ახალი პროდუქტის დამატება</h3>
+                      <h3 className="font-bold text-base md:text-lg text-white">+ ახალი პროდუქტის დამატება (ფასდაკლებით და მრავალი ფოტოთი)</h3>
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         const f = e.target;
-                        const fileInput = f.prodImageFile;
                         const prodName = f.name.value;
                         const userSelectedCat = f.category.value;
+                        const priceGEL = Number(f.priceGEL.value);
+                        const oldPriceGEL = Number(f.oldPriceGEL.value) || priceGEL;
+                        const discountPercent = Number(f.discountPercent.value) || 0;
+                        const stock = Number(f.stock.value);
+                        const brand = f.brand.value;
+                        const warranty = f.warranty.value;
+                        const mainImage = f.mainImage.value || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600';
+                        const extraImagesText = f.extraImages.value.trim();
+                        const extraImages = extraImagesText ? extraImagesText.split(',').map(s => s.trim()).filter(Boolean) : [mainImage];
+                        const description = f.description.value;
 
                         let autoCategory = userSelectedCat;
                         const lowerName = prodName.toLowerCase();
@@ -1512,53 +1472,59 @@ export default function App() {
                         } else if (lowerName.includes('airpods') || lowerName.includes('headphone') || lowerName.includes('ყურსასმენი') || lowerName.includes('case')) {
                           autoCategory = 'აქსესუარები';
                         }
-                        
-                        const createProductObj = (imageUrl) => {
-                          const newProd = {
-                            id: `prod-${Date.now()}`,
-                            sku: f.sku.value || `GEO-${Math.floor(Math.random() * 1000)}`,
-                            name: prodName,
-                            category: autoCategory,
-                            priceGEL: Number(f.priceGEL.value),
-                            stock: Number(f.stock.value),
-                            image: imageUrl || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600',
-                            description: f.description.value
-                          };
-                          setProducts([newProd, ...products]);
-                          f.reset();
-                          showToast(`✅ პროდუქტი დაემატა (${autoCategory})!`);
+
+                        const newProd = {
+                          id: `prod-${Date.now()}`,
+                          sku: f.sku.value || `GEO-${Math.floor(Math.random() * 1000)}`,
+                          name: prodName,
+                          category: autoCategory,
+                          brand,
+                          priceGEL,
+                          oldPriceGEL,
+                          discountPercent,
+                          stock,
+                          image: mainImage,
+                          images: extraImages,
+                          description,
+                          warranty,
+                          isHot: discountPercent > 0
                         };
 
-                        if (fileInput.files && fileInput.files[0]) {
-                          const reader = new FileReader();
-                          reader.onload = function(uploadEvent) {
-                            createProductObj(uploadEvent.target.result);
-                          };
-                          reader.readAsDataURL(fileInput.files[0]);
-                        } else {
-                          createProductObj('https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600');
-                        }
+                        setProducts([newProd, ...products]);
+                        f.reset();
+                        showToast(`✅ პროდუქტი წარმატებით დაემატა!`);
                       }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <input type="text" name="name" required placeholder="პროდუქტის დასახელება (მაგ: iPhone 15) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" name="name" required placeholder="პროდუქტის დასახელება (მაგ: iPhone 15 Pro) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         <input type="text" name="sku" placeholder="SKU კოდი (მაგ: GEO-IP15)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         
                         <div className="flex flex-col gap-1">
-                          <label className="text-[10px] text-slate-400">კატეგორია (ავტომატური ან არჩევითი)</label>
+                          <label className="text-[10px] text-slate-400">კატეგორია</label>
                           <select name="category" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none">
                             {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                           </select>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <input type="number" name="priceGEL" required placeholder="ფასი (₾) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
-                          <input type="number" name="stock" required placeholder="საწყისი მარაგი *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" name="brand" placeholder="ბრენდი (მაგ: Apple, Samsung)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+
+                        <div className="grid grid-cols-3 gap-2">
+                          <input type="number" name="priceGEL" required placeholder="აქტ. ფასი (₾) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                          <input type="number" name="oldPriceGEL" placeholder="ძველი ფასი (₾)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                          <input type="number" name="discountPercent" placeholder="ფასდაკლება %" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         </div>
 
-                        <div className="md:col-span-2 flex flex-col gap-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
-                          <label className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5">
-                            <ImageIcon className="w-4 h-4" /> ატვირთეთ პროდუქტის ფოტო (კომპიუტერიდან / ტელეფონიდან)
-                          </label>
-                          <input type="file" name="prodImageFile" accept="image/*" className="text-xs text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input type="number" name="stock" required placeholder="საწყისი მარაგი *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                          <input type="text" name="warranty" placeholder="გარანტია (მაგ: 1 წელი)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
+                        </div>
+
+                        <div className="md:col-span-2 space-y-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
+                          <label className="text-[11px] text-amber-400 font-bold">მთავარი ფოტოს URL:</label>
+                          <input type="url" name="mainImage" required placeholder="https://image-url.com/photo.jpg" className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white outline-none" />
+                        </div>
+
+                        <div className="md:col-span-2 space-y-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
+                          <label className="text-[11px] text-amber-400 font-bold">დამატებითი ფოტოები (გალერეა) — გამოყავით მძიმით (,):</label>
+                          <input type="text" name="extraImages" placeholder="https://img1.com/p1.jpg, https://img2.com/p2.jpg" className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white outline-none" />
                         </div>
 
                         <textarea name="description" placeholder="დეტალური აღწერა..." className="md:col-span-2 bg-slate-900 border border-slate-700 p-3 rounded-xl text-white h-20 outline-none"/>
@@ -1578,21 +1544,31 @@ export default function App() {
                               <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0" />
                               <div>
                                 <span className="font-bold text-white text-sm">{p.name}</span>
-                                <p className="text-amber-400 font-semibold">{p.priceGEL} ₾ | კატეგორია: {p.category}</p>
+                                <p className="text-amber-400 font-semibold">{p.priceGEL} ₾ {p.oldPriceGEL > p.priceGEL ? `(ძველი: ${p.oldPriceGEL} ₾)` : ''} | კატეგორია: {p.category}</p>
                               </div>
                             </div>
                             
                             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                              <div className="text-right">
-                                <span className={`font-extrabold px-2.5 py-1 rounded-xl border ${p.stock < 3 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
-                                  მარაგი: {p.stock} ც. {p.stock < 3 && '⚠️'}
-                                </span>
-                              </div>
+                              <span className={`font-extrabold px-2.5 py-1 rounded-xl border ${p.stock < 3 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                                მარაგი: {p.stock} ც. {p.stock < 3 && '⚠️'}
+                              </span>
 
                               <button 
                                 onClick={() => {
                                   setEditingProductId(p.id);
-                                  setEditProductForm({ name: p.name, sku: p.sku || '', category: p.category, priceGEL: p.priceGEL, stock: p.stock, image: p.image, description: p.description || '' });
+                                  setEditProductForm({ 
+                                    name: p.name, 
+                                    sku: p.sku || '', 
+                                    category: p.category, 
+                                    brand: p.brand || '',
+                                    priceGEL: p.priceGEL, 
+                                    oldPriceGEL: p.oldPriceGEL || 0,
+                                    discountPercent: p.discountPercent || 0,
+                                    stock: p.stock, 
+                                    image: p.image, 
+                                    description: p.description || '',
+                                    warranty: p.warranty || ''
+                                  });
                                 }} 
                                 className="bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition"
                               >
@@ -1722,7 +1698,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* POLICY EDITOR TAB */}
                 {adminActiveSubTab === 'policyEditor' && (
                   <div className="bg-slate-800 p-6 rounded-3xl max-w-2xl space-y-4">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
@@ -1776,10 +1751,14 @@ export default function App() {
                 name: editProductForm.name,
                 sku: editProductForm.sku,
                 category: editProductForm.category,
+                brand: editProductForm.brand,
                 priceGEL: Number(editProductForm.priceGEL),
+                oldPriceGEL: Number(editProductForm.oldPriceGEL),
+                discountPercent: Number(editProductForm.discountPercent),
                 stock: Number(editProductForm.stock),
                 image: editProductForm.image,
-                description: editProductForm.description
+                description: editProductForm.description,
+                warranty: editProductForm.warranty
               } : p));
               setEditingProductId(null);
               showToast('✅ პროდუქტი წარმატებით განახლდა!');
@@ -1788,21 +1767,29 @@ export default function App() {
                 <label className="text-slate-400">დასახელება:</label>
                 <input type="text" required value={editProductForm.name} onChange={e => setEditProductForm({...editProductForm, name: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-slate-400">ფასი (₾):</label>
                   <input type="number" required value={editProductForm.priceGEL} onChange={e => setEditProductForm({...editProductForm, priceGEL: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
                 </div>
                 <div>
+                  <label className="text-slate-400">ძველი ფასი:</label>
+                  <input type="number" value={editProductForm.oldPriceGEL} onChange={e => setEditProductForm({...editProductForm, oldPriceGEL: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                </div>
+                <div>
+                  <label className="text-slate-400">ფასდაკლება %:</label>
+                  <input type="number" value={editProductForm.discountPercent} onChange={e => setEditProductForm({...editProductForm, discountPercent: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
                   <label className="text-slate-400">მარაგი:</label>
                   <input type="number" required value={editProductForm.stock} onChange={e => setEditProductForm({...editProductForm, stock: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-slate-400">კატეგორია:</label>
-                <select value={editProductForm.category} onChange={e => setEditProductForm({...editProductForm, category: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none">
-                  {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
-                </select>
+                <div>
+                  <label className="text-slate-400">გარანტია:</label>
+                  <input type="text" value={editProductForm.warranty} onChange={e => setEditProductForm({...editProductForm, warranty: e.target.value})} className="w-full bg-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-slate-400">ფოტოს URL:</label>
@@ -1824,7 +1811,15 @@ export default function App() {
             <button onClick={() => setSelectedProductQuickView(null)} className="absolute top-4 right-4 text-slate-400">✕</button>
             <img src={selectedProductQuickView.image} alt="" className="w-40 h-40 object-contain mx-auto bg-slate-950 rounded-2xl p-4" />
             <h3 className="text-lg font-bold text-white">{selectedProductQuickView.name}</h3>
+            {selectedProductQuickView.images && selectedProductQuickView.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto py-1">
+                {selectedProductQuickView.images.map((imgUrl, i) => (
+                  <img key={i} src={imgUrl} alt="" onClick={() => setSelectedProductQuickView({...selectedProductQuickView, image: imgUrl})} className="w-12 h-12 object-contain bg-slate-950 rounded-lg cursor-pointer border border-slate-700 hover:border-amber-500" />
+                ))}
+              </div>
+            )}
             <p className="text-slate-400">{selectedProductQuickView.description}</p>
+            {selectedProductQuickView.warranty && <p className="text-amber-300 font-bold">🛡️ გარანტია: {selectedProductQuickView.warranty}</p>}
             <div className="text-xl font-black text-amber-400">{formatPrice(selectedProductQuickView.priceGEL)}</div>
             <button disabled={selectedProductQuickView.stock <= 0} onClick={() => { addToCart(selectedProductQuickView); setSelectedProductQuickView(null); }} className="w-full bg-amber-500 text-slate-950 py-3 rounded-xl font-bold">კალათაში დამატება</button>
           </div>
