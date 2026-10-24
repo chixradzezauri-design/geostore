@@ -4,12 +4,12 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -105,35 +105,17 @@ const INITIAL_COUPONS = [
 ];
 
 const INITIAL_POLICY = {
-  general: 'წინამდებარე წესები და პოლიტიკა არეგულირებს GEOSTORE-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს. საიტზე რეგისტრაციით ან შეკვეთის გაფორმებით თქვენ აცხადებთ თანხმობას აღნიშნულ პირობებზე.',
-  delivery: 'შეკვეთის განთავსების შემდეგ ჩვენი მენეჯერი დაგიკავშირდებათ დეტალების დასაზუსტებლად. მიწოდება ხორციელდება თბილისში 24 საათის განმავლობაში, ხოლო რეგიონებში 48 საათში. 100₾-ზე მეტი ღირებულების შეკვეთებზე მიწოდება უფასოა.',
-  warranty: 'ყველა პროდუქტზე ვრცელდება მწარმოებლის ოფიციალური 1 წლიანი გარანტია. პროდუქტის დაბრუნება ან გადაცვლა შესაძლებელია კანონმდებლობით დადგენილ ვადებში, ქარხნული წუნის აღმოჩენის შემთხვევაში.',
-  privacy: 'GEOSTORE იცავს მომხმარებლის პერსონალურ მონაცემებს და არ გადასცემს მათ მესამე პირებს, გარდა კანონით გათვალისწინებული შემთხვევებისა.'
+  general: 'წინამდებარე წესები და პოლიტიკა არეგულირებს GEOSTORE-ის ვებგვერდის გამოყენებასა და პროდუქციის შეძენის პირობებს.',
+  delivery: 'მიწოდება ხორციელდება თბილისში 24 საათში, ხოლო რეგიონებში 48 საათში.',
+  warranty: 'ყველა პროდუქტზე ვრცელდება 1 წლიანი ოფიციალური გარანტია.',
+  privacy: 'GEOSTORE იცავს მომხმარებლის პერსონალურ მონაცემებს.'
 };
 
 export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const usdRate = 2.70;
 
-  useEffect(() => {
-    const CURRENT_VERSION = 'v2.8';
-    const savedVer = localStorage.getItem('geostore_app_version');
-    if (savedVer !== CURRENT_VERSION) {
-      const keepKeys = ['geostore_admin_remember', 'geostore_admin_remember_creds', 'geostore_visitors_count'];
-      const preservedData = {};
-      keepKeys.forEach(k => {
-        try { preservedData[k] = localStorage.getItem(k); } catch(e){}
-      });
-      localStorage.clear();
-      Object.keys(preservedData).forEach(k => {
-        if (preservedData[k]) {
-          try { localStorage.setItem(k, preservedData[k]); } catch(e){}
-        }
-      });
-      localStorage.setItem('geostore_app_version', CURRENT_VERSION);
-    }
-  }, []);
-
+  // Real Visitor Tracker (No Clear Data)
   const [visitorCount, setVisitorCount] = useState(() => {
     try {
       const current = Number(localStorage.getItem('geostore_visitors_count') || 1);
@@ -155,7 +137,6 @@ export default function App() {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : fallback;
     } catch (e) {
-      localStorage.removeItem(key);
       return fallback;
     }
   };
@@ -211,6 +192,10 @@ export default function App() {
 
   const [editingProductId, setEditingProductId] = useState(null);
   const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', brand: '', priceGEL: 0, oldPriceGEL: 0, discountPercent: 0, stock: 0, image: '', description: '', warranty: '' });
+
+  // Uploaded Files State for New Product Form
+  const [uploadedMainImg, setUploadedMainImg] = useState('');
+  const [uploadedExtraImgs, setUploadedExtraImgs] = useState([]);
 
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
@@ -645,6 +630,35 @@ export default function App() {
       fetchMessages();
     } catch (err) {
       alert("❌ ქსელის შეცდომა მესიჯისას: " + err.message);
+    }
+  };
+
+  // Direct File Reader Helper
+  const handleMainImageUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        setUploadedMainImg(evt.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleExtraImagesUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const loadedImgs = [];
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          loadedImgs.push(evt.target.result);
+          if (loadedImgs.length === files.length) {
+            setUploadedExtraImgs(prev => [...prev, ...loadedImgs]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -1438,11 +1452,12 @@ export default function App() {
                   </div>
                 )}
 
-                {/* PRODUCT CREATION TAB WITH DISCOUNT & MULTI-IMAGES */}
+                {/* PRODUCT CREATION TAB WITH FILE UPLOAD */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-800 p-4 md:p-6 rounded-3xl space-y-4">
-                      <h3 className="font-bold text-base md:text-lg text-white">+ ახალი პროდუქტის დამატება (ფასდაკლებით და მრავალი ფოტოთი)</h3>
+                      <h3 className="font-bold text-base md:text-lg text-white">+ ახალი პროდუქტის დამატება (პირდაპირი ფოტოს ატვირთვით)</h3>
+                      
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         const f = e.target;
@@ -1454,10 +1469,16 @@ export default function App() {
                         const stock = Number(f.stock.value);
                         const brand = f.brand.value;
                         const warranty = f.warranty.value;
-                        const mainImage = f.mainImage.value || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600';
-                        const extraImagesText = f.extraImages.value.trim();
-                        const extraImages = extraImagesText ? extraImagesText.split(',').map(s => s.trim()).filter(Boolean) : [mainImage];
-                        const description = f.description.value;
+                        
+                        const mainImage = uploadedMainImg || f.mainImageUrl.value || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600';
+                        
+                        let extraImages = [...uploadedExtraImgs];
+                        const extraText = f.extraImageUrls.value.trim();
+                        if (extraText) {
+                          const urls = extraText.split(',').map(s => s.trim()).filter(Boolean);
+                          extraImages = [...extraImages, ...urls];
+                        }
+                        if (extraImages.length === 0) extraImages = [mainImage];
 
                         let autoCategory = userSelectedCat;
                         const lowerName = prodName.toLowerCase();
@@ -1485,15 +1506,18 @@ export default function App() {
                           stock,
                           image: mainImage,
                           images: extraImages,
-                          description,
+                          description: f.description.value,
                           warranty,
                           isHot: discountPercent > 0
                         };
 
                         setProducts([newProd, ...products]);
                         f.reset();
+                        setUploadedMainImg('');
+                        setUploadedExtraImgs([]);
                         showToast(`✅ პროდუქტი წარმატებით დაემატა!`);
                       }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        
                         <input type="text" name="name" required placeholder="პროდუქტის დასახელება (მაგ: iPhone 15 Pro) *" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         <input type="text" name="sku" placeholder="SKU კოდი (მაგ: GEO-IP15)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         
@@ -1517,14 +1541,48 @@ export default function App() {
                           <input type="text" name="warranty" placeholder="გარანტია (მაგ: 1 წელი)" className="bg-slate-900 border border-slate-700 p-3 rounded-xl text-white outline-none" />
                         </div>
 
-                        <div className="md:col-span-2 space-y-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
-                          <label className="text-[11px] text-amber-400 font-bold">მთავარი ფოტოს URL:</label>
-                          <input type="url" name="mainImage" required placeholder="https://image-url.com/photo.jpg" className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white outline-none" />
+                        {/* Direct File Upload for Main Image */}
+                        <div className="md:col-span-2 space-y-2 bg-slate-900 border border-slate-700 p-3.5 rounded-xl">
+                          <label className="text-[11px] text-amber-400 font-bold flex items-center gap-2">
+                            <Upload className="w-4 h-4" /> 1. მთავარი ფოტოს ატვირთვა კომპიუტერიდან / ტელეფონიდან:
+                          </label>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleMainImageUpload}
+                            className="w-full bg-slate-800 p-2 rounded-xl text-xs text-slate-300 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-slate-950 file:font-bold" 
+                          />
+                          {uploadedMainImg && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <img src={uploadedMainImg} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-amber-500" />
+                              <span className="text-[10px] text-emerald-400 font-bold">✓ აიტვირთა</span>
+                            </div>
+                          )}
+                          <div className="text-[10px] text-slate-500">ან ჩასვით URL ლინკი:</div>
+                          <input type="url" name="mainImageUrl" placeholder="https://..." className="w-full bg-slate-800 border border-slate-700 p-2 rounded-xl text-white outline-none" />
                         </div>
 
-                        <div className="md:col-span-2 space-y-1 bg-slate-900 border border-slate-700 p-3 rounded-xl">
-                          <label className="text-[11px] text-amber-400 font-bold">დამატებითი ფოტოები (გალერეა) — გამოყავით მძიმით (,):</label>
-                          <input type="text" name="extraImages" placeholder="https://img1.com/p1.jpg, https://img2.com/p2.jpg" className="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-white outline-none" />
+                        {/* Direct Multiple Files Upload for Gallery */}
+                        <div className="md:col-span-2 space-y-2 bg-slate-900 border border-slate-700 p-3.5 rounded-xl">
+                          <label className="text-[11px] text-amber-400 font-bold flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4" /> 2. დამატებითი ფოტოების ატვირთვა (გალერეა):
+                          </label>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            multiple
+                            onChange={handleExtraImagesUpload}
+                            className="w-full bg-slate-800 p-2 rounded-xl text-xs text-slate-300 cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-700 file:text-amber-300 file:font-bold" 
+                          />
+                          {uploadedExtraImgs.length > 0 && (
+                            <div className="flex gap-2 overflow-x-auto py-1">
+                              {uploadedExtraImgs.map((img, i) => (
+                                <img key={i} src={img} alt="" className="w-10 h-10 object-cover rounded-lg border border-slate-700" />
+                              ))}
+                            </div>
+                          )}
+                          <div className="text-[10px] text-slate-500">ან ჩასვით URL ლინკები (მძიმით გამოყოფილი):</div>
+                          <input type="text" name="extraImageUrls" placeholder="https://img1.com, https://img2.com" className="w-full bg-slate-800 border border-slate-700 p-2 rounded-xl text-white outline-none" />
                         </div>
 
                         <textarea name="description" placeholder="დეტალური აღწერა..." className="md:col-span-2 bg-slate-900 border border-slate-700 p-3 rounded-xl text-white h-20 outline-none"/>
