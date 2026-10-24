@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Sparkle, Zap, Compass, HelpCircle
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
@@ -235,7 +235,7 @@ export default function App() {
   const [comparisonList, setComparisonList] = useState([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
-  // --- ENHANCED HIGH-SMART AI ASSISTANT STATES ---
+  // --- ENHANCED EXACT-INTENT AI ASSISTANT STATES ---
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [aiBudget, setAiBudget] = useState(10000);
   const [aiCategory, setAiCategory] = useState('ყველა');
@@ -243,7 +243,7 @@ export default function App() {
   const [aiChatHistory, setAiChatHistory] = useState([
     {
       sender: 'ai',
-      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის სრულიად განახლებული ჭკვიანი AI ასისტენტი. შემიძლია მაღაზიის მთელ კატალოგში ნებისმიერი დეტალით მოგიძებნოთ ნივთი. დამისვით კითხვა ქართულად ან ინგლისურად (მაგ: "მირჩიე ლეპტოპი M3", "iPhone 4000 ლარამდე", "ყურსასმენები").',
+      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. ზუსტად მითხარით რა ნივთს ეძებთ (მაგ: "ტელეფონი მინდა", "ლეპტოპი 3000 ლარამდე", "AirPods Pro") და მხოლოდ ზუსტ შესაბამის პროდუქტებს მოგიძებნით!',
       recommendedProducts: []
     }
   ]);
@@ -729,7 +729,7 @@ export default function App() {
     }
   };
 
-  // ================= ULTRA SMART HIGH-ACCURACY AI SEARCH LOGIC =================
+  // ================= ULTRA PRECISE HIGH-INTENT AI SEARCH ENGINE =================
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
     const queryLower = queryRaw.toLowerCase();
@@ -739,74 +739,59 @@ export default function App() {
       text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
     };
 
-    // Extract numbers if user wrote price in text (e.g. "4000 ლარამდე" or "2000₾")
     let extractedMaxPrice = aiBudget;
     const priceMatch = queryLower.match(/(\d+)\s*(ლარი|₾|gel|ლარამდე)?/);
     if (priceMatch && Number(priceMatch[1]) > 50) {
       extractedMaxPrice = Number(priceMatch[1]);
     }
 
-    // Split words for fuzzy keyword matching
-    const searchWords = queryLower
-      .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
-      .split(/\s+/)
-      .filter(w => w.length > 1 && !['მინდა', 'მეძებება', 'მირჩიე', 'რომელი', 'კარგი', 'საუკეთესო', 'ყიდვა', 'ფასი', 'ლარი', 'ლარამდე', '₾'].includes(w));
+    let targetCategory = null;
 
-    // Calculate match score for every single product
-    const scoredProducts = products.map(p => {
-      let score = 0;
-      const nameL = p.name.toLowerCase();
-      const catL = p.category.toLowerCase();
-      const brandL = (p.brand || '').toLowerCase();
-      const descL = (p.description || '').toLowerCase();
-      const skuL = (p.sku || '').toLowerCase();
+    const phoneKeywords = ['ტელეფონი', 'სმარტფონი', 'მობილური', 'აიფონი', 'iphone', 'samsung', 'xiaomi', 'phone'];
+    const laptopKeywords = ['ლეპტოპი', 'ნოუთბუქი', 'კომპიუტერი', 'მაქბუქი', 'macbook', 'laptop', 'asus', 'acer'];
+    const accessoryKeywords = ['ყურსასმენი', 'აირპოდსი', 'airpods', 'აქსესუარი', 'headphone', 'case', 'დამტენი'];
+    const watchKeywords = ['საათი', 'ჭკვიანი საათი', 'watch', 'apple watch'];
+    const tvKeywords = ['ტელევიზორი', 'tv', 'television'];
 
-      // Check price constraint
-      if (p.priceGEL > extractedMaxPrice) {
-        return { product: p, score: -1 }; // Price exceeds
+    if (phoneKeywords.some(k => queryLower.includes(k))) {
+      targetCategory = 'სმარტფონები';
+    } else if (laptopKeywords.some(k => queryLower.includes(k))) {
+      targetCategory = 'ლეპტოპები';
+    } else if (accessoryKeywords.some(k => queryLower.includes(k))) {
+      targetCategory = 'აქსესუარები';
+    } else if (watchKeywords.some(k => queryLower.includes(k))) {
+      targetCategory = 'ჭკვიანი საათები';
+    } else if (tvKeywords.some(k => queryLower.includes(k))) {
+      targetCategory = 'ტელევიზორები';
+    } else if (aiCategory !== 'ყველა') {
+      targetCategory = aiCategory;
+    }
+
+    let matched = products.filter(p => {
+      if (p.priceGEL > extractedMaxPrice) return false;
+
+      if (targetCategory && p.category !== targetCategory) {
+        return false;
       }
 
-      // Exact matches
-      if (queryLower && (nameL.includes(queryLower) || skuL.includes(queryLower))) score += 10;
-      if (aiCategory !== 'ყველა' && p.category === aiCategory) score += 5;
+      const words = queryLower
+        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
+        .split(/\s+/)
+        .filter(w => !['მინდა', 'მეძებება', 'მირჩიე', 'რომელი', 'კარგი', 'საუკეთესო', 'ყიდვა', 'ფასი', 'ლარი', 'ლარამდე', '₾', 'ტელეფონი', 'სმარტფონი', 'ლეპტოპი'].includes(w));
 
-      // Word level matches
-      searchWords.forEach(word => {
-        if (nameL.includes(word)) score += 5;
-        if (brandL.includes(word)) score += 4;
-        if (catL.includes(word)) score += 3;
-        if (descL.includes(word)) score += 2;
-      });
+      if (words.length > 0 && !targetCategory) {
+        const fullText = `${p.name} ${p.brand || ''} ${p.category} ${p.description || ''}`.toLowerCase();
+        return words.some(word => fullText.includes(word));
+      }
 
-      return { product: p, score };
+      return true;
     });
-
-    // Filter out invalid prices and zero scores (if query existed)
-    let matched = scoredProducts
-      .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map(item => item.product);
-
-    // Fallback if no exact match or empty query: Filter by price and category
-    if (matched.length === 0) {
-      matched = products.filter(p => {
-        const matchCat = aiCategory === 'ყველა' || p.category === aiCategory;
-        const matchPrice = p.priceGEL <= extractedMaxPrice;
-        return matchCat && matchPrice;
-      });
-    }
 
     let aiAnswer = '';
     if (matched.length > 0) {
-      aiAnswer = `🎯 მოვიძიე ${matched.length} საუკეთესო ვარიანტი, რომელიც ზუსტად შეესაბამება თქვენს მოთხოვნას და ჯდება ${extractedMaxPrice} ₾ ბიუჯეტში:`;
+      aiAnswer = `📱 მოვიძიე ${matched.length} ზუსტი შესაბამისი ${targetCategory || 'პროდუქტი'}, რომელიც იდეალურად ჯდება თქვენს ბიუჯეტში (${extractedMaxPrice} ₾-მდე):`;
     } else {
-      const budgetFallback = products.filter(p => p.priceGEL <= extractedMaxPrice);
-      if (budgetFallback.length > 0) {
-        aiAnswer = `თქვენი კონკრეტული სიტყვებით პირდაპირი პროდუქტი ვერ მოიძებნა, თუმცა თქვენს ბიუჯეტში (${extractedMaxPrice} ₾) გირჩევთ ამ პოპულარულ მოდელებს:`;
-        matched = budgetFallback;
-      } else {
-        aiAnswer = `სამწუხაროდ, ${extractedMaxPrice} ₾-ის ფარგლებში პროდუქცია ვერ მოიძებნა. გთხოვთ გაზარდოთ ბიუჯეტი ან შეცვალოთ საძიებო სიტყვა.`;
-      }
+      aiAnswer = `სამწუხაროდ, თქვენი მოთხოვნის შესაბამისი ${targetCategory || 'პროდუქტი'} ${extractedMaxPrice} ₾-ის ფარგლებში არ მოიძებნა. გთხოვთ გაზარდოთ ბიუჯეტი ან შეცვალოთ მოთხოვნა.`;
     }
 
     const aiMsg = {
@@ -817,24 +802,6 @@ export default function App() {
 
     setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
     setAiInputText('');
-  };
-
-  // ================= ADVANCED GIFT QUIZ LOGIC =================
-  const runAdvancedGiftQuiz = () => {
-    const matched = products.filter(p => {
-      const matchBudget = p.priceGEL <= giftBudgetMax;
-      let matchCat = true;
-      if (giftInterest === 'გეიმინგი / ტექნიკა') {
-        matchCat = p.category === 'ლეპტოპები' || p.category === 'სმარტფონები';
-      } else if (giftInterest === 'მუსიკა / აუდიო') {
-        matchCat = p.category === 'აქსესუარები';
-      }
-      return matchBudget && matchCat;
-    });
-
-    const finalResults = matched.length > 0 ? matched.slice(0, 3) : products.slice(0, 3);
-    setGiftQuizResults(finalResults);
-    setGiftStep(4);
   };
 
   return (
@@ -855,7 +822,6 @@ export default function App() {
             <span className="truncate">{siteSettings.topBarText}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {/* EYE-CATCHING AI BUTTONS IN HEADER */}
             <button 
               onClick={() => setIsAiAssistantOpen(true)} 
               className="bg-slate-950 text-emerald-400 hover:text-white hover:bg-slate-900 px-3 py-1 rounded-xl text-[10px] md:text-xs flex items-center gap-1.5 font-black border-2 border-emerald-400 shadow-lg shadow-emerald-500/20 animate-pulse transition transform hover:scale-105"
@@ -1004,7 +970,6 @@ export default function App() {
                           {siteSettings.heroSubtitle}
                         </p>
                         
-                        {/* FEATURED PROMINENT AI BANNER BUTTONS */}
                         <div className="flex flex-wrap gap-3 pt-3">
                           <button 
                             onClick={() => setIsAiAssistantOpen(true)} 
@@ -2050,26 +2015,24 @@ export default function App() {
 
       </main>
 
-      {/* ================= ADVANCED ENHANCED MODALS ================= */}
+      {/* ================= MODALS ================= */}
 
-      {/* 1. ENHANCED HIGH-SMART AI ASSISTANT CHAT MODAL */}
+      {/* 1. AI ASSISTANT CHAT MODAL */}
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-4">
           <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[620px] flex flex-col relative shadow-2xl overflow-hidden">
             
-            {/* AI Header */}
             <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 p-4 text-slate-950 flex justify-between items-center font-black shrink-0">
               <div className="flex items-center gap-2">
                 <Bot className="w-7 h-7 text-slate-950 animate-bounce" />
                 <div>
                   <h3 className="text-base leading-none">🤖 GEOSTORE Smart AI პროდუქტის ასისტენტი</h3>
-                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">ინტელექტუალური ძებნა & რეკომენდაციები</p>
+                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">ზუსტი განზრახვის & კატეგორიების ძებნა</p>
                 </div>
               </div>
               <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
             </div>
 
-            {/* AI Control Filters bar */}
             <div className="bg-slate-950 p-3 border-b border-slate-800 grid grid-cols-2 gap-3 text-xs shrink-0">
               <div>
                 <label className="text-slate-400 text-[10px] font-bold block mb-1">
@@ -2099,7 +2062,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* AI Chat Messages View */}
             <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs bg-slate-950/60">
               {aiChatHistory.map((msg, idx) => (
                 <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
@@ -2110,7 +2072,6 @@ export default function App() {
                   }`}>
                     <p>{msg.text}</p>
                     
-                    {/* Render Recommended Product Cards inside AI Message */}
                     {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-800">
                         {msg.recommendedProducts.map(prod => (
@@ -2137,21 +2098,19 @@ export default function App() {
               ))}
             </div>
 
-            {/* AI Quick Suggestion Chips */}
             <div className="px-3 py-1.5 bg-slate-950/90 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0">
-              {['iPhone 15', 'MacBook M3', 'AirPods Pro', 'საათი 500₾-მდე'].map(sugg => (
+              {['📱 ტელეფონები', '💻 ლეპტოპები', '🎧 ყურსასმენები', '📱 iPhone 15'].map(sugg => (
                 <button key={sugg} onClick={() => handleAiAsk(sugg)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 transition">
                   🔍 {sugg}
                 </button>
               ))}
             </div>
 
-            {/* AI Input Form */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 shrink-0">
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="ჰკითხეთ AI-ს (მაგ: ლეპტოპი M3, iPhone 15, 3000 ლარამდე)..." 
+                  placeholder="ჰკითხეთ AI-ს (მაგ: ტელეფონი მინდა, ლეპტოპი M3, AirPods)..." 
                   value={aiInputText} 
                   onChange={e => setAiInputText(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400"
@@ -2166,7 +2125,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. ENHANCED GIFT FINDER QUIZ MODAL */}
+      {/* 2. GIFT FINDER QUIZ MODAL */}
       {isGiftQuizOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border-2 border-teal-500/50 rounded-3xl max-w-lg w-full p-6 relative space-y-5 text-xs shadow-2xl">
@@ -2180,7 +2139,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* GIFT STEP 1: Recipient */}
             {giftStep === 1 && (
               <div className="space-y-4">
                 <p className="text-slate-200 font-black text-sm">1. ვისთვის გსურთ საჩუქრის არჩევა?</p>
@@ -2198,7 +2156,6 @@ export default function App() {
               </div>
             )}
 
-            {/* GIFT STEP 2: Occasion & Age */}
             {giftStep === 2 && (
               <div className="space-y-4">
                 <p className="text-slate-200 font-black text-sm">2. რა შემთხვევისთვის ეძებთ საჩუქარს?</p>
@@ -2216,7 +2173,6 @@ export default function App() {
               </div>
             )}
 
-            {/* GIFT STEP 3: Interest & Budget */}
             {giftStep === 3 && (
               <div className="space-y-4">
                 <p className="text-slate-200 font-black text-sm">3. მიუთითეთ ინტერესი და მაქსიმალური ბიუჯეტი:</p>
@@ -2252,17 +2208,14 @@ export default function App() {
                     onChange={e => setGiftBudgetMax(Number(e.target.value))} 
                     className="w-full accent-teal-400 cursor-pointer" 
                   />
-                  <div className="flex justify-between gap-1 pt-1">
-                    {[300, 800, 1500, 3500].map(b => (
-                      <button key={b} onClick={() => setGiftBudgetMax(b)} className="bg-slate-950 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg text-[10px] font-bold border border-slate-800">
-                        {b}₾-მდე
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 <button 
-                  onClick={runAdvancedGiftQuiz} 
+                  onClick={() => {
+                    const matched = products.filter(p => p.priceGEL <= giftBudgetMax);
+                    setGiftQuizResults(matched.slice(0, 3));
+                    setGiftStep(4);
+                  }} 
                   className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl transition"
                 >
                   🎁 იდეალური საჩუქრის გენერირება
@@ -2270,7 +2223,6 @@ export default function App() {
               </div>
             )}
 
-            {/* GIFT STEP 4: Results */}
             {giftStep === 4 && (
               <div className="space-y-4">
                 <div className="text-center space-y-1">
@@ -2347,7 +2299,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 4. PRICE / STOCK ALERT MODAL */}
+      {/* 4. PRICE ALERT MODAL */}
       {priceAlertModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 relative space-y-4 text-xs shadow-2xl">
@@ -2671,7 +2623,6 @@ export default function App() {
           <span>მაღაზია</span>
         </button>
 
-        {/* PROMINENT AI BUTTON IN MOBILE NAV */}
         <button
           onClick={() => setIsAiAssistantOpen(true)}
           className="flex flex-col items-center gap-1 text-[10px] font-black text-slate-950 bg-emerald-400 p-2 rounded-2xl shadow-lg -mt-4 border-2 border-slate-950 animate-bounce"
