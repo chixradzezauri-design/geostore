@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Sparkle, Zap, Compass, HelpCircle
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
@@ -57,7 +57,7 @@ const INITIAL_PRODUCTS = [
     reviewsCount: 24,
     image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
     images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600'],
-    description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით და ტიტანის კორპუსით. საუკეთესო კამერა და ბატარეის ხანგრძლივობა.',
+    description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით და ტიტანის კორპუსით. საუკეთესო კამერა, გეიმინგი და ბატარეის ხანგრძლივობა.',
     isHot: true,
     discountPercent: 10,
     warranty: '1 წელი',
@@ -76,9 +76,28 @@ const INITIAL_PRODUCTS = [
     reviewsCount: 18,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600',
     images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600'],
-    description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით. 18 საათამდე ავტონომიური მუშაობა.',
+    description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით. იდეალურია პროგრამირებისთვის, დიზაინისთვის და სწავლისთვის. 18 საათამდე ავტონომიური მუშაობა.',
     isHot: true,
     discountPercent: 8,
+    warranty: '1 წელი',
+    isPreOrder: false
+  },
+  {
+    id: 'prod-3',
+    sku: 'GEO-AP-PRO2',
+    name: 'AirPods Pro 2nd Gen USB-C',
+    category: 'აქსესუარები',
+    brand: 'Apple',
+    priceGEL: 749,
+    oldPriceGEL: 899,
+    stock: 12,
+    rating: 4.8,
+    reviewsCount: 31,
+    image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=600',
+    images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=600'],
+    description: 'ხმაურის აქტიური ჩახშობა (ANC), საუკეთესო ჟღერადობა მუსიკისთვის და ზარებისთვის.',
+    isHot: false,
+    discountPercent: 16,
     warranty: '1 წელი',
     isPreOrder: false
   }
@@ -212,22 +231,32 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '', notes: '' });
 
-  // --- NEW INNOVATIVE STATES ---
+  // --- INNOVATIVE STATES ---
   const [comparisonList, setComparisonList] = useState([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
+  // --- ENHANCED AI ASSISTANT STATES ---
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
-  const [aiQuery, setAiQuery] = useState('');
   const [aiBudget, setAiBudget] = useState(5000);
   const [aiCategory, setAiCategory] = useState('ყველა');
-  const [aiResults, setAiResults] = useState([]);
+  const [aiInputText, setAiInputText] = useState('');
+  const [aiChatHistory, setAiChatHistory] = useState([
+    {
+      sender: 'ai',
+      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. დამისვით ნებისმიერი კითხვა ტექნიკაზე, მიუთითეთ თქვენი ბიუჯეტი ან მითხარით რა საჭიროებისთვის ეძებთ ნივთს (მაგ: "მეძებება ლეპტოპი პროგრამირებისთვის 4000₾-მდე").',
+      recommendedProducts: []
+    }
+  ]);
 
+  // --- ENHANCED GIFT QUIZ STATES ---
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [giftStep, setGiftStep] = useState(1);
   const [giftRecipient, setGiftRecipient] = useState('');
+  const [giftAge, setGiftAge] = useState('');
+  const [giftOccasion, setGiftOccasion] = useState('');
   const [giftInterest, setGiftInterest] = useState('');
-  const [giftBudgetMax, setGiftBudgetMax] = useState(5000);
-  const [giftQuizResult, setGiftQuizResult] = useState(null);
+  const [giftBudgetMax, setGiftBudgetMax] = useState(2500);
+  const [giftQuizResults, setGiftQuizResults] = useState([]);
 
   const [priceAlertModal, setPriceAlertModal] = useState(null);
   const [alertEmail, setAlertEmail] = useState('');
@@ -335,7 +364,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_coupons', JSON.stringify(coupons)); } catch(e){} }, [coupons]);
   useEffect(() => { try { localStorage.setItem('geostore_sections', JSON.stringify(sections)); } catch(e){} }, [sections]);
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
-  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
+  useEffect(() => { try { localStorage.setItem('geostore_current-user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
 
   const formatPrice = (priceInGEL) => {
     if (currency === 'USD') {
@@ -700,31 +729,61 @@ export default function App() {
     }
   };
 
-  // AI Assistant Search Handler
-  const runAiAssistantSearch = () => {
-    const results = products.filter(p => {
+  // ================= SMART AI CHAT LOGIC =================
+  const handleAiAsk = (customQuestion = null) => {
+    const query = (customQuestion || aiInputText).trim();
+    if (!query && aiCategory === 'ყველა' && aiBudget >= 10000) return;
+
+    const userMsg = { sender: 'user', text: query || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` };
+    
+    // AI Search Logic across actual catalog
+    const matched = products.filter(p => {
       const matchCat = aiCategory === 'ყველა' || p.category === aiCategory;
-      const matchBudget = p.priceGEL <= aiBudget;
-      const matchQuery = aiQuery === '' || p.name.toLowerCase().includes(aiQuery.toLowerCase()) || p.description.toLowerCase().includes(aiQuery.toLowerCase());
-      return matchCat && matchBudget && matchQuery;
+      const matchPrice = p.priceGEL <= aiBudget;
+      const q = query.toLowerCase();
+      const matchText = !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+      return matchCat && matchPrice && matchText;
     });
-    setAiResults(results);
+
+    let aiAnswer = '';
+    if (matched.length > 0) {
+      aiAnswer = `თქვენი მოთხოვნის მიხედვით მოვიძიე ${matched.length} საუკეთესო ვარიანტი, რომელიც იდეალურად ჯდება თქვენს ბიუჯეტში (${aiBudget} ₾-მდე):`;
+    } else {
+      const fallback = products.filter(p => p.priceGEL <= aiBudget);
+      if (fallback.length > 0) {
+        aiAnswer = `ზუსტი დამთხვევა ვერ მოიძებნა, თუმცა თქვენს ბიუჯეტში (${aiBudget} ₾) გირჩევთ ამ პოპულარულ მოდელებს:`;
+        matched.push(...fallback);
+      } else {
+        aiAnswer = `სამწუხაროდ, ${aiBudget} ₾-ის ფარგლებში პროდუქტი არ მოიძებნა. გთხოვთ გაზარდოთ ბიუჯეტი ან შეცვალოთ მოთხოვნა.`;
+      }
+    }
+
+    const aiMsg = {
+      sender: 'ai',
+      text: aiAnswer,
+      recommendedProducts: matched.slice(0, 4)
+    };
+
+    setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
+    setAiInputText('');
   };
 
-  // Gift Quiz Finder Handler
-  const runGiftQuiz = () => {
-    const results = products.filter(p => {
+  // ================= ADVANCED GIFT QUIZ LOGIC =================
+  const runAdvancedGiftQuiz = () => {
+    const matched = products.filter(p => {
       const matchBudget = p.priceGEL <= giftBudgetMax;
-      let matchInterest = true;
+      let matchCat = true;
       if (giftInterest === 'გეიმინგი' || giftInterest === 'ტექნიკა') {
-        matchInterest = p.category === 'ლეპტოპები' || p.category === 'სმარტფონები';
-      } else if (giftInterest === 'მუსიკა/აქსესუარები') {
-        matchInterest = p.category === 'აქსესუარები';
+        matchCat = p.category === 'ლეპტოპები' || p.category === 'სმარტფონები';
+      } else if (giftInterest === 'მუსიკა/აუდიო') {
+        matchCat = p.category === 'აქსესუარები';
       }
-      return matchBudget && matchInterest;
+      return matchBudget && matchCat;
     });
-    setGiftQuizResult(results.length > 0 ? results[0] : products[0]);
-    setGiftStep(3);
+
+    const finalResults = matched.length > 0 ? matched.slice(0, 3) : products.slice(0, 3);
+    setGiftQuizResults(finalResults);
+    setGiftStep(4);
   };
 
   return (
@@ -745,15 +804,27 @@ export default function App() {
             <span className="truncate">{siteSettings.topBarText}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-slate-950 text-emerald-400 hover:bg-slate-900 px-3 py-0.5 rounded-lg text-[10px] flex items-center gap-1 font-black border border-emerald-400/40 animate-pulse transition">
-              <Bot className="w-3.5 h-3.5" /> AI ასისტენტი
+            {/* EYE-CATCHING AI BUTTONS IN HEADER */}
+            <button 
+              onClick={() => setIsAiAssistantOpen(true)} 
+              className="bg-slate-950 text-emerald-400 hover:text-white hover:bg-slate-900 px-3 py-1 rounded-xl text-[10px] md:text-xs flex items-center gap-1.5 font-black border-2 border-emerald-400 shadow-lg shadow-emerald-500/20 animate-pulse transition transform hover:scale-105"
+            >
+              <Bot className="w-4 h-4 text-emerald-400" />
+              <span>🤖 AI ასისტენტი</span>
             </button>
-            <button onClick={() => setIsGiftQuizOpen(true)} className="bg-slate-950 text-teal-300 hover:bg-slate-900 px-3 py-0.5 rounded-lg text-[10px] flex items-center gap-1 font-black border border-teal-400/40 transition">
-              <Gift className="w-3.5 h-3.5" /> საჩუქრის ქვიზი
+
+            <button 
+              onClick={() => setIsGiftQuizOpen(true)} 
+              className="bg-slate-950 text-teal-300 hover:text-white hover:bg-slate-900 px-3 py-1 rounded-xl text-[10px] md:text-xs flex items-center gap-1.5 font-black border-2 border-teal-400/60 shadow-lg transition transform hover:scale-105"
+            >
+              <Gift className="w-4 h-4 text-teal-300" />
+              <span>🎁 საჩუქრის ქვიზი</span>
             </button>
+
             <button onClick={handleManualRefresh} className="bg-slate-950/80 hover:bg-slate-950 px-2.5 py-0.5 rounded-lg text-emerald-400 text-[10px] flex items-center gap-1 font-bold border border-emerald-500/30 transition">
               <RefreshCw className="w-3 h-3 animate-spin" /> განახლება
             </button>
+
             <button 
               onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')}
               className="bg-slate-950/80 hover:bg-slate-950 px-2.5 py-0.5 rounded-full border border-emerald-400/40 transition flex items-center gap-1 font-black text-emerald-300 text-[10px]"
@@ -785,7 +856,6 @@ export default function App() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            {/* COMPARISON BUTTON */}
             <button 
               onClick={() => setIsComparisonOpen(true)}
               className="p-3 rounded-2xl border relative bg-slate-900 border-emerald-500/30 text-slate-300 hover:border-emerald-400 transition"
@@ -856,11 +926,8 @@ export default function App() {
             />
             <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-2.5" />
           </div>
-          <button onClick={() => setIsAiAssistantOpen(true)} className="bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold border border-emerald-500/40">
-            <Bot className="w-4 h-4" />
-          </button>
-          <button onClick={handleManualRefresh} className="bg-slate-900 text-emerald-400 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 border border-slate-800">
-            <RefreshCw className="w-3.5 h-3.5" />
+          <button onClick={() => setIsAiAssistantOpen(true)} className="bg-emerald-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1 border border-emerald-300 shadow">
+            <Bot className="w-4 h-4" /> AI
           </button>
         </div>
       </header>
@@ -873,29 +940,39 @@ export default function App() {
             {sections.filter(s => s.visible).map(sec => {
               if (sec.id === 'hero') {
                 return (
-                  <div key={sec.id} className="relative rounded-3xl overflow-hidden border border-emerald-500/30 shadow-2xl bg-slate-900">
+                  <div key={sec.id} className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-2xl bg-slate-900">
                     <div className="grid grid-cols-1 md:grid-cols-2 items-center">
-                      <div className="p-8 md:p-14 z-10 space-y-4">
-                        <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-                          <Sparkles className="w-3.5 h-3.5" /> სპეც შეთავაზება
+                      <div className="p-8 md:p-14 z-10 space-y-5">
+                        <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400 text-[11px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> სპეც შეთავაზება & AI ტექნოლოგია
                         </span>
                         <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
                           {siteSettings.heroTitle}
                         </h1>
-                        <p className="text-slate-400 text-xs md:text-base leading-relaxed">
+                        <p className="text-slate-300 text-xs md:text-base leading-relaxed">
                           {siteSettings.heroSubtitle}
                         </p>
-                        <div className="flex flex-wrap gap-3 pt-2">
-                          <a href="#products" className="inline-flex items-center gap-2 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-xl hover:bg-emerald-400 transition text-xs md:text-sm">
-                            <span>{banners[0]?.buttonText || 'შეიძინე ახლავე'}</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </a>
-                          <button onClick={() => setIsAiAssistantOpen(true)} className="inline-flex items-center gap-2 bg-slate-950 border border-emerald-500/40 text-emerald-300 font-black px-5 py-3 rounded-2xl hover:bg-slate-900 transition text-xs md:text-sm">
-                            <Bot className="w-4 h-4 text-emerald-400" /> AI ასისტენტთან არჩევა
+                        
+                        {/* FEATURED PROMINENT AI BANNER BUTTONS */}
+                        <div className="flex flex-wrap gap-3 pt-3">
+                          <button 
+                            onClick={() => setIsAiAssistantOpen(true)} 
+                            className="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl shadow-xl hover:scale-105 transition transform flex items-center gap-2 text-xs md:text-sm"
+                          >
+                            <Bot className="w-5 h-5 text-slate-950" />
+                            <span>🤖 ჰკითხე AI ასისტენტს არჩევანი</span>
+                          </button>
+
+                          <button 
+                            onClick={() => setIsGiftQuizOpen(true)} 
+                            className="bg-slate-950 border-2 border-teal-400/80 text-teal-300 hover:text-white font-black px-5 py-3.5 rounded-2xl hover:bg-slate-900 transition flex items-center gap-2 text-xs md:text-sm shadow-lg"
+                          >
+                            <Gift className="w-5 h-5 text-teal-300" />
+                            <span>🎁 საჩუქრის არჩევა ქვიზით</span>
                           </button>
                         </div>
                       </div>
-                      <div className="relative h-56 md:h-96 w-full">
+                      <div className="relative h-60 md:h-96 w-full">
                         <img src={banners[0]?.image} alt="Hero" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-900 via-transparent to-transparent"></div>
                       </div>
@@ -1576,7 +1653,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* PRODUCT CREATION TAB WITH FILE UPLOAD */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="bg-slate-900 p-4 md:p-6 rounded-3xl space-y-4 border border-slate-800">
@@ -1672,7 +1748,6 @@ export default function App() {
                           <label htmlFor="isPreOrder" className="text-slate-300 font-bold cursor-pointer">წინასწარი შეკვეთა (Pre-Order)</label>
                         </div>
 
-                        {/* Direct File Upload for Main Image */}
                         <div className="md:col-span-2 space-y-2 bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
                           <label className="text-[11px] text-emerald-400 font-bold flex items-center gap-2">
                             <Upload className="w-4 h-4" /> 1. მთავარი ფოტოს ატვირთვა კომპიუტერიდან / ტელეფონიდან:
@@ -1693,7 +1768,6 @@ export default function App() {
                           <input type="url" name="mainImageUrl" placeholder="https://..." className="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white outline-none" />
                         </div>
 
-                        {/* Direct Multiple Files Upload for Gallery */}
                         <div className="md:col-span-2 space-y-2 bg-slate-950 border border-slate-800 p-3.5 rounded-xl">
                           <label className="text-[11px] text-emerald-400 font-bold flex items-center gap-2">
                             <ImageIcon className="w-4 h-4" /> 2. დამატებითი ფოტოების ატვირთვა (გალერეა):
@@ -1925,62 +1999,259 @@ export default function App() {
 
       </main>
 
-      {/* ================= INNOVATIVE MODALS ================= */}
+      {/* ================= ADVANCED ENHANCED MODALS ================= */}
 
-      {/* 1. AI ASSISTANT MODAL */}
+      {/* 1. ENHANCED AI ASSISTANT CHAT MODAL */}
       {isAiAssistantOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-lg w-full p-6 relative space-y-4 text-xs shadow-2xl">
-            <button onClick={() => setIsAiAssistantOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Bot className="w-6 h-6 text-emerald-400 animate-bounce" />
-              <h3 className="text-base font-black text-white">🤖 AI პროდუქტის ასისტენტი</h3>
-            </div>
-            <p className="text-slate-300">მიუთითეთ თქვენი ბიუჯეტი და სასურველი კატეგორია, და AI მომენტალურად შეგირჩევთ საუკეთესო ვარიანტს!</p>
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-4">
+          <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[600px] flex flex-col relative shadow-2xl overflow-hidden">
             
-            <div className="space-y-3">
+            {/* AI Header */}
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 p-4 text-slate-950 flex justify-between items-center font-black shrink-0">
+              <div className="flex items-center gap-2">
+                <Bot className="w-7 h-7 text-slate-950 animate-bounce" />
+                <div>
+                  <h3 className="text-base leading-none">🤖 GEOSTORE AI პროდუქტის ასისტენტი</h3>
+                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">ინტერაქტიული AI ჩატი და ჭკვიანი ძებნა</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            {/* AI Control Filters bar */}
+            <div className="bg-slate-950 p-3 border-b border-slate-800 grid grid-cols-2 gap-3 text-xs shrink-0">
               <div>
-                <label className="text-slate-400 font-bold">მაქსიმალური ბიუჯეტი: <span className="text-emerald-400 font-black">{aiBudget} ₾</span></label>
-                <input type="range" min="100" max="10000" step="100" value={aiBudget} onChange={e => setAiBudget(Number(e.target.value))} className="w-full accent-emerald-500 mt-1 cursor-pointer" />
+                <label className="text-slate-400 text-[10px] font-bold block mb-1">
+                  მაქს. ბიუჯეტი: <span className="text-emerald-400 font-black">{aiBudget} ₾</span>
+                </label>
+                <input 
+                  type="range" 
+                  min="200" 
+                  max="10000" 
+                  step="200" 
+                  value={aiBudget} 
+                  onChange={e => setAiBudget(Number(e.target.value))} 
+                  className="w-full accent-emerald-500 cursor-pointer h-1.5" 
+                />
               </div>
 
               <div>
-                <label className="text-slate-400 font-bold">კატეგორია:</label>
-                <select value={aiCategory} onChange={e => setAiCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white mt-1 outline-none">
+                <label className="text-slate-400 text-[10px] font-bold block mb-1">კატეგორია:</label>
+                <select 
+                  value={aiCategory} 
+                  onChange={e => setAiCategory(e.target.value)} 
+                  className="w-full bg-slate-900 border border-slate-800 p-1.5 rounded-xl text-white text-xs outline-none"
+                >
                   <option value="ყველა">✨ ყველა კატეგორია</option>
                   {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
                 </select>
               </div>
-
-              <div>
-                <label className="text-slate-400 font-bold">ძებნის საკვანძო სიტყვა (სურვილისამებრ):</label>
-                <input type="text" placeholder="მაგ: კამერა, მძლავრი, ლეპტოპი..." value={aiQuery} onChange={e => setAiQuery(e.target.value)} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white mt-1 outline-none" />
-              </div>
-
-              <button onClick={runAiAssistantSearch} className="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl shadow-lg hover:bg-emerald-400 transition">
-                🔍 AI ძებნის გაშვება
-              </button>
             </div>
 
-            {aiResults.length > 0 && (
-              <div className="space-y-2 mt-4 pt-4 border-t border-slate-800 max-h-52 overflow-y-auto">
-                <h4 className="font-bold text-emerald-400">მოძებნილი პროდუქტები ({aiResults.length}):</h4>
-                {aiResults.map(p => (
-                  <div key={p.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-                    <div>
-                      <p className="font-bold text-white">{p.name}</p>
-                      <p className="text-emerald-400 font-bold">{p.priceGEL} ₾</p>
-                    </div>
-                    <button onClick={() => { addToCart(p); setIsAiAssistantOpen(false); }} className="bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-lg font-bold">ყიდვა</button>
+            {/* AI Chat Messages View */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs bg-slate-950/60">
+              {aiChatHistory.map((msg, idx) => (
+                <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`p-3.5 rounded-2xl max-w-[90%] leading-relaxed ${
+                    msg.sender === 'user' 
+                      ? 'bg-emerald-500 text-slate-950 font-extrabold shadow-md' 
+                      : 'bg-slate-900 border border-emerald-500/30 text-white shadow-xl'
+                  }`}>
+                    <p>{msg.text}</p>
+                    
+                    {/* Render Recommended Product Cards inside AI Message */}
+                    {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-slate-800">
+                        {msg.recommendedProducts.map(prod => (
+                          <div key={prod.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex flex-col justify-between items-start gap-2">
+                            <div className="flex items-center gap-2">
+                              <img src={prod.image} alt="" className="w-10 h-10 object-contain bg-slate-900 rounded-lg p-1 border border-slate-800 shrink-0" />
+                              <div>
+                                <h5 className="font-bold text-white text-[11px] line-clamp-1">{prod.name}</h5>
+                                <p className="text-emerald-400 font-black text-xs">{prod.priceGEL} ₾</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => { addToCart(prod); setIsAiAssistantOpen(false); }} 
+                              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-1.5 rounded-lg text-[10px] transition"
+                            >
+                              🛒 კალათაში დამატება
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+
+            {/* AI Input Form */}
+            <div className="p-3 bg-slate-900 border-t border-slate-800 shrink-0">
+              <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="ჰკითხეთ AI-ს (მაგ: მირჩიე კარგი ტელეფონი 2000₾-მდე)..." 
+                  value={aiInputText} 
+                  onChange={e => setAiInputText(e.target.value)} 
+                  className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400"
+                />
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1 shrink-0 shadow-lg transition">
+                  <Send className="w-4 h-4" /> კითხვა
+                </button>
+              </form>
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* 2. PRODUCT COMPARISON MODAL */}
+      {/* 2. ENHANCED GIFT FINDER QUIZ MODAL */}
+      {isGiftQuizOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border-2 border-teal-500/50 rounded-3xl max-w-lg w-full p-6 relative space-y-5 text-xs shadow-2xl">
+            <button onClick={() => setIsGiftQuizOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold">✕</button>
+            
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+              <Gift className="w-7 h-7 text-teal-400 animate-pulse" />
+              <div>
+                <h3 className="text-base font-black text-white">🎁 ჭკვიანი სასაჩუქრე ასისტენტი</h3>
+                <p className="text-[10px] text-teal-300 font-semibold">შეარჩიეთ საუკეთესო საჩუქარი 4 სწრაფ ნაბიჯში</p>
+              </div>
+            </div>
+
+            {/* GIFT STEP 1: Recipient */}
+            {giftStep === 1 && (
+              <div className="space-y-4">
+                <p className="text-slate-200 font-black text-sm">1. ვისთვის გსურთ საჩუქრის არჩევა?</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {['მეუღლე / საყვარელი ადამიანი', 'მშობელი', 'შვილი / მოზარდი', 'მეგობარი / კოლეგა'].map(rec => (
+                    <button 
+                      key={rec} 
+                      onClick={() => { setGiftRecipient(rec); setGiftStep(2); }} 
+                      className="p-3.5 bg-slate-950 border border-slate-800 hover:border-teal-400 rounded-2xl font-bold text-white text-left transition transform hover:scale-102"
+                    >
+                      👤 {rec}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* GIFT STEP 2: Occasion & Age */}
+            {giftStep === 2 && (
+              <div className="space-y-4">
+                <p className="text-slate-200 font-black text-sm">2. რა შემთხვევისთვის ეძებთ საჩუქარს?</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {['დაბადების დღე 🎂', 'ახალი წელი 🎄', 'იუბილე / დღესასწაული 🎉', 'უბრალოდ სიურპრიზი ✨'].map(occ => (
+                    <button 
+                      key={occ} 
+                      onClick={() => { setGiftOccasion(occ); setGiftStep(3); }} 
+                      className="p-3.5 bg-slate-950 border border-slate-800 hover:border-teal-400 rounded-2xl font-bold text-white text-left transition"
+                    >
+                      {occ}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* GIFT STEP 3: Interest & Budget */}
+            {giftStep === 3 && (
+              <div className="space-y-4">
+                <p className="text-slate-200 font-black text-sm">3. მიუთითეთ ინტერესი და მაქსიმალური ბიუჯეტი:</p>
+
+                <div className="space-y-2">
+                  <label className="text-slate-400 font-bold block">ინტერესი:</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['გეიმინგი / ტექნიკა', 'მუსიკა / აუდიო', 'სმარტფონები', 'ყველაფერი'].map(ins => (
+                      <button 
+                        key={ins} 
+                        onClick={() => setGiftInterest(ins)} 
+                        className={`p-2.5 rounded-xl font-bold border text-xs transition ${
+                          giftInterest === ins ? 'bg-teal-500 text-slate-950 border-teal-300' : 'bg-slate-950 border-slate-800 text-white'
+                        }`}
+                      >
+                        {ins}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400 font-bold">მაქსიმალური ბიუჯეტი:</span>
+                    <span className="text-teal-400 font-black">{giftBudgetMax} ₾</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="100" 
+                    max="6000" 
+                    step="100" 
+                    value={giftBudgetMax} 
+                    onChange={e => setGiftBudgetMax(Number(e.target.value))} 
+                    className="w-full accent-teal-400 cursor-pointer" 
+                  />
+                  <div className="flex justify-between gap-1 pt-1">
+                    {[300, 800, 1500, 3500].map(b => (
+                      <button key={b} onClick={() => setGiftBudgetMax(b)} className="bg-slate-950 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded-lg text-[10px] font-bold border border-slate-800">
+                        {b}₾-მდე
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  onClick={runAdvancedGiftQuiz} 
+                  className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl transition"
+                >
+                  🎁 იდეალური საჩუქრის გენერირება
+                </button>
+              </div>
+            )}
+
+            {/* GIFT STEP 4: Results */}
+            {giftStep === 4 && (
+              <div className="space-y-4">
+                <div className="text-center space-y-1">
+                  <h4 className="font-black text-teal-400 text-base">🎉 შერჩეული საუკეთესო საჩუქრები!</h4>
+                  <p className="text-slate-400 text-[11px]">{giftRecipient} • {giftOccasion} • {giftBudgetMax}₾ ბიუჯეტში</p>
+                </div>
+
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                  {giftQuizResults.map(p => (
+                    <div key={p.id} className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between gap-3">
+                      <img src={p.image} alt="" className="w-14 h-14 object-contain bg-slate-900 rounded-xl p-1 shrink-0" />
+                      <div className="flex-1">
+                        <h5 className="font-bold text-white text-xs">{p.name}</h5>
+                        <p className="text-teal-400 font-black text-sm">{p.priceGEL} ₾</p>
+                      </div>
+                      <button 
+                        onClick={() => { addToCart(p); setIsGiftQuizOpen(false); }} 
+                        className="bg-teal-500 text-slate-950 font-black px-3 py-2 rounded-xl text-xs shrink-0"
+                      >
+                        ყიდვა
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setGiftStep(1)} className="flex-1 bg-slate-950 border border-slate-800 text-slate-300 font-bold py-2.5 rounded-xl">
+                    🔄 თავიდან არჩევა
+                  </button>
+                  <button onClick={() => setIsGiftQuizOpen(false)} className="bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl">
+                    დახურვა
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* 3. PRODUCT COMPARISON MODAL */}
       {isComparisonOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-3xl w-full p-6 relative space-y-4 text-xs shadow-2xl">
@@ -2010,60 +2281,6 @@ export default function App() {
                     <button onClick={() => toggleComparison(prod)} className="w-full bg-rose-500/20 text-rose-400 py-2 rounded-xl font-bold border border-rose-500/30">ამოღება</button>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 3. GIFT FINDER QUIZ MODAL */}
-      {isGiftQuizOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-teal-500/40 rounded-3xl max-w-md w-full p-6 relative space-y-4 text-xs shadow-2xl">
-            <button onClick={() => setIsGiftQuizOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Gift className="w-6 h-6 text-teal-400" />
-              <h3 className="text-base font-black text-white">🎁 სასაჩუქრე ასისტენტი (Quiz)</h3>
-            </div>
-
-            {giftStep === 1 && (
-              <div className="space-y-4">
-                <p className="text-slate-300 font-bold">1. ვისთვის ეძებთ საჩუქარს?</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['მეუღლე / მეგობარი', 'მშობელი', 'შვილი / მოზარდი', 'კოლეგა'].map(rec => (
-                    <button key={rec} onClick={() => { setGiftRecipient(rec); setGiftStep(2); }} className="p-3 bg-slate-950 border border-slate-800 hover:border-teal-400 rounded-xl font-bold text-white text-left">
-                      👤 {rec}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {giftStep === 2 && (
-              <div className="space-y-4">
-                <p className="text-slate-300 font-bold">2. რა აინტერესებს ყველაზე მეტად?</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {['გეიმინგი / ტექნიკა', 'მუსიკა / აქსესუარები', 'ფოტოგრაფია / სმარტფონები'].map(ins => (
-                    <button key={ins} onClick={() => { setGiftInterest(ins); runGiftQuiz(); }} className="p-3 bg-slate-950 border border-slate-800 hover:border-teal-400 rounded-xl font-bold text-white text-left">
-                      ⭐ {ins}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {giftStep === 3 && giftQuizResult && (
-              <div className="space-y-4 text-center">
-                <h4 className="font-black text-teal-400 text-sm">🎉 ჩვენ შეგირჩიეთ იდეალური საჩუქარი!</h4>
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
-                  <img src={giftQuizResult.image} alt="" className="w-32 h-32 object-contain mx-auto" />
-                  <p className="font-bold text-white text-sm">{giftQuizResult.name}</p>
-                  <p className="text-teal-400 font-black text-lg">{giftQuizResult.priceGEL} ₾</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => { addToCart(giftQuizResult); setIsGiftQuizOpen(false); }} className="flex-1 bg-teal-500 text-slate-950 font-bold py-3 rounded-xl">კალათაში დამატება</button>
-                  <button onClick={() => setGiftStep(1)} className="bg-slate-800 text-white px-4 py-3 rounded-xl font-bold">თავიდან</button>
-                </div>
               </div>
             )}
           </div>
@@ -2384,6 +2601,7 @@ export default function App() {
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
 
+      {/* MOBILE BOTTOM NAVIGATION */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 md:hidden z-40 py-2.5 px-4 flex justify-around items-center">
         <button
           onClick={() => setActiveTab('store')}
@@ -2393,12 +2611,13 @@ export default function App() {
           <span>მაღაზია</span>
         </button>
 
+        {/* PROMINENT AI BUTTON IN MOBILE NAV */}
         <button
           onClick={() => setIsAiAssistantOpen(true)}
-          className="flex flex-col items-center gap-1 text-[10px] font-bold text-emerald-400"
+          className="flex flex-col items-center gap-1 text-[10px] font-black text-slate-950 bg-emerald-400 p-2 rounded-2xl shadow-lg -mt-4 border-2 border-slate-950 animate-bounce"
         >
           <Bot className="w-5 h-5" />
-          <span>AI ასისტენტი</span>
+          <span>AI</span>
         </button>
 
         <button
