@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
@@ -144,6 +144,37 @@ const INITIAL_POLICY = {
 export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const [usdRate, setUsdRate] = useState(2.70);
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('მომხმარებელმა დააყენა აპლიკაცია');
+        }
+        setDeferredPrompt(null);
+        setShowInstallBanner(false);
+      });
+    }
+  };
 
   // Real Visitor Tracker
   const [visitorCount, setVisitorCount] = useState(() => {
@@ -847,6 +878,33 @@ export default function App() {
         <div className="fixed top-5 right-5 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
           <Sparkles className="w-5 h-5 text-slate-950" />
           {toastMessage}
+        </div>
+      )}
+
+      {/* PWA INSTALL BANNER */}
+      {showInstallBanner && (
+        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-slate-950 animate-bounce">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📲</span>
+            <div>
+              <h4 className="font-black text-xs md:text-sm">დააყენე GEOSTORE აპლიკაცია!</h4>
+              <p className="text-[10px] md:text-xs font-semibold">სწრაფი წვდომა ეკრანიდან ერთი დაჭერით</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleInstallClick} 
+              className="bg-slate-950 text-emerald-400 font-black px-4 py-2 rounded-xl text-xs hover:bg-slate-900 transition"
+            >
+              დაყენება
+            </button>
+            <button 
+              onClick={() => setShowInstallBanner(false)} 
+              className="text-slate-950 font-bold px-2 text-xs"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
