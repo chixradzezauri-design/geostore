@@ -235,15 +235,15 @@ export default function App() {
   const [comparisonList, setComparisonList] = useState([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
-  // --- ENHANCED AI ASSISTANT STATES ---
+  // --- ENHANCED HIGH-SMART AI ASSISTANT STATES ---
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
-  const [aiBudget, setAiBudget] = useState(5000);
+  const [aiBudget, setAiBudget] = useState(10000);
   const [aiCategory, setAiCategory] = useState('ყველა');
   const [aiInputText, setAiInputText] = useState('');
   const [aiChatHistory, setAiChatHistory] = useState([
     {
       sender: 'ai',
-      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. დამისვით ნებისმიერი კითხვა ტექნიკაზე, მიუთითეთ თქვენი ბიუჯეტი ან მითხარით რა საჭიროებისთვის ეძებთ ნივთს (მაგ: "მეძებება ლეპტოპი პროგრამირებისთვის 4000₾-მდე").',
+      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის სრულიად განახლებული ჭკვიანი AI ასისტენტი. შემიძლია მაღაზიის მთელ კატალოგში ნებისმიერი დეტალით მოგიძებნოთ ნივთი. დამისვით კითხვა ქართულად ან ინგლისურად (მაგ: "მირჩიე ლეპტოპი M3", "iPhone 4000 ლარამდე", "ყურსასმენები").',
       recommendedProducts: []
     }
   ]);
@@ -729,32 +729,83 @@ export default function App() {
     }
   };
 
-  // ================= SMART AI CHAT LOGIC =================
+  // ================= ULTRA SMART HIGH-ACCURACY AI SEARCH LOGIC =================
   const handleAiAsk = (customQuestion = null) => {
-    const query = (customQuestion || aiInputText).trim();
-    if (!query && aiCategory === 'ყველა' && aiBudget >= 10000) return;
+    const queryRaw = (customQuestion || aiInputText).trim();
+    const queryLower = queryRaw.toLowerCase();
 
-    const userMsg = { sender: 'user', text: query || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` };
-    
-    // AI Search Logic across actual catalog
-    const matched = products.filter(p => {
-      const matchCat = aiCategory === 'ყველა' || p.category === aiCategory;
-      const matchPrice = p.priceGEL <= aiBudget;
-      const q = query.toLowerCase();
-      const matchText = !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
-      return matchCat && matchPrice && matchText;
+    const userMsg = { 
+      sender: 'user', 
+      text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
+    };
+
+    // Extract numbers if user wrote price in text (e.g. "4000 ლარამდე" or "2000₾")
+    let extractedMaxPrice = aiBudget;
+    const priceMatch = queryLower.match(/(\d+)\s*(ლარი|₾|gel|ლარამდე)?/);
+    if (priceMatch && Number(priceMatch[1]) > 50) {
+      extractedMaxPrice = Number(priceMatch[1]);
+    }
+
+    // Split words for fuzzy keyword matching
+    const searchWords = queryLower
+      .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
+      .split(/\s+/)
+      .filter(w => w.length > 1 && !['მინდა', 'მეძებება', 'მირჩიე', 'რომელი', 'კარგი', 'საუკეთესო', 'ყიდვა', 'ფასი', 'ლარი', 'ლარამდე', '₾'].includes(w));
+
+    // Calculate match score for every single product
+    const scoredProducts = products.map(p => {
+      let score = 0;
+      const nameL = p.name.toLowerCase();
+      const catL = p.category.toLowerCase();
+      const brandL = (p.brand || '').toLowerCase();
+      const descL = (p.description || '').toLowerCase();
+      const skuL = (p.sku || '').toLowerCase();
+
+      // Check price constraint
+      if (p.priceGEL > extractedMaxPrice) {
+        return { product: p, score: -1 }; // Price exceeds
+      }
+
+      // Exact matches
+      if (queryLower && (nameL.includes(queryLower) || skuL.includes(queryLower))) score += 10;
+      if (aiCategory !== 'ყველა' && p.category === aiCategory) score += 5;
+
+      // Word level matches
+      searchWords.forEach(word => {
+        if (nameL.includes(word)) score += 5;
+        if (brandL.includes(word)) score += 4;
+        if (catL.includes(word)) score += 3;
+        if (descL.includes(word)) score += 2;
+      });
+
+      return { product: p, score };
     });
+
+    // Filter out invalid prices and zero scores (if query existed)
+    let matched = scoredProducts
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.product);
+
+    // Fallback if no exact match or empty query: Filter by price and category
+    if (matched.length === 0) {
+      matched = products.filter(p => {
+        const matchCat = aiCategory === 'ყველა' || p.category === aiCategory;
+        const matchPrice = p.priceGEL <= extractedMaxPrice;
+        return matchCat && matchPrice;
+      });
+    }
 
     let aiAnswer = '';
     if (matched.length > 0) {
-      aiAnswer = `თქვენი მოთხოვნის მიხედვით მოვიძიე ${matched.length} საუკეთესო ვარიანტი, რომელიც იდეალურად ჯდება თქვენს ბიუჯეტში (${aiBudget} ₾-მდე):`;
+      aiAnswer = `🎯 მოვიძიე ${matched.length} საუკეთესო ვარიანტი, რომელიც ზუსტად შეესაბამება თქვენს მოთხოვნას და ჯდება ${extractedMaxPrice} ₾ ბიუჯეტში:`;
     } else {
-      const fallback = products.filter(p => p.priceGEL <= aiBudget);
-      if (fallback.length > 0) {
-        aiAnswer = `ზუსტი დამთხვევა ვერ მოიძებნა, თუმცა თქვენს ბიუჯეტში (${aiBudget} ₾) გირჩევთ ამ პოპულარულ მოდელებს:`;
-        matched.push(...fallback);
+      const budgetFallback = products.filter(p => p.priceGEL <= extractedMaxPrice);
+      if (budgetFallback.length > 0) {
+        aiAnswer = `თქვენი კონკრეტული სიტყვებით პირდაპირი პროდუქტი ვერ მოიძებნა, თუმცა თქვენს ბიუჯეტში (${extractedMaxPrice} ₾) გირჩევთ ამ პოპულარულ მოდელებს:`;
+        matched = budgetFallback;
       } else {
-        aiAnswer = `სამწუხაროდ, ${aiBudget} ₾-ის ფარგლებში პროდუქტი არ მოიძებნა. გთხოვთ გაზარდოთ ბიუჯეტი ან შეცვალოთ მოთხოვნა.`;
+        aiAnswer = `სამწუხაროდ, ${extractedMaxPrice} ₾-ის ფარგლებში პროდუქცია ვერ მოიძებნა. გთხოვთ გაზარდოთ ბიუჯეტი ან შეცვალოთ საძიებო სიტყვა.`;
       }
     }
 
@@ -773,9 +824,9 @@ export default function App() {
     const matched = products.filter(p => {
       const matchBudget = p.priceGEL <= giftBudgetMax;
       let matchCat = true;
-      if (giftInterest === 'გეიმინგი' || giftInterest === 'ტექნიკა') {
+      if (giftInterest === 'გეიმინგი / ტექნიკა') {
         matchCat = p.category === 'ლეპტოპები' || p.category === 'სმარტფონები';
-      } else if (giftInterest === 'მუსიკა/აუდიო') {
+      } else if (giftInterest === 'მუსიკა / აუდიო') {
         matchCat = p.category === 'აქსესუარები';
       }
       return matchBudget && matchCat;
@@ -2001,18 +2052,18 @@ export default function App() {
 
       {/* ================= ADVANCED ENHANCED MODALS ================= */}
 
-      {/* 1. ENHANCED AI ASSISTANT CHAT MODAL */}
+      {/* 1. ENHANCED HIGH-SMART AI ASSISTANT CHAT MODAL */}
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-4">
-          <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[600px] flex flex-col relative shadow-2xl overflow-hidden">
+          <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[620px] flex flex-col relative shadow-2xl overflow-hidden">
             
             {/* AI Header */}
             <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 p-4 text-slate-950 flex justify-between items-center font-black shrink-0">
               <div className="flex items-center gap-2">
                 <Bot className="w-7 h-7 text-slate-950 animate-bounce" />
                 <div>
-                  <h3 className="text-base leading-none">🤖 GEOSTORE AI პროდუქტის ასისტენტი</h3>
-                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">ინტერაქტიული AI ჩატი და ჭკვიანი ძებნა</p>
+                  <h3 className="text-base leading-none">🤖 GEOSTORE Smart AI პროდუქტის ასისტენტი</h3>
+                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">ინტელექტუალური ძებნა & რეკომენდაციები</p>
                 </div>
               </div>
               <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
@@ -2086,18 +2137,27 @@ export default function App() {
               ))}
             </div>
 
+            {/* AI Quick Suggestion Chips */}
+            <div className="px-3 py-1.5 bg-slate-950/90 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+              {['iPhone 15', 'MacBook M3', 'AirPods Pro', 'საათი 500₾-მდე'].map(sugg => (
+                <button key={sugg} onClick={() => handleAiAsk(sugg)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 transition">
+                  🔍 {sugg}
+                </button>
+              ))}
+            </div>
+
             {/* AI Input Form */}
             <div className="p-3 bg-slate-900 border-t border-slate-800 shrink-0">
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="ჰკითხეთ AI-ს (მაგ: მირჩიე კარგი ტელეფონი 2000₾-მდე)..." 
+                  placeholder="ჰკითხეთ AI-ს (მაგ: ლეპტოპი M3, iPhone 15, 3000 ლარამდე)..." 
                   value={aiInputText} 
                   onChange={e => setAiInputText(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400"
                 />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1 shrink-0 shadow-lg transition">
-                  <Send className="w-4 h-4" /> კითხვა
+                  <Send className="w-4 h-4" /> ძებნა
                 </button>
               </form>
             </div>
