@@ -145,11 +145,18 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const [usdRate, setUsdRate] = useState(2.70);
 
-  // PWA Install Prompt State
+  // PWA Install Prompt State & Browser Detector
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [isIosDevice, setIsIosDevice] = useState(false);
 
   useEffect(() => {
+    // Check if device is iOS (iPhone/iPad/Safari)
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIos = /iphone|ipad|ipod/.test(userAgent);
+    setIsIosDevice(isIos);
+
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -165,6 +172,7 @@ export default function App() {
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
+      // Android / Desktop Chrome / Edge - Direct Native Install Prompt
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
@@ -172,8 +180,12 @@ export default function App() {
         }
         setDeferredPrompt(null);
       });
+    } else if (isIosDevice) {
+      // iOS / Safari - Show smart tailored instructions
+      setShowInstallModal(true);
     } else {
-      alert("აპლიკაციის დასაყენებლად ბრაუზერის მენიუდან (3 წერტილი ან Share) აირჩიეთ 'Add to Home screen' (ეკრანზე დამატება)!");
+      // General Fallback / Other Browsers
+      setShowInstallModal(true);
     }
   };
 
@@ -904,6 +916,32 @@ export default function App() {
               className="text-slate-950 font-bold px-2 text-xs"
             >
               ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SMART BROWSER-AWARE INSTALL MODAL FOR iOS */}
+      {showInstallModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
+            <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-base">✕</button>
+            <span className="text-4xl">📱</span>
+            <h3 className="text-lg font-black text-white">აპლიკაციის დაყენება (Apple / Safari)</h3>
+            
+            <div className="space-y-3 text-left text-xs text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <p className="flex items-center gap-2">
+                <span className="bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full text-[10px]">1</span>
+                ბრაუზერის ქვედა პანელზე დააჭირეთ <b className="text-emerald-400">Share (გაზიარება)</b> ღილაკს ⎋
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full text-[10px]">2</span>
+                მენიუში აირჩიეთ <b className="text-emerald-400">„Add to Home Screen“ (ეკრანზე დამატება)</b> ➕
+              </p>
+            </div>
+
+            <button onClick={() => setShowInstallModal(false)} className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs shadow-lg">
+              გასაგებია
             </button>
           </div>
         </div>
