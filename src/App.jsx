@@ -231,7 +231,6 @@ export default function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', brand: '', vendor: '', priceGEL: 0, oldPriceGEL: 0, discountPercent: 0, stock: 0, image: '', description: '', warranty: '', isPreOrder: false });
 
-  // Uploaded Files State for New Product Form
   const [uploadedMainImg, setUploadedMainImg] = useState('');
   const [uploadedExtraImgs, setUploadedExtraImgs] = useState([]);
 
@@ -248,11 +247,9 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '', notes: '' });
 
-  // --- INNOVATIVE STATES ---
   const [comparisonList, setComparisonList] = useState([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
-  // --- ENHANCED REAL-TIME KNOWLEDGE AI ASSISTANT STATES ---
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [aiBudget, setAiBudget] = useState(10000);
   const [aiCategory, setAiCategory] = useState('ყველა');
@@ -265,7 +262,6 @@ export default function App() {
     }
   ]);
 
-  // --- ENHANCED GIFT QUIZ STATES ---
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [giftStep, setGiftStep] = useState(1);
   const [giftRecipient, setGiftRecipient] = useState('');
@@ -748,7 +744,6 @@ export default function App() {
     }
   };
 
-  // ================= 100% BULLETPROOF AI ASSISTANT ENGINE =================
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
     const queryLower = queryRaw.toLowerCase();
@@ -758,7 +753,6 @@ export default function App() {
       text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
     };
 
-    // 0. Greetings / Small Talk Detection
     const greetingKeywords = ['გამარჯობა', 'გარმარჯობა', 'სალამი', 'hi', 'hello', 'როგორ ხარ', 'ვინ ხარ', 'რისი გაკეთება შეგიძლია'];
     const isGreeting = greetingKeywords.some(k => queryLower === k || (queryLower.includes(k) && queryLower.length < 15));
 
@@ -773,7 +767,6 @@ export default function App() {
       return;
     }
 
-    // 1. Policy & Dynamic Site Info Intent
     const policyKeywords = ['წესი', 'წესები', 'პოლიტიკა', 'მიწოდება', 'მიტანა', 'გარანტია', 'დაბრუნება', 'კონფიდენციალურობა', 'პირობები'];
     const isPolicyAsk = policyKeywords.some(k => queryLower.includes(k));
 
@@ -857,7 +850,6 @@ export default function App() {
         </div>
       )}
 
-      {/* POPUP ANNOUNCEMENT MODAL */}
       {showPopupModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
@@ -872,7 +864,6 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-2xl">
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-slate-950 text-[10px] md:text-xs py-1.5 px-4 font-black flex justify-between items-center">
           <div className="flex items-center gap-2 truncate">
@@ -991,7 +982,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN */}
       <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
         
         {activeTab === 'store' && (
@@ -1074,7 +1064,6 @@ export default function App() {
                         <Grid className="w-5 h-5 text-emerald-400" /> კატეგორიები და ვენდერები
                       </h2>
                       
-                      {/* VENDORS FILTER BAR */}
                       <div className="flex gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
                         <button
                           onClick={() => setSelectedVendorFilter('ყველა')}
@@ -1376,7 +1365,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= ADMIN PANEL ================= */}
         {activeTab === 'admin' && (
           <div className="space-y-6">
             {!adminLoggedIn ? (
@@ -1660,7 +1648,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* --- NEW: VENDORS MARKETPLACE MANAGEMENT TAB --- */}
                 {adminActiveSubTab === 'vendors' && (
                   <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
@@ -2150,9 +2137,6 @@ export default function App() {
 
       </main>
 
-      {/* ================= MODALS ================= */}
-
-      {/* 1. REAL-TIME KNOWLEDGE AI ASSISTANT CHAT MODAL */}
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-4">
           <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[620px] flex flex-col relative shadow-2xl overflow-hidden">
@@ -2266,7 +2250,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. GIFT FINDER QUIZ MODAL */}
       {isGiftQuizOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border-2 border-teal-500/50 rounded-3xl max-w-lg w-full p-6 relative space-y-5 text-xs shadow-2xl">
@@ -2404,7 +2387,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 3. PRODUCT COMPARISON MODAL */}
       {isComparisonOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-3xl w-full p-6 relative space-y-4 text-xs shadow-2xl">
@@ -2440,7 +2422,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 4. PRICE ALERT MODAL */}
       {priceAlertModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 relative space-y-4 text-xs shadow-2xl">
@@ -2465,7 +2446,6 @@ export default function App() {
         </div>
       )}
 
-      {/* PRODUCT EDIT MODAL */}
       {editingProductId && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 relative space-y-4 text-xs shadow-2xl">
@@ -2646,7 +2626,6 @@ export default function App() {
         </div>
       )}
 
-      {/* LIVE CHAT WIDGET */}
       <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-emerald-500 text-slate-950 p-4 rounded-full shadow-2xl flex items-center justify-center relative hover:scale-105 transition transform">
@@ -2772,7 +2751,6 @@ export default function App() {
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
 
-      {/* MOBILE BOTTOM NAVIGATION */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 md:hidden z-40 py-2.5 px-4 flex justify-around items-center">
         <button
           onClick={() => setActiveTab('store')}
