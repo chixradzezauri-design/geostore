@@ -235,7 +235,7 @@ export default function App() {
   const [comparisonList, setComparisonList] = useState([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
-  // --- ENHANCED EXACT-INTENT AI ASSISTANT STATES ---
+  // --- ENHANCED REAL-TIME KNOWLEDGE AI ASSISTANT STATES ---
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [aiBudget, setAiBudget] = useState(10000);
   const [aiCategory, setAiCategory] = useState('ყველა');
@@ -243,7 +243,7 @@ export default function App() {
   const [aiChatHistory, setAiChatHistory] = useState([
     {
       sender: 'ai',
-      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. ზუსტად მითხარით რა ნივთს ეძებთ (მაგ: "ტელეფონი მინდა", "ლეპტოპი 3000 ლარამდე", "AirPods Pro") და მხოლოდ ზუსტ შესაბამის პროდუქტებს მოგიძებნით!',
+      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. მე რეალურ დროში მაქვს წვდომა მაღაზიის ყველა პროდუქტზე, ფასზე, მარაგზე და წესებზე! მკითხეთ ნებისმიერი რამ პროდუქტზე ან საიტის პოლიტიკაზე (მაგ: "როგორია მიწოდების პირობები?", "რა გარანტია მოქმედებს?", "ტელეფონი 2000 ლარამდე").',
       recommendedProducts: []
     }
   ]);
@@ -364,7 +364,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_coupons', JSON.stringify(coupons)); } catch(e){} }, [coupons]);
   useEffect(() => { try { localStorage.setItem('geostore_sections', JSON.stringify(sections)); } catch(e){} }, [sections]);
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
-  useEffect(() => { try { localStorage.setItem('geostore_current-user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
+  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
 
   const formatPrice = (priceInGEL) => {
     if (currency === 'USD') {
@@ -729,7 +729,7 @@ export default function App() {
     }
   };
 
-  // ================= ULTRA PRECISE HIGH-INTENT AI SEARCH ENGINE =================
+  // ================= ULTRA REAL-TIME KNOWLEDGE AWARE AI ENGINE =================
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
     const queryLower = queryRaw.toLowerCase();
@@ -739,6 +739,34 @@ export default function App() {
       text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
     };
 
+    // 1. Check Policy & Dynamic Site Info Intent
+    const policyKeywords = ['წესი', 'წესები', 'პოლიტიკა', 'მიწოდება', 'მიტანა', 'გარანტია', 'დაბრუნება', 'კონფიდენციალურობა', 'პირობები'];
+    const isPolicyAsk = policyKeywords.some(k => queryLower.includes(k));
+
+    if (isPolicyAsk) {
+      let policyReply = `📜 **${siteSettings.storeName}-ის მიმდინარე წესები და პოლიტიკა:**\n\n`;
+      if (queryLower.includes('მიწოდება') || queryLower.includes('მიტანა')) {
+        policyReply += `🚚 **მიწოდების პირობები:** ${storePolicy.delivery}`;
+      } else if (queryLower.includes('გარანტია')) {
+        policyReply += `🛡️ **გარანტიის პირობები:** ${storePolicy.warranty}`;
+      } else if (queryLower.includes('დაბრუნება')) {
+        policyReply += `🔄 **დაბრუნების პირობები:** ${storePolicy.warranty}`;
+      } else {
+        policyReply += `1️⃣ **ზოგადი:** ${storePolicy.general}\n\n2️⃣ **მიწოდება:** ${storePolicy.delivery}\n\n3️⃣ **გარანტია:** ${storePolicy.warranty}\n\n4️⃣ **კონფიდენციალურობა:** ${storePolicy.privacy}`;
+      }
+
+      const aiMsg = {
+        sender: 'ai',
+        text: policyReply,
+        recommendedProducts: []
+      };
+
+      setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
+      setAiInputText('');
+      return;
+    }
+
+    // 2. Exact Product Intent Search
     let extractedMaxPrice = aiBudget;
     const priceMatch = queryLower.match(/(\d+)\s*(ლარი|₾|gel|ლარამდე)?/);
     if (priceMatch && Number(priceMatch[1]) > 50) {
@@ -1172,11 +1200,11 @@ export default function App() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
                       <div>
                         <h4 className="font-bold text-emerald-400 text-sm mb-1">როგორ ხდება მიწოდება?</h4>
-                        <p className="text-slate-400">თბილისში მიწოდება ხდება იმავე დღეს, ხოლო რეგიონებში 1-2 სამუშაო დღეში.</p>
+                        <p className="text-slate-400">{storePolicy.delivery}</p>
                       </div>
                       <div>
                         <h4 className="font-bold text-emerald-400 text-sm mb-1">მოქმედებს თუ არა გარანტია?</h4>
-                        <p className="text-slate-400">ყველა პროდუქტზე ვრცელდება 1 წლიანი ოფიციალური გარანტია.</p>
+                        <p className="text-slate-400">{storePolicy.warranty}</p>
                       </div>
                     </div>
                   </div>
@@ -1733,7 +1761,7 @@ export default function App() {
                         f.reset();
                         setUploadedMainImg('');
                         setUploadedExtraImgs([]);
-                        showToast(`✅ პროდუქტი წარმატებით დაემატა!`);
+                        showToast(`✅ პროდუქტი წარმატებით დაემატა! (AI-მ მყისიერად გაითვალისწინა)`);
                       }} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                         
                         <input type="text" name="name" required placeholder="პროდუქტის დასახელება (მაგ: iPhone 15 Pro) *" className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none" />
@@ -1981,11 +2009,11 @@ export default function App() {
                 {adminActiveSubTab === 'policyEditor' && (
                   <div className="bg-slate-900 p-6 rounded-3xl max-w-2xl space-y-4 border border-slate-800">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-emerald-400" /> წესების და პოლიტიკის რედაქტორი
+                      <BookOpen className="w-5 h-5 text-emerald-400" /> წესების და პოლიტიკის რედაქტორი (AI ავტომატურად ითვისებს)
                     </h3>
                     <form onSubmit={(e) => {
                       e.preventDefault();
-                      showToast('✅ წესები და პოლიტიკა წარმატებით განახლდა!');
+                      showToast('✅ წესები და პოლიტიკა განახლდა! AI-მ ავტომატურად შეისწავლა ახალი პირობები.');
                     }} className="space-y-3 text-xs">
                       <div className="space-y-1">
                         <label className="text-slate-400 font-bold">1. ზოგადი დებულებები:</label>
@@ -2017,7 +2045,7 @@ export default function App() {
 
       {/* ================= MODALS ================= */}
 
-      {/* 1. AI ASSISTANT CHAT MODAL */}
+      {/* 1. REAL-TIME KNOWLEDGE AI ASSISTANT CHAT MODAL */}
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-4">
           <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[620px] flex flex-col relative shadow-2xl overflow-hidden">
@@ -2026,8 +2054,8 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <Bot className="w-7 h-7 text-slate-950 animate-bounce" />
                 <div>
-                  <h3 className="text-base leading-none">🤖 GEOSTORE Smart AI პროდუქტის ასისტენტი</h3>
-                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">ზუსტი განზრახვის & კატეგორიების ძებნა</p>
+                  <h3 className="text-base leading-none">🤖 GEOSTORE Live-Knowledge AI ასისტენტი</h3>
+                  <p className="text-[10px] text-slate-900/80 font-bold mt-0.5">პირდაპირი წვდომა პროდუქტებსა და წესებზე</p>
                 </div>
               </div>
               <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
@@ -2065,7 +2093,7 @@ export default function App() {
             <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs bg-slate-950/60">
               {aiChatHistory.map((msg, idx) => (
                 <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-3.5 rounded-2xl max-w-[90%] leading-relaxed ${
+                  <div className={`p-3.5 rounded-2xl max-w-[90%] leading-relaxed whitespace-pre-line ${
                     msg.sender === 'user' 
                       ? 'bg-emerald-500 text-slate-950 font-extrabold shadow-md' 
                       : 'bg-slate-900 border border-emerald-500/30 text-white shadow-xl'
@@ -2099,9 +2127,15 @@ export default function App() {
             </div>
 
             <div className="px-3 py-1.5 bg-slate-950/90 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0">
-              {['📱 ტელეფონები', '💻 ლეპტოპები', '🎧 ყურსასმენები', '📱 iPhone 15'].map(sugg => (
-                <button key={sugg} onClick={() => handleAiAsk(sugg)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 transition">
-                  🔍 {sugg}
+              {[
+                { label: '📜 საიტის წესები & პოლიტიკა', text: 'როგორია საიტის წესები და პოლიტიკა?' },
+                { label: '🚚 მიწოდების პირობები', text: 'როგორია მიწოდების პირობები?' },
+                { label: '🛡️ გარანტია', text: 'რა გარანტია მოქმედებს?' },
+                { label: '📱 ტელეფონები', text: 'სმარტფონები მინდა' },
+                { label: '💻 ლეპტოპები', text: 'ლეპტოპები მინდა' }
+              ].map((sugg, i) => (
+                <button key={i} onClick={() => handleAiAsk(sugg.text)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 transition">
+                  {sugg.label}
                 </button>
               ))}
             </div>
@@ -2110,7 +2144,7 @@ export default function App() {
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="ჰკითხეთ AI-ს (მაგ: ტელეფონი მინდა, ლეპტოპი M3, AirPods)..." 
+                  placeholder="ჰკითხეთ AI-ს (მაგ: მიწოდების პირობები, გარანტია, iPhone 15)..." 
                   value={aiInputText} 
                   onChange={e => setAiInputText(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400"
