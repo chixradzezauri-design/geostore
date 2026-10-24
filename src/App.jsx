@@ -739,6 +739,21 @@ export default function App() {
       text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
     };
 
+    // 0. Handle Greetings / General Small Talk
+    const greetingKeywords = ['გამარჯობა', 'გარმარჯობა', 'სალამი', 'hi', 'hello', 'როგორ ხარ', 'ვინ ხარ', 'რისი გაკეთება შეგიძლია'];
+    const isGreeting = greetingKeywords.some(k => queryLower === k || queryLower.includes(k) && queryLower.length < 15);
+
+    if (isGreeting) {
+      const aiGreetingMsg = {
+        sender: 'ai',
+        text: `გამარჯობა! 👋 მე ვარ ${siteSettings.storeName}-ის ჭკვიანი AI ასისტენტი. სიამოვნებით დაგეხმარებით პროდუქტების შერჩევაში, ფასების ნახვაში ან საიტის წესებისა და პოლიტიკის (მიწოდება, გარანტია) გაცნობაში. რით შემიძლია დაგეხმაროთ დღეს?`,
+        recommendedProducts: []
+      };
+      setAiChatHistory(prev => [...prev, userMsg, aiGreetingMsg]);
+      setAiInputText('');
+      return;
+    }
+
     // 1. Check Policy & Dynamic Site Info Intent
     const policyKeywords = ['წესი', 'წესები', 'პოლიტიკა', 'მიწოდება', 'მიტანა', 'გარანტია', 'დაბრუნება', 'კონფიდენციალურობა', 'პირობები'];
     const isPolicyAsk = policyKeywords.some(k => queryLower.includes(k));
@@ -2128,11 +2143,11 @@ export default function App() {
 
             <div className="px-3 py-1.5 bg-slate-950/90 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0">
               {[
+                { label: '👋 გამარჯობა', text: 'გამარჯობა' },
                 { label: '📜 საიტის წესები & პოლიტიკა', text: 'როგორია საიტის წესები და პოლიტიკა?' },
                 { label: '🚚 მიწოდების პირობები', text: 'როგორია მიწოდების პირობები?' },
                 { label: '🛡️ გარანტია', text: 'რა გარანტია მოქმედებს?' },
-                { label: '📱 ტელეფონები', text: 'სმარტფონები მინდა' },
-                { label: '💻 ლეპტოპები', text: 'ლეპტოპები მინდა' }
+                { label: '📱 ტელეფონები', text: 'სმარტფონები მინდა' }
               ].map((sugg, i) => (
                 <button key={i} onClick={() => handleAiAsk(sugg.text)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 transition">
                   {sugg.label}
@@ -2144,7 +2159,7 @@ export default function App() {
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="ჰკითხეთ AI-ს (მაგ: მიწოდების პირობები, გარანტია, iPhone 15)..." 
+                  placeholder="ჰკითხეთ AI-ს (მაგ: გამარჯობა, მიწოდების პირობები, iPhone 15)..." 
                   value={aiInputText} 
                   onChange={e => setAiInputText(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400"
