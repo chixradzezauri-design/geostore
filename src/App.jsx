@@ -9,7 +9,7 @@ import {
 
 // ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6Inhwbm9uIiwiaWF0IjoxNzkyNzM0NDQ5LCJleHAiOjIxMDgzMTA0NDl9.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -147,7 +147,7 @@ export default function App() {
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -171,8 +171,9 @@ export default function App() {
           console.log('მომხმარებელმა დააყენა აპლიკაცია');
         }
         setDeferredPrompt(null);
-        setShowInstallBanner(false);
       });
+    } else {
+      alert("აპლიკაციის დასაყენებლად ბრაუზერის მენიუდან (3 წერტილი ან Share) აირჩიეთ 'Add to Home screen' (ეკრანზე დამატება)!");
     }
   };
 
@@ -883,18 +884,18 @@ export default function App() {
 
       {/* PWA INSTALL BANNER */}
       {showInstallBanner && (
-        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-slate-950 animate-bounce">
+        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-slate-950">
           <div className="flex items-center gap-3">
             <span className="text-2xl">📲</span>
             <div>
-              <h4 className="font-black text-xs md:text-sm">დააყენე GEOSTORE აპლიკაცია!</h4>
-              <p className="text-[10px] md:text-xs font-semibold">სწრაფი წვდომა ეკრანიდან ერთი დაჭერით</p>
+              <h4 className="font-black text-xs md:text-sm">გაიაქტიურე GEOSTORE აპლიკაცია!</h4>
+              <p className="text-[10px] md:text-xs font-semibold">დაამატე ტელეფონის მთავარ ეკრანზე</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={handleInstallClick} 
-              className="bg-slate-950 text-emerald-400 font-black px-4 py-2 rounded-xl text-xs hover:bg-slate-900 transition"
+              className="bg-slate-950 text-emerald-400 font-black px-4 py-2 rounded-xl text-xs hover:bg-slate-900 transition shadow"
             >
               დაყენება
             </button>
