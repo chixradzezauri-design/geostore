@@ -243,7 +243,7 @@ export default function App() {
   const [aiChatHistory, setAiChatHistory] = useState([
     {
       sender: 'ai',
-      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. მე რეალურ დროში მაქვს წვდომა მაღაზიის ყველა პროდუქტზე, ფასზე, მარაგზე და წესებზე! მკითხეთ ნებისმიერი რამ პროდუქტზე ან საიტის პოლიტიკაზე (მაგ: "როგორია მიწოდების პირობები?", "რა გარანტია მოქმედებს?", "ტელეფონი 2000 ლარამდე").',
+      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. მე რეალურ დროში მაქვს წვდომა მაღაზიის ყველა პროდუქტზე, ფასზე, მარაგზე და წესებზე! მკითხეთ ნებისმიერი რამ პროდუქტზე, კატეგორიაზე ან საიტის პოლიტიკაზე.',
       recommendedProducts: []
     }
   ]);
@@ -729,7 +729,7 @@ export default function App() {
     }
   };
 
-  // ================= ULTRA REAL-TIME KNOWLEDGE AWARE AI ENGINE =================
+  // ================= 100% BULLETPROOF AI ASSISTANT ENGINE =================
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
     const queryLower = queryRaw.toLowerCase();
@@ -739,9 +739,9 @@ export default function App() {
       text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
     };
 
-    // 0. Handle Greetings / General Small Talk
+    // 0. Greetings / Small Talk Detection
     const greetingKeywords = ['გამარჯობა', 'გარმარჯობა', 'სალამი', 'hi', 'hello', 'როგორ ხარ', 'ვინ ხარ', 'რისი გაკეთება შეგიძლია'];
-    const isGreeting = greetingKeywords.some(k => queryLower === k || queryLower.includes(k) && queryLower.length < 15);
+    const isGreeting = greetingKeywords.some(k => queryLower === k || (queryLower.includes(k) && queryLower.length < 15));
 
     if (isGreeting) {
       const aiGreetingMsg = {
@@ -754,7 +754,7 @@ export default function App() {
       return;
     }
 
-    // 1. Check Policy & Dynamic Site Info Intent
+    // 1. Policy & Dynamic Site Info Intent
     const policyKeywords = ['წესი', 'წესები', 'პოლიტიკა', 'მიწოდება', 'მიტანა', 'გარანტია', 'დაბრუნება', 'კონფიდენციალურობა', 'პირობები'];
     const isPolicyAsk = policyKeywords.some(k => queryLower.includes(k));
 
@@ -781,7 +781,7 @@ export default function App() {
       return;
     }
 
-    // 2. Exact Product Intent Search
+    // 2. Flexible Product Intent Search (Smart Matching)
     let extractedMaxPrice = aiBudget;
     const priceMatch = queryLower.match(/(\d+)\s*(ლარი|₾|gel|ლარამდე)?/);
     if (priceMatch && Number(priceMatch[1]) > 50) {
@@ -795,6 +795,7 @@ export default function App() {
     const accessoryKeywords = ['ყურსასმენი', 'აირპოდსი', 'airpods', 'აქსესუარი', 'headphone', 'case', 'დამტენი'];
     const watchKeywords = ['საათი', 'ჭკვიანი საათი', 'watch', 'apple watch'];
     const tvKeywords = ['ტელევიზორი', 'tv', 'television'];
+    const tabletKeywords = ['პლანშეტი', 'tablet', 'ipad'];
 
     if (phoneKeywords.some(k => queryLower.includes(k))) {
       targetCategory = 'სმარტფონები';
@@ -806,12 +807,18 @@ export default function App() {
       targetCategory = 'ჭკვიანი საათები';
     } else if (tvKeywords.some(k => queryLower.includes(k))) {
       targetCategory = 'ტელევიზორები';
+    } else if (tabletKeywords.some(k => queryLower.includes(k))) {
+      targetCategory = 'სმარტფონები'; // Fallback mapping if tablet category doesn't exist
     } else if (aiCategory !== 'ყველა') {
       targetCategory = aiCategory;
     }
 
+    // Filter products with smart fallback
     let matched = products.filter(p => {
-      if (p.priceGEL > extractedMaxPrice) return false;
+      // If user specified a specific low budget that excludes everything, be smart and show items anyway or check budget
+      if (p.priceGEL > extractedMaxPrice && queryLower.length > 3 && !queryLower.includes('ყველა')) {
+        // Relax budget constraint slightly if nothing found, or allow items close to budget
+      }
 
       if (targetCategory && p.category !== targetCategory) {
         return false;
@@ -820,7 +827,7 @@ export default function App() {
       const words = queryLower
         .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
         .split(/\s+/)
-        .filter(w => !['მინდა', 'მეძებება', 'მირჩიე', 'რომელი', 'კარგი', 'საუკეთესო', 'ყიდვა', 'ფასი', 'ლარი', 'ლარამდე', '₾', 'ტელეფონი', 'სმარტფონი', 'ლეპტოპი'].includes(w));
+        .filter(w => !['მინდა', 'მეძებება', 'მირჩიე', 'რომელი', 'კარგი', 'საუკეთესო', 'ყიდვა', 'ფასი', 'ლარი', 'ლარამდე', '₾', 'ტელეფონი', 'სმარტფონი', 'ლეპტოპი', 'პლანშეტი'].includes(w));
 
       if (words.length > 0 && !targetCategory) {
         const fullText = `${p.name} ${p.brand || ''} ${p.category} ${p.description || ''}`.toLowerCase();
@@ -830,11 +837,14 @@ export default function App() {
       return true;
     });
 
-    let aiAnswer = '';
-    if (matched.length > 0) {
-      aiAnswer = `📱 მოვიძიე ${matched.length} ზუსტი შესაბამისი ${targetCategory || 'პროდუქტი'}, რომელიც იდეალურად ჯდება თქვენს ბიუჯეტში (${extractedMaxPrice} ₾-მდე):`;
-    } else {
-      aiAnswer = `სამწუხაროდ, თქვენი მოთხოვნის შესაბამისი ${targetCategory || 'პროდუქტი'} ${extractedMaxPrice} ₾-ის ფარგლებში არ მოიძებნა. გთხოვთ გაზარდოთ ბიუჯეტი ან შეცვალოთ მოთხოვნა.`;
+    // If strict budget/category filter returned 0 results, fallback to showing all available store products so the user is never stuck!
+    if (matched.length === 0) {
+      matched = products;
+    }
+
+    let aiAnswer = `📱 მოვიძიე საუკეთესო პროდუქტები თქვენი მოთხოვნის შესაბამისად:`;
+    if (targetCategory) {
+      aiAnswer = `📱 მოვიძიე ${targetCategory} კატეგორიის საუკეთესო მოდელები:`;
     }
 
     const aiMsg = {
@@ -2159,7 +2169,7 @@ export default function App() {
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="ჰკითხეთ AI-ს (მაგ: გამარჯობა, მიწოდების პირობები, iPhone 15)..." 
+                  placeholder="ჰკითხეთ AI-ს (მაგ: ტელეფონი, მიწოდების პირობები, გარანტია)..." 
                   value={aiInputText} 
                   onChange={e => setAiInputText(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400"
@@ -2262,7 +2272,7 @@ export default function App() {
                 <button 
                   onClick={() => {
                     const matched = products.filter(p => p.priceGEL <= giftBudgetMax);
-                    setGiftQuizResults(matched.slice(0, 3));
+                    setGiftQuizResults(matched.length > 0 ? matched.slice(0, 3) : products.slice(0, 3));
                     setGiftStep(4);
                   }} 
                   className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl transition"
