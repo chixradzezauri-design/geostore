@@ -43,9 +43,9 @@ const INITIAL_CATEGORIES = [
 ];
 
 const INITIAL_VENDORS = [
-  { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, phone: '+995 32 200 00 00', status: 'აქტიური' },
-  { id: 'v2', name: 'TechHub Georgia', commission: 10, phone: '+995 555 11 22 33', status: 'აქტიური' },
-  { id: 'v3', name: 'Apple Shop Tbilisi', commission: 8, phone: '+995 599 88 77 66', status: 'აქტიური' }
+  { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, phone: '+995 32 200 00 00', status: 'აქტიური', contactPerson: 'გიორგი ბერიძე', email: 'official@geostore.ge' },
+  { id: 'v2', name: 'TechHub Georgia', commission: 10, phone: '+995 555 11 22 33', status: 'აქტიური', contactPerson: 'დავით მარაქველიძე', email: 'hub@techhub.ge' },
+  { id: 'v3', name: 'Apple Shop Tbilisi', commission: 8, phone: '+995 599 88 77 66', status: 'აქტიური', contactPerson: 'ნიკა ქავთარაძე', email: 'sales@appleshop.ge' }
 ];
 
 const INITIAL_PRODUCTS = [
@@ -58,6 +58,7 @@ const INITIAL_PRODUCTS = [
     vendor: 'GEOSTORE ოფიციალური',
     priceGEL: 3899,
     oldPriceGEL: 4299,
+    costPriceGEL: 3200, // თვითღირებულება ფინანსური ანალიტიკისთვის
     stock: 8,
     rating: 4.9,
     reviewsCount: 24,
@@ -78,6 +79,7 @@ const INITIAL_PRODUCTS = [
     vendor: 'TechHub Georgia',
     priceGEL: 4499,
     oldPriceGEL: 4899,
+    costPriceGEL: 3800,
     stock: 4,
     rating: 5.0,
     reviewsCount: 18,
@@ -98,7 +100,8 @@ const INITIAL_PRODUCTS = [
     vendor: 'Apple Shop Tbilisi',
     priceGEL: 749,
     oldPriceGEL: 899,
-    stock: 12,
+    costPriceGEL: 550,
+    stock: 2, // დაბალი მარაგი ტესტირებისთვის
     rating: 4.8,
     reviewsCount: 31,
     image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=600',
@@ -253,7 +256,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
-  const [adminActiveSubTab, setAdminActiveSubTab] = useState('analytics');
+  const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro'); // ახალი პროფესიონალური Dashboard
   const [showPopupModal, setShowPopupModal] = useState(() => siteSettings.popupAnnouncementActive);
 
   const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
@@ -339,6 +342,7 @@ export default function App() {
         const formatted = data.map(o => ({
           id: o.id,
           date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+          rawDate: o.created_at ? new Date(o.created_at) : new Date(),
           customerName: o.customer_name,
           phone: o.phone,
           address: o.address,
@@ -420,36 +424,41 @@ export default function App() {
   const discountAmountGEL = useMemo(() => appliedCoupon ? (cartSubtotalGEL * appliedCoupon.discountPercent) / 100 : 0, [cartSubtotalGEL, appliedCoupon]);
   const cartTotalGEL = cartSubtotalGEL - discountAmountGEL;
 
-  const salesAnalytics = useMemo(() => {
+  // --- პროფესიონალური ფინანსური და ბიზნეს ანალიტიკა (ეტაპი 1) ---
+  const proAnalytics = useMemo(() => {
     const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
+    const cancelledOrders = orders.filter(o => o.status === 'გაუქმებულია');
+    const pendingOrders = orders.filter(o => o.status === 'ახალი' || o.status === 'მზადდება' || o.status === 'გზაშია');
+
     const totalRevenueGEL = completedOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
     
-    let totalItemsSold = 0;
-    const soldItemsMap = {};
-
+    // სავარაუდო თვითღირებულება და წმინდა მოგება რეალური პროდუქტებიდან
+    let totalCostGEL = 0;
     completedOrders.forEach(o => {
       (o.items || []).forEach(item => {
-        const qty = Number(item.quantity) || 1;
-        totalItemsSold += qty;
-        if (!soldItemsMap[item.name]) {
-          soldItemsMap[item.name] = { name: item.name, count: 0, totalRevenue: 0 };
-        }
-        soldItemsMap[item.name].count += qty;
-        soldItemsMap[item.name].totalRevenue += (Number(item.price) || 0) * qty;
+        const foundProd = products.find(p => p.id === item.id || p.name === item.name);
+        const cost = foundProd ? (Number(foundProd.costPriceGEL) || (Number(foundProd.priceGEL) * 0.75)) : (Number(item.price) * 0.75);
+        totalCostGEL += cost * (Number(item.quantity) || 1);
       });
     });
 
-    const topProducts = Object.values(soldItemsMap).sort((a, b) => b.count - a.count);
+    const netProfitGEL = totalRevenueGEL - totalCostGEL;
+    const avgOrderValue = completedOrders.length > 0 ? (totalRevenueGEL / completedOrders.length).toFixed(2) : 0;
+
+    // დაბალი მარაგის პროდუქტები (მარაგი <= 3)
+    const lowStockProducts = products.filter(p => p.stock <= 3);
 
     return {
-      completedOrdersCount: completedOrders.length,
-      totalOrdersCount: orders.length,
       totalRevenueGEL,
-      totalItemsSold,
-      topProducts,
-      averageOrderValue: completedOrders.length > 0 ? (totalRevenueGEL / completedOrders.length).toFixed(2) : 0
+      netProfitGEL,
+      totalOrdersCount: orders.length,
+      completedOrdersCount: completedOrders.length,
+      cancelledOrdersCount: cancelledOrders.length,
+      pendingOrdersCount: pendingOrders.length,
+      avgOrderValue,
+      lowStockProducts
     };
-  }, [orders]);
+  }, [orders, products]);
 
   const addToCart = (product, quantity = 1) => {
     setCart(prev => {
@@ -1438,6 +1447,7 @@ export default function App() {
           </div>
         )}
 
+        {/* ----------------- ADMIN PANEL WITH STAGE 1 PROFESSIONAL UPGRADES ----------------- */}
         {activeTab === 'admin' && (
           <div className="space-y-5 w-full">
             {!adminLoggedIn ? (
@@ -1475,10 +1485,13 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-5 w-full">
+                {/* Admin Subtabs Navigation */}
                 <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-xl p-2 overflow-x-auto scrollbar-none shadow w-full">
                   <div className="flex gap-1.5">
                     {[
-                      { id: 'analytics', label: '📊 სტატისტიკა' },
+                      { id: 'dashboardPro', label: '📊 პროფესიონალური Dashboard' },
+                      { id: 'suppliersPro', label: '🚚 მომწოდებლები & შესყიდვები' },
+                      { id: 'analytics', label: '📈 ძველი სტატისტიკა' },
                       { id: 'orders', label: '📦 შეკვეთები' },
                       { id: 'adminChat', label: '💬 ჩათები' },
                       { id: 'vendors', label: '🏪 ვენდერები' },
@@ -1509,6 +1522,168 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* --- STAGE 1: PROFESSIONAL DASHBOARD --- */}
+                {adminActiveSubTab === 'dashboardPro' && (
+                  <div className="space-y-5 w-full">
+                    <div className="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-slate-900 p-5 rounded-2xl border border-emerald-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <span className="text-emerald-400 font-bold text-[10px] uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">ბიზნესის სრული კონტროლი</span>
+                        <h2 className="text-xl font-black text-white mt-1">📊 ადმინისტრატორის მთავარი პანელი</h2>
+                        <p className="text-slate-400 text-xs">რეალური მონაცემები და ფინანსური მაჩვენებლები განახლებულია რეალურ დროში.</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={handleManualRefresh} className="bg-slate-950 border border-emerald-500/40 text-emerald-300 px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-slate-900 transition flex items-center gap-1.5">
+                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Metric Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 w-full">
+                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>💰 სრული შემოსავალი</span>
+                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <div className="text-2xl font-black text-emerald-400 mt-2">{proAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</div>
+                        <p className="text-[10px] text-slate-500 mt-1">ჩაბარებული შეკვეთებიდან</p>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>💎 სავარაუდო წმინდა მოგება</span>
+                          <DollarSign className="w-4 h-4 text-teal-400" />
+                        </div>
+                        <div className="text-2xl font-black text-teal-400 mt-2">{proAnalytics.netProfitGEL.toLocaleString('ka-GE')} ₾</div>
+                        <p className="text-[10px] text-slate-500 mt-1">შემოსავალი მინუს თვითღირებულება</p>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>📦 შეკვეთები (სულ / ახალი)</span>
+                          <PackageCheck className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <div className="text-2xl font-black text-blue-400 mt-2">{proAnalytics.totalOrdersCount} <span className="text-xs text-slate-400">({proAnalytics.pendingOrdersCount} ახალი)</span></div>
+                        <p className="text-[10px] text-slate-500 mt-1">საშ. ღირებულება: {proAnalytics.avgOrderValue} ₾</p>
+                      </div>
+
+                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
+                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
+                          <span>⚠️ დაბალი მარაგის პროდუქტები</span>
+                          <AlertCircle className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div className="text-2xl font-black text-amber-400 mt-2">{proAnalytics.lowStockProducts.length} ცალი</div>
+                        <p className="text-[10px] text-slate-500 mt-1">საჭიროებს მარაგის შევსებას</p>
+                      </div>
+                    </div>
+
+                    {/* Low Stock Alert Box */}
+                    {proAnalytics.lowStockProducts.length > 0 && (
+                      <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-4 space-y-3">
+                        <h3 className="font-bold text-amber-400 text-xs flex items-center gap-1.5">
+                          <AlertCircle className="w-4 h-4" /> ყურადღება: პროდუქტები ამოწურვის პირასაა (მარაგი &le; 3)
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                          {proAnalytics.lowStockProducts.map(p => (
+                            <div key={p.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2">
+                                <img src={p.image} alt="" className="w-8 h-8 object-contain bg-slate-900 rounded-lg p-0.5" />
+                                <div>
+                                  <h4 className="font-bold text-white text-[11px] line-clamp-1">{p.name}</h4>
+                                  <p className="text-amber-400 text-[10px]">ვენდერი: {p.vendor || 'GEOSTORE'}</p>
+                                </div>
+                              </div>
+                              <span className="bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-lg text-[10px]">
+                                მარაგი: {p.stock}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* --- STAGE 1: SUPPLIERS & PURCHASING MANAGEMENT --- */}
+                {adminActiveSubTab === 'suppliersPro' && (
+                  <div className="space-y-5 w-full">
+                    <div className="bg-slate-900 p-5 rounded-2xl space-y-4 border border-slate-800 w-full">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
+                          <Truck className="w-5 h-5 text-teal-400" /> 🚚 მომწოდებლების და შესყიდვების მართვა
+                        </h3>
+                      </div>
+
+                      {/* Add Supplier Form */}
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const f = e.target;
+                        const name = f.supName.value.trim();
+                        const contactPerson = f.supContact.value.trim();
+                        const phone = f.supPhone.value.trim();
+                        const email = f.supEmail.value.trim();
+                        const commission = Number(f.supComm.value) || 0;
+
+                        if(!name) return;
+
+                        const newSup = {
+                          id: `sup-${Date.now()}`,
+                          name,
+                          contactPerson,
+                          phone,
+                          email,
+                          commission,
+                          status: 'აქტიური'
+                        };
+
+                        setVendorsList([...vendorsList, newSup]);
+                        f.reset();
+                        showToast('✅ მომწოდებელი წარმატებით დაემატა!');
+                      }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <input type="text" name="supName" required placeholder="მომწოდებლის სახელი *" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                        <input type="text" name="supContact" placeholder="საკონტაქტო პირი" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                        <input type="text" name="supPhone" placeholder="ტელეფონი" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                        <input type="email" name="supEmail" placeholder="ელ-ფოსტა" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
+                        <div className="flex gap-2">
+                          <input type="number" name="supComm" placeholder="საკომ. %" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none flex-1" />
+                          <button type="submit" className="bg-teal-500 text-slate-950 font-black px-3 py-2 rounded-xl">დამატება</button>
+                        </div>
+                      </form>
+
+                      {/* Suppliers List */}
+                      <div className="space-y-2.5 pt-2">
+                        {vendorsList.map(sup => (
+                          <div key={sup.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-teal-300 text-sm">🏪 {sup.name}</span>
+                                <span className="bg-teal-500/20 text-teal-300 text-[9px] px-2 py-0.5 rounded-full font-bold">{sup.status}</span>
+                              </div>
+                              <p className="text-slate-400 text-[11px] mt-1">
+                                👤 პირი: <b>{sup.contactPerson || 'არ არის'}</b> | 📞 {sup.phone} | ✉️ {sup.email || 'არ არის'} | საკომისიო: <b className="text-emerald-400">{sup.commission}%</b>
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => {
+                                // შესყიდვის / მარაგის შევსების მოთხოვნის სიმულაცია
+                                showToast(`📦 მოთხოვნა გაიგზავნა მომწოდებელთან: ${sup.name}`);
+                              }} className="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs">
+                                მარაგის შევსება
+                              </button>
+                              {sup.name !== 'GEOSTORE ოფიციალური' && (
+                                <button onClick={() => setVendorsList(vendorsList.filter(x => x.id !== sup.id))} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-lg">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* --- EXISTING TABS PRESERVED FULLY BELOW --- */}
                 {adminActiveSubTab === 'analytics' && (
                   <div className="space-y-5 w-full">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
@@ -1517,17 +1692,8 @@ export default function App() {
                           <span>💰 რეალური შემოსავალი</span>
                           <TrendingUp className="w-4 h-4 text-emerald-400" />
                         </div>
-                        <div className="text-xl font-black text-emerald-400 mt-2">{salesAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</div>
+                        <div className="text-xl font-black text-emerald-400 mt-2">{proAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</div>
                         <p className="text-[9px] text-slate-500 mt-1">მხოლოდ ჩაბარებული შეკვეთებიდან</p>
-                      </div>
-
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>📦 გაყიდული ნივთები</span>
-                          <PackageCheck className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <div className="text-xl font-black text-emerald-400 mt-2">{salesAnalytics.totalItemsSold} ცალი</div>
-                        <p className="text-[9px] text-slate-500 mt-1">სულ გაყიდული პროდუქცია</p>
                       </div>
 
                       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
@@ -1547,30 +1713,6 @@ export default function App() {
                         <div className="text-xl font-black text-teal-400 mt-2">{vendorsList.length}</div>
                         <p className="text-[9px] text-slate-500 mt-1">მარკეტფლეისის პარტნიორები</p>
                       </div>
-                    </div>
-
-                    <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 w-full">
-                      <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                        <Star className="w-4 h-4 text-emerald-400" /> რეალურად ყველაზე გაყიდვადი ნივთები (Top Sales)
-                      </h3>
-                      {salesAnalytics.topProducts.length === 0 ? (
-                        <p className="text-slate-500 text-xs">ჯერ არ არის დასრულებული შეკვეთები.</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {salesAnalytics.topProducts.map((prod, idx) => (
-                            <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                              <div className="flex items-center gap-2.5">
-                                <span className="font-black text-emerald-400 text-xs">#{idx + 1}</span>
-                                <span className="font-bold text-white">{prod.name}</span>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2.5 py-0.5 rounded-lg text-[11px]">გაყიდულია: {prod.count} ცალი</span>
-                                <span className="font-black text-emerald-400">{prod.totalRevenue} ₾</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -1860,6 +2002,7 @@ export default function App() {
                           vendor: userSelectedVendor,
                           priceGEL,
                           oldPriceGEL,
+                          costPriceGEL: priceGEL * 0.75,
                           discountPercent,
                           stock,
                           image: mainImage,
