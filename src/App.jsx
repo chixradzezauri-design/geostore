@@ -898,7 +898,6 @@ export default function App() {
         </div>
       )}
 
-      {/* პრემიუმ შოპინგ ჩანთის იკონი და GEOSTORE წარწერა (აღარ არის G ასო) */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4">
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
