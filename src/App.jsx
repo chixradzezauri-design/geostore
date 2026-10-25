@@ -9,13 +9,13 @@ import {
 
 // ================= SUPABASE REST API CONFIG =================
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6Inhwbm9uIiwiaWF0IjoxNzkyNzM0NDQ5LCJleHAiOjIxMDgzMTA0NDl9.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
-const headers = {
+const getHeaders = () => ({
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
   'Content-Type': 'application/json'
-};
+});
 
 // --- TELEGRAM CONFIG ---
 const TG_BOT_TOKEN = "8968372156:AAHe6OHQZfdChPXS4wQDQ5omSA1DNIS6VEY";
@@ -340,7 +340,7 @@ export default function App() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers: getHeaders() });
       if (res.ok) {
         const data = await res.json();
         const formatted = data.map(o => ({
@@ -351,7 +351,7 @@ export default function App() {
           phone: o.phone,
           address: o.address,
           userEmail: o.user_email,
-          items: o.items || [],
+          items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
           totalGEL: o.total_gel,
           status: o.status || 'ახალი',
           courier: o.courier || ''
@@ -359,13 +359,13 @@ export default function App() {
         setOrders(formatted);
       }
     } catch (err) {
-      console.error(err);
+      console.error("fetchOrders Error:", err);
     }
   };
 
   const fetchMessages = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.asc`, { headers });
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.asc`, { headers: getHeaders() });
       if (res.ok) {
         const data = await res.json();
         const formatted = data.map(m => ({
@@ -386,7 +386,7 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error("fetchMessages Error:", err);
     }
   };
 
@@ -396,7 +396,7 @@ export default function App() {
     const interval = setInterval(() => {
       fetchOrders();
       fetchMessages();
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [chatClientName]);
 
@@ -542,10 +542,10 @@ export default function App() {
     setCouponInput('');
   };
 
-  // --- Supabase შეკვეთის გაფორმება (100% გამართული) ---
+  // --- Supabase შეკვეთის გაფორმება (უშეცდომო API key და მონაცემთა ფორმატი) ---
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
-      alert('⚠️ გთხოვთ შეავსოთ ყველა ველი');
+      alert('⚠️ გთხოვთ შეავსოთ ყველა მოთხოვნილი ველი');
       return;
     }
 
@@ -561,7 +561,7 @@ export default function App() {
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
-        headers: { ...headers, 'Prefer': 'return=representation' },
+        headers: { ...getHeaders(), 'Prefer': 'return=representation' },
         body: JSON.stringify({
           id: orderId,
           customer_name: checkoutForm.name,
@@ -569,7 +569,7 @@ export default function App() {
           address: checkoutForm.address,
           user_email: currentUser ? currentUser.email : 'guest',
           items: itemsData,
-          total_gel: totalVal,
+          total_gel: Number(totalVal),
           status: 'ახალი',
           courier: 'არ არის დანიშნული'
         })
@@ -717,7 +717,7 @@ export default function App() {
     return products.filter(p => {
       const matchesCategory = selectedCategory === 'ყველა' || p.category === selectedCategory;
       const matchesVendor = selectedVendorFilter === 'ყველა' || p.vendor === selectedVendorFilter;
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesCategory && matchesVendor && matchesSearch;
     });
   }, [products, selectedCategory, selectedVendorFilter, searchQuery]);
@@ -734,23 +734,13 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  const groupedClients = useMemo(() => {
-    const map = {};
-    adminChatArchive.forEach(m => {
-      const name = m.clientName || 'სტუმარი';
-      if (!map[name]) map[name] = [];
-      map[name].push(m);
-    });
-    return map;
-  }, [adminChatArchive]);
-
   const handleSendMessage = async (text, senderName, imageUrl = '') => {
     if (!text.trim() && !imageUrl) return;
 
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
         method: 'POST',
-        headers: { ...headers, 'Prefer': 'return=representation' },
+        headers: { ...getHeaders(), 'Prefer': 'return=representation' },
         body: JSON.stringify({
           id: Date.now(),
           client_name: chatClientName || 'სტუმარი',
