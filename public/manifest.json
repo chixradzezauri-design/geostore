@@ -3,7 +3,7 @@
   "name": "GEOSTORE - N1 ტექნიკის მარკეტფლეისი",
   "icons": [
     {
-      "src": "https://images.unsplash.com/photo-1513151233558-d86053986c?auto=format&fit=crop&q=80&w=512&h=512",
+      "src": "https://images.unsplash.com/photo-1513151233558-d86053986c?w=512&h=512&fit=crop",
       "type": "image/jpeg",
       "sizes": "512x512",
       "purpose": "any maskable"
