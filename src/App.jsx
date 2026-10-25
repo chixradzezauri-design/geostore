@@ -542,7 +542,6 @@ export default function App() {
     setCouponInput('');
   };
 
-  // --- Supabase შეკვეთის გაფორმება (უშეცდომო API key და მონაცემთა ფორმატი) ---
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       alert('⚠️ გთხოვთ შეავსოთ ყველა მოთხოვნილი ველი');
@@ -732,40 +731,6 @@ export default function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleSendMessage = async (text, senderName, imageUrl = '') => {
-    if (!text.trim() && !imageUrl) return;
-
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
-        method: 'POST',
-        headers: { ...getHeaders(), 'Prefer': 'return=representation' },
-        body: JSON.stringify({
-          id: Date.now(),
-          client_name: chatClientName || 'სტუმარი',
-          sender: senderName,
-          text: text || 'ფოტო:',
-          image: imageUrl,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        })
-      });
-
-      if (!response.ok) {
-        const errData = await response.text();
-        alert("❌ Supabase მესიჯის შეცდომა: " + errData);
-        return;
-      }
-
-      if (senderName !== 'ადმინი') {
-        sendTelegramNotification(`💬 *ახალი მესიჯი ჩათში!*\n👤 *${chatClientName || 'სტუმარი'}:* ${text || 'ფოტო'}`);
-      }
-      setChatInput('');
-      setAdminIndividualReply('');
-      fetchMessages();
-    } catch (err) {
-      alert("❌ ქსელის შეცდომა მესიჯისას: " + err.message);
-    }
   };
 
   const handleMainImageUpload = (e) => {
@@ -1065,6 +1030,64 @@ export default function App() {
           </div>
         )}
 
+        {/* WISHLIST TAB */}
+        {activeTab === 'wishlist' && (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <h2 className="text-lg font-black text-white">❤️ სურვილების სია</h2>
+            {wishlist.length === 0 ? <p className="text-slate-500 text-xs">სურვილების სია ცარიელია.</p> : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {wishlist.map(prod => (
+                  <div key={prod.id} className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-3.5 flex flex-col justify-between">
+                    <div>
+                      <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-950 mb-3 p-3 flex items-center justify-center border border-slate-800">
+                        <img src={prod.image} alt={prod.name} className="w-full h-full object-contain" />
+                      </div>
+                      <h3 className="font-bold text-white text-xs mb-1">{prod.name}</h3>
+                      <p className="text-emerald-400 font-black text-sm">{formatPrice(prod.priceGEL)}</p>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <button onClick={() => addToCart(prod)} className="flex-1 bg-emerald-500 text-slate-950 py-2 rounded-xl text-xs font-black">კალათაში</button>
+                      <button onClick={() => toggleWishlist(prod)} className="bg-rose-500/20 text-rose-400 px-3 py-2 rounded-xl text-xs font-bold">წაშლა</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PROFILE TAB */}
+        {activeTab === 'profile' && currentUser && (
+          <div className="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 text-xs">
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-black text-lg">
+                {currentUser.name[0]}
+              </div>
+              <div>
+                <h3 className="font-black text-white text-sm">{currentUser.name}</h3>
+                <p className="text-slate-400">{currentUser.email} | {currentUser.phone}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-bold text-white">ჩემი შეკვეთები:</h4>
+              {orders.filter(o => o.userEmail === currentUser.email).length === 0 ? (
+                <p className="text-slate-500">შეკვეთები არ ფიქსირდება.</p>
+              ) : (
+                orders.filter(o => o.userEmail === currentUser.email).map(o => (
+                  <div key={o.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between">
+                    <div>
+                      <p className="font-bold text-emerald-400">#{o.id} ({o.totalGEL} ₾)</p>
+                      <p className="text-slate-400 text-[10px]">{o.date}</p>
+                    </div>
+                    <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded font-bold">{o.status}</span>
+                  </div>
+                ))
+              )}
+            </div>
+            <button onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} className="w-full bg-rose-500/20 text-rose-400 font-bold py-2 rounded-xl">პროფილიდან გასვლა</button>
+          </div>
+        )}
+
         {/* ADMIN PANEL WITH ALL UPGRADES */}
         {activeTab === 'admin' && (
           <div className="space-y-5">
@@ -1083,9 +1106,9 @@ export default function App() {
               <div className="space-y-5">
                 <div className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800 overflow-x-auto">
                   <div className="flex gap-2">
-                    {['dashboardPro', 'crmPro', 'returnsPro', 'suppliersPro', 'products', 'orders', 'adminChat', 'security'].map(sub => (
+                    {['dashboardPro', 'crmPro', 'returnsPro', 'suppliersPro', 'products', 'orders', 'adminChat', 'cms', 'security'].map(sub => (
                       <button key={sub} onClick={() => setAdminActiveSubTab(sub)} className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${adminActiveSubTab === sub ? 'bg-emerald-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>
-                        {sub === 'dashboardPro' ? '📊 Dashboard' : sub === 'crmPro' ? '👥 CRM' : sub === 'returnsPro' ? '🔄 დაბრუნებები' : sub === 'suppliersPro' ? '🚚 მომწოდებლები' : sub === 'products' ? '📦 პროდუქცია' : sub === 'orders' ? '📋 შეკვეთები' : sub === 'adminChat' ? '💬 ჩათები' : '🔒 უსაფრთხოება'}
+                        {sub === 'dashboardPro' ? '📊 Dashboard' : sub === 'crmPro' ? '👥 CRM' : sub === 'returnsPro' ? '🔄 დაბრუნებები' : sub === 'suppliersPro' ? '🚚 მომწოდებლები' : sub === 'products' ? '📦 პროდუქცია' : sub === 'orders' ? '📋 შეკვეთები' : sub === 'adminChat' ? '💬 ჩათები' : sub === 'cms' ? '🎨 CMS' : '🔒 უსაფრთხოება'}
                       </button>
                     ))}
                   </div>
@@ -1219,6 +1242,16 @@ export default function App() {
                   </div>
                 )}
 
+                {adminActiveSubTab === 'cms' && (
+                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3 text-xs">
+                    <h3 className="font-bold text-sm text-white">🎨 CMS & Page Builder</h3>
+                    <div className="space-y-2">
+                      <label className="text-slate-400">მაღაზიის სათაური:</label>
+                      <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 p-2 rounded text-white outline-none" />
+                    </div>
+                  </div>
+                )}
+
                 {adminActiveSubTab === 'security' && (
                   <div className="bg-slate-900 p-5 rounded-2xl max-w-sm space-y-3">
                     <h3 className="font-bold text-sm text-white">პაროლის შეცვლა</h3>
@@ -1246,6 +1279,34 @@ export default function App() {
               <input type="tel" required placeholder="ტელეფონი" value={checkoutForm.phone} onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
               <input type="text" required placeholder="მისამართი" value={checkoutForm.address} onChange={e => setCheckoutForm({...checkoutForm, address: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
               <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded font-black text-xs">დადასტურება</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* AUTH MODAL (LOGIN & REGISTER) */}
+      {isAuthOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 relative space-y-4">
+            <button onClick={() => setIsAuthOpen(false)} className="absolute top-3 right-3 text-slate-400">✕</button>
+            <div className="flex gap-2 border-b border-slate-800 pb-2">
+              <button onClick={() => setAuthMode('login')} className={`flex-1 font-bold text-xs pb-1 ${authMode === 'login' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400'}`}>შესვლა</button>
+              <button onClick={() => setAuthMode('register')} className={`flex-1 font-bold text-xs pb-1 ${authMode === 'register' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400'}`}>რეგისტრაცია</button>
+            </div>
+            <form onSubmit={handleAuthSubmit} className="space-y-3">
+              {authMode === 'register' && (
+                <>
+                  <input type="text" placeholder="სახელი" value={authForm.name} onChange={e => setAuthForm({...authForm, name: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+                  <input type="tel" placeholder="ტელეფონი" value={authForm.phone} onChange={e => setAuthForm({...authForm, phone: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+                </>
+              )}
+              <input type="email" required placeholder="ელ-ფოსტა" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+              <input type="password" required placeholder="პაროლი" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <input type="checkbox" checked={authForm.remember} onChange={e => setAuthForm({...authForm, remember: e.target.checked})} />
+                <span>დამიმახსოვრე</span>
+              </div>
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl text-xs">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
             </form>
           </div>
         </div>
