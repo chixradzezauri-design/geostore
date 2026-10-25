@@ -878,7 +878,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-emerald-500 selection:text-slate-950 flex flex-col justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-emerald-500 selection:text-slate-950 flex flex-col justify-between overflow-x-hidden">
       
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
@@ -889,19 +889,19 @@ export default function App() {
 
       {/* PWA INSTALL BANNER (პრემიუმ დიზაინი) */}
       {showInstallBanner && (
-        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 text-slate-100 p-4 rounded-3xl shadow-2xl flex items-center justify-between border-2 border-emerald-500/50 backdrop-blur-xl animate-fade-in">
+        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 text-slate-100 p-4 rounded-3xl shadow-2xl flex items-center justify-between border-2 border-emerald-500/50 backdrop-blur-xl animate-fade-in max-w-lg mx-auto md:mx-0">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/30">
-              <Smartphone className="w-6 h-6 stroke-[2.5]" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/30 shrink-0">
+              <ShoppingBag className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
               <h4 className="font-black text-xs md:text-sm text-white flex items-center gap-1.5">
                 GEOSTORE აპლიკაცია <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full border border-emerald-500/30">PWA</span>
               </h4>
-              <p className="text-[10px] md:text-xs text-slate-300 font-medium">დაამატე ტელეფონის ან კომპიუტერის ეკრანზე 1 წამში!</p>
+              <p className="text-[10px] md:text-xs text-slate-300 font-medium">დაამატე ტელეფონის ან კომპიუტერის ეკრანზე!</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button 
               onClick={handleInstallClick} 
               className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-4 py-2.5 rounded-2xl text-xs hover:scale-105 transition shadow-lg shadow-emerald-500/20"
@@ -918,7 +918,7 @@ export default function App() {
         </div>
       )}
 
-      {/* SMART BROWSER-AWARE INSTALL MODAL (ძალიან მაგარი ვიზუალით) */}
+      {/* SMART BROWSER-AWARE INSTALL MODAL (ლამაზი პრემიუმ ვიზუალით, აპლიკაციის სახელით ქვემოთ) */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4">
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
@@ -926,13 +926,17 @@ export default function App() {
             
             <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold bg-slate-900 p-2 rounded-full border border-slate-800 transition">✕</button>
             
-            <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-3xl mx-auto flex items-center justify-center shadow-inner text-emerald-400">
-              <DownloadCloud className="w-8 h-8 animate-pulse" />
+            {/* პრემიუმ აპლიკაციის იკონი და ქვემოთ GEOSTORE წარწერა */}
+            <div className="flex flex-col items-center gap-2.5 pt-2">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center shadow-2xl shadow-emerald-500/30 border-2 border-emerald-400/50 text-slate-950">
+                <ShoppingBag className="w-10 h-10 stroke-[2.5]" />
+              </div>
+              <span className="font-black text-white text-base tracking-wider uppercase">GEOSTORE</span>
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-white">GEOSTORE აპლიკაციის დაყენება</h3>
-              <p className="text-[11px] text-slate-400">მიიღე სწრაფი წვდომა და უკეთესი გამოცდილება</p>
+              <h3 className="text-base font-black text-white">აპლიკაციის მთავარ ეკრანზე დამატება</h3>
+              <p className="text-[11px] text-slate-400">იმოქმედეთ ინსტრუქციის მიხედვით:</p>
             </div>
             
             {/crios|chrome/i.test(navigator.userAgent) && isIosDevice ? (
@@ -953,11 +957,11 @@ export default function App() {
               <div className="space-y-3 text-left text-xs text-slate-300 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-inner">
                 <p className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[10px] shrink-0">1</span>
-                  ბრაუზერის ქვედა პანელზე დააჭირეთ <b className="text-emerald-400 font-bold">Share (გაზიარება)</b> <span className="text-base">⎋</span>
+                  ბრაუზერის მენიუში დააჭირეთ <b className="text-emerald-400 font-bold">Share (გაზიარება)</b> <span className="text-base">⎋</span>
                 </p>
                 <p className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[10px] shrink-0">2</span>
-                  მენიუდან აირჩიეთ <b className="text-emerald-400 font-bold">„Add to Home Screen“</b> <span className="text-base">➕</span>
+                  აირჩიეთ <b className="text-emerald-400 font-bold">„Add to Home Screen“</b> <span className="text-base">➕</span>
                 </p>
               </div>
             )}
@@ -983,8 +987,8 @@ export default function App() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-2xl">
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-slate-950 text-[10px] md:text-xs py-1.5 px-4 font-black flex justify-between items-center">
+      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-2xl w-full">
+        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-slate-950 text-[10px] md:text-xs py-1.5 px-4 font-black flex justify-between items-center w-full">
           <div className="flex items-center gap-2 truncate">
             <span>🇬🇪</span>
             <span className="truncate">{siteSettings.topBarText}</span>
@@ -1101,7 +1105,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
+      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1 overflow-x-hidden">
         
         {activeTab === 'store' && (
           <div className="space-y-10">
