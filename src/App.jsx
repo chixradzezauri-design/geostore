@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud, Smartphone, Laptop
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud, Smartphone, Laptop, Users, RotateCcw
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
@@ -58,7 +58,7 @@ const INITIAL_PRODUCTS = [
     vendor: 'GEOSTORE ოფიციალური',
     priceGEL: 3899,
     oldPriceGEL: 4299,
-    costPriceGEL: 3200, // თვითღირებულება ფინანსური ანალიტიკისთვის
+    costPriceGEL: 3200,
     stock: 8,
     rating: 4.9,
     reviewsCount: 24,
@@ -101,7 +101,7 @@ const INITIAL_PRODUCTS = [
     priceGEL: 749,
     oldPriceGEL: 899,
     costPriceGEL: 550,
-    stock: 2, // დაბალი მარაგი ტესტირებისთვის
+    stock: 2,
     rating: 4.8,
     reviewsCount: 31,
     image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&q=80&w=600',
@@ -256,7 +256,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
-  const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro'); // ახალი პროფესიონალური Dashboard
+  const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro'); 
   const [showPopupModal, setShowPopupModal] = useState(() => siteSettings.popupAnnouncementActive);
 
   const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
@@ -306,7 +306,7 @@ export default function App() {
   const [alertEmail, setAlertEmail] = useState('');
 
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', [
-    { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15' }
+    { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123', ordersCount: 1, totalSpentGEL: 3899, date: '2026-10-15', notes: 'VIP მყიდველი' }
   ]));
 
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
@@ -316,6 +316,12 @@ export default function App() {
 
   const [orders, setOrders] = useState([]);
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
+
+  // --- CRM & Returns ---
+  const [returnsList, setReturnsList] = useState(() => loadSafeStorage('geostore_returns', [
+    { id: 'RET-101', orderId: 'ORD-1001', customerName: 'გიორგი ბერიძე', productName: 'iPhone 15 Pro', reason: 'არ მოუხდა მოდელი', status: 'განხილვაში', refundStatus: 'არ არის დაბრუნებული', date: '2026-10-24', adminNotes: 'მოწმდება' }
+  ]));
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => {
@@ -412,6 +418,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_sections', JSON.stringify(sections)); } catch(e){} }, [sections]);
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
+  useEffect(() => { try { localStorage.setItem('geostore_returns', JSON.stringify(returnsList)); } catch(e){} }, [returnsList]);
 
   const formatPrice = (priceInGEL) => {
     if (currency === 'USD') {
@@ -424,7 +431,22 @@ export default function App() {
   const discountAmountGEL = useMemo(() => appliedCoupon ? (cartSubtotalGEL * appliedCoupon.discountPercent) / 100 : 0, [cartSubtotalGEL, appliedCoupon]);
   const cartTotalGEL = cartSubtotalGEL - discountAmountGEL;
 
-  // --- პროფესიონალური ფინანსური და ბიზნეს ანალიტიკა (ეტაპი 1) ---
+  // --- CRM Analytics ---
+  const crmAnalytics = useMemo(() => {
+    return usersList.map(u => {
+      const userOrders = orders.filter(o => o.userEmail === u.email || o.customerName === u.name);
+      const totalSpent = userOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), u.totalSpentGEL || 0);
+      const ordersCount = userOrders.length || u.ordersCount || 0;
+      
+      let segment = 'ახალი';
+      if (totalSpent > 3000 || ordersCount >= 3) segment = 'ლოიალური (VIP)';
+      else if (ordersCount > 0) segment = 'აქტიური';
+
+      return { ...u, realOrdersCount: ordersCount, realTotalSpent: totalSpent, segment };
+    });
+  }, [usersList, orders]);
+
+  // --- Pro Analytics ---
   const proAnalytics = useMemo(() => {
     const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
     const cancelledOrders = orders.filter(o => o.status === 'გაუქმებულია');
@@ -432,7 +454,6 @@ export default function App() {
 
     const totalRevenueGEL = completedOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
     
-    // სავარაუდო თვითღირებულება და წმინდა მოგება რეალური პროდუქტებიდან
     let totalCostGEL = 0;
     completedOrders.forEach(o => {
       (o.items || []).forEach(item => {
@@ -444,8 +465,6 @@ export default function App() {
 
     const netProfitGEL = totalRevenueGEL - totalCostGEL;
     const avgOrderValue = completedOrders.length > 0 ? (totalRevenueGEL / completedOrders.length).toFixed(2) : 0;
-
-    // დაბალი მარაგის პროდუქტები (მარაგი <= 3)
     const lowStockProducts = products.filter(p => p.stock <= 3);
 
     return {
@@ -612,7 +631,8 @@ export default function App() {
         password: authForm.password,
         ordersCount: 0,
         totalSpentGEL: 0,
-        date: new Date().toISOString().slice(0, 10)
+        date: new Date().toISOString().slice(0, 10),
+        notes: ''
       };
       setUsersList([newUser, ...usersList]);
       setCurrentUser(newUser);
@@ -1447,7 +1467,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ----------------- ADMIN PANEL WITH STAGE 1 PROFESSIONAL UPGRADES ----------------- */}
+        {/* ----------------- ADMIN PANEL WITH FULL UPGRADES ----------------- */}
         {activeTab === 'admin' && (
           <div className="space-y-5 w-full">
             {!adminLoggedIn ? (
@@ -1490,6 +1510,8 @@ export default function App() {
                   <div className="flex gap-1.5">
                     {[
                       { id: 'dashboardPro', label: '📊 პროფესიონალური Dashboard' },
+                      { id: 'crmPro', label: '👥 CRM სეგმენტები' },
+                      { id: 'returnsPro', label: '🔄 დაბრუნებები' },
                       { id: 'suppliersPro', label: '🚚 მომწოდებლები & შესყიდვები' },
                       { id: 'analytics', label: '📈 ძველი სტატისტიკა' },
                       { id: 'orders', label: '📦 შეკვეთები' },
@@ -1500,7 +1522,6 @@ export default function App() {
                       { id: 'products', label: 'პროდუქცია' },
                       { id: 'banners', label: 'ბანერები' },
                       { id: 'builder', label: 'Page Builder' },
-                      { id: 'crm', label: 'CRM' },
                       { id: 'coupons', label: 'პრომოები' },
                       { id: 'security', label: 'უსაფრთხოება' },
                       { id: 'cms', label: 'საიტის CMS' },
@@ -1522,7 +1543,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* --- STAGE 1: PROFESSIONAL DASHBOARD --- */}
+                {/* --- PROFESSIONAL DASHBOARD --- */}
                 {adminActiveSubTab === 'dashboardPro' && (
                   <div className="space-y-5 w-full">
                     <div className="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-slate-900 p-5 rounded-2xl border border-emerald-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1538,7 +1559,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Metric Cards Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 w-full">
                       <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
                         <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
@@ -1577,7 +1597,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Low Stock Alert Box */}
                     {proAnalytics.lowStockProducts.length > 0 && (
                       <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-4 space-y-3">
                         <h3 className="font-bold text-amber-400 text-xs flex items-center gap-1.5">
@@ -1604,7 +1623,108 @@ export default function App() {
                   </div>
                 )}
 
-                {/* --- STAGE 1: SUPPLIERS & PURCHASING MANAGEMENT --- */}
+                {/* --- CRM SEGMENTATION --- */}
+                {adminActiveSubTab === 'crmPro' && (
+                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
+                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-emerald-400" /> 👥 მომხმარებელთა ავტომატური CRM სეგმენტაცია
+                    </h3>
+                    <div className="space-y-2.5">
+                      {crmAnalytics.map(u => (
+                        <div key={u.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-white text-sm">{u.name}</p>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                u.segment.includes('VIP') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              }`}>{u.segment}</span>
+                            </div>
+                            <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone} | შეკვეთები: <b>{u.realOrdersCount}</b> | სულ დახარჯული: <b className="text-emerald-400">{u.realTotalSpent} ₾</b></p>
+                            {u.notes && <p className="text-slate-500 text-[10px] mt-0.5 italic">📝 შენიშვნა: {u.notes}</p>}
+                          </div>
+                          <button onClick={() => {
+                            const note = prompt('შენიშვნა მომხმარებელზე:', u.notes || '');
+                            if(note !== null) setUsersList(usersList.map(x => x.id === u.id ? {...x, notes: note} : x));
+                          }} className="bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-white font-bold transition">
+                            შენიშვნის დამატება
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* --- RETURNS & REFUNDS --- */}
+                {adminActiveSubTab === 'returnsPro' && (
+                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
+                        <RotateCcw className="w-4 h-4 text-rose-400" /> 🔄 პროდუქციის დაბრუნებებისა და Refund-ების მართვა
+                      </h3>
+                      <button onClick={() => {
+                        const orderId = prompt('შეკვეთის ID (მაგ: ORD-1001):');
+                        const customerName = prompt('მყიდველის სახელი:');
+                        const productName = prompt('პროდუქტის დასახელება:');
+                        const reason = prompt('დაბრუნების მიზეზი:');
+                        if (orderId && customerName && productName) {
+                          const newRet = {
+                            id: `RET-${Math.floor(100 + Math.random() * 900)}`,
+                            orderId,
+                            customerName,
+                            productName,
+                            reason: reason || 'წუნდებული / არ მოუხდა',
+                            status: 'განხილვაში',
+                            refundStatus: 'არ არის დაბრუნებული',
+                            date: new Date().toISOString().slice(0, 10),
+                            adminNotes: ''
+                          };
+                          setReturnsList([newRet, ...returnsList]);
+                          showToast('✅ დაბრუნების მოთხოვნა შეიქმნა!');
+                        }
+                      }} className="bg-rose-500 hover:bg-rose-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl text-xs transition">
+                        + ახალი მოთხოვნა
+                      </button>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {returnsList.length === 0 ? (
+                        <p className="text-slate-500 text-xs">დაბრუნების მოთხოვნები არ არის.</p>
+                      ) : (
+                        returnsList.map(r => (
+                          <div key={r.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-rose-400 text-sm">#{r.id}</span>
+                                <span className="text-white font-bold">{r.productName}</span>
+                                <span className="text-slate-500 text-[10px]">({r.orderId})</span>
+                              </div>
+                              <p className="text-slate-400 text-[11px] mt-1">
+                                👤 მყიდველი: <b>{r.customerName}</b> | მიზეზი: <span className="text-amber-300">{r.reason}</span>
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <select 
+                                value={r.status} 
+                                onChange={e => setReturnsList(returnsList.map(x => x.id === r.id ? {...x, status: e.target.value} : x))}
+                                className="bg-slate-900 border border-slate-700 text-emerald-300 font-bold px-2.5 py-1 rounded-lg outline-none text-xs"
+                              >
+                                <option value="განხილვაში">🟡 განხილვაში</option>
+                                <option value="დამტკიცებული">🟢 დამტკიცებული</option>
+                                <option value="უარყოფილი">🔴 უარყოფილი</option>
+                                <option value="დასრულებული">✅ დასრულებული</option>
+                              </select>
+                              <button onClick={() => setReturnsList(returnsList.filter(x => x.id !== r.id))} className="text-rose-400 hover:text-rose-300 p-1 bg-rose-500/10 rounded-lg">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* --- SUPPLIERS & PURCHASING MANAGEMENT --- */}
                 {adminActiveSubTab === 'suppliersPro' && (
                   <div className="space-y-5 w-full">
                     <div className="bg-slate-900 p-5 rounded-2xl space-y-4 border border-slate-800 w-full">
@@ -1614,7 +1734,6 @@ export default function App() {
                         </h3>
                       </div>
 
-                      {/* Add Supplier Form */}
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         const f = e.target;
@@ -1650,7 +1769,6 @@ export default function App() {
                         </div>
                       </form>
 
-                      {/* Suppliers List */}
                       <div className="space-y-2.5 pt-2">
                         {vendorsList.map(sup => (
                           <div key={sup.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
@@ -1665,7 +1783,6 @@ export default function App() {
                             </div>
                             <div className="flex items-center gap-2">
                               <button onClick={() => {
-                                // შესყიდვის / მარაგის შევსების მოთხოვნის სიმულაცია
                                 showToast(`📦 მოთხოვნა გაიგზავნა მომწოდებელთან: ${sup.name}`);
                               }} className="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs">
                                 მარაგის შევსება
@@ -1683,7 +1800,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* --- EXISTING TABS PRESERVED FULLY BELOW --- */}
+                {/* --- ANALYTICS --- */}
                 {adminActiveSubTab === 'analytics' && (
                   <div className="space-y-5 w-full">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
@@ -1717,6 +1834,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- ORDERS --- */}
                 {adminActiveSubTab === 'orders' && (
                   <div className="space-y-5 w-full">
                     <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
@@ -1777,6 +1895,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- ADMIN CHATS --- */}
                 {adminActiveSubTab === 'adminChat' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
@@ -1852,6 +1971,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- VENDORS --- */}
                 {adminActiveSubTab === 'vendors' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
@@ -1900,6 +2020,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- CATEGORIES --- */}
                 {adminActiveSubTab === 'categories' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white">კატეგორიების მართვა</h3>
@@ -1930,6 +2051,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- BRANDS --- */}
                 {adminActiveSubTab === 'brands' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
@@ -1964,6 +2086,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- PRODUCTS --- */}
                 {adminActiveSubTab === 'products' && (
                   <div className="space-y-5 w-full">
                     <div className="bg-slate-900 p-4 md:p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
@@ -2141,6 +2264,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- BANNERS --- */}
                 {adminActiveSubTab === 'banners' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white">მთავარი ბანერის რედაქტირება</h3>
@@ -2152,6 +2276,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- PAGE BUILDER --- */}
                 {adminActiveSubTab === 'builder' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-2.5 max-w-lg border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white">🎨 Page Builder (სექციები)</h3>
@@ -2166,25 +2291,7 @@ export default function App() {
                   </div>
                 )}
 
-                {adminActiveSubTab === 'crm' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-2.5 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white">👥 მომხმარებლები ({usersList.length})</h3>
-                    <div className="space-y-2">
-                      {usersList.map(u => (
-                        <div key={u.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                          <div>
-                            <p className="font-bold text-white">{u.name}</p>
-                            <p className="text-slate-400 text-[10px]">📧 {u.email} | 📞 {u.phone}</p>
-                          </div>
-                          <button onClick={() => setUsersList(usersList.filter(x => x.id !== u.id))} className="text-rose-400">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                {/* --- COUPONS --- */}
                 {adminActiveSubTab === 'coupons' && (
                   <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white">პრომო კოდები</h3>
@@ -2212,6 +2319,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- SECURITY --- */}
                 {adminActiveSubTab === 'security' && (
                   <div className="bg-slate-900 p-5 rounded-2xl max-w-sm space-y-3.5 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5"><Key className="w-4 h-4 text-emerald-400"/> ადმინის პაროლის შეცვლა</h3>
@@ -2224,6 +2332,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- CMS --- */}
                 {adminActiveSubTab === 'cms' && (
                   <div className="bg-slate-900 p-5 rounded-2xl max-w-lg space-y-4 border border-slate-800 text-xs w-full">
                     <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5"><Settings className="w-4 h-4 text-emerald-400"/> საიტის სრული რედაქტორი (CMS)</h3>
@@ -2305,6 +2414,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* --- POLICY EDITOR --- */}
                 {adminActiveSubTab === 'policyEditor' && (
                   <div className="bg-slate-900 p-5 rounded-2xl max-w-xl space-y-3.5 border border-slate-800 w-full">
                     <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
@@ -2589,6 +2699,7 @@ export default function App() {
         </div>
       )}
 
+      {/* COMPARISON MODAL */}
       {isComparisonOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl max-w-2xl w-full p-5 relative space-y-3.5 text-xs shadow-xl">
@@ -2623,6 +2734,7 @@ export default function App() {
         </div>
       )}
 
+      {/* PRICE ALERT MODAL */}
       {priceAlertModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-sm w-full p-5 relative space-y-3 text-xs shadow-xl">
@@ -2647,6 +2759,7 @@ export default function App() {
         </div>
       )}
 
+      {/* EDIT PRODUCT MODAL */}
       {editingProductId && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 relative space-y-3 text-xs shadow-xl">
@@ -2738,6 +2851,7 @@ export default function App() {
         </div>
       )}
 
+      {/* QUICK VIEW MODAL */}
       {selectedProductQuickView && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 relative space-y-3 text-xs shadow-xl">
@@ -2761,6 +2875,7 @@ export default function App() {
         </div>
       )}
 
+      {/* AUTH MODAL */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 relative space-y-3.5 shadow-xl">
@@ -2796,6 +2911,7 @@ export default function App() {
         </div>
       )}
 
+      {/* CHECKOUT MODAL */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 relative space-y-3.5 shadow-xl">
@@ -2811,6 +2927,7 @@ export default function App() {
         </div>
       )}
 
+      {/* INVOICE MODAL */}
       {activeInvoiceOrder && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white text-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-xl">
@@ -2827,6 +2944,7 @@ export default function App() {
         </div>
       )}
 
+      {/* LIVE CHAT BUTTON / WIDGET */}
       <div className="fixed bottom-14 md:bottom-5 right-3 md:right-5 z-40">
         {!isChatOpen ? (
           <button onClick={() => setIsChatOpen(true)} className="bg-emerald-500 text-slate-950 p-3.5 rounded-full shadow-xl flex items-center justify-center relative hover:scale-105 transition transform">
@@ -2952,6 +3070,7 @@ export default function App() {
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
 
+      {/* MOBILE BOTTOM NAVIGATION */}
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 md:hidden z-40 py-2 px-3 flex justify-around items-center">
         <button
           onClick={() => setActiveTab('store')}
