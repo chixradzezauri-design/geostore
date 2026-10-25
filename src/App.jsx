@@ -4,7 +4,7 @@ import {
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
   MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
   Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud, Smartphone, Laptop
 } from 'lucide-react';
 
 // ================= SUPABASE REST API CONFIG =================
@@ -145,14 +145,13 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const [usdRate, setUsdRate] = useState(2.70);
 
-  // PWA Install Prompt State & Browser Detector
+  // PWA Install Prompt State & Browser Intelligence
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [isIosDevice, setIsIosDevice] = useState(false);
 
   useEffect(() => {
-    // Check if device is iOS (iPhone/iPad/Safari)
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIos = /iphone|ipad|ipod/.test(userAgent);
     setIsIosDevice(isIos);
@@ -172,7 +171,6 @@ export default function App() {
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
-      // Android / Desktop Chrome / Edge - Direct Native Install Prompt
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
@@ -180,16 +178,11 @@ export default function App() {
         }
         setDeferredPrompt(null);
       });
-    } else if (isIosDevice) {
-      // iOS / Safari - Show smart tailored instructions
-      setShowInstallModal(true);
     } else {
-      // General Fallback / Other Browsers
       setShowInstallModal(true);
     }
   };
 
-  // Real Visitor Tracker
   const [visitorCount, setVisitorCount] = useState(() => {
     try {
       const current = Number(localStorage.getItem('geostore_visitors_count') || 1);
@@ -894,26 +887,30 @@ export default function App() {
         </div>
       )}
 
-      {/* PWA INSTALL BANNER */}
+      {/* PWA INSTALL BANNER (პრემიუმ დიზაინი) */}
       {showInstallBanner && (
-        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 p-4 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-slate-950">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📲</span>
+        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 text-slate-100 p-4 rounded-3xl shadow-2xl flex items-center justify-between border-2 border-emerald-500/50 backdrop-blur-xl animate-fade-in">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/30">
+              <Smartphone className="w-6 h-6 stroke-[2.5]" />
+            </div>
             <div>
-              <h4 className="font-black text-xs md:text-sm">გაიაქტიურე GEOSTORE აპლიკაცია!</h4>
-              <p className="text-[10px] md:text-xs font-semibold">დაამატე ტელეფონის მთავარ ეკრანზე</p>
+              <h4 className="font-black text-xs md:text-sm text-white flex items-center gap-1.5">
+                GEOSTORE აპლიკაცია <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full border border-emerald-500/30">PWA</span>
+              </h4>
+              <p className="text-[10px] md:text-xs text-slate-300 font-medium">დაამატე ტელეფონის ან კომპიუტერის ეკრანზე 1 წამში!</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={handleInstallClick} 
-              className="bg-slate-950 text-emerald-400 font-black px-4 py-2 rounded-xl text-xs hover:bg-slate-900 transition shadow"
+              className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-4 py-2.5 rounded-2xl text-xs hover:scale-105 transition shadow-lg shadow-emerald-500/20"
             >
-              დაყენება
+              დაყენება 🚀
             </button>
             <button 
               onClick={() => setShowInstallBanner(false)} 
-              className="text-slate-950 font-bold px-2 text-xs"
+              className="text-slate-400 hover:text-white font-bold p-1.5 text-xs transition"
             >
               ✕
             </button>
@@ -921,27 +918,52 @@ export default function App() {
         </div>
       )}
 
-      {/* SMART BROWSER-AWARE INSTALL MODAL FOR iOS */}
+      {/* SMART BROWSER-AWARE INSTALL MODAL (ძალიან მაგარი ვიზუალით) */}
       {showInstallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
-            <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-base">✕</button>
-            <span className="text-4xl">📱</span>
-            <h3 className="text-lg font-black text-white">აპლიკაციის დაყენება (Apple / Safari)</h3>
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"></div>
             
-            <div className="space-y-3 text-left text-xs text-slate-300 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <p className="flex items-center gap-2">
-                <span className="bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full text-[10px]">1</span>
-                ბრაუზერის ქვედა პანელზე დააჭირეთ <b className="text-emerald-400">Share (გაზიარება)</b> ღილაკს ⎋
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full text-[10px]">2</span>
-                მენიუში აირჩიეთ <b className="text-emerald-400">„Add to Home Screen“ (ეკრანზე დამატება)</b> ➕
-              </p>
+            <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold bg-slate-900 p-2 rounded-full border border-slate-800 transition">✕</button>
+            
+            <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-3xl mx-auto flex items-center justify-center shadow-inner text-emerald-400">
+              <DownloadCloud className="w-8 h-8 animate-pulse" />
             </div>
 
-            <button onClick={() => setShowInstallModal(false)} className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl text-xs shadow-lg">
-              გასაგებია
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-white">GEOSTORE აპლიკაციის დაყენება</h3>
+              <p className="text-[11px] text-slate-400">მიიღე სწრაფი წვდომა და უკეთესი გამოცდილება</p>
+            </div>
+            
+            {/crios|chrome/i.test(navigator.userAgent) && isIosDevice ? (
+              <div className="space-y-3 text-left text-xs text-slate-300 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-inner">
+                <p className="text-amber-400 font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0" /> Chrome-ით შემოსვლისას iOS-ზე:
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full text-[10px] shrink-0">1</span>
+                  გახსენით ეს საიტი <b className="text-emerald-400">Safari ბრაუზერში</b>.
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full text-[10px] shrink-0">2</span>
+                  დააჭირეთ <b className="text-emerald-400">Share ⎋</b> -&gt; <b className="text-emerald-400">„Add to Home Screen“</b> ➕.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 text-left text-xs text-slate-300 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-inner">
+                <p className="flex items-center gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[10px] shrink-0">1</span>
+                  ბრაუზერის ქვედა პანელზე დააჭირეთ <b className="text-emerald-400 font-bold">Share (გაზიარება)</b> <span className="text-base">⎋</span>
+                </p>
+                <p className="flex items-center gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[10px] shrink-0">2</span>
+                  მენიუდან აირჩიეთ <b className="text-emerald-400 font-bold">„Add to Home Screen“</b> <span className="text-base">➕</span>
+                </p>
+              </div>
+            )}
+
+            <button onClick={() => setShowInstallModal(false)} className="w-full bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black py-3 rounded-2xl text-xs shadow-xl transition transform hover:scale-102">
+              გასაგებია, მადლობა! ✨
             </button>
           </div>
         </div>
