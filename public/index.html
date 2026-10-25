@@ -7,7 +7,6 @@
     
     <title>GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი</title>
     
-    <!-- PWA & Mobile Icons -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GEOSTORE">
@@ -15,31 +14,13 @@
     
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1513151233558-d86053986c?w=180&h=180&fit=crop">
-    <link rel="icon" type="image/jpeg" href="https://images.unsplash.com/photo-1513151233558-d86053986c?w=192&h=192&fit=crop">
+    <!-- 33-ე ნომერი GS იკონის პირდაპირი ინტეგრაცია -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%23030712'/><path d='M156 180h200v220H156z' fill='%2310b981' opacity='0.2'/><path d='M130 180h252v50H130z' fill='%2310b981'/><path d='M231 130h50v300h-50z' fill='%2310b981'/><path d='M256 130c-40-40-90 0-90 40h90z' fill='%2334d399'/><path d='M256 130c40-40 90 0 90 40h-90z' fill='%2334d399'/><text x='256' y='325' font-size='85' font-weight='900' fill='%23ffffff' text-anchor='middle' font-family='sans-serif'>GS</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%23030712'/><path d='M156 180h200v220H156z' fill='%2310b981' opacity='0.2'/><path d='M130 180h252v50H130z' fill='%2310b981'/><path d='M231 130h50v300h-50z' fill='%2310b981'/><path d='M256 130c-40-40-90 0-90 40h90z' fill='%2334d399'/><path d='M256 130c40-40 90 0 90 40h-90z' fill='%2334d399'/><text x='256' y='325' font-size='85' font-weight='900' fill='%23ffffff' text-anchor='middle' font-family='sans-serif'>GS</text></svg>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-
-    <!-- 🚀 ძველი ქეშისა და Service Worker-ის ავტომატური გასუფთავების სკრიპტი -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister();
-          }
-        });
-      }
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          for (let name of names) {
-            caches.delete(name);
-          }
-        });
-      }
-    </script>
   </head>
   <body class="bg-slate-950 text-slate-100">
     <noscript>გთხოვთ ჩართოთ JavaScript ამ აპლიკაციის გასაშვებად.</noscript>
