@@ -1,4 +1,4 @@
-Import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShoppingBag, Heart, Search, User, ShieldCheck, Truck, RefreshCw, 
   Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
@@ -943,7 +943,7 @@ export default function App() {
         </div>
       )}
 
-      {/* COMPACT TOP BAR (უზრუნველყოფილია "განახლება" წარწერის სრულად წაშლა) */}
+      {/* COMPACT TOP BAR */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-xl w-full">
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-slate-950 text-[10px] py-1 px-3 font-black flex justify-between items-center w-full">
           <div className="flex items-center gap-1.5 truncate">
