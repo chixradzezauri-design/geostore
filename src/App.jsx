@@ -1882,7 +1882,7 @@ export default function App() {
                         const mainImage = uploadedMainImg || f.mainImageUrl.value || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600';
                         
                         let extraImages = [...uploadedExtraImgs];
-                        const extraText = f.extraImageUrls.value.trim();
+                        const extraText = f.extraImageUrls ? f.extraImageUrls.value.trim() : '';
                         if (extraText) {
                           const urls = extraText.split(',').map(s => s.trim()).filter(Boolean);
                           extraImages = [...extraImages, ...urls];
