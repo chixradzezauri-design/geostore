@@ -878,7 +878,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-emerald-500 selection:text-slate-950 flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-24 md:pb-0 selection:bg-emerald-500 selection:text-slate-950 flex flex-col justify-between overflow-x-hidden w-full">
       
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2 text-xs md:text-sm">
@@ -887,7 +887,7 @@ export default function App() {
         </div>
       )}
 
-      {/* PWA INSTALL BANNER (პრემიუმ დიზაინი) */}
+      {/* PWA INSTALL BANNER */}
       {showInstallBanner && (
         <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 text-slate-100 p-4 rounded-3xl shadow-2xl flex items-center justify-between border-2 border-emerald-500/50 backdrop-blur-xl animate-fade-in max-w-lg mx-auto md:mx-0">
           <div className="flex items-center gap-3.5">
@@ -918,7 +918,7 @@ export default function App() {
         </div>
       )}
 
-      {/* SMART BROWSER-AWARE INSTALL MODAL (ლამაზი პრემიუმ ვიზუალით, აპლიკაციის სახელით ქვემოთ) */}
+      {/* SMART BROWSER-AWARE INSTALL MODAL (ლამაზი პრემიუმ შოპინგ ჩანთის იკონით და GEOSTORE წარწერით ქვემოთ) */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4">
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
@@ -926,7 +926,7 @@ export default function App() {
             
             <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold bg-slate-900 p-2 rounded-full border border-slate-800 transition">✕</button>
             
-            {/* პრემიუმ აპლიკაციის იკონი და ქვემოთ GEOSTORE წარწერა */}
+            {/* პრემიუმ შოპინგ ჩანთის იკონი და ქვემოთ GEOSTORE წარწერა */}
             <div className="flex flex-col items-center gap-2.5 pt-2">
               <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center shadow-2xl shadow-emerald-500/30 border-2 border-emerald-400/50 text-slate-950">
                 <ShoppingBag className="w-10 h-10 stroke-[2.5]" />
@@ -1025,8 +1025,8 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3 md:gap-6 w-full">
           <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => setActiveTab('store')}>
-            <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center shadow-lg shadow-emerald-500/20 font-black text-xl text-slate-950 group-hover:scale-105 transition transform">
-              {siteSettings.storeName ? siteSettings.storeName.charAt(0) : 'G'}
+            <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-slate-950 group-hover:scale-105 transition transform">
+              <ShoppingBag className="w-5 h-5 stroke-[2.5]" />
             </div>
             <span className="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-white bg-clip-text text-transparent">
               {siteSettings.storeName}
@@ -1108,11 +1108,11 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1 overflow-x-hidden">
         
         {activeTab === 'store' && (
-          <div className="space-y-10">
+          <div className="space-y-10 w-full">
             {sections.filter(s => s.visible).map(sec => {
               if (sec.id === 'hero') {
                 return (
-                  <div key={sec.id} className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-2xl bg-slate-900">
+                  <div key={sec.id} className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-2xl bg-slate-900 w-full">
                     <div className="grid grid-cols-1 md:grid-cols-2 items-center">
                       <div className="p-8 md:p-14 z-10 space-y-5">
                         <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400 text-[11px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
@@ -1154,7 +1154,7 @@ export default function App() {
 
               if (sec.id === 'promos') {
                 return (
-                  <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
                     {promoSlots.map(slot => (
                       <div key={slot.id} className={`rounded-3xl p-6 bg-gradient-to-br ${slot.bgGradient} border border-emerald-500/20 hover:border-emerald-500/40 transition shadow-xl flex flex-col justify-between backdrop-blur-md`}>
                         <span className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 self-start text-[10px] font-black px-3 py-1 rounded-full">{slot.tag}</span>
@@ -1167,7 +1167,7 @@ export default function App() {
 
               if (sec.id === 'ticker') {
                 return (
-                  <div key={sec.id} className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                  <div key={sec.id} className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between shadow-lg w-full">
                     <div className="flex items-center gap-3">
                       <Clock className="w-5 h-5 text-emerald-400 animate-pulse shrink-0" />
                       <div>
@@ -1181,13 +1181,13 @@ export default function App() {
 
               if (sec.id === 'categories') {
                 return (
-                  <div key={sec.id} className="space-y-4">
+                  <div key={sec.id} className="space-y-4 w-full">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                       <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
                         <Grid className="w-5 h-5 text-emerald-400" /> კატეგორიები და ვენდერები
                       </h2>
                       
-                      <div className="flex gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
+                      <div className="flex gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none w-full md:w-auto">
                         <button
                           onClick={() => setSelectedVendorFilter('ყველა')}
                           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition border ${
@@ -1210,7 +1210,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                    <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none w-full">
                       <button
                         onClick={() => setSelectedCategory('ყველა')}
                         className={`px-5 py-2.5 rounded-2xl font-black text-xs whitespace-nowrap transition border ${
@@ -1237,7 +1237,7 @@ export default function App() {
 
               if (sec.id === 'products') {
                 return (
-                  <div key={sec.id} id="products" className="space-y-6">
+                  <div key={sec.id} id="products" className="space-y-6 w-full">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
                         <ShoppingBag className="w-5 h-5 text-emerald-400" /> პროდუქციის კატალოგი {selectedVendorFilter !== 'ყველა' ? `(${selectedVendorFilter})` : ''}
@@ -1254,7 +1254,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                       {filteredProducts.map(prod => {
                         const isWish = wishlist.some(w => w.id === prod.id);
                         const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -1332,7 +1332,7 @@ export default function App() {
 
               if (sec.id === 'badges') {
                 return (
-                  <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
                       <Truck className="w-6 h-6 text-emerald-400 shrink-0" />
                       <div><h4 className="font-bold text-white text-xs">სწრაფი მიწოდება</h4><p className="text-[10px] text-slate-400">მთელ საქართველოში</p></div>
@@ -1347,7 +1347,7 @@ export default function App() {
 
               if (sec.id === 'faq') {
                 return (
-                  <div key={sec.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4">
+                  <div key={sec.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4 w-full">
                     <h2 className="text-xl font-black text-white">ხშირად დასმული კითხვები</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
                       <div>
@@ -1369,7 +1369,7 @@ export default function App() {
         )}
 
         {activeTab === 'policy' && (
-          <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-10 space-y-6 text-xs md:text-sm leading-relaxed shadow-2xl">
+          <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-10 space-y-6 text-xs md:text-sm leading-relaxed shadow-2xl w-full">
             <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
               <BookOpen className="w-7 h-7 text-emerald-400" />
               <h2 className="text-xl md:text-2xl font-black text-white">წესები და პოლიტიკა</h2>
@@ -1404,10 +1404,10 @@ export default function App() {
         )}
 
         {activeTab === 'wishlist' && (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full">
             <h2 className="text-xl md:text-2xl font-black text-white">❤️ სურვილების სია ({wishlist.length})</h2>
             {wishlist.length === 0 ? <p className="text-slate-500 text-xs">სია ცარიელია.</p> : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {wishlist.map(prod => (
                   <div key={prod.id} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
                     <img src={prod.image} alt="" className="w-16 h-16 object-contain bg-slate-950 rounded-xl p-1 border border-slate-800" />
@@ -1424,7 +1424,7 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-xl mx-auto bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 space-y-4 text-xs md:text-sm shadow-2xl">
+          <div className="max-w-xl mx-auto bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 space-y-4 text-xs md:text-sm shadow-2xl w-full">
             <h2 className="text-xl font-black text-white">👤 მომხმარებლის პროფილი</h2>
             <p><b>სახელი:</b> {currentUser.name}</p>
             <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
@@ -1454,10 +1454,10 @@ export default function App() {
         )}
 
         {activeTab === 'cart' && (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full">
             <h2 className="text-xl md:text-2xl font-black text-white">🛒 საყიდლების კალათა</h2>
             {cart.length === 0 ? <p className="text-slate-500 text-xs">კალათა ცარიელია.</p> : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
                 <div className="lg:col-span-2 space-y-3">
                   {cart.map(item => (
                     <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center text-xs">
@@ -1489,7 +1489,7 @@ export default function App() {
         )}
 
         {activeTab === 'admin' && (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full">
             {!adminLoggedIn ? (
               <div className="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-4 text-center shadow-2xl">
                 <Shield className="w-12 h-12 text-emerald-400 mx-auto" />
@@ -1524,8 +1524,8 @@ export default function App() {
                 </form>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-2xl p-2 overflow-x-auto scrollbar-none shadow-lg">
+              <div className="space-y-6 w-full">
+                <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-2xl p-2 overflow-x-auto scrollbar-none shadow-lg w-full">
                   <div className="flex gap-2">
                     {[
                       { id: 'analytics', label: '📊 სტატისტიკა' },
@@ -1563,8 +1563,8 @@ export default function App() {
                 </div>
 
                 {adminActiveSubTab === 'analytics' && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-6 w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                       <div className="bg-slate-900 p-5 rounded-3xl border border-slate-800 flex flex-col justify-between">
                         <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
                           <span>💰 რეალური შემოსავალი</span>
@@ -1602,7 +1602,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
+                    <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4 w-full">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                         <Star className="w-5 h-5 text-emerald-400" /> რეალურად ყველაზე გაყიდვადი ნივთები (Top Sales)
                       </h3>
@@ -1629,8 +1629,8 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'orders' && (
-                  <div className="space-y-6">
-                    <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="space-y-6 w-full">
+                    <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                       <div className="flex justify-between items-center">
                         <h3 className="font-bold text-base md:text-lg text-white">📦 აქტიური შეკვეთები ({orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length})</h3>
                         <div className="flex gap-2">
@@ -1692,7 +1692,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'adminChat' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                     <div className="flex justify-between items-center">
                       <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                         <MessageSquare className="w-5 h-5 text-emerald-400" /> 💬 მომხმარებელთა ინდივიდუალური ჩათები
@@ -1772,7 +1772,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'vendors' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                       <Store className="w-5 h-5 text-teal-400" /> 🏪 მრავალვენდერიანი მარკეტფლეისის მართვა
                     </h3>
@@ -1820,7 +1820,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'categories' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white">კატეგორიების მართვა</h3>
                     <form onSubmit={(e) => {
                       e.preventDefault();
@@ -1850,7 +1850,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'brands' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                       <Tag className="w-5 h-5 text-emerald-400" /> 🏷️ ბრენდების მართვა
                     </h3>
@@ -1884,8 +1884,8 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'products' && (
-                  <div className="space-y-6">
-                    <div className="bg-slate-900 p-4 md:p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="space-y-6 w-full">
+                    <div className="bg-slate-900 p-4 md:p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                       <h3 className="font-bold text-base md:text-lg text-white">+ ახალი პროდუქტის დამატება (ვენდერის მითითებით)</h3>
                       
                       <form onSubmit={(e) => {
@@ -2007,7 +2007,7 @@ export default function App() {
                       </form>
                     </div>
 
-                    <div className="bg-slate-900 p-4 md:p-6 rounded-3xl space-y-3 border border-slate-800">
+                    <div className="bg-slate-900 p-4 md:p-6 rounded-3xl space-y-3 border border-slate-800 w-full">
                       <h3 className="font-bold text-base md:text-lg text-white">არსებული პროდუქტები და ვენდერები ({products.length})</h3>
                       <div className="space-y-3">
                         {products.map(p => (
@@ -2060,7 +2060,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'banners' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white">მთავარი ბანერის რედაქტირება</h3>
                     <div className="space-y-3 text-xs">
                       <input type="text" value={banners[0]?.title || ''} onChange={e => setBanners([{ ...banners[0], title: e.target.value }])} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" placeholder="სათაური" />
@@ -2071,7 +2071,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'builder' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-3 max-w-xl border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-3 max-w-xl border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white">🎨 Page Builder (სექციები)</h3>
                     {sections.map((sec) => (
                       <div key={sec.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
@@ -2085,7 +2085,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'crm' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-3 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-3 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white">👥 მომხმარებლები ({usersList.length})</h3>
                     <div className="space-y-2">
                       {usersList.map(u => (
@@ -2104,7 +2104,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'coupons' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white">პრომო კოდები</h3>
                     <form onSubmit={(e) => {
                       e.preventDefault();
@@ -2131,7 +2131,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'security' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl max-w-md space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl max-w-md space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Key className="w-5 h-5 text-emerald-400"/> ადმინის პაროლის შეცვლა</h3>
                     <form onSubmit={handleChangeAdminPassword} className="space-y-3">
                       <input type="text" value={adminSecurityForm.username} onChange={e => setAdminSecurityForm({...adminSecurityForm, username: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none" />
@@ -2143,7 +2143,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'cms' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl max-w-xl space-y-5 border border-slate-800 text-xs">
+                  <div className="bg-slate-900 p-6 rounded-3xl max-w-xl space-y-5 border border-slate-800 text-xs w-full">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2"><Settings className="w-5 h-5 text-emerald-400"/> საიტის სრული რედაქტორი (CMS)</h3>
                     
                     <form onSubmit={(e) => {
@@ -2224,7 +2224,7 @@ export default function App() {
                 )}
 
                 {adminActiveSubTab === 'policyEditor' && (
-                  <div className="bg-slate-900 p-6 rounded-3xl max-w-2xl space-y-4 border border-slate-800">
+                  <div className="bg-slate-900 p-6 rounded-3xl max-w-2xl space-y-4 border border-slate-800 w-full">
                     <h3 className="font-bold text-base md:text-lg text-white flex items-center gap-2">
                       <BookOpen className="w-5 h-5 text-emerald-400" /> წესების და პოლიტიკის რედაქტორი (AI ავტომატურად ითვისებს)
                     </h3>
@@ -2866,7 +2866,7 @@ export default function App() {
         )}
       </div>
 
-      <footer className="bg-slate-950 border-t border-slate-900 py-8 text-center text-xs text-slate-500 mt-16 space-y-2">
+      <footer className="bg-slate-950 border-t border-slate-900 py-8 text-center text-xs text-slate-500 mt-16 space-y-2 w-full">
         <div className="flex justify-center gap-6">
           <button onClick={() => setActiveTab('policy')} className="hover:text-emerald-400 transition font-bold text-emerald-500">წესები და პოლიტიკა</button>
           <button onClick={() => setActiveTab('store')} className="hover:text-emerald-400 transition">მთავარი</button>
