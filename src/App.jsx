@@ -170,7 +170,7 @@ export default function App() {
   const handleInstallClick = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
+      deferredPrompt.userChoice.then(() => {
         setDeferredPrompt(null);
       });
     } else {
@@ -198,7 +198,7 @@ export default function App() {
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : fallback;
-    } catch (e) {
+    } catch {
       return fallback;
     }
   };
@@ -216,13 +216,13 @@ export default function App() {
   }));
 
   useEffect(() => {
-    try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch (e) {}
+    try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch {}
   }, [siteSettings]);
 
   const [storePolicy, setStorePolicy] = useState(() => loadSafeStorage('geostore_store_policy', INITIAL_POLICY));
 
   useEffect(() => {
-    try { localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy)); } catch (e) {}
+    try { localStorage.setItem('geostore_store_policy', JSON.stringify(storePolicy)); } catch {}
   }, [storePolicy]);
 
   const [adminAuth, setAdminAuth] = useState(() => loadSafeStorage('geostore_admin_auth', { username: "admin", password: "admin123" }));
@@ -233,7 +233,7 @@ export default function App() {
   const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
-    try { localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth)); } catch (e) {}
+    try { localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth)); } catch {}
   }, [adminAuth]);
 
   const [categories, setCategories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
@@ -262,9 +262,9 @@ export default function App() {
   const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
   const [editingProductId, setEditingProductId] = useState(null);
   const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', brand: '', vendor: '', priceGEL: 0, oldPriceGEL: 0, discountPercent: 0, stock: 0, image: '', description: '', warranty: '', isPreOrder: false });
+  const [newProductForm, setNewProductForm] = useState({ name: '', sku: 'GEO-NEW', category: 'სმარტფონები', brand: 'Apple', vendor: 'GEOSTORE ოფიციალური', priceGEL: 1500, oldPriceGEL: 1700, discountPercent: 10, stock: 10, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600', description: 'ახალი პროდუქტი', warranty: '1 წელი', isPreOrder: false });
 
   const [uploadedMainImg, setUploadedMainImg] = useState('');
-  const [uploadedExtraImgs, setUploadedExtraImgs] = useState([]);
 
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
@@ -317,11 +317,9 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [activeInvoiceOrder, setActiveInvoiceOrder] = useState(null);
 
-  // --- CRM & Returns ---
   const [returnsList, setReturnsList] = useState(() => loadSafeStorage('geostore_returns', [
     { id: 'RET-101', orderId: 'ORD-1001', customerName: 'გიორგი ბერიძე', productName: 'iPhone 15 Pro', reason: 'არ მოუხდა მოდელი', status: 'განხილვაში', refundStatus: 'არ არის დაბრუნებული', date: '2026-10-24', adminNotes: 'მოწმდება' }
   ]));
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatClientName, setChatClientName] = useState(() => {
@@ -431,7 +429,6 @@ export default function App() {
   const discountAmountGEL = useMemo(() => appliedCoupon ? (cartSubtotalGEL * appliedCoupon.discountPercent) / 100 : 0, [cartSubtotalGEL, appliedCoupon]);
   const cartTotalGEL = cartSubtotalGEL - discountAmountGEL;
 
-  // --- CRM Analytics ---
   const crmAnalytics = useMemo(() => {
     return usersList.map(u => {
       const userOrders = orders.filter(o => o.userEmail === u.email || o.customerName === u.name);
@@ -446,7 +443,6 @@ export default function App() {
     });
   }, [usersList, orders]);
 
-  // --- Pro Analytics ---
   const proAnalytics = useMemo(() => {
     const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
     const cancelledOrders = orders.filter(o => o.status === 'გაუქმებულია');
@@ -546,6 +542,7 @@ export default function App() {
     setCouponInput('');
   };
 
+  // --- SUPABASE-ის გამართული შეკვეთის გაფორმება ---
   const handlePlaceOrder = async (itemsToOrder, totalVal, isExpress = false) => {
     if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) {
       alert('⚠️ გთხოვთ შეავსოთ ყველა ველი');
@@ -553,7 +550,13 @@ export default function App() {
     }
 
     const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const itemsData = itemsToOrder.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity || 1, vendor: i.vendor || 'GEOSTORE ოფიციალური' }));
+    const itemsData = itemsToOrder.map(i => ({ 
+      id: i.id, 
+      name: i.name, 
+      price: i.priceGEL, 
+      quantity: i.quantity || 1, 
+      vendor: i.vendor || 'GEOSTORE ოფიციალური' 
+    }));
 
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
@@ -602,65 +605,11 @@ export default function App() {
       setQuickBuyProduct(null);
       if (!isExpress) setCart([]);
       setAppliedCoupon(null);
+      setCheckoutForm({ name: '', phone: '', address: '', notes: '' });
       showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
       fetchOrders();
     } catch (err) {
       alert("❌ ქსელის შეცდომა შეკვეთისას: " + err.message);
-    }
-  };
-
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
-    if (!authForm.email || !authForm.password) return;
-
-    if (authMode === 'register') {
-      if (!authForm.name || !authForm.phone) {
-        alert('გთხოვთ შეავსოთ ყველა ველი!');
-        return;
-      }
-      const exists = usersList.some(u => u.email === authForm.email);
-      if (exists) {
-        alert('ამ ელ-ფოსტით მომხმარებელი უკვე არსებობს!');
-        return;
-      }
-      const newUser = {
-        id: `u-${Date.now()}`,
-        name: authForm.name,
-        email: authForm.email,
-        phone: authForm.phone,
-        password: authForm.password,
-        ordersCount: 0,
-        totalSpentGEL: 0,
-        date: new Date().toISOString().slice(0, 10),
-        notes: ''
-      };
-      setUsersList([newUser, ...usersList]);
-      setCurrentUser(newUser);
-
-      if (authForm.remember) {
-        try { localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true })); } catch(e){}
-      } else {
-        localStorage.removeItem('geostore_user_remembered');
-      }
-
-      setIsAuthOpen(false);
-      setAuthForm({ name: '', phone: '', email: '', password: '', remember: false });
-      showToast('🎉 რეგისტრაცია წარმატებულია!');
-    } else {
-      const found = usersList.find(u => u.email === authForm.email && u.password === authForm.password);
-      if (found) {
-        setCurrentUser(found);
-        if (authForm.remember) {
-          try { localStorage.setItem('geostore_user_remembered', JSON.stringify({ email: authForm.email, password: authForm.password, remember: true })); } catch(e){}
-        } else {
-          localStorage.removeItem('geostore_user_remembered');
-        }
-        setIsAuthOpen(false);
-        setAuthForm({ name: '', phone: '', email: '', password: '', remember: false });
-        showToast('🔑 ავტორიზაცია წარმატებულია!');
-      } else {
-        alert('არასწორი ელ-ფოსტა ან პაროლი!');
-      }
     }
   };
 
@@ -730,16 +679,6 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  const groupedClients = useMemo(() => {
-    const map = {};
-    adminChatArchive.forEach(m => {
-      const name = m.clientName || 'სტუმარი';
-      if (!map[name]) map[name] = [];
-      map[name].push(m);
-    });
-    return map;
-  }, [adminChatArchive]);
-
   const handleSendMessage = async (text, senderName, imageUrl = '') => {
     if (!text.trim() && !imageUrl) return;
 
@@ -774,33 +713,18 @@ export default function App() {
     }
   };
 
-  const handleMainImageUpload = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        setUploadedMainImg(evt.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
+    if (!queryRaw) return;
     const queryLower = queryRaw.toLowerCase();
 
-    const userMsg = { 
-      sender: 'user', 
-      text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
-    };
+    const userMsg = { sender: 'user', text: queryRaw };
 
-    const greetingKeywords = ['გამარჯობა', 'გარმარჯობა', 'სალამი', 'hi', 'hello', 'როგორ ხარ', 'ვინ ხარ', 'რისი გაკეთება შეგიძლია'];
-    const isGreeting = greetingKeywords.some(k => queryLower === k || (queryLower.includes(k) && queryLower.length < 15));
-
-    if (isGreeting) {
+    const greetingKeywords = ['გამარჯობა', 'სალამი', 'hi', 'hello', 'როგორ ხარ'];
+    if (greetingKeywords.some(k => queryLower.includes(k) && queryLower.length < 20)) {
       const aiGreetingMsg = {
         sender: 'ai',
-        text: `გამარჯობა! 👋 მე ვარ ${siteSettings.storeName}-ის ჭკვიანი AI ასისტენტი. სიამოვნებით დაგეხმარებით პროდუქტების შერჩევაში, ფასების ნახვაში ან საიტის წესებისა და პოლიტიკის გაცნობაში. რით შემიძლია დაგეხმაროთ დღეს?`,
+        text: `მოგესალმებით! 👋 მე ვარ ${siteSettings.storeName}-ის პერსონალური AI ექსპერტი. რით შემიძლია დაგეხმაროთ დღეს?`,
         recommendedProducts: []
       };
       setAiChatHistory(prev => [...prev, userMsg, aiGreetingMsg]);
@@ -808,73 +732,18 @@ export default function App() {
       return;
     }
 
-    const policyKeywords = ['წესი', 'წესები', 'პოლიტიკა', 'მიწოდება', 'მიტანა', 'გარანტია', 'დაბრუნება', 'კონფიდენციალურობა', 'პირობები'];
-    const isPolicyAsk = policyKeywords.some(k => queryLower.includes(k));
-
-    if (isPolicyAsk) {
-      let policyReply = `📜 **${siteSettings.storeName}-ის მიმდინარე წესები და პოლიტიკა:**\n\n`;
-      if (queryLower.includes('მიწოდება') || queryLower.includes('მიტანა')) {
-        policyReply += `🚚 **მიწოდების პირობები:** ${storePolicy.delivery}`;
-      } else if (queryLower.includes('გარანტია')) {
-        policyReply += `🛡️ **გარანტიის პირობები:** ${storePolicy.warranty}`;
-      } else if (queryLower.includes('დაბრუნება')) {
-        policyReply += `🔄 **დაბრუნების პირობები:** ${storePolicy.warranty}`;
-      } else {
-        policyReply += `1️⃣ **ზოგადი:** ${storePolicy.general}\n\n2️⃣ **მიწოდება:** ${storePolicy.delivery}\n\n3️⃣ **გარანტია:** ${storePolicy.warranty}\n\n4️⃣ **კონფიდენციალურობა:** ${storePolicy.privacy}`;
-      }
-
-      const aiMsg = {
-        sender: 'ai',
-        text: policyReply,
-        recommendedProducts: []
-      };
-
-      setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
-      setAiInputText('');
-      return;
-    }
-
-    let targetCategory = null;
-    const phoneKeywords = ['ტელეფონი', 'სმარტფონი', 'მობილური', 'აიფონი', 'iphone', 'samsung', 'xiaomi', 'phone'];
-    const laptopKeywords = ['ლეპტოპი', 'ნოუთბუქი', 'კომპიუტერი', 'მაქბუქი', 'macbook', 'laptop', 'asus', 'acer'];
-    const accessoryKeywords = ['ყურსასმენი', 'აირპოდსი', 'airpods', 'აქსესუარი', 'headphone', 'case', 'დამტენი'];
-    const watchKeywords = ['საათი', 'ჭკვიანი საათი', 'watch', 'apple watch'];
-    const tvKeywords = ['ტელევიზორი', 'tv', 'television'];
-
-    if (phoneKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'სმარტფონები';
-    } else if (laptopKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'ლეპტოპები';
-    } else if (accessoryKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'აქსესუარები';
-    } else if (watchKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'ჭკვიანი საათები';
-    } else if (tvKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'ტელევიზორები';
-    } else if (aiCategory !== 'ყველა') {
-      targetCategory = aiCategory;
-    }
-
-    let matched = products.filter(p => {
-      if (targetCategory && p.category !== targetCategory) {
-        return false;
-      }
-      return true;
+    let matchedProducts = products.filter(p => {
+      if (p.priceGEL > aiBudget) return false;
+      if (aiCategory !== 'ყველა' && p.category !== aiCategory) return false;
+      return p.name.toLowerCase().includes(queryLower) || p.category.toLowerCase().includes(queryLower);
     });
 
-    if (matched.length === 0) {
-      matched = products;
-    }
-
-    let aiAnswer = `📱 მოვიძიე საუკეთესო პროდუქტები თქვენი მოთხოვნის შესაბამისად:`;
-    if (targetCategory) {
-      aiAnswer = `📱 მოვიძიე ${targetCategory} კატეგორიის საუკეთესო მოდელები:`;
-    }
+    if (matchedProducts.length === 0) matchedProducts = products.slice(0, 3);
 
     const aiMsg = {
       sender: 'ai',
-      text: aiAnswer,
-      recommendedProducts: matched.slice(0, 4)
+      text: `✨ თქვენი მოთხოვნის მიხედვით მოვიძიე შემდეგი პროდუქტები:`,
+      recommendedProducts: matchedProducts.slice(0, 4)
     };
 
     setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
@@ -891,88 +760,7 @@ export default function App() {
         </div>
       )}
 
-      {showInstallBanner && (
-        <div className="fixed bottom-16 left-3 right-3 md:left-auto md:right-4 md:bottom-20 z-50 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 text-slate-100 p-3 rounded-2xl shadow-xl flex items-center justify-between border border-emerald-500/40 backdrop-blur-xl animate-fade-in max-w-md mx-auto md:mx-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-md shrink-0">
-              <ShoppingBag className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <h4 className="font-black text-xs text-white flex items-center gap-1">
-                GEOSTORE აპლიკაცია <span className="bg-emerald-500/20 text-emerald-400 text-[8px] px-1.5 py-0.2 rounded-full border border-emerald-500/30">PWA</span>
-              </h4>
-              <p className="text-[10px] text-slate-300 font-medium">დაამატე ტელეფონზე ან კომპიუტერში!</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button 
-              onClick={handleInstallClick} 
-              className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-3 py-2 rounded-xl text-xs hover:scale-105 transition shadow-md"
-            >
-              დაყენება 🚀
-            </button>
-            <button 
-              onClick={() => setShowInstallBanner(false)} 
-              className="text-slate-400 hover:text-white font-bold p-1 text-xs transition"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showInstallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4">
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-emerald-500/60 rounded-2xl max-w-sm w-full p-5 text-center space-y-4 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"></div>
-            
-            <button onClick={() => setShowInstallModal(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white font-bold bg-slate-900 p-1.5 rounded-full border border-slate-800 transition text-xs">✕</button>
-            
-            <div className="flex flex-col items-center gap-2 pt-1">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center shadow-xl border border-emerald-400/50 text-slate-950">
-                <ShoppingBag className="w-8 h-8 stroke-[2.5]" />
-              </div>
-              <span className="font-black text-white text-sm tracking-wider uppercase">GEOSTORE</span>
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-sm font-black text-white">აპლიკაციის მთავარ ეკრანზე დამატება</h3>
-              <p className="text-[10px] text-slate-400">იმოქმედეთ ინსტრუქციის მიხედვით:</p>
-            </div>
-            
-            <div className="space-y-2 text-left text-xs text-slate-300 bg-slate-900/90 p-3 rounded-xl border border-slate-800 shadow-inner">
-              <p className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[9px] shrink-0">1</span>
-                ბრაუზერის მენიუში დააჭირეთ <b className="text-emerald-400 font-bold">Share (გაზიარება)</b> <span className="text-sm">⎋</span>
-              </p>
-              <p className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-[9px] shrink-0">2</span>
-                აირჩიეთ <b className="text-emerald-400 font-bold">„Add to Home Screen“</b> <span className="text-sm">➕</span>
-              </p>
-            </div>
-
-            <button onClick={() => setShowInstallModal(false)} className="w-full bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow-lg transition">
-              გასაგებია, მადლობა! ✨
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showPopupModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-emerald-500 rounded-2xl max-w-sm w-full p-5 text-center space-y-3 shadow-2xl">
-            <button onClick={() => setShowPopupModal(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white font-bold text-xs">✕</button>
-            <Sparkles className="w-8 h-8 text-emerald-400 mx-auto" />
-            <h3 className="text-base font-black text-white">{siteSettings.popupTitle}</h3>
-            <p className="text-slate-300 text-xs leading-relaxed">{siteSettings.popupText}</p>
-            <button onClick={() => setShowPopupModal(false)} className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow-md">
-              გასაგებია, მადლობა!
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* COMPACT TOP BAR */}
+      {/* HEADER */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-xl w-full">
         <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-slate-950 text-[10px] py-1 px-3 font-black flex justify-between items-center w-full">
           <div className="flex items-center gap-1.5 truncate">
@@ -980,37 +768,21 @@ export default function App() {
             <span className="truncate">{siteSettings.topBarText}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button 
-              onClick={() => setIsAiAssistantOpen(true)} 
-              className="bg-slate-950 text-emerald-400 hover:text-white hover:bg-slate-900 px-2.5 py-0.5 rounded-lg text-[10px] flex items-center gap-1 font-black border border-emerald-400 shadow transition"
-            >
-              <Bot className="w-3.5 h-3.5 text-emerald-400" />
-              <span>AI ასისტენტი</span>
+            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-slate-950 text-emerald-400 hover:text-white px-2.5 py-0.5 rounded-lg text-[10px] flex items-center gap-1 font-black border border-emerald-400 shadow">
+              <Bot className="w-3.5 h-3.5" /> AI ასისტენტი
             </button>
-
-            <button 
-              onClick={() => setIsGiftQuizOpen(true)} 
-              className="bg-slate-950 text-teal-300 hover:text-white hover:bg-slate-900 px-2.5 py-0.5 rounded-lg text-[10px] flex items-center gap-1 font-black border border-teal-400/60 shadow transition"
-            >
-              <Gift className="w-3.5 h-3.5 text-teal-300" />
-              <span>საჩუქრის ქვიზი</span>
-            </button>
-
-            <button 
-              onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')}
-              className="bg-slate-950/80 hover:bg-slate-950 px-2 py-0.5 rounded-full border border-emerald-400/40 transition flex items-center gap-1 font-black text-emerald-300 text-[10px]"
-            >
-              <span>{currency === 'GEL' ? '₾ GEL' : '$ USD'}</span>
+            <button onClick={() => setCurrency(prev => prev === 'GEL' ? 'USD' : 'GEL')} className="bg-slate-950/80 px-2 py-0.5 rounded-full border border-emerald-400/40 font-black text-emerald-300 text-[10px]">
+              {currency === 'GEL' ? '₾ GEL' : '$ USD'}
             </button>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-3 py-2.5 flex items-center justify-between gap-3 w-full">
-          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setActiveTab('store')}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center shadow-md text-slate-950 group-hover:scale-105 transition transform">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('store')}>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center text-slate-950 font-black">
               <ShoppingBag className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <span className="text-xl md:text-2xl font-black tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-white bg-clip-text text-transparent">
+            <span className="text-xl md:text-2xl font-black bg-gradient-to-r from-emerald-400 via-teal-200 to-white bg-clip-text text-transparent">
               {siteSettings.storeName}
             </span>
           </div>
@@ -1018,68 +790,24 @@ export default function App() {
           <div className="flex-1 max-w-sm relative hidden md:block">
             <input
               type="text"
-              placeholder="ძებნა: iPhone, MacBook, SKU..."
+              placeholder="ძებნა: iPhone, MacBook..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-400 shadow-inner"
+              className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-emerald-400"
             />
             <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-3 top-2.5" />
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <button 
-              onClick={() => setIsComparisonOpen(true)}
-              className="p-2.5 rounded-xl border relative bg-slate-900 border-emerald-500/30 text-slate-300 hover:border-emerald-400 transition"
-              title="შედარება"
-            >
-              <CheckSquare className="w-4 h-4 text-cyan-400" />
-              {comparisonList.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-cyan-500 text-slate-950 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow">
-                  {comparisonList.length}
-                </span>
-              )}
+            <button onClick={() => setActiveTab('wishlist')} className="p-2.5 rounded-xl border bg-slate-900 border-emerald-500/30 text-slate-300 relative">
+              <Heart className="w-4 h-4 text-rose-500" />
+              {wishlist.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{wishlist.length}</span>}
             </button>
-
-            <button 
-              onClick={() => setActiveTab('wishlist')}
-              className="p-2.5 rounded-xl border relative bg-slate-900 border-emerald-500/30 text-slate-300 hover:border-emerald-400 transition"
-            >
-              <Heart className="w-4 h-4 text-rose-500 fill-rose-500/20" />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow">
-                  {wishlist.length}
-                </span>
-              )}
-            </button>
-
-            {currentUser ? (
-              <button onClick={() => setActiveTab('profile')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-emerald-500/40 text-emerald-400 hover:bg-slate-800 transition">
-                <User className="w-3.5 h-3.5" /> {currentUser.name}
-              </button>
-            ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-200 hover:border-emerald-500/50 transition">
-                <User className="w-3.5 h-3.5" /> შესვლა
-              </button>
-            )}
-
-            <button 
-              onClick={() => setActiveTab('cart')}
-              className="p-2.5 rounded-xl border relative bg-slate-900 border-emerald-500/30 text-slate-300 hover:border-emerald-400 transition"
-            >
+            <button onClick={() => setActiveTab('cart')} className="p-2.5 rounded-xl border bg-slate-900 border-emerald-500/30 text-slate-300 relative">
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow">
-                  {cart.reduce((a, b) => a + b.quantity, 0)}
-                </span>
-              )}
+              {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{cart.reduce((a, b) => a + b.quantity, 0)}</span>}
             </button>
-
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`p-2.5 rounded-xl border transition flex items-center gap-1.5 shadow ${
-                activeTab === 'admin' ? 'bg-emerald-500 text-slate-950 font-black border-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-              }`}
-            >
+            <button onClick={() => setActiveTab('admin')} className={`p-2.5 rounded-xl border flex items-center gap-1.5 ${activeTab === 'admin' ? 'bg-emerald-500 text-slate-950 font-black' : 'bg-slate-900 border-slate-800 text-slate-300'}`}>
               <Settings className="w-4 h-4" />
               <span className="text-xs font-bold">ადმინი</span>
             </button>
@@ -1087,1361 +815,183 @@ export default function App() {
         </div>
       </header>
 
-      {/* COMPACT MAIN CONTENT AREA */}
-      <main className="max-w-7xl mx-auto px-3 py-5 w-full flex-1 overflow-x-hidden space-y-5">
+      {/* MAIN BODY */}
+      <main className="max-w-7xl mx-auto px-3 py-5 w-full flex-1 space-y-5">
         {activeTab === 'store' && (
           <div className="space-y-5 w-full">
-            {sections.filter(s => s.visible).map(sec => {
-              if (sec.id === 'hero') {
-                return (
-                  <div key={sec.id} className="relative rounded-2xl overflow-hidden border border-emerald-500/30 shadow-lg bg-slate-900 w-full">
-                    <div className="grid grid-cols-1 md:grid-cols-12 items-center">
-                      <div className="p-5 md:p-6 md:col-span-7 z-10 space-y-2.5">
-                        <span className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                          <Store className="w-3 h-3 text-emerald-400" /> მრავალვენდერიანი მარკეტფლეისი
-                        </span>
-                        <h1 className="text-xl md:text-2xl font-black text-white leading-tight">
-                          {siteSettings.heroTitle}
-                        </h1>
-                        <p className="text-slate-300 text-xs leading-relaxed">
-                          {siteSettings.heroSubtitle}
-                        </p>
-                        
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          <button 
-                            onClick={() => setIsAiAssistantOpen(true)} 
-                            className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-3.5 py-2 rounded-xl shadow hover:scale-105 transition transform flex items-center gap-1.5 text-xs"
-                          >
-                            <Bot className="w-3.5 h-3.5 text-slate-950" />
-                            <span>🤖 AI ასისტენტი</span>
-                          </button>
-
-                          <button 
-                            onClick={() => setIsGiftQuizOpen(true)} 
-                            className="bg-slate-950 border border-teal-400/60 text-teal-300 hover:text-white font-black px-3.5 py-2 rounded-xl hover:bg-slate-900 transition flex items-center gap-1.5 text-xs shadow-sm"
-                          >
-                            <Gift className="w-3.5 h-3.5 text-teal-300" />
-                            <span>🎁 საჩუქრის ქვიზი</span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="relative h-36 md:h-52 md:col-span-5 w-full">
-                        <img src={banners[0]?.image} alt="Hero" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-900 via-slate-900/40 to-transparent"></div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (sec.id === 'promos') {
-                return (
-                  <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
-                    {promoSlots.map(slot => (
-                      <div key={slot.id} className={`rounded-xl p-3.5 bg-gradient-to-br ${slot.bgGradient} border border-emerald-500/20 hover:border-emerald-500/40 transition shadow flex flex-col justify-between backdrop-blur-md`}>
-                        <span className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 self-start text-[8px] font-black px-2 py-0.5 rounded-full">{slot.tag}</span>
-                        <h3 className="text-xs font-bold text-white mt-3">{slot.title}</h3>
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-
-              if (sec.id === 'ticker') {
-                return (
-                  <div key={sec.id} className="bg-slate-900 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between shadow-sm w-full">
-                    <div className="flex items-center gap-2.5">
-                      <Clock className="w-3.5 h-3.5 text-emerald-400 animate-pulse shrink-0" />
-                      <div>
-                        <h4 className="font-extrabold text-white text-xs">⚡ GEOSTORE - ოფიციალური ვენდერების შეთავაზებები</h4>
-                        <p className="text-[9px] text-slate-400">შეიძინე პირდაპირ სანდო მომწოდებლებისგან!</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (sec.id === 'categories') {
-                return (
-                  <div key={sec.id} className="space-y-2.5 w-full">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                      <h2 className="text-base md:text-lg font-black text-white flex items-center gap-1.5">
-                        <Grid className="w-4 h-4 text-emerald-400" /> კატეგორიები და ვენდერები
-                      </h2>
-                      
-                      <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-none w-full md:w-auto">
-                        <button
-                          onClick={() => setSelectedVendorFilter('ყველა')}
-                          className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition border ${
-                            selectedVendorFilter === 'ყველა' ? 'bg-teal-500 text-slate-950 border-teal-300' : 'bg-slate-900 text-slate-300 border-slate-800'
-                          }`}
-                        >
-                          🌐 ყველა ვენდერი
-                        </button>
-                        {vendorsList.map(v => (
-                          <button
-                            key={v.id}
-                            onClick={() => setSelectedVendorFilter(v.name)}
-                            className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition border ${
-                              selectedVendorFilter === v.name ? 'bg-teal-500 text-slate-950 border-teal-300' : 'bg-slate-900 text-slate-300 border-slate-800'
-                            }`}
-                          >
-                            🏪 {v.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none w-full">
-                      <button
-                        onClick={() => setSelectedCategory('ყველა')}
-                        className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition border ${
-                          selectedCategory === 'ყველა' ? 'bg-emerald-500 text-slate-950 border-emerald-300 shadow-sm' : 'bg-slate-900 text-slate-300 border-slate-800'
-                        }`}
-                      >
-                        ✨ ყველა
-                      </button>
-                      {categories.map(cat => (
-                        <button
-                          key={cat.id || cat}
-                          onClick={() => setSelectedCategory(cat.name || cat)}
-                          className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition border ${
-                            selectedCategory === (cat.name || cat) ? 'bg-emerald-500 text-slate-950 border-emerald-300 shadow-sm' : 'bg-slate-900 text-slate-300 border-slate-800'
-                          }`}
-                        >
-                          {cat.icon || ''} {cat.name || cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-
-              if (sec.id === 'products') {
-                return (
-                  <div key={sec.id} id="products" className="space-y-4 w-full">
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-base md:text-lg font-black text-white flex items-center gap-1.5">
-                        <ShoppingBag className="w-4 h-4 text-emerald-400" /> პროდუქციის კატალოგი {selectedVendorFilter !== 'ყველა' ? `(${selectedVendorFilter})` : ''}
-                      </h2>
-                      <div className="flex gap-1.5">
-                        {comparisonList.length > 0 && (
-                          <button onClick={() => setIsComparisonOpen(true)} className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 px-2.5 py-1 rounded-xl text-xs font-bold border border-cyan-500/40 transition">
-                            შედარება ({comparisonList.length})
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                      {filteredProducts.map(prod => {
-                        const isWish = wishlist.some(w => w.id === prod.id);
-                        const isCompared = comparisonList.some(c => c.id === prod.id);
-                        const monthlyInstallment = Math.round(prod.priceGEL / 12);
-
-                        return (
-                          <div key={prod.id} className="bg-slate-900 border border-emerald-500/20 hover:border-emerald-400/60 rounded-2xl p-3.5 flex flex-col justify-between group transition duration-300 shadow-lg">
-                            <div>
-                              <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-950 mb-3 p-3 flex items-center justify-center border border-slate-800">
-                                <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition duration-500" />
-                                {prod.discountPercent > 0 && (
-                                  <span className="absolute top-2.5 left-2.5 bg-emerald-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full shadow">
-                                    -{prod.discountPercent}%
-                                  </span>
-                                )}
-                                {prod.isPreOrder && (
-                                  <span className="absolute top-2.5 left-14 bg-blue-600 text-white font-black text-[9px] px-2 py-0.5 rounded-full shadow">
-                                    PRE-ORDER
-                                  </span>
-                                )}
-                                <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5">
-                                  <button onClick={() => toggleWishlist(prod)} className="p-2 bg-slate-950/80 hover:bg-slate-950 rounded-full text-white border border-slate-800 transition" title="სურვილებში">
-                                    <Heart className={`w-3.5 h-3.5 ${isWish ? 'fill-rose-500 text-rose-500' : 'text-slate-400'}`} />
-                                  </button>
-                                  <button onClick={() => toggleComparison(prod)} className={`p-2 rounded-full border transition ${isCompared ? 'bg-cyan-500 text-slate-950 border-cyan-300' : 'bg-slate-950/80 text-cyan-400 border-slate-800'}`} title="შედარებაში">
-                                    <CheckSquare className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                                <button onClick={() => setSelectedProductQuickView(prod)} className="absolute bottom-2.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition duration-300 bg-slate-950 text-emerald-400 text-[9px] font-bold px-3 py-1 rounded-lg border border-emerald-500/40">
-                                  <Eye className="w-3 h-3 inline mr-1" /> სწრაფი ნახვა
-                                </button>
-                              </div>
-                              
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">{prod.category} {prod.brand ? `• ${prod.brand}` : ''}</span>
-                                <span className="text-[9px] font-bold px-2 py-0.2 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/30">
-                                  🏪 {prod.vendor || 'GEOSTORE'}
-                                </span>
-                              </div>
-
-                              <h3 className="font-bold text-white text-xs md:text-sm mb-1 line-clamp-2">{prod.name}</h3>
-                              <p className="text-[10px] text-teal-400 font-semibold mb-2.5">💳 განვადება: თვეში ~{monthlyInstallment} ₾-დან</p>
-                            </div>
-
-                            <div className="pt-2.5 border-t border-slate-800/80 space-y-2.5">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="text-base md:text-lg font-black text-emerald-400">{formatPrice(prod.priceGEL)}</div>
-                                  {prod.oldPriceGEL > prod.priceGEL && (
-                                    <div className="text-[11px] text-slate-500 line-through font-medium">{formatPrice(prod.oldPriceGEL)}</div>
-                                  )}
-                                </div>
-                                {prod.stock <= 0 && (
-                                  <button onClick={() => setPriceAlertModal(prod)} className="text-[9px] text-amber-400 hover:underline flex items-center gap-1 font-bold">
-                                    <Bell className="w-3 h-3" /> შემატყობინე
-                                  </button>
-                                )}
-                              </div>
-                              <div className="grid grid-cols-2 gap-1.5">
-                                <button disabled={prod.stock <= 0} onClick={() => addToCart(prod)} className={`py-2 rounded-xl text-xs font-black transition ${prod.stock > 0 ? 'bg-emerald-500 text-slate-950 shadow hover:bg-emerald-400' : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}>
-                                  {prod.stock > 0 ? (prod.isPreOrder ? 'Pre-Order' : 'კალათაში') : 'არ არის'}
-                                </button>
-                                <button disabled={prod.stock <= 0} onClick={() => { setQuickBuyProduct(prod); setIsCheckoutOpen(true); }} className={`py-2 rounded-xl text-xs font-black border transition ${prod.stock > 0 ? 'bg-slate-950 border-emerald-500/40 text-emerald-300 hover:bg-slate-900' : 'bg-slate-950 border-slate-800 text-slate-700 cursor-not-allowed'}`}>
-                                  1-Click ყიდვა
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }
-
-              if (sec.id === 'badges') {
-                return (
-                  <div key={sec.id} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
-                      <Truck className="w-5 h-5 text-emerald-400 shrink-0" />
-                      <div><h4 className="font-bold text-white text-xs">სწრაფი მიწოდება</h4><p className="text-[9px] text-slate-400">მთელ საქართველოში</p></div>
-                    </div>
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-                      <div><h4 className="font-bold text-white text-xs">1 წლიანი გარანტია</h4><p className="text-[9px] text-slate-400">ოფიციალური სერვისი</p></div>
-                    </div>
-                  </div>
-                );
-              }
-
-              if (sec.id === 'faq') {
-                return (
-                  <div key={sec.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 w-full">
-                    <h2 className="text-base md:text-lg font-black text-white">ხშირად დასმული კითხვები</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed">
-                      <div>
-                        <h4 className="font-bold text-emerald-400 text-xs mb-1">როგორ ხდება მიწოდება?</h4>
-                        <p className="text-slate-400 text-[11px]">{storePolicy.delivery}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-emerald-400 text-xs mb-1">მოქმედებს თუ არა გარანტია?</h4>
-                        <p className="text-slate-400 text-[11px]">{storePolicy.warranty}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-          </div>
-        )}
-
-        {activeTab === 'policy' && (
-          <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-8 space-y-5 text-xs leading-relaxed shadow-xl w-full">
-            <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
-              <BookOpen className="w-6 h-6 text-emerald-400" />
-              <h2 className="text-lg md:text-xl font-black text-white">წესები და პოლიტიკა</h2>
-            </div>
-            
-            <div className="space-y-4 text-slate-300">
-              <div>
-                <h3 className="font-bold text-emerald-400 text-xs mb-1">1. ზოგადი დებულებები</h3>
-                <p className="text-[11px]">{storePolicy.general}</p>
-              </div>
-
-              <div>
-                <h3 className="font-bold text-emerald-400 text-xs mb-1">2. შეკვეთა და მიწოდება</h3>
-                <p className="text-[11px]">{storePolicy.delivery}</p>
-              </div>
-
-              <div>
-                <h3 className="font-bold text-emerald-400 text-xs mb-1">3. გარანტია და დაბრუნება</h3>
-                <p className="text-[11px]">{storePolicy.warranty}</p>
-              </div>
-
-              <div>
-                <h3 className="font-bold text-emerald-400 text-xs mb-1">4. კონფიდენციალურობა</h3>
-                <p className="text-[11px]">{storePolicy.privacy}</p>
-              </div>
-            </div>
-
-            <button onClick={() => setActiveTab('store')} className="bg-emerald-500 text-slate-950 font-black px-5 py-2 rounded-xl text-xs shadow">
-              &larr; მთავარ გვერდზე დაბრუნება
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'wishlist' && (
-          <div className="space-y-4 w-full">
-            <h2 className="text-lg md:text-xl font-black text-white">❤️ სურვილების სია ({wishlist.length})</h2>
-            {wishlist.length === 0 ? <p className="text-slate-500 text-xs">სია ცარიელია.</p> : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
-                {wishlist.map(prod => (
-                  <div key={prod.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex items-center gap-3">
-                    <img src={prod.image} alt="" className="w-14 h-14 object-contain bg-slate-950 rounded-lg p-1 border border-slate-800" />
-                    <div>
-                      <h4 className="font-bold text-xs">{prod.name}</h4>
-                      <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(prod.priceGEL)}</p>
-                      <button onClick={() => addToCart(prod)} className="mt-1.5 bg-emerald-500 text-slate-950 px-2.5 py-1 rounded-lg text-[10px] font-bold">კალათაში</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'profile' && currentUser && (
-          <div className="max-w-lg mx-auto bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-800 space-y-3.5 text-xs shadow-xl w-full">
-            <h2 className="text-lg font-black text-white">👤 მომხმარებლის პროფილი</h2>
-            <p><b>სახელი:</b> {currentUser.name}</p>
-            <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
-            <p><b>ტელეფონი:</b> {currentUser.phone}</p>
-
-            <div className="pt-3 border-t border-slate-800">
-              <h3 className="font-bold text-xs text-slate-200 mb-2">📦 ჩემი შეკვეთების ისტორია</h3>
-              {orders.filter(o => o.userEmail === currentUser.email).length === 0 ? (
-                <p className="text-slate-500 text-[11px]">შეკვეთები არ არის.</p>
-              ) : (
-                <div className="space-y-2">
-                  {orders.filter(o => o.userEmail === currentUser.email).map(o => (
-                    <div key={o.id} className="p-2.5 bg-slate-950 rounded-xl flex justify-between items-center border border-slate-800 text-[11px]">
-                      <div>
-                        <p className="font-bold text-emerald-400">#{o.id} ({o.date}) - <span className="text-emerald-400">{o.status}</span></p>
-                        <p className="text-slate-400">{o.items?.map(i => i.name).join(', ')}</p>
-                      </div>
-                      <span className="font-black text-white">{o.totalGEL} ₾</span>
-                    </div>
-                  ))}
+            <div className="relative rounded-2xl overflow-hidden border border-emerald-500/30 bg-slate-900">
+              <div className="grid grid-cols-1 md:grid-cols-12 items-center">
+                <div className="p-5 md:p-6 md:col-span-7 space-y-2.5">
+                  <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[9px] font-black px-2.5 py-0.5 rounded-full">
+                    🏪 მარკეტფლეისი
+                  </span>
+                  <h1 className="text-xl md:text-2xl font-black text-white">{siteSettings.heroTitle}</h1>
+                  <p className="text-slate-300 text-xs">{siteSettings.heroSubtitle}</p>
+                  <button onClick={() => setIsAiAssistantOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5">
+                    <Bot className="w-3.5 h-3.5" /> AI ასისტენტი
+                  </button>
                 </div>
-              )}
+                <div className="h-36 md:h-52 md:col-span-5 relative">
+                  <img src={banners[0]?.image} alt="Hero" className="w-full h-full object-cover" />
+                </div>
+              </div>
             </div>
 
-            <button onClick={() => { setCurrentUser(null); setActiveTab('store'); }} className="bg-rose-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold mt-1">გამოსვლა</button>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <button onClick={() => setSelectedCategory('ყველა')} className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap border ${selectedCategory === 'ყველა' ? 'bg-emerald-500 text-slate-950 border-emerald-300' : 'bg-slate-900 text-slate-300 border-slate-800'}`}>
+                ✨ ყველა
+              </button>
+              {categories.map(cat => (
+                <button key={cat.id || cat} onClick={() => setSelectedCategory(cat.name || cat)} className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap border ${selectedCategory === (cat.name || cat) ? 'bg-emerald-500 text-slate-950 border-emerald-300' : 'bg-slate-900 text-slate-300 border-slate-800'}`}>
+                  {cat.icon || ''} {cat.name || cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProducts.map(prod => (
+                <div key={prod.id} className="bg-slate-900 border border-emerald-500/20 hover:border-emerald-400 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <div>
+                    <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-950 mb-3 p-3 flex items-center justify-center border border-slate-800">
+                      <img src={prod.image} alt={prod.name} className="w-full h-full object-contain" />
+                      {prod.discountPercent > 0 && (
+                        <span className="absolute top-2.5 left-2.5 bg-emerald-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">
+                          -{prod.discountPercent}%
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[9px] text-emerald-400 font-bold uppercase">{prod.category}</span>
+                    <h3 className="font-bold text-white text-xs md:text-sm mb-1 line-clamp-2">{prod.name}</h3>
+                  </div>
+                  <div className="pt-2.5 border-t border-slate-800 space-y-2.5">
+                    <div className="text-base md:text-lg font-black text-emerald-400">{formatPrice(prod.priceGEL)}</div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button onClick={() => addToCart(prod)} className="bg-emerald-500 text-slate-950 py-2 rounded-xl text-xs font-black">
+                        კალათაში
+                      </button>
+                      <button onClick={() => { setQuickBuyProduct(prod); setIsCheckoutOpen(true); }} className="bg-slate-950 border border-emerald-500/40 text-emerald-300 py-2 rounded-xl text-xs font-black">
+                        ყიდვა
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {activeTab === 'cart' && (
-          <div className="space-y-4 w-full">
-            <h2 className="text-lg md:text-xl font-black text-white">🛒 საყიდლების კალათა</h2>
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-lg font-black text-white">🛒 საყიდლების კალათა</h2>
             {cart.length === 0 ? <p className="text-slate-500 text-xs">კალათა ცარიელია.</p> : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 w-full">
-                <div className="lg:col-span-2 space-y-2.5">
-                  {cart.map(item => (
-                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                      <div>
-                        <h4 className="font-bold text-xs text-white">{item.name}</h4>
-                        <p className="text-teal-400 text-[9px]">ვენდერი: {item.vendor || 'GEOSTORE'}</p>
-                        <p className="text-emerald-400 font-bold mt-0.5">{formatPrice(item.priceGEL)} x {item.quantity}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => updateCartQuantity(item.id, -1)} className="px-2 py-0.5 bg-slate-800 rounded-lg text-white font-bold">-</button>
-                        <span className="font-bold px-1.5">{item.quantity}</span>
-                        <button onClick={() => updateCartQuantity(item.id, 1)} className="px-2 py-0.5 bg-slate-800 rounded-lg text-white font-bold">+</button>
-                        <button onClick={() => removeFromCart(item.id)} className="text-rose-400 ml-2 font-bold">✕</button>
-                      </div>
+              <div className="space-y-3">
+                {cart.map(item => (
+                  <div key={item.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                      <h4 className="font-bold text-white">{item.name}</h4>
+                      <p className="text-emerald-400 font-bold">{formatPrice(item.priceGEL)} x {item.quantity}</p>
                     </div>
-                  ))}
-                </div>
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl h-fit space-y-3.5 shadow-lg">
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="პრომო კოდი" value={couponInput} onChange={(e) => setCouponInput(e.target.value)} className="bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs flex-1 uppercase text-white outline-none" />
-                    <button onClick={applyCouponCode} className="bg-slate-800 px-3 py-2 rounded-xl text-xs font-bold text-white">გამოყენება</button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => updateCartQuantity(item.id, -1)} className="px-2 py-1 bg-slate-800 rounded font-bold">-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateCartQuantity(item.id, 1)} className="px-2 py-1 bg-slate-800 rounded font-bold">+</button>
+                      <button onClick={() => removeFromCart(item.id)} className="text-rose-400 font-bold ml-2">✕</button>
+                    </div>
                   </div>
-                  <div className="text-lg font-black text-emerald-400">სულ: {formatPrice(cartTotalGEL)}</div>
-                  <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow">შეკვეთა</button>
+                ))}
+                <div className="bg-slate-900 p-4 rounded-xl flex justify-between items-center">
+                  <span className="font-black text-white text-sm">სულ: {formatPrice(cartTotalGEL)}</span>
+                  <button onClick={() => setIsCheckoutOpen(true)} className="bg-emerald-500 text-slate-950 px-5 py-2.5 rounded-xl font-black text-xs">შეკვეთა</button>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* ----------------- ADMIN PANEL WITH FULL UPGRADES ----------------- */}
+        {/* ADMIN PANEL */}
         {activeTab === 'admin' && (
-          <div className="space-y-5 w-full">
+          <div className="space-y-5">
             {!adminLoggedIn ? (
-              <div className="max-w-sm mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 text-center shadow-xl">
+              <div className="max-w-sm mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 text-center">
                 <Shield className="w-10 h-10 text-emerald-400 mx-auto" />
                 <h2 className="text-base font-bold text-white">ადმინისტრატორის შესვლა</h2>
                 <form onSubmit={handleAdminLogin} className="space-y-2.5">
-                  <input 
-                    type="text" 
-                    placeholder="მომხმარებლის სახელი" 
-                    value={adminLoginForm.username} 
-                    onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" 
-                  />
-                  <input 
-                    type="password" 
-                    placeholder="პაროლი" 
-                    value={adminLoginForm.password} 
-                    onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" 
-                  />
-                  <div className="flex items-center gap-2 text-xs text-slate-300">
-                    <input 
-                      type="checkbox" 
-                      id="adminRemember"
-                      checked={adminLoginForm.remember} 
-                      onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
-                      className="rounded accent-emerald-500"
-                    />
-                    <label htmlFor="adminRemember" className="cursor-pointer text-[11px]">მომიმახსოვრე სისტემაში</label>
-                  </div>
+                  <input type="text" placeholder="მომხმარებელი" value={adminLoginForm.username} onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
+                  <input type="password" placeholder="პაროლი" value={adminLoginForm.password} onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
                   {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
-                  <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-bold text-xs transition shadow">შესვლა</button>
+                  <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-bold text-xs">შესვლა</button>
                 </form>
               </div>
             ) : (
-              <div className="space-y-5 w-full">
-                {/* Admin Subtabs Navigation */}
-                <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-xl p-2 overflow-x-auto scrollbar-none shadow w-full">
-                  <div className="flex gap-1.5">
-                    {[
-                      { id: 'dashboardPro', label: '📊 პროფესიონალური Dashboard' },
-                      { id: 'crmPro', label: '👥 CRM სეგმენტები' },
-                      { id: 'returnsPro', label: '🔄 დაბრუნებები' },
-                      { id: 'suppliersPro', label: '🚚 მომწოდებლები & შესყიდვები' },
-                      { id: 'analytics', label: '📈 ძველი სტატისტიკა' },
-                      { id: 'orders', label: '📦 შეკვეთები' },
-                      { id: 'adminChat', label: '💬 ჩათები' },
-                      { id: 'vendors', label: '🏪 ვენდერები' },
-                      { id: 'categories', label: 'კატეგორიები' },
-                      { id: 'brands', label: '🏷️ ბრენდები' },
-                      { id: 'products', label: 'პროდუქცია' },
-                      { id: 'banners', label: 'ბანერები' },
-                      { id: 'builder', label: 'Page Builder' },
-                      { id: 'coupons', label: 'პრომოები' },
-                      { id: 'security', label: 'უსაფრთხოება' },
-                      { id: 'cms', label: 'საიტის CMS' },
-                      { id: 'policyEditor', label: '📜 წესები' }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setAdminActiveSubTab(tab.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                          adminActiveSubTab === tab.id ? 'bg-emerald-500 text-slate-950 shadow' : 'bg-slate-950 text-slate-300 hover:bg-slate-800'
-                        }`}
-                      >
-                        {tab.label}
+              <div className="space-y-5">
+                <div className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                  <div className="flex gap-2">
+                    {['dashboardPro', 'products', 'orders', 'security'].map(sub => (
+                      <button key={sub} onClick={() => setAdminActiveSubTab(sub)} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminActiveSubTab === sub ? 'bg-emerald-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>
+                        {sub === 'dashboardPro' ? '📊 Dashboard' : sub === 'products' ? '📦 პროდუქცია' : sub === 'orders' ? '📋 შეკვეთები' : '🔒 უსაფრთხოება'}
                       </button>
                     ))}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-1.5 rounded-xl text-xs font-bold">გასვლა</button>
-                  </div>
+                  <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">გასვლა</button>
                 </div>
 
-                {/* --- PROFESSIONAL DASHBOARD --- */}
                 {adminActiveSubTab === 'dashboardPro' && (
-                  <div className="space-y-5 w-full">
-                    <div className="bg-gradient-to-r from-emerald-900/40 via-slate-900 to-slate-900 p-5 rounded-2xl border border-emerald-500/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                      <div>
-                        <span className="text-emerald-400 font-bold text-[10px] uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">ბიზნესის სრული კონტროლი</span>
-                        <h2 className="text-xl font-black text-white mt-1">📊 ადმინისტრატორის მთავარი პანელი</h2>
-                        <p className="text-slate-400 text-xs">რეალური მონაცემები და ფინანსური მაჩვენებლები განახლებულია რეალურ დროში.</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={handleManualRefresh} className="bg-slate-950 border border-emerald-500/40 text-emerald-300 px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-slate-900 transition flex items-center gap-1.5">
-                          <RefreshCw className="w-3.5 h-3.5" /> განახლება
-                        </button>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                      <p className="text-slate-400 text-xs font-bold">შემოსავალი</p>
+                      <p className="text-xl font-black text-emerald-400 mt-1">{proAnalytics.totalRevenueGEL} ₾</p>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 w-full">
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>💰 სრული შემოსავალი</span>
-                          <TrendingUp className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <div className="text-2xl font-black text-emerald-400 mt-2">{proAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</div>
-                        <p className="text-[10px] text-slate-500 mt-1">ჩაბარებული შეკვეთებიდან</p>
-                      </div>
-
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>💎 სავარაუდო წმინდა მოგება</span>
-                          <DollarSign className="w-4 h-4 text-teal-400" />
-                        </div>
-                        <div className="text-2xl font-black text-teal-400 mt-2">{proAnalytics.netProfitGEL.toLocaleString('ka-GE')} ₾</div>
-                        <p className="text-[10px] text-slate-500 mt-1">შემოსავალი მინუს თვითღირებულება</p>
-                      </div>
-
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>📦 შეკვეთები (სულ / ახალი)</span>
-                          <PackageCheck className="w-4 h-4 text-blue-400" />
-                        </div>
-                        <div className="text-2xl font-black text-blue-400 mt-2">{proAnalytics.totalOrdersCount} <span className="text-xs text-slate-400">({proAnalytics.pendingOrdersCount} ახალი)</span></div>
-                        <p className="text-[10px] text-slate-500 mt-1">საშ. ღირებულება: {proAnalytics.avgOrderValue} ₾</p>
-                      </div>
-
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between shadow-lg">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>⚠️ დაბალი მარაგის პროდუქტები</span>
-                          <AlertCircle className="w-4 h-4 text-amber-400" />
-                        </div>
-                        <div className="text-2xl font-black text-amber-400 mt-2">{proAnalytics.lowStockProducts.length} ცალი</div>
-                        <p className="text-[10px] text-slate-500 mt-1">საჭიროებს მარაგის შევსებას</p>
-                      </div>
+                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                      <p className="text-slate-400 text-xs font-bold">შეკვეთები</p>
+                      <p className="text-xl font-black text-blue-400 mt-1">{orders.length}</p>
                     </div>
-
-                    {proAnalytics.lowStockProducts.length > 0 && (
-                      <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-4 space-y-3">
-                        <h3 className="font-bold text-amber-400 text-xs flex items-center gap-1.5">
-                          <AlertCircle className="w-4 h-4" /> ყურადღება: პროდუქტები ამოწურვის პირასაა (მარაგი &le; 3)
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                          {proAnalytics.lowStockProducts.map(p => (
-                            <div key={p.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-2">
-                                <img src={p.image} alt="" className="w-8 h-8 object-contain bg-slate-900 rounded-lg p-0.5" />
-                                <div>
-                                  <h4 className="font-bold text-white text-[11px] line-clamp-1">{p.name}</h4>
-                                  <p className="text-amber-400 text-[10px]">ვენდერი: {p.vendor || 'GEOSTORE'}</p>
-                                </div>
-                              </div>
-                              <span className="bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-lg text-[10px]">
-                                მარაგი: {p.stock}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* --- CRM SEGMENTATION --- */}
-                {adminActiveSubTab === 'crmPro' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                      <Users className="w-4 h-4 text-emerald-400" /> 👥 მომხმარებელთა ავტომატური CRM სეგმენტაცია
-                    </h3>
-                    <div className="space-y-2.5">
-                      {crmAnalytics.map(u => (
-                        <div key={u.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-bold text-white text-sm">{u.name}</p>
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                                u.segment.includes('VIP') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              }`}>{u.segment}</span>
-                            </div>
-                            <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone} | შეკვეთები: <b>{u.realOrdersCount}</b> | სულ დახარჯული: <b className="text-emerald-400">{u.realTotalSpent} ₾</b></p>
-                            {u.notes && <p className="text-slate-500 text-[10px] mt-0.5 italic">📝 შენიშვნა: {u.notes}</p>}
-                          </div>
-                          <button onClick={() => {
-                            const note = prompt('შენიშვნა მომხმარებელზე:', u.notes || '');
-                            if(note !== null) setUsersList(usersList.map(x => x.id === u.id ? {...x, notes: note} : x));
-                          }} className="bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-white font-bold transition">
-                            შენიშვნის დამატება
-                          </button>
-                        </div>
-                      ))}
+                    <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                      <p className="text-slate-400 text-xs font-bold">ვიზიტორები</p>
+                      <p className="text-xl font-black text-teal-400 mt-1">{visitorCount}</p>
                     </div>
                   </div>
                 )}
 
-                {/* --- RETURNS & REFUNDS --- */}
-                {adminActiveSubTab === 'returnsPro' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                        <RotateCcw className="w-4 h-4 text-rose-400" /> 🔄 პროდუქციის დაბრუნებებისა და Refund-ების მართვა
-                      </h3>
-                      <button onClick={() => {
-                        const orderId = prompt('შეკვეთის ID (მაგ: ORD-1001):');
-                        const customerName = prompt('მყიდველის სახელი:');
-                        const productName = prompt('პროდუქტის დასახელება:');
-                        const reason = prompt('დაბრუნების მიზეზი:');
-                        if (orderId && customerName && productName) {
-                          const newRet = {
-                            id: `RET-${Math.floor(100 + Math.random() * 900)}`,
-                            orderId,
-                            customerName,
-                            productName,
-                            reason: reason || 'წუნდებული / არ მოუხდა',
-                            status: 'განხილვაში',
-                            refundStatus: 'არ არის დაბრუნებული',
-                            date: new Date().toISOString().slice(0, 10),
-                            adminNotes: ''
-                          };
-                          setReturnsList([newRet, ...returnsList]);
-                          showToast('✅ დაბრუნების მოთხოვნა შეიქმნა!');
-                        }
-                      }} className="bg-rose-500 hover:bg-rose-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl text-xs transition">
-                        + ახალი მოთხოვნა
-                      </button>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      {returnsList.length === 0 ? (
-                        <p className="text-slate-500 text-xs">დაბრუნების მოთხოვნები არ არის.</p>
-                      ) : (
-                        returnsList.map(r => (
-                          <div key={r.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-rose-400 text-sm">#{r.id}</span>
-                                <span className="text-white font-bold">{r.productName}</span>
-                                <span className="text-slate-500 text-[10px]">({r.orderId})</span>
-                              </div>
-                              <p className="text-slate-400 text-[11px] mt-1">
-                                👤 მყიდველი: <b>{r.customerName}</b> | მიზეზი: <span className="text-amber-300">{r.reason}</span>
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                              <select 
-                                value={r.status} 
-                                onChange={e => setReturnsList(returnsList.map(x => x.id === r.id ? {...x, status: e.target.value} : x))}
-                                className="bg-slate-900 border border-slate-700 text-emerald-300 font-bold px-2.5 py-1 rounded-lg outline-none text-xs"
-                              >
-                                <option value="განხილვაში">🟡 განხილვაში</option>
-                                <option value="დამტკიცებული">🟢 დამტკიცებული</option>
-                                <option value="უარყოფილი">🔴 უარყოფილი</option>
-                                <option value="დასრულებული">✅ დასრულებული</option>
-                              </select>
-                              <button onClick={() => setReturnsList(returnsList.filter(x => x.id !== r.id))} className="text-rose-400 hover:text-rose-300 p-1 bg-rose-500/10 rounded-lg">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* --- SUPPLIERS & PURCHASING MANAGEMENT --- */}
-                {adminActiveSubTab === 'suppliersPro' && (
-                  <div className="space-y-5 w-full">
-                    <div className="bg-slate-900 p-5 rounded-2xl space-y-4 border border-slate-800 w-full">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                          <Truck className="w-5 h-5 text-teal-400" /> 🚚 მომწოდებლების და შესყიდვების მართვა
-                        </h3>
-                      </div>
-
-                      <form onSubmit={(e) => {
-                        e.preventDefault();
-                        const f = e.target;
-                        const name = f.supName.value.trim();
-                        const contactPerson = f.supContact.value.trim();
-                        const phone = f.supPhone.value.trim();
-                        const email = f.supEmail.value.trim();
-                        const commission = Number(f.supComm.value) || 0;
-
-                        if(!name) return;
-
-                        const newSup = {
-                          id: `sup-${Date.now()}`,
-                          name,
-                          contactPerson,
-                          phone,
-                          email,
-                          commission,
-                          status: 'აქტიური'
-                        };
-
-                        setVendorsList([...vendorsList, newSup]);
-                        f.reset();
-                        showToast('✅ მომწოდებელი წარმატებით დაემატა!');
-                      }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <input type="text" name="supName" required placeholder="მომწოდებლის სახელი *" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        <input type="text" name="supContact" placeholder="საკონტაქტო პირი" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        <input type="text" name="supPhone" placeholder="ტელეფონი" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        <input type="email" name="supEmail" placeholder="ელ-ფოსტა" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        <div className="flex gap-2">
-                          <input type="number" name="supComm" placeholder="საკომ. %" className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white outline-none flex-1" />
-                          <button type="submit" className="bg-teal-500 text-slate-950 font-black px-3 py-2 rounded-xl">დამატება</button>
-                        </div>
-                      </form>
-
-                      <div className="space-y-2.5 pt-2">
-                        {vendorsList.map(sup => (
-                          <div key={sup.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-teal-300 text-sm">🏪 {sup.name}</span>
-                                <span className="bg-teal-500/20 text-teal-300 text-[9px] px-2 py-0.5 rounded-full font-bold">{sup.status}</span>
-                              </div>
-                              <p className="text-slate-400 text-[11px] mt-1">
-                                👤 პირი: <b>{sup.contactPerson || 'არ არის'}</b> | 📞 {sup.phone} | ✉️ {sup.email || 'არ არის'} | საკომისიო: <b className="text-emerald-400">{sup.commission}%</b>
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button onClick={() => {
-                                showToast(`📦 მოთხოვნა გაიგზავნა მომწოდებელთან: ${sup.name}`);
-                              }} className="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs">
-                                მარაგის შევსება
-                              </button>
-                              {sup.name !== 'GEOSTORE ოფიციალური' && (
-                                <button onClick={() => setVendorsList(vendorsList.filter(x => x.id !== sup.id))} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-lg">
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* --- ANALYTICS --- */}
-                {adminActiveSubTab === 'analytics' && (
-                  <div className="space-y-5 w-full">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>💰 რეალური შემოსავალი</span>
-                          <TrendingUp className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <div className="text-xl font-black text-emerald-400 mt-2">{proAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</div>
-                        <p className="text-[9px] text-slate-500 mt-1">მხოლოდ ჩაბარებული შეკვეთებიდან</p>
-                      </div>
-
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>👥 რეალური ვიზიტორები</span>
-                          <Globe className="w-4 h-4 text-blue-400" />
-                        </div>
-                        <div className="text-xl font-black text-blue-400 mt-2">{visitorCount}</div>
-                        <p className="text-[9px] text-slate-500 mt-1">საიტზე შემოსვლების თვლა</p>
-                      </div>
-
-                      <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                        <div className="flex justify-between items-center text-slate-400 text-xs font-bold">
-                          <span>🏪 აქტიური ვენდერები</span>
-                          <Store className="w-4 h-4 text-teal-400" />
-                        </div>
-                        <div className="text-xl font-black text-teal-400 mt-2">{vendorsList.length}</div>
-                        <p className="text-[9px] text-slate-500 mt-1">მარკეტფლეისის პარტნიორები</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* --- ORDERS --- */}
-                {adminActiveSubTab === 'orders' && (
-                  <div className="space-y-5 w-full">
-                    <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-bold text-sm md:text-base text-white">📦 აქტიური შეკვეთები ({orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length})</h3>
-                        <div className="flex gap-2">
-                          <button onClick={exportOrdersCSV} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-xl">CSV ექსპორტი</button>
-                        </div>
-                      </div>
-                      <div className="space-y-2.5">
-                        {orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').length === 0 ? (
-                          <p className="text-slate-500 text-xs">აქტიური შეკვეთები არ არის.</p>
-                        ) : (
-                          orders.filter(o => o.status !== 'ჩაბარებულია' && o.status !== 'გაუქმებულია').map(o => (
-                            <div key={o.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
-                              <div>
-                                <span className="font-bold text-emerald-400 text-xs">#{o.id} ({o.date})</span>
-                                <p className="text-slate-300 mt-0.5"><b>მყიდველი:</b> {o.customerName} | 📞 {o.phone}</p>
-                                <p className="text-slate-400 mt-0.5"><b>მისამართი:</b> {o.address}</p>
-                                <div className="mt-1 text-slate-400 text-[11px]">
-                                  {o.items?.map(i => `${i.name} (${i.quantity}ც., ვენდერი: ${i.vendor || 'GEOSTORE'})`).join(', ')}
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end">
-                                <div className="flex flex-col gap-1">
-                                  <label className="text-[9px] text-slate-400">სტატუსი:</label>
-                                  <select 
-                                    value={o.status || 'ახალი'} 
-                                    onChange={async (e) => {
-                                      const updatedStatus = e.target.value;
-                                      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${o.id}`, {
-                                        method: 'PATCH',
-                                        headers: { ...headers, 'Prefer': 'return=minimal' },
-                                        body: JSON.stringify({ status: updatedStatus })
-                                      });
-                                      fetchOrders();
-                                      showToast(`შეკვეთა #${o.id} სტატუსი შეიცვალა: ${updatedStatus}`);
-                                    }}
-                                    className="bg-slate-900 border border-slate-700 text-emerald-300 font-bold px-2.5 py-1 rounded-lg outline-none text-xs"
-                                  >
-                                    <option value="ახალი">🟢 ახალი</option>
-                                    <option value="მზადდება">🟡 მზადდება</option>
-                                    <option value="გზაშია">🔵 გზაშია</option>
-                                    <option value="ჩაბარებულია">✅ ჩაბარებულია</option>
-                                    <option value="გაუქმებულია">❌ გაუქმებულია</option>
-                                  </select>
-                                </div>
-
-                                <span className="font-black text-white text-xs shrink-0">{o.totalGEL} ₾</span>
-                                <button onClick={() => setActiveInvoiceOrder(o)} className="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-white font-bold transition shrink-0 text-xs">ინვოისი</button>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* --- ADMIN CHATS --- */}
-                {adminActiveSubTab === 'adminChat' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                      <MessageSquare className="w-4 h-4 text-emerald-400" /> 💬 მომხმარებელთა ინდივიდუალური ჩათები
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5 h-[360px] overflow-y-auto">
-                        <h4 className="text-[10px] font-bold text-slate-400 uppercase px-1 mb-1">მომხმარებლები ({Object.keys(groupedClients).length})</h4>
-                        {Object.keys(groupedClients).length === 0 ? (
-                          <p className="text-slate-500 text-xs p-2">მესიჯები არ არის.</p>
-                        ) : (
-                          Object.keys(groupedClients).map(clientName => (
-                            <button
-                              key={clientName}
-                              onClick={() => setAdminSelectedClient(clientName)}
-                              className={`w-full text-left p-2.5 rounded-xl text-xs font-bold transition flex justify-between items-center ${
-                                adminSelectedClient === clientName ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-white hover:bg-slate-800'
-                              }`}
-                            >
-                              <span>👤 {clientName}</span>
-                              <span className="text-[9px] opacity-80">({groupedClients[clientName].length})</span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-
-                      <div className="md:col-span-2 bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col h-[360px]">
-                        {!adminSelectedClient ? (
-                          <div className="flex-1 flex items-center justify-center text-slate-500 text-xs">
-                            აირჩიეთ მომხმარებელი სიიდან, რომ ნახოთ მესიჯები და მიწეროთ პასუხი.
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex justify-between items-center border-b border-slate-800 pb-2 mb-2">
-                              <h4 className="font-bold text-emerald-400 text-xs">ჩათი მომხმარებელთან: {adminSelectedClient}</h4>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto space-y-2.5 p-1.5 text-xs">
-                              {(groupedClients[adminSelectedClient] || []).map(m => (
-                                <div key={m.id} className={`flex flex-col ${m.sender === 'ადმინი' ? 'items-end' : 'items-start'}`}>
-                                  <div className={`p-2.5 rounded-xl max-w-[85%] ${m.sender === 'ადმინი' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-900 text-white border border-slate-800'}`}>
-                                    <b>{m.sender}:</b> {m.text}
-                                    {m.image && (
-                                      <img src={m.image} alt="Attachment" className="mt-2 rounded-lg max-h-24 object-cover w-full border border-slate-800" />
-                                    )}
-                                  </div>
-                                  <span className="text-[8px] text-slate-500 mt-0.5">{m.time}</span>
-                                </div>
-                              ))}
-                            </div>
-
-                            <form onSubmit={(e) => {
-                              e.preventDefault();
-                              if(!adminIndividualReply.trim()) return;
-                              handleSendMessage(adminIndividualReply, 'ადმინი');
-                            }} className="flex gap-2 mt-2 pt-2 border-t border-slate-800">
-                              <input 
-                                type="text" 
-                                placeholder={`მიწერეთ პასუხი ${adminSelectedClient}-ს...`}
-                                value={adminIndividualReply}
-                                onChange={e => setAdminIndividualReply(e.target.value)}
-                                className="flex-1 bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs text-white outline-none"
-                              />
-                              <button type="submit" className="bg-emerald-500 text-slate-950 px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1">
-                                <Send className="w-3.5 h-3.5" /> გაგზავნა
-                              </button>
-                            </form>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* --- VENDORS --- */}
-                {adminActiveSubTab === 'vendors' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                      <Store className="w-4 h-4 text-teal-400" /> 🏪 მრავალვენდერიანი მარკეტფლეისის მართვა
-                    </h3>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const vName = e.target.vName.value.trim();
-                      const vPhone = e.target.vPhone.value.trim();
-                      const vComm = Number(e.target.vComm.value) || 0;
-                      if(!vName) return;
-                      const newVendor = {
-                        id: `v-${Date.now()}`,
-                        name: vName,
-                        phone: vPhone || '+995 500 00 00 00',
-                        commission: vComm,
-                        status: 'აქტიური'
-                      };
-                      setVendorsList([...vendorsList, newVendor]);
-                      e.target.reset();
-                      showToast('✅ ვენდერი წარმატებით დაემატა მარკეტფლეისში!');
-                    }} className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-                      <input type="text" name="vName" required placeholder="ვენდერის / მაღაზიის სახელი *" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                      <input type="text" name="vPhone" placeholder="ტელეფონი" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                      <div className="flex gap-2">
-                        <input type="number" name="vComm" placeholder="საკომისიო %" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none flex-1" />
-                        <button type="submit" className="bg-teal-500 text-slate-950 px-3.5 py-2 rounded-xl font-bold">დამატება</button>
-                      </div>
-                    </form>
-
-                    <div className="space-y-2 pt-1">
-                      {vendorsList.map(v => (
-                        <div key={v.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                          <div>
-                            <span className="font-bold text-teal-300 text-xs">🏪 {v.name}</span>
-                            <p className="text-slate-400 text-[10px] mt-0.5">📞 {v.phone} | საკომისიო: <b className="text-emerald-400">{v.commission}%</b></p>
-                          </div>
-                          {v.name !== 'GEOSTORE ოფიციალური' && (
-                            <button onClick={() => setVendorsList(vendorsList.filter(x => x.id !== v.id))} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-lg">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* --- CATEGORIES --- */}
-                {adminActiveSubTab === 'categories' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white">კატეგორიების მართვა</h3>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const catName = e.target.catName.value.trim();
-                      if(!catName) return;
-                      setCategories([...categories, { id: `cat-${Date.now()}`, name: catName, icon: '📦' }]);
-                      e.target.reset();
-                      showToast('კატეგორია დაემატა');
-                    }} className="flex gap-2">
-                      <input type="text" name="catName" required placeholder="ახალი კატეგორია..." className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs flex-1 text-white outline-none" />
-                      <button type="submit" className="bg-emerald-500 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold">დამატება</button>
-                    </form>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                      {categories.map(c => (
-                        <div key={c.id || c} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                          <span className="font-bold text-white">{c.name || c}</span>
-                          {(c.name || c) !== 'ყველა' && (
-                            <button onClick={() => setCategories(categories.filter(x => (x.id ? x.id !== c.id : x !== c)))} className="text-rose-400 hover:text-rose-300">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* --- BRANDS --- */}
-                {adminActiveSubTab === 'brands' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                      <Tag className="w-4 h-4 text-emerald-400" /> 🏷️ ბრენდების მართვა
-                    </h3>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const brandName = e.target.brandName.value.trim();
-                      if(!brandName) return;
-                      if(brandsList.includes(brandName)) {
-                        alert('ეს ბრენდი უკვე არსებობს!');
-                        return;
-                      }
-                      setBrandsList([...brandsList, brandName]);
-                      e.target.reset();
-                      showToast('✅ ბრენდი დაემატა');
-                    }} className="flex gap-2">
-                      <input type="text" name="brandName" required placeholder="ახალი ბრენდი (მაგ: Lenovo, JBL)..." className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs flex-1 text-white outline-none" />
-                      <button type="submit" className="bg-emerald-500 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold">დამატება</button>
-                    </form>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                      {brandsList.map(b => (
-                        <div key={b} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                          <span className="font-bold text-emerald-300">{b}</span>
-                          <button onClick={() => setBrandsList(brandsList.filter(x => x !== b))} className="text-rose-400 hover:text-rose-300">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* --- PRODUCTS --- */}
                 {adminActiveSubTab === 'products' && (
-                  <div className="space-y-5 w-full">
-                    <div className="bg-slate-900 p-4 md:p-5 rounded-2xl space-y-3.5 border border-slate-800 w-full">
-                      <h3 className="font-bold text-sm md:text-base text-white">+ ახალი პროდუქტის დამატება (ვენდერის მითითებით)</h3>
-                      
-                      <form onSubmit={(e) => {
-                        e.preventDefault();
-                        const f = e.target;
-                        const prodName = f.name.value;
-                        const userSelectedCat = f.category.value;
-                        const userSelectedVendor = f.vendor.value;
-                        const priceGEL = Number(f.priceGEL.value);
-                        const oldPriceGEL = Number(f.oldPriceGEL.value) || priceGEL;
-                        const discountPercent = Number(f.discountPercent.value) || 0;
-                        const stock = Number(f.stock.value);
-                        const brand = f.brand.value;
-                        const warranty = f.warranty.value;
-                        const isPreOrder = f.isPreOrder.checked;
-                        
-                        const mainImage = uploadedMainImg || f.mainImageUrl.value || 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600';
-                        
-                        let extraImages = [...uploadedExtraImgs];
-                        const extraText = f.extraImageUrls ? f.extraImageUrls.value.trim() : '';
-                        if (extraText) {
-                          const urls = extraText.split(',').map(s => s.trim()).filter(Boolean);
-                          extraImages = [...extraImages, ...urls];
-                        }
-                        if (extraImages.length === 0) extraImages = [mainImage];
-
-                        const newProd = {
-                          id: `prod-${Date.now()}`,
-                          sku: f.sku.value || `GEO-${Math.floor(Math.random() * 1000)}`,
-                          name: prodName,
-                          category: userSelectedCat,
-                          brand,
-                          vendor: userSelectedVendor,
-                          priceGEL,
-                          oldPriceGEL,
-                          costPriceGEL: priceGEL * 0.75,
-                          discountPercent,
-                          stock,
-                          image: mainImage,
-                          images: extraImages,
-                          description: f.description.value,
-                          warranty,
-                          isHot: discountPercent > 0,
-                          isPreOrder
-                        };
-
-                        setProducts([newProd, ...products]);
-                        f.reset();
-                        setUploadedMainImg('');
-                        setUploadedExtraImgs([]);
-                        showToast(`✅ პროდუქტი წარმატებით დაემატა მარკეტფლეისში!`);
-                      }} className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                        
-                        <input type="text" name="name" required placeholder="პროდუქტის დასახელება *" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        <input type="text" name="sku" placeholder="SKU კოდი" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[9px] text-slate-400">კატეგორია</label>
-                          <select name="category" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none">
-                            {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
-                          </select>
+                  <div className="bg-slate-900 p-5 rounded-2xl space-y-4 border border-slate-800">
+                    <h3 className="font-bold text-sm text-white">პროდუქციის დამატება</h3>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const newProd = { ...newProductForm, id: `prod-${Date.now()}`, image: uploadedMainImg || newProductForm.image };
+                      setProducts([newProd, ...products]);
+                      setUploadedMainImg('');
+                      showToast('✅ პროდუქტი დაემატა!');
+                    }} className="space-y-2 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <input type="text" placeholder="სახელწოდება" value={newProductForm.name} onChange={e => setNewProductForm({...newProductForm, name: e.target.value})} className="w-full bg-slate-900 p-2 rounded text-xs text-white outline-none" />
+                      <input type="number" placeholder="ფასი (₾)" value={newProductForm.priceGEL} onChange={e => setNewProductForm({...newProductForm, priceGEL: Number(e.target.value)})} className="w-full bg-slate-900 p-2 rounded text-xs text-white outline-none" />
+                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2 rounded text-xs font-bold">+ დამატება</button>
+                    </form>
+                    <div className="space-y-2">
+                      {products.map(p => (
+                        <div key={p.id} className="bg-slate-950 p-2.5 rounded-xl text-xs flex justify-between items-center border border-slate-800">
+                          <span>{p.name} ({p.priceGEL} ₾)</span>
+                          <button onClick={() => setProducts(products.filter(x => x.id !== p.id))} className="text-rose-400 font-bold">წაშლა</button>
                         </div>
-
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[9px] text-slate-400">მომწოდებელი (ვენდერი)</label>
-                          <select name="vendor" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none">
-                            {vendorsList.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
-                          </select>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[9px] text-slate-400">ბრენდი</label>
-                          <select name="brand" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none">
-                            {brandsList.map(b => <option key={b} value={b}>{b}</option>)}
-                          </select>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[9px] text-slate-400">გარანტია</label>
-                          <input type="text" name="warranty" placeholder="1 წელი" className="bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 md:col-span-2">
-                          <input type="number" name="priceGEL" required placeholder="აქტ. ფასი (₾) *" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                          <input type="number" name="oldPriceGEL" placeholder="ძველი ფასი (₾)" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                          <input type="number" name="discountPercent" placeholder="ფასდაკლება %" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                        </div>
-
-                        <input type="number" name="stock" required placeholder="მარაგი *" className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-
-                        <div className="flex items-center gap-2 md:col-span-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                          <input type="checkbox" name="isPreOrder" id="isPreOrder" className="rounded accent-emerald-500 w-3.5 h-3.5" />
-                          <label htmlFor="isPreOrder" className="text-slate-300 font-bold cursor-pointer text-[11px]">წინასწარი შეკვეთა (Pre-Order)</label>
-                        </div>
-
-                        <div className="md:col-span-2 space-y-1.5 bg-slate-950 border border-slate-800 p-3 rounded-xl">
-                          <label className="text-[10px] text-emerald-400 font-bold flex items-center gap-1.5">
-                            <Upload className="w-3.5 h-3.5" /> მთავარი ფოტოს ატვირთვა:
-                          </label>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleMainImageUpload}
-                            className="w-full bg-slate-900 p-1.5 rounded-xl text-[11px] text-slate-300 cursor-pointer file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-bold" 
-                          />
-                          {uploadedMainImg && (
-                            <div className="flex items-center gap-2 mt-1">
-                              <img src={uploadedMainImg} alt="Preview" className="w-10 h-10 object-cover rounded-lg border border-emerald-500" />
-                              <span className="text-[9px] text-emerald-400 font-bold">✓ აიტვირთა</span>
-                            </div>
-                          )}
-                          <input type="url" name="mainImageUrl" placeholder="ან URL ლინკი: https://..." className="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white outline-none mt-1.5" />
-                        </div>
-
-                        <textarea name="description" placeholder="დეტალური აღწერა..." className="md:col-span-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white h-16 outline-none"/>
-                        
-                        <button type="submit" className="md:col-span-2 bg-emerald-500 text-slate-950 font-black py-3 rounded-xl text-xs transition shadow">
-                          დამატება პროდუქტებში
-                        </button>
-                      </form>
-                    </div>
-
-                    <div className="bg-slate-900 p-4 md:p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
-                      <h3 className="font-bold text-sm md:text-base text-white">არსებული პროდუქტები და ვენდერები ({products.length})</h3>
-                      <div className="space-y-2.5">
-                        {products.map(p => (
-                          <div key={p.id} className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 text-xs">
-                            <div className="flex items-center gap-2.5">
-                              <img src={p.image} alt="" className="w-10 h-10 object-contain bg-slate-900 p-1 rounded-lg border border-slate-800 shrink-0" />
-                              <div>
-                                <span className="font-bold text-white text-xs">{p.name}</span>
-                                <p className="text-teal-400 font-semibold text-[10px]">ვენდერი: {p.vendor || 'GEOSTORE'} | ფასი: {p.priceGEL} ₾</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-                              <span className="font-extrabold px-2 py-0.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">
-                                მარაგი: {p.stock} ც.
-                              </span>
-
-                              <button 
-                                onClick={() => {
-                                  setEditingProductId(p.id);
-                                  setEditProductForm({ 
-                                    name: p.name, 
-                                    sku: p.sku || '', 
-                                    category: p.category, 
-                                    brand: p.brand || '',
-                                    vendor: p.vendor || 'GEOSTORE ოფიციალური',
-                                    priceGEL: p.priceGEL, 
-                                    oldPriceGEL: p.oldPriceGEL || 0,
-                                    discountPercent: p.discountPercent || 0,
-                                    stock: p.stock, 
-                                    image: p.image, 
-                                    description: p.description || '',
-                                    warranty: p.warranty || '',
-                                    isPreOrder: p.isPreOrder || false
-                                  });
-                                }} 
-                                className="bg-slate-900 hover:bg-slate-800 text-emerald-300 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition border border-slate-800 text-[11px]"
-                              >
-                                <Edit3 className="w-3 h-3" /> რედაქტირება
-                              </button>
-                              <button onClick={() => setProducts(products.filter(x => x.id !== p.id))} className="text-rose-400 hover:text-rose-300 p-1 bg-rose-500/10 rounded-lg">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* --- BANNERS --- */}
-                {adminActiveSubTab === 'banners' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white">მთავარი ბანერის რედაქტირება</h3>
-                    <div className="space-y-2.5 text-xs">
-                      <input type="text" value={banners[0]?.title || ''} onChange={e => setBanners([{ ...banners[0], title: e.target.value }])} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" placeholder="სათაური" />
-                      <input type="text" value={banners[0]?.subtitle || ''} onChange={e => setBanners([{ ...banners[0], subtitle: e.target.value }])} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" placeholder="ქვესათაური" />
-                      <input type="url" value={banners[0]?.image || ''} onChange={e => setBanners([{ ...banners[0], image: e.target.value }])} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" placeholder="სურათის URL" />
+                {adminActiveSubTab === 'orders' && (
+                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-sm text-white">შეკვეთები</h3>
+                      <button onClick={exportOrdersCSV} className="bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-xl text-xs font-bold">CSV ექსპორტი</button>
                     </div>
-                  </div>
-                )}
-
-                {/* --- PAGE BUILDER --- */}
-                {adminActiveSubTab === 'builder' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-2.5 max-w-lg border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white">🎨 Page Builder (სექციები)</h3>
-                    {sections.map((sec) => (
-                      <div key={sec.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                        <span className="text-white font-bold">{sec.name} ({sec.visible ? '🟢 ჩართული' : '🔴 დამალული'})</span>
-                        <button onClick={() => setSections(sections.map(s => s.id === sec.id ? { ...s, visible: !s.visible } : s))} className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-white font-bold text-[11px]">
-                          {sec.visible ? 'დამალვა' : 'ჩვენება'}
-                        </button>
+                    {orders.map(o => (
+                      <div key={o.id} className="bg-slate-950 p-3 rounded-xl text-xs flex justify-between items-center border border-slate-800">
+                        <div>
+                          <p className="font-bold text-emerald-400">#{o.id} - {o.customerName} ({o.totalGEL} ₾)</p>
+                          <p className="text-slate-400">{o.address}</p>
+                        </div>
+                        <span className="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded font-bold">{o.status}</span>
                       </div>
                     ))}
-                  </div>
-                )}
-
-                {/* --- COUPONS --- */}
-                {adminActiveSubTab === 'coupons' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl space-y-3 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white">პრომო კოდები</h3>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const code = e.target.code.value.trim().toUpperCase();
-                      const disc = Number(e.target.disc.value);
-                      if(!code) return;
-                      setCoupons([...coupons, { code, discountPercent: disc }]);
-                      e.target.reset();
-                      showToast('პრომო კოდი დაემატა');
-                    }} className="flex gap-2">
-                      <input type="text" name="code" required placeholder="კოდი (GEO10)" className="bg-slate-950 border border-slate-800 p-2 rounded-xl text-xs uppercase text-white outline-none" />
-                      <input type="number" name="disc" required placeholder="%" className="bg-slate-950 border border-slate-800 p-2 rounded-xl text-xs w-16 text-white outline-none" />
-                      <button type="submit" className="bg-emerald-500 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold">დამატება</button>
-                    </form>
-                    <div className="flex flex-wrap gap-2">
-                      {coupons.map((c, i) => (
-                        <span key={i} className="bg-slate-950 px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-800 flex items-center gap-1.5 text-emerald-400">
-                          {c.code} (-{c.discountPercent}%)
-                          <button onClick={() => setCoupons(coupons.filter((_, idx) => idx !== i))} className="text-rose-400">×</button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* --- SECURITY --- */}
-                {adminActiveSubTab === 'security' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl max-w-sm space-y-3.5 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5"><Key className="w-4 h-4 text-emerald-400"/> ადმინის პაროლის შეცვლა</h3>
-                    <form onSubmit={handleChangeAdminPassword} className="space-y-2.5">
-                      <input type="text" value={adminSecurityForm.username} onChange={e => setAdminSecurityForm({...adminSecurityForm, username: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-                      <input type="password" required placeholder="ძველი პაროლი" value={adminSecurityForm.oldPassword} onChange={e => setAdminSecurityForm({...adminSecurityForm, oldPassword: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-                      <input type="password" required placeholder="ახალი პაროლი" value={adminSecurityForm.newPassword} onChange={e => setAdminSecurityForm({...adminSecurityForm, newPassword: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-bold text-xs">განახლება</button>
-                    </form>
-                  </div>
-                )}
-
-                {/* --- CMS --- */}
-                {adminActiveSubTab === 'cms' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl max-w-lg space-y-4 border border-slate-800 text-xs w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5"><Settings className="w-4 h-4 text-emerald-400"/> საიტის სრული რედაქტორი (CMS)</h3>
-                    
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      showToast('✅ საიტის მონაცემები წარმატებით განახლდა!');
-                    }} className="space-y-3.5">
-                      
-                      <div className="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <label className="text-emerald-400 font-bold flex items-center gap-1">
-                          <Palette className="w-3.5 h-3.5" /> საიტის ძირითადი ფერი (Theme Accent):
-                        </label>
-                        <select 
-                          value={siteSettings.primaryColor || 'emerald'} 
-                          onChange={e => setSiteSettings({...siteSettings, primaryColor: e.target.value})}
-                          className="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white outline-none"
-                        >
-                          <option value="emerald">🟢 ზურმუხტისფერი (Emerald)</option>
-                          <option value="blue">🔵 კლასიკური ლურჯი (Blue)</option>
-                          <option value="violet">🟣 იისფერი (Violet)</option>
-                          <option value="amber">🟠 ქარვისფერი (Amber)</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <label className="text-emerald-400 font-bold">💱 აშშ დოლარის (USD) კურსი ლარში:</label>
-                        <input 
-                          type="number" 
-                          step="0.01" 
-                          value={usdRate} 
-                          onChange={e => setUsdRate(Number(e.target.value))} 
-                          className="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white outline-none" 
-                        />
-                      </div>
-
-                      <div className="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <label className="text-emerald-400 font-bold">📢 სარეკლამო Popup ფანჯრის მართვა:</label>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <input 
-                            type="checkbox" 
-                            id="popupActiveCheck"
-                            checked={siteSettings.popupAnnouncementActive} 
-                            onChange={e => setSiteSettings({...siteSettings, popupAnnouncementActive: e.target.checked})} 
-                            className="rounded accent-emerald-500 w-3.5 h-3.5"
-                          />
-                          <label htmlFor="popupActiveCheck" className="text-slate-200 cursor-pointer font-bold text-[11px]">Popup ფანჯრის ჩართვა საიტზე</label>
-                        </div>
-                        <input 
-                          type="text" 
-                          placeholder="Popup სათაური" 
-                          value={siteSettings.popupTitle} 
-                          onChange={e => setSiteSettings({...siteSettings, popupTitle: e.target.value})} 
-                          className="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white outline-none mb-1.5" 
-                        />
-                        <textarea 
-                          placeholder="Popup ტექსტი..." 
-                          value={siteSettings.popupText} 
-                          onChange={e => setSiteSettings({...siteSettings, popupText: e.target.value})} 
-                          className="w-full bg-slate-900 border border-slate-800 p-2 rounded-xl text-white outline-none h-14" 
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-slate-400">მაღაზიის სათაური (ლოგო):</label>
-                        <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-slate-400">ზედა ზოლის ტექსტი (Header Ticker):</label>
-                        <input type="text" value={siteSettings.topBarText} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-slate-400">მთავარი ბანერის სათაური (Hero Title):</label>
-                        <input type="text" value={siteSettings.heroTitle} onChange={e => setSiteSettings({...siteSettings, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                      </div>
-
-                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">ცვლილებების შენახვა</button>
-                    </form>
-                  </div>
-                )}
-
-                {/* --- POLICY EDITOR --- */}
-                {adminActiveSubTab === 'policyEditor' && (
-                  <div className="bg-slate-900 p-5 rounded-2xl max-w-xl space-y-3.5 border border-slate-800 w-full">
-                    <h3 className="font-bold text-sm md:text-base text-white flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-emerald-400" /> წესების და პოლიტიკის რედაქტორი (AI ავტომატურად ითვისებს)
-                    </h3>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      showToast('✅ წესები და პოლიტიკა განახლდა!');
-                    }} className="space-y-2.5 text-xs">
-                      <div className="space-y-1">
-                        <label className="text-slate-400 font-bold">1. ზოგადი დებულებები:</label>
-                        <textarea value={storePolicy.general} onChange={e => setStorePolicy({...storePolicy, general: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none h-16" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-slate-400 font-bold">2. შეკვეთა და მიწოდება:</label>
-                        <textarea value={storePolicy.delivery} onChange={e => setStorePolicy({...storePolicy, delivery: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none h-16" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-slate-400 font-bold">3. გარანტია და დაბრუნება:</label>
-                        <textarea value={storePolicy.warranty} onChange={e => setStorePolicy({...storePolicy, warranty: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none h-16" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-slate-400 font-bold">4. კონფიდენციალურობა:</label>
-                        <textarea value={storePolicy.privacy} onChange={e => setStorePolicy({...storePolicy, privacy: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none h-16" />
-                      </div>
-                      <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">ცვლილებების შენახვა</button>
-                    </form>
                   </div>
                 )}
               </div>
@@ -2450,680 +1000,52 @@ export default function App() {
         )}
       </main>
 
+      {/* CHECKOUT MODAL */}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 relative space-y-3.5">
+            <button onClick={() => setIsCheckoutOpen(false)} className="absolute top-3 right-3 text-slate-400">✕</button>
+            <h3 className="text-sm font-bold text-white">შეკვეთის გაფორმება</h3>
+            <form onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(quickBuyProduct ? [quickBuyProduct] : cart, quickBuyProduct ? quickBuyProduct.priceGEL : cartTotalGEL, !!quickBuyProduct); }} className="space-y-2.5">
+              <input type="text" required placeholder="სახელი" value={checkoutForm.name} onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+              <input type="tel" required placeholder="ტელეფონი" value={checkoutForm.phone} onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+              <input type="text" required placeholder="მისამართი" value={checkoutForm.address} onChange={e => setCheckoutForm({...checkoutForm, address: e.target.value})} className="w-full bg-slate-950 p-2.5 rounded text-xs text-white outline-none" />
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded font-black text-xs">დადასტურება</button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* AI ASSISTANT MODAL */}
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3">
-          <div className="bg-slate-900 border border-emerald-500/50 rounded-2xl max-w-xl w-full h-[560px] flex flex-col relative shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 p-3 text-slate-950 flex justify-between items-center font-black shrink-0">
-              <div className="flex items-center gap-2">
-                <Bot className="w-6 h-6 text-slate-950 animate-bounce" />
-                <div>
-                  <h3 className="text-sm leading-none">🤖 GEOSTORE Live-Knowledge AI ასისტენტი</h3>
-                  <p className="text-[9px] text-slate-900/80 font-bold mt-0.5">პირდაპირი წვდომა პროდუქტებსა და წესებზე</p>
-                </div>
-              </div>
-              <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">✕</button>
+          <div className="bg-slate-900 border border-emerald-500/50 rounded-2xl max-w-xl w-full h-[500px] flex flex-col relative">
+            <div className="bg-emerald-500 p-3 text-slate-950 font-black flex justify-between items-center shrink-0">
+              <span className="flex items-center gap-1"><Bot className="w-5 h-5" /> AI ასისტენტი</span>
+              <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-6 h-6 rounded-full text-xs">✕</button>
             </div>
-
-            <div className="bg-slate-950 p-2.5 border-b border-slate-800 grid grid-cols-2 gap-2 text-xs shrink-0">
-              <div>
-                <label className="text-slate-400 text-[9px] font-bold block mb-0.5">
-                  მაქს. ბიუჯეტი: <span className="text-emerald-400 font-black">{aiBudget} ₾</span>
-                </label>
-                <input 
-                  type="range" 
-                  min="200" 
-                  max="10000" 
-                  step="200" 
-                  value={aiBudget} 
-                  onChange={e => setAiBudget(Number(e.target.value))} 
-                  className="w-full accent-emerald-500 cursor-pointer h-1" 
-                />
-              </div>
-
-              <div>
-                <label className="text-slate-400 text-[9px] font-bold block mb-0.5">კატეგორია:</label>
-                <select 
-                  value={aiCategory} 
-                  onChange={e => setAiCategory(e.target.value)} 
-                  className="w-full bg-slate-900 border border-slate-800 p-1 rounded-xl text-white text-xs outline-none"
-                >
-                  <option value="ყველა">✨ ყველა კატეგორია</option>
-                  {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
-                </select>
-              </div>
-            </div>
-
             <div className="flex-1 p-3.5 overflow-y-auto space-y-3 text-xs bg-slate-950/60">
               {aiChatHistory.map((msg, idx) => (
                 <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`p-3 rounded-2xl max-w-[90%] leading-relaxed whitespace-pre-line ${
-                    msg.sender === 'user' 
-                      ? 'bg-emerald-500 text-slate-950 font-extrabold shadow' 
-                      : 'bg-slate-900 border border-emerald-500/30 text-white shadow-lg'
-                  }`}>
+                  <div className={`p-3 rounded-2xl max-w-[90%] ${msg.sender === 'user' ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-white'}`}>
                     <p>{msg.text}</p>
-                    
-                    {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2.5 pt-2.5 border-t border-slate-800">
-                        {msg.recommendedProducts.map(prod => (
-                          <div key={prod.id} className="bg-slate-950 p-2 rounded-xl border border-slate-800 flex flex-col justify-between items-start gap-1.5">
-                            <div className="flex items-center gap-2">
-                              <img src={prod.image} alt="" className="w-8 h-8 object-contain bg-slate-900 rounded-lg p-1 border border-slate-800 shrink-0" />
-                              <div>
-                                <h5 className="font-bold text-white text-[10px] line-clamp-1">{prod.name}</h5>
-                                <p className="text-emerald-400 font-black text-[11px]">{prod.priceGEL} ₾</p>
-                              </div>
-                            </div>
-                            <button 
-                              onClick={() => { addToCart(prod); setIsAiAssistantOpen(false); }} 
-                              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-1 rounded-lg text-[10px] transition"
-                            >
-                              🛒 კალათაში
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
-
-            <div className="px-3 py-1 bg-slate-950/90 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0">
-              {[
-                { label: '👋 გამარჯობა', text: 'გამარჯობა' },
-                { label: '📜 საიტის წესები', text: 'როგორია საიტის წესები და პოლიტიკა?' },
-                { label: '🚚 მიწოდება', text: 'როგორია მიწოდების პირობები?' },
-                { label: '🛡️ გარანტია', text: 'რა გარანტია მოქმედებს?' },
-                { label: '📱 ტელეფონები', text: 'სმარტფონები მინდა' }
-              ].map((sugg, i) => (
-                <button key={i} onClick={() => handleAiAsk(sugg.text)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold px-2 py-1 rounded-lg shrink-0 transition">
-                  {sugg.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-2.5 bg-slate-900 border-t border-slate-800 shrink-0">
+            <div className="p-2.5 bg-slate-900 border-t border-slate-800">
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
-                <input 
-                  type="text" 
-                  placeholder="ჰკითხეთ AI-ს..." 
-                  value={aiInputText} 
-                  onChange={e => setAiInputText(e.target.value)} 
-                  className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-400"
-                />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-1 shrink-0 shadow transition">
-                  <Send className="w-3.5 h-3.5" /> ძებნა
-                </button>
+                <input type="text" placeholder="ჰკითხეთ AI-ს..." value={aiInputText} onChange={e => setAiInputText(e.target.value)} className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-4 py-2 rounded-xl text-xs">გაგზავნა</button>
               </form>
             </div>
           </div>
         </div>
       )}
 
-      {/* GIFT QUIZ MODAL */}
-      {isGiftQuizOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-teal-500/50 rounded-2xl max-w-md w-full p-5 relative space-y-4 text-xs shadow-xl">
-            <button onClick={() => setIsGiftQuizOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white font-bold text-xs">✕</button>
-            
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
-              <Gift className="w-6 h-6 text-teal-400 animate-pulse" />
-              <div>
-                <h3 className="text-sm font-black text-white">🎁 ჭკვიანი სასაჩუქრე ასისტენტი</h3>
-                <p className="text-[9px] text-teal-300 font-semibold">შეარჩიეთ საჩუქარი 4 სწრაფ ნაბიჯში</p>
-              </div>
-            </div>
-
-            {giftStep === 1 && (
-              <div className="space-y-3">
-                <p className="text-slate-200 font-black text-xs">1. ვისთვის გსურთ საჩუქრის არჩევა?</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['მეუღლე / საყვარელი', 'მშობელი', 'შვილი / მოზარდი', 'მეგობარი / კოლეგა'].map(rec => (
-                    <button 
-                      key={rec} 
-                      onClick={() => { setGiftRecipient(rec); setGiftStep(2); }} 
-                      className="p-3 bg-slate-950 border border-slate-800 hover:border-teal-400 rounded-xl font-bold text-white text-left transition"
-                    >
-                      👤 {rec}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {giftStep === 2 && (
-              <div className="space-y-3">
-                <p className="text-slate-200 font-black text-xs">2. რა შემთხვევისთვის ეძებთ საჩუქარს?</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {['დაბადების დღე 🎂', 'ახალი წელი 🎄', 'იუბილე / დღესასწაული 🎉', 'სიურპრიზი ✨'].map(occ => (
-                    <button 
-                      key={occ} 
-                      onClick={() => { setGiftOccasion(occ); setGiftStep(3); }} 
-                      className="p-3 bg-slate-950 border border-slate-800 hover:border-teal-400 rounded-xl font-bold text-white text-left transition"
-                    >
-                      {occ}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {giftStep === 3 && (
-              <div className="space-y-3">
-                <p className="text-slate-200 font-black text-xs">3. ინტერესი და მაქსიმალური ბიუჯეტი:</p>
-
-                <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold block text-[10px]">ინტერესი:</label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['გეიმინგი / ტექნიკა', 'მუსიკა / აუდიო', 'სმარტფონები', 'ყველაფერი'].map(ins => (
-                      <button 
-                        key={ins} 
-                        onClick={() => setGiftInterest(ins)} 
-                        className={`p-2 rounded-xl font-bold border text-[11px] transition ${
-                          giftInterest === ins ? 'bg-teal-500 text-slate-950 border-teal-300' : 'bg-slate-950 border-slate-800 text-white'
-                        }`}
-                      >
-                        {ins}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-1 pt-1">
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-400 font-bold">მაქსიმალური ბიუჯეტი:</span>
-                    <span className="text-teal-400 font-black">{giftBudgetMax} ₾</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="100" 
-                    max="6000" 
-                    step="100" 
-                    value={giftBudgetMax} 
-                    onChange={e => setGiftBudgetMax(Number(e.target.value))} 
-                    className="w-full accent-teal-400 cursor-pointer h-1" 
-                  />
-                </div>
-
-                <button 
-                  onClick={() => {
-                    const matched = products.filter(p => p.priceGEL <= giftBudgetMax);
-                    setGiftQuizResults(matched.length > 0 ? matched.slice(0, 3) : products.slice(0, 3));
-                    setGiftStep(4);
-                  }} 
-                  className="w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-black py-3 rounded-xl text-xs shadow transition"
-                >
-                  🎁 საჩუქრის გენერირება
-                </button>
-              </div>
-            )}
-
-            {giftStep === 4 && (
-              <div className="space-y-3">
-                <div className="text-center space-y-0.5">
-                  <h4 className="font-black text-teal-400 text-sm">🎉 შერჩეული საჩუქრები!</h4>
-                  <p className="text-slate-400 text-[10px]">{giftRecipient} • {giftOccasion} • {giftBudgetMax}₾</p>
-                </div>
-
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {giftQuizResults.map(p => (
-                    <div key={p.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2.5">
-                      <img src={p.image} alt="" className="w-11 h-11 object-contain bg-slate-900 rounded-lg p-1 shrink-0" />
-                      <div className="flex-1">
-                        <h5 className="font-bold text-white text-[11px] line-clamp-1">{p.name}</h5>
-                        <p className="text-teal-400 font-black text-xs">{p.priceGEL} ₾</p>
-                      </div>
-                      <button 
-                        onClick={() => { addToCart(p); setIsGiftQuizOpen(false); }} 
-                        className="bg-teal-500 text-slate-950 font-black px-2.5 py-1.5 rounded-lg text-[10px] shrink-0"
-                      >
-                        ყიდვა
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <button onClick={() => setGiftStep(1)} className="flex-1 bg-slate-950 border border-slate-800 text-slate-300 font-bold py-2 rounded-xl text-[11px]">
-                    🔄 თავიდან
-                  </button>
-                  <button onClick={() => setIsGiftQuizOpen(false)} className="bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-[11px]">
-                    დახურვა
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* COMPARISON MODAL */}
-      {isComparisonOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl max-w-2xl w-full p-5 relative space-y-3.5 text-xs shadow-xl">
-            <button onClick={() => setIsComparisonOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white text-xs">✕</button>
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
-              <CheckSquare className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-sm font-black text-white">⚔️ პროდუქტების შედარება</h3>
-            </div>
-
-            {comparisonList.length === 0 ? (
-              <p className="text-slate-400 text-center py-6">შედარების სია ცარიელია.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 overflow-x-auto">
-                {comparisonList.map(prod => (
-                  <div key={prod.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5 flex flex-col justify-between">
-                    <div>
-                      <img src={prod.image} alt="" className="w-20 h-20 object-contain mx-auto bg-slate-900 p-1.5 rounded-xl mb-2" />
-                      <h4 className="font-bold text-white text-xs mb-0.5 line-clamp-1">{prod.name}</h4>
-                      <p className="text-cyan-400 font-black text-sm">{prod.priceGEL} ₾</p>
-                    </div>
-                    <div className="space-y-1 text-slate-300 border-t border-slate-800 pt-2 text-[11px]">
-                      <p><b>ვენდერი:</b> {prod.vendor || 'GEOSTORE'}</p>
-                      <p><b>კატეგორია:</b> {prod.category}</p>
-                      <p><b>მარაგი:</b> {prod.stock} ც.</p>
-                    </div>
-                    <button onClick={() => toggleComparison(prod)} className="w-full bg-rose-500/20 text-rose-400 py-1.5 rounded-xl font-bold border border-rose-500/30 text-[11px]">ამოღება</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* PRICE ALERT MODAL */}
-      {priceAlertModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-sm w-full p-5 relative space-y-3 text-xs shadow-xl">
-            <button onClick={() => setPriceAlertModal(null)} className="absolute top-3 right-3 text-slate-400 hover:text-white text-xs">✕</button>
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
-              <Bell className="w-5 h-5 text-amber-400" />
-              <h3 className="text-sm font-black text-white">🔔 შემატყობინე მარაგში შევსებისას</h3>
-            </div>
-            <p className="text-slate-300 text-[11px]">პროდუქტი: <b className="text-amber-400">{priceAlertModal.name}</b></p>
-            
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if(!alertEmail.trim()) return;
-              showToast('✅ თქვენ წარმატებით გამოიწერეთ შეტყობინება!');
-              setPriceAlertModal(null);
-              setAlertEmail('');
-            }} className="space-y-2.5">
-              <input type="email" required placeholder="თქვენი ელ-ფოსტა..." value={alertEmail} onChange={e => setAlertEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-              <button type="submit" className="w-full bg-amber-500 text-slate-950 font-black py-2.5 rounded-xl shadow text-xs">გამოწერა</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* EDIT PRODUCT MODAL */}
-      {editingProductId && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 relative space-y-3 text-xs shadow-xl">
-            <button onClick={() => setEditingProductId(null)} className="absolute top-3 right-3 text-slate-400 text-xs">✕</button>
-            <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-              <Edit3 className="w-4 h-4 text-emerald-400" /> პროდუქტის რედაქტირება
-            </h3>
-            
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              setProducts(products.map(p => p.id === editingProductId ? {
-                ...p,
-                name: editProductForm.name,
-                sku: editProductForm.sku,
-                category: editProductForm.category,
-                brand: editProductForm.brand,
-                vendor: editProductForm.vendor,
-                priceGEL: Number(editProductForm.priceGEL),
-                oldPriceGEL: Number(editProductForm.oldPriceGEL),
-                discountPercent: Number(editProductForm.discountPercent),
-                stock: Number(editProductForm.stock),
-                image: editProductForm.image,
-                description: editProductForm.description,
-                warranty: editProductForm.warranty,
-                isPreOrder: editProductForm.isPreOrder
-              } : p));
-              setEditingProductId(null);
-              showToast('✅ პროდუქტი წარმატებით განახლდა!');
-            }} className="space-y-2.5">
-              <div className="space-y-1">
-                <label className="text-slate-400 text-[10px]">დასახელება:</label>
-                <input type="text" required value={editProductForm.name} onChange={e => setEditProductForm({...editProductForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-slate-400 text-[10px]">ვენდერი:</label>
-                  <select value={editProductForm.vendor} onChange={e => setEditProductForm({...editProductForm, vendor: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none">
-                    {vendorsList.map(v => <option key={v.id} value={v.name}>{v.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-400 text-[10px]">კატეგორია:</label>
-                  <select value={editProductForm.category} onChange={e => setEditProductForm({...editProductForm, category: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none">
-                    {categories.map(c => <option key={c.id || c} value={c.name || c}>{c.name || c}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-slate-400 text-[10px]">ფასი (₾):</label>
-                  <input type="number" required value={editProductForm.priceGEL} onChange={e => setEditProductForm({...editProductForm, priceGEL: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-                </div>
-                <div>
-                  <label className="text-slate-400 text-[10px]">ძველი ფასი:</label>
-                  <input type="number" value={editProductForm.oldPriceGEL} onChange={e => setEditProductForm({...editProductForm, oldPriceGEL: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-                </div>
-                <div>
-                  <label className="text-slate-400 text-[10px]">ფასდაკლება %:</label>
-                  <input type="number" value={editProductForm.discountPercent} onChange={e => setEditProductForm({...editProductForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-slate-400 text-[10px]">მარაგი:</label>
-                  <input type="number" required value={editProductForm.stock} onChange={e => setEditProductForm({...editProductForm, stock: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-                </div>
-                <div>
-                  <label className="text-slate-400 text-[10px]">გარანტია:</label>
-                  <input type="text" value={editProductForm.warranty} onChange={e => setEditProductForm({...editProductForm, warranty: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
-                <input type="checkbox" checked={editProductForm.isPreOrder} onChange={e => setEditProductForm({...editProductForm, isPreOrder: e.target.checked})} id="editPreOrder" className="rounded accent-emerald-500 w-3.5 h-3.5" />
-                <label htmlFor="editPreOrder" className="text-slate-300 font-bold cursor-pointer text-[11px]">წინასწარი შეკვეთა (Pre-Order)</label>
-              </div>
-              <div className="space-y-1">
-                <label className="text-slate-400 text-[10px]">ფოტოს URL:</label>
-                <input type="url" required value={editProductForm.image} onChange={e => setEditProductForm({...editProductForm, image: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-slate-400 text-[10px]">აღწერა:</label>
-                <textarea value={editProductForm.description} onChange={e => setEditProductForm({...editProductForm, description: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2 rounded-xl text-white outline-none h-16" />
-              </div>
-              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl text-xs">შენახვა</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* QUICK VIEW MODAL */}
-      {selectedProductQuickView && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 relative space-y-3 text-xs shadow-xl">
-            <button onClick={() => setSelectedProductQuickView(null)} className="absolute top-3 right-3 text-slate-400 text-xs">✕</button>
-            <img src={selectedProductQuickView.image} alt="" className="w-36 h-36 object-contain mx-auto bg-slate-950 rounded-xl p-3 border border-slate-800" />
-            <h3 className="text-sm font-bold text-white">{selectedProductQuickView.name}</h3>
-            <p className="text-teal-400 font-bold text-[11px]">🏪 ვენდერი: {selectedProductQuickView.vendor || 'GEOSTORE'}</p>
-            {selectedProductQuickView.images && selectedProductQuickView.images.length > 1 && (
-              <div className="flex gap-1.5 overflow-x-auto py-1">
-                {selectedProductQuickView.images.map((imgUrl, i) => (
-                  <img key={i} src={imgUrl} alt="" onClick={() => setSelectedProductQuickView({...selectedProductQuickView, image: imgUrl})} className="w-10 h-10 object-contain bg-slate-950 rounded-lg cursor-pointer border border-slate-800 hover:border-emerald-500 p-0.5" />
-                ))}
-              </div>
-            )}
-            <p className="text-slate-400 leading-relaxed text-[11px]">{selectedProductQuickView.description}</p>
-            {selectedProductQuickView.warranty && <p className="text-emerald-300 font-bold text-[11px]">🛡️ გარანტია: {selectedProductQuickView.warranty}</p>}
-            <p className="text-teal-400 font-bold text-[11px]">💳 0% განვადება: თვეში ~{Math.round(selectedProductQuickView.priceGEL / 12)} ₾</p>
-            <div className="text-lg font-black text-emerald-400">{formatPrice(selectedProductQuickView.priceGEL)}</div>
-            <button disabled={selectedProductQuickView.stock <= 0} onClick={() => { addToCart(selectedProductQuickView); setSelectedProductQuickView(null); }} className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-black text-xs shadow">კალათაში დამატება</button>
-          </div>
-        </div>
-      )}
-
-      {/* AUTH MODAL */}
-      {isAuthOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 relative space-y-3.5 shadow-xl">
-            <button onClick={() => setIsAuthOpen(false)} className="absolute top-3 right-3 text-slate-400 text-xs">✕</button>
-            <div className="flex gap-3 border-b border-slate-800 pb-2 font-bold text-xs">
-              <button onClick={() => setAuthMode('login')} className={authMode === 'login' ? 'text-emerald-400 border-b-2 border-emerald-400 pb-1' : 'text-slate-500'}>შესვლა</button>
-              <button onClick={() => setAuthMode('register')} className={authMode === 'register' ? 'text-emerald-400 border-b-2 border-emerald-400 pb-1' : 'text-slate-500'}>რეგისტრაცია</button>
-            </div>
-            <form onSubmit={handleAuthSubmit} className="space-y-2.5">
-              {authMode === 'register' && (
-                <>
-                  <input type="text" required placeholder="სახელი *" value={authForm.name} onChange={e => setAuthForm({...authForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-                  <input type="tel" required placeholder="ტელეფონი *" value={authForm.phone} onChange={e => setAuthForm({...authForm, phone: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-                </>
-              )}
-              <input type="email" required placeholder="ელ-ფოსტა *" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-              <input type="password" required placeholder="პაროლი *" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-              
-              <div className="flex items-center gap-2 text-xs text-slate-300">
-                <input 
-                  type="checkbox" 
-                  id="userRemember"
-                  checked={authForm.remember} 
-                  onChange={e => setAuthForm({...authForm, remember: e.target.checked})} 
-                  className="rounded accent-emerald-500"
-                />
-                <label htmlFor="userRemember" className="cursor-pointer text-[11px]">მომიმახსოვრე</label>
-              </div>
-
-              <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-bold text-xs shadow">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* CHECKOUT MODAL */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 relative space-y-3.5 shadow-xl">
-            <button onClick={() => setIsCheckoutOpen(false)} className="absolute top-3 right-3 text-slate-400 text-xs">✕</button>
-            <h3 className="text-sm font-bold text-white">შეკვეთის გაფორმება</h3>
-            <form onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(quickBuyProduct ? [quickBuyProduct] : cart, quickBuyProduct ? quickBuyProduct.priceGEL : cartTotalGEL, !!quickBuyProduct); }} className="space-y-2.5">
-              <input type="text" required placeholder="სახელი და გვარი *" value={checkoutForm.name} onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-              <input type="tel" required placeholder="ტელეფონი *" value={checkoutForm.phone} onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-              <input type="text" required placeholder="მისამართი *" value={checkoutForm.address} onChange={e => setCheckoutForm({...checkoutForm, address: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
-              <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-black text-xs shadow">დადასტურება</button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* INVOICE MODAL */}
-      {activeInvoiceOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white text-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-xl">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-bold text-xs">ინვოისი #{activeInvoiceOrder.id}</h3>
-              <button onClick={() => setActiveInvoiceOrder(null)} className="text-xs">✕</button>
-            </div>
-            <p className="text-[11px]"><b>მყიდველი:</b> {activeInvoiceOrder.customerName} ({activeInvoiceOrder.phone})</p>
-            <p className="text-[11px]"><b>მისამართი:</b> {activeInvoiceOrder.address}</p>
-            <p className="text-[11px]"><b>სტატუსი:</b> {activeInvoiceOrder.status}</p>
-            <div className="text-xs font-bold text-emerald-600">სულ: {activeInvoiceOrder.totalGEL} ₾</div>
-            <button onClick={() => window.print()} className="w-full bg-slate-900 text-white py-2 rounded-xl text-xs font-bold">ბეჭდვა</button>
-          </div>
-        </div>
-      )}
-
-      {/* LIVE CHAT BUTTON / WIDGET */}
-      <div className="fixed bottom-14 md:bottom-5 right-3 md:right-5 z-40">
-        {!isChatOpen ? (
-          <button onClick={() => setIsChatOpen(true)} className="bg-emerald-500 text-slate-950 p-3.5 rounded-full shadow-xl flex items-center justify-center relative hover:scale-105 transition transform">
-            <MessageSquare className="w-5 h-5" />
-          </button>
-        ) : (
-          <div className="bg-slate-900/95 border border-slate-800 rounded-2xl shadow-xl w-72 sm:w-80 md:w-88 overflow-hidden flex flex-col h-[420px] backdrop-blur-xl">
-            <div className="bg-emerald-500 p-3 text-slate-950 font-bold flex justify-between items-center text-xs shadow">
-              <span>მხარდაჭერა (ჩათი) {chatClientName ? `(${chatClientName})` : ''}</span>
-              <div className="flex items-center gap-1.5">
-                <button 
-                  onClick={() => {
-                    if(window.confirm('გსურთ ჩათის დასრულება?')) {
-                      setClientChatView([{ id: 1, sender: 'bot', text: 'გამარჯობა! რით შემიძლია დაგეხმაროთ GEOSTORE-ში?', time: '12:00', image: '' }]);
-                      setChatClientName('');
-                      localStorage.removeItem('geostore_chat_client_name');
-                      showToast('ჩათი დასრულდა');
-                    }
-                  }} 
-                  className="bg-slate-950 text-white px-2 py-0.5 rounded text-[9px]"
-                >
-                  დასრულება
-                </button>
-                <button onClick={() => setIsChatOpen(false)} className="text-xs">✕</button>
-              </div>
-            </div>
-
-            {!chatClientName ? (
-              <div className="flex-1 p-5 flex flex-col justify-center items-center text-center space-y-2.5 bg-slate-950 text-xs">
-                <h4 className="font-bold text-emerald-400 text-xs">გამარჯობა! გთხოვთ შეიყვანოთ თქვენი სახელი</h4>
-                <p className="text-slate-400 text-[10px]">რომ მენეჯერმა იცოდეს ვის ესაუბრება.</p>
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  if(!clientNameInput.trim()) return;
-                  setChatClientName(clientNameInput.trim());
-                  try { localStorage.setItem('geostore_chat_client_name', clientNameInput.trim()); } catch(e){}
-                  showToast('✅ სახელი დაფიქსირდა');
-                }} className="w-full space-y-2">
-                  <input 
-                    type="text" 
-                    required 
-                    placeholder="თქვენი სახელი..." 
-                    value={clientNameInput} 
-                    onChange={e => setClientNameInput(e.target.value)} 
-                    className="w-full bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-white text-xs outline-none" 
-                  />
-                  <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-bold py-2 rounded-xl text-xs">დაწყება</button>
-                </form>
-              </div>
-            ) : (
-              <>
-                <div className="flex-1 p-2.5 overflow-y-auto space-y-2.5 text-xs bg-slate-950">
-                  {clientChatView.map(m => (
-                    <div key={m.id} className={`flex flex-col ${m.sender === chatClientName ? 'items-end' : 'items-start'}`}>
-                      <div className={`p-2.5 rounded-xl max-w-[85%] ${m.sender === chatClientName ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-900 text-white border border-slate-800'}`}>
-                        <b>{m.sender}:</b> {m.text}
-                        {m.image && (
-                          <img src={m.image} alt="Attachment" className="mt-1.5 rounded-lg max-h-32 object-cover w-full border border-slate-800" />
-                        )}
-                      </div>
-                      <span className="text-[8px] text-slate-500 mt-0.5 px-1">{m.time}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="p-2.5 bg-slate-900 border-t border-slate-800 space-y-1.5">
-                  <div className="flex gap-1.5 items-center">
-                    <label className="p-2 rounded-xl border bg-slate-950 text-slate-300 border-slate-800 cursor-pointer hover:bg-slate-800 transition" title="აირჩიეთ ფოტო">
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            const reader = new FileReader();
-                            reader.onload = function(evt) {
-                              handleSendMessage('ფოტო:', chatClientName, evt.target.result);
-                            };
-                            reader.readAsDataURL(e.target.files[0]);
-                          }
-                        }} 
-                      />
-                    </label>
-
-                    <input 
-                      type="text" 
-                      placeholder="შეტყობინება..." 
-                      value={chatInput} 
-                      onChange={e => setChatInput(e.target.value)} 
-                      onKeyDown={(e) => { 
-                        if(e.key === 'Enter') { 
-                          e.preventDefault();
-                          if(!chatInput.trim()) return; 
-                          handleSendMessage(chatInput, chatClientName);
-                        } 
-                      }} 
-                      className="flex-1 bg-slate-950 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none border border-slate-800" 
-                    />
-
-                    <button 
-                      onClick={() => { 
-                        if(!chatInput.trim()) return; 
-                        handleSendMessage(chatInput, chatClientName);
-                      }} 
-                      className="bg-emerald-500 text-slate-950 p-2 rounded-xl font-bold"
-                    >
-                      <Send className="w-3 h-3"/>
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-[11px] text-slate-500 mt-10 space-y-1.5 w-full">
-        <div className="flex justify-center gap-5">
-          <button onClick={() => setActiveTab('policy')} className="hover:text-emerald-400 transition font-bold text-emerald-500">წესები და პოლიტიკა</button>
-          <button onClick={() => setActiveTab('store')} className="hover:text-emerald-400 transition">მთავარი</button>
-        </div>
+      <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-[11px] text-slate-500">
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
-
-      {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800 md:hidden z-40 py-2 px-3 flex justify-around items-center">
-        <button
-          onClick={() => setActiveTab('store')}
-          className={`flex flex-col items-center gap-0.5 text-[9px] font-bold ${activeTab === 'store' ? 'text-emerald-400' : 'text-slate-400'}`}
-        >
-          <Grid className="w-4 h-4" />
-          <span>მაღაზია</span>
-        </button>
-
-        <button
-          onClick={() => setIsAiAssistantOpen(true)}
-          className="flex flex-col items-center gap-0.5 text-[9px] font-black text-slate-950 bg-emerald-400 p-1.5 rounded-xl shadow -mt-3 border border-slate-950 animate-bounce"
-        >
-          <Bot className="w-4 h-4" />
-          <span>AI</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('cart')}
-          className={`flex flex-col items-center gap-0.5 text-[9px] font-bold relative ${activeTab === 'cart' ? 'text-emerald-400' : 'text-slate-400'}`}
-        >
-          <ShoppingBag className="w-4 h-4" />
-          <span>კალათა</span>
-          {cart.length > 0 && (
-            <span className="absolute -top-1 right-1.5 bg-emerald-500 text-slate-950 text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
-              {cart.reduce((a, b) => a + b.quantity, 0)}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => {
-            if (currentUser) {
-              setActiveTab('profile');
-            } else {
-              setAuthMode('login');
-              setIsAuthOpen(true);
-            }
-          }}
-          className={`flex flex-col items-center gap-0.5 text-[9px] font-bold ${activeTab === 'profile' ? 'text-emerald-400' : 'text-slate-400'}`}
-        >
-          <User className="w-4 h-4" />
-          <span>{currentUser ? 'პროფილი' : 'შესვლა'}</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('admin')}
-          className={`flex flex-col items-center gap-0.5 text-[9px] font-bold ${activeTab === 'admin' ? 'text-emerald-400' : 'text-slate-400'}`}
-        >
-          <Settings className="w-4 h-4" />
-          <span>ადმინი</span>
-        </button>
-      </nav>
     </div>
   );
 }
