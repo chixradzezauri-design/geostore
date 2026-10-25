@@ -34,7 +34,6 @@ const sendTelegramNotification = (text) => {
   }).catch(err => console.log("TG Error:", err));
 };
 
-// --- INITIAL MOCK DATA ---
 const INITIAL_CATEGORIES = [
   { id: 'cat-1', name: 'სმარტფონები', icon: '📱' },
   { id: 'cat-2', name: 'ლეპტოპები', icon: '💻' },
@@ -145,7 +144,6 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const [usdRate, setUsdRate] = useState(2.70);
 
-  // PWA Install Prompt State & Browser Intelligence
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -764,23 +762,6 @@ export default function App() {
     }
   };
 
-  const handleExtraImagesUpload = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      const loadedImgs = [];
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          loadedImgs.push(evt.target.result);
-          if (loadedImgs.length === files.length) {
-            setUploadedExtraImgs(prev => [...prev, ...loadedImgs]);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
     const queryLower = queryRaw.toLowerCase();
@@ -887,7 +868,6 @@ export default function App() {
         </div>
       )}
 
-      {/* PWA INSTALL BANNER */}
       {showInstallBanner && (
         <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-24 z-50 bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 text-slate-100 p-4 rounded-3xl shadow-2xl flex items-center justify-between border-2 border-emerald-500/50 backdrop-blur-xl animate-fade-in max-w-lg mx-auto md:mx-0">
           <div className="flex items-center gap-3.5">
@@ -918,7 +898,7 @@ export default function App() {
         </div>
       )}
 
-      {/* SMART BROWSER-AWARE INSTALL MODAL (ლამაზი პრემიუმ შოპინგ ჩანთის იკონით და GEOSTORE წარწერით ქვემოთ) */}
+      {/* პრემიუმ შოპინგ ჩანთის იკონი და GEOSTORE წარწერა (აღარ არის G ასო) */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-4">
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/60 rounded-3xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
@@ -926,7 +906,6 @@ export default function App() {
             
             <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold bg-slate-900 p-2 rounded-full border border-slate-800 transition">✕</button>
             
-            {/* პრემიუმ შოპინგ ჩანთის იკონი და ქვემოთ GEOSTORE წარწერა */}
             <div className="flex flex-col items-center gap-2.5 pt-2">
               <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center shadow-2xl shadow-emerald-500/30 border-2 border-emerald-400/50 text-slate-950">
                 <ShoppingBag className="w-10 h-10 stroke-[2.5]" />
@@ -1106,7 +1085,6 @@ export default function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1 overflow-x-hidden">
-        
         {activeTab === 'store' && (
           <div className="space-y-10 w-full">
             {sections.filter(s => s.visible).map(sec => {
@@ -2252,18 +2230,15 @@ export default function App() {
                     </form>
                   </div>
                 )}
-
               </div>
             )}
           </div>
         )}
-
       </main>
 
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-4">
           <div className="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-2xl w-full h-[620px] flex flex-col relative shadow-2xl overflow-hidden">
-            
             <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 p-4 text-slate-950 flex justify-between items-center font-black shrink-0">
               <div className="flex items-center gap-2">
                 <Bot className="w-7 h-7 text-slate-950 animate-bounce" />
@@ -2368,7 +2343,6 @@ export default function App() {
                 </button>
               </form>
             </div>
-
           </div>
         </div>
       )}
@@ -2505,7 +2479,6 @@ export default function App() {
                 </div>
               </div>
             )}
-
           </div>
         </div>
       )}
@@ -2927,7 +2900,6 @@ export default function App() {
           <span>ადმინი</span>
         </button>
       </nav>
-
     </div>
   );
 }
