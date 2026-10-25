@@ -1,15 +1,20 @@
 {
   "short_name": "GEOSTORE",
-  "name": "GEOSTORE - მრავალვენდერიანი მარკეტფლეისი",
+  "name": "GEOSTORE - N1 ტექნიკის მარკეტფლეისი",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=512",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
-  "start_url": "/",
-  "display": "standalone",
+  "start_url": ".",
+  "background_color": "#030712",
   "theme_color": "#10b981",
-  "background_color": "#020617"
+  "display": "standalone"
 }
