@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 1)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 2 - კუპონები)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Package
+  Plus, Trash2, Users, Store, Tag
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -18,16 +18,18 @@ export default function AdminDashboardPro({
   products,
   setProducts,
   vendorsList,
-  categories,
-  siteSettings,
-  setSiteSettings,
+  coupons,
+  setCoupons,
   formatPrice
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, users, vendors
+  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, users, vendors, coupons
   
-  // პროდუქტის დამატების / რედაქტირების State
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', image: '', description: ''
+  });
+
+  const [couponForm, setCouponForm] = useState({
+    code: '', discountPercent: '', minOrderGEL: ''
   });
 
   if (!adminLoggedIn) {
@@ -91,6 +93,23 @@ export default function AdminDashboardPro({
     setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', image: '', description: '' });
   };
 
+  const handleCreateCoupon = (e) => {
+    e.preventDefault();
+    if (!couponForm.code || !couponForm.discountPercent) return;
+    const newC = {
+      id: `c-${Date.now()}`,
+      code: couponForm.code.toUpperCase(),
+      discountPercent: Number(couponForm.discountPercent),
+      minOrderGEL: Number(couponForm.minOrderGEL) || 0
+    };
+    setCoupons(prev => [newC, ...prev]);
+    setCouponForm({ code: '', discountPercent: '', minOrderGEL: '' });
+  };
+
+  const handleDeleteCoupon = (id) => {
+    setCoupons(prev => prev.filter(c => c.id !== id));
+  };
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 rounded-3xl p-5 gap-4 shadow-xl">
@@ -100,7 +119,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, მომხმარებლები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კუპონები</p>
           </div>
         </div>
         <button 
@@ -116,6 +135,7 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
           { id: 'users', label: '👥 მომხმარებლები', count: usersList?.length || 0 },
           { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 }
         ].map(tab => (
@@ -217,6 +237,37 @@ export default function AdminDashboardPro({
                     </div>
                   </div>
                   <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🎫 კუპონების მართვის ტაბი */}
+      {adminTab === 'coupons' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Tag className="w-5 h-5 text-emerald-400" /> ახალი კუპონის შექმნა
+            </h3>
+            <form onSubmit={handleCreateCoupon} className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <input type="text" placeholder="კოდი (მაგ: GEO2026)" required value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500 uppercase" />
+              <input type="number" placeholder="ფასდაკლება % (მაგ: 15)" required value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black p-3 rounded-xl shadow hover:bg-emerald-400 transition">კუპონის დამატება</button>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm">აქტიური კუპონები ({coupons?.length || 0})</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {coupons?.map(c => (
+                <div key={c.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                  <div>
+                    <h4 className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
+                    <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: {c.discountPercent}%</p>
+                  </div>
+                  <button onClick={() => handleDeleteCoupon(c.id)} className="text-rose-400 hover:text-rose-300 p-2"><Trash2 className="w-4 h-4" /></button>
                 </div>
               ))}
             </div>
