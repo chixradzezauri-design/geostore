@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (კატეგორიების მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ბანერებისა და პრომო აქციების მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -25,6 +25,8 @@ export default function AdminDashboardPro({
   setCoupons,
   categoriesList,
   setCategoriesList,
+  bannersList,
+  setBannersList,
   siteSettings,
   setSiteSettings,
   formatPrice
@@ -46,8 +48,12 @@ export default function AdminDashboardPro({
     name: '', commission: ''
   });
 
-  // ახალი კატეგორიის ფორმა
   const [newCatName, setNewCatName] = useState('');
+
+  // ბანერის ფორმა
+  const [bannerForm, setBannerForm] = useState({
+    title: '', subtitle: '', image: '', link: ''
+  });
 
   const [settingsForm, setSettingsForm] = useState({
     storeName: siteSettings?.storeName || 'GEOSTORE',
@@ -187,7 +193,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // კატეგორიის დამატება
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -203,6 +208,26 @@ export default function AdminDashboardPro({
   const handleDeleteCategory = (catName) => {
     if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
       setCategoriesList(prev => prev.filter(c => c !== catName));
+    }
+  };
+
+  // ბანერის დამატება
+  const handleAddBanner = (e) => {
+    e.preventDefault();
+    if (!bannerForm.title) return;
+    const newB = {
+      id: `b-${Date.now()}`,
+      ...bannerForm,
+      image: bannerForm.image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
+    };
+    setBannersList(prev => [...(prev || []), newB]);
+    setBannerForm({ title: '', subtitle: '', image: '', link: '' });
+    alert('✅ სარეკლამო ბანერი წარმატებით დაემატა!');
+  };
+
+  const handleDeleteBanner = (id) => {
+    if (window.confirm('ნამდვილად გსურთ ამ ბანერის წაშლა?')) {
+      setBannersList(prev => prev.filter(b => b.id !== id));
     }
   };
 
@@ -261,7 +286,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კატეგორიები, ვენდორები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ბანერები, კატეგორიები, ვენდორები</p>
           </div>
         </div>
         <button 
@@ -277,6 +302,7 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'banners', label: '📢 ბანერები', count: bannersList?.length || 0 },
           { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
           { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 },
@@ -469,7 +495,64 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 📂 კატეგორიების მართვის სექცია */}
+      {/* 📢 ბანერების მართვის სექცია */}
+      {adminTab === 'banners' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-emerald-400" /> ახალი სარეკლამო ბანერის დამატება
+            </h3>
+            <form onSubmit={handleAddBanner} className="space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input 
+                  type="text" 
+                  placeholder="სათაური (მაგ: ზაფხულის ფასდაკლება!)" 
+                  required 
+                  value={bannerForm.title} 
+                  onChange={e => setBannerForm({...bannerForm, title: e.target.value})} 
+                  className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="ქვესათაური / აღწერა" 
+                  value={bannerForm.subtitle} 
+                  onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} 
+                  className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+                />
+              </div>
+              <input 
+                type="text" 
+                placeholder="ბანერის ფოტოს URL (სურვილისამებრ)" 
+                value={bannerForm.image} 
+                onChange={e => setBannerForm({...bannerForm, image: e.target.value})} 
+                className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+              />
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
+                ბანერის დამატება
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm">აქტიური ბანერები ({bannersList?.length || 0})</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {bannersList?.map(b => (
+                <div key={b.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs gap-3">
+                  <div className="flex items-center gap-3">
+                    <img src={b.image} alt="" className="w-16 h-12 object-cover rounded-xl border border-slate-800 shrink-0" />
+                    <div>
+                      <h4 className="font-black text-white text-sm">{b.title}</h4>
+                      <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => handleDeleteBanner(b.id)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {adminTab === 'categories' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
