@@ -1,14 +1,12 @@
-// src/App.jsx - ეტაპი 1: საიტის ბაზა, კალათა და მომხმარებლის ავტორიზაცია/რეგისტრაცია
+// src/App.jsx - GEOSTORE სრული მთავარი ფაილი
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  ShoppingBag, Heart, Search, User, ShieldCheck, Truck, RefreshCw, 
-  Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
-  MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
-  Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
-  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud, Smartphone, Laptop, Users, RotateCcw
-} from 'lucide-react';
+import Header from './components/Header';
+import StoreView from './components/StoreView';
+import AdminDashboardPro from './components/AdminDashboardPro';
+import AiAssistantModal from './components/AiAssistantModal';
+import Modals from './components/Modals';
 
-// ================= SUPABASE & CONFIG =================
+// --- CONFIG & INITIAL DATA ---
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
@@ -37,6 +35,12 @@ const INITIAL_CATEGORIES = [
   { id: 'cat-4', name: 'ჭკვიანი საათები', icon: '⌚' }
 ];
 
+const INITIAL_VENDORS = [
+  { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
+  { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' },
+  { id: 'v3', name: 'Apple Shop Tbilisi', commission: 8, status: 'აქტიური' }
+];
+
 const INITIAL_PRODUCTS = [
   {
     id: 'prod-1',
@@ -47,6 +51,7 @@ const INITIAL_PRODUCTS = [
     vendor: 'GEOSTORE ოფიციალური',
     priceGEL: 3899,
     oldPriceGEL: 4299,
+    costPriceGEL: 3200,
     stock: 8,
     image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
     description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით.'
@@ -60,6 +65,7 @@ const INITIAL_PRODUCTS = [
     vendor: 'TechHub Georgia',
     priceGEL: 4499,
     oldPriceGEL: 4899,
+    costPriceGEL: 3800,
     stock: 4,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600',
     description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით.'
@@ -82,27 +88,51 @@ export default function App() {
   }));
 
   const [categories, setCategories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
+  const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
   const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
-  
+  const [banners, setBanners] = useState([]);
+  const [promoSlots, setPromoSlots] = useState([
+    { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-emerald-600/30 to-teal-800/40' },
+    { id: 'ps2', title: '0% განვადება 24 თვემდე', tag: 'FINANCE', bgGradient: 'from-cyan-600/30 to-blue-800/40' },
+    { id: 'ps3', title: 'უფასო მიწოდება თბილისში', tag: 'EXPRESS', bgGradient: 'from-green-600/30 to-emerald-900/40' }
+  ]);
+
   const [activeTab, setActiveTab] = useState('store'); 
+  const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
 
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [comparisonList, setComparisonList] = useState([]);
 
-  // --- მომხმარებლის რეგისტრაცია და ავტორიზაცია ---
+  // --- Auth States ---
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', [
     { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123' }
   ]));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authMode, setAuthMode] = useState('login');
   const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '' });
 
+  // --- Admin States ---
+  const [adminAuth, setAdminAuth] = useState({ username: "admin", password: "admin123" });
+  const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
+    try { return localStorage.getItem('geostore_admin_remember'] === 'true'; } catch { return false; }
+  });
+  const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
+  const [adminError, setAdminError] = useState('');
+
+  // --- Orders & Modals ---
   const [orders, setOrders] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '' });
+  const [quickBuyProduct, setQuickBuyProduct] = useState(null);
+  const [selectedProductQuickView, setSelectedProductQuickView] = useState(null);
+  const [priceAlertModal, setPriceAlertModal] = useState(null);
+
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+  const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
 
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (msg) => {
@@ -110,20 +140,83 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // LocalStorage შენახვა
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data.map(o => ({
+          id: o.id,
+          date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+          customerName: o.customer_name,
+          phone: o.phone,
+          address: o.address,
+          userEmail: o.user_email,
+          items: o.items || [],
+          totalGEL: o.total_gel,
+          status: o.status || 'ახალი'
+        })));
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch(e){} }, [products]);
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
 
-  const addToCart = (product) => {
+  const cartTotalGEL = useMemo(() => {
+    const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
+    return itemsToCalc.reduce((acc, item) => acc + (item.priceGEL * (item.quantity || 1)), 0);
+  }, [cart, quickBuyProduct]);
+
+  const proAnalytics = useMemo(() => {
+    const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
+    const totalRevenueGEL = completedOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
+    return {
+      totalRevenueGEL,
+      netProfitGEL: totalRevenueGEL * 0.25,
+      totalOrdersCount: orders.length,
+      lowStockProducts: products.filter(p => p.stock <= 3)
+    };
+  }, [orders, products]);
+
+  const addToCart = (product, quantity = 1) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity }];
     });
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
+  };
+
+  const toggleWishlist = (product) => {
+    setWishlist(prev => {
+      const exists = prev.some(item => item.id === product.id);
+      if (exists) {
+        showToast('წაიშალა სურვილების სიიდან');
+        return prev.filter(item => item.id !== product.id);
+      }
+      showToast('❤️ დაემატა სურვილების სიაში!');
+      return [...prev, product];
+    });
+  };
+
+  const toggleComparison = (product) => {
+    setComparisonList(prev => {
+      const exists = prev.some(item => item.id === product.id);
+      if (exists) return prev.filter(item => item.id !== product.id);
+      if (prev.length >= 3) { showToast('⚠️ მაქსიმუმ 3 პროდუქტი'); return prev; }
+      showToast('⚔️ დაემატა შედარებაში');
+      return [...prev, product];
+    });
   };
 
   const handleAuthSubmit = (e) => {
@@ -131,33 +224,17 @@ export default function App() {
     if (!authForm.email || !authForm.password) return;
 
     if (authMode === 'register') {
-      if (!authForm.name || !authForm.phone) {
-        alert('გთხოვთ შეავსოთ ყველა ველი!');
-        return;
-      }
-      const exists = usersList.some(u => u.email === authForm.email);
-      if (exists) {
-        alert('ამ ელ-ფოსტით მომხმარებელი უკვე არსებობს!');
-        return;
-      }
-      const newUser = {
-        id: `u-${Date.now()}`,
-        name: authForm.name,
-        email: authForm.email,
-        phone: authForm.phone,
-        password: authForm.password
-      };
+      if (!authForm.name || !authForm.phone) { alert('შეავსეთ ყველა ველი!'); return; }
+      const newUser = { id: `u-${Date.now()}`, ...authForm };
       setUsersList([...usersList, newUser]);
       setCurrentUser(newUser);
       setIsAuthOpen(false);
-      setAuthForm({ name: '', phone: '', email: '', password: '' });
       showToast('🎉 რეგისტრაცია წარმატებულია!');
     } else {
       const found = usersList.find(u => u.email === authForm.email && u.password === authForm.password);
       if (found) {
         setCurrentUser(found);
         setIsAuthOpen(false);
-        setAuthForm({ name: '', phone: '', email: '', password: '' });
         showToast('🔑 ავტორიზაცია წარმატებულია!');
       } else {
         alert('არასწორი ელ-ფოსტა ან პაროლი!');
@@ -165,13 +242,58 @@ export default function App() {
     }
   };
 
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminLoginForm.username === adminAuth.username && adminLoginForm.password === adminAuth.password) {
+      setAdminLoggedIn(true);
+      setAdminError('');
+      if (adminLoginForm.remember) localStorage.setItem('geostore_admin_remember', 'true');
+      showToast('🔓 ადმინ პანელში შესვლა წარმატებულია!');
+    } else {
+      setAdminError('არასწორი მომხმარებელი ან პაროლი!');
+    }
+  };
+
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    if (!checkoutForm.name || !checkoutForm.phone || !checkoutForm.address) return;
+    const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const itemsToOrder = quickBuyProduct ? [{ id: quickBuyProduct.id, name: quickBuyProduct.name, price: quickBuyProduct.priceGEL, quantity: 1 }] : cart.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity }));
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+        method: 'POST',
+        headers: { ...headers, 'Prefer': 'return=representation' },
+        body: JSON.stringify({
+          id: orderId,
+          customer_name: checkoutForm.name,
+          phone: checkoutForm.phone,
+          address: checkoutForm.address,
+          user_email: currentUser ? currentUser.email : 'guest',
+          items: itemsToOrder,
+          total_gel: cartTotalGEL,
+          status: 'ახალი'
+        })
+      });
+      sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n💰 თანხა: ${cartTotalGEL} ₾`);
+      setIsCheckoutOpen(false);
+      setQuickBuyProduct(null);
+      setCart([]);
+      showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
+      fetchOrders();
+    } catch (err) { alert('შეცდომა შეკვეთისას'); }
+  };
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesCategory = selectedCategory === 'ყველა' || p.category === selectedCategory;
+      const matchesVendor = selectedVendorFilter === 'ყველა' || p.vendor === selectedVendorFilter;
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesVendor && matchesSearch;
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, selectedVendorFilter, searchQuery]);
+
+  const formatPrice = (p) => `${p.toLocaleString('ka-GE')} ₾`;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full">
@@ -182,80 +304,113 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('store')}>
-            <div className="bg-emerald-500 p-2 rounded-xl text-slate-950 font-black flex items-center gap-1.5 shadow">
-              <Store className="w-5 h-5" />
-              <span className="text-sm tracking-wide">{siteSettings.storeName}</span>
-            </div>
-          </div>
+      {/* HEADER COMPONENT */}
+      <Header 
+        siteSettings={siteSettings}
+        setActiveTab={setActiveTab}
+        wishlistCount={wishlist.length}
+        cartCount={cart.reduce((a,b)=>a+b.quantity,0)}
+        currentUser={currentUser}
+        setIsAuthOpen={setIsAuthOpen}
+        setAuthMode={setAuthMode}
+        setIsAiAssistantOpen={setIsAiAssistantOpen}
+        setIsGiftQuizOpen={setIsGiftQuizOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
 
-          <div className="flex items-center gap-2">
-            <button onClick={() => setActiveTab('wishlist')} className="relative p-2 bg-slate-800 rounded-xl text-slate-200">
-              <Heart className="w-4 h-4" />
-              {wishlist.length > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{wishlist.length}</span>}
-            </button>
-            <button onClick={() => setActiveTab('cart')} className="relative p-2 bg-slate-800 rounded-xl text-slate-200">
-              <ShoppingBag className="w-4 h-4" />
-              {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{cart.reduce((a,b)=>a+b.quantity,0)}</span>}
-            </button>
-
-            {currentUser ? (
-              <button onClick={() => setActiveTab('profile')} className="px-3 py-1.5 bg-slate-800 text-emerald-400 font-bold rounded-xl text-xs">{currentUser.name}</button>
-            ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs shadow">შესვლა</button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* MAIN VIEW */}
+      {/* MAIN VIEW AREA */}
       <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 space-y-6">
         {activeTab === 'store' && (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-slate-900 to-slate-950 border border-slate-800 p-6 md:p-10 rounded-3xl space-y-4 shadow-xl">
-              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-[11px] font-bold">მრავალვენდერიანი მარკეტფლეისი</span>
-              <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">{siteSettings.heroTitle}</h1>
-              <p className="text-slate-400 text-xs md:text-sm max-w-xl">{siteSettings.heroSubtitle}</p>
-            </div>
+          <StoreView 
+            siteSettings={siteSettings}
+            banners={banners}
+            promoSlots={promoSlots}
+            categories={categories}
+            vendorsList={vendorsList}
+            selectedVendorFilter={selectedVendorFilter}
+            setSelectedVendorFilter={setSelectedVendorFilter}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            filteredProducts={filteredProducts}
+            wishlist={wishlist}
+            toggleWishlist={toggleWishlist}
+            comparisonList={comparisonList}
+            toggleComparison={toggleComparison}
+            setSelectedProductQuickView={setSelectedProductQuickView}
+            addToCart={addToCart}
+            setQuickBuyProduct={setQuickBuyProduct}
+            setIsCheckoutOpen={setIsCheckoutOpen}
+            setPriceAlertModal={setPriceAlertModal}
+            formatPrice={formatPrice}
+          />
+        )}
 
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              <button onClick={() => setSelectedCategory('ყველა')} className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${selectedCategory === 'ყველა' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-800'}`}>ყველა</button>
-              {categories.map(cat => (
-                <button key={cat.id || cat} onClick={() => setSelectedCategory(cat.name || cat)} className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${selectedCategory === (cat.name || cat) ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-800'}`}>
-                  {cat.icon || ''} {cat.name || cat}
-                </button>
-              ))}
-            </div>
+        {activeTab === 'admin' && (
+          <AdminDashboardPro 
+            adminLoggedIn={adminLoggedIn}
+            setAdminLoggedIn={setAdminLoggedIn}
+            adminLoginForm={adminLoginForm}
+            setAdminLoginForm={setAdminLoginForm}
+            handleAdminLogin={handleAdminLogin}
+            adminError={adminError}
+            proAnalytics={proAnalytics}
+            orders={orders}
+            usersList={usersList}
+            products={products}
+            formatPrice={formatPrice}
+          />
+        )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {filteredProducts.map(prod => (
-                <div key={prod.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg space-y-3">
-                  <div className="relative group">
-                    <img src={prod.image} alt={prod.name} className="w-full h-40 object-contain bg-slate-950 rounded-xl p-2 border border-slate-800" />
-                    <button onClick={() => {
-                      setWishlist(prev => prev.some(w => w.id === prod.id) ? prev.filter(w => w.id !== prod.id) : [...prev, prod]);
-                      showToast('❤️ დაემატა სურვილებში');
-                    }} className="absolute top-2 right-2 p-1.5 bg-slate-900/80 rounded-lg text-rose-400">
-                      <Heart className="w-4 h-4" />
-                    </button>
+        {activeTab === 'wishlist' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-white">❤️ სურვილების სია ({wishlist.length})</h2>
+            {wishlist.length === 0 ? <p className="text-slate-500 text-xs">სია ცარიელია.</p> : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {wishlist.map(prod => (
+                  <div key={prod.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img src={prod.image} alt="" className="w-14 h-14 object-contain bg-slate-950 rounded-lg p-1 border border-slate-800" />
+                      <div>
+                        <h4 className="font-bold text-xs text-white">{prod.name}</h4>
+                        <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(prod.priceGEL)}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => addToCart(prod)} className="bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold shadow">კალათაში</button>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-teal-400 font-bold uppercase">{prod.vendor || 'GEOSTORE'}</span>
-                    <h3 className="font-bold text-white text-xs mt-1 line-clamp-1">{prod.name}</h3>
-                    <p className="text-emerald-400 font-black text-sm mt-1">{prod.priceGEL} ₾</p>
-                  </div>
-                  <button onClick={() => addToCart(prod)} className="w-full bg-emerald-500 text-slate-950 font-black py-2 rounded-xl text-xs shadow">კალათაში</button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'cart' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-white">🛒 საყიდლების კალათა</h2>
+            {cart.length === 0 ? <p className="text-slate-500 text-xs">კალათა ცარიელია.</p> : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="lg:col-span-2 space-y-2.5">
+                  {cart.map(item => (
+                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                      <div>
+                        <h4 className="font-bold text-xs text-white">{item.name}</h4>
+                        <p className="text-emerald-400 font-bold mt-0.5">{formatPrice(item.priceGEL)} x {item.quantity}</p>
+                      </div>
+                      <button onClick={() => setCart(cart.filter(c => c.id !== item.id))} className="text-rose-400 font-bold">წაშლა</button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl h-fit space-y-3.5 shadow-lg">
+                  <div className="text-lg font-black text-emerald-400">სულ: {formatPrice(cartTotalGEL)}</div>
+                  <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow">შეკვეთის გაფორმება</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-md mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3 text-xs">
+          <div className="max-w-md mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3 text-xs shadow-xl">
             <h2 className="text-base font-black text-white">👤 მომხმარებლის პროფილი</h2>
             <p><b>სახელი:</b> {currentUser.name}</p>
             <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
@@ -265,31 +420,42 @@ export default function App() {
         )}
       </main>
 
-      {/* AUTH MODAL */}
-      {isAuthOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2 text-xs font-bold">
-              <button onClick={() => setAuthMode('login')} className={authMode === 'login' ? 'text-emerald-400 border-b-2 border-emerald-400 pb-1' : 'text-slate-500'}>შესვლა</button>
-              <button onClick={() => setAuthMode('register')} className={authMode === 'register' ? 'text-emerald-400 border-b-2 border-emerald-400 pb-1' : 'text-slate-500'}>რეგისტრაცია</button>
-              <button onClick={() => setIsAuthOpen(false)} className="text-slate-400 font-bold">✕</button>
-            </div>
-            <form onSubmit={handleAuthSubmit} className="space-y-2.5 text-xs">
-              {authMode === 'register' && (
-                <>
-                  <input type="text" required placeholder="სახელი *" value={authForm.name} onChange={e => setAuthForm({...authForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                  <input type="tel" required placeholder="ტელეფონი *" value={authForm.phone} onChange={e => setAuthForm({...authForm, phone: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-                </>
-              )}
-              <input type="email" required placeholder="ელ-ფოსტა *" value={authForm.email} onChange={e => setAuthForm({...authForm, email: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-              <input type="password" required placeholder="პაროლი *" value={authForm.password} onChange={e => setAuthForm({...authForm, password: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none" />
-              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl shadow">{authMode === 'login' ? 'შესვლა' : 'რეგისტრაცია'}</button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* MODALS COMPONENT */}
+      <Modals 
+        isCheckoutOpen={isCheckoutOpen}
+        setIsCheckoutOpen={setIsCheckoutOpen}
+        checkoutForm={checkoutForm}
+        setCheckoutForm={setCheckoutForm}
+        handlePlaceOrder={handlePlaceOrder}
+        cartTotalGEL={cartTotalGEL}
+        isAuthOpen={isAuthOpen}
+        setIsAuthOpen={setIsAuthOpen}
+        authMode={authMode}
+        setAuthMode={setAuthMode}
+        authForm={authForm}
+        setAuthForm={setAuthForm}
+        handleAuthSubmit={handleAuthSubmit}
+        isGiftQuizOpen={isGiftQuizOpen}
+        setIsGiftQuizOpen={setIsGiftQuizOpen}
+        products={products}
+        addToCart={addToCart}
+        comparisonList={comparisonList}
+        toggleComparison={toggleComparison}
+        wishlist={wishlist}
+        toggleWishlist={toggleWishlist}
+        formatPrice={formatPrice}
+      />
 
-      <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-[11px] text-slate-500">
+      {/* AI ASSISTANT MODAL COMPONENT */}
+      <AiAssistantModal 
+        isAiAssistantOpen={isAiAssistantOpen}
+        setIsAiAssistantOpen={setIsAiAssistantOpen}
+        products={products}
+        addToCart={addToCart}
+        formatPrice={formatPrice}
+      />
+
+      <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-[11px] text-slate-500 mt-10">
         <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
       </footer>
     </div>
