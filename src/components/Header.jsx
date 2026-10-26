@@ -65,7 +65,7 @@ export default function Header({
             <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-3.5 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs shadow">შესვლა</button>
           )}
 
-          <button onClick={() => setActiveTab('admin')} className="p-2 bg-slate-800 rounded-xl text-emerald-400 font-bold text-xs flex items-center gap-1">
+          <button onClick={() => setActiveTab('admin')} className="p-2 bg-slate-800 rounded-xl text-emerald-400 font-bold text-xs flex items-center gap-1 hover:bg-slate-700 transition">
             <Shield className="w-4 h-4" /> ადმინ
           </button>
         </div>
