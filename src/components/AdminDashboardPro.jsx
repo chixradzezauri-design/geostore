@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 6 - პარამეტრები და AI მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ფოტოების ატვირთვა და მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, BarChart3, Settings, Bot, CheckCircle
+  Plus, Trash2, Users, Store, Tag, Search, Star, BarChart3, Settings, Bot, Image as ImageIcon
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -26,12 +26,14 @@ export default function AdminDashboardPro({
   setSiteSettings,
   formatPrice
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, coupons, users, vendors, settings
+  const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   
+  // პროდუქტის ფორმა მრავალი ფოტოსა და ფაილის მხარდაჭერით
   const [productForm, setProductForm] = useState({
-    name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', image: '', description: ''
+    name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: ''
   });
+  const [selectedImages, setSelectedImages] = useState([]);
 
   const [couponForm, setCouponForm] = useState({
     code: '', discountPercent: '', minOrderGEL: ''
@@ -42,11 +44,6 @@ export default function AdminDashboardPro({
     topBarText: siteSettings?.topBarText || '',
     heroTitle: siteSettings?.heroTitle || '',
     heroSubtitle: siteSettings?.heroSubtitle || ''
-  });
-
-  const [aiConfig, setAiConfig] = useState({
-    enabled: true,
-    welcomeMessage: 'გამარჯობა! მე ვარ GEOSTORE-ის AI ასისტენტი. რით შემიძლია დაგეხმაროთ?'
   });
 
   if (!adminLoggedIn) {
@@ -95,19 +92,46 @@ export default function AdminDashboardPro({
     }
   };
 
+  // ფაილების არჩევა და Base64-ად გადაყვანა (ლინკის გარეშე ატვირთვა)
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    promises = files.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then(base64Images => {
+      setSelectedImages(prev => [...prev, ...base64Images]);
+    });
+  };
+
+  let promises;
+
   const handleSaveProduct = (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
+
+    const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600';
 
     const newProd = {
       id: `prod-${Date.now()}`,
       sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       ...productForm,
       priceGEL: Number(productForm.priceGEL),
-      stock: Number(productForm.stock) || 1
+      stock: Number(productForm.stock) || 1,
+      image: mainImage,
+      gallery: selectedImages // მრავალი ფოტოს გალერეა
     };
+
     setProducts(prev => [newProd, ...prev]);
-    setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', image: '', description: '' });
+    setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
+    setSelectedImages([]);
+    alert('პროდუქტი წარმატებით დაემატა ფოტოებთან ერთად!');
   };
 
   const handleCreateCoupon = (e) => {
@@ -156,7 +180,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კუპონები, პარამეტრები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები (ფოტოების ატვირთვით), კუპონები</p>
           </div>
         </div>
         <button 
@@ -174,7 +198,7 @@ export default function AdminDashboardPro({
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
           { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
-          { id: 'settings', label: '⚙️ პარამეტრები & AI' }
+          { id: 'settings', label: '⚙️ პარამეტრები' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -253,18 +277,42 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 🏷️ პროდუქტების მართვისა და ფოტოების ატვირთვის სექცია */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
             <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება
+              <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ფოტოების ატვირთვით)
             </h3>
-            <form onSubmit={handleSaveProduct} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-              <input type="text" placeholder="პროდუქტის დასახელება *" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <input type="number" placeholder="ფასი GEL *" required value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <input type="text" placeholder="სურათის URL" value={productForm.image} onChange={e => setProductForm({...productForm, image: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <button type="submit" className="bg-emerald-500 text-slate-950 font-black p-3 rounded-xl shadow hover:bg-emerald-400 transition col-span-1 sm:col-span-2">პროდუქტის დამატება</button>
+            <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input type="text" placeholder="პროდუქტის დასახელება *" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <input type="number" placeholder="ფასი GEL *" required value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              </div>
+
+              {/* მრავალი ფოტოს ატვირთვის ველი */}
+              <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <label className="text-slate-300 font-bold flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-emerald-400" /> ატვირთეთ პროდუქტის ფოტოები (შეგიძლიათ აირჩიოთ რამდენიმე ერთად):
+                </label>
+                <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
+                
+                {selectedImages.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pt-2">
+                    {selectedImages.map((img, idx) => (
+                      <div key={idx} className="relative w-16 h-16 bg-slate-900 border border-slate-800 rounded-xl p-1 shrink-0">
+                        <img src={img} alt="" className="w-full h-full object-contain rounded-lg" />
+                        <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black p-3.5 rounded-xl shadow hover:bg-emerald-400 transition">
+                პროდუქტის დამატება გალერეით
+              </button>
             </form>
           </div>
 
@@ -353,48 +401,28 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* ⚙️ პარამეტრებისა და AI კონტროლის სექცია */}
       {adminTab === 'settings' && (
-        <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-            <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
-            </h3>
-            <form onSubmit={handleSaveSettings} className="space-y-3 text-xs">
-              <div className="space-y-1">
-                <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
-                <input type="text" value={settingsForm.storeName} onChange={e => setSettingsForm({...settingsForm, storeName: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
-                <input type="text" value={settingsForm.topBarText} onChange={e => setSettingsForm({...settingsForm, topBarText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-slate-400 font-bold">მთავარი სათაური (Hero Title)</label>
-                <input type="text" value={settingsForm.heroTitle} onChange={e => setSettingsForm({...settingsForm, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-              </div>
-              <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
-                პარამეტრების შენახვა
-              </button>
-            </form>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-            <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <Bot className="w-5 h-5 text-teal-400" /> AI ასისტენტის მართვა
-            </h3>
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                <div>
-                  <h4 className="font-bold text-white">AI ასისტენტის სტატუსი</h4>
-                  <p className="text-slate-400 text-[11px] mt-0.5">განათავსეთ AI ასისტენტი საიტზე მომხმარებლებისთვის</p>
-                </div>
-                <button onClick={() => setAiConfig({...aiConfig, enabled: !aiConfig.enabled})} className={`px-4 py-2 rounded-xl font-bold ${aiConfig.enabled ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
-                  {aiConfig.enabled ? 'ჩართულია' : 'გამორთულია'}
-                </button>
-              </div>
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="font-black text-white text-sm flex items-center gap-2">
+            <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
+          </h3>
+          <form onSubmit={handleSaveSettings} className="space-y-3 text-xs">
+            <div className="space-y-1">
+              <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
+              <input type="text" value={settingsForm.storeName} onChange={e => setSettingsForm({...settingsForm, storeName: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
             </div>
-          </div>
+            <div className="space-y-1">
+              <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
+              <input type="text" value={settingsForm.topBarText} onChange={e => setSettingsForm({...settingsForm, topBarText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-slate-400 font-bold">მთავარი სათაური (Hero Title)</label>
+              <input type="text" value={settingsForm.heroTitle} onChange={e => setSettingsForm({...settingsForm, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+            </div>
+            <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
+              პარამეტრების შენახვა
+            </button>
+          </form>
         </div>
       )}
     </div>
