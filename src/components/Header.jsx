@@ -21,6 +21,7 @@ export default function Header({
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
+      // ვკრძალავთ ბრაუზერის სტანდარტულ ავტომატურ ბანერს, რომ ჩვენი ღილაკით ვმართოთ
       e.preventDefault();
       setDeferredPrompt(e);
     };
@@ -34,14 +35,18 @@ export default function Header({
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      // თუ ბრაუზერი მხარს უჭერს ავტომატურ დაყენებას, ვუშვებთ პრომპტს
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
+      // ძირითადი მცდელობა: პირდაპირ გამოვიძახოთ ბრაუზერის ინსტალაციის ფანჯარა
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+        }
+      } catch {
+        setShowInstallModal(true);
       }
     } else {
-      // თუ ავტომატური დაყენება შეუძლებელია (მაგ: iPhone/Safari ან უკვე დაინსტალირებულია), ვაჩვენებთ ინსტრუქციას
+      // თუ ტელეფონი ან ბრაუზერი (მაგ: iPhone/Safari) არ ატარებს ავტომატურ პრომპტს, ვაჩვენებთ ინსტრუქციას
       setShowInstallModal(true);
     }
   };
@@ -155,7 +160,7 @@ export default function Header({
                 <span className="bg-rose-500 text-white px-2 py-0.5 rounded-full text-[10px]">{wishlistCount}</span>
               </button>
 
-              <button onClick={() => { handleInstallClick(); setMobileMenuOpen(false); }} className="flex items-center justify-between p-3 bg-emerald-500/20 text-emerald-300 rounded-xl border border-emerald-500/30">
+              <button onClick={() => { handleInstallClick(); setMobileMenuOpen(false); }} className="flex items-center justify-between p-3 bg-emerald-500/20 text-emerald-300 rounded-xl border border-emerald-500/30 cursor-pointer">
                 <span className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-emerald-400" /> აპლიკაციის დაყენება ტელეფონში</span>
                 <Download className="w-4 h-4 text-emerald-400" />
               </button>
@@ -178,11 +183,11 @@ export default function Header({
         )}
       </header>
 
-      {/* INSTALL INSTRUCTION MODAL (თუ ავტომატური დაყენება არ ირთვება) */}
+      {/* INSTALL INSTRUCTION MODAL */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-xs text-white shadow-2xl relative">
-            <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-base">✕</button>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-xs text-white shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-base cursor-pointer">✕</button>
             
             <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
               <div className="bg-emerald-500/20 p-2.5 rounded-2xl border border-emerald-500/30">
@@ -190,27 +195,27 @@ export default function Header({
               </div>
               <div>
                 <h3 className="font-black text-sm text-white">GEOSTORE აპლიკაციის დაყენება</h3>
-                <p className="text-[11px] text-slate-400">მიჰყევით ამ მარტივ ნაბიჯებს:</p>
+                <p className="text-[11px] text-slate-400">მიჰყევით ინსტრუქციას:</p>
               </div>
             </div>
 
             <div className="space-y-3 text-slate-300">
               <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
                 <b className="text-emerald-400 block">📱 iPhone / iPad (Safari):</b>
-                <p>1. ბრაუზერის ქვედა მენიუდან დააჭირეთ ღილაკს **Share** (გაზიარება / კვადრატი ისრით).</p>
+                <p>1. ქვედა მენიუდან დააჭირეთ ღილაკს **Share** (გაზიარება / კვადრატი ისრით).</p>
                 <p>2. მენიუდან აირჩიეთ **"Add to Home Screen"** (მთავარ ეკრანზე დამატება).</p>
               </div>
 
               <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
                 <b className="text-emerald-400 block">🤖 Android (Chrome / Samsung):</b>
-                <p>1. დააჭირეთ ბრაუზერის ზედა მარჯვენა კუთხეში მდებარე **3 წერტილს** (მენიუ).</p>
+                <p>1. ზედა მარჯვენა კუთხეში დააჭირეთ **3 წერტილს** (მენიუ).</p>
                 <p>2. აირჩიეთ **"Install app"** ან **"Add to Home screen"**.</p>
               </div>
             </div>
 
             <button 
               onClick={() => setShowInstallModal(false)}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl transition shadow"
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl transition shadow cursor-pointer"
             >
               გასაგებია
             </button>
