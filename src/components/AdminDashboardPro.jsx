@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (შეკვეთების ექსპორტი და სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (კატეგორიების მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -23,6 +23,8 @@ export default function AdminDashboardPro({
   setVendorsList,
   coupons,
   setCoupons,
+  categoriesList,
+  setCategoriesList,
   siteSettings,
   setSiteSettings,
   formatPrice
@@ -43,6 +45,9 @@ export default function AdminDashboardPro({
   const [vendorForm, setVendorForm] = useState({
     name: '', commission: ''
   });
+
+  // ახალი კატეგორიის ფორმა
+  const [newCatName, setNewCatName] = useState('');
 
   const [settingsForm, setSettingsForm] = useState({
     storeName: siteSettings?.storeName || 'GEOSTORE',
@@ -182,11 +187,29 @@ export default function AdminDashboardPro({
     }
   };
 
+  // კატეგორიის დამატება
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    if (categoriesList?.includes(newCatName.trim())) {
+      alert('ეს კატეგორია უკვე არსებობს!');
+      return;
+    }
+    setCategoriesList(prev => [...(prev || []), newCatName.trim()]);
+    setNewCatName('');
+    alert('✅ კატეგორია წარმატებით დაემატა!');
+  };
+
+  const handleDeleteCategory = (catName) => {
+    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
+      setCategoriesList(prev => prev.filter(c => c !== catName));
+    }
+  };
+
   const handleUpdateOrderStatus = (orderId, newStatus) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
-  // შეკვეთების ექსპორტი CSV / Excel ფორმატში
   const handleExportOrders = () => {
     if (!orders || orders.length === 0) {
       alert('გადმოსაწერი შეკვეთები არ არის.');
@@ -238,7 +261,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთების ექსპორტი, მარაგი, ვენდორები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კატეგორიები, ვენდორები</p>
           </div>
         </div>
         <button 
@@ -253,7 +276,8 @@ export default function AdminDashboardPro({
         {[
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
-          { id: 'products', label: '🏷️ პროდუქტები & მარაგი', count: products?.length || 0 },
+          { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
           { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 },
           { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
@@ -297,7 +321,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 📦 შეკვეთების მართვა და ექსპორტის ღილაკი */}
       {adminTab === 'orders' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
@@ -356,7 +379,20 @@ export default function AdminDashboardPro({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input type="text" placeholder="პროდუქტის დასახელება *" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
                 <input type="number" placeholder="ფასი GEL *" required value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <select 
+                  value={productForm.category} 
+                  onChange={e => setProductForm({...productForm, category: e.target.value})} 
+                  className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500"
+                >
+                  {categoriesList?.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+                <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
 
               <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
@@ -399,7 +435,7 @@ export default function AdminDashboardPro({
                     <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0" />
                     <div>
                       <h4 className="font-bold text-white text-sm">{p.name}</h4>
-                      <p className="text-slate-400 text-[10px]">SKU: {p.sku || 'N/A'} | ვენდორი: {p.vendor || 'GEOSTORE'}</p>
+                      <p className="text-slate-400 text-[10px]">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
                     </div>
                   </div>
 
@@ -426,6 +462,42 @@ export default function AdminDashboardPro({
 
                     <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📂 კატეგორიების მართვის სექცია */}
+      {adminTab === 'categories' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი კატეგორიის დამატება
+            </h3>
+            <form onSubmit={handleAddCategory} className="flex gap-3 text-xs">
+              <input 
+                type="text" 
+                placeholder="კატეგორიის დასახელება (მაგ: აქსესუარები)" 
+                required 
+                value={newCatName} 
+                onChange={e => setNewCatName(e.target.value)} 
+                className="flex-1 bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+              />
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
+                დამატება
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm">არსებული კატეგორიები ({categoriesList?.length || 0})</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {categoriesList?.map((cat, idx) => (
+                <div key={idx} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                  <span className="font-bold text-white">{cat}</span>
+                  <button onClick={() => handleDeleteCategory(cat)} className="text-rose-400 hover:text-rose-300 p-1.5"><Trash2 className="w-4 h-4" /></button>
                 </div>
               ))}
             </div>
