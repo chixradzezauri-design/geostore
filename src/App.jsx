@@ -1,7 +1,11 @@
-// src/App.js
+// src/App.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ShoppingBag, Heart, User, Settings, Grid, Bot, Gift, Sparkles, MessageSquare
+  ShoppingBag, Heart, Search, User, ShieldCheck, Truck, RefreshCw, 
+  Clock, Star, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronUp, 
+  MessageSquare, Send, FileText, Download, Tag, Sliders, ArrowRight, 
+  Eye, Grid, List, CheckCircle, AlertCircle, Phone, MapPin, Globe,
+  Menu, Sparkles, Percent, DollarSign, Settings, Layers, Lock, LogOut, Key, Shield, Printer, BookOpen, Image as ImageIcon, Bell, TrendingUp, BarChart2, PackageCheck, Upload, Bot, Gift, Cpu, CheckSquare, Zap, Compass, HelpCircle, Palette, Store, DownloadCloud, Smartphone, Laptop, Users, RotateCcw
 } from 'lucide-react';
 
 import { 
@@ -56,6 +60,7 @@ export default function App() {
     try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState(() => loadSafeStorage('geostore_admin_remember_creds', { username: '', password: '', remember: false }));
+  const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
     try { localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth)); } catch (e) {}
@@ -81,6 +86,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
+  const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro'); 
 
   const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
   const [editingProductId, setEditingProductId] = useState(null);
@@ -481,6 +487,21 @@ export default function App() {
     showToast('გახვედით ადმინ პანელიდან');
   };
 
+  const handleChangeAdminPassword = (e) => {
+    e.preventDefault();
+    if (adminSecurityForm.oldPassword !== adminAuth.password) {
+      alert('ძველი პაროლი არასწორია!');
+      return;
+    }
+    const updated = {
+      username: adminSecurityForm.username || adminAuth.username,
+      password: adminSecurityForm.newPassword
+    };
+    setAdminAuth(updated);
+    setAdminSecurityForm({ username: updated.username, oldPassword: '', newPassword: '' });
+    showToast('🔑 პაროლი წარმატებით შეიცვალა!');
+  };
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesCategory = selectedCategory === 'ყველა' || p.category === selectedCategory;
@@ -672,20 +693,23 @@ export default function App() {
           <div className="space-y-5 w-full">
             {!adminLoggedIn ? (
               <div className="max-w-sm mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 text-center shadow-xl">
+                <Shield className="w-10 h-10 text-emerald-400 mx-auto" />
                 <h2 className="text-base font-bold text-white">ადმინისტრატორის შესვლა</h2>
                 <form onSubmit={handleAdminLogin} className="space-y-2.5">
                   <input type="text" placeholder="მომხმარებლის სახელი" value={adminLoginForm.username} onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
                   <input type="password" placeholder="პაროლი" value={adminLoginForm.password} onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none" />
+                  <div className="flex items-center gap-2 text-xs text-slate-300">
+                    <input type="checkbox" id="adminRemember" checked={adminLoginForm.remember} onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} className="rounded accent-emerald-500" />
+                    <label htmlFor="adminRemember" className="cursor-pointer text-[11px]">მომიმახსოვრე</label>
+                  </div>
                   {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
                   <button type="submit" className="w-full bg-emerald-500 text-slate-950 py-2.5 rounded-xl font-bold text-xs transition shadow">შესვლა</button>
                 </form>
               </div>
             ) : (
               <div className="space-y-5 w-full">
-                <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-xl p-2 overflow-x-auto shadow w-full">
-                  <div className="flex gap-1.5">
-                    <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950">📊 Dashboard Pro (ადმინ პანელი)</span>
-                  </div>
+                <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-xl p-2 shadow w-full">
+                  <span className="text-xs font-black text-emerald-400">📊 ადმინ პანელი (პროფესიონალური მართვა)</span>
                   <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-1.5 rounded-xl text-xs font-bold">გასვლა</button>
                 </div>
 
@@ -693,22 +717,37 @@ export default function App() {
                   proAnalytics={proAnalytics}
                   crmAnalytics={crmAnalytics}
                   returnsList={returnsList}
-                  orders={orders}
                   setReturnsList={setReturnsList}
-                  setUsersList={setUsersList}
-                  exportOrdersCSV={exportOrdersCSV}
-                  handleManualRefresh={handleManualRefresh}
-                  products={products}
+                  orders={orders}
+                  fetchOrders={fetchOrders}
                   setProducts={setProducts}
+                  products={products}
                   categories={categories}
                   setCategories={setCategories}
                   vendorsList={vendorsList}
                   setVendorsList={setVendorsList}
                   coupons={coupons}
                   setCoupons={setCoupons}
+                  exportOrdersCSV={exportOrdersCSV}
+                  handleManualRefresh={handleManualRefresh}
                   setEditingProductId={setEditingProductId}
                   setEditProductForm={setEditProductForm}
                   showToast={showToast}
+                  adminActiveSubTab={adminActiveSubTab}
+                  setAdminActiveSubTab={setAdminActiveSubTab}
+                  adminSecurityForm={adminSecurityForm}
+                  setAdminSecurityForm={setAdminSecurityForm}
+                  handleChangeAdminPassword={handleChangeAdminPassword}
+                  siteSettings={siteSettings}
+                  setSiteSettings={setSiteSettings}
+                  usdRate={usdRate}
+                  setUsdRate={setUsdRate}
+                  storePolicy={storePolicy}
+                  setStorePolicy={setStorePolicy}
+                  activeInvoiceOrder={activeInvoiceOrder}
+                  setActiveInvoiceOrder={setActiveInvoiceOrder}
+                  SUPABASE_URL={SUPABASE_URL}
+                  headers={headers}
                 />
               </div>
             )}
@@ -732,7 +771,7 @@ export default function App() {
         addToCart={addToCart}
       />
 
-      {/* ALL OTHER MODALS */}
+      {/* MODALS COMPONENT */}
       <Modals 
         isGiftQuizOpen={isGiftQuizOpen}
         setIsGiftQuizOpen={setIsGiftQuizOpen}
