@@ -1,9 +1,6 @@
 // src/components/AdminDashboardPro.jsx
-import React, { useState } from 'react';
-import { 
-  Shield, TrendingUp, BarChart2, PackageCheck, Users, Lock, LogOut, 
-  Settings, DollarSign, Bell, Printer, Download, Check, X, Eye
-} from 'lucide-react';
+import React from 'react';
+import { Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut } from 'lucide-react';
 
 export default function AdminDashboardPro({
   adminLoggedIn,
@@ -14,29 +11,25 @@ export default function AdminDashboardPro({
   adminError,
   proAnalytics,
   orders,
-  usersList,
-  products,
   formatPrice
 }) {
-  const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro');
-
   if (!adminLoggedIn) {
     return (
       <div className="max-w-sm mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl text-center">
         <Shield className="w-12 h-12 text-emerald-400 mx-auto" />
         <h2 className="text-base font-bold text-white">ადმინისტრატორის შესვლა</h2>
-        <p className="text-[10px] text-slate-400">ნაგულისხმევი მომხმარებელი: admin / admin123</p>
+        <p className="text-[10px] text-slate-400">ნაგულისხმები მომხმარებელი: admin / admin123</p>
         <form onSubmit={handleAdminLogin} className="space-y-3 text-xs">
           <input 
             type="text" 
-            placeholder="მომხმარებელი" 
+            placeholder="მომხმარებელი (admin)" 
             value={adminLoginForm.username} 
             onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
             className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-emerald-500" 
           />
           <input 
             type="password" 
-            placeholder="პაროლი" 
+            placeholder="პაროლი (admin123)" 
             value={adminLoginForm.password} 
             onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
             className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-emerald-500" 
@@ -53,7 +46,7 @@ export default function AdminDashboardPro({
           </div>
           {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
           <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl shadow hover:bg-emerald-400 transition">
-            შესვლა სისტემაში
+            ადმინ პანელში შესვლა
           </button>
         </form>
       </div>
@@ -67,7 +60,7 @@ export default function AdminDashboardPro({
           <h2 className="text-base font-black text-white flex items-center gap-2">
             <Shield className="w-5 h-5 text-emerald-400" /> პროფესიონალური ადმინ პანელი
           </h2>
-          <p className="text-[11px] text-slate-400 mt-0.5">GEOSTORE-ის მართვის ცენტრი, ფინანსები და CRM სეგმენტები</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">GEOSTORE-ის მართვის ცენტრი, ფინანსები და შეკვეთები</p>
         </div>
         <button 
           onClick={() => { setAdminLoggedIn(false); localStorage.removeItem('geostore_admin_remember'); }} 
@@ -126,7 +119,7 @@ export default function AdminDashboardPro({
                   <span className="bg-teal-500/10 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-lg font-bold">
                     {o.status}
                   </span>
-                  <span className="font-black text-white text-sm">{o.totalGEL} ₾</span>
+                  <span className="font-black text-white text-sm">{formatPrice(o.totalGEL)}</span>
                 </div>
               </div>
             ))
