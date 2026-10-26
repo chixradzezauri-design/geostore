@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - პროფესიონალური ფოტოების გალერეის და ატვირთვის მართვა
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ვენდორები და კომისიები)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, BarChart3, Settings, Bot, Image as ImageIcon
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -20,6 +20,7 @@ export default function AdminDashboardPro({
   products,
   setProducts,
   vendorsList,
+  setVendorsList,
   coupons,
   setCoupons,
   siteSettings,
@@ -36,6 +37,11 @@ export default function AdminDashboardPro({
 
   const [couponForm, setCouponForm] = useState({
     code: '', discountPercent: '', minOrderGEL: ''
+  });
+
+  // ახალი ვენდორის დამატების ფორმა
+  const [vendorForm, setVendorForm] = useState({
+    name: '', commission: ''
   });
 
   const [settingsForm, setSettingsForm] = useState({
@@ -91,7 +97,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // გალერეიდან ფოტოების არჩევა და მაღალი ხარისხით დამუშავება
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -148,6 +153,26 @@ export default function AdminDashboardPro({
     setCoupons(prev => prev.filter(c => c.id !== id));
   };
 
+  const handleAddVendor = (e) => {
+    e.preventDefault();
+    if (!vendorForm.name || vendorForm.commission === '') return;
+    const newV = {
+      id: `v-${Date.now()}`,
+      name: vendorForm.name,
+      commission: Number(vendorForm.commission),
+      status: 'აქტიური'
+    };
+    setVendorsList(prev => [...prev, newV]);
+    setVendorForm({ name: '', commission: '' });
+    alert('✅ ვენდორი წარმატებით დაემატა!');
+  };
+
+  const handleDeleteVendor = (id) => {
+    if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
+      setVendorsList(prev => prev.filter(v => v.id !== id));
+    }
+  };
+
   const handleUpdateOrderStatus = (orderId, newStatus) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
@@ -177,7 +202,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, ფოტო გალერეა</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, ვენდორები და კომისიები</p>
           </div>
         </div>
         <button 
@@ -194,6 +219,7 @@ export default function AdminDashboardPro({
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
+          { id: 'vendors', label: '🏪 ვენდორები & კომისიები', count: vendorsList?.length || 0 },
           { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
           { id: 'settings', label: '⚙️ პარამეტრები' }
         ].map(tab => (
@@ -274,7 +300,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 🏷️ პროდუქტების მართვისა და მრავალი ფოტოს გალერეის ატვირთვის სექცია */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
@@ -288,7 +313,6 @@ export default function AdminDashboardPro({
                 <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
 
-              {/* გალერეიდან რამდენიმე ფოტოს მონიშვნის ველი */}
               <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
                 <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                   <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან (მონიშნეთ რამდენიმე ერთად):
@@ -362,6 +386,42 @@ export default function AdminDashboardPro({
                     <p className="text-slate-300 font-bold mt-0.5">ფასდაკლება: {c.discountPercent}%</p>
                   </div>
                   <button onClick={() => handleDeleteCoupon(c.id)} className="text-rose-400 hover:text-rose-300 p-2"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🏪 ვენდორებისა და კომისიების მართვის სექცია */}
+      {adminTab === 'vendors' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Store className="w-5 h-5 text-emerald-400" /> ახალი ვენდორის დამატება და კომისია
+            </h3>
+            <form onSubmit={handleAddVendor} className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <input type="text" placeholder="ვენდორის სახელი *" required value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <input type="number" placeholder="კომისია % (მაგ: 10)" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black p-3 rounded-xl shadow hover:bg-emerald-400 transition flex items-center justify-center gap-1">
+                <Percent className="w-4 h-4" /> ვენდორის დამატება
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {vendorsList?.map(v => (
+                <div key={v.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                  <div>
+                    <h4 className="font-bold text-white text-sm">{v.name}</h4>
+                    <p className="text-emerald-400 font-bold mt-0.5">კომისია: {v.commission}%</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[9px] font-black">{v.status}</span>
+                    <button onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-1.5"><Trash2 className="w-4 h-4" /></button>
+                  </div>
                 </div>
               ))}
             </div>
