@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ფასდაკლებები და ფლეშ-აქციები)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ინვოისები და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -58,7 +58,6 @@ export default function AdminDashboardPro({
     title: '', message: ''
   });
 
-  // ფლეშ-აქციის / ფასდაკლების მასობრივი ფორმა
   const [flashSaleForm, setFlashSaleForm] = useState({
     discountPercent: '', category: 'ყველა'
   });
@@ -180,7 +179,6 @@ export default function AdminDashboardPro({
     alert('✅ პროდუქტი წარმატებით დაემატა!');
   };
 
-  // მასობრივი ფასდაკლების / ფლეშ-აქციის გააქტიურება
   const handleApplyFlashSale = (e) => {
     e.preventDefault();
     const percent = Number(flashSaleForm.discountPercent);
@@ -202,6 +200,80 @@ export default function AdminDashboardPro({
     logActivity(`გააქტიურდა მასობრივი ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${flashSaleForm.category}`);
     alert(`⚡ წარმატებით გააქტიურდა ${percent}%-იანი ფასდაკლება!`);
     setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+  };
+
+  // ინვოისის ბეჭდვის ფუნქცია
+  const handlePrintInvoice = (order) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('გთხოვთ დაუშვათ Popup ფანჯრები ბრაუზერში.');
+      return;
+    }
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>ინვოისი #${order.id}</title>
+          <style>
+            body { font-family: 'Noto Sans Georgian', sans-serif; padding: 30px; color: #111; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
+            .store-name { font-size: 24px; font-weight: 900; color: #10b981; }
+            .order-info { margin-bottom: 20px; font-size: 14px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
+            th { background-color: #f8fafc; }
+            .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="store-name">GEOSTORE</div>
+              <p>ონლაინ მარკეტფლეისი საქართველოში</p>
+            </div>
+            <div style="text-align: right;">
+              <h2>შეკვეთა #${order.id}</h2>
+              <p>თარიღი: ${order.date}</p>
+            </div>
+          </div>
+          <div class="order-info">
+            <p><b>მყიდველი:</b> ${order.customerName}</p>
+            <p><b>ტელეფონი:</b> ${order.phone}</p>
+            <p><b>მიტანის მისამართი:</b> ${order.address}</p>
+            <p><b>სტატუსი:</b> ${order.status || 'ახალი'}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>პროდუქტი</th>
+                <th>რაოდენობა</th>
+                <th>ფასი</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${order.itemSummary || 'შეკვეთილი პროდუქტები'}</td>
+                <td>1</td>
+                <td>${order.totalGEL} ₾</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="total">
+            სულ გადასახდელი: ${formatPrice(order.totalGEL)}
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+
+    logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${order.id}`);
   };
 
   const handleCreateCoupon = (e) => {
@@ -366,7 +438,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ფლეშ-აქციები, ლოგები, ბანერები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ინვოისები, ფლეშ-აქციები, ბანერები</p>
           </div>
         </div>
         <button 
@@ -430,11 +502,12 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 📦 შეკვეთების მართვა და ინვოისის ბეჭდვა */}
       {adminTab === 'orders' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
             <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსები
+              <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა, სტატუსები და ინვოისები
             </h3>
             <button 
               onClick={handleExportOrders}
@@ -465,10 +538,21 @@ export default function AdminDashboardPro({
                       <span className="text-[10px] text-slate-400">სტატუსი: <b className="text-emerald-400">{o.status || 'ახალი'}</b></span>
                     </div>
 
-                    <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
-                      <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'ახალი' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                      <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                      <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
+                    <div className="flex items-center gap-2">
+                      {/* ინვოისის ბეჭდვის ღილაკი */}
+                      <button 
+                        onClick={() => handlePrintInvoice(o)} 
+                        title="ინვოისის ბეჭდვა"
+                        className="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-slate-800 p-2.5 rounded-xl transition flex items-center gap-1 font-bold text-[11px]"
+                      >
+                        <Printer className="w-4 h-4" /> ბეჭდვა
+                      </button>
+
+                      <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                        <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'ახალი' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                        <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                        <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -578,7 +662,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* ⚡ ფლეშ-აქციებისა და ფასდაკლებების სექცია */}
       {adminTab === 'discounts' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
