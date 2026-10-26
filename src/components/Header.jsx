@@ -1,6 +1,6 @@
-// src/components/Header.jsx - Ultra Modern Header & Navigation
+// src/components/Header.jsx - Ultra Modern Header with Search by Image
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
@@ -12,6 +12,7 @@ export default function Header({
   setAuthMode, 
   setIsAiAssistantOpen, 
   setIsGiftQuizOpen,
+  setIsImageSearchOpen, // <-- ფოტოთი ძიების მოდალის მართვის ფუნქცია
   searchQuery,
   setSearchQuery
 }) {
@@ -64,53 +65,68 @@ export default function Header({
             </div>
           </div>
 
-          {/* SEARCH BAR (Desktop) */}
-          <div className="flex-1 max-w-md relative hidden md:block">
-            <input
-              type="text"
-              placeholder="მოძებნე სასურველი პროდუქტი..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950/90 border border-slate-800/80 rounded-2xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 shadow-inner"
-            />
-            <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-2.5" />
+          {/* SEARCH BAR & IMAGE SEARCH BUTTON (Desktop) */}
+          <div className="flex-1 max-w-md relative hidden md:flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="მოძებნე სასურველი პროდუქტი..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-950/90 border border-slate-800/80 rounded-2xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 shadow-inner"
+              />
+              <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-2.5" />
+            </div>
+            
+            {/* 📸 ფოტოთი ძიების ღილაკი */}
+            <button
+              onClick={() => setIsImageSearchOpen(true)}
+              title="პროდუქტის ფოტოთი ძიება"
+              className="p-2 bg-slate-950/90 hover:bg-slate-800 border border-slate-800/80 rounded-2xl text-emerald-400 transition cursor-pointer flex items-center justify-center shadow-inner hover:scale-105"
+            >
+              <Camera className="w-4 h-4" />
+            </button>
           </div>
 
           {/* DESKTOP ACTIONS */}
           <div className="hidden lg:flex items-center gap-2.5">
-            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-teal-500/10 text-teal-300 border border-teal-500/30 px-3.5 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-teal-500/20 transition shadow">
+            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-teal-500/10 text-teal-300 border border-teal-500/30 px-3.5 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-teal-500/20 transition shadow cursor-pointer">
               <Bot className="w-4 h-4 text-teal-400" /> AI ასისტენტი
             </button>
 
-            <button onClick={() => setIsGiftQuizOpen(true)} className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3.5 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-500/20 transition shadow">
+            <button onClick={() => setIsGiftQuizOpen(true)} className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3.5 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-500/20 transition shadow cursor-pointer">
               <Gift className="w-4 h-4 text-emerald-400" /> ქვიზი
             </button>
 
-            <button onClick={() => setActiveTab('wishlist')} className="relative p-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-slate-200 hover:border-slate-600 transition shadow">
+            <button onClick={() => setActiveTab('wishlist')} className="relative p-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-slate-200 hover:border-slate-600 transition shadow cursor-pointer">
               <Heart className="w-4 h-4 text-rose-500" />
               {wishlistCount > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{wishlistCount}</span>}
             </button>
 
-            <button onClick={() => setActiveTab('cart')} className="relative p-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-slate-200 hover:border-slate-600 transition shadow">
+            <button onClick={() => setActiveTab('cart')} className="relative p-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-slate-200 hover:border-slate-600 transition shadow cursor-pointer">
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
               {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{cartCount}</span>}
             </button>
 
             {currentUser ? (
-              <button onClick={() => setActiveTab('profile')} className="px-4 py-2 bg-slate-800/80 border border-slate-700/50 text-emerald-400 font-bold rounded-2xl text-xs flex items-center gap-1.5 shadow">
+              <button onClick={() => setActiveTab('profile')} className="px-4 py-2 bg-slate-800/80 border border-slate-700/50 text-emerald-400 font-bold rounded-2xl text-xs flex items-center gap-1.5 shadow cursor-pointer">
                 <User className="w-4 h-4" /> {currentUser.name}
               </button>
             ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg shadow-emerald-500/20 transition">შესვლა</button>
+              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer">შესვლა</button>
             )}
 
-            <button onClick={() => setActiveTab('admin')} className="px-3.5 py-2 bg-slate-800/80 text-emerald-400 font-bold rounded-2xl text-xs flex items-center gap-1.5 border border-emerald-500/30 shadow">
+            <button onClick={() => setActiveTab('admin')} className="px-3.5 py-2 bg-slate-800/80 text-emerald-400 font-bold rounded-2xl text-xs flex items-center gap-1.5 border border-emerald-500/30 shadow cursor-pointer">
               <Shield className="w-4 h-4" /> ადმინ
             </button>
           </div>
 
           {/* MOBILE QUICK BUTTONS & HAMBURGER */}
           <div className="flex items-center gap-2 lg:hidden">
+            <button onClick={() => setIsImageSearchOpen(true)} className="p-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-emerald-400">
+              <Camera className="w-4 h-4" />
+            </button>
+
             <button onClick={() => setActiveTab('cart')} className="relative p-2.5 bg-slate-800/80 border border-slate-700/50 rounded-2xl text-slate-200">
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
               {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{cartCount}</span>}
@@ -125,15 +141,23 @@ export default function Header({
         {/* MOBILE DROPDOWN MENU */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-slate-900/95 backdrop-blur-3xl border-t border-slate-800 p-5 space-y-3.5 shadow-2xl animate-in slide-in-from-top duration-300">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="ძებნა..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white"
-              />
-              <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="ძებნა..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white"
+                />
+                <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
+              </div>
+              <button 
+                onClick={() => { setIsImageSearchOpen(true); setMobileMenuOpen(false); }}
+                className="p-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-emerald-400"
+              >
+                <Camera className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
