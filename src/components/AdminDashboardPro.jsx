@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ვენდორები და კომისიები)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (სწრაფი მარაგები და მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Edit3, Check
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -29,17 +29,20 @@ export default function AdminDashboardPro({
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [productSearchQuery, setProductSearchQuery] = useState('');
   
+  // პროდუქტის ფორმა
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: ''
   });
   const [selectedImages, setSelectedImages] = useState([]);
 
+  // კუპონის ფორმა
   const [couponForm, setCouponForm] = useState({
     code: '', discountPercent: '', minOrderGEL: ''
   });
 
-  // ახალი ვენდორის დამატების ფორმა
+  // ვენდორის ფორმა
   const [vendorForm, setVendorForm] = useState({
     name: '', commission: ''
   });
@@ -97,6 +100,16 @@ export default function AdminDashboardPro({
     }
   };
 
+  // პროდუქტის მარაგის ან ფასის პირდაპირი ცვლილება ცხრილიდან
+  const handleQuickUpdateProduct = (id, field, value) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === id) {
+        return { ...p, [field]: field === 'priceGEL' || field === 'stock' ? Number(value) : value };
+      }
+      return p;
+    }));
+  };
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -133,7 +146,7 @@ export default function AdminDashboardPro({
     setProducts(prev => [newProd, ...prev]);
     setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
     setSelectedImages([]);
-    alert('✅ პროდუქტი წარმატებით დაემატა უმაღლესი ხარისხის ფოტოებით!');
+    alert('✅ პროდუქტი წარმატებით დაემატა!');
   };
 
   const handleCreateCoupon = (e) => {
@@ -193,6 +206,11 @@ export default function AdminDashboardPro({
     u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
+  const filteredProducts = products?.filter(p => 
+    p.name?.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+    p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 rounded-3xl p-5 gap-4 shadow-xl">
@@ -202,7 +220,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, ვენდორები და კომისიები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, სწრაფი პროდუქტები, ვენდორები</p>
           </div>
         </div>
         <button 
@@ -217,9 +235,9 @@ export default function AdminDashboardPro({
         {[
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
-          { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'products', label: '🏷️ პროდუქტები & მარაგი', count: products?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
-          { id: 'vendors', label: '🏪 ვენდორები & კომისიები', count: vendorsList?.length || 0 },
+          { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 },
           { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
           { id: 'settings', label: '⚙️ პარამეტრები' }
         ].map(tab => (
@@ -300,6 +318,7 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 🏷️ პროდუქტების და სწრაფი მარაგის რედაქტირების სექცია */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
@@ -317,13 +336,7 @@ export default function AdminDashboardPro({
                 <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                   <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან (მონიშნეთ რამდენიმე ერთად):
                 </label>
-                <input 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  onChange={handleImageChange} 
-                  className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" 
-                />
+                <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
                 
                 {selectedImages.length > 0 && (
                   <div className="flex gap-2.5 overflow-x-auto pt-3 pb-1">
@@ -344,18 +357,49 @@ export default function AdminDashboardPro({
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-            <h3 className="font-black text-white text-sm">არსებული პროდუქტები ({products?.length || 0})</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {products?.map(p => (
-                <div key={p.id} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+              <h3 className="font-black text-white text-sm">პროდუქტების სწრაფი მართვა და მარაგები ({products?.length || 0})</h3>
+              <div className="relative w-full sm:w-64">
+                <input type="text" placeholder="ძებნა პროდუქტებში..." value={productSearchQuery} onChange={e => setProductSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500" />
+                <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-2.5 top-2.5" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {filteredProducts?.map(p => (
+                <div key={p.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                   <div className="flex items-center gap-3">
-                    <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-900 p-1 rounded-xl border border-slate-800" />
+                    <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0" />
                     <div>
-                      <h4 className="font-bold text-white line-clamp-1">{p.name}</h4>
-                      <p className="text-emerald-400 font-black mt-0.5">{formatPrice(p.priceGEL)}</p>
+                      <h4 className="font-bold text-white text-sm">{p.name}</h4>
+                      <p className="text-slate-400 text-[10px]">SKU: {p.sku || 'N/A'} | ვენდორი: {p.vendor || 'GEOSTORE'}</p>
                     </div>
                   </div>
-                  <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2"><Trash2 className="w-4 h-4" /></button>
+
+                  {/* პირდაპირი ცვლილების ველები (ფასი და მარაგი) */}
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400 text-[11px]">ფასი (₾):</span>
+                      <input 
+                        type="number" 
+                        value={p.priceGEL} 
+                        onChange={e => handleQuickUpdateProduct(p.id, 'priceGEL', e.target.value)}
+                        className="w-20 bg-slate-900 border border-slate-800 rounded-xl p-2 text-emerald-400 font-black text-center outline-none focus:border-emerald-500" 
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400 text-[11px]">მარაგი:</span>
+                      <input 
+                        type="number" 
+                        value={p.stock !== undefined ? p.stock : 10} 
+                        onChange={e => handleQuickUpdateProduct(p.id, 'stock', e.target.value)}
+                        className="w-16 bg-slate-900 border border-slate-800 rounded-xl p-2 text-white font-black text-center outline-none focus:border-emerald-500" 
+                      />
+                    </div>
+
+                    <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -393,7 +437,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 🏪 ვენდორებისა და კომისიების მართვის სექცია */}
       {adminTab === 'vendors' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
