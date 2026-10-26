@@ -17,22 +17,15 @@ export default function Header({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isInstallable, setIsInstallable] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsInstallable(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // შევამოწმოთ თუ უკვე აპლიკაციის რეჟიმშია გახსნილი
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstallable(false);
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -41,13 +34,14 @@ export default function Header({
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
+      // თუ ბრაუზერი მხარს უჭერს ავტომატურ დაყენებას, ვუშვებთ პრომპტს
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
-        setIsInstallable(false);
       }
     } else {
+      // თუ ავტომატური დაყენება შეუძლებელია (მაგ: iPhone/Safari ან უკვე დაინსტალირებულია), ვაჩვენებთ ინსტრუქციას
       setShowInstallModal(true);
     }
   };
@@ -184,7 +178,7 @@ export default function Header({
         )}
       </header>
 
-      {/* INSTALL INSTRUCTION MODAL */}
+      {/* INSTALL INSTRUCTION MODAL (თუ ავტომატური დაყენება არ ირთვება) */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-xs text-white shadow-2xl relative">
@@ -196,7 +190,7 @@ export default function Header({
               </div>
               <div>
                 <h3 className="font-black text-sm text-white">GEOSTORE აპლიკაციის დაყენება</h3>
-                <p className="text-[11px] text-slate-400">იმოქმედეთ მარტივი ინსტრუქციის მიხედვით:</p>
+                <p className="text-[11px] text-slate-400">მიჰყევით ამ მარტივ ნაბიჯებს:</p>
               </div>
             </div>
 
