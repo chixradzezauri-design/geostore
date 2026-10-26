@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 4 - მომხმარებლების CRM მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 5 - ფინანსები და ანალიტიკა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star
+  Plus, Trash2, Users, Store, Tag, Search, Star, BarChart3
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -135,7 +135,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ანალიტიკა, შეკვეთები, პროდუქტები, კუპონები, CRM</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კუპონები, CRM</p>
           </div>
         </div>
         <button 
@@ -148,7 +148,7 @@ export default function AdminDashboardPro({
 
       <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 scrollbar-none">
         {[
-          { id: 'analytics', label: '📊 ანალიტიკა' },
+          { id: 'analytics', label: '📊 ფინანსები და ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
@@ -172,23 +172,35 @@ export default function AdminDashboardPro({
         ))}
       </div>
 
+      {/* 📊 ფინანსური ანალიტიკისა და ანგარიშგების სექცია */}
       {adminTab === 'analytics' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
-            <p className="text-2xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
+              <p className="text-2xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო წმინდა მოგება</p>
+              <p className="text-2xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><PackageCheck className="w-4 h-4 text-blue-400" /> სულ შეკვეთები</p>
+              <p className="text-2xl font-black text-blue-400">{proAnalytics.totalOrdersCount}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
+              <p className="text-2xl font-black text-amber-400">{proAnalytics.lowStockProducts?.length || 0} პროდუქტი</p>
+            </div>
           </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო წმინდა მოგება</p>
-            <p className="text-2xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><PackageCheck className="w-4 h-4 text-blue-400" /> სულ შეკვეთები</p>
-            <p className="text-2xl font-black text-blue-400">{proAnalytics.totalOrdersCount}</p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
-            <p className="text-2xl font-black text-amber-400">{proAnalytics.lowStockProducts?.length || 0} პროდუქტი</p>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-emerald-400" /> ფინანსური ანგარიშგება და ხარჯების მონიტორინგი
+            </h3>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              მოცემული მონაცემები ეფუძნება რეალურ შეკვეთებსა და პროდუქტების ფასებს. სავარაუდო წმინდა მოგება გამოითვლება შემოსავლის 25%-ის ოდენობით (გათვალისწინებულია საშუალო თვითღირებულება და ლოგისტიკური ხარჯები).
+            </p>
           </div>
         </div>
       )}
@@ -312,7 +324,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 👥 მომხმარებლების CRM მართვის განახლებული სექცია */}
       {adminTab === 'users' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
