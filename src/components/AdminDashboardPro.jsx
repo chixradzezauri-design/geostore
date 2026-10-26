@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 5 - ფინანსები და ანალიტიკა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 6 - პარამეტრები და AI მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, BarChart3
+  Plus, Trash2, Users, Store, Tag, Search, Star, BarChart3, Settings, Bot, CheckCircle
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -22,9 +22,11 @@ export default function AdminDashboardPro({
   vendorsList,
   coupons,
   setCoupons,
+  siteSettings,
+  setSiteSettings,
   formatPrice
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, coupons, users, vendors
+  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, coupons, users, vendors, settings
   const [userSearchQuery, setUserSearchQuery] = useState('');
   
   const [productForm, setProductForm] = useState({
@@ -33,6 +35,18 @@ export default function AdminDashboardPro({
 
   const [couponForm, setCouponForm] = useState({
     code: '', discountPercent: '', minOrderGEL: ''
+  });
+
+  const [settingsForm, setSettingsForm] = useState({
+    storeName: siteSettings?.storeName || 'GEOSTORE',
+    topBarText: siteSettings?.topBarText || '',
+    heroTitle: siteSettings?.heroTitle || '',
+    heroSubtitle: siteSettings?.heroSubtitle || ''
+  });
+
+  const [aiConfig, setAiConfig] = useState({
+    enabled: true,
+    welcomeMessage: 'გამარჯობა! მე ვარ GEOSTORE-ის AI ასისტენტი. რით შემიძლია დაგეხმაროთ?'
   });
 
   if (!adminLoggedIn) {
@@ -121,6 +135,13 @@ export default function AdminDashboardPro({
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
   };
 
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    setSiteSettings(settingsForm);
+    try { localStorage.setItem('geostore_site_settings', JSON.stringify(settingsForm)); } catch {}
+    alert('საიტის პარამეტრები წარმატებით განახლდა!');
+  };
+
   const filteredUsers = usersList?.filter(u => 
     u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
     u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
@@ -135,7 +156,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კუპონები, CRM</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კუპონები, პარამეტრები</p>
           </div>
         </div>
         <button 
@@ -148,12 +169,12 @@ export default function AdminDashboardPro({
 
       <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800 scrollbar-none">
         {[
-          { id: 'analytics', label: '📊 ფინანსები და ანალიტიკა' },
+          { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
-          { id: 'users', label: '👥 მომხმარებლები (CRM)', count: usersList?.length || 0 },
-          { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 }
+          { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
+          { id: 'settings', label: '⚙️ პარამეტრები & AI' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -172,35 +193,23 @@ export default function AdminDashboardPro({
         ))}
       </div>
 
-      {/* 📊 ფინანსური ანალიტიკისა და ანგარიშგების სექცია */}
       {adminTab === 'analytics' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
-              <p className="text-2xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო წმინდა მოგება</p>
-              <p className="text-2xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><PackageCheck className="w-4 h-4 text-blue-400" /> სულ შეკვეთები</p>
-              <p className="text-2xl font-black text-blue-400">{proAnalytics.totalOrdersCount}</p>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
-              <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
-              <p className="text-2xl font-black text-amber-400">{proAnalytics.lowStockProducts?.length || 0} პროდუქტი</p>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
+            <p className="text-2xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
           </div>
-
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-            <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-emerald-400" /> ფინანსური ანგარიშგება და ხარჯების მონიტორინგი
-            </h3>
-            <p className="text-slate-400 text-xs leading-relaxed">
-              მოცემული მონაცემები ეფუძნება რეალურ შეკვეთებსა და პროდუქტების ფასებს. სავარაუდო წმინდა მოგება გამოითვლება შემოსავლის 25%-ის ოდენობით (გათვალისწინებულია საშუალო თვითღირებულება და ლოგისტიკური ხარჯები).
-            </p>
+          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო წმინდა მოგება</p>
+            <p className="text-2xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><PackageCheck className="w-4 h-4 text-blue-400" /> სულ შეკვეთები</p>
+            <p className="text-2xl font-black text-blue-400">{proAnalytics.totalOrdersCount}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow-lg">
+            <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
+            <p className="text-2xl font-black text-amber-400">{proAnalytics.lowStockProducts?.length || 0} პროდუქტი</p>
           </div>
         </div>
       )}
@@ -232,24 +241,9 @@ export default function AdminDashboardPro({
                     </div>
 
                     <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
-                      <button 
-                        onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
-                        className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'ახალი' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-                      >
-                        ახალი
-                      </button>
-                      <button 
-                        onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')}
-                        className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-                      >
-                        მუშავდება
-                      </button>
-                      <button 
-                        onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')}
-                        className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-                      >
-                        დასრულებული
-                      </button>
+                      <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'ახალი' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                      <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                      <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
                     </div>
                   </div>
                 </div>
@@ -331,13 +325,7 @@ export default function AdminDashboardPro({
               <Users className="w-5 h-5 text-emerald-400" /> მომხმარებლების CRM მართვა ({usersList?.length || 0})
             </h3>
             <div className="relative w-full sm:w-64">
-              <input 
-                type="text" 
-                placeholder="ძებნა სახელით ან ემაილით..." 
-                value={userSearchQuery}
-                onChange={e => setUserSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
-              />
+              <input type="text" placeholder="ძებნა სახელით ან ემაილით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500" />
               <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-2.5 top-2.5" />
             </div>
           </div>
@@ -355,15 +343,9 @@ export default function AdminDashboardPro({
                     </div>
                     <p className="text-slate-400 text-[11px] mt-0.5">📧 {u.email} | 📞 {u.phone}</p>
                   </div>
-                  
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button 
-                      onClick={() => handleToggleVipUser(u.id)}
-                      className={`px-3 py-1.5 rounded-xl font-bold text-[11px] flex items-center gap-1 transition ${u.isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:text-white'}`}
-                    >
-                      <Star className="w-3.5 h-3.5" /> {u.isVip ? 'VIP სტატუსი მოხსნა' : 'VIP-ად მონიშვნა'}
-                    </button>
-                  </div>
+                  <button onClick={() => handleToggleVipUser(u.id)} className={`px-3 py-1.5 rounded-xl font-bold text-[11px] flex items-center gap-1 transition ${u.isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:text-white'}`}>
+                    <Star className="w-3.5 h-3.5" /> {u.isVip ? 'VIP სტატუსი მოხსნა' : 'VIP-ად მონიშვნა'}
+                  </button>
                 </div>
               ))
             )}
@@ -371,19 +353,47 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {adminTab === 'vendors' && (
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-          <h3 className="font-black text-white text-sm flex items-center gap-2"><Store className="w-5 h-5 text-emerald-400" /> მარკეტფლეისის ვენდორები</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {vendorsList?.map(v => (
-              <div key={v.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
-                <div>
-                  <h4 className="font-bold text-white">{v.name}</h4>
-                  <p className="text-slate-400 text-[11px]">კომისია: {v.commission}%</p>
-                </div>
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">{v.status}</span>
+      {/* ⚙️ პარამეტრებისა და AI კონტროლის სექცია */}
+      {adminTab === 'settings' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
+            </h3>
+            <form onSubmit={handleSaveSettings} className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
+                <input type="text" value={settingsForm.storeName} onChange={e => setSettingsForm({...settingsForm, storeName: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
-            ))}
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
+                <input type="text" value={settingsForm.topBarText} onChange={e => setSettingsForm({...settingsForm, topBarText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">მთავარი სათაური (Hero Title)</label>
+                <input type="text" value={settingsForm.heroTitle} onChange={e => setSettingsForm({...settingsForm, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              </div>
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
+                პარამეტრების შენახვა
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Bot className="w-5 h-5 text-teal-400" /> AI ასისტენტის მართვა
+            </h3>
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <h4 className="font-bold text-white">AI ასისტენტის სტატუსი</h4>
+                  <p className="text-slate-400 text-[11px] mt-0.5">განათავსეთ AI ასისტენტი საიტზე მომხმარებლებისთვის</p>
+                </div>
+                <button onClick={() => setAiConfig({...aiConfig, enabled: !aiConfig.enabled})} className={`px-4 py-2 rounded-xl font-bold ${aiConfig.enabled ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                  {aiConfig.enabled ? 'ჩართულია' : 'გამორთულია'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
