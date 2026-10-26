@@ -40,33 +40,6 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  const handleInstallClick = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult) => {
-        setDeferredPrompt(null);
-      });
-    } else {
-      setShowInstallModal(true);
-    }
-  };
-
-  const [visitorCount, setVisitorCount] = useState(() => {
-    try {
-      const current = Number(localStorage.getItem('geostore_visitors_count') || 1);
-      const isSessionTracked = sessionStorage.getItem('geostore_session_tracked');
-      if (!isSessionTracked) {
-        const updated = current + 1;
-        localStorage.setItem('geostore_visitors_count', updated.toString());
-        sessionStorage.setItem('geostore_session_tracked', 'true');
-        return updated;
-      }
-      return current;
-    } catch {
-      return 1;
-    }
-  });
-
   const loadSafeStorage = (key, fallback) => {
     try {
       const item = localStorage.getItem(key);
@@ -103,7 +76,6 @@ export default function App() {
     try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState(() => loadSafeStorage('geostore_admin_remember_creds', { username: '', password: '', remember: false }));
-  const [adminSecurityForm, setAdminSecurityForm] = useState({ username: adminAuth.username, oldPassword: '', newPassword: '' });
 
   useEffect(() => {
     try { localStorage.setItem('geostore_admin_auth', JSON.stringify(adminAuth)); } catch (e) {}
@@ -130,14 +102,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
   const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro'); 
-  const [showPopupModal, setShowPopupModal] = useState(() => siteSettings.popupAnnouncementActive);
 
   const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
   const [editingProductId, setEditingProductId] = useState(null);
   const [editProductForm, setEditProductForm] = useState({ name: '', sku: '', category: '', brand: '', vendor: '', priceGEL: 0, oldPriceGEL: 0, discountPercent: 0, stock: 0, image: '', description: '', warranty: '', isPreOrder: false });
-
-  const [uploadedMainImg, setUploadedMainImg] = useState('');
-  const [uploadedExtraImgs, setUploadedExtraImgs] = useState([]);
 
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
@@ -557,7 +525,6 @@ export default function App() {
 
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
-    const queryLower = queryRaw.toLowerCase();
     if (!queryRaw) return;
 
     const userMsg = { sender: 'user', text: queryRaw };
@@ -738,25 +705,21 @@ export default function App() {
               <div className="space-y-5 w-full">
                 <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-xl p-2 overflow-x-auto shadow w-full">
                   <div className="flex gap-1.5">
-                    <button onClick={() => setAdminActiveSubTab('dashboardPro')} className={`px-3 py-1.5 rounded-xl text-xs font-bold ${adminActiveSubTab === 'dashboardPro' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-950 text-slate-300'}`}>📊 Dashboard Pro</button>
+                    <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950">📊 Dashboard Pro</button>
                   </div>
                   <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-1.5 rounded-xl text-xs font-bold">გასვლა</button>
                 </div>
 
-                {adminActiveSubTab === 'dashboardPro' && (
-                  <AdminDashboardPro 
-                    proAnalytics={proAnalytics}
-                    crmAnalytics={crmAnalytics}
-                    returnsList={returnsList}
-                    orders={orders}
-                    setReturnsList={setReturnsList}
-                    setUsersList={setUsersList}
-                    exportOrdersCSV={exportOrdersCSV}
-                    handleManualRefresh={handleManualRefresh}
-                    setActiveTab={setActiveTab}
-                    setAdminActiveSubTab={setAdminActiveSubTab}
-                  />
-                )}
+                <AdminDashboardPro 
+                  proAnalytics={proAnalytics}
+                  crmAnalytics={crmAnalytics}
+                  returnsList={returnsList}
+                  orders={orders}
+                  setReturnsList={setReturnsList}
+                  setUsersList={setUsersList}
+                  exportOrdersCSV={exportOrdersCSV}
+                  handleManualRefresh={handleManualRefresh}
+                />
               </div>
             )}
           </div>
@@ -851,4 +814,3 @@ export default function App() {
     </div>
   );
 }
-
