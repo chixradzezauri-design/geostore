@@ -1,9 +1,18 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (საპასუხო ტიგეტები და სრული მართვა)
-import React, { useState } from 'react';
+// src/components/AdminDashboardPro.jsx - Supabase-ზე მიბმული მხარდაჭერის ტიგეტები და სრული მართვა
+import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle, MessageSquare
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle
 } from 'lucide-react';
+
+const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json'
+};
 
 export default function AdminDashboardPro({
   adminLoggedIn,
@@ -66,20 +75,34 @@ export default function AdminDashboardPro({
     newUsername: '', newPassword: ''
   });
 
-  // მხარდაჭერის ტიგეტები ადმინ პანელში (მცდელობა წამოიღოს LocalStorage-დან, თუ არა დემო)
-  const [supportTickets, setSupportTickets] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_support_tickets');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      { id: 't-101', customerName: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', subject: 'შეკვეთის მიტანის დრო', message: 'გამარჯობა, მაინტერესებს როდის ჩამოვა ჩემი შეკვეთა #1001?', status: 'ღია', reply: '', date: '26.10.2026' },
-      { id: 't-102', customerName: 'ნინო ქავთარაძე', email: 'nino@gmail.com', subject: 'პროდუქტის დაბრუნება', message: 'როგორ შეიძლება პროდუქტის უკან დაბრუნება თუ ზომა არ მომერგო?', status: 'მუშავდება', reply: '', date: '25.10.2026' }
-    ];
-  });
-
-  // ადმინის მიერ პასუხის ინფუთების მდგომარეობა თითოეული ტიგეტისთვის
+  // მხარდაჭერის ტიგეტები პირდაპირ Supabase-დან
+  const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
+
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setSupportTickets(data.map(t => ({
+          id: t.id,
+          customerName: t.customer_name,
+          email: t.email,
+          subject: t.subject,
+          message: t.message,
+          status: t.status || 'ღია',
+          reply: t.reply || '',
+          date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
+        })));
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchTickets();
+    const interval = setInterval(fetchTickets, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
@@ -333,43 +356,45 @@ export default function AdminDashboardPro({
     setPasswordForm({ newUsername: '', newPassword: '' });
   };
 
-  const handleUpdateTicketStatus = (ticketId, newStatus) => {
-    setSupportTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
+  const handleUpdateTicketStatus = async (ticketId, newStatus) => {
     try {
-      localStorage.setItem('geostore_support_tickets', JSON.stringify(supportTickets));
-    } catch {}
-    logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
+      await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status: newStatus })
+      });
+      fetchTickets();
+      logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
+    } catch { alert('შეცდომა სტატუსის განახლებისას'); }
   };
 
-  // ადმინისტრატორის მიერ პასუხის მიწერა ტიგეტზე
-  const handleSendTicketReply = (ticketId) => {
+  const handleSendTicketReply = async (ticketId) => {
     const replyText = replyInputs[ticketId];
     if (!replyText || !replyText.trim()) return;
 
-    setSupportTickets(prev => prev.map(t => {
-      if (t.id === ticketId) {
-        const updated = { ...t, reply: replyText.trim(), status: 'მოგვარებული' };
-        return updated;
-      }
-      return t;
-    }));
-
     try {
-      const updatedList = supportTickets.map(t => t.id === ticketId ? { ...t, reply: replyText.trim(), status: 'მოგვარებული' } : t);
-      localStorage.setItem('geostore_support_tickets', JSON.stringify(updatedList));
-    } catch {}
-
-    setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
-    logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
-    alert('✅ პასუხი წარმატებით გაეგზავნა მომხმარებელს!');
+      await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ reply: replyText.trim(), status: 'მოგვარებული' })
+      });
+      setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
+      fetchTickets();
+      logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
+      alert('✅ პასუხი წარმატებით გაეგზავნა მომხმარებელს!');
+    } catch { alert('შეცდომა პასუხის გაგზავნისას'); }
   };
 
-  const handleDeleteTicket = (ticketId) => {
+  const handleDeleteTicket = async (ticketId) => {
     if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
-      const updated = supportTickets.filter(t => t.id !== ticketId);
-      setSupportTickets(updated);
-      try { localStorage.setItem('geostore_support_tickets', JSON.stringify(updated)); } catch {}
-      logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+          method: 'DELETE',
+          headers
+        });
+        fetchTickets();
+        logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
+      } catch { alert('შეცდომა ტიგეტის წაშლისას'); }
     }
   };
 
@@ -658,11 +683,11 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 💬 მხარდაჭერის ტიგეტები და პასუხის გაცემა */}
+      {/* 💬 მხარდაჭერის ტიგეტები Supabase-დან */}
       {adminTab === 'support' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხის გაცემა ({supportTickets?.length || 0})
+            <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
           </h3>
           <div className="space-y-4">
             {(!supportTickets || supportTickets.length === 0) ? (
@@ -694,7 +719,6 @@ export default function AdminDashboardPro({
                     </p>
                   </div>
 
-                  {/* უკვე გაცემული პასუხის ჩვენება */}
                   {t.reply && (
                     <div className="bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl space-y-1">
                       <b className="text-emerald-400 block text-[11px]">ადმინისტრატორის პასუხი:</b>
@@ -702,7 +726,6 @@ export default function AdminDashboardPro({
                     </div>
                   )}
 
-                  {/* პასუხის მიწერის ფორმა */}
                   <div className="flex gap-2 pt-2">
                     <input 
                       type="text" 
