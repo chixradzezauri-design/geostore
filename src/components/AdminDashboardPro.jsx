@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ფოტოების ატვირთვა და მართვა)
+// src/components/AdminDashboardPro.jsx - პროფესიონალური ფოტოების გალერეის და ატვირთვის მართვა
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -29,7 +29,6 @@ export default function AdminDashboardPro({
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   
-  // პროდუქტის ფორმა მრავალი ფოტოსა და ფაილის მხარდაჭერით
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: ''
   });
@@ -92,12 +91,12 @@ export default function AdminDashboardPro({
     }
   };
 
-  // ფაილების არჩევა და Base64-ად გადაყვანა (ლინკის გარეშე ატვირთვა)
+  // გალერეიდან ფოტოების არჩევა და მაღალი ხარისხით დამუშავება
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    promises = files.map(file => {
+    const promises = files.map(file => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result);
@@ -110,13 +109,11 @@ export default function AdminDashboardPro({
     });
   };
 
-  let promises;
-
   const handleSaveProduct = (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
 
-    const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600';
+    const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
 
     const newProd = {
       id: `prod-${Date.now()}`,
@@ -125,13 +122,13 @@ export default function AdminDashboardPro({
       priceGEL: Number(productForm.priceGEL),
       stock: Number(productForm.stock) || 1,
       image: mainImage,
-      gallery: selectedImages // მრავალი ფოტოს გალერეა
+      gallery: selectedImages.length > 0 ? selectedImages : [mainImage]
     };
 
     setProducts(prev => [newProd, ...prev]);
     setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
     setSelectedImages([]);
-    alert('პროდუქტი წარმატებით დაემატა ფოტოებთან ერთად!');
+    alert('✅ პროდუქტი წარმატებით დაემატა უმაღლესი ხარისხის ფოტოებით!');
   };
 
   const handleCreateCoupon = (e) => {
@@ -180,7 +177,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები (ფოტოების ატვირთვით), კუპონები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, ფოტო გალერეა</p>
           </div>
         </div>
         <button 
@@ -277,12 +274,12 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 🏷️ პროდუქტების მართვისა და ფოტოების ატვირთვის სექცია */}
+      {/* 🏷️ პროდუქტების მართვისა და მრავალი ფოტოს გალერეის ატვირთვის სექცია */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
             <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ფოტოების ატვირთვით)
+              <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება გალერეით
             </h3>
             <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -291,19 +288,25 @@ export default function AdminDashboardPro({
                 <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
               </div>
 
-              {/* მრავალი ფოტოს ატვირთვის ველი */}
+              {/* გალერეიდან რამდენიმე ფოტოს მონიშვნის ველი */}
               <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                <label className="text-slate-300 font-bold flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-emerald-400" /> ატვირთეთ პროდუქტის ფოტოები (შეგიძლიათ აირჩიოთ რამდენიმე ერთად):
+                <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
+                  <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან (მონიშნეთ რამდენიმე ერთად):
                 </label>
-                <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  onChange={handleImageChange} 
+                  className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" 
+                />
                 
                 {selectedImages.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto pt-2">
+                  <div className="flex gap-2.5 overflow-x-auto pt-3 pb-1">
                     {selectedImages.map((img, idx) => (
-                      <div key={idx} className="relative w-16 h-16 bg-slate-900 border border-slate-800 rounded-xl p-1 shrink-0">
+                      <div key={idx} className="relative w-20 h-20 bg-slate-900 border border-slate-800 rounded-xl p-1 shrink-0 shadow-md">
                         <img src={img} alt="" className="w-full h-full object-contain rounded-lg" />
-                        <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">×</button>
+                        <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-5 h-5 text-[11px] font-black flex items-center justify-center shadow">×</button>
                       </div>
                     ))}
                   </div>
@@ -311,7 +314,7 @@ export default function AdminDashboardPro({
               </div>
 
               <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black p-3.5 rounded-xl shadow hover:bg-emerald-400 transition">
-                პროდუქტის დამატება გალერეით
+                პროდუქტის შენახვა გალერეით
               </button>
             </form>
           </div>
