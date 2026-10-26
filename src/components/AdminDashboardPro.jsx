@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (პროდუქტების ექსპორტი/იმპორტი და სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (უსაფრთხოება და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Upload
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -60,6 +60,11 @@ export default function AdminDashboardPro({
 
   const [flashSaleForm, setFlashSaleForm] = useState({
     discountPercent: '', category: 'ყველა'
+  });
+
+  // ადმინის პაროლის შეცვლის ფორმა
+  const [passwordForm, setPasswordForm] = useState({
+    newUsername: '', newPassword: ''
   });
 
   const [activityLogs, setActivityLogs] = useState([
@@ -179,7 +184,6 @@ export default function AdminDashboardPro({
     alert('✅ პროდუქტი წარმატებით დაემატა!');
   };
 
-  // პროდუქტების CSV ექსპორტი
   const handleExportProducts = () => {
     if (!products || products.length === 0) {
       alert('ექსპორტისთვის პროდუქტები არ არის.');
@@ -295,6 +299,25 @@ export default function AdminDashboardPro({
     }, 500);
 
     logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${order.id}`);
+  };
+
+  // ადმინის პაროლის და სახელის ცვლილება
+  const handleChangeAdminCredentials = (e) => {
+    e.preventDefault();
+    if (!passwordForm.newUsername && !passwordForm.newPassword) return;
+
+    try {
+      if (passwordForm.newUsername) {
+        localStorage.setItem('geostore_admin_user', passwordForm.newUsername);
+      }
+      if (passwordForm.newPassword) {
+        localStorage.setItem('geostore_admin_pass', passwordForm.newPassword);
+      }
+    } catch {}
+
+    logActivity('შეიცვალა ადმინისტრატორის სარეკვიზიტი მონაცემები');
+    alert('🔒 ადმინისტრატორის მონაცემები წარმატებით განახლდა!');
+    setPasswordForm({ newUsername: '', newPassword: '' });
   };
 
   const handleCreateCoupon = (e) => {
@@ -459,7 +482,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტების იმპორტი/ექსპორტი, ბანერები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: უსაფრთხოება, ფინანსები, შეკვეთები, პროდუქტები, ბანერები</p>
           </div>
         </div>
         <button 
@@ -483,7 +506,7 @@ export default function AdminDashboardPro({
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
           { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 },
           { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
-          { id: 'settings', label: '⚙️ პარამეტრები' }
+          { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -581,7 +604,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 🏷️ პროდუქტების მართვა და CSV ექსპორტი */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
@@ -922,7 +944,7 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-sm">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {vendorsList?.map(v => (
-                <key key={v.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                <div key={v.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
                   <div>
                     <h4 className="font-bold text-white text-sm">{v.name}</h4>
                     <p className="text-emerald-400 font-bold mt-0.5">კომისია: {v.commission}%</p>
@@ -931,7 +953,7 @@ export default function AdminDashboardPro({
                     <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[9px] font-black">{v.status}</span>
                     <button onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-1.5"><Trash2 className="w-4 h-4" /></button>
                   </div>
-                </key>
+                </div>
               ))}
             </div>
           </div>
@@ -973,28 +995,62 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* ⚙️ პარამეტრები & უსაფრთხოება სექცია */}
       {adminTab === 'settings' && (
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-          <h3 className="font-black text-white text-sm flex items-center gap-2">
-            <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
-          </h3>
-          <form onSubmit={handleSaveSettings} className="space-y-3 text-xs">
-            <div className="space-y-1">
-              <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
-              <input type="text" value={settingsForm.storeName} onChange={e => setSettingsForm({...settingsForm, storeName: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
-              <input type="text" value={settingsForm.topBarText} onChange={e => setSettingsForm({...settingsForm, topBarText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-slate-400 font-bold">მთავარი სათაური (Hero Title)</label>
-              <input type="text" value={settingsForm.heroTitle} onChange={e => setSettingsForm({...settingsForm, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
-            </div>
-            <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
-              პარამეტრების შენახვა
-            </button>
-          </form>
+        <div className="space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
+            </h3>
+            <form onSubmit={handleSaveSettings} className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
+                <input type="text" value={settingsForm.storeName} onChange={e => setSettingsForm({...settingsForm, storeName: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
+                <input type="text" value={settingsForm.topBarText} onChange={e => setSettingsForm({...settingsForm, topBarText: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">მთავარი სათაური (Hero Title)</label>
+                <input type="text" value={settingsForm.heroTitle} onChange={e => setSettingsForm({...settingsForm, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
+              </div>
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
+                პარამეტრების შენახვა
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Lock className="w-5 h-5 text-emerald-400" /> ადმინისტრატორის სარეკვიზიტო მონაცემები (უსაფრთხოება)
+            </h3>
+            <form onSubmit={handleChangeAdminCredentials} className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">ახალი ადმინ სახელი (სურვილისამებრ)</label>
+                <input 
+                  type="text" 
+                  placeholder="ახალი მომხმარებელი" 
+                  value={passwordForm.newUsername} 
+                  onChange={e => setPasswordForm({...passwordForm, newUsername: e.target.value})} 
+                  className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">ახალი პაროლი (სურვილისამებრ)</label>
+                <input 
+                  type="password" 
+                  placeholder="ახალი საიდუმლო პაროლი" 
+                  value={passwordForm.newPassword} 
+                  onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})} 
+                  className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+                />
+              </div>
+              <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-xl shadow hover:bg-emerald-400 transition">
+                უსაფრთხოების მონაცემების განახლება
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>
