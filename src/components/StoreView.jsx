@@ -62,7 +62,7 @@ export default function StoreView({
         <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
           <button 
             onClick={() => setSelectedCategory('ყველა')} 
-            className={`px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-300 ${
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-300 cursor-pointer ${
               selectedCategory === 'ყველა' 
                 ? 'bg-white text-slate-950 shadow-lg shadow-white/10 scale-105' 
                 : 'bg-slate-900/60 text-slate-400 border border-slate-800/80 hover:text-white hover:border-slate-700'
@@ -74,7 +74,7 @@ export default function StoreView({
             <button 
               key={cat.id || cat} 
               onClick={() => setSelectedCategory(cat.name || cat)} 
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 cursor-pointer ${
                 selectedCategory === (cat.name || cat) 
                   ? 'bg-white text-slate-950 shadow-lg shadow-white/10 scale-105' 
                   : 'bg-slate-900/60 text-slate-400 border border-slate-800/80 hover:text-white hover:border-slate-700'
@@ -97,7 +97,7 @@ export default function StoreView({
                 <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
                 <button 
                   onClick={() => toggleWishlist(prod)} 
-                  className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur-md rounded-xl text-rose-400 border border-slate-800/60 hover:scale-110 transition"
+                  className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur-md rounded-xl text-rose-400 border border-slate-800/60 hover:scale-110 transition cursor-pointer"
                 >
                   <Heart className={`w-3.5 h-3.5 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                 </button>
