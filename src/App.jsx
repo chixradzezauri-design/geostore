@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE სრული, ერთიანი და ადმინ-ოპტიმიზებული მთავარი ფაილი
+// src/App.jsx - GEOSTORE სრული და დაცული ძირითადი ფაილი
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -70,12 +70,7 @@ const INITIAL_PRODUCTS = [
 
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : fallback;
-    } catch {
-      return fallback;
-    }
+    try { const item = localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch { return fallback; }
   };
 
   const [siteSettings, setSiteSettings] = useState(() => loadSafeStorage('geostore_site_settings', {
@@ -112,7 +107,7 @@ export default function App() {
   // Admin States
   const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('geostore_admin_remember'] === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
   const [adminError, setAdminError] = useState('');
@@ -146,9 +141,7 @@ export default function App() {
           status: o.status || 'ახალი'
         })));
       }
-    } catch (err) {
-      console.warn("Background auto-sync warning:", err);
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -160,6 +153,8 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
+  useEffect(() => { try { localStorage.setItem('geostore_cart', JSON.stringify(cart)); } catch{} }, [cart]);
+  useEffect(() => { try { localStorage.setItem('geostore_wishlist', JSON.stringify(wishlist)); } catch{} }, [wishlist]);
 
   const cartTotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
@@ -280,7 +275,6 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER */}
       <Header 
         siteSettings={siteSettings}
         setActiveTab={setActiveTab}
@@ -312,7 +306,6 @@ export default function App() {
           />
         )}
 
-        {/* ADMIN DASHBOARD PRO COMPONENT */}
         {activeTab === 'admin' && (
           <AdminDashboardPro 
             adminLoggedIn={adminLoggedIn}
@@ -392,7 +385,6 @@ export default function App() {
         )}
       </main>
 
-      {/* MODALS */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -412,7 +404,6 @@ export default function App() {
         addToCart={addToCart}
       />
 
-      {/* AI ASSISTANT MODAL */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
