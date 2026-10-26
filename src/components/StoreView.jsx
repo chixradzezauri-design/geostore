@@ -1,4 +1,4 @@
-// src/components/StoreView.js
+// src/components/StoreView.jsx
 import React from 'react';
 import { ShoppingBag, Store, Grid, Clock, CheckSquare, Heart, Eye, Bell, Truck, ShieldCheck, Bot, Gift } from 'lucide-react';
 
