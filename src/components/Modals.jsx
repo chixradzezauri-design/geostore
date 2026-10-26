@@ -1,6 +1,6 @@
 // src/components/Modals.jsx - Next-Gen Minimalist Modals with Terms & Warranty
 import React from 'react';
-import { X, ShieldCheck, FileText, ShoppingBag, Lock, Sparkles, Star } from 'lucide-react';
+import { X, ShieldCheck, FileText, ShoppingBag, Lock } from 'lucide-react';
 
 export default function Modals({
   isCheckoutOpen,
@@ -15,11 +15,6 @@ export default function Modals({
   authForm,
   setAuthForm,
   handleAuthSubmit,
-  isGiftQuizOpen,
-  setIsGiftQuizOpen,
-  products,
-  addToCart,
-  // ახალი სთეითები წესებისა და გარანტიისთვის
   isTermsOpen,
   setIsTermsOpen,
   isWarrantyOpen,
