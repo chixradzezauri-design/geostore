@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (უსაფრთხოება და სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (მხარდაჭერის ტიგეტები და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -62,10 +62,15 @@ export default function AdminDashboardPro({
     discountPercent: '', category: 'ყველა'
   });
 
-  // ადმინის პაროლის შეცვლის ფორმა
   const [passwordForm, setPasswordForm] = useState({
     newUsername: '', newPassword: ''
   });
+
+  // მხარდაჭერის ტიგეტების სია (მოვამზადოთ საწყისი დემო მონაცემებით)
+  const [supportTickets, setSupportTickets] = useState([
+    { id: 't-101', customerName: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', subject: 'შეკვეთის მიტანის დრო', message: 'გამარჯობა, მაინტერესებს როდის ჩამოვა ჩემი შეკვეთა #1001?', status: 'ღია', date: '26.10.2026' },
+    { id: 't-102', customerName: 'ნინო ქავთარაძე', email: 'nino@gmail.com', subject: 'პროდუქტის დაბრუნება', message: 'როგორ შეიძლება პროდუქტის უკან დაბრუნება თუ ზომა არ მომერგო?', status: 'მუშავდება', date: '25.10.2026' }
+  ]);
 
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
@@ -301,7 +306,6 @@ export default function AdminDashboardPro({
     logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${order.id}`);
   };
 
-  // ადმინის პაროლის და სახელის ცვლილება
   const handleChangeAdminCredentials = (e) => {
     e.preventDefault();
     if (!passwordForm.newUsername && !passwordForm.newPassword) return;
@@ -318,6 +322,18 @@ export default function AdminDashboardPro({
     logActivity('შეიცვალა ადმინისტრატორის სარეკვიზიტი მონაცემები');
     alert('🔒 ადმინისტრატორის მონაცემები წარმატებით განახლდა!');
     setPasswordForm({ newUsername: '', newPassword: '' });
+  };
+
+  const handleUpdateTicketStatus = (ticketId, newStatus) => {
+    setSupportTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
+    logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
+  };
+
+  const handleDeleteTicket = (ticketId) => {
+    if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
+      setSupportTickets(prev => prev.filter(t => t.id !== ticketId));
+      logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
+    }
   };
 
   const handleCreateCoupon = (e) => {
@@ -482,7 +498,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: უსაფრთხოება, ფინანსები, შეკვეთები, პროდუქტები, ბანერები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: მხარდაჭერა, უსაფრთხოება, ფინანსები, შეკვეთები, პროდუქტები</p>
           </div>
         </div>
         <button 
@@ -498,15 +514,16 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.length || 0 },
           { id: 'discounts', label: '⚡ ფლეშ-აქციები' },
           { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0 },
-          { id: 'broadcasts', label: '💬 შეტყობინებები' },
-          { id: 'banners', label: '📢 ბანერები', count: bannersList?.length || 0 },
+          { id: 'broadcasts', label: '📢 შეტყობინებები' },
+          { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0 },
           { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
           { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 },
           { id: 'users', label: '👥 CRM', count: usersList?.length || 0 },
-          { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება' }
+          { id: 'settings', label: '⚙️ პარამეტრები' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -596,6 +613,43 @@ export default function AdminDashboardPro({
                         <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
                       </div>
                     </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 💬 მხარდაჭერის ტიგეტების მართვა */}
+      {adminTab === 'support' && (
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="font-black text-white text-sm flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და კითხვები ({supportTickets?.length || 0})
+          </h3>
+          <div className="space-y-3">
+            {(!supportTickets || supportTickets.length === 0) ? (
+              <p className="text-slate-500 text-xs py-6 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
+            ) : (
+              supportTickets.map(t => (
+                <div key={t.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
+                      <span className="text-slate-200 font-bold">{t.subject}</span>
+                      <span className="text-slate-500 text-[10px]">({t.date})</span>
+                    </div>
+                    <p className="text-slate-300">მომხმარებელი: <b className="text-white">{t.customerName}</b> ({t.email})</p>
+                    <p className="text-slate-400 text-[11px] bg-slate-900 p-2.5 rounded-xl border border-slate-800 mt-1">💬 "{t.message}"</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full md:w-auto justify-end shrink-0">
+                    <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                      <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'ღია' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>ღია</button>
+                      <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                      <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
+                    </div>
+                    <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               ))
@@ -995,7 +1049,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* ⚙️ პარამეტრები & უსაფრთხოება სექცია */}
       {adminTab === 'settings' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
