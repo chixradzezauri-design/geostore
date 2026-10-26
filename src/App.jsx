@@ -20,26 +20,6 @@ export default function App() {
   const [currency, setCurrency] = useState('GEL'); 
   const [usdRate, setUsdRate] = useState(2.70);
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallBanner, setShowInstallBanner] = useState(true);
-  const [showInstallModal, setShowInstallModal] = useState(false);
-  const [isIosDevice, setIsIosDevice] = useState(false);
-
-  useEffect(() => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIos = /iphone|ipad|ipod/.test(userAgent);
-    setIsIosDevice(isIos);
-
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallBanner(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
-
   const loadSafeStorage = (key, fallback) => {
     try {
       const item = localStorage.getItem(key);
@@ -101,7 +81,6 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
   const [adminError, setAdminError] = useState('');
-  const [adminActiveSubTab, setAdminActiveSubTab] = useState('dashboardPro'); 
 
   const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
   const [editingProductId, setEditingProductId] = useState(null);
@@ -705,7 +684,7 @@ export default function App() {
               <div className="space-y-5 w-full">
                 <div className="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-xl p-2 overflow-x-auto shadow w-full">
                   <div className="flex gap-1.5">
-                    <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950">📊 Dashboard Pro</button>
+                    <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950">📊 Dashboard Pro (ადმინ პანელი)</span>
                   </div>
                   <button onClick={handleAdminLogout} className="bg-rose-500/20 text-rose-400 px-3.5 py-1.5 rounded-xl text-xs font-bold">გასვლა</button>
                 </div>
@@ -719,6 +698,17 @@ export default function App() {
                   setUsersList={setUsersList}
                   exportOrdersCSV={exportOrdersCSV}
                   handleManualRefresh={handleManualRefresh}
+                  products={products}
+                  setProducts={setProducts}
+                  categories={categories}
+                  setCategories={setCategories}
+                  vendorsList={vendorsList}
+                  setVendorsList={setVendorsList}
+                  coupons={coupons}
+                  setCoupons={setCoupons}
+                  setEditingProductId={setEditingProductId}
+                  setEditProductForm={setEditProductForm}
+                  showToast={showToast}
                 />
               </div>
             )}
