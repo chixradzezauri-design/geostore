@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE სრული მარკეტფლეისი რეალურ დროში სინქრონიზაციით და მხარდაჭერით
+// src/App.jsx - GEOSTORE სრული მარკეტფლეისი Supabase მხარდაჭერით და რეალურ დროში სინქრონიზაციით
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -111,7 +111,7 @@ export default function App() {
   // Admin States
   const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('geostore_admin_remember'] === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
   const [adminError, setAdminError] = useState('');
@@ -133,7 +133,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // 🔄 რეალურ დროში სინქრონიზაცია სხვა ფანჯრებიდან/გვერდებიდან (Storage Event Listener)
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (!e.key) return;
@@ -434,7 +433,7 @@ export default function App() {
         )}
       </main>
 
-      {/* მხარდაჭერისა და ჩათის მცურავი ვიჯეტი მთავარი საიტისთვის */}
+      {/* მხარდაჭერის მცურავი ვიჯეტი Supabase ინტეგრაციით */}
       <div className="fixed bottom-6 right-6 z-50">
         {supportOpen ? (
           <div className="w-80 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-4 space-y-3 text-xs text-white">
@@ -445,7 +444,7 @@ export default function App() {
               <button onClick={() => setSupportOpen(false)} className="text-slate-400 hover:text-white font-black text-sm">✕</button>
             </div>
             
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
               const name = e.target.cname.value;
               const email = e.target.cemail.value;
@@ -453,25 +452,28 @@ export default function App() {
               const message = e.target.cmessage.value;
               if (!name || !message) return;
 
-              const newT = {
-                id: `t-${Math.floor(1000 + Math.random() * 9000)}`,
-                customerName: name,
-                email: email || 'guest@geostore.ge',
-                subject: subject || 'ზოგადი კითხვა',
-                message: message,
-                status: 'ღია',
-                reply: '',
-                date: new Date().toLocaleDateString('ka-GE')
-              };
+              const ticketId = `t-${Math.floor(1000 + Math.random() * 9000)}`;
 
               try {
-                const existing = JSON.parse(localStorage.getItem('geostore_support_tickets') || '[]');
-                localStorage.setItem('geostore_support_tickets', JSON.stringify([newT, ...existing]));
-              } catch {}
+                await fetch(`${SUPABASE_URL}/rest/v1/support_tickets`, {
+                  method: 'POST',
+                  headers: { ...headers, 'Prefer': 'return=representation' },
+                  body: JSON.stringify({
+                    id: ticketId,
+                    customer_name: name,
+                    email: email || 'guest@geostore.ge',
+                    subject: subject || 'ზოგადი კითხვა',
+                    message: message,
+                    status: 'ღია'
+                  })
+                });
 
-              alert('✅ თქვენი შეტყობინება წარმატებით გაეგზავნა ადმინისტრატორს! მალე გიპასუხებთ.');
-              e.target.reset();
-              setSupportOpen(false);
+                alert('✅ თქვენი შეტყობინება წარმატებით გაეგზავნა ადმინისტრატორს! მალე გიპასუხებთ.');
+                e.target.reset();
+                setSupportOpen(false);
+              } catch {
+                alert('შეცდომა შეტყობინების გაგზავნისას.');
+              }
             }} className="space-y-2.5">
               <input type="text" name="cname" placeholder="თქვენი სახელი *" required className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
               <input type="email" name="cemail" placeholder="ელ-ფოსტა" className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
