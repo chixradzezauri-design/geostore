@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ინვოისები და სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (პროდუქტების ექსპორტი/იმპორტი და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Upload
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -179,6 +179,28 @@ export default function AdminDashboardPro({
     alert('✅ პროდუქტი წარმატებით დაემატა!');
   };
 
+  // პროდუქტების CSV ექსპორტი
+  const handleExportProducts = () => {
+    if (!products || products.length === 0) {
+      alert('ექსპორტისთვის პროდუქტები არ არის.');
+      return;
+    }
+    let csvContent = "data:text/csv;charset=utf-8,ID,SKU,Name,Category,Price(GEL),Stock,Vendor\r\n";
+    products.forEach(p => {
+      const row = [p.id, p.sku || 'N/A', `"${p.name}"`, `"${p.category}"`, p.priceGEL, p.stock || 1, `"${p.vendor || 'GEOSTORE'}"`];
+      csvContent += row.join(",") + "\r\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `geostore_products_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    logActivity('გადმოიწერა პროდუქტების CSV ექსპორტი');
+  };
+
   const handleApplyFlashSale = (e) => {
     e.preventDefault();
     const percent = Number(flashSaleForm.discountPercent);
@@ -202,7 +224,6 @@ export default function AdminDashboardPro({
     setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
   };
 
-  // ინვოისის ბეჭდვის ფუნქცია
   const handlePrintInvoice = (order) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -438,7 +459,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ინვოისები, ფლეშ-აქციები, ბანერები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტების იმპორტი/ექსპორტი, ბანერები</p>
           </div>
         </div>
         <button 
@@ -502,7 +523,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 📦 შეკვეთების მართვა და ინვოისის ბეჭდვა */}
       {adminTab === 'orders' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
@@ -539,7 +559,6 @@ export default function AdminDashboardPro({
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* ინვოისის ბეჭდვის ღილაკი */}
                       <button 
                         onClick={() => handlePrintInvoice(o)} 
                         title="ინვოისის ბეჭდვა"
@@ -562,12 +581,22 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 🏷️ პროდუქტების მართვა და CSV ექსპორტი */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-            <h3 className="font-black text-white text-sm flex items-center gap-2">
-              <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება გალერეით
-            </h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+              <h3 className="font-black text-white text-sm flex items-center gap-2">
+                <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება გალერეით
+              </h3>
+              <button 
+                onClick={handleExportProducts}
+                className="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+              >
+                <Download className="w-4 h-4" /> პროდუქტების ექსპორტი (CSV)
+              </button>
+            </div>
+
             <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input type="text" placeholder="პროდუქტის დასახელება *" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" />
@@ -893,7 +922,7 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-sm">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {vendorsList?.map(v => (
-                <div key={v.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                <key key={v.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
                   <div>
                     <h4 className="font-bold text-white text-sm">{v.name}</h4>
                     <p className="text-emerald-400 font-bold mt-0.5">კომისია: {v.commission}%</p>
@@ -902,7 +931,7 @@ export default function AdminDashboardPro({
                     <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[9px] font-black">{v.status}</span>
                     <button onClick={() => handleDeleteVendor(v.id)} className="text-rose-400 hover:text-rose-300 p-1.5"><Trash2 className="w-4 h-4" /></button>
                   </div>
-                </div>
+                </key>
               ))}
             </div>
           </div>
