@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (მხარდაჭერის ტიგეტები და სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (საპასუხო ტიგეტები და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle, MessageSquare
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -66,11 +66,20 @@ export default function AdminDashboardPro({
     newUsername: '', newPassword: ''
   });
 
-  // მხარდაჭერის ტიგეტების სია (მოვამზადოთ საწყისი დემო მონაცემებით)
-  const [supportTickets, setSupportTickets] = useState([
-    { id: 't-101', customerName: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', subject: 'შეკვეთის მიტანის დრო', message: 'გამარჯობა, მაინტერესებს როდის ჩამოვა ჩემი შეკვეთა #1001?', status: 'ღია', date: '26.10.2026' },
-    { id: 't-102', customerName: 'ნინო ქავთარაძე', email: 'nino@gmail.com', subject: 'პროდუქტის დაბრუნება', message: 'როგორ შეიძლება პროდუქტის უკან დაბრუნება თუ ზომა არ მომერგო?', status: 'მუშავდება', date: '25.10.2026' }
-  ]);
+  // მხარდაჭერის ტიგეტები ადმინ პანელში (მცდელობა წამოიღოს LocalStorage-დან, თუ არა დემო)
+  const [supportTickets, setSupportTickets] = useState(() => {
+    try {
+      const saved = localStorage.getItem('geostore_support_tickets');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { id: 't-101', customerName: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', subject: 'შეკვეთის მიტანის დრო', message: 'გამარჯობა, მაინტერესებს როდის ჩამოვა ჩემი შეკვეთა #1001?', status: 'ღია', reply: '', date: '26.10.2026' },
+      { id: 't-102', customerName: 'ნინო ქავთარაძე', email: 'nino@gmail.com', subject: 'პროდუქტის დაბრუნება', message: 'როგორ შეიძლება პროდუქტის უკან დაბრუნება თუ ზომა არ მომერგო?', status: 'მუშავდება', reply: '', date: '25.10.2026' }
+    ];
+  });
+
+  // ადმინის მიერ პასუხის ინფუთების მდგომარეობა თითოეული ტიგეტისთვის
+  const [replyInputs, setReplyInputs] = useState({});
 
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
@@ -326,12 +335,40 @@ export default function AdminDashboardPro({
 
   const handleUpdateTicketStatus = (ticketId, newStatus) => {
     setSupportTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
+    try {
+      localStorage.setItem('geostore_support_tickets', JSON.stringify(supportTickets));
+    } catch {}
     logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
+  };
+
+  // ადმინისტრატორის მიერ პასუხის მიწერა ტიგეტზე
+  const handleSendTicketReply = (ticketId) => {
+    const replyText = replyInputs[ticketId];
+    if (!replyText || !replyText.trim()) return;
+
+    setSupportTickets(prev => prev.map(t => {
+      if (t.id === ticketId) {
+        const updated = { ...t, reply: replyText.trim(), status: 'მოგვარებული' };
+        return updated;
+      }
+      return t;
+    }));
+
+    try {
+      const updatedList = supportTickets.map(t => t.id === ticketId ? { ...t, reply: replyText.trim(), status: 'მოგვარებული' } : t);
+      localStorage.setItem('geostore_support_tickets', JSON.stringify(updatedList));
+    } catch {}
+
+    setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
+    logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
+    alert('✅ პასუხი წარმატებით გაეგზავნა მომხმარებელს!');
   };
 
   const handleDeleteTicket = (ticketId) => {
     if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
-      setSupportTickets(prev => prev.filter(t => t.id !== ticketId));
+      const updated = supportTickets.filter(t => t.id !== ticketId);
+      setSupportTickets(updated);
+      try { localStorage.setItem('geostore_support_tickets', JSON.stringify(updated)); } catch {}
       logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
     }
   };
@@ -498,7 +535,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: მხარდაჭერა, უსაფრთხოება, ფინანსები, შეკვეთები, პროდუქტები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: მხარდაჭერა და პასუხები, უსაფრთხოება, ფინანსები, შეკვეთები</p>
           </div>
         </div>
         <button 
@@ -514,7 +551,7 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
-          { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.length || 0 },
+          { id: 'support', label: '💬 მხარდაჭერა & პასუხები', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0 },
           { id: 'discounts', label: '⚡ ფლეშ-აქციები' },
           { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0 },
           { id: 'broadcasts', label: '📢 შეტყობინებები' },
@@ -621,35 +658,65 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 💬 მხარდაჭერის ტიგეტების მართვა */}
+      {/* 💬 მხარდაჭერის ტიგეტები და პასუხის გაცემა */}
       {adminTab === 'support' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და კითხვები ({supportTickets?.length || 0})
+            <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხის გაცემა ({supportTickets?.length || 0})
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {(!supportTickets || supportTickets.length === 0) ? (
               <p className="text-slate-500 text-xs py-6 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
             ) : (
               supportTickets.map(t => (
-                <div key={t.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                <div key={t.id} className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3 text-xs">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                    <div className="flex items-center gap-2.5">
                       <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
-                      <span className="text-slate-200 font-bold">{t.subject}</span>
+                      <span className="text-white font-black text-sm">{t.subject}</span>
                       <span className="text-slate-500 text-[10px]">({t.date})</span>
                     </div>
-                    <p className="text-slate-300">მომხმარებელი: <b className="text-white">{t.customerName}</b> ({t.email})</p>
-                    <p className="text-slate-400 text-[11px] bg-slate-900 p-2.5 rounded-xl border border-slate-800 mt-1">💬 "{t.message}"</p>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                        <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'ღია' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>ღია</button>
+                        <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                        <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
+                      </div>
+                      <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 w-full md:w-auto justify-end shrink-0">
-                    <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
-                      <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'ღია' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>ღია</button>
-                      <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                      <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
+                  <div className="space-y-1">
+                    <p className="text-slate-300">მომხმარებელი: <b className="text-white">{t.customerName}</b> ({t.email})</p>
+                    <p className="text-slate-300 bg-slate-900 p-3 rounded-xl border border-slate-800/80 mt-1">
+                      <b className="text-emerald-400 block mb-0.5">კითხვა:</b> "{t.message}"
+                    </p>
+                  </div>
+
+                  {/* უკვე გაცემული პასუხის ჩვენება */}
+                  {t.reply && (
+                    <div className="bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl space-y-1">
+                      <b className="text-emerald-400 block text-[11px]">ადმინისტრატორის პასუხი:</b>
+                      <p className="text-slate-200">{t.reply}</p>
                     </div>
-                    <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                  )}
+
+                  {/* პასუხის მიწერის ფორმა */}
+                  <div className="flex gap-2 pt-2">
+                    <input 
+                      type="text" 
+                      placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
+                      value={replyInputs[t.id] !== undefined ? replyInputs[t.id] : ''}
+                      onChange={e => setReplyInputs({...replyInputs, [t.id]: e.target.value})}
+                      className="flex-1 bg-slate-900 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500"
+                    />
+                    <button 
+                      onClick={() => handleSendTicketReply(t.id)}
+                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-xl transition flex items-center gap-1.5 shrink-0"
+                    >
+                      <Send className="w-4 h-4" /> პასუხის გაგზავნა
+                    </button>
                   </div>
                 </div>
               ))
