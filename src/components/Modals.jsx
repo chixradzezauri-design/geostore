@@ -1,4 +1,4 @@
-// src/components/Modals.js
+// src/components/Modals.jsx
 import React from 'react';
 import { Gift, CheckSquare, Bell, Edit3, MessageSquare, Send, ImageIcon } from 'lucide-react';
 
