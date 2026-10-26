@@ -1,26 +1,17 @@
 // src/components/StoreView.jsx
 import React from 'react';
-import { ShoppingBag, Heart, Eye, Grid, CheckSquare, Bell } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 export default function StoreView({
   siteSettings,
   promoSlots,
   categories,
-  vendorsList,
-  selectedVendorFilter,
-  setSelectedVendorFilter,
   selectedCategory,
   setSelectedCategory,
   filteredProducts,
   wishlist,
   toggleWishlist,
-  comparisonList,
-  toggleComparison,
-  setSelectedProductQuickView,
   addToCart,
-  setQuickBuyProduct,
-  setIsCheckoutOpen,
-  setPriceAlertModal,
   formatPrice
 }) {
   return (
