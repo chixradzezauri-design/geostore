@@ -1,11 +1,11 @@
-// src/App.jsx - GEOSTORE Next-Gen Minimalist Edition
+// src/App.jsx - GEOSTORE Next-Gen Minimalist Edition with Terms & Warranty
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -123,6 +123,10 @@ export default function App() {
   const [quickBuyProduct] = useState(null);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
+
+  // New Terms & Warranty Modal States
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
 
   // Support / Chat Widget State
   const [supportOpen, setSupportOpen] = useState(false);
@@ -516,10 +520,10 @@ export default function App() {
         authForm={authForm}
         setAuthForm={setAuthForm}
         handleAuthSubmit={handleAuthSubmit}
-        isGiftQuizOpen={isGiftQuizOpen}
-        setIsGiftQuizOpen={setIsGiftQuizOpen}
-        products={products}
-        addToCart={addToCart}
+        isTermsOpen={isTermsOpen}
+        setIsTermsOpen={setIsTermsOpen}
+        isWarrantyOpen={isWarrantyOpen}
+        setIsWarrantyOpen={setIsWarrantyOpen}
       />
 
       <AiAssistantModal 
@@ -528,10 +532,19 @@ export default function App() {
         products={products}
         categories={categories}
         addToCart={addToCart}
-        formatFormatPrice={formatPrice}
+        formatPrice={formatPrice}
       />
 
-      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-12 backdrop-blur-md">
+      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-12 backdrop-blur-md space-y-3">
+        <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
+          <button onClick={() => setIsTermsOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
+            <FileText className="w-4 h-4" /> წესები და პირობები
+          </button>
+          <span>•</span>
+          <button onClick={() => setIsWarrantyOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
+            <ShieldCheck className="w-4 h-4" /> საგარანტიო წესები
+          </button>
+        </div>
         <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
       </footer>
     </div>
