@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE სრული მთავარი ფაილი
+// src/App.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -6,7 +6,6 @@ import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
 
-// --- CONFIG & INITIAL DATA ---
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
@@ -25,7 +24,7 @@ const sendTelegramNotification = (text) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: TG_CHAT_ID, text: text, parse_mode: 'Markdown' })
-  }).catch(err => console.log("TG Error:", err));
+  }).catch(() => {});
 };
 
 const INITIAL_CATEGORIES = [
@@ -37,8 +36,7 @@ const INITIAL_CATEGORIES = [
 
 const INITIAL_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
-  { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' },
-  { id: 'v3', name: 'Apple Shop Tbilisi', commission: 8, status: 'აქტიური' }
+  { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
 ];
 
 const INITIAL_PRODUCTS = [
@@ -51,7 +49,6 @@ const INITIAL_PRODUCTS = [
     vendor: 'GEOSTORE ოფიციალური',
     priceGEL: 3899,
     oldPriceGEL: 4299,
-    costPriceGEL: 3200,
     stock: 8,
     image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
     description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით.'
@@ -65,7 +62,6 @@ const INITIAL_PRODUCTS = [
     vendor: 'TechHub Georgia',
     priceGEL: 4499,
     oldPriceGEL: 4899,
-    costPriceGEL: 3800,
     stock: 4,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600',
     description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით.'
@@ -74,63 +70,54 @@ const INITIAL_PRODUCTS = [
 
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : fallback;
-    } catch (e) { return fallback; }
+    try { const item = localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch { return fallback; }
   };
 
-  const [siteSettings, setSiteSettings] = useState(() => loadSafeStorage('geostore_site_settings', {
+  const [siteSettings] = useState({
     storeName: 'GEOSTORE',
     topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი',
     heroTitle: 'მრავალვენდერიანი მარკეტფლეისი საუკეთესო შეთავაზებებით',
     heroSubtitle: 'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
-  }));
+  });
 
-  const [categories, setCategories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
-  const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
-  const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
-  const [banners, setBanners] = useState([]);
-  const [promoSlots, setPromoSlots] = useState([
+  const [categories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
+  const [vendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
+  const [products] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
+  const [promoSlots] = useState([
     { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-emerald-600/30 to-teal-800/40' },
     { id: 'ps2', title: '0% განვადება 24 თვემდე', tag: 'FINANCE', bgGradient: 'from-cyan-600/30 to-blue-800/40' },
     { id: 'ps3', title: 'უფასო მიწოდება თბილისში', tag: 'EXPRESS', bgGradient: 'from-green-600/30 to-emerald-900/40' }
   ]);
 
   const [activeTab, setActiveTab] = useState('store'); 
-  const [selectedVendorFilter, setSelectedVendorFilter] = useState('ყველა');
+  const [selectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
 
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-  const [comparisonList, setComparisonList] = useState([]);
+  const [comparisonList] = useState([]);
 
-  // --- Auth States ---
-  const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', [
-    { id: 'u1', name: 'გიორგი ბერიძე', email: 'giorgi@gmail.com', phone: '599123456', password: '123' }
-  ]));
+  // Auth
+  const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', []));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '' });
 
-  // --- Admin States ---
-  const [adminAuth, setAdminAuth] = useState({ username: "admin", password: "admin123" });
+  // Admin
+  const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try { return localStorage.getItem('geostore_admin_remember'] === 'true'; } catch { return false; }
+    try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
   const [adminError, setAdminError] = useState('');
 
-  // --- Orders & Modals ---
+  // Orders & Modals
   const [orders, setOrders] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '' });
-  const [quickBuyProduct, setQuickBuyProduct] = useState(null);
-  const [selectedProductQuickView, setSelectedProductQuickView] = useState(null);
-  const [priceAlertModal, setPriceAlertModal] = useState(null);
-
+  const [quickBuyProduct] = useState(null);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
 
@@ -151,13 +138,11 @@ export default function App() {
           customerName: o.customer_name,
           phone: o.phone,
           address: o.address,
-          userEmail: o.user_email,
-          items: o.items || [],
           totalGEL: o.total_gel,
           status: o.status || 'ახალი'
         })));
       }
-    } catch (e) { console.error(e); }
+    } catch {}
   };
 
   useEffect(() => {
@@ -166,9 +151,8 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch(e){} }, [products]);
-  useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
-  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
+  useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
+  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
 
   const cartTotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
@@ -176,8 +160,7 @@ export default function App() {
   }, [cart, quickBuyProduct]);
 
   const proAnalytics = useMemo(() => {
-    const completedOrders = orders.filter(o => o.status === 'ჩაბარებულია');
-    const totalRevenueGEL = completedOrders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
+    const totalRevenueGEL = orders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
     return {
       totalRevenueGEL,
       netProfitGEL: totalRevenueGEL * 0.25,
@@ -189,9 +172,7 @@ export default function App() {
   const addToCart = (product, quantity = 1) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
-      }
+      if (existing) return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
       return [...prev, { ...product, quantity }];
     });
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
@@ -205,16 +186,6 @@ export default function App() {
         return prev.filter(item => item.id !== product.id);
       }
       showToast('❤️ დაემატა სურვილების სიაში!');
-      return [...prev, product];
-    });
-  };
-
-  const toggleComparison = (product) => {
-    setComparisonList(prev => {
-      const exists = prev.some(item => item.id === product.id);
-      if (exists) return prev.filter(item => item.id !== product.id);
-      if (prev.length >= 3) { showToast('⚠️ მაქსიმუმ 3 პროდუქტი'); return prev; }
-      showToast('⚔️ დაემატა შედარებაში');
       return [...prev, product];
     });
   };
@@ -277,11 +248,10 @@ export default function App() {
       });
       sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n💰 თანხა: ${cartTotalGEL} ₾`);
       setIsCheckoutOpen(false);
-      setQuickBuyProduct(null);
       setCart([]);
       showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
       fetchOrders();
-    } catch (err) { alert('შეცდომა შეკვეთისას'); }
+    } catch { alert('შეცდომა შეკვეთისას'); }
   };
 
   const filteredProducts = useMemo(() => {
@@ -299,12 +269,10 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full">
       {toastMessage && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-500 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-xl border border-emerald-300 animate-bounce flex items-center gap-2 text-xs">
-          <Sparkles className="w-4 h-4 text-slate-950" />
           {toastMessage}
         </div>
       )}
 
-      {/* HEADER COMPONENT */}
       <Header 
         siteSettings={siteSettings}
         setActiveTab={setActiveTab}
@@ -319,29 +287,20 @@ export default function App() {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* MAIN VIEW AREA */}
       <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 space-y-6">
         {activeTab === 'store' && (
           <StoreView 
             siteSettings={siteSettings}
-            banners={banners}
             promoSlots={promoSlots}
             categories={categories}
             vendorsList={vendorsList}
-            selectedVendorFilter={selectedVendorFilter}
-            setSelectedVendorFilter={setSelectedVendorFilter}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             comparisonList={comparisonList}
-            toggleComparison={toggleComparison}
-            setSelectedProductQuickView={setSelectedProductQuickView}
             addToCart={addToCart}
-            setQuickBuyProduct={setQuickBuyProduct}
-            setIsCheckoutOpen={setIsCheckoutOpen}
-            setPriceAlertModal={setPriceAlertModal}
             formatPrice={formatPrice}
           />
         )}
@@ -356,8 +315,6 @@ export default function App() {
             adminError={adminError}
             proAnalytics={proAnalytics}
             orders={orders}
-            usersList={usersList}
-            products={products}
             formatPrice={formatPrice}
           />
         )}
@@ -420,14 +377,12 @@ export default function App() {
         )}
       </main>
 
-      {/* MODALS COMPONENT */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
         checkoutForm={checkoutForm}
         setCheckoutForm={setCheckoutForm}
         handlePlaceOrder={handlePlaceOrder}
-        cartTotalGEL={cartTotalGEL}
         isAuthOpen={isAuthOpen}
         setIsAuthOpen={setIsAuthOpen}
         authMode={authMode}
@@ -439,14 +394,8 @@ export default function App() {
         setIsGiftQuizOpen={setIsGiftQuizOpen}
         products={products}
         addToCart={addToCart}
-        comparisonList={comparisonList}
-        toggleComparison={toggleComparison}
-        wishlist={wishlist}
-        toggleWishlist={toggleWishlist}
-        formatPrice={formatPrice}
       />
 
-      {/* AI ASSISTANT MODAL COMPONENT */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
@@ -456,7 +405,7 @@ export default function App() {
       />
 
       <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-[11px] text-slate-500 mt-10">
-        <p>© 2026 {siteSettings.storeName}. ყველა უფლება დაცულია.</p>
+        <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
       </footer>
     </div>
   );
