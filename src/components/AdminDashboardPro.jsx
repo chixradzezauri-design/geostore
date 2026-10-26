@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ბანერებისა და პრომო აქციების მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ბროდკასტები და შეტყობინებები)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -50,9 +50,13 @@ export default function AdminDashboardPro({
 
   const [newCatName, setNewCatName] = useState('');
 
-  // ბანერის ფორმა
   const [bannerForm, setBannerForm] = useState({
     title: '', subtitle: '', image: '', link: ''
+  });
+
+  // ბროდკასტის ფორმა
+  const [broadcastForm, setBroadcastForm] = useState({
+    title: '', message: ''
   });
 
   const [settingsForm, setSettingsForm] = useState({
@@ -211,7 +215,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // ბანერის დამატება
   const handleAddBanner = (e) => {
     e.preventDefault();
     if (!bannerForm.title) return;
@@ -229,6 +232,28 @@ export default function AdminDashboardPro({
     if (window.confirm('ნამდვილად გსურთ ამ ბანერის წაშლა?')) {
       setBannersList(prev => prev.filter(b => b.id !== id));
     }
+  };
+
+  // ბროდკასტის / შეტყობინების გაგზავნა
+  const handleSendBroadcast = (e) => {
+    e.preventDefault();
+    if (!broadcastForm.title || !broadcastForm.message) return;
+    
+    // ვინახავთ შეტყობინებას მომხმარებლებისთვის შესანახ ბაზაში
+    const newNotification = {
+      id: `notif-${Date.now()}`,
+      title: broadcastForm.title,
+      message: broadcastForm.message,
+      date: new Date().toLocaleDateString('ka-GE')
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('geostore_broadcasts') || '[]');
+      localStorage.setItem('geostore_broadcasts', JSON.stringify([newNotification, ...existing]));
+    } catch {}
+
+    setBroadcastForm({ title: '', message: '' });
+    alert('🚀 შეტყობინება წარმატებით გაეგზავნა ყველა მომხმარებელს!');
   };
 
   const handleUpdateOrderStatus = (orderId, newStatus) => {
@@ -286,7 +311,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ბანერები, კატეგორიები, ვენდორები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ბროდკასტები, ბანერები, ვენდორები</p>
           </div>
         </div>
         <button 
@@ -302,6 +327,7 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'broadcasts', label: '💬 შეტყობინებები' },
           { id: 'banners', label: '📢 ბანერები', count: bannersList?.length || 0 },
           { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
@@ -495,7 +521,42 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 📢 ბანერების მართვის სექცია */}
+      {/* 💬 შეტყობინებებისა და ბროდკასტების სექცია */}
+      {adminTab === 'broadcasts' && (
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="font-black text-white text-sm flex items-center gap-2">
+            <Send className="w-5 h-5 text-emerald-400" /> გლობალური შეტყობინების (Broadcast) გაგზავნა
+          </h3>
+          <form onSubmit={handleSendBroadcast} className="space-y-3 text-xs">
+            <div className="space-y-1">
+              <label className="text-slate-400 font-bold">შეტყობინების სათაური</label>
+              <input 
+                type="text" 
+                placeholder="მაგ: ახალი კოლექცია უკვე საიტზეა!" 
+                required 
+                value={broadcastForm.title} 
+                onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})} 
+                className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-slate-400 font-bold">შეტყობინების ტექსტი</label>
+              <textarea 
+                rows="4"
+                placeholder="დაწერეთ შეტყობინება, რომელიც გამოჩნდება მომხმარებლების პანელში..." 
+                required 
+                value={broadcastForm.message} 
+                onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} 
+                className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500 resize-none" 
+              />
+            </div>
+            <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow hover:bg-emerald-400 transition flex items-center gap-2">
+              <Send className="w-4 h-4" /> შეტყობინების გაგზავნა ყველა მომხმარებელს
+            </button>
+          </form>
+        </div>
+      )}
+
       {adminTab === 'banners' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
