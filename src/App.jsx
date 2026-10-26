@@ -1,11 +1,11 @@
-// src/App.jsx - GEOSTORE სრული მარკეტფლეისი Supabase მხარდაჭერით და სინქრონიზაციით
+// src/App.jsx - GEOSTORE Next-Gen Minimalist Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -310,7 +310,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full">
       {toastMessage && (
-        <div className="fixed top-4 right-4 z-50 bg-emerald-500 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-xl border border-emerald-300 animate-bounce flex items-center gap-2 text-xs">
+        <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
         </div>
       )}
@@ -329,7 +329,7 @@ export default function App() {
         setSearchQuery={setSearchQuery}
       />
 
-      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1 space-y-8">
         {activeTab === 'store' && (
           <StoreView 
             siteSettings={siteSettings}
@@ -376,20 +376,22 @@ export default function App() {
         )}
 
         {activeTab === 'wishlist' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-white">❤️ სურვილების სია ({wishlist.length})</h2>
-            {wishlist.length === 0 ? <p className="text-slate-500 text-xs">სია ცარიელია.</p> : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="space-y-6">
+            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> სურვილების სია ({wishlist.length})
+            </h2>
+            {wishlist.length === 0 ? <p className="text-slate-500 text-xs py-8">სია ცარიელია.</p> : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map(prod => (
-                  <div key={prod.id} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img src={prod.image} alt="" className="w-14 h-14 object-contain bg-slate-950 rounded-lg p-1 border border-slate-800" />
+                  <div key={prod.id} className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl">
+                    <div className="flex items-center gap-3.5">
+                      <img src={prod.image} alt="" className="w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner" />
                       <div>
-                        <h4 className="font-bold text-xs text-white">{prod.name}</h4>
-                        <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(prod.priceGEL)}</p>
+                        <h4 className="font-bold text-xs text-white line-clamp-1">{prod.name}</h4>
+                        <p className="text-emerald-400 font-black text-xs mt-1">{formatPrice(prod.priceGEL)}</p>
                       </div>
                     </div>
-                    <button onClick={() => addToCart(prod)} className="bg-emerald-500 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold shadow">კალათაში</button>
+                    <button onClick={() => addToCart(prod)} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer">კალათაში</button>
                   </div>
                 ))}
               </div>
@@ -398,24 +400,26 @@ export default function App() {
         )}
 
         {activeTab === 'cart' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-black text-white">🛒 საყიდლების კალათა</h2>
-            {cart.length === 0 ? <p className="text-slate-500 text-xs">კალათა ცარიელია.</p> : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2 space-y-2.5">
+          <div className="space-y-6">
+            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-emerald-400" /> საყიდლების კალათა
+            </h2>
+            {cart.length === 0 ? <p className="text-slate-500 text-xs py-8">კალათა ცარიელია.</p> : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-3">
                   {cart.map(item => (
-                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-                      <div>
+                    <div key={item.id} className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl">
+                      <div className="space-y-1">
                         <h4 className="font-bold text-xs text-white">{item.name}</h4>
-                        <p className="text-emerald-400 font-bold mt-0.5">{formatPrice(item.priceGEL)} x {item.quantity}</p>
+                        <p className="text-emerald-400 font-bold">{formatPrice(item.priceGEL)} x {item.quantity}</p>
                       </div>
-                      <button onClick={() => setCart(cart.filter(c => c.id !== item.id))} className="text-rose-400 font-bold">წაშლა</button>
+                      <button onClick={() => setCart(cart.filter(c => c.id !== item.id))} className="text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer">წაშლა</button>
                     </div>
                   ))}
                 </div>
-                <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl h-fit space-y-3.5 shadow-lg">
-                  <div className="text-lg font-black text-emerald-400">სულ: {formatPrice(cartTotalGEL)}</div>
-                  <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl text-xs shadow">შეკვეთის გაფორმება</button>
+                <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-4 shadow-2xl backdrop-blur-2xl">
+                  <div className="text-xl font-black text-emerald-400">სულ: {formatPrice(cartTotalGEL)}</div>
+                  <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer">შეკვეთის გაფორმება</button>
                 </div>
               </div>
             )}
@@ -423,25 +427,29 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-md mx-auto bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3 text-xs shadow-xl">
-            <h2 className="text-base font-black text-white">👤 მომხმარებლის პროფილი</h2>
-            <p><b>სახელი:</b> {currentUser.name}</p>
-            <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
-            <p><b>ტელეფონი:</b> {currentUser.phone}</p>
-            <button onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} className="bg-rose-500 text-white px-4 py-2 rounded-xl font-bold">გამოსვლა</button>
+          <div className="max-w-md mx-auto bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+            <h2 className="text-base font-black text-white flex items-center gap-2">
+              <User className="w-4 h-4 text-emerald-400" /> მომხმარებლის პროფილი
+            </h2>
+            <div className="space-y-2 text-slate-300">
+              <p><b>სახელი:</b> {currentUser.name}</p>
+              <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
+              <p><b>ტელეფონი:</b> {currentUser.phone}</p>
+            </div>
+            <button onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer">გამოსვლა</button>
           </div>
         )}
       </main>
 
-      {/* მხარდაჭერის მცურავი ვიჯეტი Supabase ინტეგრაციით */}
+      {/* მხარდაჭერის მცურავი ვიჯეტი */}
       <div className="fixed bottom-6 right-6 z-50">
         {supportOpen ? (
-          <div className="w-80 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-4 space-y-3 text-xs text-white">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <h4 className="font-black flex items-center gap-1.5 text-emerald-400">
+          <div className="w-80 bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] shadow-2xl p-5 space-y-4 text-xs text-white backdrop-blur-3xl animate-in fade-in duration-300">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h4 className="font-black flex items-center gap-2 text-emerald-400">
                 <MessageSquare className="w-4 h-4" /> GEOSTORE მხარდაჭერა
               </h4>
-              <button onClick={() => setSupportOpen(false)} className="text-slate-400 hover:text-white font-black text-sm">✕</button>
+              <button onClick={() => setSupportOpen(false)} className="text-slate-400 hover:text-white font-black text-sm cursor-pointer p-1">✕</button>
             </div>
             
             <form onSubmit={async (e) => {
@@ -474,12 +482,12 @@ export default function App() {
               } catch {
                 alert('შეცდომა შეტყობინების გაგზავნისას.');
               }
-            }} className="space-y-2.5">
-              <input type="text" name="cname" placeholder="თქვენი სახელი *" required className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <input type="email" name="cemail" placeholder="ელ-ფოსტა" className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <input type="text" name="csubject" placeholder="თემა (მაგ: შეკვეთა #102)" className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
-              <textarea name="cmessage" rows="3" placeholder="დაწერეთ თქვენი კითხვა ან საჩივარი..." required className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500 resize-none"></textarea>
-              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl shadow hover:bg-emerald-400 transition">
+            }} className="space-y-3">
+              <input type="text" name="cname" placeholder="თქვენი სახელი *" required className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
+              <input type="email" name="cemail" placeholder="ელ-ფოსტა" className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
+              <input type="text" name="csubject" placeholder="თემა (მაგ: შეკვეთა #102)" className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
+              <textarea name="cmessage" rows="3" placeholder="დაწერეთ თქვენი კითხვა ან საჩივარი..." required className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 resize-none shadow-inner"></textarea>
+              <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
                 შეტყობინების გაგზავნა
               </button>
             </form>
@@ -520,10 +528,10 @@ export default function App() {
         products={products}
         categories={categories}
         addToCart={addToCart}
-        formatPrice={formatPrice}
+        formatFormatPrice={formatPrice}
       />
 
-      <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-[11px] text-slate-500 mt-10">
+      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-12 backdrop-blur-md">
         <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
       </footer>
     </div>
