@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - სრული კატეგორიები და პროდუქტები
+// src/components/StoreView.jsx
 import React from 'react';
 import { Heart, ShoppingBag } from 'lucide-react';
 
@@ -31,7 +31,7 @@ export default function StoreView({
         ))}
       </div>
 
-      {/* კატეგორიების სრული ბლოკი */}
+      {/* კატეგორიები */}
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">კატეგორიები</h3>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
