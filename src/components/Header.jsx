@@ -1,4 +1,4 @@
-// src/components/Header.jsx - სრული მობილურისთვის ოპტიმიზებული მენიუ
+// src/components/Header.jsx
 import React, { useState } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User } from 'lucide-react';
 
@@ -90,7 +90,7 @@ export default function Header({
         </div>
       </div>
 
-      {/* MOBILE DROPDOWN MENU (ყველა ფუნქცია მობილურისთვის) */}
+      {/* MOBILE DROPDOWN MENU */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-slate-900 border-t border-slate-800 p-4 space-y-3 shadow-2xl">
           <div className="relative">
