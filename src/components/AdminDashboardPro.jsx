@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 2 - კუპონები)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 3 - შეკვეთების სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag
+  Plus, Trash2, Users, Store, Tag, CheckCircle2, Clock, Truck
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -14,6 +14,7 @@ export default function AdminDashboardPro({
   adminError,
   proAnalytics,
   orders,
+  setOrders,
   usersList,
   products,
   setProducts,
@@ -22,7 +23,7 @@ export default function AdminDashboardPro({
   setCoupons,
   formatPrice
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, users, vendors, coupons
+  const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, coupons, users, vendors
   
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', image: '', description: ''
@@ -110,6 +111,10 @@ export default function AdminDashboardPro({
     setCoupons(prev => prev.filter(c => c.id !== id));
   };
 
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  };
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 rounded-3xl p-5 gap-4 shadow-xl">
@@ -119,7 +124,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, პროდუქტები, კუპონები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთების სტატუსები, პროდუქტები, კუპონები</p>
           </div>
         </div>
         <button 
@@ -177,17 +182,18 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 📦 შეკვეთების სრული მართვისა და სტატუსების ცვლილების სექცია */}
       {adminTab === 'orders' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
-            <PackageCheck className="w-5 h-5 text-emerald-400" /> Supabase შეკვეთების სრული მართვა
+            <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსების განახლება
           </h3>
           <div className="space-y-3">
             {(!orders || orders.length === 0) ? (
               <p className="text-slate-500 text-xs py-4 text-center">შეკვეთები ჯერ არ ფიქსირდება.</p>
             ) : (
               orders.map(o => (
-                <div key={o.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+                <div key={o.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
@@ -196,11 +202,34 @@ export default function AdminDashboardPro({
                     <p className="text-slate-200">მყიდველი: <b className="text-white">{o.customerName}</b> | 📞 {o.phone}</p>
                     <p className="text-slate-400 text-[11px]">📍 მისამართი: {o.address}</p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-xl font-bold text-[11px]">
-                      {o.status || 'ახალი'}
-                    </span>
-                    <span className="font-black text-white text-base">{formatPrice(o.totalGEL)}</span>
+                  
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto justify-end">
+                    <div className="text-right">
+                      <span className="font-black text-white text-base block">{formatPrice(o.totalGEL)}</span>
+                      <span className="text-[10px] text-slate-400">სტატუსი: <b className="text-emerald-400">{o.status || 'ახალი'}</b></span>
+                    </div>
+
+                    {/* სტატუსის სწრაფი შეცვლის ღილაკები */}
+                    <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                      <button 
+                        onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
+                        className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'ახალი' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        ახალი
+                      </button>
+                      <button 
+                        onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')}
+                        className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'მუშავდება' ? 'bg-teal-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        მუშავდება
+                      </button>
+                      <button 
+                        onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')}
+                        className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        დასრულებული
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -244,7 +273,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 🎫 კუპონების მართვის ტაბი */}
       {adminTab === 'coupons' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
