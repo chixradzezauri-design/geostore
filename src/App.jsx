@@ -1,10 +1,11 @@
-// src/App.jsx
+// src/App.jsx - GEOSTORE სრული მარკეტფლეისი მცურავი მხარდაჭერის ჩათით და ადმინ ინტეგრაციით
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
+import { MessageSquare } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -80,9 +81,12 @@ export default function App() {
     heroSubtitle: 'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
   }));
 
-  const [categories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
-  const [vendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
+  const [categories, setCategoriesList] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
+  const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
   const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
+  const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', []));
+  const [bannersList, setBannersList] = useState(() => loadSafeStorage('geostore_banners', []));
+
   const [promoSlots] = useState([
     { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-emerald-600/30 to-teal-800/40' },
     { id: 'ps2', title: '0% განვადება 24 თვემდე', tag: 'FINANCE', bgGradient: 'from-cyan-600/30 to-blue-800/40' },
@@ -120,6 +124,9 @@ export default function App() {
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
 
+  // Support / Chat Widget State
+  const [supportOpen, setSupportOpen] = useState(false);
+
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -155,6 +162,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
   useEffect(() => { try { localStorage.setItem('geostore_cart', JSON.stringify(cart)); } catch{} }, [cart]);
   useEffect(() => { try { localStorage.setItem('geostore_wishlist', JSON.stringify(wishlist)); } catch{} }, [wishlist]);
+  useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
 
   const cartTotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
@@ -217,7 +225,10 @@ export default function App() {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminLoginForm.username === adminAuth.username && adminLoginForm.password === adminAuth.password) {
+    const savedUser = localStorage.getItem('geostore_admin_user') || adminAuth.username;
+    const savedPass = localStorage.getItem('geostore_admin_pass') || adminAuth.password;
+
+    if (adminLoginForm.username === savedUser && adminLoginForm.password === savedPass) {
       setAdminLoggedIn(true);
       setAdminError('');
       if (adminLoginForm.remember) localStorage.setItem('geostore_admin_remember', 'true');
@@ -316,11 +327,19 @@ export default function App() {
             adminError={adminError}
             proAnalytics={proAnalytics}
             orders={orders}
+            setOrders={setOrders}
             usersList={usersList}
+            setUsersList={setUsersList}
             products={products}
             setProducts={setProducts}
             vendorsList={vendorsList}
-            categories={categories}
+            setVendorsList={setVendorsList}
+            coupons={coupons}
+            setCoupons={setCoupons}
+            categoriesList={categories}
+            setCategoriesList={setCategoriesList}
+            bannersList={bannersList}
+            setBannersList={setBannersList}
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
@@ -384,6 +403,65 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* მხარდაჭერისა და ჩათის მცურავი ვიჯეტი მთავარი საიტისთვის */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {supportOpen ? (
+          <div className="w-80 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-4 space-y-3 text-xs text-white">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <h4 className="font-black flex items-center gap-1.5 text-emerald-400">
+                <MessageSquare className="w-4 h-4" /> GEOSTORE მხარდაჭერა
+              </h4>
+              <button onClick={() => setSupportOpen(false)} className="text-slate-400 hover:text-white font-black text-sm">✕</button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const name = e.target.cname.value;
+              const email = e.target.cemail.value;
+              const subject = e.target.csubject.value;
+              const message = e.target.cmessage.value;
+              if (!name || !message) return;
+
+              const newT = {
+                id: `t-${Math.floor(1000 + Math.random() * 9000)}`,
+                customerName: name,
+                email: email || 'guest@geostore.ge',
+                subject: subject || 'ზოგადი კითხვა',
+                message: message,
+                status: 'ღია',
+                reply: '',
+                date: new Date().toLocaleDateString('ka-GE')
+              };
+
+              try {
+                const existing = JSON.parse(localStorage.getItem('geostore_support_tickets') || '[]');
+                localStorage.setItem('geostore_support_tickets', JSON.stringify([newT, ...existing]));
+              } catch {}
+
+              alert('✅ თქვენი შეტყობინება წარმატებით გაეგზავნა ადმინისტრატორს! მალე გიპასუხებთ.');
+              e.target.reset();
+              setSupportOpen(false);
+            }} className="space-y-2.5">
+              <input type="text" name="cname" placeholder="თქვენი სახელი *" required className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <input type="email" name="cemail" placeholder="ელ-ფოსტა" className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <input type="text" name="csubject" placeholder="თემა (მაგ: შეკვეთა #102)" className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500" />
+              <textarea name="cmessage" rows="3" placeholder="დაწერეთ თქვენი კითხვა ან საჩივარი..." required className="w-full bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-white outline-none focus:border-emerald-500 resize-none"></textarea>
+              <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-2.5 rounded-xl shadow hover:bg-emerald-400 transition">
+                შეტყობინების გაგზავნა
+              </button>
+            </form>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setSupportOpen(true)}
+            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-full shadow-2xl transition flex items-center gap-2 group cursor-pointer"
+          >
+            <MessageSquare className="w-6 h-6" />
+            <span className="hidden group-hover:inline text-xs pr-1">კონსულტაცია / ჩათი</span>
+          </button>
+        )}
+      </div>
 
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
