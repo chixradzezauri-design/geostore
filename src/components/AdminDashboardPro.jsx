@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ბროდკასტები და შეტყობინებები)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (სისტემური ლოგები და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -54,10 +54,15 @@ export default function AdminDashboardPro({
     title: '', subtitle: '', image: '', link: ''
   });
 
-  // ბროდკასტის ფორმა
   const [broadcastForm, setBroadcastForm] = useState({
     title: '', message: ''
   });
+
+  // სისტემური ლოგების შიდა მდგომარეობა
+  const [activityLogs, setActivityLogs] = useState([
+    { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
+    { id: 'l2', action: 'სისტემის მონაცემები წარმატებით ჩაიტვირთა', time: new Date().toLocaleTimeString('ka-GE') }
+  ]);
 
   const [settingsForm, setSettingsForm] = useState({
     storeName: siteSettings?.storeName || 'GEOSTORE',
@@ -65,6 +70,15 @@ export default function AdminDashboardPro({
     heroTitle: siteSettings?.heroTitle || '',
     heroSubtitle: siteSettings?.heroSubtitle || ''
   });
+
+  const logActivity = (actionText) => {
+    const newLog = {
+      id: `log-${Date.now()}`,
+      action: actionText,
+      time: new Date().toLocaleTimeString('ka-GE') + ' (' + new Date().toLocaleDateString('ka-GE') + ')'
+    };
+    setActivityLogs(prev => [newLog, ...prev]);
+  };
 
   if (!adminLoggedIn) {
     return (
@@ -109,6 +123,7 @@ export default function AdminDashboardPro({
   const handleDeleteProduct = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა?')) {
       setProducts(prev => prev.filter(p => p.id !== id));
+      logActivity(`წაიშალა პროდუქტი (ID: ${id})`);
     }
   };
 
@@ -157,6 +172,7 @@ export default function AdminDashboardPro({
     setProducts(prev => [newProd, ...prev]);
     setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
     setSelectedImages([]);
+    logActivity(`დაემატა ახალი პროდუქტი: ${newProd.name}`);
     alert('✅ პროდუქტი წარმატებით დაემატა!');
   };
 
@@ -171,10 +187,12 @@ export default function AdminDashboardPro({
     };
     setCoupons(prev => [newC, ...prev]);
     setCouponForm({ code: '', discountPercent: '', minOrderGEL: '' });
+    logActivity(`შეიქმნა ახალი კუპონი: ${newC.code}`);
   };
 
   const handleDeleteCoupon = (id) => {
     setCoupons(prev => prev.filter(c => c.id !== id));
+    logActivity(`წაიშალა კუპონი (ID: ${id})`);
   };
 
   const handleAddVendor = (e) => {
@@ -188,12 +206,14 @@ export default function AdminDashboardPro({
     };
     setVendorsList(prev => [...prev, newV]);
     setVendorForm({ name: '', commission: '' });
+    logActivity(`დაემატა ახალი ვენდორი: ${newV.name}`);
     alert('✅ ვენდორი წარმატებით დაემატა!');
   };
 
   const handleDeleteVendor = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
       setVendorsList(prev => prev.filter(v => v.id !== id));
+      logActivity(`წაიშალა ვენდორი (ID: ${id})`);
     }
   };
 
@@ -206,12 +226,14 @@ export default function AdminDashboardPro({
     }
     setCategoriesList(prev => [...(prev || []), newCatName.trim()]);
     setNewCatName('');
+    logActivity(`დაემატა კატეგორია: ${newCatName.trim()}`);
     alert('✅ კატეგორია წარმატებით დაემატა!');
   };
 
   const handleDeleteCategory = (catName) => {
     if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
       setCategoriesList(prev => prev.filter(c => c !== catName));
+      logActivity(`წაიშალა კატეგორია: ${catName}`);
     }
   };
 
@@ -225,21 +247,21 @@ export default function AdminDashboardPro({
     };
     setBannersList(prev => [...(prev || []), newB]);
     setBannerForm({ title: '', subtitle: '', image: '', link: '' });
+    logActivity(`დაემატა ბანერი: ${newB.title}`);
     alert('✅ სარეკლამო ბანერი წარმატებით დაემატა!');
   };
 
   const handleDeleteBanner = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ ბანერის წაშლა?')) {
       setBannersList(prev => prev.filter(b => b.id !== id));
+      logActivity(`წაიშალა ბანერი (ID: ${id})`);
     }
   };
 
-  // ბროდკასტის / შეტყობინების გაგზავნა
   const handleSendBroadcast = (e) => {
     e.preventDefault();
     if (!broadcastForm.title || !broadcastForm.message) return;
     
-    // ვინახავთ შეტყობინებას მომხმარებლებისთვის შესანახ ბაზაში
     const newNotification = {
       id: `notif-${Date.now()}`,
       title: broadcastForm.title,
@@ -253,11 +275,13 @@ export default function AdminDashboardPro({
     } catch {}
 
     setBroadcastForm({ title: '', message: '' });
+    logActivity(`გაიგზავნა ბროდკასტი: ${broadcastForm.title}`);
     alert('🚀 შეტყობინება წარმატებით გაეგზავნა ყველა მომხმარებელს!');
   };
 
   const handleUpdateOrderStatus = (orderId, newStatus) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
   };
 
   const handleExportOrders = () => {
@@ -279,16 +303,19 @@ export default function AdminDashboardPro({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
   const handleToggleVipUser = (userId) => {
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
+    logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
   };
 
   const handleSaveSettings = (e) => {
     e.preventDefault();
     setSiteSettings(settingsForm);
     try { localStorage.setItem('geostore_site_settings', JSON.stringify(settingsForm)); } catch {}
+    logActivity('განახლდა საიტის გლობალური პარამეტრები');
     alert('საიტის პარამეტრები წარმატებით განახლდა!');
   };
 
@@ -311,7 +338,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ბროდკასტები, ბანერები, ვენდორები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ლოგები, ბროდკასტები, ბანერები</p>
           </div>
         </div>
         <button 
@@ -327,6 +354,7 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'logs', label: '📋 აქტივობები (ლოგები)', count: activityLogs?.length || 0 },
           { id: 'broadcasts', label: '💬 შეტყობინებები' },
           { id: 'banners', label: '📢 ბანერები', count: bannersList?.length || 0 },
           { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0 },
@@ -521,7 +549,23 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 💬 შეტყობინებებისა და ბროდკასტების სექცია */}
+      {/* 📋 აქტივობებისა და ლოგების სექცია */}
+      {adminTab === 'logs' && (
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="font-black text-white text-sm flex items-center gap-2">
+            <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
+          </h3>
+          <div className="space-y-2.5">
+            {activityLogs.map(log => (
+              <div key={log.id} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+                <span className="font-bold text-slate-200">{log.action}</span>
+                <span className="text-slate-500 text-[10px]">{log.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {adminTab === 'broadcasts' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
