@@ -1,10 +1,11 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Separate AI Floating Widget
+// src/App.jsx - GEOSTORE Next-Gen Edition with Image Search Fully Integrated
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
+import ImageSearchModal from './components/ImageSearchModal'; // <--- ფოტოთი ძიების მოდალი
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -124,9 +125,10 @@ export default function App() {
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
 
-  // Terms & Warranty Modals
+  // Terms, Warranty & Image Search Modals
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
+  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false); // <--- ფოტოთი ძიების სთეითი
 
   // Support / Chat Widget State
   const [supportOpen, setSupportOpen] = useState(false);
@@ -329,6 +331,7 @@ export default function App() {
         setAuthMode={setAuthMode}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         setIsGiftQuizOpen={setIsGiftQuizOpen}
+        setIsImageSearchOpen={setIsImageSearchOpen}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
@@ -538,6 +541,15 @@ export default function App() {
         setIsTermsOpen={setIsTermsOpen}
         isWarrantyOpen={isWarrantyOpen}
         setIsWarrantyOpen={setIsWarrantyOpen}
+      />
+
+      {/* 📸 ფოტოთი ძიების მოდალი */}
+      <ImageSearchModal 
+        isImageSearchOpen={isImageSearchOpen}
+        setIsImageSearchOpen={setIsImageSearchOpen}
+        products={products}
+        addToCart={addToCart}
+        formatPrice={formatPrice}
       />
 
       <AiAssistantModal 
