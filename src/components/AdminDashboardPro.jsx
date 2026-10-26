@@ -75,7 +75,6 @@ export default function AdminDashboardPro({
     newUsername: '', newPassword: ''
   });
 
-  // მხარდაჭერის ტიგეტები პირდაპირ Supabase-დან
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
 
@@ -683,7 +682,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 💬 მხარდაჭერის ტიგეტები Supabase-დან */}
       {adminTab === 'support' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
