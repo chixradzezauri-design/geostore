@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (სისტემური ლოგები და სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ფასდაკლებები და ფლეშ-აქციები)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -58,7 +58,11 @@ export default function AdminDashboardPro({
     title: '', message: ''
   });
 
-  // სისტემური ლოგების შიდა მდგომარეობა
+  // ფლეშ-აქციის / ფასდაკლების მასობრივი ფორმა
+  const [flashSaleForm, setFlashSaleForm] = useState({
+    discountPercent: '', category: 'ყველა'
+  });
+
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
     { id: 'l2', action: 'სისტემის მონაცემები წარმატებით ჩაიტვირთა', time: new Date().toLocaleTimeString('ka-GE') }
@@ -174,6 +178,30 @@ export default function AdminDashboardPro({
     setSelectedImages([]);
     logActivity(`დაემატა ახალი პროდუქტი: ${newProd.name}`);
     alert('✅ პროდუქტი წარმატებით დაემატა!');
+  };
+
+  // მასობრივი ფასდაკლების / ფლეშ-აქციის გააქტიურება
+  const handleApplyFlashSale = (e) => {
+    e.preventDefault();
+    const percent = Number(flashSaleForm.discountPercent);
+    if (!percent || percent <= 0) return;
+
+    setProducts(prev => prev.map(p => {
+      if (flashSaleForm.category === 'ყველა' || p.category === flashSaleForm.category) {
+        const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
+        const discountedPrice = Math.round(basePrice * (1 - percent / 100));
+        return {
+          ...p,
+          oldPriceGEL: basePrice,
+          priceGEL: discountedPrice
+        };
+      }
+      return p;
+    }));
+
+    logActivity(`გააქტიურდა მასობრივი ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${flashSaleForm.category}`);
+    alert(`⚡ წარმატებით გააქტიურდა ${percent}%-იანი ფასდაკლება!`);
+    setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
   };
 
   const handleCreateCoupon = (e) => {
@@ -338,7 +366,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ლოგები, ბროდკასტები, ბანერები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, ფლეშ-აქციები, ლოგები, ბანერები</p>
           </div>
         </div>
         <button 
@@ -354,7 +382,8 @@ export default function AdminDashboardPro({
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
-          { id: 'logs', label: '📋 აქტივობები (ლოგები)', count: activityLogs?.length || 0 },
+          { id: 'discounts', label: '⚡ ფლეშ-აქციები' },
+          { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0 },
           { id: 'broadcasts', label: '💬 შეტყობინებები' },
           { id: 'banners', label: '📢 ბანერები', count: bannersList?.length || 0 },
           { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0 },
@@ -549,7 +578,46 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 📋 აქტივობებისა და ლოგების სექცია */}
+      {/* ⚡ ფლეშ-აქციებისა და ფასდაკლებების სექცია */}
+      {adminTab === 'discounts' && (
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="font-black text-white text-sm flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
+          </h3>
+          <form onSubmit={handleApplyFlashSale} className="space-y-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">ფასდაკლება პროცენტულად (%)</label>
+                <input 
+                  type="number" 
+                  placeholder="მაგ: 20" 
+                  required 
+                  value={flashSaleForm.discountPercent} 
+                  onChange={e => setFlashSaleForm({...flashSaleForm, discountPercent: e.target.value})} 
+                  className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500" 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-slate-400 font-bold">კატეგორია</label>
+                <select 
+                  value={flashSaleForm.category} 
+                  onChange={e => setFlashSaleForm({...flashSaleForm, category: e.target.value})} 
+                  className="w-full bg-slate-950 border border-slate-800 p-3 rounded-xl text-white outline-none focus:border-emerald-500"
+                >
+                  <option value="ყველა">ყველა კატეგორია</option>
+                  {categoriesList?.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <button type="submit" className="bg-amber-500 text-slate-950 font-black px-6 py-3 rounded-xl shadow hover:bg-amber-400 transition flex items-center gap-2">
+              <Zap className="w-4 h-4" /> ფასდაკლების მასობრივად გააქტიურება
+            </button>
+          </form>
+        </div>
+      )}
+
       {adminTab === 'logs' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
