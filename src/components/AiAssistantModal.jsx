@@ -1,4 +1,4 @@
-// src/components/AiAssistantModal.js
+// src/components/AiAssistantModal.jsx
 import React from 'react';
 import { Bot, Send } from 'lucide-react';
 
