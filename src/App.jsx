@@ -282,6 +282,7 @@ export default function App() {
   const [comparisonList, setComparisonList] = useState([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
+  // --- SMART ENHANCED AI ASSISTANT STATE ---
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [aiBudget, setAiBudget] = useState(10000);
   const [aiCategory, setAiCategory] = useState('ყველა');
@@ -289,7 +290,7 @@ export default function App() {
   const [aiChatHistory, setAiChatHistory] = useState([
     {
       sender: 'ai',
-      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. მე რეალურ დროში მაქვს წვდომა მაღაზიის ყველა პროდუქტზე, ვენდერებზე, ფასზე, მარაგზე და წესებზე! მკითხეთ ნებისმიერი რამ.',
+      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. მე რეალურ დროში ვამოწმებ მაღაზიის მარაგებს, მიმდინარე ფასებს, ფასდაკლებებს, შეკვეთების სტატუსებსა და საიტის წესებს! რით შეგვიძლია დაგეხმაროთ დღეს?',
       recommendedProducts: []
     }
   ]);
@@ -785,22 +786,28 @@ export default function App() {
     }
   };
 
+  // ==========================================
+  // SMART ENHANCED AI ASSISTANT LOGIC (UPDATED)
+  // ==========================================
   const handleAiAsk = (customQuestion = null) => {
     const queryRaw = (customQuestion || aiInputText).trim();
     const queryLower = queryRaw.toLowerCase();
 
+    if (!queryRaw) return;
+
     const userMsg = { 
       sender: 'user', 
-      text: queryRaw || `ბიუჯეტი: ${aiBudget}₾, კატეგორია: ${aiCategory}` 
+      text: queryRaw 
     };
 
+    // 1. Greeting check
     const greetingKeywords = ['გამარჯობა', 'გარმარჯობა', 'სალამი', 'hi', 'hello', 'როგორ ხარ', 'ვინ ხარ', 'რისი გაკეთება შეგიძლია'];
     const isGreeting = greetingKeywords.some(k => queryLower === k || (queryLower.includes(k) && queryLower.length < 15));
 
     if (isGreeting) {
       const aiGreetingMsg = {
         sender: 'ai',
-        text: `გამარჯობა! 👋 მე ვარ ${siteSettings.storeName}-ის ჭკვიანი AI ასისტენტი. სიამოვნებით დაგეხმარებით პროდუქტების შერჩევაში, ფასების ნახვაში ან საიტის წესებისა და პოლიტიკის გაცნობაში. რით შემიძლია დაგეხმაროთ დღეს?`,
+        text: `გამარჯობა! 👋 მე ვარ ${siteSettings.storeName}-ის ჭკვიანი AI ასისტენტი. მე რეალურ დროში ვამოწმებ მაღაზიის მარაგებს, ფასებს, ფასდაკლებებს, შეკვეთების სტატუსებსა და საიტის წესებს. რით შემიძლია დაგეხმაროთ დღეს?`,
         recommendedProducts: []
       };
       setAiChatHistory(prev => [...prev, userMsg, aiGreetingMsg]);
@@ -808,6 +815,7 @@ export default function App() {
       return;
     }
 
+    // 2. Policy / Rules check
     const policyKeywords = ['წესი', 'წესები', 'პოლიტიკა', 'მიწოდება', 'მიტანა', 'გარანტია', 'დაბრუნება', 'კონფიდენციალურობა', 'პირობები'];
     const isPolicyAsk = policyKeywords.some(k => queryLower.includes(k));
 
@@ -823,17 +831,85 @@ export default function App() {
         policyReply += `1️⃣ **ზოგადი:** ${storePolicy.general}\n\n2️⃣ **მიწოდება:** ${storePolicy.delivery}\n\n3️⃣ **გარანტია:** ${storePolicy.warranty}\n\n4️⃣ **კონფიდენციალურობა:** ${storePolicy.privacy}`;
       }
 
-      const aiMsg = {
-        sender: 'ai',
-        text: policyReply,
-        recommendedProducts: []
-      };
-
-      setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
+      setAiChatHistory(prev => [...prev, userMsg, { sender: 'ai', text: policyReply, recommendedProducts: [] }]);
       setAiInputText('');
       return;
     }
 
+    // 3. User Orders check
+    const orderKeywords = ['შეკვეთა', 'შეკვეთები', 'ჩემი შეკვეთა', 'სტატუსი', 'order'];
+    const isOrderAsk = orderKeywords.some(k => queryLower.includes(k));
+
+    if (isOrderAsk) {
+      if (!currentUser) {
+        setAiChatHistory(prev => [...prev, userMsg, {
+          sender: 'ai',
+          text: `⚠️ შეკვეთების სანახავად გთხოვთ გაიაროთ ავტორიზაცია საიტზე. ამის შემდეგ შევძლებ თქვენი შეკვეთების სტატუსის რეალურ დროში შემოწმებას!`,
+          recommendedProducts: []
+        }]);
+        setAiInputText('');
+        return;
+      }
+
+      const userOrders = orders.filter(o => o.userEmail === currentUser.email || o.customerName === currentUser.name);
+      if (userOrders.length === 0) {
+        setAiChatHistory(prev => [...prev, userMsg, {
+          sender: 'ai',
+          text: `👤 ძვირფასო ${currentUser.name}, თქვენს პროფილზე აქტიური შეკვეთები ვერ მოიძებნა.`,
+          recommendedProducts: []
+        }]);
+        setAiInputText('');
+        return;
+      }
+
+      let orderReply = `📦 **თქვენი შეკვეთები (${userOrders.length}):**\n\n`;
+      userOrders.forEach(o => {
+        orderReply += `• **შეკვეთა #${o.id}** (${o.date})\n  - სტატუსი: **${o.status}**\n  - თანხა: **${o.totalGEL} ₾**\n  - მისამართი: ${o.address}\n\n`;
+      });
+
+      setAiChatHistory(prev => [...prev, userMsg, { sender: 'ai', text: orderReply, recommendedProducts: [] }]);
+      setAiInputText('');
+      return;
+    }
+
+    // 4. Comparison check
+    const compareKeywords = ['შედარება', 'მიუდარე', 'შეიდარე', 'რომელია უკეთესი'];
+    const isCompareAsk = compareKeywords.some(k => queryLower.includes(k));
+
+    if (isCompareAsk || comparisonList.length >= 2) {
+      const itemsToCompare = comparisonList.length >= 2 ? comparisonList : products.slice(0, 2);
+      let compareText = `⚔️ **პროდუქტების შედარება რეალური მონაცემებით:**\n\n`;
+      itemsToCompare.forEach(p => {
+        compareText += `🔹 **${p.name}**\n  - ფასი: **${p.priceGEL} ₾**\n  - მარაგი: **${p.stock} ც.**\n  - ვენდერი: ${p.vendor || 'GEOSTORE'}\n  - კატეგორია: ${p.category}\n\n`;
+      });
+
+      setAiChatHistory(prev => [...prev, userMsg, {
+        sender: 'ai',
+        text: compareText,
+        recommendedProducts: itemsToCompare
+      }]);
+      setAiInputText('');
+      return;
+    }
+
+    // 5. Discount / Sale check
+    const discountKeywords = ['ფასდაკლება', 'ფასდაკლებაში', 'აქცია', 'sale', 'იაფი'];
+    const isDiscountAsk = discountKeywords.some(k => queryLower.includes(k));
+
+    if (isDiscountAsk) {
+      const discountedProducts = products.filter(p => p.discountPercent > 0);
+      let discText = `🏷️ **მიმდინარე ფასდაკლებები და აქციები:**\nმოვიძიე ${discountedProducts.length} ფასდაკლებული პროდუქტი:`;
+      
+      setAiChatHistory(prev => [...prev, userMsg, {
+        sender: 'ai',
+        text: discText,
+        recommendedProducts: discountedProducts.slice(0, 4)
+      }]);
+      setAiInputText('');
+      return;
+    }
+
+    // 6. General product search / budget recommendation
     let targetCategory = null;
     const phoneKeywords = ['ტელეფონი', 'სმარტფონი', 'მობილური', 'აიფონი', 'iphone', 'samsung', 'xiaomi', 'phone'];
     const laptopKeywords = ['ლეპტოპი', 'ნოუთბუქი', 'კომპიუტერი', 'მაქბუქი', 'macbook', 'laptop', 'asus', 'acer'];
@@ -841,43 +917,44 @@ export default function App() {
     const watchKeywords = ['საათი', 'ჭკვიანი საათი', 'watch', 'apple watch'];
     const tvKeywords = ['ტელევიზორი', 'tv', 'television'];
 
-    if (phoneKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'სმარტფონები';
-    } else if (laptopKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'ლეპტოპები';
-    } else if (accessoryKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'აქსესუარები';
-    } else if (watchKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'ჭკვიანი საათები';
-    } else if (tvKeywords.some(k => queryLower.includes(k))) {
-      targetCategory = 'ტელევიზორები';
-    } else if (aiCategory !== 'ყველა') {
-      targetCategory = aiCategory;
+    if (phoneKeywords.some(k => queryLower.includes(k))) targetCategory = 'სმარტფონები';
+    else if (laptopKeywords.some(k => queryLower.includes(k))) targetCategory = 'ლეპტოპები';
+    else if (accessoryKeywords.some(k => queryLower.includes(k))) targetCategory = 'აქსესუარები';
+    else if (watchKeywords.some(k => queryLower.includes(k))) targetCategory = 'ჭკვიანი საათები';
+    else if (tvKeywords.some(k => queryLower.includes(k))) targetCategory = 'ტელევიზორები';
+    else if (aiCategory !== 'ყველა') targetCategory = aiCategory;
+
+    // Filter by budget if numbers found in query or slider
+    let budgetLimit = aiBudget;
+    const numbersInQuery = queryRaw.match(/\d+/g);
+    if (numbersInQuery && numbersInQuery.length > 0) {
+      const parsedNum = parseInt(numbersInQuery[0]);
+      if (parsedNum > 50) budgetLimit = parsedNum;
     }
 
     let matched = products.filter(p => {
-      if (targetCategory && p.category !== targetCategory) {
-        return false;
-      }
+      if (targetCategory && p.category !== targetCategory) return false;
+      if (p.priceGEL > budgetLimit) return false;
       return true;
     });
 
     if (matched.length === 0) {
+      matched = products.filter(p => p.priceGEL <= budgetLimit);
+    }
+    if (matched.length === 0) {
       matched = products;
     }
 
-    let aiAnswer = `📱 მოვიძიე საუკეთესო პროდუქტები თქვენი მოთხოვნის შესაბამისად:`;
+    let aiAnswer = `📱 **რეალურ დროში მოძიებული შედეგები** (ბიუჯეტი: ${budgetLimit}₾):`;
     if (targetCategory) {
-      aiAnswer = `📱 მოვიძიე ${targetCategory} კატეგორიის საუკეთესო მოდელები:`;
+      aiAnswer = `📱 მოვიძიე **${targetCategory}** კატეგორიის საუკეთესო პროდუქტები თქვენი ბიუჯეტის შესაბამისად:`;
     }
 
-    const aiMsg = {
+    setAiChatHistory(prev => [...prev, userMsg, {
       sender: 'ai',
       text: aiAnswer,
       recommendedProducts: matched.slice(0, 4)
-    };
-
-    setAiChatHistory(prev => [...prev, userMsg, aiMsg]);
+    }]);
     setAiInputText('');
   };
 
@@ -2450,7 +2527,7 @@ export default function App() {
         )}
       </main>
 
-      {/* AI ASSISTANT MODAL */}
+      {/* AI ASSISTANT MODAL (SMART & ENHANCED) */}
       {isAiAssistantOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3">
           <div className="bg-slate-900 border border-emerald-500/50 rounded-2xl max-w-xl w-full h-[560px] flex flex-col relative shadow-2xl overflow-hidden">
@@ -2458,8 +2535,8 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <Bot className="w-6 h-6 text-slate-950 animate-bounce" />
                 <div>
-                  <h3 className="text-sm leading-none">🤖 GEOSTORE Live-Knowledge AI ასისტენტი</h3>
-                  <p className="text-[9px] text-slate-900/80 font-bold mt-0.5">პირდაპირი წვდომა პროდუქტებსა და წესებზე</p>
+                  <h3 className="text-sm leading-none">🤖 GEOSTORE ჭკვიანი AI ასისტენტი</h3>
+                  <p className="text-[9px] text-slate-900/80 font-bold mt-0.5">რეალურ დროში ინტეგრირებული მონაცემებით</p>
                 </div>
               </div>
               <button onClick={() => setIsAiAssistantOpen(false)} className="bg-slate-950 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs">✕</button>
@@ -2512,7 +2589,7 @@ export default function App() {
                               <img src={prod.image} alt="" className="w-8 h-8 object-contain bg-slate-900 rounded-lg p-1 border border-slate-800 shrink-0" />
                               <div>
                                 <h5 className="font-bold text-white text-[10px] line-clamp-1">{prod.name}</h5>
-                                <p className="text-emerald-400 font-black text-[11px]">{prod.priceGEL} ₾</p>
+                                <p className="text-emerald-400 font-black text-[11px]">{prod.priceGEL} ₾ (მარაგი: {prod.stock})</p>
                               </div>
                             </div>
                             <button 
@@ -2533,10 +2610,10 @@ export default function App() {
             <div className="px-3 py-1 bg-slate-950/90 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto scrollbar-none shrink-0">
               {[
                 { label: '👋 გამარჯობა', text: 'გამარჯობა' },
-                { label: '📜 საიტის წესები', text: 'როგორია საიტის წესები და პოლიტიკა?' },
-                { label: '🚚 მიწოდება', text: 'როგორია მიწოდების პირობები?' },
-                { label: '🛡️ გარანტია', text: 'რა გარანტია მოქმედებს?' },
-                { label: '📱 ტელეფონები', text: 'სმარტფონები მინდა' }
+                { label: '📦 ჩემი შეკვეთები', text: 'რა არის ჩემი შეკვეთის სტატუსი?' },
+                { label: '🏷️ ფასდაკლებები', text: 'რომელი პროდუქტებია ფასდაკლებაში?' },
+                { label: '⚔️ შედარება', text: 'შემიდარე პროდუქტები' },
+                { label: '📜 საიტის წესები', text: 'როგორია მიწოდებისა და გარანტიის წესები?' }
               ].map((sugg, i) => (
                 <button key={i} onClick={() => handleAiAsk(sugg.text)} className="bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold px-2 py-1 rounded-lg shrink-0 transition">
                   {sugg.label}
@@ -2548,7 +2625,7 @@ export default function App() {
               <form onSubmit={(e) => { e.preventDefault(); handleAiAsk(); }} className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="ჰკითხეთ AI-ს..." 
+                  placeholder="ჰკითხეთ AI-ს (ფასი, მარაგი, შეკვეთა, წესები)..." 
                   value={aiInputText} 
                   onChange={e => setAiInputText(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-emerald-500/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-emerald-400"
