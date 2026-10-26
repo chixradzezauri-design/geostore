@@ -46,7 +46,7 @@ export default function AdminDashboardPro({
           </div>
           {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
           <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl shadow hover:bg-emerald-400 transition">
-            ადმინ პანელში შესვლა
+            შესვლა სისტემაში
           </button>
         </form>
       </div>
@@ -70,57 +70,40 @@ export default function AdminDashboardPro({
         </button>
       </div>
 
-      {/* ANALYTICS CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow">
-          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი
-          </p>
-          <p className="text-2xl font-black text-emerald-400">{proAnalytics.totalRevenueGEL.toLocaleString('ka-GE')} ₾</p>
+          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-emerald-400" /> შემოსავალი</p>
+          <p className="text-2xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow">
-          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5">
-            <DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო მოგება
-          </p>
-          <p className="text-2xl font-black text-teal-400">{proAnalytics.netProfitGEL.toLocaleString('ka-GE')} ₾</p>
+          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> მოგება</p>
+          <p className="text-2xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow">
-          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5">
-            <PackageCheck className="w-4 h-4 text-blue-400" /> შეკვეთები
-          </p>
+          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><PackageCheck className="w-4 h-4 text-blue-400" /> შეკვეთები</p>
           <p className="text-2xl font-black text-blue-400">{proAnalytics.totalOrdersCount}</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow">
-          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5">
-            <Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი
-          </p>
-          <p className="text-2xl font-black text-amber-400">{proAnalytics.lowStockProducts.length} ცალი</p>
+          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი</p>
+          <p className="text-2xl font-black text-amber-400">{proAnalytics.lowStockProducts.length}</p>
         </div>
       </div>
 
-      {/* ORDERS LIST */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-xl">
         <h3 className="font-bold text-sm text-white flex items-center gap-2">
-          <PackageCheck className="w-4 h-4 text-emerald-400" /> Supabase შეკვეთების მართვა ({orders.length})
+          <PackageCheck className="w-4 h-4 text-emerald-400" /> შეკვეთების მართვა ({orders.length})
         </h3>
-        
         <div className="space-y-2.5">
           {orders.length === 0 ? (
-            <p className="text-slate-500 text-xs">შეკვეთები ჯერ არ არის.</p>
+            <p className="text-slate-500 text-xs">შეკვეთები არ მოიძებნა.</p>
           ) : (
             orders.map(o => (
-              <div key={o.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-xs">
+              <div key={o.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
                 <div>
                   <span className="font-bold text-emerald-400">#{o.id} ({o.date})</span>
                   <p className="text-slate-200 mt-1">მყიდველი: <b>{o.customerName}</b> ({o.phone})</p>
-                  <p className="text-slate-400 text-[11px]">მისამართი: {o.address}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="bg-teal-500/10 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-lg font-bold">
-                    {o.status}
-                  </span>
-                  <span className="font-black text-white text-sm">{formatPrice(o.totalGEL)}</span>
-                </div>
+                <span className="font-black text-white text-sm">{formatPrice(o.totalGEL)}</span>
               </div>
             ))
           )}
