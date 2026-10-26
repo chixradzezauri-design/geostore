@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (სწრაფი მარაგები და მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (შეკვეთების ექსპორტი და სრული მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Edit3, Check
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -31,18 +31,15 @@ export default function AdminDashboardPro({
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   
-  // პროდუქტის ფორმა
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: ''
   });
   const [selectedImages, setSelectedImages] = useState([]);
 
-  // კუპონის ფორმა
   const [couponForm, setCouponForm] = useState({
     code: '', discountPercent: '', minOrderGEL: ''
   });
 
-  // ვენდორის ფორმა
   const [vendorForm, setVendorForm] = useState({
     name: '', commission: ''
   });
@@ -100,7 +97,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // პროდუქტის მარაგის ან ფასის პირდაპირი ცვლილება ცხრილიდან
   const handleQuickUpdateProduct = (id, field, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === id) {
@@ -190,6 +186,28 @@ export default function AdminDashboardPro({
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
+  // შეკვეთების ექსპორტი CSV / Excel ფორმატში
+  const handleExportOrders = () => {
+    if (!orders || orders.length === 0) {
+      alert('გადმოსაწერი შეკვეთები არ არის.');
+      return;
+    }
+    
+    let csvContent = "data:text/csv;charset=utf-8,ID,Date,Customer,Phone,Address,Total(GEL),Status\r\n";
+    orders.forEach(o => {
+      const row = [o.id, o.date, `"${o.customerName}"`, `"${o.phone}"`, `"${o.address}"`, o.totalGEL, o.status || 'ახალი'];
+      csvContent += row.join(",") + "\r\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `geostore_orders_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleToggleVipUser = (userId) => {
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
   };
@@ -220,7 +238,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთები, სწრაფი პროდუქტები, ვენდორები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთების ექსპორტი, მარაგი, ვენდორები</p>
           </div>
         </div>
         <button 
@@ -279,11 +297,21 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 📦 შეკვეთების მართვა და ექსპორტის ღილაკი */}
       {adminTab === 'orders' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-          <h3 className="font-black text-white text-sm flex items-center gap-2">
-            <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსების განახლება
-          </h3>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსები
+            </h3>
+            <button 
+              onClick={handleExportOrders}
+              className="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+            >
+              <Download className="w-4 h-4" /> შეკვეთების ექსპორტი (CSV)
+            </button>
+          </div>
+
           <div className="space-y-3">
             {(!orders || orders.length === 0) ? (
               <p className="text-slate-500 text-xs py-4 text-center">შეკვეთები ჯერ არ ფიქსირდება.</p>
@@ -318,7 +346,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 🏷️ პროდუქტების და სწრაფი მარაგის რედაქტირების სექცია */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
@@ -376,7 +403,6 @@ export default function AdminDashboardPro({
                     </div>
                   </div>
 
-                  {/* პირდაპირი ცვლილების ველები (ფასი და მარაგი) */}
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                     <div className="flex items-center gap-1.5">
                       <span className="text-slate-400 text-[11px]">ფასი (₾):</span>
