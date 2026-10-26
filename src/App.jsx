@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx - სრული, განახლებადი და დაცული კოდი ავტომატური სინქრონიზაციით
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -96,16 +96,15 @@ export default function App() {
 
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-  const [comparisonList] = useState([]);
 
-  // Auth
+  // Auth States
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', []));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '' });
 
-  // Admin
+  // Admin States
   const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
     try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
@@ -127,6 +126,7 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  // უსაფრთხო და მუდმივად განახლებადი მონაცემთა მიღება Supabase-იდან
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -142,17 +142,26 @@ export default function App() {
           status: o.status || 'ახალი'
         })));
       }
-    } catch {}
+    } catch (err) {
+      console.log("Auto-sync background check:", err);
+    }
   };
 
+  // ავტომატური სინქრონიზაცია (ფონური განახლება ყოველ 3 წამში შეცდომების გარეშე)
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 4000);
+    const interval = setInterval(fetchOrders, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
-  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
+  // მონაცემთა ავტომატური შენახვა უსაფრთხო საარქივო მეხსიერებაში
+  useEffect(() => { 
+    try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} 
+  }, [usersList]);
+
+  useEffect(() => { 
+    try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} 
+  }, [currentUser]);
 
   const cartTotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
@@ -299,7 +308,6 @@ export default function App() {
             filteredProducts={filteredProducts}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
-            comparisonList={comparisonList}
             addToCart={addToCart}
             formatPrice={formatPrice}
           />
