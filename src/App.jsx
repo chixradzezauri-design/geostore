@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE სრული, დაცული და ავტომატურად განახლებადი კოდი
+// src/App.jsx - GEOSTORE სრული, ერთიანი და ადმინ-ოპტიმიზებული მთავარი ფაილი
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -69,27 +69,25 @@ const INITIAL_PRODUCTS = [
 ];
 
 export default function App() {
-  // უსაფრთხო საარქივო მეხსიერების ჩატვირთვა (Data Persistence & Recovery Protection)
   const loadSafeStorage = (key, fallback) => {
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : fallback;
-    } catch (e) {
-      console.error(`Storage load error for ${key}:`, e);
+    } catch {
       return fallback;
     }
   };
 
-  const [siteSettings] = useState({
+  const [siteSettings, setSiteSettings] = useState(() => loadSafeStorage('geostore_site_settings', {
     storeName: 'GEOSTORE',
     topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი',
     heroTitle: 'მრავალვენდერიანი მარკეტფლეისი საუკეთესო შეთავაზებებით',
     heroSubtitle: 'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
-  });
+  }));
 
   const [categories] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
   const [vendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
-  const [products] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
+  const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
   const [promoSlots] = useState([
     { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-emerald-600/30 to-teal-800/40' },
     { id: 'ps2', title: '0% განვადება 24 თვემდე', tag: 'FINANCE', bgGradient: 'from-cyan-600/30 to-blue-800/40' },
@@ -104,7 +102,7 @@ export default function App() {
   const [cart, setCart] = useState(() => loadSafeStorage('geostore_cart', []));
   const [wishlist, setWishlist] = useState(() => loadSafeStorage('geostore_wishlist', []));
 
-  // Auth States with Persistence
+  // Auth States
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', []));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -133,7 +131,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // ავტომატური სინქრონიზაციის დაცვა: მონაცემთა ბაზიდან მიღება რეალურ დროში (Polling Sync Protection)
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -160,11 +157,9 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // მონაცემთა მუდმივი დაცვა LocalStorage-ში (Data Loss Prevention Hooks)
-  useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch(e){} }, [usersList]);
-  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch(e){} }, [currentUser]);
-  useEffect(() => { try { localStorage.setItem('geostore_cart', JSON.stringify(cart)); } catch(e){} }, [cart]);
-  useEffect(() => { try { localStorage.setItem('geostore_wishlist', JSON.stringify(wishlist)); } catch(e){} }, [wishlist]);
+  useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
+  useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
+  useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
 
   const cartTotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
@@ -285,6 +280,7 @@ export default function App() {
         </div>
       )}
 
+      {/* HEADER */}
       <Header 
         siteSettings={siteSettings}
         setActiveTab={setActiveTab}
@@ -316,6 +312,7 @@ export default function App() {
           />
         )}
 
+        {/* ADMIN DASHBOARD PRO COMPONENT */}
         {activeTab === 'admin' && (
           <AdminDashboardPro 
             adminLoggedIn={adminLoggedIn}
@@ -326,6 +323,13 @@ export default function App() {
             adminError={adminError}
             proAnalytics={proAnalytics}
             orders={orders}
+            usersList={usersList}
+            products={products}
+            setProducts={setProducts}
+            vendorsList={vendorsList}
+            categories={categories}
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
           />
         )}
@@ -388,6 +392,7 @@ export default function App() {
         )}
       </main>
 
+      {/* MODALS */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -407,10 +412,12 @@ export default function App() {
         addToCart={addToCart}
       />
 
+      {/* AI ASSISTANT MODAL */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         products={products}
+        categories={categories}
         addToCart={addToCart}
         formatPrice={formatPrice}
       />
