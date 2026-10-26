@@ -15,21 +15,21 @@ export default function AdminDashboardPro({
 }) {
   if (!adminLoggedIn) {
     return (
-      <div className="max-w-sm mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl text-center">
+      <div className="max-w-sm mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl text-center my-10">
         <Shield className="w-12 h-12 text-emerald-400 mx-auto" />
         <h2 className="text-base font-bold text-white">ადმინისტრატორის შესვლა</h2>
-        <p className="text-[10px] text-slate-400">ნაგულისხმები მომხმარებელი: admin / admin123</p>
+        <p className="text-[10px] text-slate-400">მხოლოდ უფლებამოსილი პირებისთვის (admin / admin123)</p>
         <form onSubmit={handleAdminLogin} className="space-y-3 text-xs">
           <input 
             type="text" 
-            placeholder="მომხმარებელი (admin)" 
+            placeholder="მომხმარებელი" 
             value={adminLoginForm.username} 
             onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
             className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-emerald-500" 
           />
           <input 
             type="password" 
-            placeholder="პაროლი (admin123)" 
+            placeholder="პაროლი" 
             value={adminLoginForm.password} 
             onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
             className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-emerald-500" 
@@ -46,7 +46,7 @@ export default function AdminDashboardPro({
           </div>
           {adminError && <p className="text-rose-400 text-xs font-bold">{adminError}</p>}
           <button type="submit" className="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl shadow hover:bg-emerald-400 transition">
-            შესვლა სისტემაში
+            შესვლა პანელში
           </button>
         </form>
       </div>
@@ -60,7 +60,7 @@ export default function AdminDashboardPro({
           <h2 className="text-base font-black text-white flex items-center gap-2">
             <Shield className="w-5 h-5 text-emerald-400" /> პროფესიონალური ადმინ პანელი
           </h2>
-          <p className="text-[11px] text-slate-400 mt-0.5">GEOSTORE-ის მართვის ცენტრი, ფინანსები და შეკვეთები</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">სისტემის მართვის ცენტრი და ფინანსური ანალიტიკა</p>
         </div>
         <button 
           onClick={() => { setAdminLoggedIn(false); localStorage.removeItem('geostore_admin_remember'); }} 
@@ -76,7 +76,7 @@ export default function AdminDashboardPro({
           <p className="text-2xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow">
-          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> მოგება</p>
+          <p className="text-slate-400 text-xs font-bold flex items-center gap-1.5"><DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო მოგება</p>
           <p className="text-2xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2 shadow">
@@ -91,7 +91,7 @@ export default function AdminDashboardPro({
 
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4 shadow-xl">
         <h3 className="font-bold text-sm text-white flex items-center gap-2">
-          <PackageCheck className="w-4 h-4 text-emerald-400" /> შეკვეთების მართვა ({orders.length})
+          <PackageCheck className="w-4 h-4 text-emerald-400" /> შეკვეთების სია ({orders.length})
         </h3>
         <div className="space-y-2.5">
           {orders.length === 0 ? (
