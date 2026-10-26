@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE სრული მარკეტფლეისი მცურავი მხარდაჭერის ჩათით და ადმინ ინტეგრაციით
+// src/App.jsx - GEOSTORE სრული მარკეტფლეისი რეალურ დროში სინქრონიზაციით და მხარდაჭერით
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -133,6 +133,34 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  // 🔄 რეალურ დროში სინქრონიზაცია სხვა ფანჯრებიდან/გვერდებიდან (Storage Event Listener)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (!e.key) return;
+      if (e.key === 'geostore_products') {
+        try { setProducts(JSON.parse(e.newValue) || INITIAL_PRODUCTS); } catch {}
+      }
+      if (e.key === 'geostore_cats') {
+        try { setCategoriesList(JSON.parse(e.newValue) || INITIAL_CATEGORIES); } catch {}
+      }
+      if (e.key === 'geostore_site_settings') {
+        try { setSiteSettings(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'geostore_vendors') {
+        try { setVendorsList(JSON.parse(e.newValue) || INITIAL_VENDORS); } catch {}
+      }
+      if (e.key === 'geostore_cart') {
+        try { setCart(JSON.parse(e.newValue) || []); } catch {}
+      }
+      if (e.key === 'geostore_wishlist') {
+        try { setWishlist(JSON.parse(e.newValue) || []); } catch {}
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -160,6 +188,8 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
+  useEffect(() => { try { localStorage.setItem('geostore_cats', JSON.stringify(categories)); } catch{} }, [categories]);
+  useEffect(() => { try { localStorage.setItem('geostore_vendors', JSON.stringify(vendorsList)); } catch{} }, [vendorsList]);
   useEffect(() => { try { localStorage.setItem('geostore_cart', JSON.stringify(cart)); } catch{} }, [cart]);
   useEffect(() => { try { localStorage.setItem('geostore_wishlist', JSON.stringify(wishlist)); } catch{} }, [wishlist]);
   useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
