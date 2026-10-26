@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE სრული და დაცული ძირითადი ფაილი
+// src/App.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -107,7 +107,7 @@ export default function App() {
   // Admin States
   const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try { return localStorage.getItem('geostore_admin_remember'] === 'true'; } catch { return false; }
+    try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
   const [adminError, setAdminError] = useState('');
