@@ -1,6 +1,6 @@
 // src/components/Header.jsx
 import React from 'react';
-import { ShoppingBag, Heart, Search, User, Shield, Store, Bot, Gift } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
@@ -41,55 +41,31 @@ export default function Header({
         </div>
 
         <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setIsAiAssistantOpen(true)} 
-            className="bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 hover:bg-teal-500/30 transition"
-          >
+          <button onClick={() => setIsAiAssistantOpen(true)} className="bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 hover:bg-teal-500/30 transition">
             <Bot className="w-4 h-4 text-teal-400" /> AI ასისტენტი
           </button>
 
-          <button 
-            onClick={() => setIsGiftQuizOpen(true)} 
-            className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-500/30 transition"
-          >
-            <Gift className="w-4 h-4 text-emerald-400" /> საჩუქრის ქვიზი
+          <button onClick={() => setIsGiftQuizOpen(true)} className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-500/30 transition">
+            <Gift className="w-4 h-4 text-emerald-400" /> ქვიზი
           </button>
 
-          <button onClick={() => setActiveTab('wishlist')} className="relative p-2 bg-slate-800 rounded-xl text-slate-200 hover:bg-slate-700 transition">
+          <button onClick={() => setActiveTab('wishlist')} className="relative p-2 bg-slate-800 rounded-xl text-slate-200">
             <Heart className="w-4 h-4 text-rose-500" />
-            {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">
-                {wishlistCount}
-              </span>
-            )}
+            {wishlistCount > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{wishlistCount}</span>}
           </button>
 
-          <button onClick={() => setActiveTab('cart')} className="relative p-2 bg-slate-800 rounded-xl text-slate-200 hover:bg-slate-700 transition">
+          <button onClick={() => setActiveTab('cart')} className="relative p-2 bg-slate-800 rounded-xl text-slate-200">
             <ShoppingBag className="w-4 h-4 text-emerald-400" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-emerald-500 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{cartCount}</span>}
           </button>
 
           {currentUser ? (
-            <button onClick={() => setActiveTab('profile')} className="px-3 py-1.5 bg-slate-800 text-emerald-400 font-bold rounded-xl text-xs hover:bg-slate-700 transition">
-              {currentUser.name}
-            </button>
+            <button onClick={() => setActiveTab('profile')} className="px-3 py-1.5 bg-slate-800 text-emerald-400 font-bold rounded-xl text-xs">{currentUser.name}</button>
           ) : (
-            <button 
-              onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} 
-              className="px-3.5 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs shadow hover:bg-emerald-400 transition"
-            >
-              შესვლა
-            </button>
+            <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-3.5 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs shadow">შესვლა</button>
           )}
 
-          <button 
-            onClick={() => setActiveTab('admin')} 
-            className="p-2 bg-slate-800 rounded-xl text-emerald-400 font-bold text-xs flex items-center gap-1 hover:bg-slate-700 transition"
-          >
+          <button onClick={() => setActiveTab('admin')} className="p-2 bg-slate-800 rounded-xl text-emerald-400 font-bold text-xs flex items-center gap-1">
             <Shield className="w-4 h-4" /> ადმინ
           </button>
         </div>
