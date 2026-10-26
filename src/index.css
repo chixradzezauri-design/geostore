@@ -2,11 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  overflow-x: hidden;
-  -webkit-text-size-adjust: 100%;
+@layer base {
+  body {
+    background-color: #030712; /* ულტრა-მუქი Apple/Stripe ფონი */
+    color: #f8fafc;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+  }
 }
 
 input, select, textarea, button {
-  font-size: 16px !important; /* რომ მობილურში არ გაადიდოს ავტომატურად */
+  font-size: 16px !important;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
