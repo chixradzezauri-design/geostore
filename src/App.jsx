@@ -1,11 +1,11 @@
-// src/App.jsx - GEOSTORE Next-Gen Minimalist Edition with Terms & Warranty
+// src/App.jsx - GEOSTORE Next-Gen Edition with Separate AI Floating Widget
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -124,7 +124,7 @@ export default function App() {
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
 
-  // New Terms & Warranty Modal States
+  // Terms & Warranty Modals
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
 
@@ -445,7 +445,21 @@ export default function App() {
         )}
       </main>
 
-      {/* მხარდაჭერის მცურავი ვიჯეტი */}
+      {/* 🤖 1. ცალკე AI მცურავი ნეონური ღილაკი (ქვედა მარცხენა კუთხეში) */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <button 
+          onClick={() => setIsAiAssistantOpen(true)}
+          className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black p-4 rounded-full shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer border border-emerald-300/40"
+        >
+          <div className="relative">
+            <Bot className="w-6 h-6 animate-pulse" />
+            <Sparkles className="w-3.5 h-3.5 text-slate-950 absolute -top-1 -right-1" />
+          </div>
+          <span className="hidden group-hover:inline text-xs font-black pr-1 tracking-tight">AI ასისტენტი</span>
+        </button>
+      </div>
+
+      {/* 💬 2. მხარდაჭერის მცურავი ვიჯეტი (ქვედა მარჯვენა კუთხეში) */}
       <div className="fixed bottom-6 right-6 z-50">
         {supportOpen ? (
           <div className="w-80 bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] shadow-2xl p-5 space-y-4 text-xs text-white backdrop-blur-3xl animate-in fade-in duration-300">
