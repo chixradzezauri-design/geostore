@@ -1,8 +1,8 @@
-// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 3 - შეკვეთების სრული მართვა)
+// src/components/AdminDashboardPro.jsx - GEOSTORE პროფესიონალური ადმინ პანელი (ეტაპი 4 - მომხმარებლების CRM მართვა)
 import React, { useState } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, CheckCircle2, Clock, Truck
+  Plus, Trash2, Users, Store, Tag, Search, Star
 } from 'lucide-react';
 
 export default function AdminDashboardPro({
@@ -16,6 +16,7 @@ export default function AdminDashboardPro({
   orders,
   setOrders,
   usersList,
+  setUsersList,
   products,
   setProducts,
   vendorsList,
@@ -24,6 +25,7 @@ export default function AdminDashboardPro({
   formatPrice
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); // analytics, orders, products, coupons, users, vendors
+  const [userSearchQuery, setUserSearchQuery] = useState('');
   
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', image: '', description: ''
@@ -115,6 +117,15 @@ export default function AdminDashboardPro({
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
+  const handleToggleVipUser = (userId) => {
+    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
+  };
+
+  const filteredUsers = usersList?.filter(u => 
+    u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
+    u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 rounded-3xl p-5 gap-4 shadow-xl">
@@ -124,7 +135,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ფინანსები, შეკვეთების სტატუსები, პროდუქტები, კუპონები</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">სრული კონტროლი: ანალიტიკა, შეკვეთები, პროდუქტები, კუპონები, CRM</p>
           </div>
         </div>
         <button 
@@ -141,7 +152,7 @@ export default function AdminDashboardPro({
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
           { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
           { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0 },
-          { id: 'users', label: '👥 მომხმარებლები', count: usersList?.length || 0 },
+          { id: 'users', label: '👥 მომხმარებლები (CRM)', count: usersList?.length || 0 },
           { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0 }
         ].map(tab => (
           <button
@@ -182,7 +193,6 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* 📦 შეკვეთების სრული მართვისა და სტატუსების ცვლილების სექცია */}
       {adminTab === 'orders' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="font-black text-white text-sm flex items-center gap-2">
@@ -209,7 +219,6 @@ export default function AdminDashboardPro({
                       <span className="text-[10px] text-slate-400">სტატუსი: <b className="text-emerald-400">{o.status || 'ახალი'}</b></span>
                     </div>
 
-                    {/* სტატუსის სწრაფი შეცვლის ღილაკები */}
                     <div className="flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
                       <button 
                         onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
@@ -303,20 +312,47 @@ export default function AdminDashboardPro({
         </div>
       )}
 
+      {/* 👥 მომხმარებლების CRM მართვის განახლებული სექცია */}
       {adminTab === 'users' && (
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4 shadow-xl">
-          <h3 className="font-black text-white text-sm flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> რეგისტრირებული მომხმარებლები ({usersList?.length || 0})</h3>
-          <div className="space-y-2">
-            {(!usersList || usersList.length === 0) ? (
-              <p className="text-slate-500 text-xs py-4 text-center">მომხმარებლები ჯერ არ არიან რეგისტრირებული.</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-3">
+            <h3 className="font-black text-white text-sm flex items-center gap-2">
+              <Users className="w-5 h-5 text-emerald-400" /> მომხმარებლების CRM მართვა ({usersList?.length || 0})
+            </h3>
+            <div className="relative w-full sm:w-64">
+              <input 
+                type="text" 
+                placeholder="ძებნა სახელით ან ემაილით..." 
+                value={userSearchQuery}
+                onChange={e => setUserSearchQuery(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+              />
+              <Search className="w-3.5 h-3.5 text-emerald-400 absolute left-2.5 top-2.5" />
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            {(!filteredUsers || filteredUsers.length === 0) ? (
+              <p className="text-slate-500 text-xs py-6 text-center">მომხმარებლები ვერ მოიძებნა.</p>
             ) : (
-              usersList.map((u, i) => (
-                <div key={u.id || i} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+              filteredUsers.map((u, i) => (
+                <div key={u.id || i} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                   <div>
-                    <h4 className="font-bold text-white">{u.name}</h4>
-                    <p className="text-slate-400 text-[11px]">{u.email} | 📞 {u.phone}</p>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-white text-sm">{u.name}</h4>
+                      {u.isVip && <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> VIP</span>}
+                    </div>
+                    <p className="text-slate-400 text-[11px] mt-0.5">📧 {u.email} | 📞 {u.phone}</p>
                   </div>
-                  <span className="bg-teal-500/10 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">მომხმარებელი</span>
+                  
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <button 
+                      onClick={() => handleToggleVipUser(u.id)}
+                      className={`px-3 py-1.5 rounded-xl font-bold text-[11px] flex items-center gap-1 transition ${u.isVip ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:text-white'}`}
+                    >
+                      <Star className="w-3.5 h-3.5" /> {u.isVip ? 'VIP სტატუსი მოხსნა' : 'VIP-ად მონიშვნა'}
+                    </button>
+                  </div>
                 </div>
               ))
             )}
