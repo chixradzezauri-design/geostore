@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings (Fixed Modal Overlay)
+// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings (Fixed Modal Overlay & Padding)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -400,12 +400,12 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal with Reviews & Ratings (Fixed z-index to 9999 and full padding for mobile view) */}
+      {/* Product Detail Modal with Reviews & Ratings (Fixed z-index 9999, safe padding top and bottom) */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-5 sm:p-10 space-y-6 my-auto">
+        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-6 sm:p-10 space-y-6 my-16 sm:my-auto">
             
-            {/* Close button with high z-index and prominent styling */}
+            {/* Close button with highest z-index */}
             <button 
               onClick={() => setSelectedProduct(null)} 
               className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/40 transition cursor-pointer z-50 shadow-xl"
