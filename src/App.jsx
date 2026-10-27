@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition (Fixed Footer & Sync)
+// src/App.jsx - GEOSTORE Next-Gen Edition (Full Code with User Order History)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -170,6 +170,7 @@ export default function App() {
           id: o.id,
           date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
           customerName: o.customer_name,
+          user_email: o.user_email || '',
           phone: o.phone,
           address: o.address,
           totalGEL: o.total_gel,
@@ -429,16 +430,68 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-md mx-auto bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
-            <h2 className="text-base font-black text-white flex items-center gap-2">
-              <User className="w-4 h-4 text-emerald-400" /> მომხმარებლის პროფილი
-            </h2>
-            <div className="space-y-2 text-slate-300">
-              <p><b>სახელი:</b> {currentUser.name}</p>
-              <p><b>ელ-ფოსტა:</b> {currentUser.email}</p>
-              <p><b>ტელეფონი:</b> {currentUser.phone}</p>
+          <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+            {/* Profile Info Card */}
+            <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+              <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
+                <User className="w-5 h-5 text-emerald-400" /> მომხმარებლის პროფილი
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
+                <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
+                  <span className="text-slate-500 block text-[10px] font-bold uppercase">სახელი</span>
+                  <b className="text-white text-sm mt-1 block">{currentUser.name}</b>
+                </div>
+                <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
+                  <span className="text-slate-500 block text-[10px] font-bold uppercase">ელ-ფოსტა</span>
+                  <b className="text-white text-sm mt-1 block truncate">{currentUser.email}</b>
+                </div>
+                <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
+                  <span className="text-slate-500 block text-[10px] font-bold uppercase">ტელეფონი</span>
+                  <b className="text-white text-sm mt-1 block">{currentUser.phone}</b>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} 
+                className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
+              >
+                სისტემიდან გასვლა
+              </button>
             </div>
-            <button onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer">გამოსვლა</button>
+
+            {/* User Orders History Card */}
+            <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+              <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
+                <ShoppingBag className="w-4 h-4 text-emerald-400" /> ჩემი შეკვეთების ისტორია
+              </h3>
+
+              <div className="space-y-3">
+                {orders.filter(o => o.customerName === currentUser.name || o.user_email === currentUser.email).length === 0 ? (
+                  <p className="text-slate-500 text-xs py-6 text-center">თქვენ ჯერ არ გაქვთ გაფორმებული შეკვეთები.</p>
+                ) : (
+                  orders
+                    .filter(o => o.customerName === currentUser.name || o.user_email === currentUser.email)
+                    .map(order => (
+                      <div key={order.id} className="bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-emerald-400">#{order.id}</span>
+                            <span className="text-slate-500 text-[10px]">({order.date})</span>
+                          </div>
+                          <p className="text-slate-300 text-[11px]">📍 მისამართი: {order.address}</p>
+                          <p className="text-slate-400 text-[11px]">📞 ტელეფონი: {order.phone}</p>
+                        </div>
+                        <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
+                          <span className="font-black text-white text-sm">{formatPrice(order.totalGEL)}</span>
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold mt-1">
+                            {order.status || 'ახალი'}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
           </div>
         )}
       </main>
