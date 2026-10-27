@@ -1,6 +1,6 @@
-// src/components/Header.jsx - Elite Gold Luxury Header with Order Tracker, Comparison & Mobile Menu (TopBar Cleaned)
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
+// src/components/Header.jsx - Elite Gold Luxury Header (Fixed Sticky & Overlap Issue)
+import React, { useState } from 'react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
@@ -12,20 +12,19 @@ export default function Header({
   setIsAuthOpen, 
   setAuthMode, 
   setIsAiAssistantOpen, 
-  setIsGiftQuizOpen,
   setIsImageSearchOpen, 
   setIsComparisonOpen,
   setIsTrackerOpen,
   searchQuery,
-  setSearchQuery,
-  handleInstallClick
+  setSearchQuery
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <>
-      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 sticky top-0 z-35 backdrop-blur-2xl w-full shadow-2xl">
-        {/* Top Announcement Bar (Cleaned from install button to prevent overlap) */}
+      {/* 🛑 ამოღებულია sticky top-0, რათა აღარასდროს გადაეფაროს პროდუქტის მოდალს ან სქროლს */}
+      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 w-full shadow-2xl backdrop-blur-2xl">
+        {/* Top Announcement Bar */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-2 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 shrink-0" /> 
           <span className="truncate">{siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
@@ -170,11 +169,6 @@ export default function Header({
               <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="w-full flex items-center justify-between p-4 bg-[#121216] rounded-2xl text-slate-200 border border-amber-500/20 shadow-sm hover:border-amber-400 transition cursor-pointer">
                 <span className="flex items-center gap-2.5 text-amber-300">❤️ სურვილების სია</span>
                 <span className="bg-rose-500 text-white px-3 py-0.5 rounded-full text-[10px] font-black">{wishlistCount}</span>
-              </button>
-
-              <button onClick={() => { handleInstallClick(); setMobileMenuOpen(false); }} className="w-full flex items-center justify-between p-4 bg-[#121216] text-amber-300 rounded-2xl border border-amber-500/20 shadow-sm hover:border-amber-400 transition cursor-pointer">
-                <span className="flex items-center gap-2.5"><Smartphone className="w-4 h-4 text-amber-400" /> აპლიკაციის დაყენება ტელეფონში</span>
-                <Download className="w-4 h-4 text-amber-400" />
               </button>
 
               {currentUser ? (
