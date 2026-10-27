@@ -1,4 +1,4 @@
-// src/components/Header.jsx - Elite Gold Luxury Header with Order Tracker, Comparison & Mobile Menu
+// src/components/Header.jsx - Elite Gold Luxury Header with Order Tracker, Comparison & Mobile Menu (Fixed Z-Index & Overlap)
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
 
@@ -48,13 +48,13 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 sticky top-0 z-40 backdrop-blur-2xl w-full shadow-2xl">
+      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 sticky top-0 z-30 backdrop-blur-2xl w-full shadow-2xl">
         {/* Top Announcement Bar */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-3 shadow-sm">
-          <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> {siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-3 shadow-sm relative z-30">
+          <span className="flex items-center gap-1.5 truncate"><Sparkles className="w-3.5 h-3.5 shrink-0" /> {siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
           <button 
             onClick={handleInstallClick}
-            className="bg-slate-950 hover:bg-slate-900 text-amber-400 px-3 py-1 rounded-xl text-[10px] transition-all hover:scale-105 flex items-center gap-1.5 shadow-md cursor-pointer font-black"
+            className="bg-slate-950 hover:bg-slate-900 text-amber-400 px-3 py-1 rounded-xl text-[10px] transition-all hover:scale-105 flex items-center gap-1.5 shadow-md cursor-pointer font-black shrink-0"
           >
             <Download className="w-3.5 h-3.5" /> აპლიკაციის დაყენება
           </button>
