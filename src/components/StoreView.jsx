@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Luxury Boutique with Advanced Filters, Comparison & Reviews/Ratings
+// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -27,6 +27,25 @@ export default function StoreView({
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [installmentMonths, setInstallmentMonths] = useState(12);
+
+  // ⚡ Flash Sale ქაუნთდაუნის ტაიმერი (მაგ: 12 საათიანი ათვლა)
+  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        } else if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        } else if (prev.hours > 0) {
+          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        }
+        return { hours: 12, minutes: 0, seconds: 0 };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // ⭐ შეფასებების state-ები
   const [allReviews, setAllReviews] = useState(() => {
@@ -95,6 +114,11 @@ export default function StoreView({
     return result;
   }, [filteredProducts, minPrice, maxPrice, sortBy]);
 
+  // Flash Sale-სთვის ვირჩევთ პროდუქტებს, რომლებსაც აქვთ ფასდაკლება (oldPriceGEL)
+  const flashSaleProducts = useMemo(() => {
+    return (filteredProducts || []).filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
+  }, [filteredProducts]);
+
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
     if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
@@ -144,6 +168,68 @@ export default function StoreView({
           ))}
         </div>
       </div>
+
+      {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
+      {flashSaleProducts.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-6 md:p-8 shadow-2xl space-y-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
+                <Timer className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  ⚡ FLASH SALE <span className="text-amber-400 text-xs bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/30">დროში შეზღუდული შეთავაზება</span>
+                </h3>
+                <p className="text-slate-400 text-xs">იჩქარეთ, ფასდაკლება იწურება!</p>
+              </div>
+            </div>
+
+            {/* Countdown Clock */}
+            <div className="flex items-center gap-2 text-xs font-black">
+              <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
+                <span className="text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="block text-[9px] text-slate-400 uppercase">საათი</span>
+              </div>
+              <span className="text-amber-400 text-base">:</span>
+              <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
+                <span className="text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="block text-[9px] text-slate-400 uppercase">წუთი</span>
+              </div>
+              <span className="text-amber-400 text-base">:</span>
+              <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
+                <span className="text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span className="block text-[9px] text-slate-400 uppercase">წამი</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Flash Sale Products Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {flashSaleProducts.map(prod => {
+              const isWish = wishlist.some(w => w.id === prod.id);
+              return (
+                <div key={`flash-${prod.id}`} className="group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
+                  <div onClick={() => handleOpenProduct(prod)} className="relative bg-[#0d0d12] rounded-2xl p-4 h-44 flex items-center justify-center cursor-pointer overflow-hidden">
+                    <img src={prod.image} alt="" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                    <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
+                  </div>
+                  <div className="py-3 space-y-1.5">
+                    <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-amber-400 font-black text-sm">{formatPrice(prod.priceGEL)}</span>
+                      {prod.oldPriceGEL && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
+                    </div>
+                  </div>
+                  <button onClick={() => addToCart(prod)} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer">
+                    კალათაში
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Categories */}
       <div className="space-y-4">
