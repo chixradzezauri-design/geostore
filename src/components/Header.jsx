@@ -1,4 +1,4 @@
-// src/components/Header.jsx - Elite Gold Luxury Header with Order Tracker, Comparison & Mobile Menu (Fixed Z-Index & Overlap)
+// src/components/Header.jsx - Elite Gold Luxury Header with Order Tracker, Comparison & Mobile Menu (TopBar Cleaned)
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
 
@@ -17,47 +17,18 @@ export default function Header({
   setIsComparisonOpen,
   setIsTrackerOpen,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  handleInstallClick
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallModal, setShowInstallModal] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') setDeferredPrompt(null);
-      } catch {
-        setShowInstallModal(true);
-      }
-    } else {
-      setShowInstallModal(true);
-    }
-  };
 
   return (
     <>
-      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 sticky top-0 z-30 backdrop-blur-2xl w-full shadow-2xl">
-        {/* Top Announcement Bar */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-3 shadow-sm relative z-30">
-          <span className="flex items-center gap-1.5 truncate"><Sparkles className="w-3.5 h-3.5 shrink-0" /> {siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
-          <button 
-            onClick={handleInstallClick}
-            className="bg-slate-950 hover:bg-slate-900 text-amber-400 px-3 py-1 rounded-xl text-[10px] transition-all hover:scale-105 flex items-center gap-1.5 shadow-md cursor-pointer font-black shrink-0"
-          >
-            <Download className="w-3.5 h-3.5" /> აპლიკაციის დაყენება
-          </button>
+      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 sticky top-0 z-35 backdrop-blur-2xl w-full shadow-2xl">
+        {/* Top Announcement Bar (Cleaned from install button to prevent overlap) */}
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-2 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 shrink-0" /> 
+          <span className="truncate">{siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
@@ -224,46 +195,6 @@ export default function Header({
           </div>
         )}
       </header>
-
-      {/* INSTALL INSTRUCTION MODAL */}
-      {showInstallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
-            <button onClick={() => setShowInstallModal(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
-            
-            <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
-              <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
-                <Smartphone className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <h3 className="font-black text-sm text-white">GEOSTORE აპლიკაციის დაყენება</h3>
-                <p className="text-[11px] text-slate-400">მიჰყევით მარტივ ინსტრუქციას:</p>
-              </div>
-            </div>
-
-            <div className="space-y-3.5 text-slate-300">
-              <div className="bg-[#121216] p-4 rounded-2xl border border-amber-500/20 space-y-2">
-                <b className="text-amber-400 block text-xs">📱 iPhone / iPad (Safari):</b>
-                <p>1. ქვედა მენიუდან დააჭირეთ ღილაკს **Share** (გაზიარება / კვადრატი ისრით).</p>
-                <p>2. მენიუდან აირჩიეთ **"Add to Home Screen"** (მთავარ ეკრანზე დამატება).</p>
-              </div>
-
-              <div className="bg-[#121216] p-4 rounded-2xl border border-amber-500/20 space-y-2">
-                <b className="text-amber-400 block text-xs">🤖 Android (Chrome / Samsung):</b>
-                <p>1. ზედა მარჯვენა კუთხეში დააჭირეთ **3 წერტილს** (მენიუ).</p>
-                <p>2. აირჩიეთ **"Install app"** ან **"Add to Home screen"**.</p>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setShowInstallModal(false)}
-              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
-            >
-              გასაგებია
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
