@@ -1,6 +1,9 @@
-// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Delivery Region Selector
-import React from 'react';
-import { X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck } from 'lucide-react';
+// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Live Order Tracker Map & Delivery Region Selector
+import React, { useState } from 'react';
+import { 
+  X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
+  Search, PackageCheck, CheckCircle2, Clock, Navigation, Map 
+} from 'lucide-react';
 
 export default function Modals({
   isCheckoutOpen,
@@ -19,10 +22,41 @@ export default function Modals({
   setIsTermsOpen,
   isWarrantyOpen,
   setIsWarrantyOpen,
+  isTrackerOpen,
+  setIsTrackerOpen,
+  orders = [],
   selectedRegion,
   setSelectedRegion,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 }
 }) {
+  const [searchOrderId, setSearchOrderId] = useState('');
+  const [trackedOrder, setTrackedOrder] = useState(null);
+  const [trackerError, setTrackerError] = useState('');
+
+  const handleSearchOrder = (e) => {
+    e.preventDefault();
+    if (!searchOrderId.trim()) return;
+    const cleanId = searchOrderId.trim().toUpperCase().replace('#', '');
+    const found = orders.find(o => o.id?.toUpperCase().replace('#', '') === cleanId);
+    
+    if (found) {
+      setTrackedOrder(found);
+      setTrackerError('');
+    } else {
+      setTrackedOrder(null);
+      setTrackerError(`შეკვეთა კოდით "#${cleanId}" ვერ მოიძებნა.`);
+    }
+  };
+
+  // სტატუსის მიხედვით პროგრესის %-ის გამოთვლა
+  const getStatusProgress = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('ჩაბარებულია') || s.includes('დასრულებული')) return 100;
+    if (s.includes('გზაშია') || s.includes('კურიერთან')) return 75;
+    if (s.includes('მზადდება') || s.includes('მუშავდება')) return 40;
+    return 15; // ახალი შეკვეთა
+  };
+
   return (
     <>
       {/* 1. შეკვეთის გაფორმების მოდალი რეგიონის ამორჩევით */}
@@ -96,7 +130,147 @@ export default function Modals({
         </div>
       )}
 
-      {/* 2. ავტორიზაცია / რეგისტრაცია */}
+      {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
+      {isTrackerOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+            
+            <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
+              <h3 className="font-black text-white text-base flex items-center gap-2.5">
+                <PackageCheck className="w-5 h-5 text-amber-400" /> შეკვეთის ლაივ-ტრეკინგი
+              </h3>
+              <button onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Input Form */}
+            <form onSubmit={handleSearchOrder} className="flex gap-2">
+              <div className="relative flex-1">
+                <input 
+                  type="text" 
+                  placeholder="შეიყვანეთ შეკვეთის კოდი (მაგ: ORD-1234)..." 
+                  value={searchOrderId}
+                  onChange={e => setSearchOrderId(e.target.value)}
+                  className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner"
+                />
+                <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
+              </div>
+              <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-5 py-3 rounded-2xl text-xs transition cursor-pointer shadow-lg shadow-amber-500/20">
+                ძებნა
+              </button>
+            </form>
+
+            {trackerError && (
+              <p className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{trackerError}</p>
+            )}
+
+            {trackedOrder ? (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                
+                {/* Order Summary Card */}
+                <div className="bg-[#121216] p-5 rounded-3xl border border-amber-500/20 space-y-3">
+                  <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">შეკვეთის კოდი</span>
+                      <b className="text-amber-400 text-sm font-black">#{trackedOrder.id}</b>
+                    </div>
+                    <span className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold">
+                      🟢 {trackedOrder.status || 'ახალი'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs text-slate-300 pt-1">
+                    <div>
+                      <span className="text-slate-500 text-[10px] block">მიმღები:</span>
+                      <b>{trackedOrder.customerName}</b>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 text-[10px] block">ტელეფონი:</span>
+                      <b>{trackedOrder.phone}</b>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-500 text-[10px] block">მისამართი:</span>
+                      <b className="text-slate-200">{trackedOrder.address}</b>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 🚚 Visual Progress Bar */}
+                <div className="space-y-3 bg-[#121216] p-5 rounded-3xl border border-amber-500/20">
+                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                    <Clock className="w-4 h-4" /> მიწოდების სტატუსის პროგრესი
+                  </h4>
+
+                  <div className="relative pt-2">
+                    <div className="overflow-hidden h-2.5 mb-4 text-xs flex rounded-full bg-[#08080a] border border-amber-500/20">
+                      <div 
+                        style={{ width: `${getStatusProgress(trackedOrder.status)}%` }} 
+                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 transition-all duration-700"
+                      ></div>
+                    </div>
+
+                    <div className="grid grid-cols-4 text-[10px] text-center font-bold text-slate-400">
+                      <div className={getStatusProgress(trackedOrder.status) >= 15 ? 'text-amber-400' : ''}>1. მიღებულია</div>
+                      <div className={getStatusProgress(trackedOrder.status) >= 40 ? 'text-amber-400' : ''}>2. მზადდება</div>
+                      <div className={getStatusProgress(trackedOrder.status) >= 75 ? 'text-amber-400' : ''}>3. გზაშია 🚚</div>
+                      <div className={getStatusProgress(trackedOrder.status) >= 100 ? 'text-emerald-400' : ''}>4. ჩაბარებულია ✅</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 🗺️ INTERACTIVE SIMULATED LIVE MAP */}
+                <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-5 space-y-3 relative overflow-hidden shadow-2xl">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                      <Map className="w-4 h-4 text-amber-400" /> კურიერის ლაივ-რუკა
+                    </h4>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> GPS აქტიურია
+                    </span>
+                  </div>
+
+                  {/* Simulated Map Graphic Container */}
+                  <div className="h-44 bg-slate-900 rounded-2xl relative overflow-hidden flex items-center justify-center border border-amber-500/20 group">
+                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                    
+                    {/* Simulated Delivery Path Line */}
+                    <div className="absolute w-3/4 h-1 bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full animate-pulse"></div>
+
+                    {/* Start Store Icon */}
+                    <div className="absolute left-8 bg-amber-500 text-slate-950 p-2 rounded-full shadow-lg border border-amber-300 z-10">
+                      <Navigation className="w-4 h-4" />
+                    </div>
+
+                    {/* Courier Moving Icon */}
+                    <div className="absolute left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 p-3 rounded-full shadow-2xl shadow-amber-500/50 animate-bounce z-20 border-2 border-white">
+                      <Truck className="w-5 h-5" />
+                    </div>
+
+                    {/* Customer Destination Icon */}
+                    <div className="absolute right-8 bg-emerald-500 text-slate-950 p-2 rounded-full shadow-lg border border-emerald-300 z-10">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+
+                    <div className="absolute bottom-3 left-3 bg-[#0c0c0e]/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] text-amber-300 font-bold border border-amber-500/30">
+                      📍 კურიერი უახლოვდება დანიშნულების ადგილს
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
+                <PackageCheck className="w-10 h-10 text-amber-400/60 mx-auto" />
+                <p className="text-slate-400 text-xs font-bold">შეიყვანეთ შეკვეთის კოდი ზედა ველში ლაივ-სტატუსის სანახავად.</p>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* 3. ავტორიზაცია / რეგისტრაცია */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-sm w-full p-8 space-y-6 shadow-2xl relative">
@@ -178,7 +352,7 @@ export default function Modals({
         </div>
       )}
 
-      {/* 3. წესები და პირობები */}
+      {/* 4. წესები და პირობები */}
       {isTermsOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-xl w-full p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
@@ -215,7 +389,7 @@ export default function Modals({
         </div>
       )}
 
-      {/* 4. საგარანტიო წესები */}
+      {/* 5. საგარანტიო წესები */}
       {isWarrantyOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-xl w-full p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
