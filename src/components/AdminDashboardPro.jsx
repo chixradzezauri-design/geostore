@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Charts & Sidebar
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Charts & Sidebar (Fixed Mobile & Status Update)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -516,9 +516,18 @@ export default function AdminDashboardPro({
     alert('🚀 შეტყობინება წარმატებით გაეგზავნა ყველა მომხმარებელს!');
   };
 
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
-    setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-    logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status: newStatus })
+      });
+      setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
+    } catch {
+      alert('შეცდომა შეკვეთის სტატუსის განახლებისას');
+    }
   };
 
   const handleExportOrders = () => {
@@ -704,12 +713,12 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Orders Tab */}
+        {/* Orders Tab - Fixed Responsive Layout */}
         {adminTab === 'orders' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა, სტატუსები და ინვოისები
+                <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსები
               </h3>
               <button 
                 onClick={handleExportOrders}
@@ -719,43 +728,56 @@ export default function AdminDashboardPro({
               </button>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               {(!orders || orders.length === 0) ? (
                 <p className="text-slate-500 text-xs py-6 text-center">შეკვეთები ჯერ არ ფიქსირდება.</p>
               ) : (
                 orders.map(o => (
-                  <div key={o.id} className="bg-[#08080a] p-5 rounded-3xl border border-emerald-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs shadow-inner">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2.5">
+                  <div key={o.id} className="bg-[#08080a] p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner">
+                    
+                    {/* Top Row: ID, Date & Total */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                      <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
-                        <span className="text-slate-500 text-[10px]">({o.date})</span>
+                        <span className="text-slate-400 text-[11px] ml-2">({o.date})</span>
                       </div>
-                      <p className="text-slate-300">მყიდველი: <b className="text-white">{o.customerName}</b> | 📞 {o.phone}</p>
+                      <div className="text-left sm:text-right">
+                        <span className="font-black text-white text-base">{formatPrice(o.totalGEL)}</span>
+                      </div>
+                    </div>
+
+                    {/* Middle Info: Customer & Address */}
+                    <div className="space-y-1 text-slate-300">
+                      <p>მყიდველი: <b className="text-white">{o.customerName}</b> | 📞 {o.phone}</p>
                       <p className="text-slate-400 text-[11px]">📍 მისამართი: {o.address}</p>
                     </div>
-                    
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto justify-end">
-                      <div className="text-right">
-                        <span className="font-black text-white text-base block">{formatPrice(o.totalGEL)}</span>
-                        <span className="text-[10px] text-slate-400">სტატუსი: <b className="text-emerald-400">{o.status || 'ახალი'}</b></span>
+
+                    {/* Bottom Actions & Status buttons (Wrapped cleanly for mobile) */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 text-[11px]">სტატუსი:</span>
+                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">
+                          {o.status || 'ახალი'}
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                         <button 
                           onClick={() => handlePrintInvoice(o)} 
                           title="ინვოისის ბეჭდვა"
-                          className="bg-[#121216] hover:bg-[#1a1a20] text-emerald-400 border border-emerald-500/20 px-3.5 py-2.5 rounded-2xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
+                          className="bg-[#121216] hover:bg-[#1a1a20] text-emerald-400 border border-emerald-500/20 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
                         >
                           <Printer className="w-4 h-4" /> ბეჭდვა
                         </button>
 
-                        <div className="flex items-center gap-1 bg-[#121216] p-1.5 rounded-2xl border border-emerald-500/20">
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
+                        <div className="flex items-center gap-1 bg-[#121216] p-1 rounded-2xl border border-emerald-500/20">
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
                         </div>
                       </div>
                     </div>
+
                   </div>
                 ))
               )}
