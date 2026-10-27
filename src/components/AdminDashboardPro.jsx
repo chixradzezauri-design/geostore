@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Next-Gen Apple/Stripe Style Admin Dashboard (Fixed & Secured)
+// src/components/AdminDashboardPro.jsx - (Integrated with Tags & Full Product Management)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -45,35 +45,17 @@ export default function AdminDashboardPro({
   const [productSearchQuery, setProductSearchQuery] = useState('');
   
   const [productForm, setProductForm] = useState({
-    name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: ''
+    name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: ''
   });
   const [selectedImages, setSelectedImages] = useState([]);
 
-  const [couponForm, setCouponForm] = useState({
-    code: '', discountPercent: '', minOrderGEL: ''
-  });
-
-  const [vendorForm, setVendorForm] = useState({
-    name: '', commission: ''
-  });
-
+  const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
+  const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
   const [newCatName, setNewCatName] = useState('');
-
-  const [bannerForm, setBannerForm] = useState({
-    title: '', subtitle: '', image: '', link: ''
-  });
-
-  const [broadcastForm, setBroadcastForm] = useState({
-    title: '', message: ''
-  });
-
-  const [flashSaleForm, setFlashSaleForm] = useState({
-    discountPercent: '', category: 'ყველა'
-  });
-
-  const [passwordForm, setPasswordForm] = useState({
-    newUsername: '', newPassword: ''
-  });
+  const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
+  const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
+  const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
+  const [passwordForm, setPasswordForm] = useState({ newUsername: '', newPassword: '' });
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
@@ -207,21 +189,25 @@ export default function AdminDashboardPro({
 
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
 
+    const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+
     const newProd = {
       id: `prod-${Date.now()}`,
       sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       ...productForm,
       priceGEL: Number(productForm.priceGEL),
+      oldPriceGEL: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
       stock: Number(productForm.stock) || 1,
+      tags: tagsArray,
       image: mainImage,
       gallery: selectedImages.length > 0 ? selectedImages : [mainImage]
     };
 
     setProducts(prev => [newProd, ...(prev || [])]);
-    setProductForm({ name: '', category: categoriesList?.[0] || 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
+    setProductForm({ name: '', category: categoriesList?.[0] || 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '' });
     setSelectedImages([]);
     logActivity(`დაემატა ახალი პროდუქტი: ${newProd.name}`);
-    alert('✅ პროდუქტი წარმატებით დაემატა!');
+    alert('✅ პროდუქტი წარმატებით დაემატა დეტალური ინფორმაციითა და ტეგებით!');
   };
 
   const handleExportProducts = () => {
@@ -564,7 +550,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h2 className="text-base font-black text-white tracking-tight">GEOSTORE პროფესიონალური ადმინ პანელი</h2>
-            <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი: მხარდაჭერა და პასუხები, უსაფრთხოება, ფინანსები, შეკვეთები</p>
+            <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი: მხარდაჭერა, პროდუქტების დეტალები & ტეგები, ფინანსები, შეკვეთები</p>
           </div>
         </div>
         <button 
@@ -580,7 +566,7 @@ export default function AdminDashboardPro({
         {[
           { id: 'analytics', label: '📊 ანალიტიკა' },
           { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0 },
-          { id: 'products', label: '🏷️ პროდუქტები', count: products?.length || 0 },
+          { id: 'products', label: '🏷️ პროდუქტები & ტეგები', count: products?.length || 0 },
           { id: 'support', label: '💬 მხარდაჭერა & პასუხები', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0 },
           { id: 'discounts', label: '⚡ ფლეშ-აქციები' },
           { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0 },
@@ -755,13 +741,13 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* Products Tab */}
+      {/* Products Tab with Full Info & Tags Form */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/80 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება გალერეით
+                <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დეტალები, ტეგები და გალერეა)
               </h3>
               <button 
                 onClick={handleExportProducts}
@@ -775,24 +761,47 @@ export default function AdminDashboardPro({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <input type="text" placeholder="პროდუქტის დასახელება *" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
                 <input type="number" placeholder="ფასი GEL *" required value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
+                <input type="number" placeholder="ძველი ფასი (სურვილისამებრ)" value={productForm.oldPriceGEL} onChange={e => setProductForm({...productForm, oldPriceGEL: e.target.value})} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <select 
                   value={productForm.category} 
                   onChange={e => setProductForm({...productForm, category: e.target.value})} 
                   className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner cursor-pointer"
                 >
-                  {(categoriesList || []).length > 0 ? (
-                    categoriesList.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))
-                  ) : (
-                    <option value="სმარტფონები">სმარტფონები</option>
-                  )}
+                  {(categoriesList || []).map(cat => (
+                    <option key={typeof cat === 'object' ? cat.name : cat} value={typeof cat === 'object' ? cat.name : cat}>
+                      {typeof cat === 'object' ? cat.name : cat}
+                    </option>
+                  ))}
                 </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
                 <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-bold flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-emerald-400" /> ტეგები (გამოყავით მძიმით, მაგ: HOT, NEW, 0% განვადება):
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="მაგ: HOT, NEW, 0% განვადება" 
+                  value={productForm.tags} 
+                  onChange={e => setProductForm({...productForm, tags: e.target.value})} 
+                  className="w-full bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" 
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-bold">პროდუქტის სრული აღწერა:</label>
+                <textarea 
+                  rows="3"
+                  placeholder="დაწერეთ დეტალური ტექნიკური მახასიათებლები და აღწერა..." 
+                  value={productForm.description} 
+                  onChange={e => setProductForm({...productForm, description: e.target.value})} 
+                  className="w-full bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 resize-none shadow-inner" 
+                />
               </div>
 
               <div className="space-y-3 bg-slate-950/80 p-5 rounded-3xl border border-slate-800/80 shadow-inner">
@@ -814,7 +823,7 @@ export default function AdminDashboardPro({
               </div>
 
               <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                პროდუქტის შენახვა გალერეით
+                პროდუქტის შენახვა ტეგებითა და დეტალებით
               </button>
             </form>
           </div>
@@ -897,7 +906,9 @@ export default function AdminDashboardPro({
                 >
                   <option value="ყველა">ყველა კატეგორია</option>
                   {(categoriesList || []).map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={typeof cat === 'object' ? cat.name : cat} value={typeof cat === 'object' ? cat.name : cat}>
+                      {typeof cat === 'object' ? cat.name : cat}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1210,7 +1221,7 @@ export default function AdminDashboardPro({
                   className="w-full bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" 
                 />
               </div>
-              <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
+              <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
                 უსაფრთხოების მონაცემების განახლება
               </button>
             </form>
