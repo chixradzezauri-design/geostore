@@ -1,12 +1,13 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition (Full Code with User Order History & AI Orders Sync)
+// src/App.jsx - GEOSTORE Next-Gen Edition with Product Comparison Tool
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
+import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -29,7 +30,6 @@ const sendTelegramNotification = (text) => {
   }).catch(() => {});
 };
 
-// 📌 საწყისი კატეგორიები იკონების მხარდაჭერით
 const INITIAL_CATEGORIES = [
   { name: 'სმარტფონები', icon: 'Smartphone' },
   { name: 'ლეპტოპები', icon: 'Laptop' },
@@ -102,6 +102,7 @@ export default function App() {
 
   const [cart, setCart] = useState(() => loadSafeStorage('geostore_cart', []));
   const [wishlist, setWishlist] = useState(() => loadSafeStorage('geostore_wishlist', []));
+  const [comparisonList, setComparisonList] = useState(() => loadSafeStorage('geostore_comparison', []));
 
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', []));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
@@ -122,6 +123,7 @@ export default function App() {
   const [quickBuyProduct] = useState(null);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
@@ -154,6 +156,9 @@ export default function App() {
       }
       if (e.key === 'geostore_wishlist') {
         try { setWishlist(JSON.parse(e.newValue) || []); } catch {}
+      }
+      if (e.key === 'geostore_comparison') {
+        try { setComparisonList(JSON.parse(e.newValue) || []); } catch {}
       }
     };
 
@@ -193,6 +198,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_vendors', JSON.stringify(vendorsList)); } catch{} }, [vendorsList]);
   useEffect(() => { try { localStorage.setItem('geostore_cart', JSON.stringify(cart)); } catch{} }, [cart]);
   useEffect(() => { try { localStorage.setItem('geostore_wishlist', JSON.stringify(wishlist)); } catch{} }, [wishlist]);
+  useEffect(() => { try { localStorage.setItem('geostore_comparison', JSON.stringify(comparisonList)); } catch{} }, [comparisonList]);
   useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
 
   const cartTotalGEL = useMemo(() => {
@@ -227,6 +233,22 @@ export default function App() {
         return prev.filter(item => item.id !== product.id);
       }
       showToast('❤️ დაემატა სურვილების სიაში!');
+      return [...prev, product];
+    });
+  };
+
+  const toggleComparison = (product) => {
+    setComparisonList(prev => {
+      const exists = prev.some(item => item.id === product.id);
+      if (exists) {
+        showToast('წაიშალა შედარების სიიდან');
+        return prev.filter(item => item.id !== product.id);
+      }
+      if (prev.length >= 4) {
+        alert('შედარებაში შესაძლებელია მაქსიმუმ 4 პროდუქტის დამატება!');
+        return prev;
+      }
+      showToast('⚖️ დაემატა შედარების სიაში!');
       return [...prev, product];
     });
   };
@@ -322,12 +344,14 @@ export default function App() {
         setActiveTab={setActiveTab}
         wishlistCount={wishlist.length}
         cartCount={cart.reduce((a,b)=>a+b.quantity,0)}
+        comparisonCount={comparisonList.length}
         currentUser={currentUser}
         setIsAuthOpen={setIsAuthOpen}
         setAuthMode={setAuthMode}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         setIsGiftQuizOpen={setIsGiftQuizOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
+        setIsComparisonOpen={setIsComparisonOpen}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
@@ -344,6 +368,8 @@ export default function App() {
             filteredProducts={filteredProducts}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
+            comparisonList={comparisonList}
+            toggleComparison={toggleComparison}
             addToCart={addToCart}
             formatPrice={formatPrice}
           />
@@ -431,7 +457,6 @@ export default function App() {
 
         {activeTab === 'profile' && currentUser && (
           <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
-            {/* Profile Info Card */}
             <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" /> მომხმარებლის პროფილი
@@ -451,15 +476,11 @@ export default function App() {
                 </div>
               </div>
 
-              <button 
-                onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} 
-                className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4"
-              >
+              <button onClick={() => { setCurrentUser(null); setActiveTab('store'); showToast('გახვედით პროფილიდან'); }} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl font-bold transition cursor-pointer mt-4">
                 სისტემიდან გასვლა
               </button>
             </div>
 
-            {/* User Orders History Card */}
             <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" /> ჩემი შეკვეთების ისტორია
@@ -483,9 +504,7 @@ export default function App() {
                         </div>
                         <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
                           <span className="font-black text-white text-sm">{formatPrice(order.totalGEL)}</span>
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold mt-1">
-                            {order.status || 'ახალი'}
-                          </span>
+                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold mt-1">{order.status || 'ახალი'}</span>
                         </div>
                       </div>
                     ))
@@ -497,10 +516,7 @@ export default function App() {
       </main>
 
       <div className="fixed bottom-6 left-6 z-50">
-        <button 
-          onClick={() => setIsAiAssistantOpen(true)}
-          className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black p-4 rounded-full shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer border border-emerald-300/40"
-        >
+        <button onClick={() => setIsAiAssistantOpen(true)} className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black p-4 rounded-full shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer border border-emerald-300/40">
           <div className="relative">
             <Bot className="w-6 h-6 animate-pulse" />
             <Sparkles className="w-3.5 h-3.5 text-slate-950 absolute -top-1 -right-1" />
@@ -513,9 +529,7 @@ export default function App() {
         {supportOpen ? (
           <div className="w-80 bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] shadow-2xl p-5 space-y-4 text-xs text-white backdrop-blur-3xl animate-in fade-in duration-300">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h4 className="font-black flex items-center gap-2 text-emerald-400">
-                <MessageSquare className="w-4 h-4" /> GEOSTORE მხარდაჭერა
-              </h4>
+              <h4 className="font-black flex items-center gap-2 text-emerald-400"><MessageSquare className="w-4 h-4" /> GEOSTORE მხარდაჭერა</h4>
               <button onClick={() => setSupportOpen(false)} className="text-slate-400 hover:text-white font-black text-sm cursor-pointer p-1">✕</button>
             </div>
             
@@ -526,44 +540,27 @@ export default function App() {
               const subject = e.target.csubject.value;
               const message = e.target.cmessage.value;
               if (!name || !message) return;
-
               const ticketId = `t-${Math.floor(1000 + Math.random() * 9000)}`;
-
               try {
                 await fetch(`${SUPABASE_URL}/rest/v1/support_tickets`, {
                   method: 'POST',
                   headers: { ...headers, 'Prefer': 'return=representation' },
-                  body: JSON.stringify({
-                    id: ticketId,
-                    customer_name: name,
-                    email: email || 'guest@geostore.ge',
-                    subject: subject || 'ზოგადი კითხვა',
-                    message: message,
-                    status: 'ღია'
-                  })
+                  body: JSON.stringify({ id: ticketId, customer_name: name, email: email || 'guest@geostore.ge', subject: subject || 'ზოგადი კითხვა', message: message, status: 'ღია' })
                 });
-
                 alert('✅ თქვენი შეტყობინება წარმატებით გაეგზავნა ადმინისტრატორს! მალე გიპასუხებთ.');
                 e.target.reset();
                 setSupportOpen(false);
-              } catch {
-                alert('შეცდომა შეტყობინების გაგზავნისას.');
-              }
+              } catch { alert('შეცდომა შეტყობინების გაგზავნისას.'); }
             }} className="space-y-3">
               <input type="text" name="cname" placeholder="თქვენი სახელი *" required className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
               <input type="email" name="cemail" placeholder="ელ-ფოსტა" className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
               <input type="text" name="csubject" placeholder="თემა (მაგ: შეკვეთა #102)" className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" />
               <textarea name="cmessage" rows="3" placeholder="დაწერეთ თქვენი კითხვა ან საჩივარი..." required className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 resize-none shadow-inner"></textarea>
-              <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
-                შეტყობინების გაგზავნა
-              </button>
+              <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">შეტყობინების გაგზავნა</button>
             </form>
           </div>
         ) : (
-          <button 
-            onClick={() => setSupportOpen(true)}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-full shadow-2xl transition flex items-center gap-2 group cursor-pointer"
-          >
+          <button onClick={() => setSupportOpen(true)} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-full shadow-2xl transition flex items-center gap-2 group cursor-pointer">
             <MessageSquare className="w-6 h-6" />
             <span className="hidden group-hover:inline text-xs pr-1">კონსულტაცია / ჩათი</span>
           </button>
@@ -607,15 +604,20 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
+      <ProductCompareModal 
+        isComparisonOpen={isComparisonOpen}
+        setIsComparisonOpen={setIsComparisonOpen}
+        comparisonList={comparisonList}
+        setComparisonList={setComparisonList}
+        addToCart={addToCart}
+        formatPrice={formatPrice}
+      />
+
       <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-12 backdrop-blur-md space-y-3">
         <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
-          <button onClick={() => setIsTermsOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
-            <FileText className="w-4 h-4" /> წესები და პირობები
-          </button>
+          <button onClick={() => setIsTermsOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"><FileText className="w-4 h-4" /> წესები და პირობები</button>
           <span>•</span>
-          <button onClick={() => setIsWarrantyOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
-            <ShieldCheck className="w-4 h-4" /> საგარანტიო წესები
-          </button>
+          <button onClick={() => setIsWarrantyOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"><ShieldCheck className="w-4 h-4" /> საგარანტიო წესები</button>
         </div>
         <p>© 2026 GEOSTORE. ყველა უფლება დაცულია.</p>
       </footer>
