@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings
+// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings (Fixed Modal Overlay)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -400,17 +400,22 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal with Reviews & Ratings */}
+      {/* Product Detail Modal with Reviews & Ratings (Fixed z-index to 9999 and full padding for mobile view) */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
-          <div className="relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-8 md:p-10 space-y-8">
-            <button onClick={() => setSelectedProduct(null)} className="absolute top-6 right-6 p-3 bg-[#141418] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-2xl border border-amber-500/20 transition cursor-pointer z-20 shadow">
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-5 sm:p-10 space-y-6 my-auto">
+            
+            {/* Close button with high z-index and prominent styling */}
+            <button 
+              onClick={() => setSelectedProduct(null)} 
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/40 transition cursor-pointer z-50 shadow-xl"
+            >
+              <X className="w-6 h-6" />
             </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-6 sm:pt-0">
               <div className="space-y-5">
-                <div className="bg-[#060608] rounded-[2.5rem] p-8 border border-amber-500/30 flex items-center justify-center h-72 md:h-80 shadow-2xl">
+                <div className="bg-[#060608] rounded-[2.5rem] p-6 border border-amber-500/30 flex items-center justify-center h-64 sm:h-80 shadow-2xl">
                   <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                 </div>
                 
@@ -425,18 +430,18 @@ export default function StoreView({
                 )}
               </div>
 
-              <div className="space-y-6 text-xs max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
+              <div className="space-y-6 text-xs max-h-[60vh] sm:max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5">
                     <span className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
                     <span className="text-[11px] text-slate-400 font-bold bg-[#141418] px-3.5 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-black text-white leading-tight pt-2">{selectedProduct.name}</h2>
+                  <h2 className="text-xl sm:text-3xl font-black text-white leading-tight pt-2">{selectedProduct.name}</h2>
                   <p className="text-slate-400 text-xs">მომწოდებელი: <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                 </div>
 
                 <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
-                  <span className="text-3xl font-black text-amber-400">{formatPrice(selectedProduct.priceGEL)}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-amber-400">{formatPrice(selectedProduct.priceGEL)}</span>
                   {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                 </div>
 
