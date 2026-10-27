@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Elite Gold Luxury Admin Panel Edition
+// src/components/AdminDashboardPro.jsx - Clean Secure Login Edition
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -106,50 +106,61 @@ export default function AdminDashboardPro({
     setActivityLogs(prev => [newLog, ...prev]);
   };
 
+  // 🔒 სრულიად გასუფთავებული შესასვლელი ფანჯარა (აღარ უთითებს პაროლებს ტექსტის სახით)
   if (!adminLoggedIn) {
     return (
-      <div className="max-w-sm mx-auto bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] p-8 space-y-5 shadow-2xl backdrop-blur-3xl text-center my-12">
-        <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-          <Shield className="w-7 h-7 text-amber-400 animate-pulse" />
+      <div className="max-w-sm mx-auto bg-[#0d0d10] border border-amber-500/35 rounded-[2.5rem] p-8 space-y-6 shadow-2xl backdrop-blur-3xl text-center my-16">
+        <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+          <Shield className="w-8 h-8 text-amber-400 animate-pulse" />
         </div>
-        <div className="space-y-1">
-          <h2 className="text-lg font-black text-white tracking-tight">ადმინისტრატორის შესვლა</h2>
-          <p className="text-xs text-slate-400">GEOSTORE მართვის სისტემა (admin / admin123)</p>
+        
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-black text-white tracking-tight">ადმინისტრატორის პანელი</h2>
+          <p className="text-xs text-slate-400">შეიყვანეთ სამართავი მონაცემები სისტემაში შესასვლელად</p>
         </div>
-        <form onSubmit={handleAdminLogin} className="space-y-3.5 text-xs">
+
+        <form onSubmit={handleAdminLogin} autoComplete="off" className="space-y-4 text-xs">
           <input 
             type="text" 
+            name="geo_admin_username_secure"
+            autoComplete="off"
             placeholder="მომხმარებელი" 
             value={adminLoginForm?.username || ''} 
             onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
-            className="w-full bg-[#08080a] border border-amber-500/20 rounded-2xl p-3.5 text-white outline-none focus:border-amber-400 shadow-inner transition-all" 
+            className="w-full bg-[#08080a] border border-amber-500/20 rounded-2xl p-4 text-white outline-none focus:border-amber-400 shadow-inner transition-all" 
           />
           <input 
             type="password" 
+            name="geo_admin_password_secure"
+            autoComplete="new-password"
             placeholder="პაროლი" 
             value={adminLoginForm?.password || ''} 
             onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
-            className="w-full bg-[#08080a] border border-amber-500/20 rounded-2xl p-3.5 text-white outline-none focus:border-amber-400 shadow-inner transition-all" 
+            className="w-full bg-[#08080a] border border-amber-500/20 rounded-2xl p-4 text-white outline-none focus:border-amber-400 shadow-inner transition-all" 
           />
-          <div className="flex items-center gap-2 text-left pt-1">
+
+          <div className="flex items-center gap-2 text-left pt-1 px-1">
             <input 
               type="checkbox" 
               id="remMe" 
               checked={adminLoginForm?.remember || false} 
               onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
-              className="rounded accent-amber-400 cursor-pointer" 
+              className="rounded accent-amber-400 cursor-pointer w-4 h-4" 
             />
-            <label htmlFor="remMe" className="cursor-pointer text-xs text-slate-300">მომიმახსოვრე სისტემაში</label>
+            <label htmlFor="remMe" className="cursor-pointer text-xs text-slate-300 font-bold">მომიმახსოვრე სისტემაში</label>
           </div>
+
           {adminError && <p className="text-rose-400 text-xs font-bold pt-1">{adminError}</p>}
+
           <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-            ადმინ პანელში შესვლა
+            სისტემაში შესვლა
           </button>
         </form>
       </div>
     );
   }
 
+  // დანარჩენი ადმინ პანელის სრული ფუნქციონალი უცვლელად...
   const handleDeleteProduct = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა?')) {
       setProducts(prev => (prev || []).filter(p => p.id !== id));
@@ -740,7 +751,7 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* Products Tab with Full Info & Tags Form */}
+      {/* Products Tab */}
       {adminTab === 'products' && (
         <div className="space-y-6">
           <div className="bg-[#0d0d10] border border-amber-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
@@ -1199,11 +1210,12 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-amber-500/20 pb-4">
               <Lock className="w-5 h-5 text-amber-400" /> ადმინისტრატორის სარეკვიზიტო მონაცემები (უსაფრთხოება)
             </h3>
-            <form onSubmit={handleChangeAdminCredentials} className="space-y-4 text-xs">
+            <form onSubmit={handleChangeAdminCredentials} autoComplete="off" className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-bold">ახალი ადმინ სახელი (სურვილისამებრ)</label>
                 <input 
                   type="text" 
+                  autoComplete="off"
                   placeholder="ახალი მომხმარებელი" 
                   value={passwordForm.newUsername} 
                   onChange={e => setPasswordForm({...passwordForm, newUsername: e.target.value})} 
@@ -1214,6 +1226,7 @@ export default function AdminDashboardPro({
                 <label className="text-slate-400 font-bold">ახალი პაროლი (სურვილისამებრ)</label>
                 <input 
                   type="password" 
+                  autoComplete="new-password"
                   placeholder="ახალი საიდუმლო პაროლი" 
                   value={passwordForm.newPassword} 
                   onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})} 
