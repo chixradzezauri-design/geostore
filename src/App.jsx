@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Product Comparison Tool
+// src/App.jsx - GEOSTORE Next-Gen Edition with Promo Codes & Comparison Tool
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,7 +7,7 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -71,6 +71,11 @@ const INITIAL_PRODUCTS = [
   }
 ];
 
+// საწყისი სატესტო პრომო-კოდი
+const INITIAL_COUPONS = [
+  { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
+];
+
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
     try { const item = localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch { return fallback; }
@@ -86,7 +91,7 @@ export default function App() {
   const [categories, setCategoriesList] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
   const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
   const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
-  const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', []));
+  const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', INITIAL_COUPONS));
   const [bannersList, setBannersList] = useState(() => loadSafeStorage('geostore_banners', []));
 
   const [promoSlots] = useState([
@@ -104,6 +109,10 @@ export default function App() {
   const [wishlist, setWishlist] = useState(() => loadSafeStorage('geostore_wishlist', []));
   const [comparisonList, setComparisonList] = useState(() => loadSafeStorage('geostore_comparison', []));
 
+  // 🏷️ პრომო-კოდის სთეითი
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', []));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -112,7 +121,7 @@ export default function App() {
 
   const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('geostore_admin_remember'] === 'true'; } catch { return false; }
   });
   const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
   const [adminError, setAdminError] = useState('');
@@ -160,6 +169,9 @@ export default function App() {
       if (e.key === 'geostore_comparison') {
         try { setComparisonList(JSON.parse(e.newValue) || []); } catch {}
       }
+      if (e.key === 'geostore_coupons') {
+        try { setCoupons(JSON.parse(e.newValue) || INITIAL_COUPONS); } catch {}
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -199,12 +211,35 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_cart', JSON.stringify(cart)); } catch{} }, [cart]);
   useEffect(() => { try { localStorage.setItem('geostore_wishlist', JSON.stringify(wishlist)); } catch{} }, [wishlist]);
   useEffect(() => { try { localStorage.setItem('geostore_comparison', JSON.stringify(comparisonList)); } catch{} }, [comparisonList]);
+  useEffect(() => { try { localStorage.setItem('geostore_coupons', JSON.stringify(coupons)); } catch{} }, [coupons]);
   useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
 
-  const cartTotalGEL = useMemo(() => {
+  // 🏷️ სებოტი თანხა და პრომო-კოდის გამოთვლა
+  const cartSubtotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
     return itemsToCalc.reduce((acc, item) => acc + (item.priceGEL * (item.quantity || 1)), 0);
   }, [cart, quickBuyProduct]);
+
+  const cartTotalGEL = useMemo(() => {
+    if (!appliedCoupon) return cartSubtotalGEL;
+    const discountAmount = (cartSubtotalGEL * appliedCoupon.discountPercent) / 100;
+    return Math.max(0, cartSubtotalGEL - discountAmount);
+  }, [cartSubtotalGEL, appliedCoupon]);
+
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    const cleanCode = promoInput.trim().toUpperCase();
+    if (!cleanCode) return;
+
+    const found = coupons.find(c => c.code.toUpperCase() === cleanCode && (c.status === 'აქტიური' || !c.status));
+    if (found) {
+      setAppliedCoupon(found);
+      showToast(`🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`);
+      setPromoInput('');
+    } else {
+      alert('არასწორი ან გაუქმებული პრომო-კოდი!');
+    }
+  };
 
   const proAnalytics = useMemo(() => {
     const totalRevenueGEL = orders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
@@ -312,9 +347,10 @@ export default function App() {
           status: 'ახალი'
         })
       });
-      sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n💰 თანხა: ${cartTotalGEL} ₾`);
+      sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n💰 თანხა: ${cartTotalGEL} ₾${appliedCoupon ? ` (გამოყენებულია პრომო-კოდი: ${appliedCoupon.code})` : ''}`);
       setIsCheckoutOpen(false);
       setCart([]);
+      setAppliedCoupon(null);
       showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
       fetchOrders();
     } catch { alert('შეცდომა შეკვეთისას'); }
@@ -446,8 +482,47 @@ export default function App() {
                     </div>
                   ))}
                 </div>
-                <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-4 shadow-2xl backdrop-blur-2xl">
-                  <div className="text-xl font-black text-emerald-400">სულ: {formatPrice(cartTotalGEL)}</div>
+
+                <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
+                  
+                  {/* Promo Code Input Box */}
+                  <div className="space-y-2 border-b border-slate-800 pb-4">
+                    <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs"><Tag className="w-3.5 h-3.5" /> პრომო-კოდი</span>
+                    {appliedCoupon ? (
+                      <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
+                        <div>
+                          <b className="text-amber-300 uppercase">{appliedCoupon.code}</b>
+                          <span className="text-emerald-400 block text-[10px]">(-{appliedCoupon.discountPercent}% ფასდაკლება)</span>
+                        </div>
+                        <button onClick={() => setAppliedCoupon(null)} className="text-rose-400 hover:text-rose-300 p-1 cursor-pointer"><X className="w-4 h-4" /></button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="შეიყვანეთ კოდი (მაგ: GEOSTORE2026)" 
+                          value={promoInput} 
+                          onChange={e => setPromoInput(e.target.value)} 
+                          className="flex-1 bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-xs text-white outline-none focus:border-amber-400"
+                        />
+                        <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs transition cursor-pointer">გამოყენება</button>
+                      </form>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    {appliedCoupon && (
+                      <div className="flex justify-between text-slate-400">
+                        <span>ქვეჯამი:</span>
+                        <span>{formatPrice(cartSubtotalGEL)}</span>
+                      </div>
+                    )}
+                    <div className="text-xl font-black text-amber-400 flex justify-between items-center pt-2">
+                      <span>სულ:</span>
+                      <span>{formatPrice(cartTotalGEL)}</span>
+                    </div>
+                  </div>
+
                   <button onClick={() => setIsCheckoutOpen(true)} className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer">შეკვეთის გაფორმება</button>
                 </div>
               </div>
