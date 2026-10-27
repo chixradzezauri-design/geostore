@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Luxury Boutique with Advanced Filters & Product Comparison Button
-import React, { useState, useMemo } from 'react';
+// src/components/StoreView.jsx - Luxury Boutique with Advanced Filters, Comparison & Reviews/Ratings
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -28,10 +28,50 @@ export default function StoreView({
   const [maxPrice, setMaxPrice] = useState('');
   const [installmentMonths, setInstallmentMonths] = useState(12);
 
+  // ⭐ შეფასებების state-ები
+  const [allReviews, setAllReviews] = useState(() => {
+    try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
+  });
+  const [newReviewAuthor, setNewReviewAuthor] = useState('');
+  const [newReviewComment, setNewReviewComment] = useState('');
+  const [newReviewRating, setNewReviewRating] = useState(5);
+
+  useEffect(() => {
+    try { localStorage.setItem('geostore_product_reviews', JSON.stringify(allReviews)); } catch {}
+  }, [allReviews]);
+
   const handleOpenProduct = (prod) => {
     setSelectedProduct(prod);
     setActiveImage(prod.image);
     setInstallmentMonths(12);
+    setNewReviewAuthor('');
+    setNewReviewComment('');
+    setNewReviewRating(5);
+  };
+
+  const handleAddReview = (e, productId) => {
+    e.preventDefault();
+    if (!newReviewAuthor.trim() || !newReviewComment.trim()) return;
+
+    const reviewObj = {
+      id: `rev-${Date.now()}`,
+      author: newReviewAuthor.trim(),
+      comment: newReviewComment.trim(),
+      rating: Number(newReviewRating),
+      date: new Date().toLocaleDateString('ka-GE')
+    };
+
+    setAllReviews(prev => {
+      const currentProdReviews = prev[productId] || [];
+      return {
+        ...prev,
+        [productId]: [reviewObj, ...currentProdReviews]
+      };
+    });
+
+    setNewReviewAuthor('');
+    setNewReviewComment('');
+    setNewReviewRating(5);
   };
 
   const processedProducts = useMemo(() => {
@@ -201,6 +241,10 @@ export default function StoreView({
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
+            const prodReviews = allReviews[prod.id] || [];
+            const avgRating = prodReviews.length > 0 
+              ? (prodReviews.reduce((acc, r) => acc + r.rating, 0) / prodReviews.length).toFixed(1) 
+              : '5.0';
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
@@ -247,7 +291,9 @@ export default function StoreView({
                 <div className="py-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-3 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
-                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">მარაგშია ({prod.stock || 1})</span>
+                    <div className="flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
+                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
+                    </div>
                   </div>
                   <h3 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="flex items-baseline gap-3 pt-1">
@@ -268,7 +314,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal */}
+      {/* Product Detail Modal with Reviews & Ratings */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
           <div className="relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-8 md:p-10 space-y-8">
@@ -293,7 +339,7 @@ export default function StoreView({
                 )}
               </div>
 
-              <div className="space-y-6 text-xs">
+              <div className="space-y-6 text-xs max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5">
                     <span className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
@@ -330,7 +376,74 @@ export default function StoreView({
                   <span>ხელმისაწვდომია მარაგში: <b className="text-amber-400 font-black">{selectedProduct.stock || 1} ცალი</b></span>
                 </div>
 
-                <button onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95">
+                {/* ⭐ REVIEWS & RATINGS SECTION */}
+                <div className="space-y-4 pt-4 border-t border-amber-500/20">
+                  <h3 className="text-sm font-black text-white flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა შეფასებები ({(allReviews[selectedProduct.id] || []).length})
+                  </h3>
+
+                  {/* Add Review Form */}
+                  <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
+                    <span className="text-amber-300 font-bold block text-xs">დატოვეთ თქვენი შეფასება:</span>
+                    <div className="flex gap-2 items-center">
+                      <span className="text-slate-400">შეფასება:</span>
+                      <select 
+                        value={newReviewRating} 
+                        onChange={e => setNewReviewRating(Number(e.target.value))}
+                        className="bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
+                      >
+                        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                        <option value="4">⭐⭐⭐⭐ (4)</option>
+                        <option value="3">⭐⭐⭐ (3)</option>
+                        <option value="2">⭐⭐ (2)</option>
+                        <option value="1">⭐ (1)</option>
+                      </select>
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="თქვენი სახელი *" 
+                      value={newReviewAuthor} 
+                      onChange={e => setNewReviewAuthor(e.target.value)}
+                      required
+                      className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
+                    />
+                    <textarea 
+                      placeholder="თქვენი კომენტარი პროდუქტზე..." 
+                      value={newReviewComment} 
+                      onChange={e => setNewReviewComment(e.target.value)}
+                      required
+                      rows="2"
+                      className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
+                    ></textarea>
+                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
+                      შეფასების გამოქვეყნება
+                    </button>
+                  </form>
+
+                  {/* Reviews List */}
+                  <div className="space-y-3 pt-2">
+                    {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
+                      <p className="text-slate-500 text-xs text-center py-4">ამ პროდუქტზე ჯერ არ არის შეფასებები. იყავი პირველი!</p>
+                    ) : (
+                      allReviews[selectedProduct.id].map(rev => (
+                        <div key={rev.id} className="bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-1.5 shadow-inner">
+                          <div className="flex justify-between items-center">
+                            <b className="text-white text-xs">{rev.author}</b>
+                            <span className="text-[10px] text-slate-500">{rev.date}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-amber-400 text-xs">
+                            {Array.from({ length: rev.rating }).map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-amber-400" />
+                            ))}
+                          </div>
+                          <p className="text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <button onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6">
                   <ShoppingBag className="w-5 h-5" /> კალათაში დამატება
                 </button>
               </div>
