@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Next-Gen Apple/Stripe Style Admin Dashboard
+// src/components/AdminDashboardPro.jsx - Next-Gen Apple/Stripe Style Admin Dashboard (Fixed & Secured)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -22,19 +22,19 @@ export default function AdminDashboardPro({
   handleAdminLogin,
   adminError,
   proAnalytics,
-  orders,
+  orders = [],
   setOrders,
-  usersList,
+  usersList = [],
   setUsersList,
-  products,
+  products = [],
   setProducts,
-  vendorsList,
+  vendorsList = [],
   setVendorsList,
-  coupons,
+  coupons = [],
   setCoupons,
-  categoriesList,
+  categoriesList = [],
   setCategoriesList,
-  bannersList,
+  bannersList = [],
   setBannersList,
   siteSettings,
   setSiteSettings,
@@ -138,14 +138,14 @@ export default function AdminDashboardPro({
           <input 
             type="text" 
             placeholder="მომხმარებელი" 
-            value={adminLoginForm.username} 
+            value={adminLoginForm?.username || ''} 
             onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
             className="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3.5 text-white outline-none focus:border-emerald-500 shadow-inner transition-all" 
           />
           <input 
             type="password" 
             placeholder="პაროლი" 
-            value={adminLoginForm.password} 
+            value={adminLoginForm?.password || ''} 
             onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
             className="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-3.5 text-white outline-none focus:border-emerald-500 shadow-inner transition-all" 
           />
@@ -153,7 +153,7 @@ export default function AdminDashboardPro({
             <input 
               type="checkbox" 
               id="remMe" 
-              checked={adminLoginForm.remember} 
+              checked={adminLoginForm?.remember || false} 
               onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
               className="rounded accent-emerald-500 cursor-pointer" 
             />
@@ -170,13 +170,13 @@ export default function AdminDashboardPro({
 
   const handleDeleteProduct = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა?')) {
-      setProducts(prev => prev.filter(p => p.id !== id));
+      setProducts(prev => (prev || []).filter(p => p.id !== id));
       logActivity(`წაიშალა პროდუქტი (ID: ${id})`);
     }
   };
 
   const handleQuickUpdateProduct = (id, field, value) => {
-    setProducts(prev => prev.map(p => {
+    setProducts(prev => (prev || []).map(p => {
       if (p.id === id) {
         return { ...p, [field]: field === 'priceGEL' || field === 'stock' ? Number(value) : value };
       }
@@ -185,7 +185,7 @@ export default function AdminDashboardPro({
   };
 
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
     const promises = files.map(file => {
@@ -197,7 +197,7 @@ export default function AdminDashboardPro({
     });
 
     Promise.all(promises).then(base64Images => {
-      setSelectedImages(prev => [...prev, ...base64Images]);
+      setSelectedImages(prev => [...(prev || []), ...base64Images]);
     });
   };
 
@@ -217,8 +217,8 @@ export default function AdminDashboardPro({
       gallery: selectedImages.length > 0 ? selectedImages : [mainImage]
     };
 
-    setProducts(prev => [newProd, ...prev]);
-    setProductForm({ name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
+    setProducts(prev => [newProd, ...(prev || [])]);
+    setProductForm({ name: '', category: categoriesList?.[0] || 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '' });
     setSelectedImages([]);
     logActivity(`დაემატა ახალი პროდუქტი: ${newProd.name}`);
     alert('✅ პროდუქტი წარმატებით დაემატა!');
@@ -250,7 +250,7 @@ export default function AdminDashboardPro({
     const percent = Number(flashSaleForm.discountPercent);
     if (!percent || percent <= 0) return;
 
-    setProducts(prev => prev.map(p => {
+    setProducts(prev => (prev || []).map(p => {
       if (flashSaleForm.category === 'ყველა' || p.category === flashSaleForm.category) {
         const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
         const discountedPrice = Math.round(basePrice * (1 - percent / 100));
@@ -410,13 +410,13 @@ export default function AdminDashboardPro({
       discountPercent: Number(couponForm.discountPercent),
       minOrderGEL: Number(couponForm.minOrderGEL) || 0
     };
-    setCoupons(prev => [newC, ...prev]);
+    setCoupons(prev => [newC, ...(prev || [])]);
     setCouponForm({ code: '', discountPercent: '', minOrderGEL: '' });
     logActivity(`შეიქმნა ახალი კუპონი: ${newC.code}`);
   };
 
   const handleDeleteCoupon = (id) => {
-    setCoupons(prev => prev.filter(c => c.id !== id));
+    setCoupons(prev => (prev || []).filter(c => c.id !== id));
     logActivity(`წაიშალა კუპონი (ID: ${id})`);
   };
 
@@ -429,7 +429,7 @@ export default function AdminDashboardPro({
       commission: Number(vendorForm.commission),
       status: 'აქტიური'
     };
-    setVendorsList(prev => [...prev, newV]);
+    setVendorsList(prev => [...(prev || []), newV]);
     setVendorForm({ name: '', commission: '' });
     logActivity(`დაემატა ახალი ვენდორი: ${newV.name}`);
     alert('✅ ვენდორი წარმატებით დაემატა!');
@@ -437,7 +437,7 @@ export default function AdminDashboardPro({
 
   const handleDeleteVendor = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
-      setVendorsList(prev => prev.filter(v => v.id !== id));
+      setVendorsList(prev => (prev || []).filter(v => v.id !== id));
       logActivity(`წაიშალა ვენდორი (ID: ${id})`);
     }
   };
@@ -445,7 +445,7 @@ export default function AdminDashboardPro({
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
-    if (categoriesList?.includes(newCatName.trim())) {
+    if ((categoriesList || []).includes(newCatName.trim())) {
       alert('ეს კატეგორია უკვე არსებობს!');
       return;
     }
@@ -457,7 +457,7 @@ export default function AdminDashboardPro({
 
   const handleDeleteCategory = (catName) => {
     if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
-      setCategoriesList(prev => prev.filter(c => c !== catName));
+      setCategoriesList(prev => (prev || []).filter(c => c !== catName));
       logActivity(`წაიშალა კატეგორია: ${catName}`);
     }
   };
@@ -478,7 +478,7 @@ export default function AdminDashboardPro({
 
   const handleDeleteBanner = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ ბანერის წაშლა?')) {
-      setBannersList(prev => prev.filter(b => b.id !== id));
+      setBannersList(prev => (prev || []).filter(b => b.id !== id));
       logActivity(`წაიშალა ბანერი (ID: ${id})`);
     }
   };
@@ -505,7 +505,7 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateOrderStatus = (orderId, newStatus) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
   };
 
@@ -532,7 +532,7 @@ export default function AdminDashboardPro({
   };
 
   const handleToggleVipUser = (userId) => {
-    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
+    setUsersList(prev => (prev || []).map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
     logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
   };
 
@@ -544,12 +544,12 @@ export default function AdminDashboardPro({
     alert('საიტის პარამეტრები წარმატებით განახლდა!');
   };
 
-  const filteredUsers = usersList?.filter(u => 
+  const filteredUsers = (usersList || []).filter(u => 
     u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
     u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
-  const filteredProducts = products?.filter(p => 
+  const filteredProducts = (products || []).filter(p => 
     p.name?.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
     p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
   );
@@ -614,19 +614,19 @@ export default function AdminDashboardPro({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
             <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
-            <p className="text-3xl font-black text-emerald-400">{formatPrice(proAnalytics.totalRevenueGEL)}</p>
+            <p className="text-3xl font-black text-emerald-400">{formatPrice(proAnalytics?.totalRevenueGEL || 0)}</p>
           </div>
           <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
             <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-teal-400" /> სავარაუდო წმინდა მოგება</p>
-            <p className="text-3xl font-black text-teal-400">{formatPrice(proAnalytics.netProfitGEL)}</p>
+            <p className="text-3xl font-black text-teal-400">{formatPrice(proAnalytics?.netProfitGEL || 0)}</p>
           </div>
           <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
             <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-blue-400" /> სულ შეკვეთები</p>
-            <p className="text-3xl font-black text-blue-400">{proAnalytics.totalOrdersCount}</p>
+            <p className="text-3xl font-black text-blue-400">{proAnalytics?.totalOrdersCount || 0}</p>
           </div>
           <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
             <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
-            <p className="text-3xl font-black text-amber-400">{proAnalytics.lowStockProducts?.length || 0} პროდუქტი</p>
+            <p className="text-3xl font-black text-amber-400">{proAnalytics?.lowStockProducts?.length || 0} პროდუქტი</p>
           </div>
         </div>
       )}
@@ -780,9 +780,13 @@ export default function AdminDashboardPro({
                   onChange={e => setProductForm({...productForm, category: e.target.value})} 
                   className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner cursor-pointer"
                 >
-                  {categoriesList?.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                  {(categoriesList || []).length > 0 ? (
+                    categoriesList.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))
+                  ) : (
+                    <option value="სმარტფონები">სმარტფონები</option>
+                  )}
                 </select>
               </div>
 
@@ -892,7 +896,7 @@ export default function AdminDashboardPro({
                   className="w-full bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner cursor-pointer"
                 >
                   <option value="ყველა">ყველა კატეგორია</option>
-                  {categoriesList?.map(cat => (
+                  {(categoriesList || []).map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
@@ -999,7 +1003,7 @@ export default function AdminDashboardPro({
           <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base">აქტიური ბანერები ({bannersList?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {bannersList?.map(b => (
+              {(bannersList || []).map(b => (
                 <div key={b.id} className="bg-slate-950/80 p-4 rounded-3xl border border-slate-800/80 flex justify-between items-center text-xs gap-3 shadow-inner">
                   <div className="flex items-center gap-3.5">
                     <img src={b.image} alt="" className="w-16 h-12 object-cover rounded-2xl border border-slate-800 shrink-0" />
@@ -1041,10 +1045,10 @@ export default function AdminDashboardPro({
           <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base">არსებული კატეგორიები ({categoriesList?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {categoriesList?.map((cat, idx) => (
+              {(categoriesList || []).map((cat, idx) => (
                 <div key={idx} className="bg-slate-950/80 p-4 rounded-3xl border border-slate-800/80 flex justify-between items-center text-xs shadow-inner">
-                  <span className="font-bold text-white">{cat}</span>
-                  <button onClick={() => handleDeleteCategory(cat)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                  <span className="font-bold text-white">{typeof cat === 'object' ? cat.name : cat}</span>
+                  <button onClick={() => handleDeleteCategory(typeof cat === 'object' ? cat.name : cat)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                 </div>
               ))}
             </div>
@@ -1069,7 +1073,7 @@ export default function AdminDashboardPro({
           <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base">აქტიური კუპონები ({coupons?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {coupons?.map(c => (
+              {(coupons || []).map(c => (
                 <div key={c.id} className="bg-slate-950/80 p-4 rounded-3xl border border-slate-800/80 flex justify-between items-center text-xs shadow-inner">
                   <div>
                     <h4 className="font-black text-emerald-400 text-sm tracking-wider">{c.code}</h4>
@@ -1102,7 +1106,7 @@ export default function AdminDashboardPro({
           <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {vendorsList?.map(v => (
+              {(vendorsList || []).map(v => (
                 <div key={v.id} className="bg-slate-950/80 p-4 rounded-3xl border border-slate-800/80 flex justify-between items-center text-xs shadow-inner">
                   <div>
                     <h4 className="font-bold text-white text-sm">{v.name}</h4>
@@ -1206,7 +1210,7 @@ export default function AdminDashboardPro({
                   className="w-full bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner" 
                 />
               </div>
-              <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
+              <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
                 უსაფრთხოების მონაცემების განახლება
               </button>
             </form>
