@@ -1,12 +1,13 @@
-// src/components/AiAssistantModal.jsx - High-IQ Smart AI Concierge (Robust Keyword Search)
+// src/components/AiAssistantModal.jsx - Ultimate AI Concierge with Full Store Access & Multi-Topic Intelligence
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, Sparkles, Send, X, ShoppingBag, ArrowRight, Lightbulb, PackageCheck } from 'lucide-react';
+import { Bot, Sparkles, Send, X, ShoppingBag, ArrowRight, Lightbulb, PackageCheck, Store, ShieldCheck, Truck, Tag } from 'lucide-react';
 
 export default function AiAssistantModal({
   isAiAssistantOpen,
   setIsAiAssistantOpen,
   products = [],
   categories = [],
+  vendorsList = [],
   orders = [],
   addToCart,
   formatPrice
@@ -15,7 +16,7 @@ export default function AiAssistantModal({
     {
       id: 'm1',
       sender: 'ai',
-      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის პრემიუმ AI კონსიერჟი. რით შემიძლია დაგეხმაროთ დღეს? შეგიძლიათ მკითხოთ რეკომენდაცია ბიუჯეტის, ტექნიკის პარამეტრების, განვადების, მიწოდების ან თქვენი შეკვეთის სტატუსის შესახებ!'
+      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი AI კონსიერჟი. მაქვს სრული წვდომა ჩვენს კატალოგზე, ვენდერებზე, შეკვეთებსა და მიწოდების პირობებზე. რით შემიძლია დაგეხმაროთ დღეს?'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -34,43 +35,61 @@ export default function AiAssistantModal({
 
   if (!isAiAssistantOpen) return null;
 
-  // 🧠 სუპერ-მდგრადი საკვანძო სიტყვების ანალიზატორი
+  // 🧠 სრული წვდომისა და მრავალმხრივი ინტელექტის გენერატორი
   const generateAiReply = (userQuery) => {
     const query = userQuery.toLowerCase().trim();
     let matchedProducts = [];
 
-    // 1. მეგობრული საუბარი და მოკითხვა
+    // 1. მეგობრული საუბარი და ზოგადი შეკითხვები
     if (query.includes('როგორ') && (query.includes('ხარ') || query.includes('ბრძანდებით') || query.includes('გისვამ'))) {
       return {
-        text: 'გმადლობთ, მშვენივრად! 🤖 ყოველთვის მზად ვარ, რომ GEOSTORE-ში საუკეთესო შოპინგის გამოცდილება შექმნათ. თქვენ როგორ ბრძანდებით, რით დაგეხმაროთ?',
+        text: 'გმადლობთ, მშვენივრად! 🤖 მზად ვარ დაგეხმაროთ ნებისმიერ საკითხში — იქნება ეს ტექნიკის შერჩევა, ფასდაკლებები თუ შეკვეთის ტრეკინგი.',
         products: []
       };
     }
 
     if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello') || query.includes('hi')) {
       return {
-        text: 'გამარჯობა! 🌟 რა სასიამოვნოა თქვენთან საუბარი. რით შემიძლია დაგეხმაროთ? გსურთ ტექნიკის შერჩევა, ფასდაკლებების ნახვა თუ შეკვეთის სტატუსის შემოწმება?',
+        text: 'გამარჯობა! 🌟 სიამოვნებით გესაუბრებით. რა გაინტერესებთ დღეს GEOSTORE-ში?',
         products: []
       };
     }
 
     if (query.includes('ვინ') || query.includes('შენი') || query.includes('შეგიძლია') || query.includes('რისი')) {
       return {
-        text: 'მე ვარ GEOSTORE-ის ხელოვნური ინტელექტის ასისტენტი 🤖. შემიძლია დაგეხმაროთ ტექნიკის შერჩევაში, განვადებისა და მიწოდების პირობების გაცნობაში ან შეკვეთის სტატუსის შემოწმებაში!',
+        text: 'მე ვარ GEOSTORE-ის სრულუფლებიანი AI ასისტენტი 🤖. მე დამევალა:\n\n• პროდუქტების შერჩევა კატეგორიებისა და ბიუჯეტის მიხედვით\n• ვენდერებისა და ოფიციალური პარტნიორების შესახებ ინფორმაციის მოწოდება\n• შეკვეთების სტატუსის შემოწმება (#ORD კოდით)\n• მიწოდების, გარანტიისა და 0% განვადების პირობების ახსნა',
         products: []
       };
     }
 
     if (query.includes('მადლობა') || query.includes('გმადლობ') || query.includes('გაიხარე') || query.includes('thanks')) {
       return {
-        text: 'დიდი არაფრის! ❤️ სიამოვნებით დაგეხმარეთ. თუ დამატებითი კითხვები გექნებათ, ნებისმიერ დროს მომწერეთ!',
+        text: 'დიდი არაფრის! ❤️ ყოველთვის მზად ვარ დასახმარებლად. თუ კიდევ რაიმე დაგჭირდებათ, აქ ვარ!',
         products: []
       };
     }
 
-    // 2. შეკვეთის სტატუსის შემოწმება (#ORD-1234)
+    // 2. კატეგორიების შესახებ შეკითხვები
+    if (query.includes('კატეგორია') || query.includes('რა გაქვთ') || query.includes('რას ყიდით') || query.includes('არჩევანი')) {
+      const catNames = (categories || []).map(c => typeof c === 'object' ? c.name : c).join(', ');
+      return {
+        text: `🛒 ჩვენთან წარმოდგენილია შემდეგი ძირითადი კატეგორიები: ${catNames || 'სმარტფონები, ლეპტოპები, აქსესუარები'}. შეგიძლიათ მომწეროთ რომელიმე მათგანი და სრულ სიას გაგიზიარებთ!`,
+        products: products.slice(0, 2)
+      };
+    }
+
+    // 3. ვენდერების/მომწოდებლების შესახებ შეკითხვები
+    if (query.includes('ვენდერ') || query.includes('მომწოდებელ') || query.includes('სადღა') || query.includes('ბრენდ')) {
+      const vendorNames = (vendorsList || []).map(v => `• ${v.name} (სტატუსი: ${v.status})`).join('\n');
+      return {
+        text: `店铺 GEOSTORE წარმოადგენს მრავალვენდერიან მარკეტფლეისს. ჩვენი ოფიციალური პარტნიორები და მომწოდებლები არიან:\n\n${vendorNames}`,
+        products: []
+      };
+    }
+
+    // 4. შეკვეთის სტატუსის შემოწმება (#ORD-1234)
     const orderMatch = query.match(/ord[-\s]?\d+/i);
-    if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი')) {
+    if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი') || query.includes('ტრეკინგ')) {
       if (orderMatch) {
         const orderIdClean = orderMatch[0].toUpperCase().replace(/\s+/g, '');
         const foundOrder = (orders || []).find(o => o.id?.toUpperCase() === orderIdClean || o.id?.toUpperCase() === `#${orderIdClean}`);
@@ -88,35 +107,35 @@ export default function AiAssistantModal({
         }
       } else {
         return {
-          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მიაწეროთ შეკვეთის კოდი (მაგალითად: ORD-9572)! 📦',
+          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მოწეროთ შეკვეთის უნიკალური კოდი (მაგალითად: ORD-9572)! 📦',
           products: []
         };
       }
     }
 
-    // 3. გარანტია, მიწოდება, განვადება
+    // 5. პირობები (გარანტია, მიწოდება, განვადება)
     if (query.includes('გარანტია') || query.includes('საგარანტიო')) {
       return {
-        text: '🛡️ GEOSTORE-ის ყველა პროდუქტზე მოქმედებს ოფიციალური გარანტია!',
+        text: '🛡️ GEOSTORE-ის ყველა პროდუქტზე მოქმედებს მინიმუმ 1-ლიანი ოფიციალური მწარმოებლის გარანტია.',
         products: []
       };
     }
 
     if (query.includes('მიწოდება') || query.includes('მიტანა') || query.includes('კურიერი')) {
       return {
-        text: '🚀 მიწოდება ხორციელდება მთელი საქართველოს მასშტაბით! თბილისში 1-2 დღეში, ხოლო რეგიონებში 2-3 დღეში.',
+        text: '🚀 მიწოდება ხორციელდება მთელი საქართველოს მასშტაბით! თბილისში მიწოდება უფასოა ან ტარიფირებულია რეგიონის მიხედვით.',
         products: []
       };
     }
 
     if (query.includes('განვადება') || query.includes('0%') || query.includes('თვე')) {
       return {
-        text: '💳 GEOSTORE-ში მოქმედებს 0%-იანი განვადება 6, 12 და 24 თვემდე!',
+        text: '💳 GEOSTORE-ში ხელმისაწვდომია 0%-იანი განვადება 6, 12 და 24 თვემდე პერიოდით საქართველოს წამყვანი ბანკებიდან.',
         products: []
       };
     }
 
-    // 4. პროდუქტების ძებნა ფასით ან კატეგორიით
+    // 6. ბიუჯეტისა და ფასდაკლებების ძებნა
     const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel)/);
     const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
 
@@ -131,37 +150,38 @@ export default function AiAssistantModal({
     if (query.includes('ფასდაკლება') || query.includes('აქცია') || query.includes('sale')) {
       matchedProducts = products.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return { 
-        text: '🔥 ხელმისაწვდომია შემდეგი ფასდაკლებები:', 
+        text: '🔥 მიმდინარე სპეციალური ფასდაკლებები და შეთავაზებები:', 
         products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) 
       };
     } 
 
     if (query.includes('ლეპტოპ') || query.includes('laptop') || query.includes('macbook')) {
       matchedProducts = products.filter(p => p.category === 'ლეპტოპები' || p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('laptop'));
-      return { text: '💻 საუკეთესო ლეპტოპები:', products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) };
+      return { text: '💻 ჩვენი საუკეთესო ლეპტოპების კოლექცია:', products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) };
     } 
 
     if (query.includes('ტელეფონ') || query.includes('phone') || query.includes('iphone') || query.includes('სმარტფონ')) {
       matchedProducts = products.filter(p => p.category === 'სმარტფონები' || p.name.toLowerCase().includes('iphone'));
-      return { text: '📱 სმარტფონების არჩევანი:', products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) };
+      return { text: '📱 სმარტფონების ფლაგმანური არჩევანი:', products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) };
     }
 
     // ზოგადი ძიება პროდუქტებში
     matchedProducts = products.filter(p => 
       p.name.toLowerCase().includes(query) || 
-      p.category.toLowerCase().includes(query)
+      p.category.toLowerCase().includes(query) ||
+      (p.brand && p.brand.toLowerCase().includes(query))
     );
 
     if (matchedProducts.length > 0) {
       return {
-        text: `✨ თქვენი მოთხოვნის მიხედვით ვიპოვეთ:`,
+        text: `✨ თქვენი მოთხოვნის შესაბამისად ვიპოვე შემდეგი პროდუქტები:`,
         products: matchedProducts.slice(0, 3)
       };
     }
 
-    // 5. სათადარიგო პასუხი, თუ სიტყვა ვერ იცნო
+    // 7. სათადარიგო პასუხი
     return {
-      text: `🤔 ვეცადე პასუხის მოძებნა, მაგრამ ვერ დავამყარე ზუსტი კავშირი. შეგიძლიათ მკითხოთ ტექნიკის, მიწოდების, განვადების ან ფასდაკლებების შესახებ! აი რამდენიმე პოპულარული ნივთი:`,
+      text: `🤔 ვეცადე პასუხის მოძებნა, მაგრამ ვერსად ვნახე ზუსტი დამთხვევა. შეგიძლიათ მკითხოთ პროდუქტებზე, ვენდერებზე, მიწოდებაზე ან განვადებაზე! აი რამდენიმე პოპულარული ნივთი:`,
       products: products.slice(0, 2)
     };
   };
@@ -185,12 +205,12 @@ export default function AiAssistantModal({
       };
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 600);
+    }, 500);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2.5rem] w-full max-w-2xl h-[620px] flex flex-col justify-between shadow-2xl overflow-hidden">
+      <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2.5rem] w-full max-w-2xl h-[640px] flex flex-col justify-between shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="bg-[#121216] p-5 border-b border-emerald-500/20 flex justify-between items-center shrink-0">
@@ -202,7 +222,7 @@ export default function AiAssistantModal({
               <h3 className="font-black text-white text-sm flex items-center gap-1.5">
                 GEOSTORE AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
-              <p className="text-[10px] text-emerald-400 font-bold">ინტელექტუალური ასისტენტი (24/7)</p>
+              <p className="text-[10px] text-emerald-400 font-bold">სრული წვდომის ინტელექტუალური ასისტენტი (24/7)</p>
             </div>
           </div>
           <button onClick={() => setIsAiAssistantOpen(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
@@ -254,10 +274,10 @@ export default function AiAssistantModal({
 
         {/* Quick Suggestion Chips */}
         <div className="px-6 py-2 flex gap-2 overflow-x-auto scrollbar-none text-[11px] shrink-0">
-          {['👋 გამარჯობა', '😊 როგორ ხარ?', '🤖 ვინ ხარ?', '🔥 ფასდაკლებები', '💳 0% განვადება', '🚚 მიწოდება'].map((chip, idx) => (
+          {['👋 გამარჯობა', '🛒 კატეგორიები', '🏪 ვენდერები', '🔥 ფასდაკლებები', '💳 განვადება', '🚚 მიწოდება'].map((chip, idx) => (
             <button 
               key={idx} 
-              onClick={() => handleSendMessage(chip.replace(/[👋😊🤖🔥💳🚚]/g, '').trim())} 
+              onClick={() => handleSendMessage(chip.replace(/[👋🛒🏪🔥💳🚚]/g, '').trim())} 
               className="bg-[#141418] hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0"
             >
               <Lightbulb className="w-3 h-3" /> {chip}
@@ -269,7 +289,7 @@ export default function AiAssistantModal({
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-4 bg-[#121216] border-t border-emerald-500/20 flex gap-3 shrink-0">
           <input 
             type="text" 
-            placeholder="ჰკითხეთ AI-ს ნებისმიერი რამ..." 
+            placeholder="ჰკითხეთ AI-ს ნებისმიერი რამ კატეგორიებზე, პროდუქტებზე ან შეკვეთებზე..." 
             value={inputMessage} 
             onChange={e => setInputMessage(e.target.value)} 
             className="flex-1 bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
