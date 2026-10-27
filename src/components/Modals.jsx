@@ -1,6 +1,6 @@
-// src/components/Modals.jsx - Elite Gold Luxury Modals Edition
+// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Delivery Region Selector
 import React from 'react';
-import { X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin } from 'lucide-react';
+import { X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck } from 'lucide-react';
 
 export default function Modals({
   isCheckoutOpen,
@@ -18,11 +18,14 @@ export default function Modals({
   isTermsOpen,
   setIsTermsOpen,
   isWarrantyOpen,
-  setIsWarrantyOpen
+  setIsWarrantyOpen,
+  selectedRegion,
+  setSelectedRegion,
+  deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 }
 }) {
   return (
     <>
-      {/* 1. შეკვეთის გაფორმების მოდალი */}
+      {/* 1. შეკვეთის გაფორმების მოდალი რეგიონის ამორჩევით */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-md w-full p-8 space-y-6 shadow-2xl relative">
@@ -61,11 +64,24 @@ export default function Modals({
               </div>
 
               <div className="space-y-1.5">
+                <label className="text-slate-300 font-bold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-amber-400" /> მიწოდების რეგიონი *</label>
+                <select
+                  value={selectedRegion || 'tbilisi'}
+                  onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
+                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-amber-400 font-bold outline-none focus:border-amber-400 shadow-inner cursor-pointer"
+                >
+                  <option value="tbilisi">თბილისი / რუსთავი ({deliveryFees.tbilisi} ₾)</option>
+                  <option value="bigCities">დიდი ქალაქები - ქუთაისი, ბათუმი ({deliveryFees.bigCities} ₾)</option>
+                  <option value="other">სხვა რეგიონები / მთიანი ზონა ({deliveryFees.other} ₾)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-slate-300 font-bold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-amber-400" /> მიწოდების მისამართი *</label>
                 <input
                   type="text"
                   required
-                  placeholder="თბილისი, ჭავჭავაძის გამზ. #..."
+                  placeholder="ქუჩა, კორპუსი, ბინა..."
                   value={checkoutForm.address}
                   onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
