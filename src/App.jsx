@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Order Tracker & All Features
+// src/App.jsx - GEOSTORE Next-Gen Edition with Wishlist Share & All Features
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,7 +7,7 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, PackageCheck, Search } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -132,12 +132,6 @@ export default function App() {
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
-  // 📦 შეკვეთის ტრეკერის state-ები
-  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
-  const [trackerCodeInput, setTrackerCodeInput] = useState('');
-  const [trackedOrderResult, setTrackedOrderResult] = useState(null);
-  const [trackerSearched, setTrackerSearched] = useState(false);
-
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
@@ -244,17 +238,6 @@ export default function App() {
     }
   };
 
-  // 📦 შეკვეთის ძიების ფუნქცია ტრეკერისთვის
-  const handleTrackOrderSubmit = (e) => {
-    e.preventDefault();
-    const cleanQuery = trackerCodeInput.trim().toUpperCase().replace(/\s+/g, '');
-    if (!cleanQuery) return;
-
-    const found = orders.find(o => o.id?.toUpperCase() === cleanQuery || o.id?.toUpperCase() === `#${cleanQuery}`);
-    setTrackedOrderResult(found || null);
-    setTrackerSearched(true);
-  };
-
   const proAnalytics = useMemo(() => {
     const totalRevenueGEL = orders.reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
     return {
@@ -300,6 +283,27 @@ export default function App() {
       showToast('⚖️ დაემატა შედარების სიაში!');
       return [...prev, product];
     });
+  };
+
+  // 🔗 სურვილების სიის გაზიარების ფუნქცია
+  const handleShareWishlist = () => {
+    if (wishlist.length === 0) {
+      alert('სურვილების სია ცარიელია!');
+      return;
+    }
+    const wishlistText = `🎁 ჩემი ფავორიტი პროდუქტების სია GEOSTORE-დან:\n` + 
+      wishlist.map((w, idx) => `${idx + 1}. ${w.name} - ${w.priceGEL} ₾`).join('\n') + 
+      `\n\nაღმოაჩინე საუკეთესო ტექნოლოგიები!`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(wishlistText).then(() => {
+        showToast('📋 სურვილების სიის ტექსტი დაკოპირდა ბუფერში!');
+      }).catch(() => {
+        alert(wishlistText);
+      });
+    } else {
+      alert(wishlistText);
+    }
   };
 
   const handleAuthSubmit = (e) => {
@@ -402,7 +406,6 @@ export default function App() {
         setIsGiftQuizOpen={setIsGiftQuizOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
         setIsComparisonOpen={setIsComparisonOpen}
-        setIsTrackerOpen={setIsTrackerOpen}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
@@ -457,9 +460,20 @@ export default function App() {
 
         {activeTab === 'wishlist' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-              <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> სურვილების სია ({wishlist.length})
-            </h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                <Heart className="w-5 h-5 text-rose-500 fill-rose-500" /> სურვილების სია ({wishlist.length})
+              </h2>
+              {wishlist.length > 0 && (
+                <button 
+                  onClick={handleShareWishlist}
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4" /> სიის გაზიარება / კოპირება
+                </button>
+              )}
+            </div>
+
             {wishlist.length === 0 ? <p className="text-slate-500 text-xs py-8">სია ცარიელია.</p> : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map(prod => (
@@ -603,70 +617,6 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* 📦 ORDER TRACKER MODAL */}
-      {isTrackerOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-lg p-8 space-y-6 shadow-2xl text-xs text-white">
-            <button onClick={() => { setIsTrackerOpen(false); setTrackedOrderResult(null); setTrackerSearched(false); setTrackerCodeInput(''); }} className="absolute top-6 right-6 p-2 bg-[#141418] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-xl border border-amber-500/25 transition cursor-pointer">
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 border-b border-amber-500/20 pb-4">
-              <div className="bg-amber-500/10 p-3 rounded-2xl border border-amber-500/30">
-                <PackageCheck className="w-6 h-6 text-amber-400 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="font-black text-sm text-white">שეკვეთის სტატუსის შემოწმება</h3>
-                <p className="text-[11px] text-slate-400">ჩაწერეთ შეკვეთის კოდი (მაგ: ORD-1234)</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleTrackOrderSubmit} className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="შეკვეთის კოდი (მაგ: ORD-9572)" 
-                value={trackerCodeInput} 
-                onChange={e => setTrackerCodeInput(e.target.value)}
-                required
-                className="flex-1 bg-[#060608] border border-amber-500/30 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner"
-              />
-              <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-slate-950 px-5 py-3.5 rounded-2xl font-black transition cursor-pointer shadow-lg shadow-amber-500/20 flex items-center gap-1.5">
-                <Search className="w-4 h-4" /> ძებნა
-              </button>
-            </form>
-
-            {trackerSearched && (
-              <div className="space-y-4 pt-2">
-                {trackedOrderResult ? (
-                  <div className="bg-[#141418] border border-amber-500/30 p-5 rounded-3xl space-y-3 shadow-inner">
-                    <div className="flex justify-between items-center border-b border-amber-500/20 pb-3">
-                      <span className="font-black text-amber-400 text-sm">#{trackedOrderResult.id}</span>
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">
-                        🟢 {trackedOrderResult.status}
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 text-slate-300">
-                      <p>👤 მიმღები: <b className="text-white">{trackedOrderResult.customerName}</b></p>
-                      <p>📞 ტელეფონი: <b className="text-white">{trackedOrderResult.phone}</b></p>
-                      <p>📍 მისამართი: <b className="text-white">{trackedOrderResult.address}</b></p>
-                      <p>📅 თარიღი: <b className="text-white">{trackedOrderResult.date}</b></p>
-                      <p className="pt-2 border-t border-amber-500/10 flex justify-between">
-                        <span>სულ თანხა:</span>
-                        <span className="text-amber-400 font-black text-sm">{formatPrice(trackedOrderResult.totalGEL)}</span>
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-rose-500/10 border border-rose-500/30 p-5 rounded-3xl text-center text-rose-300 font-bold">
-                    🔍 შეკვეთა კოდით "{trackerCodeInput}" ვერ მოიძებნა. გთხოვთ გადაამოწმოთ კოდი!
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="fixed bottom-6 left-6 z-50">
         <button onClick={() => setIsAiAssistantOpen(true)} className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black p-4 rounded-full shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer border border-emerald-300/40">
