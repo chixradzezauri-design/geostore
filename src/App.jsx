@@ -1,11 +1,11 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Image Search Fully Integrated
+// src/App.jsx - GEOSTORE Next-Gen Edition (Fixed Categories & Admin Stability)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
 import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
 import Modals from './components/Modals';
-import ImageSearchModal from './components/ImageSearchModal'; // <--- ფოტოთი ძიების მოდალი
+import ImageSearchModal from './components/ImageSearchModal'; 
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -29,12 +29,8 @@ const sendTelegramNotification = (text) => {
   }).catch(() => {});
 };
 
-const INITIAL_CATEGORIES = [
-  { id: 'cat-1', name: 'სმარტფონები', icon: '📱' },
-  { id: 'cat-2', name: 'ლეპტოპები', icon: '💻' },
-  { id: 'cat-3', name: 'აქსესუარები', icon: '🎧' },
-  { id: 'cat-4', name: 'ჭკვიანი საათები', icon: '⌚' }
-];
+// 📌 კატეგორიები გადაყვანილია სტრიქონების მასივში, რომ ადმინ პანელმა უპრობლემოდ იმუშაოს
+const INITIAL_CATEGORIES = ['სმარტფონები', 'ლეპტოპები', 'აქსესუარები', 'ჭკვიანი საათები'];
 
 const INITIAL_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
@@ -128,7 +124,7 @@ export default function App() {
   // Terms, Warranty & Image Search Modals
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
-  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false); // <--- ფოტოთი ძიების სთეითი
+  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
 
   // Support / Chat Widget State
   const [supportOpen, setSupportOpen] = useState(false);
@@ -448,7 +444,6 @@ export default function App() {
         )}
       </main>
 
-      {/* 🤖 1. ცალკე AI მცურავი ნეონური ღილაკი (ქვედა მარცხენა კუთხეში) */}
       <div className="fixed bottom-6 left-6 z-50">
         <button 
           onClick={() => setIsAiAssistantOpen(true)}
@@ -462,7 +457,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* 💬 2. მხარდაჭერის მცურავი ვიჯეტი (ქვედა მარჯვენა კუთხეში) */}
       <div className="fixed bottom-6 right-6 z-50">
         {supportOpen ? (
           <div className="w-80 bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] shadow-2xl p-5 space-y-4 text-xs text-white backdrop-blur-3xl animate-in fade-in duration-300">
@@ -543,7 +537,6 @@ export default function App() {
         setIsWarrantyOpen={setIsWarrantyOpen}
       />
 
-      {/* 📸 ფოტოთი ძიების მოდალი */}
       <ImageSearchModal 
         isImageSearchOpen={isImageSearchOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
@@ -567,7 +560,7 @@ export default function App() {
             <FileText className="w-4 h-4" /> წესები და პირობები
           </button>
           <span>•</span>
-          <button onClick={() => setIsWarrantyOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
+          <button onClick={() => setIsWarranty`ტიგეტი`(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer" onClick={() => setIsWarrantyOpen(true)}>
             <ShieldCheck className="w-4 h-4" /> საგარანტიო წესები
           </button>
         </div>
