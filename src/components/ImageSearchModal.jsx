@@ -44,7 +44,6 @@ export default function ImageSearchModal({
 
     // რეალური ვიზუალური შედარების სიმულაცია პროდუქტების ბაზასთან
     setTimeout(() => {
-      // ამოვარჩიოთ პროდუქტები და დავალაგოთ მსგავსების პრინციპით (ან გადმოცემული პროდუქტებიდან რეალური შედეგები)
       const shuffled = [...products].sort(() => 0.5 - Math.random());
       setSearchResults(shuffled.slice(0, 3)); // დავაბრუნოთ ყველაზე მსგავსი 3 პროდუქტი
       setIsSearching(false);
