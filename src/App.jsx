@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition (Fixed Categories & Admin Stability)
+// src/App.jsx - GEOSTORE Next-Gen Edition (Fixed Footer & Sync)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -29,8 +29,13 @@ const sendTelegramNotification = (text) => {
   }).catch(() => {});
 };
 
-// 📌 კატეგორიები გადაყვანილია სტრიქონების მასივში, რომ ადმინ პანელმა უპრობლემოდ იმუშაოს
-const INITIAL_CATEGORIES = ['სმარტფონები', 'ლეპტოპები', 'აქსესუარები', 'ჭკვიანი საათები'];
+// 📌 საწყისი კატეგორიები იკონების მხარდაჭერით
+const INITIAL_CATEGORIES = [
+  { name: 'სმარტფონები', icon: 'Smartphone' },
+  { name: 'ლეპტოპები', icon: 'Laptop' },
+  { name: 'აქსესუარები', icon: 'Sparkles' },
+  { name: 'ჭკვიანი საათები', icon: 'Watch' }
+];
 
 const INITIAL_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
@@ -98,14 +103,12 @@ export default function App() {
   const [cart, setCart] = useState(() => loadSafeStorage('geostore_cart', []));
   const [wishlist, setWishlist] = useState(() => loadSafeStorage('geostore_wishlist', []));
 
-  // Auth States
   const [usersList, setUsersList] = useState(() => loadSafeStorage('geostore_users_list', []));
   const [currentUser, setCurrentUser] = useState(() => loadSafeStorage('geostore_current_user', null));
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '' });
 
-  // Admin States
   const [adminAuth] = useState({ username: "admin", password: "admin123" });
   const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
     try { return localStorage.getItem('geostore_admin_remember') === 'true'; } catch { return false; }
@@ -113,7 +116,6 @@ export default function App() {
   const [adminLoginForm, setAdminLoginForm] = useState({ username: '', password: '', remember: false });
   const [adminError, setAdminError] = useState('');
 
-  // Orders & Modals
   const [orders, setOrders] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '' });
@@ -121,12 +123,9 @@ export default function App() {
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
 
-  // Terms, Warranty & Image Search Modals
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
-
-  // Support / Chat Widget State
   const [supportOpen, setSupportOpen] = useState(false);
 
   const [toastMessage, setToastMessage] = useState('');
@@ -560,7 +559,7 @@ export default function App() {
             <FileText className="w-4 h-4" /> წესები და პირობები
           </button>
           <span>•</span>
-          <button onClick={() => setIsWarranty`ტიგეტი`(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer" onClick={() => setIsWarrantyOpen(true)}>
+          <button onClick={() => setIsWarrantyOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer">
             <ShieldCheck className="w-4 h-4" /> საგარანტიო წესები
           </button>
         </div>
