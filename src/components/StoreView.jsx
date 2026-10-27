@@ -1,6 +1,10 @@
-// src/components/StoreView.jsx - Harrods Gold Boutique & Category Icons Edition
-import React, { useState } from 'react';
-import { Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Cpu, Speaker } from 'lucide-react';
+// src/components/StoreView.jsx - Luxury Boutique with Advanced Filters & Installment Calculator
+import React, { useState, useMemo } from 'react';
+import { 
+  Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
+  CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator 
+} from 'lucide-react';
 
 export default function StoreView({
   siteSettings,
@@ -17,12 +21,43 @@ export default function StoreView({
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
 
+  // 🔹 ფილტრაციისა და დალაგების ახალი State-ები
+  const [sortBy, setSortBy] = useState('default'); // 'default', 'price-asc', 'price-desc', 'name-asc'
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [installmentMonths, setInstallmentMonths] = useState(12);
+
   const handleOpenProduct = (prod) => {
     setSelectedProduct(prod);
     setActiveImage(prod.image);
+    setInstallmentMonths(12);
   };
 
-  // დამხმარე ფუნქცია კატეგორიის სახელის მიხედვით შესაბამისი ლამაზი იკონის შესარჩევად
+  // 🔹 პროდუქტების დინამიკური გაფილტვრა ფასით და დალაგება
+  const processedProducts = useMemo(() => {
+    let result = [...(filteredProducts || [])];
+
+    // ფასის მიხედვით გაფილტვრა
+    if (minPrice !== '' && !isNaN(minPrice)) {
+      result = result.filter(p => p.priceGEL >= Number(minPrice));
+    }
+    if (maxPrice !== '' && !isNaN(maxPrice)) {
+      result = result.filter(p => p.priceGEL <= Number(maxPrice));
+    }
+
+    // დალაგება (Sorting)
+    if (sortBy === 'price-asc') {
+      result.sort((a, b) => a.priceGEL - b.priceGEL);
+    } else if (sortBy === 'price-desc') {
+      result.sort((a, b) => b.priceGEL - a.priceGEL);
+    } else if (sortBy === 'name-asc') {
+      result.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
+    }
+
+    return result;
+  }, [filteredProducts, minPrice, maxPrice, sortBy]);
+
+  // დამხმარე ფუნქცია კატეგორიის იკონებისთვის
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
     if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
@@ -36,7 +71,7 @@ export default function StoreView({
   };
 
   return (
-    <div className="space-y-16 w-full pb-28 animate-in fade-in duration-500">
+    <div className="space-y-12 w-full pb-28 animate-in fade-in duration-500">
       
       {/* 🌟 LUXURY BOUTIQUE HERO & BANNER SECTION */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[3rem] p-8 md:p-16 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 group">
@@ -81,7 +116,7 @@ export default function StoreView({
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> კატეგორიები
           </h3>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-1.5 rounded-xl border border-amber-500/20 shadow-inner">
-            {filteredProducts?.length || 0} პროდუქტი ვიტრინაზე
+            {processedProducts?.length || 0} პროდუქტი ვიტრინაზე
           </span>
         </div>
         
@@ -117,77 +152,135 @@ export default function StoreView({
         </div>
       </div>
 
-      {/* 🛍️ ELEGANT LUXURY PRODUCTS GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
-        {(filteredProducts || []).map(prod => {
-          const isWish = wishlist.some(w => w.id === prod.id);
-          const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
+      {/* 🎛️ ADVANCED FILTERS & SORTING BAR */}
+      <div className="bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+        
+        {/* Price Range Inputs */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 text-slate-400 font-bold">
+            <SlidersHorizontal className="w-4 h-4 text-amber-400" /> ფასი (₾):
+          </div>
+          <input 
+            type="number" 
+            placeholder="Min" 
+            value={minPrice} 
+            onChange={e => setMinPrice(e.target.value)}
+            className="w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+          />
+          <span className="text-slate-500">-</span>
+          <input 
+            type="number" 
+            placeholder="Max" 
+            value={maxPrice} 
+            onChange={e => setMaxPrice(e.target.value)}
+            className="w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+          />
+          {(minPrice !== '' || maxPrice !== '') && (
+            <button 
+              onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+              className="text-amber-400 hover:text-amber-300 font-bold underline px-2 cursor-pointer"
+            >
+              გასუფთავება
+            </button>
+          )}
+        </div>
 
-          return (
-            <div key={prod.id} className="group bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem] p-5 flex flex-col justify-between hover:border-amber-400 transition-all duration-500 shadow-2xl hover:shadow-amber-500/15">
-              
-              <div 
-                onClick={() => handleOpenProduct(prod)}
-                className="relative bg-[#060608] rounded-3xl p-6 border border-amber-500/10 flex items-center justify-center h-60 overflow-hidden cursor-pointer group/img"
-              >
-                <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
-                
-                <button 
-                  onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
-                  className="absolute top-4 right-4 p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
-                >
-                  <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
-                </button>
+        {/* Sorting Dropdown */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          <div className="flex items-center gap-2 text-slate-400 font-bold">
+            <ArrowUpDown className="w-4 h-4 text-amber-400" /> დალაგება:
+          </div>
+          <select 
+            value={sortBy} 
+            onChange={e => setSortBy(e.target.value)}
+            className="bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold"
+          >
+            <option value="default">ნაგულისხმევი</option>
+            <option value="price-asc">ფასით: დაბლიდან მაღლა ⬆</option>
+            <option value="price-desc">ფასით: მაღლიდან დაბლა ⬇</option>
+            <option value="name-asc">დასახელებით (A-Z)</option>
+          </select>
+        </div>
 
-                <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
-                  {prod.oldPriceGEL && (
-                    <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">
-                      ფასდაკლება
-                    </span>
-                  )}
-                  {tagsArray.slice(0, 2).map((tag, idx) => (
-                    <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
-                  <Eye className="w-4 h-4 text-amber-400" /> დეტალურად ნახვა
-                </div>
-              </div>
-
-              <div className="py-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-3 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
-                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">მარაგშია ({prod.stock || 1})</span>
-                </div>
-                <h3 
-                  onClick={() => handleOpenProduct(prod)}
-                  className="font-black text-white text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer"
-                >
-                  {prod.name}
-                </h3>
-                <div className="flex items-baseline gap-3 pt-1">
-                  <p className="text-amber-400 font-black text-lg">{formatPrice(prod.priceGEL)}</p>
-                  {prod.oldPriceGEL && (
-                    <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>
-                  )}
-                </div>
-              </div>
-
-              <button 
-                onClick={() => addToCart(prod)} 
-                className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
-              >
-                <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> კალათაში დამატება
-              </button>
-            </div>
-          );
-        })}
       </div>
 
-      {/* 🔍 LUXURY PRODUCT DETAIL MODAL */}
+      {/* 🛍️ ELEGANT LUXURY PRODUCTS GRID */}
+      {processedProducts.length === 0 ? (
+        <div className="text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
+          <p className="text-slate-400 text-sm font-bold">მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+          {processedProducts.map(prod => {
+            const isWish = wishlist.some(w => w.id === prod.id);
+            const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
+
+            return (
+              <div key={prod.id} className="group bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem] p-5 flex flex-col justify-between hover:border-amber-400 transition-all duration-500 shadow-2xl hover:shadow-amber-500/15">
+                
+                <div 
+                  onClick={() => handleOpenProduct(prod)}
+                  className="relative bg-[#060608] rounded-3xl p-6 border border-amber-500/10 flex items-center justify-center h-60 overflow-hidden cursor-pointer group/img"
+                >
+                  <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
+                  
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
+                    className="absolute top-4 right-4 p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
+                  >
+                    <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  </button>
+
+                  <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
+                    {prod.oldPriceGEL && (
+                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">
+                        ფასდაკლება
+                      </span>
+                    )}
+                    {tagsArray.slice(0, 2).map((tag, idx) => (
+                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
+                    <Eye className="w-4 h-4 text-amber-400" /> დეტალურად ნახვა
+                  </div>
+                </div>
+
+                <div className="py-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-3 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">მარაგშია ({prod.stock || 1})</span>
+                  </div>
+                  <h3 
+                    onClick={() => handleOpenProduct(prod)}
+                    className="font-black text-white text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer"
+                  >
+                    {prod.name}
+                  </h3>
+                  <div className="flex items-baseline gap-3 pt-1">
+                    <p className="text-amber-400 font-black text-lg">{formatPrice(prod.priceGEL)}</p>
+                    {prod.oldPriceGEL && (
+                      <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>
+                    )}
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => addToCart(prod)} 
+                  className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
+                >
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> კალათაში დამატება
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 🔍 LUXURY PRODUCT DETAIL MODAL WITH INSTALLMENT CALCULATOR */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
           <div className="relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-8 md:p-10 space-y-8">
@@ -233,23 +326,37 @@ export default function StoreView({
                   <p className="text-slate-400 text-xs">მომწოდებელი: <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                 </div>
 
-                {/* Tags */}
-                {selectedProduct.tags && (
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {(Array.isArray(selectedProduct.tags) ? selectedProduct.tags : selectedProduct.tags.split(',')).map((t, idx) => (
-                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm">
-                        <Tag className="w-3.5 h-3.5" /> {t.trim()}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
                 {/* Price Box */}
                 <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
                   <span className="text-3xl font-black text-amber-400">{formatPrice(selectedProduct.priceGEL)}</span>
                   {selectedProduct.oldPriceGEL && (
                     <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>
                   )}
+                </div>
+
+                {/* 💳 0% INSTALLMENT CALCULATOR */}
+                <div className="bg-[#08080a] p-5 rounded-3xl border border-amber-500/30 space-y-3 shadow-inner">
+                  <div className="flex justify-between items-center">
+                    <span className="text-amber-400 font-black flex items-center gap-2 text-xs">
+                      <Calculator className="w-4 h-4" /> 0% განვადების კალკულატორი
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                      თვეში: {Math.round(selectedProduct.priceGEL / installmentMonths)} ₾
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-1">
+                    {[6, 12, 24].map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setInstallmentMonths(m)}
+                        className={`flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer border ${installmentMonths === m ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#141418] text-slate-400 border-amber-500/20 hover:text-white'}`}
+                      >
+                        {m} თვე
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Description */}
