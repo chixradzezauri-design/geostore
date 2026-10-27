@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition (Full Code with User Order History)
+// src/App.jsx - GEOSTORE Next-Gen Edition (Full Code with User Order History & AI Orders Sync)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -602,6 +602,7 @@ export default function App() {
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         products={products}
         categories={categories}
+        orders={orders}
         addToCart={addToCart}
         formatPrice={formatPrice}
       />
