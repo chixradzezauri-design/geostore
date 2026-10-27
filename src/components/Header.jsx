@@ -1,4 +1,4 @@
-// src/components/Header.jsx - Elite Gold Boutique Mobile & Desktop Header
+// src/components/Header.jsx - Elite Gold Luxury Header & Perfectly Structured Mobile Menu
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles } from 'lucide-react';
 
@@ -45,7 +45,7 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-[#0c0c0e]/90 border-b border-amber-500/20 sticky top-0 z-40 backdrop-blur-2xl w-full shadow-2xl">
+      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 sticky top-0 z-40 backdrop-blur-2xl w-full shadow-2xl">
         {/* Top Announcement Bar */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-3 shadow-sm">
           <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> {siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
@@ -140,10 +140,11 @@ export default function Header({
           </div>
         </div>
 
-        {/* MOBILE CLEAN GRID DROPDOWN MENU */}
+        {/* 📱 MOBILE ELEGANT GRID MENU (სრულიად მოწესრიგებული და ჰაეროვანი განლაგება) */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-[#0c0c0e]/95 backdrop-blur-3xl border-t border-amber-500/20 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
-            {/* Search row inside mobile menu */}
+          <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-6 space-y-5 shadow-2xl animate-in slide-in-from-top duration-300">
+            
+            {/* Search Input */}
             <div className="flex items-center gap-2.5">
               <div className="relative flex-1">
                 <input
@@ -151,53 +152,55 @@ export default function Header({
                   placeholder="ძებნა პროდუქტებში..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#121216] border border-amber-500/20 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-400 shadow-inner"
+                  className="w-full bg-[#121216] border border-amber-500/25 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-400 shadow-inner"
                 />
                 <Search className="w-4 h-4 text-amber-400 absolute left-4 top-3.5" />
               </div>
               <button 
                 onClick={() => { setIsImageSearchOpen(true); setMobileMenuOpen(false); }}
-                className="p-3.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm"
+                className="p-3.5 bg-[#121216] border border-amber-500/25 rounded-2xl text-amber-400 shadow-sm flex items-center justify-center"
               >
                 <Camera className="w-5 h-5" />
               </button>
             </div>
 
-            {/* AI & Quiz Grid */}
+            {/* Smart Features Grid (AI & Quiz) */}
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setIsAiAssistantOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition">
+              <button onClick={() => { setIsAiAssistantOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition cursor-pointer">
                 <Bot className="w-4 h-4 text-amber-400" /> AI ასისტენტი
               </button>
-              <button onClick={() => { setIsGiftQuizOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition">
+              <button onClick={() => { setIsGiftQuizOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition cursor-pointer">
                 <Gift className="w-4 h-4 text-amber-400" /> საჩუქრის ქვიზი
               </button>
             </div>
 
-            {/* Navigation links grid */}
-            <div className="grid grid-cols-1 gap-2.5 pt-2 border-t border-amber-500/15 text-xs font-bold">
-              <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="flex items-center justify-between p-3.5 bg-[#121216] rounded-2xl text-slate-200 border border-amber-500/15 shadow-sm">
-                <span className="flex items-center gap-2">❤️ სურვილების სია</span>
+            {/* Main Navigation Grid List */}
+            <div className="space-y-2.5 pt-2 border-t border-amber-500/20 text-xs font-bold">
+              
+              <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="w-full flex items-center justify-between p-4 bg-[#121216] rounded-2xl text-slate-200 border border-amber-500/20 shadow-sm hover:border-amber-400 transition cursor-pointer">
+                <span className="flex items-center gap-2.5 text-amber-300">❤️ სურვილების სია</span>
                 <span className="bg-rose-500 text-white px-3 py-0.5 rounded-full text-[10px] font-black">{wishlistCount}</span>
               </button>
 
-              <button onClick={() => { handleInstallClick(); setMobileMenuOpen(false); }} className="flex items-center justify-between p-3.5 bg-[#121216] text-amber-300 rounded-2xl border border-amber-500/15 shadow-sm">
+              <button onClick={() => { handleInstallClick(); setMobileMenuOpen(false); }} className="w-full flex items-center justify-between p-4 bg-[#121216] text-amber-300 rounded-2xl border border-amber-500/20 shadow-sm hover:border-amber-400 transition cursor-pointer">
                 <span className="flex items-center gap-2.5"><Smartphone className="w-4 h-4 text-amber-400" /> აპლიკაციის დაყენება ტელეფონში</span>
                 <Download className="w-4 h-4 text-amber-400" />
               </button>
 
               {currentUser ? (
-                <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="p-3.5 bg-[#121216] rounded-2xl text-amber-400 text-left border border-amber-500/15 flex items-center gap-2.5 shadow-sm">
+                <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full p-4 bg-[#121216] rounded-2xl text-amber-400 text-left border border-amber-500/20 flex items-center gap-2.5 shadow-sm hover:border-amber-400 transition cursor-pointer">
                   <User className="w-4 h-4" /> პროფილი: {currentUser.name}
                 </button>
               ) : (
-                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="p-4 bg-amber-400 text-slate-950 font-black rounded-2xl text-center shadow-lg shadow-amber-500/20">
+                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-center shadow-lg shadow-amber-500/20 transition cursor-pointer">
                   🔑 შესვლა / რეგისტრაცია
                 </button>
               )}
 
-              <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="p-3.5 bg-[#121216] rounded-2xl text-amber-400 flex items-center gap-2.5 border border-amber-500/20 shadow-sm">
+              <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="w-full p-4 bg-[#121216] rounded-2xl text-amber-400 flex items-center gap-2.5 border border-amber-500/30 shadow-sm hover:border-amber-400 transition cursor-pointer">
                 <Shield className="w-4 h-4 text-amber-400" /> 🔐 ადმინ პანელი
               </button>
+
             </div>
           </div>
         )}
@@ -205,8 +208,8 @@ export default function Header({
 
       {/* INSTALL INSTRUCTION MODAL */}
       {showInstallModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
             <button onClick={() => setShowInstallModal(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
             
             <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
