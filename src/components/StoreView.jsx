@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Luxury Boutique with Advanced Filters & Installment Calculator
+// src/components/StoreView.jsx - Luxury Boutique with Advanced Filters & Product Comparison Button
 import React, { useState, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -15,14 +15,15 @@ export default function StoreView({
   filteredProducts,
   wishlist,
   toggleWishlist,
+  comparisonList = [],
+  toggleComparison,
   addToCart,
   formatPrice
 }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
 
-  // 🔹 ფილტრაციისა და დალაგების ახალი State-ები
-  const [sortBy, setSortBy] = useState('default'); // 'default', 'price-asc', 'price-desc', 'name-asc'
+  const [sortBy, setSortBy] = useState('default');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [installmentMonths, setInstallmentMonths] = useState(12);
@@ -33,11 +34,9 @@ export default function StoreView({
     setInstallmentMonths(12);
   };
 
-  // 🔹 პროდუქტების დინამიკური გაფილტვრა ფასით და დალაგება
   const processedProducts = useMemo(() => {
     let result = [...(filteredProducts || [])];
 
-    // ფასის მიხედვით გაფილტვრა
     if (minPrice !== '' && !isNaN(minPrice)) {
       result = result.filter(p => p.priceGEL >= Number(minPrice));
     }
@@ -45,7 +44,6 @@ export default function StoreView({
       result = result.filter(p => p.priceGEL <= Number(maxPrice));
     }
 
-    // დალაგება (Sorting)
     if (sortBy === 'price-asc') {
       result.sort((a, b) => a.priceGEL - b.priceGEL);
     } else if (sortBy === 'price-desc') {
@@ -57,7 +55,6 @@ export default function StoreView({
     return result;
   }, [filteredProducts, minPrice, maxPrice, sortBy]);
 
-  // დამხმარე ფუნქცია კატეგორიის იკონებისთვის
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
     if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
@@ -65,7 +62,7 @@ export default function StoreView({
     if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-4 h-4 text-amber-400" />;
     if (name.includes('საათ') || name.includes('watch')) return <Watch className="w-4 h-4 text-amber-400" />;
     if (name.includes('ფოტო') || name.includes('camera') || name.includes('ვიდეო')) return <CameraIcon className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ტელევიზორ') || name.includes('tv') || name.includes('монитор')) return <Tv className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ტელევიზორ') || name.includes('tv')) return <Tv className="w-4 h-4 text-amber-400" />;
     if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-4 h-4 text-amber-400" />;
     return <Sparkles className="w-4 h-4 text-amber-400" />;
   };
@@ -73,7 +70,7 @@ export default function StoreView({
   return (
     <div className="space-y-12 w-full pb-28 animate-in fade-in duration-500">
       
-      {/* 🌟 LUXURY BOUTIQUE HERO & BANNER SECTION */}
+      {/* Hero Banner */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[3rem] p-8 md:p-16 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 group">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[160px] pointer-events-none group-hover:bg-amber-500/20 transition-all duration-700"></div>
 
@@ -93,7 +90,6 @@ export default function StoreView({
           </div>
         </div>
 
-        {/* Brand Promo / Banner Slots */}
         <div className="hidden lg:flex flex-col gap-4 shrink-0 z-10 w-80">
           {(promoSlots || []).slice(0, 2).map((slot) => (
             <div key={slot.id} className="bg-[#121216] border border-amber-500/30 p-5 rounded-3xl shadow-2xl flex items-center justify-between group/card hover:border-amber-400 transition-all duration-300 hover:scale-105">
@@ -109,7 +105,7 @@ export default function StoreView({
         </div>
       </div>
 
-      {/* 🏷️ REFINED GOLDEN CATEGORIES WITH ICONS */}
+      {/* Categories */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -152,10 +148,8 @@ export default function StoreView({
         </div>
       </div>
 
-      {/* 🎛️ ADVANCED FILTERS & SORTING BAR */}
+      {/* Filters & Sorting */}
       <div className="bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        
-        {/* Price Range Inputs */}
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="flex items-center gap-2 text-slate-400 font-bold">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> ფასი (₾):
@@ -176,16 +170,10 @@ export default function StoreView({
             className="w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button 
-              onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-              className="text-amber-400 hover:text-amber-300 font-bold underline px-2 cursor-pointer"
-            >
-              გასუფთავება
-            </button>
+            <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-2 cursor-pointer">გასუფთავება</button>
           )}
         </div>
 
-        {/* Sorting Dropdown */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
           <div className="flex items-center gap-2 text-slate-400 font-bold">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> დალაგება:
@@ -201,10 +189,9 @@ export default function StoreView({
             <option value="name-asc">დასახელებით (A-Z)</option>
           </select>
         </div>
-
       </div>
 
-      {/* 🛍️ ELEGANT LUXURY PRODUCTS GRID */}
+      {/* Products Grid */}
       {processedProducts.length === 0 ? (
         <div className="text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="text-slate-400 text-sm font-bold">მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.</p>
@@ -213,6 +200,7 @@ export default function StoreView({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
+            const isCompared = comparisonList.some(c => c.id === prod.id);
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
@@ -224,23 +212,30 @@ export default function StoreView({
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
+                  {/* Wishlist Button */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
                     className="absolute top-4 right-4 p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
+                    title="სურვილების სიაში დამატება"
                   >
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
 
+                  {/* ⚖️ Compare Button */}
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
+                    className={`absolute top-16 right-4 p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
+                    title="შედარებაში დამატება"
+                  >
+                    <Scale className="w-4 h-4" />
+                  </button>
+
                   <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
                     {prod.oldPriceGEL && (
-                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">
-                        ფასდაკლება
-                      </span>
+                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">ფასდაკლება</span>
                     )}
                     {tagsArray.slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">
-                        {tag}
-                      </span>
+                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">{tag}</span>
                     ))}
                   </div>
 
@@ -254,17 +249,10 @@ export default function StoreView({
                     <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-3 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
                     <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">მარაგშია ({prod.stock || 1})</span>
                   </div>
-                  <h3 
-                    onClick={() => handleOpenProduct(prod)}
-                    className="font-black text-white text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer"
-                  >
-                    {prod.name}
-                  </h3>
+                  <h3 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="flex items-baseline gap-3 pt-1">
                     <p className="text-amber-400 font-black text-lg">{formatPrice(prod.priceGEL)}</p>
-                    {prod.oldPriceGEL && (
-                      <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>
-                    )}
+                    {prod.oldPriceGEL && <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
@@ -280,21 +268,15 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🔍 LUXURY PRODUCT DETAIL MODAL WITH INSTALLMENT CALCULATOR */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
           <div className="relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-8 md:p-10 space-y-8">
-            
-            <button 
-              onClick={() => setSelectedProduct(null)} 
-              className="absolute top-6 right-6 p-3 bg-[#141418] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-2xl border border-amber-500/20 transition cursor-pointer z-20 shadow"
-            >
+            <button onClick={() => setSelectedProduct(null)} className="absolute top-6 right-6 p-3 bg-[#141418] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-2xl border border-amber-500/20 transition cursor-pointer z-20 shadow">
               <X className="w-5 h-5" />
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-              
-              {/* Gallery & Active Image */}
               <div className="space-y-5">
                 <div className="bg-[#060608] rounded-[2.5rem] p-8 border border-amber-500/30 flex items-center justify-center h-72 md:h-80 shadow-2xl">
                   <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
@@ -303,11 +285,7 @@ export default function StoreView({
                 {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                     {selectedProduct.gallery.map((img, idx) => (
-                      <button 
-                        key={idx} 
-                        onClick={() => setActiveImage(img)}
-                        className={`w-20 h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}
-                      >
+                      <button key={idx} onClick={() => setActiveImage(img)} className={`w-20 h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
                         <img src={img} alt="" className="w-full h-full object-contain rounded-xl" />
                       </button>
                     ))}
@@ -315,7 +293,6 @@ export default function StoreView({
                 )}
               </div>
 
-              {/* Info & Actions */}
               <div className="space-y-6 text-xs">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5">
@@ -326,61 +303,36 @@ export default function StoreView({
                   <p className="text-slate-400 text-xs">მომწოდებელი: <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                 </div>
 
-                {/* Price Box */}
                 <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
                   <span className="text-3xl font-black text-amber-400">{formatPrice(selectedProduct.priceGEL)}</span>
-                  {selectedProduct.oldPriceGEL && (
-                    <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>
-                  )}
+                  {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                 </div>
 
-                {/* 💳 0% INSTALLMENT CALCULATOR */}
                 <div className="bg-[#08080a] p-5 rounded-3xl border border-amber-500/30 space-y-3 shadow-inner">
                   <div className="flex justify-between items-center">
-                    <span className="text-amber-400 font-black flex items-center gap-2 text-xs">
-                      <Calculator className="w-4 h-4" /> 0% განვადების კალკულატორი
-                    </span>
-                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-                      თვეში: {Math.round(selectedProduct.priceGEL / installmentMonths)} ₾
-                    </span>
+                    <span className="text-amber-400 font-black flex items-center gap-2 text-xs"><Calculator className="w-4 h-4" /> 0% განვადების კალკულატორი</span>
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg">თვეში: {Math.round(selectedProduct.priceGEL / installmentMonths)} ₾</span>
                   </div>
-                  
                   <div className="flex gap-2 pt-1">
                     {[6, 12, 24].map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setInstallmentMonths(m)}
-                        className={`flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer border ${installmentMonths === m ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#141418] text-slate-400 border-amber-500/20 hover:text-white'}`}
-                      >
-                        {m} თვე
-                      </button>
+                      <button key={m} type="button" onClick={() => setInstallmentMonths(m)} className={`flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer border ${installmentMonths === m ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#141418] text-slate-400 border-amber-500/20 hover:text-white'}`}>{m} თვე</button>
                     ))}
                   </div>
                 </div>
 
-                {/* Description */}
                 <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                   <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
-                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">
-                    {selectedProduct.description || 'ამ პროდუქტის დეტალური აღწერა ჯერ არ არის დამატებული.'}
-                  </p>
+                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'ამ პროდუქტის დეტალური აღწერა ჯერ არ არის დამატებული.'}</p>
                 </div>
 
-                {/* Stock Info */}
                 <div className="flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                   <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
                   <span>ხელმისაწვდომია მარაგში: <b className="text-amber-400 font-black">{selectedProduct.stock || 1} ცალი</b></span>
                 </div>
 
-                {/* Add to Cart Button */}
-                <button 
-                  onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
-                  className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
-                >
+                <button onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95">
                   <ShoppingBag className="w-5 h-5" /> კალათაში დამატება
                 </button>
-
               </div>
             </div>
           </div>
