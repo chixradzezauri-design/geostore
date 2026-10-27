@@ -1,6 +1,6 @@
-// src/components/Header.jsx - Elite Gold Luxury Header & Perfectly Structured Mobile Menu with Comparison
+// src/components/Header.jsx - Elite Gold Luxury Header with Order Tracker, Comparison & Mobile Menu
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles, Scale } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
@@ -15,6 +15,7 @@ export default function Header({
   setIsGiftQuizOpen,
   setIsImageSearchOpen, 
   setIsComparisonOpen,
+  setIsTrackerOpen,
   searchQuery,
   setSearchQuery
 }) {
@@ -92,11 +93,16 @@ export default function Header({
 
           {/* DESKTOP ACTIONS */}
           <div className="hidden lg:flex items-center gap-3">
+            {/* 📦 Order Tracker Button */}
+            <button onClick={() => setIsTrackerOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3.5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-amber-500/20 transition-all shadow-sm cursor-pointer hover:scale-105" title="შეკვეთის სტატუსის ტრეკერი">
+              <PackageCheck className="w-4 h-4 text-amber-400" /> შეკვეთის ძებნა
+            </button>
+
             <button onClick={() => setIsAiAssistantOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 hover:bg-amber-500/20 transition-all shadow-sm cursor-pointer hover:scale-105">
               <Bot className="w-4 h-4 text-amber-400 animate-pulse" /> AI ასისტენტი
             </button>
 
-            {/* ⚖️ COMPARISON BUTTON (Desktop Header) */}
+            {/* ⚖️ COMPARISON BUTTON */}
             <button onClick={() => setIsComparisonOpen(true)} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400/50 transition-all shadow-sm cursor-pointer hover:scale-105" title="პროდუქტების შედარება">
               <Scale className="w-4 h-4 text-amber-400" />
               {comparisonCount > 0 && <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 rounded-full w-5 h-5 text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">{comparisonCount}</span>}
@@ -172,13 +178,13 @@ export default function Header({
               </button>
             </div>
 
-            {/* Smart Features Grid (AI & Quiz) */}
+            {/* Smart Features Grid (AI & Tracker) */}
             <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => { setIsTrackerOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition cursor-pointer">
+                <PackageCheck className="w-4 h-4 text-amber-400" /> შეკვეთის ძებნა
+              </button>
               <button onClick={() => { setIsAiAssistantOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition cursor-pointer">
                 <Bot className="w-4 h-4 text-amber-400" /> AI ასისტენტი
-              </button>
-              <button onClick={() => { setIsGiftQuizOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition cursor-pointer">
-                <Gift className="w-4 h-4 text-amber-400" /> საჩუქრის ქვიზი
               </button>
             </div>
 
