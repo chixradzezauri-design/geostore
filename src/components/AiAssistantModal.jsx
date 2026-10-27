@@ -1,169 +1,191 @@
-// src/components/AiAssistantModal.jsx - Enhanced AI Shopping Assistant
-import React, { useState } from 'react';
-import { X, Bot, Send, Sparkles, ShoppingBag, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+// src/components/AiAssistantModal.jsx - Enhanced Smart AI Assistant
+import React, { useState, useEffect, useRef } from 'react';
+import { Bot, Sparkles, Send, X, ShoppingBag, ArrowRight, Lightbulb } from 'lucide-react';
 
 export default function AiAssistantModal({
   isAiAssistantOpen,
   setIsAiAssistantOpen,
-  products,
-  categories,
+  products = [],
+  categories = [],
   addToCart,
   formatPrice
 }) {
   const [messages, setMessages] = useState([
-    { 
-      sender: 'ai', 
-      text: 'გამარჯობა! 🤖 მე ვარ GEOSTORE-ის AI ასისტენტი. რით შემიძლია დაგეხმაროთ დღეს? შემიძლია შეგირჩიოთ ტექნიკა ბიუჯეტის მიხედვით ან გაგიწიოთ კონსულტაცია!',
-      suggestedProducts: [] 
+    {
+      id: 'm1',
+      sender: 'ai',
+      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის ჭკვიანი AI ასისტენტი. რით შემიძლია დაგეხმაროთ დღეს? შეგიძლიათ მკითხოთ რეკომენდაცია ბიუჯეტის, კატეგორიის ან კონკრეტული მოდელის მიხედვით!'
     }
   ]);
-  const [input, setInput] = useState('');
+  const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (isAiAssistantOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isAiAssistantOpen]);
 
   if (!isAiAssistantOpen) return null;
 
-  const quickPrompts = [
-    '🔥 ტოპ სმარტფონები',
-    '💻 მძლავრი ლეპტოპები',
-    '⚡ დღის ფასდაკლებები',
-    '📦 როგორ მუშაობს მიწოდება?'
-  ];
+  // AI პასუხის გენერირების ლოგიკა პროდუქტების ბაზის მიხედვით
+  const generateAiReply = (userQuery) => {
+    const query = userQuery.toLowerCase();
+    let matchedProducts = [];
+    let responseText = '';
 
-  const handleSendQuery = (queryText) => {
+    // ფასის ძიების ლოგიკა (მაგ: "4000 ლარამდე")
+    const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel)/);
+    const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
+
+    if (maxBudget) {
+      matchedProducts = products.filter(p => p.priceGEL <= maxBudget);
+      responseText = `აი პროდუქტები, რომლებიც თავსდება თქვენს ბიუჯეტში (${maxBudget} ₾-მდე):`;
+    } else if (query.includes('ფასდაკლება') || query.includes('აქცია') || query.includes('sale')) {
+      matchedProducts = products.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
+      responseText = 'ხელმისაწვდომია შემდეგი საუკეთესო ფასდაკლებები:';
+    } else if (query.includes('ლეპტოპ') || query.includes('laptop') || query.includes('macbook')) {
+      matchedProducts = products.filter(p => p.category === 'ლეპტოპები' || p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('laptop'));
+      responseText = 'აი საუკეთესო ლეპტოპები ჩვენს კატალოგში:';
+    } else if (query.includes('ტელეფონ') || query.includes('phone') || query.includes('iphone') || query.includes('სმარტფონ')) {
+      matchedProducts = products.filter(p => p.category === 'სმარტფონები' || p.name.toLowerCase().includes('iphone'));
+      responseText = 'შეარჩიეთ თქვენთვის სასურველი სმარტფონი:';
+    } else {
+      // ზოგადი ძიება დასახელებით ან კატეგორიით
+      matchedProducts = products.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.category.toLowerCase().includes(query) ||
+        (p.description && p.description.toLowerCase().includes(query))
+      );
+      if (matchedProducts.length > 0) {
+        responseText = `თქვენი მოთხოვნის მიხედვით იპოვეთ ${matchedProducts.length} შესაბამისი პროდუქტი:`;
+      } else {
+        responseText = 'სამწუხაროდ, ზუსტი მოდელი ვერ მოიძებნა. თუმცა გირჩევთ გადახედოთ ჩვენს პოპულარულ მოდელებს:';
+        matchedProducts = products.slice(0, 2);
+      }
+    }
+
+    return {
+      text: responseText,
+      products: matchedProducts.slice(0, 3) // მაქსიმუმ 3 საუკეთესო რეკომენდაცია
+    };
+  };
+
+  const handleSendMessage = (textToSend) => {
+    const queryText = textToSend || inputMessage;
     if (!queryText.trim()) return;
 
-    const userMsg = queryText.trim();
-    setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
-    setInput('');
+    const userMsg = { id: `u-${Date.now()}`, sender: 'user', text: queryText };
+    setMessages(prev => [...prev, userMsg]);
+    if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
     setTimeout(() => {
-      let aiReply = "საუკეთესო არჩევანია! გადახედეთ ჩვენს ასორტიმენტს ან მიუთითეთ თქვენი ბიუჯეტი (მაგ: 'ლეპტოპი 3000 ლარამდე').";
-      let matchedProducts = [];
-      const lower = userMsg.toLowerCase();
-
-      if (lower.includes('სმარტფონ') || lower.includes('iphone') || lower.includes('ტელეფონ')) {
-        matchedProducts = products.filter(p => p.category === 'სმარტფონები');
-        aiReply = `ნახეთ ჩვენი საუკეთესო სმარტფონები (${matchedProducts.length} მოდელი):`;
-      } else if (lower.includes('ლეპტოპ') || lower.includes('macbook') || lower.includes('კომპიუტერ')) {
-        matchedProducts = products.filter(p => p.category === 'ლეპტოპები');
-        aiReply = `აი ჩვენი ყველაზე პოპულარული ლეპტოპები:`;
-      } else if (lower.includes('ფასდაკლებ') || lower.includes('აქცია') || lower.includes('deal')) {
-        matchedProducts = products.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
-        aiReply = `ამჟამად მოქმედებს სპეციალური ფასდაკლებები ამ მოდელებზე:`;
-      } else if (lower.includes('მიწოდებ') || lower.includes('კურიერ')) {
-        aiReply = "🚀 მიწოდება თბილისში ხორციელდება 24 საათში (უფასოდ 100₾-ზე ზემოთ შეკვეთაზე), ხოლო რეგიონებში 2-3 სამუშაო დღეში.";
-      } else if (lower.includes('გარანტი')) {
-        aiReply = "🛡️ ყველა პროდუქტზე მოქმედებს 1-დან 3 წლამდე ოფიციალური ქარხნული გარანტია.";
-      }
-
-      setMessages(prev => [
-        ...prev, 
-        { sender: 'ai', text: aiReply, suggestedProducts: matchedProducts }
-      ]);
+      const aiResult = generateAiReply(queryText);
+      const aiMsg = {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: aiResult.text,
+        recommendedProducts: aiResult.products
+      };
+      setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 700);
+    }, 800);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] max-w-lg w-full flex flex-col h-[580px] shadow-2xl backdrop-blur-2xl relative overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2.5rem] w-full max-w-2xl h-[620px] flex flex-col justify-between shadow-2xl overflow-hidden">
         
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-slate-800/80 bg-slate-950/60">
-          <div className="flex items-center gap-3.5">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <Bot className="w-6 h-6 text-slate-950" />
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-slate-950 rounded-full animate-pulse"></span>
+        <div className="bg-[#121216] p-5 border-b border-emerald-500/20 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-500/10 p-2.5 rounded-2xl border border-emerald-500/30">
+              <Bot className="w-6 h-6 text-emerald-400 animate-pulse" />
             </div>
             <div>
-              <h3 className="font-black text-white text-sm tracking-tight flex items-center gap-1.5">
-                GEOSTORE AI ინტელექტუალური ასისტენტი
+              <h3 className="font-black text-white text-sm flex items-center gap-1.5">
+                GEOSTORE AI ასისტენტი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
-              <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-                <Sparkles className="w-3 h-3" /> ონლაინ რეჟიმში • მზადაა დასახმარებლად
-              </p>
+              <p className="text-[10px] text-emerald-400 font-bold">ონლაინ კონსულტანტი (24/7)</p>
             </div>
           </div>
-          <button 
-            onClick={() => setIsAiAssistantOpen(false)} 
-            className="p-2.5 bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white rounded-2xl transition cursor-pointer"
-          >
+          <button onClick={() => setIsAiAssistantOpen(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Messages Body */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-4 text-xs scrollbar-none">
-          {messages.map((m, idx) => (
-            <div key={idx} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[85%] p-4 rounded-3xl leading-relaxed ${
-                m.sender === 'user' 
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/20 rounded-br-xs' 
-                  : 'bg-slate-950/80 border border-slate-800/80 text-slate-200 rounded-bl-xs shadow-inner'
-              }`}>
-                {m.text}
-              </div>
+        <div className="flex-1 p-6 overflow-y-auto space-y-4 text-xs scrollbar-thin">
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] p-4 rounded-3xl space-y-3 ${msg.sender === 'user' ? 'bg-emerald-500 text-slate-950 font-bold rounded-tr-none' : 'bg-[#141418] border border-emerald-500/20 text-slate-200 rounded-tl-none shadow-xl'}`}>
+                <p className="leading-relaxed whitespace-pre-line">{msg.text}</p>
 
-              {/* AI პროდუქტების ბარათების რეკომენდაცია */}
-              {m.suggestedProducts && m.suggestedProducts.length > 0 && (
-                <div className="mt-3 space-y-2 w-full max-w-[90%]">
-                  {m.suggestedProducts.map(p => (
-                    <div key={p.id} className="bg-slate-950/90 border border-slate-800/80 p-3 rounded-2xl flex items-center justify-between gap-3 shadow-md">
-                      <img src={p.image} alt="" className="w-12 h-12 object-contain bg-slate-900 rounded-xl p-1 border border-slate-800 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white text-xs truncate">{p.name}</h4>
-                        <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(p.priceGEL)}</p>
+                {/* Recommended Product Cards inside AI Message */}
+                {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
+                  <div className="space-y-2.5 pt-2 border-t border-emerald-500/20">
+                    {msg.recommendedProducts.map(prod => (
+                      <div key={prod.id} className="bg-[#08080a] p-3 rounded-2xl border border-emerald-500/20 flex items-center justify-between gap-3 shadow-inner">
+                        <div className="flex items-center gap-3">
+                          <img src={prod.image} alt="" className="w-12 h-12 object-contain bg-[#121216] p-1 rounded-xl border border-emerald-500/20 shrink-0" />
+                          <div>
+                            <h5 className="font-bold text-white text-xs line-clamp-1">{prod.name}</h5>
+                            <span className="text-emerald-400 font-black text-xs">{formatPrice(prod.priceGEL)}</span>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => addToCart(prod)}
+                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-2 rounded-xl font-black text-[10px] flex items-center gap-1 shrink-0 transition shadow"
+                        >
+                          <ShoppingBag className="w-3 h-3" /> კალათაში
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => addToCart(p)}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-2 rounded-xl text-[11px] font-black flex items-center gap-1 shrink-0 transition cursor-pointer shadow-md shadow-emerald-500/20"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" /> +
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
 
           {isTyping && (
-            <div className="flex items-center gap-2 text-slate-400 text-xs bg-slate-950/60 p-3 rounded-2xl w-fit border border-slate-800/60">
-              <Bot className="w-4 h-4 text-emerald-400 animate-spin" />
-              <span>AI პასუხს ამზადებს...</span>
+            <div className="flex justify-start">
+              <div className="bg-[#141418] border border-emerald-500/20 p-4 rounded-3xl text-emerald-400 font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI პასუხობს...
+              </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Prompts */}
-        <div className="px-6 py-2 bg-slate-950/40 border-t border-slate-800/40 flex gap-2 overflow-x-auto scrollbar-none">
-          {quickPrompts.map((prompt, i) => (
-            <button
-              key={i}
-              onClick={() => handleSendQuery(prompt)}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl text-[11px] font-bold whitespace-nowrap transition cursor-pointer shrink-0"
+        {/* Quick Suggestion Chips */}
+        <div className="px-6 py-2 flex gap-2 overflow-x-auto scrollbar-none text-[11px] shrink-0">
+          {['🔥 საუკეთესო ფასდაკლებები', '💻 მძლავრი ლეპტოპები', '📱 iPhone-ის მოდელები', '💰 4000 ლარამდე'].map((chip, idx) => (
+            <button 
+              key={idx} 
+              onClick={() => handleSendMessage(chip)} 
+              className="bg-[#141418] hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0"
             >
-              {prompt}
+              <Lightbulb className="w-3 h-3" /> {chip}
             </button>
           ))}
         </div>
 
         {/* Input Form */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSendQuery(input); }} className="p-4 bg-slate-950/80 border-t border-slate-800/80 flex gap-2.5">
-          <input
-            type="text"
-            placeholder="ჰკითხეთ AI-ს ტექნიკის შესახებ..."
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            className="flex-1 bg-slate-900/80 border border-slate-800/80 rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500 shadow-inner"
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-4 bg-[#121216] border-t border-emerald-500/20 flex gap-3 shrink-0">
+          <input 
+            type="text" 
+            placeholder="დაწერეთ თქვენი კითხვა ან სასურველი ბიუჯეტი..." 
+            value={inputMessage} 
+            onChange={e => setInputMessage(e.target.value)} 
+            className="flex-1 bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
           />
-          <button 
-            type="submit" 
-            className="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black p-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center shrink-0"
-          >
+          <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 p-3.5 rounded-2xl font-black transition cursor-pointer shadow-lg shadow-emerald-500/20">
             <Send className="w-4 h-4" />
           </button>
         </form>
