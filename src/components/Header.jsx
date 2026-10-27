@@ -1,4 +1,4 @@
-// src/components/Header.jsx - Ultra Modern Header with Enhanced Layout & Smooth Animations
+// src/components/Header.jsx - Ultra-Premium Glassmorphism Header
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles } from 'lucide-react';
 
@@ -45,13 +45,13 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-slate-950/80 border-b border-slate-800/60 sticky top-0 z-40 backdrop-blur-2xl w-full shadow-2xl">
+      <header className="bg-slate-950/85 border-b border-slate-800/80 sticky top-0 z-40 backdrop-blur-3xl w-full shadow-2xl">
         {/* Top Announcement Bar */}
         <div className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-3 shadow-sm">
           <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> {siteSettings.topBarText || "GEOSTORE - N1 ტექნიკის მარკეტფლეისი"}</span>
           <button 
             onClick={handleInstallClick}
-            className="bg-slate-950 hover:bg-slate-900 text-emerald-400 px-3 py-1 rounded-xl text-[10px] transition-all hover:scale-105 flex items-center gap-1.5 shadow-md cursor-pointer font-black"
+            className="bg-slate-950 hover:bg-slate-900 text-emerald-400 px-3.5 py-1 rounded-xl text-[10px] transition-all hover:scale-105 flex items-center gap-1.5 shadow-md cursor-pointer font-black"
           >
             <Download className="w-3.5 h-3.5" /> აპლიკაციის დაყენება
           </button>
@@ -74,7 +74,7 @@ export default function Header({
                 placeholder="მოძებნე სასურველი პროდუქტი ან ბრენდი..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900/90 border border-slate-800/80 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 shadow-inner transition-all group-hover:border-slate-700"
+                className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 shadow-inner transition-all group-hover:border-slate-700"
               />
               <Search className="w-4 h-4 text-emerald-400 absolute left-4 top-3.5" />
             </div>
@@ -82,7 +82,7 @@ export default function Header({
             <button
               onClick={() => setIsImageSearchOpen(true)}
               title="პროდუქტის ფოტოთი ძიება"
-              className="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-800/80 rounded-2xl text-emerald-400 transition-all cursor-pointer flex items-center justify-center shadow-inner hover:scale-105"
+              className="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-2xl text-emerald-400 transition-all cursor-pointer flex items-center justify-center shadow-inner hover:scale-105"
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -115,7 +115,7 @@ export default function Header({
                 <User className="w-4 h-4" /> {currentUser.name}
               </button>
             ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer hover:scale-105">შესვლა</button>
+              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer hover:scale-105">შესვლა</button>
             )}
 
             <button onClick={() => setActiveTab('admin')} className="px-4 py-2.5 bg-slate-900/90 text-emerald-400 font-bold rounded-2xl text-xs flex items-center gap-2 border border-emerald-500/30 shadow-sm cursor-pointer hover:bg-slate-800">
@@ -142,7 +142,7 @@ export default function Header({
 
         {/* MOBILE DROPDOWN MENU */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-slate-950/95 backdrop-blur-3xl border-t border-slate-800/80 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
+          <div className="lg:hidden bg-slate-950/95 backdrop-blur-3xl border-t border-slate-800 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
             <div className="flex items-center gap-2.5">
               <div className="relative flex-1">
                 <input
@@ -187,7 +187,7 @@ export default function Header({
                   <User className="w-4 h-4" /> პროფილი: {currentUser.name}
                 </button>
               ) : (
-                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="p-4 bg-emerald-500 text-slate-950 font-black rounded-2xl text-center shadow-lg shadow-emerald-500/20">
+                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="p-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-2xl text-center shadow-lg shadow-emerald-500/20">
                   🔑 შესვლა / რეგისტრაცია
                 </button>
               )}
