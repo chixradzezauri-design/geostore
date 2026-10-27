@@ -1,6 +1,6 @@
-// src/components/StoreView.jsx - Harrods Gold Boutique & Luxury Edition
+// src/components/StoreView.jsx - Harrods Gold Boutique & Category Icons Edition
 import React, { useState } from 'react';
-import { Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, CheckCircle2, Eye, Award, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Cpu, Speaker } from 'lucide-react';
 
 export default function StoreView({
   siteSettings,
@@ -22,12 +22,24 @@ export default function StoreView({
     setActiveImage(prod.image);
   };
 
+  // დამხმარე ფუნქცია კატეგორიის სახელის მიხედვით შესაბამისი ლამაზი იკონის შესარჩევად
+  const getCategoryIcon = (catName) => {
+    const name = (catName || '').toLowerCase();
+    if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ლაპტოპ') || name.includes('computer') || name.includes('კომპიუტერ') || name.includes('notebook')) return <Laptop className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-4 h-4 text-amber-400" />;
+    if (name.includes('საათ') || name.includes('watch')) return <Watch className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ფოტო') || name.includes('camera') || name.includes('ვიდეო')) return <CameraIcon className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ტელევიზორ') || name.includes('tv') || name.includes('монитор')) return <Tv className="w-4 h-4 text-amber-400" />;
+    if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-4 h-4 text-amber-400" />;
+    return <Sparkles className="w-4 h-4 text-amber-400" />;
+  };
+
   return (
     <div className="space-y-16 w-full pb-28 animate-in fade-in duration-500">
       
       {/* 🌟 LUXURY BOUTIQUE HERO & BANNER SECTION */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[3rem] p-8 md:p-16 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 group">
-        {/* Ambient Gold Glows */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[160px] pointer-events-none group-hover:bg-amber-500/20 transition-all duration-700"></div>
 
         <div className="space-y-6 max-w-2xl text-center lg:text-left z-10">
@@ -62,7 +74,7 @@ export default function StoreView({
         </div>
       </div>
 
-      {/* 🏷️ REFINED GOLDEN CATEGORIES */}
+      {/* 🏷️ REFINED GOLDEN CATEGORIES WITH ICONS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -76,28 +88,29 @@ export default function StoreView({
         <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-none px-1">
           <button 
             onClick={() => setSelectedCategory('ყველა')} 
-            className={`px-7 py-3.5 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 cursor-pointer shadow-lg ${
+            className={`px-6 py-3.5 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-lg ${
               selectedCategory === 'ყველა' 
                 ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
-                : 'bg-[#121216] text-slate-400 border border-amber-500/10 hover:text-white hover:border-amber-500/30'
+                : 'bg-[#121216] text-slate-400 border border-amber-500/15 hover:text-white hover:border-amber-500/30'
             }`}
           >
-            ✦ ყველა კატეგორია
+            <Sparkles className="w-4 h-4 text-slate-950" /> ყველა კატეგორია
           </button>
+          
           {(categories || []).map(cat => {
             const catName = typeof cat === 'object' ? cat.name : cat;
-            const catIcon = typeof cat === 'object' ? cat.icon : '✦';
             return (
               <button 
                 key={cat.id || catName} 
                 onClick={() => setSelectedCategory(catName)} 
-                className={`px-7 py-3.5 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-lg ${
+                className={`px-6 py-3.5 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-lg ${
                   selectedCategory === catName 
                     ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
-                    : 'bg-[#121216] text-slate-400 border border-amber-500/10 hover:text-white hover:border-amber-500/30'
+                    : 'bg-[#121216] text-slate-400 border border-amber-500/15 hover:text-white hover:border-amber-500/30'
                 }`}
               >
-                <span>{catIcon}</span> <span>{catName}</span>
+                {getCategoryIcon(catName)}
+                <span>{catName}</span>
               </button>
             );
           })}
