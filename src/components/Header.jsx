@@ -1,18 +1,20 @@
-// src/components/Header.jsx - Elite Gold Luxury Header & Perfectly Structured Mobile Menu
+// src/components/Header.jsx - Elite Gold Luxury Header & Perfectly Structured Mobile Menu with Comparison
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Gift, Menu, X, User, Download, Smartphone, Camera, Sparkles, Scale } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
   setActiveTab, 
   wishlistCount, 
   cartCount, 
+  comparisonCount = 0,
   currentUser, 
   setIsAuthOpen, 
   setAuthMode, 
   setIsAiAssistantOpen, 
   setIsGiftQuizOpen,
   setIsImageSearchOpen, 
+  setIsComparisonOpen,
   searchQuery,
   setSearchQuery
 }) {
@@ -94,11 +96,11 @@ export default function Header({
               <Bot className="w-4 h-4 text-amber-400 animate-pulse" /> AI ასისტენტი
             </button>
 
-            <button onClick={() => setIsGiftQuizOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 hover:bg-amber-500/20 transition-all shadow-sm cursor-pointer hover:scale-105">
-              <Gift className="w-4 h-4 text-amber-400" /> ქვიზი
+            {/* ⚖️ COMPARISON BUTTON (Desktop Header) */}
+            <button onClick={() => setIsComparisonOpen(true)} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400/50 transition-all shadow-sm cursor-pointer hover:scale-105" title="პროდუქტების შედარება">
+              <Scale className="w-4 h-4 text-amber-400" />
+              {comparisonCount > 0 && <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 rounded-full w-5 h-5 text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">{comparisonCount}</span>}
             </button>
-
-            <div className="h-6 w-[1px] bg-amber-500/20 mx-1"></div>
 
             <button onClick={() => setActiveTab('wishlist')} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400/50 transition-all shadow-sm cursor-pointer hover:scale-105">
               <Heart className="w-4 h-4 text-rose-500" />
@@ -129,6 +131,12 @@ export default function Header({
               <Camera className="w-4 h-4" />
             </button>
 
+            {/* Mobile Comparison Button */}
+            <button onClick={() => setIsComparisonOpen(true)} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
+              <Scale className="w-4 h-4" />
+              {comparisonCount > 0 && <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{comparisonCount}</span>}
+            </button>
+
             <button onClick={() => setActiveTab('cart')} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 shadow-sm">
               <ShoppingBag className="w-4 h-4 text-amber-400" />
               {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">{cartCount}</span>}
@@ -140,7 +148,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* 📱 MOBILE ELEGANT GRID MENU (სრულიად მოწესრიგებული და ჰაეროვანი განლაგება) */}
+        {/* 📱 MOBILE ELEGANT GRID MENU */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-6 space-y-5 shadow-2xl animate-in slide-in-from-top duration-300">
             
@@ -177,6 +185,11 @@ export default function Header({
             {/* Main Navigation Grid List */}
             <div className="space-y-2.5 pt-2 border-t border-amber-500/20 text-xs font-bold">
               
+              <button onClick={() => { setIsComparisonOpen(true); setMobileMenuOpen(false); }} className="w-full flex items-center justify-between p-4 bg-[#121216] rounded-2xl text-slate-200 border border-amber-500/20 shadow-sm hover:border-amber-400 transition cursor-pointer">
+                <span className="flex items-center gap-2.5 text-amber-300"><Scale className="w-4 h-4 text-amber-400" /> პროდუქტების შედარება</span>
+                <span className="bg-amber-400 text-slate-950 px-3 py-0.5 rounded-full text-[10px] font-black">{comparisonCount}</span>
+              </button>
+
               <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="w-full flex items-center justify-between p-4 bg-[#121216] rounded-2xl text-slate-200 border border-amber-500/20 shadow-sm hover:border-amber-400 transition cursor-pointer">
                 <span className="flex items-center gap-2.5 text-amber-300">❤️ სურვილების სია</span>
                 <span className="bg-rose-500 text-white px-3 py-0.5 rounded-full text-[10px] font-black">{wishlistCount}</span>
