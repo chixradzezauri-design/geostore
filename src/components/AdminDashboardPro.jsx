@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Charts & Sidebar (Fixed Mobile & Status Update)
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Charts, Sidebar & Delivery Fees Manager
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3
+  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -39,7 +39,9 @@ export default function AdminDashboardPro({
   setBannersList,
   siteSettings,
   setSiteSettings,
-  formatPrice
+  formatPrice,
+  deliveryFees,
+  setDeliveryFees
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -1311,9 +1313,34 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Settings Tab */}
+        {/* Settings Tab (with Delivery Fees Manager) */}
         {adminTab === 'settings' && (
           <div className="space-y-6">
+            
+            {/* 🚚 მიწოდების ტარიფების მართვის პანელი */}
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
+                <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
+                  <label className="text-slate-300 font-bold">🏙️ თბილისი / რუსთავი (₾):</label>
+                  <input type="number" value={deliveryFees?.tbilisi ?? 0} onChange={e => setDeliveryFees({...deliveryFees, tbilisi: Number(e.target.value)})} className="w-full bg-[#121216] border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                </div>
+                <div className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
+                  <label className="text-slate-300 font-bold">🌆 დიდი ქალაქები (₾):</label>
+                  <input type="number" value={deliveryFees?.bigCities ?? 10} onChange={e => setDeliveryFees({...deliveryFees, bigCities: Number(e.target.value)})} className="w-full bg-[#121216] border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                </div>
+                <div className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
+                  <label className="text-slate-300 font-bold">🏔️ სხვა რეგიონები (₾):</label>
+                  <input type="number" value={deliveryFees?.other ?? 15} onChange={e => setDeliveryFees({...deliveryFees, other: Number(e.target.value)})} className="w-full bg-[#121216] border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                </div>
+              </div>
+              <button onClick={() => alert('✅ მიწოდების ტარიფები წარმატებით შენახდა!')} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
+                ტარიფების შენახვა
+              </button>
+            </div>
+
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
