@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Delivery Fees Calculator & All Features
+// src/App.jsx - GEOSTORE Next-Gen Edition with Footer Install Banner & All Features
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,7 +7,7 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -87,7 +87,6 @@ export default function App() {
     heroSubtitle: 'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
   }));
 
-  // 🚚 მიწოდების ტარიფების state
   const [deliveryFees, setDeliveryFees] = useState(() => loadSafeStorage('geostore_delivery_fees', {
     tbilisi: 0,
     bigCities: 10,
@@ -139,53 +138,45 @@ export default function App() {
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
 
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
 
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') setDeferredPrompt(null);
+      } catch {
+        setShowInstallModal(true);
+      }
+    } else {
+      setShowInstallModal(true);
+    }
+  };
+
   const [toastMessage, setToastMessage] = useState('');
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
-
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (!e.key) return;
-      if (e.key === 'geostore_products') {
-        try { setProducts(JSON.parse(e.newValue) || INITIAL_PRODUCTS); } catch {}
-      }
-      if (e.key === 'geostore_cats') {
-        try { setCategoriesList(JSON.parse(e.newValue) || INITIAL_CATEGORIES); } catch {}
-      }
-      if (e.key === 'geostore_site_settings') {
-        try { setSiteSettings(JSON.parse(e.newValue)); } catch {}
-      }
-      if (e.key === 'geostore_delivery_fees') {
-        try { setDeliveryFees(JSON.parse(e.newValue) || { tbilisi: 0, bigCities: 10, other: 15 }); } catch {}
-      }
-      if (e.key === 'geostore_vendors') {
-        try { setVendorsList(JSON.parse(e.newValue) || INITIAL_VENDORS); } catch {}
-      }
-      if (e.key === 'geostore_cart') {
-        try { setCart(JSON.parse(e.newValue) || []); } catch {}
-      }
-      if (e.key === 'geostore_wishlist') {
-        try { setWishlist(JSON.parse(e.newValue) || []); } catch {}
-      }
-      if (e.key === 'geostore_comparison') {
-        try { setComparisonList(JSON.parse(e.newValue) || []); } catch {}
-      }
-      if (e.key === 'geostore_coupons') {
-        try { setCoupons(JSON.parse(e.newValue) || INITIAL_COUPONS); } catch {}
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -229,7 +220,6 @@ export default function App() {
     return itemsToCalc.reduce((acc, item) => acc + (item.priceGEL * (item.quantity || 1)), 0);
   }, [cart, quickBuyProduct]);
 
-  // მიწოდების ღირებულება შერჩეული რეგიონის მიხედვით
   const currentDeliveryCost = useMemo(() => {
     if (selectedRegion === 'tbilisi') return deliveryFees.tbilisi;
     if (selectedRegion === 'bigCities') return deliveryFees.bigCities;
@@ -425,8 +415,10 @@ export default function App() {
         setIsGiftQuizOpen={setIsGiftQuizOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
         setIsComparisonOpen={setIsComparisonOpen}
+        setIsTrackerOpen={setIsTrackerOpen}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        handleInstallClick={handleInstallClick}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1 space-y-8">
@@ -762,7 +754,68 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-12 backdrop-blur-md space-y-3">
+      {/* INSTALL INSTRUCTION MODAL */}
+      {showInstallModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+            <button onClick={() => setShowInstallModal(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
+            
+            <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
+              <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
+                <Smartphone className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">GEOSTORE აპლიკაციის დაყენება</h3>
+                <p className="text-[11px] text-slate-400">მიჰყევით მარტივ ინსტრუქციას:</p>
+              </div>
+            </div>
+
+            <div className="space-y-3.5 text-slate-300">
+              <div className="bg-[#121216] p-4 rounded-2xl border border-amber-500/20 space-y-2">
+                <b className="text-amber-400 block text-xs">📱 iPhone / iPad (Safari):</b>
+                <p>1. ქვედა მენიუდან დააჭირეთ ღილაკს **Share** (გაზიარება / კვადრატი ისრით).</p>
+                <p>2. მენიუდან აირჩიეთ **"Add to Home Screen"** (მთავარ ეკრანზე დამატება).</p>
+              </div>
+
+              <div className="bg-[#121216] p-4 rounded-2xl border border-amber-500/20 space-y-2">
+                <b className="text-amber-400 block text-xs">🤖 Android (Chrome / Samsung):</b>
+                <p>1. ზედა მარჯვენა კუთხეში დააჭირეთ **3 წერტილს** (მენიუ).</p>
+                <p>2. აირჩიეთ **"Install app"** ან **"Add to Home screen"**.</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowInstallModal(false)}
+              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
+            >
+              გასაგებია
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📱 FOOTER APP INSTALL BANNER */}
+      <div className="max-w-7xl mx-auto px-4 w-full my-6">
+        <div className="bg-gradient-to-r from-amber-950/30 via-[#0e0e12] to-amber-950/30 border border-amber-500/30 rounded-[2rem] p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-2xl shrink-0 mx-auto sm:mx-0 shadow-inner">
+              <Smartphone className="w-7 h-7 text-amber-400" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-black text-white text-sm md:text-base">დააინსტალირე GEOSTORE შენს ტელეფონში</h4>
+              <p className="text-xs text-slate-400">იყავი მუდმივად კავშირზე, მიიღე შეტყობინებები და ისარგებლე სწრაფი წვდომით!</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleInstallClick}
+            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-6 py-3.5 rounded-2xl text-xs transition-all shadow-xl shadow-amber-500/20 flex items-center gap-2 shrink-0 cursor-pointer hover:scale-105"
+          >
+            <Download className="w-4 h-4" /> აპლიკაციის დაყენება
+          </button>
+        </div>
+      </div>
+
+      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-6 backdrop-blur-md space-y-3">
         <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
           <button onClick={() => setIsTermsOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"><FileText className="w-4 h-4" /> წესები და პირობები</button>
           <span>•</span>
