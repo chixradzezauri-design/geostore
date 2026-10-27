@@ -1,8 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Clean Secure Login Edition
+// src/components/AdminDashboardPro.jsx - Elite Gold Admin & Category Icons Edition
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
-  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle
+  Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
+  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, Printer as PrinterIcon
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -51,7 +52,11 @@ export default function AdminDashboardPro({
 
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
+  
+  // კატეგორიისა და იკონის ფორმა
   const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('Smartphone');
+
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
@@ -106,7 +111,6 @@ export default function AdminDashboardPro({
     setActivityLogs(prev => [newLog, ...prev]);
   };
 
-  // 🔒 სრულიად გასუფთავებული შესასვლელი ფანჯარა (აღარ უთითებს პაროლებს ტექსტის სახით)
   if (!adminLoggedIn) {
     return (
       <div className="max-w-sm mx-auto bg-[#0d0d10] border border-amber-500/35 rounded-[2.5rem] p-8 space-y-6 shadow-2xl backdrop-blur-3xl text-center my-16">
@@ -160,7 +164,40 @@ export default function AdminDashboardPro({
     );
   }
 
-  // დანარჩენი ადმინ პანელის სრული ფუნქციონალი უცვლელად...
+  // კატეგორიის დამატება იკონით
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    
+    // ვინახავთ ობიექტის სახით: { name: '...', icon: '...' }
+    const newCatObj = { name: newCatName.trim(), icon: newCatIcon };
+    
+    const categoryExists = (categoriesList || []).some(cat => {
+      const cName = typeof cat === 'object' ? cat.name : cat;
+      return cName === newCatName.trim();
+    });
+
+    if (categoryExists) {
+      alert('ეს კატეგორია უკვე არსებობს!');
+      return;
+    }
+
+    setCategoriesList(prev => [...(prev || []), newCatObj]);
+    setNewCatName('');
+    logActivity(`დაემატა კატეგორია: ${newCatName.trim()} (${newCatIcon})`);
+    alert('✅ კატეგორია და იკონი წარმატებით დაემატა!');
+  };
+
+  const handleDeleteCategory = (catName) => {
+    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
+      setCategoriesList(prev => (prev || []).filter(c => {
+        const cName = typeof c === 'object' ? c.name : c;
+        return cName !== catName;
+      }));
+      logActivity(`წაიშალა კატეგორია: ${catName}`);
+    }
+  };
+
   const handleDeleteProduct = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა?')) {
       setProducts(prev => (prev || []).filter(p => p.id !== id));
@@ -201,10 +238,13 @@ export default function AdminDashboardPro({
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
 
+    const defaultCat = categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'სმარტფონები';
+
     const newProd = {
       id: `prod-${Date.now()}`,
       sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       ...productForm,
+      category: productForm.category || defaultCat,
       priceGEL: Number(productForm.priceGEL),
       oldPriceGEL: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
       stock: Number(productForm.stock) || 1,
@@ -214,7 +254,7 @@ export default function AdminDashboardPro({
     };
 
     setProducts(prev => [newProd, ...(prev || [])]);
-    setProductForm({ name: '', category: categoriesList?.[0] || 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '' });
+    setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '' });
     setSelectedImages([]);
     logActivity(`დაემატა ახალი პროდუქტი: ${newProd.name}`);
     alert('✅ პროდუქტი წარმატებით დაემატა დეტალური ინფორმაციითა და ტეგებით!');
@@ -435,26 +475,6 @@ export default function AdminDashboardPro({
     if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
       setVendorsList(prev => (prev || []).filter(v => v.id !== id));
       logActivity(`წაიშალა ვენდორი (ID: ${id})`);
-    }
-  };
-
-  const handleAddCategory = (e) => {
-    e.preventDefault();
-    if (!newCatName.trim()) return;
-    if ((categoriesList || []).includes(newCatName.trim())) {
-      alert('ეს კატეგორია უკვე არსებობს!');
-      return;
-    }
-    setCategoriesList(prev => [...(prev || []), newCatName.trim()]);
-    setNewCatName('');
-    logActivity(`დაემატა კატეგორია: ${newCatName.trim()}`);
-    alert('✅ კატეგორია წარმატებით დაემატა!');
-  };
-
-  const handleDeleteCategory = (catName) => {
-    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
-      setCategoriesList(prev => (prev || []).filter(c => c !== catName));
-      logActivity(`წაიშალა კატეგორია: ${catName}`);
     }
   };
 
@@ -780,11 +800,14 @@ export default function AdminDashboardPro({
                   onChange={e => setProductForm({...productForm, category: e.target.value})} 
                   className="bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner cursor-pointer"
                 >
-                  {(categoriesList || []).map(cat => (
-                    <option key={typeof cat === 'object' ? cat.name : cat} value={typeof cat === 'object' ? cat.name : cat}>
-                      {typeof cat === 'object' ? cat.name : cat}
-                    </option>
-                  ))}
+                  {(categoriesList || []).map(cat => {
+                    const cName = typeof cat === 'object' ? cat.name : cat;
+                    return (
+                      <option key={cName} value={cName}>
+                        {cName}
+                      </option>
+                    );
+                  })}
                 </select>
                 <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner" />
                 <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner" />
@@ -915,11 +938,14 @@ export default function AdminDashboardPro({
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner cursor-pointer"
                 >
                   <option value="ყველა">ყველა კატეგორია</option>
-                  {(categoriesList || []).map(cat => (
-                    <option key={typeof cat === 'object' ? cat.name : cat} value={typeof cat === 'object' ? cat.name : cat}>
-                      {typeof cat === 'object' ? cat.name : cat}
-                    </option>
-                  ))}
+                  {(categoriesList || []).map(cat => {
+                    const cName = typeof cat === 'object' ? cat.name : cat;
+                    return (
+                      <option key={cName} value={cName}>
+                        {cName}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             </div>
@@ -1041,24 +1067,43 @@ export default function AdminDashboardPro({
         </div>
       )}
 
-      {/* Categories Tab */}
+      {/* Categories Tab with Icon Selection */}
       {adminTab === 'categories' && (
         <div className="space-y-6">
           <div className="bg-[#0d0d10] border border-amber-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-amber-500/20 pb-4">
-              <FolderTree className="w-5 h-5 text-amber-400" /> ახალი კატეგორიის დამატება
+              <FolderTree className="w-5 h-5 text-amber-400" /> ახალი კატეგორიის დამატება და იკონის არჩევა
             </h3>
-            <form onSubmit={handleAddCategory} className="flex gap-3 text-xs">
+            
+            <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
               <input 
                 type="text" 
                 placeholder="კატეგორიის დასახელება (მაგ: აქსესუარები)" 
                 required 
                 value={newCatName} 
                 onChange={e => setNewCatName(e.target.value)} 
-                className="flex-1 bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner" 
+                className="bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner" 
               />
-              <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-6 py-3.5 rounded-2xl shadow-xl shadow-amber-500/20 transition cursor-pointer">
-                დამატება
+              
+              <select
+                value={newCatIcon}
+                onChange={e => setNewCatIcon(e.target.value)}
+                className="bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner cursor-pointer"
+              >
+                <option value="Smartphone">📱 სმარტფონი / ტელეფონი</option>
+                <option value="Laptop">💻 ლაპტოპი / კომპიუტერი</option>
+                <option value="Headphones">🎧 ყურსასმენი / აუდიო</option>
+                <option value="Watch">⌚ საათი</option>
+                <option value="Camera">📷 ფოტო / ვიდეო კამერა</option>
+                <option value="Tv">📺 ტელევიზორი / მონიტორი</option>
+                <option value="Speaker">🔊 დინამიკი</option>
+                <option value="Gamepad2">🎮 გეიმინგი</option>
+                <option value="Tablet">📱 ტაბლეტი</option>
+                <option value="Sparkles">✨ ზოგადი / სხვა</option>
+              </select>
+
+              <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-amber-500/20 transition cursor-pointer">
+                კატეგორიის დამატება იკონით
               </button>
             </form>
           </div>
@@ -1066,12 +1111,19 @@ export default function AdminDashboardPro({
           <div className="bg-[#0d0d10] border border-amber-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base">არსებული კატეგორიები ({categoriesList?.length || 0})</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {(categoriesList || []).map((cat, idx) => (
-                <div key={idx} className="bg-[#08080a] p-4 rounded-3xl border border-amber-500/20 flex justify-between items-center text-xs shadow-inner">
-                  <span className="font-bold text-white">{typeof cat === 'object' ? cat.name : cat}</span>
-                  <button onClick={() => handleDeleteCategory(typeof cat === 'object' ? cat.name : cat)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              ))}
+              {(categoriesList || []).map((cat, idx) => {
+                const cName = typeof cat === 'object' ? cat.name : cat;
+                const cIcon = typeof cat === 'object' ? cat.icon : 'Sparkles';
+                return (
+                  <div key={idx} className="bg-[#08080a] p-4 rounded-3xl border border-amber-500/20 flex justify-between items-center text-xs shadow-inner">
+                    <span className="font-bold text-white flex items-center gap-2">
+                      <span className="text-amber-400 font-mono text-[10px] bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">{cIcon}</span>
+                      {cName}
+                    </span>
+                    <button onClick={() => handleDeleteCategory(cName)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
