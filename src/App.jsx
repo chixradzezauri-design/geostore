@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Wishlist Share & All Features
+// src/App.jsx - GEOSTORE Next-Gen Edition with Delivery Fees Calculator & All Features
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,7 +7,7 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy } from 'lucide-react';
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -87,6 +87,14 @@ export default function App() {
     heroSubtitle: 'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
   }));
 
+  // 🚚 მიწოდების ტარიფების state
+  const [deliveryFees, setDeliveryFees] = useState(() => loadSafeStorage('geostore_delivery_fees', {
+    tbilisi: 0,
+    bigCities: 10,
+    other: 15
+  }));
+  const [selectedRegion, setSelectedRegion] = useState('tbilisi');
+
   const [categories, setCategoriesList] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
   const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
   const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
@@ -155,6 +163,9 @@ export default function App() {
       if (e.key === 'geostore_site_settings') {
         try { setSiteSettings(JSON.parse(e.newValue)); } catch {}
       }
+      if (e.key === 'geostore_delivery_fees') {
+        try { setDeliveryFees(JSON.parse(e.newValue) || { tbilisi: 0, bigCities: 10, other: 15 }); } catch {}
+      }
       if (e.key === 'geostore_vendors') {
         try { setVendorsList(JSON.parse(e.newValue) || INITIAL_VENDORS); } catch {}
       }
@@ -211,17 +222,24 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_comparison', JSON.stringify(comparisonList)); } catch{} }, [comparisonList]);
   useEffect(() => { try { localStorage.setItem('geostore_coupons', JSON.stringify(coupons)); } catch{} }, [coupons]);
   useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
+  useEffect(() => { try { localStorage.setItem('geostore_delivery_fees', JSON.stringify(deliveryFees)); } catch{} }, [deliveryFees]);
 
   const cartSubtotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
     return itemsToCalc.reduce((acc, item) => acc + (item.priceGEL * (item.quantity || 1)), 0);
   }, [cart, quickBuyProduct]);
 
+  // მიწოდების ღირებულება შერჩეული რეგიონის მიხედვით
+  const currentDeliveryCost = useMemo(() => {
+    if (selectedRegion === 'tbilisi') return deliveryFees.tbilisi;
+    if (selectedRegion === 'bigCities') return deliveryFees.bigCities;
+    return deliveryFees.other;
+  }, [selectedRegion, deliveryFees]);
+
   const cartTotalGEL = useMemo(() => {
-    if (!appliedCoupon) return cartSubtotalGEL;
-    const discountAmount = (cartSubtotalGEL * appliedCoupon.discountPercent) / 100;
-    return Math.max(0, cartSubtotalGEL - discountAmount);
-  }, [cartSubtotalGEL, appliedCoupon]);
+    const sub = appliedCoupon ? cartSubtotalGEL - (cartSubtotalGEL * appliedCoupon.discountPercent) / 100 : cartSubtotalGEL;
+    return Math.max(0, sub) + currentDeliveryCost;
+  }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
 
   const handleApplyCoupon = (e) => {
     e.preventDefault();
@@ -285,7 +303,6 @@ export default function App() {
     });
   };
 
-  // 🔗 სურვილების სიის გაზიარების ფუნქცია
   const handleShareWishlist = () => {
     if (wishlist.length === 0) {
       alert('სურვილების სია ცარიელია!');
@@ -350,6 +367,8 @@ export default function App() {
     const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
     const itemsToOrder = quickBuyProduct ? [{ id: quickBuyProduct.id, name: quickBuyProduct.name, price: quickBuyProduct.priceGEL, quantity: 1 }] : cart.map(i => ({ id: i.id, name: i.name, price: i.priceGEL, quantity: i.quantity }));
 
+    const regionText = selectedRegion === 'tbilisi' ? 'თბილისი / რუსთავი' : selectedRegion === 'bigCities' ? 'დიდი ქალაქები' : 'სხვა რეგიონები';
+
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
@@ -358,14 +377,14 @@ export default function App() {
           id: orderId,
           customer_name: checkoutForm.name,
           phone: checkoutForm.phone,
-          address: checkoutForm.address,
+          address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
           user_email: currentUser ? currentUser.email : 'guest',
           items: itemsToOrder,
           total_gel: cartTotalGEL,
           status: 'ახალი'
         })
       });
-      sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n💰 თანხა: ${cartTotalGEL} ₾${appliedCoupon ? ` (გამოყენებულია პრომო-კოდი: ${appliedCoupon.code})` : ''}`);
+      sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n📍 რეგიონი: ${regionText} (${currentDeliveryCost} ₾)\n💰 სულ თანხა: ${cartTotalGEL} ₾${appliedCoupon ? ` (პრომო: ${appliedCoupon.code})` : ''}`);
       setIsCheckoutOpen(false);
       setCart([]);
       setAppliedCoupon(null);
@@ -455,6 +474,8 @@ export default function App() {
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
+            deliveryFees={deliveryFees}
+            setDeliveryFees={setDeliveryFees}
           />
         )}
 
@@ -514,6 +535,20 @@ export default function App() {
 
                 <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
                   
+                  {/* 🚚 მიწოდების რეგიონის ამორჩევა კალათაში */}
+                  <div className="space-y-2 border-b border-slate-800 pb-4">
+                    <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs"><Truck className="w-3.5 h-3.5" /> მიწოდების რეგიონი</span>
+                    <select 
+                      value={selectedRegion}
+                      onChange={e => setSelectedRegion(e.target.value)}
+                      className="w-full bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-xs text-white outline-none focus:border-amber-400 font-bold cursor-pointer"
+                    >
+                      <option value="tbilisi">თბილისი / რუსთავი ({deliveryFees.tbilisi} ₾)</option>
+                      <option value="bigCities">დიდი ქალაქები - ქუთაისი, ბათუმი ({deliveryFees.bigCities} ₾)</option>
+                      <option value="other">სხვა რეგიონები / მთიანი ზონა ({deliveryFees.other} ₾)</option>
+                    </select>
+                  </div>
+
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs"><Tag className="w-3.5 h-3.5" /> პრომო-კოდი</span>
                     {appliedCoupon ? (
@@ -538,15 +573,23 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className="space-y-1.5 text-xs">
+                  <div className="space-y-1.5 text-xs text-slate-300">
+                    <div className="flex justify-between">
+                      <span>ქვეჯამი:</span>
+                      <span>{formatPrice(cartSubtotalGEL)}</span>
+                    </div>
                     {appliedCoupon && (
-                      <div className="flex justify-between text-slate-400">
-                        <span>ქვეჯამი:</span>
-                        <span>{formatPrice(cartSubtotalGEL)}</span>
+                      <div className="flex justify-between text-emerald-400">
+                        <span>ფასდაკლება (-{appliedCoupon.discountPercent}%):</span>
+                        <span>-{formatPrice((cartSubtotalGEL * appliedCoupon.discountPercent) / 100)}</span>
                       </div>
                     )}
-                    <div className="text-xl font-black text-amber-400 flex justify-between items-center pt-2">
-                      <span>სულ:</span>
+                    <div className="flex justify-between">
+                      <span>მიწოდება:</span>
+                      <span>{currentDeliveryCost === 0 ? 'უფასო' : formatPrice(currentDeliveryCost)}</span>
+                    </div>
+                    <div className="text-xl font-black text-amber-400 flex justify-between items-center pt-2 border-t border-slate-800">
+                      <span>სულ გადასახდელი:</span>
                       <span>{formatPrice(cartTotalGEL)}</span>
                     </div>
                   </div>
@@ -687,6 +730,9 @@ export default function App() {
         setIsTermsOpen={setIsTermsOpen}
         isWarrantyOpen={isWarrantyOpen}
         setIsWarrantyOpen={setIsWarrantyOpen}
+        selectedRegion={selectedRegion}
+        setSelectedRegion={setSelectedRegion}
+        deliveryFees={deliveryFees}
       />
 
       <ImageSearchModal 
