@@ -75,9 +75,9 @@ export default function StoreView({
     setSelectedProduct(prod);
     setActiveImage(prod.image);
     setInstallmentMonths(12);
-    // ავტომატურად ვარჩევთ საწყის ზომას კატეგორიის მიხედვით
+    
     const isShoe = (prod.category || '').toLowerCase().includes('ფეხსაცმელ') || (prod.category || '').toLowerCase().includes('shoe');
-    setSelectedSize(isShoe ? '41' : 'M');
+    setSelectedSize(isShoe ? '41' : (prod.availableSizes?.[0] || 'M'));
     setSelectedColor('შავი');
     setIsGiftWrapped(false);
     setGiftMessage('');
@@ -158,7 +158,6 @@ export default function StoreView({
     return others[index];
   };
 
-  // მსგავსი პროდუქტების სია (Cross-Sell / You May Also Like)
   const getSimilarProducts = (currentProd) => {
     if (!filteredProducts) return [];
     return filteredProducts
@@ -182,7 +181,7 @@ export default function StoreView({
   return (
     <div className="space-y-8 w-full pb-28 animate-in fade-in duration-500">
       
-      {/* 🌟 COMPACT MINIMALIST HERO BANNER */}
+      {/* 🌟 HERO BANNER */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[2rem] p-5 sm:p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 group">
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -217,7 +216,7 @@ export default function StoreView({
         </div>
       </div>
 
-      {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
+      {/* ⚡ FLASH SALE COUNTDOWN */}
       {flashSaleProducts.length > 0 && (
         <div className="bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-6 md:p-8 shadow-2xl space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
@@ -233,7 +232,6 @@ export default function StoreView({
               </div>
             </div>
 
-            {/* Countdown Clock */}
             <div className="flex items-center gap-2 text-xs font-black">
               <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
@@ -252,7 +250,6 @@ export default function StoreView({
             </div>
           </div>
 
-          {/* Flash Sale Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {flashSaleProducts.map(prod => {
               return (
@@ -389,7 +386,6 @@ export default function StoreView({
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
-                  {/* Wishlist Button */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
                     className="absolute top-4 right-4 p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
@@ -398,7 +394,6 @@ export default function StoreView({
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
 
-                  {/* ⚖️ Compare Button */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
                     className={`absolute top-16 right-4 p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
@@ -494,19 +489,18 @@ export default function StoreView({
                   {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                 </div>
 
-                {/* 🏷️ ტექნიკური მახასიათებლების პანელი (Specifications) */}
                 <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-2 gap-3 text-xs">
                   <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                     <span className="text-slate-400 block text-[10px]">მასალა / შემადგენლობა</span>
-                    <b className="text-white font-bold mt-0.5 block">პრემიუმ ტყავი / 925 ვერცხლი</b>
+                    <b className="text-white font-bold mt-0.5 block">{selectedProduct.material || 'პრემიუმ ტყავი / 925 ვერცხლი'}</b>
                   </div>
                   <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                     <span className="text-slate-400 block text-[10px]">მდგრადობა / წყალგაუმტარობა</span>
-                    <b className="text-amber-400 font-bold mt-0.5 block">3ATM Water Resistant</b>
+                    <b className="text-amber-400 font-bold mt-0.5 block">{selectedProduct.durability || '3ATM Water Resistant'}</b>
                   </div>
                 </div>
 
-                {/* 👕 ზომების არჩევანი (Size Selector - Shoes 38-44 or Apparel S-XXL) */}
+                {/* 👟👖 ჭკვიანი ზომების არჩევანი კატეგორიის და პროდუქტის ზომების მიხედვით */}
                 <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
@@ -515,9 +509,11 @@ export default function StoreView({
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {((selectedProduct.category || '').toLowerCase().includes('ფეხსაცმელ') || (selectedProduct.category || '').toLowerCase().includes('shoe')
-                      ? ['38', '39', '40', '41', '42', '43', '44']
-                      : ['S', 'M', 'L', 'XL', 'XXL']
+                    {(selectedProduct.availableSizes && selectedProduct.availableSizes.length > 0 
+                      ? selectedProduct.availableSizes 
+                      : ((selectedProduct.category || '').toLowerCase().includes('ფეხსაცმელ') || (selectedProduct.category || '').toLowerCase().includes('shoe')
+                          ? ['38', '39', '40', '41', '42', '43', '44']
+                          : ['S', 'M', 'L', 'XL', 'XXL'])
                     ).map(size => (
                       <button
                         key={size}
@@ -531,7 +527,6 @@ export default function StoreView({
                   </div>
                 </div>
 
-                {/* 🎨 ფერების არჩევანი (Color Selector) */}
                 <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                   <span className="text-slate-300 font-bold block">ფერი: <b className="text-amber-400">{selectedColor}</b></span>
                   <div className="flex gap-3">
@@ -554,7 +549,6 @@ export default function StoreView({
                   </div>
                 </div>
 
-                {/* 🎁 სასაჩუქრე შეფუთვა და ღია ბარათის ტექსტი (Gift Wrapping & Note) */}
                 <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
                   <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
                     <div className="flex items-center gap-3">
@@ -585,7 +579,6 @@ export default function StoreView({
                   )}
                 </div>
 
-                {/* 🛡️ VIP გარანტია და დაზღვევა (Extended Warranty) */}
                 <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
                   <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
@@ -599,7 +592,6 @@ export default function StoreView({
                   <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
                 </div>
 
-                {/* ✨ "SHOP THE LOOK" / COMPLETE THE LOOK SECTION */}
                 {getComplementaryProduct(selectedProduct) && (() => {
                   const compProd = getComplementaryProduct(selectedProduct);
                   return (
@@ -635,7 +627,6 @@ export default function StoreView({
                   );
                 })()}
 
-                {/* 💎 მსგავსი პროდუქტების რეკომენდაციები (You May Also Like / Cross-Sell) */}
                 {getSimilarProducts(selectedProduct).length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-amber-500/20">
                     <h4 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -667,13 +658,12 @@ export default function StoreView({
                   <span>მარაგშია: <b className="text-amber-400 font-black">ხელმისაწვდომია</b> (მორგება მიტანისას)</span>
                 </div>
 
-                {/* ⭐ REVIEWS & UGC PHOTO REVIEWS SECTION */}
+                {/* ⭐ REVIEWS */}
                 <div className="space-y-4 pt-4 border-t border-amber-500/20">
                   <h3 className="text-sm font-black text-white flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა ფოტო-შეფასებები ({(allReviews[selectedProduct.id] || []).length})
                   </h3>
 
-                  {/* Add Review Form with Photo Upload */}
                   <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
                     <span className="text-amber-300 font-bold block text-xs">დატოვეთ შეფასება და ატვირთეთ ფოტო:</span>
                     <div className="flex gap-2 items-center">
@@ -707,7 +697,6 @@ export default function StoreView({
                       className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
                     ></textarea>
 
-                    {/* Photo Upload for Review */}
                     <div className="flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                       <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                         <ImageIcon className="w-4 h-4" /> ატვირთეთ ფოტო:
@@ -721,7 +710,6 @@ export default function StoreView({
                     </button>
                   </form>
 
-                  {/* Reviews List with Photos */}
                   <div className="space-y-3 pt-2">
                     {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
                       <p className="text-slate-500 text-xs text-center py-4">ამ პროდუქტზე ჯერ არ არის შეფასებები. იყავი პირველი!</p>
@@ -750,7 +738,6 @@ export default function StoreView({
                   </div>
                 </div>
 
-                {/* 🛒 კალათაში დამატება არჩეული პარამეტრებით */}
                 <button 
                   onClick={() => { 
                     let customName = `${selectedProduct.name} (${selectedSize}, ${selectedColor})`;
@@ -775,7 +762,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 📏 ზომების გიდის მოდალი (Size Guide Modal - Clothing & Shoes) */}
+      {/* 📏 ზომების გიდის მოდალი */}
       {isSizeGuideOpen && (
         <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
