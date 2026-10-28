@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Material & Specs Admin Manager
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Sizes Manager & Full History Preservation
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -50,7 +50,8 @@ export default function AdminDashboardPro({
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ტყავი / 925 ვერცხლი',
-    durability: '3ATM Water Resistant'
+    durability: '3ATM Water Resistant',
+    availableSizes: ['S', 'M', 'L', 'XL'] // 👕 ნაგულისხმევი ზომები
   });
   const [selectedImages, setSelectedImages] = useState([]);
 
@@ -231,6 +232,17 @@ export default function AdminDashboardPro({
     });
   };
 
+  const handleToggleSizeSelection = (size) => {
+    setProductForm(prev => {
+      const current = prev.availableSizes || [];
+      if (current.includes(size)) {
+        return { ...prev, availableSizes: current.filter(s => s !== size) };
+      } else {
+        return { ...prev, availableSizes: [...current, size] };
+      }
+    });
+  };
+
   const handleSaveProduct = (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
@@ -250,14 +262,15 @@ export default function AdminDashboardPro({
       stock: Number(productForm.stock) || 1,
       tags: tagsArray,
       image: mainImage,
-      gallery: selectedImages.length > 0 ? selectedImages : [mainImage]
+      gallery: selectedImages.length > 0 ? selectedImages : [mainImage],
+      availableSizes: productForm.availableSizes?.length > 0 ? productForm.availableSizes : ['S', 'M', 'L', 'XL']
     };
 
     setProducts(prev => [newProd, ...(prev || [])]);
-    setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ტყავი / 925 ვერცხლი', durability: '3ATM Water Resistant' });
+    setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ტყავი / 925 ვერცხლი', durability: '3ATM Water Resistant', availableSizes: ['S', 'M', 'L', 'XL'] });
     setSelectedImages([]);
-    logActivity(`დაემატა ახალი პროდუქტი: ${newProd.name}`);
-    alert('✅ პროდუქტი წარმატებით დაემატა დეტალური მახასიათებლებითა და მასალებით!');
+    logActivity(`დაემატა ახალი პროდუქტი ზომებით: ${newProd.name}`);
+    alert('✅ პროდუქტი და ზომები წარმატებით დაემატა!');
   };
 
   const handleExportProducts = () => {
@@ -582,7 +595,7 @@ export default function AdminDashboardPro({
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full pb-16 items-start">
       
-      {/* 🧭 SIDEBAR NAVIGATION MENU (Swirly Pro Style) */}
+      {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div className="w-full lg:w-72 bg-[#0d0d10] border border-emerald-500/30 rounded-[2.5rem] p-6 space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
         <div className="flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
           <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
@@ -854,7 +867,7 @@ export default function AdminDashboardPro({
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (მასალები, ტეგები და გალერეა)
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ზომები, მასალები და გალერეა)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -890,7 +903,26 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
-                {/* 🏷️ მახასიათებლების და მასალების ინპუტები (Specs) */}
+                {/* 👕 მარაგში არსებული ზომების მითითება (Size Selector Manager) */}
+                <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
+                  <label className="text-slate-300 font-bold block">აირჩიეთ მარაგში არსებული ზომები:</label>
+                  <div className="flex gap-2">
+                    {['S', 'M', 'L', 'XL', 'XXL', '36', '38', '40', '42'].map(sz => {
+                      const isSelected = productForm.availableSizes?.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => handleToggleSizeSelection(sz)}
+                          className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
@@ -951,7 +983,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  პროდუქტის შენახვა მასალებითა და დეტალებით
+                  პროდუქტის შენახვა ზომებითა და დეტალებით
                 </button>
               </form>
             </div>
