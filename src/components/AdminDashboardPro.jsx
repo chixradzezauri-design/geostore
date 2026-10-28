@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Shoe & Apparel Sizes Manager
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Dynamic Category-based Fields Manager
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -51,7 +51,7 @@ export default function AdminDashboardPro({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ტყავი / 925 ვერცხლი',
     durability: '3ATM Water Resistant / Anti-Slip Sole',
-    availableSizes: ['S', 'M', 'L', 'XL'] // 👕 ნაგულისხმევი ზომები (ტანსაცმელი / ფეხსაცმელი)
+    availableSizes: ['S', 'M', 'L', 'XL']
   });
   const [selectedImages, setSelectedImages] = useState([]);
 
@@ -269,8 +269,8 @@ export default function AdminDashboardPro({
     setProducts(prev => [newProd, ...(prev || [])]);
     setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ტყავი / 925 ვერცხლი', durability: '3ATM Water Resistant', availableSizes: ['S', 'M', 'L', 'XL'] });
     setSelectedImages([]);
-    logActivity(`დაემატა ახალი პროდუქტი ზომებით: ${newProd.name}`);
-    alert('✅ პროდუქტი და ზომები წარმატებით დაემატა!');
+    logActivity(`დაემატა ახალი პროდუქტი დინამიური პარამეტრებით: ${newProd.name}`);
+    alert('✅ პროდუქტი წარმატებით დაემატა!');
   };
 
   const handleExportProducts = () => {
@@ -867,7 +867,7 @@ export default function AdminDashboardPro({
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ზომები, მასალები და გალერეა)
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური პარამეტრები)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -903,14 +903,33 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
-                {/* 👟👖 ტანსაცმლის და ფეხსაცმლის ზომების მართვა (Size Selector Manager) */}
-                <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-3">
-                  <label className="text-slate-300 font-bold block">აირჩიეთ მარაგში არსებული ზომები (ტანსაცმელი ან ფეხსაცმელი):</label>
-                  
-                  <div className="space-y-2">
-                    <span className="text-[11px] text-emerald-400 font-bold block">ტანსაცმლის ზომები:</span>
+                {/* 👟👖 ჭკვიანი დინამიური ზომების მართვა არჩეული კატეგორიის მიხედვით */}
+                {(productForm.category === 'ფეხსაცმელები' || productForm.category === 'ფეხსაცმელი') && (
+                  <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
+                    <label className="text-emerald-400 font-bold block">👟 აირჩიეთ ფეხსაცმლის ზომები (EU):</label>
                     <div className="flex flex-wrap gap-2">
-                      {['S', 'M', 'L', 'XL', 'XXL'].map(sz => {
+                      {['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'].map(sz => {
+                        const isSelected = productForm.availableSizes?.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleSizeSelection(sz)}
+                            className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {(productForm.category === 'ტანსაცმელი' || productForm.category === 'ტანსაცმელები') && (
+                  <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
+                    <label className="text-emerald-400 font-bold block">👕 აირჩიეთ ტანსაცმლის ზომები:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'].map(sz => {
                         const isSelected = productForm.availableSizes?.includes(sz);
                         return (
                           <button
@@ -925,38 +944,28 @@ export default function AdminDashboardPro({
                       })}
                     </div>
                   </div>
+                )}
 
-                  <div className="space-y-2 pt-1">
-                    <span className="text-[11px] text-emerald-400 font-bold block">ფეხსაცმლის ზომები (EU):</span>
-                    <div className="flex flex-wrap gap-2">
-                      {['38', '39', '40', '41', '42', '43', '44'].map(sz => {
-                        const isSelected = productForm.availableSizes?.includes(sz);
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => handleToggleSizeSelection(sz)}
-                            className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
+                {/* დინამიური აღწერის/მახასიათებლების ველები კატეგორიის მიხედვით */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder="მასალა / შემადგენლობა (მაგ: პრემიუმ ტყავი / 925 ვერცხლი)" 
+                    placeholder={
+                      (productForm.category === 'ფეხსაცმელები' || productForm.category === 'ფეხსაცმელი') ? 'ძირის მასალა / წყალგაუმტარობა (მაგ: Anti-Slip Sole)' :
+                      (productForm.category === 'ტანსაცმელი' || productForm.category === 'ტანსაცმელები') ? 'ქსოვილის შემადგენლობა (მაგ: 100% ბამბა / Premium Cotton)' :
+                      'მასალა / შემადგენლობა (მაგ: პრემიუმ ტყავი / 925 ვერცხლი)'
+                    } 
                     value={productForm.material} 
                     onChange={e => setProductForm({...productForm, material: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
                   />
                   <input 
                     type="text" 
-                    placeholder="მდგრადობა / წყალგაუმტარობა (მაგ: 3ATM Water Resistant)" 
+                    placeholder={
+                      (productForm.category === 'ფეხსაცმელები' || productForm.category === 'ფეხსაცმელი') ? 'სეზონი / კომფორტი (მაგ: ყველა სეზონი / ორთოპედიული)' :
+                      (productForm.category === 'ტანსაცმელი' || productForm.category === 'ტანსაცმელები') ? 'მოვლა / რეცხვა (მაგ: ირეცხება 30°C-ზე)' :
+                      'მდგრადობა / წყალგაუმტარობა (მაგ: 3ATM Water Resistant)'
+                    } 
                     value={productForm.durability} 
                     onChange={e => setProductForm({...productForm, durability: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1006,7 +1015,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  პროდუქტის შენახვა ზომებითა და დეტალებით
+                  პროდუქტის შენახვა დინამიური ზომებითა და დეტალებით
                 </button>
               </form>
             </div>
