@@ -653,11 +653,11 @@ export default function AdminDashboardPro({
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">სისტემა აქტიურია (2026)</span>
+            <span className="text-slate-300 font-bold">სისტემა აქტიურია</span>
           </div>
         </div>
 
-        {/* Analytics Tab (Modern Cards, Charts & Recent Orders) */}
+        {/* Analytics Tab */}
         {adminTab === 'analytics' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -683,7 +683,6 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
-            {/* Recent Orders & Quick Overview Table */}
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -715,7 +714,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Orders Tab - Fixed Responsive Layout */}
+        {/* Orders Tab */}
         {adminTab === 'orders' && (
           <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
@@ -736,8 +735,6 @@ export default function AdminDashboardPro({
               ) : (
                 orders.map(o => (
                   <div key={o.id} className="bg-[#08080a] p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner">
-                    
-                    {/* Top Row: ID, Date & Total */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
@@ -748,13 +745,11 @@ export default function AdminDashboardPro({
                       </div>
                     </div>
 
-                    {/* Middle Info: Customer & Address */}
                     <div className="space-y-1 text-slate-300">
                       <p>მყიდველი: <b className="text-white">{o.customerName}</b> | 📞 {o.phone}</p>
                       <p className="text-slate-400 text-[11px]">📍 მისამართი: {o.address}</p>
                     </div>
 
-                    {/* Bottom Actions & Status buttons (Wrapped cleanly for mobile) */}
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
@@ -779,7 +774,6 @@ export default function AdminDashboardPro({
                         </div>
                       </div>
                     </div>
-
                   </div>
                 ))
               )}
@@ -1313,7 +1307,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Settings Tab (with Delivery Fees Manager) */}
+        {/* Settings Tab */}
         {adminTab === 'settings' && (
           <div className="space-y-6">
             
