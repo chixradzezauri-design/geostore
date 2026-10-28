@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Fashion Edition with "Shop the Look" Feature
+// src/components/StoreView.jsx - Complete Fashion Edition (All Features Integrated)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -28,6 +28,7 @@ export default function StoreView({
   const [maxPrice, setMaxPrice] = useState('');
   const [installmentMonths, setInstallmentMonths] = useState(12);
 
+  // 👕 ზომისა და ფერის State
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('შავი');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
@@ -50,12 +51,14 @@ export default function StoreView({
     return () => clearInterval(timer);
   }, []);
 
+  // 💬 შეფასებების და ფოტოების State
   const [allReviews, setAllReviews] = useState(() => {
     try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
   });
   const [newReviewAuthor, setNewReviewAuthor] = useState('');
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewImage, setNewReviewImage] = useState('');
 
   useEffect(() => {
     try { localStorage.setItem('geostore_product_reviews', JSON.stringify(allReviews)); } catch {}
@@ -70,6 +73,17 @@ export default function StoreView({
     setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
+    setNewReviewImage('');
+  };
+
+  const handleReviewImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewReviewImage(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddReview = (e, productId) => {
@@ -81,6 +95,7 @@ export default function StoreView({
       author: newReviewAuthor.trim(),
       comment: newReviewComment.trim(),
       rating: Number(newReviewRating),
+      image: newReviewImage || null,
       date: new Date().toLocaleDateString('ka-GE')
     };
 
@@ -95,6 +110,7 @@ export default function StoreView({
     setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
+    setNewReviewImage('');
   };
 
   const processedProducts = useMemo(() => {
@@ -122,12 +138,11 @@ export default function StoreView({
     return (filteredProducts || []).filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
   }, [filteredProducts]);
 
-  // დამხმარე ფუნქცია "Shop the Look" შეთავაზებისთვის (პოულობს სხვა პროდუქტს ბაზიდან)
+  // დამხმარე ფუნქცია "Shop the Look" შეთავაზებისთვის
   const getComplementaryProduct = (currentProd) => {
     if (!filteredProducts || filteredProducts.length <= 1) return null;
     const others = filteredProducts.filter(p => p.id !== currentProd.id);
     if (others.length === 0) return null;
-    // ირჩევს სხვა პროდუქტს მუდმივად მიმდინარე აიდის მიხედვით
     const index = currentProd.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % others.length;
     return others[index];
   };
@@ -543,14 +558,15 @@ export default function StoreView({
                   <span>მარაგშია: <b className="text-amber-400 font-black">ხელმისაწვდომია</b> (მორგება მიტანისას)</span>
                 </div>
 
-                {/* ⭐ REVIEWS & RATINGS SECTION */}
+                {/* ⭐ REVIEWS & UGC PHOTO REVIEWS SECTION */}
                 <div className="space-y-4 pt-4 border-t border-amber-500/20">
                   <h3 className="text-sm font-black text-white flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა შეფასებები ({(allReviews[selectedProduct.id] || []).length})
+                    <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა ფოტო-შეფასებები ({(allReviews[selectedProduct.id] || []).length})
                   </h3>
 
+                  {/* Add Review Form with Photo Upload */}
                   <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
-                    <span className="text-amber-300 font-bold block text-xs">დატოვეთ თქვენი შეფასება:</span>
+                    <span className="text-amber-300 font-bold block text-xs">დატოვეთ შეფასება და ატვირთეთ ფოტო:</span>
                     <div className="flex gap-2 items-center">
                       <span className="text-slate-400">შეფასება:</span>
                       <select 
@@ -574,24 +590,35 @@ export default function StoreView({
                       className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
                     />
                     <textarea 
-                      placeholder="თქვენი კომენტარი პროდუქტზე..." 
+                      placeholder="როგორ მოგეწონათ ტანსაცმელი? ზომა, ხარისხი..." 
                       value={newReviewComment} 
                       onChange={e => setNewReviewComment(e.target.value)}
                       required
                       rows="2"
                       className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
                     ></textarea>
+
+                    {/* Photo Upload for Review */}
+                    <div className="flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
+                      <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
+                        <ImageIcon className="w-4 h-4" /> ატვირთეთ ფოტო:
+                        <input type="file" accept="image/*" onChange={handleReviewImageChange} className="hidden" />
+                      </label>
+                      {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ ფოტო არჩეულია</span>}
+                    </div>
+
                     <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
-                      შეფასების გამოქვეყნება
+                      შეფასების და ფოტოს გამოქვეყნება
                     </button>
                   </form>
 
+                  {/* Reviews List with Photos */}
                   <div className="space-y-3 pt-2">
                     {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
                       <p className="text-slate-500 text-xs text-center py-4">ამ პროდუქტზე ჯერ არ არის შეფასებები. იყავი პირველი!</p>
                     ) : (
                       allReviews[selectedProduct.id].map(rev => (
-                        <div key={rev.id} className="bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-1.5 shadow-inner">
+                        <div key={rev.id} className="bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
                           <div className="flex justify-between items-center">
                             <b className="text-white text-xs">{rev.author}</b>
                             <span className="text-[10px] text-slate-500">{rev.date}</span>
@@ -602,6 +629,13 @@ export default function StoreView({
                             ))}
                           </div>
                           <p className="text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
+                          
+                          {/* Display uploaded review photo */}
+                          {rev.image && (
+                            <div className="mt-2">
+                              <img src={rev.image} alt="UGC Review" className="w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
