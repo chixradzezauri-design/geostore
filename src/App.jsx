@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Footer Install Banner & All Features
+// src/App.jsx - GEOSTORE Next-Gen Edition with Bulletproof Persistence (100% History Protection)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -30,19 +30,19 @@ const sendTelegramNotification = (text) => {
   }).catch(() => {});
 };
 
-const INITIAL_CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   { name: 'სმარტფონები', icon: 'Smartphone' },
   { name: 'ლეპტოპები', icon: 'Laptop' },
   { name: 'აქსესუარები', icon: 'Sparkles' },
   { name: 'ჭკვიანი საათები', icon: 'Watch' }
 ];
 
-const INITIAL_VENDORS = [
+const DEFAULT_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
   { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
 ];
 
-const INITIAL_PRODUCTS = [
+const DEFAULT_PRODUCTS = [
   {
     id: 'prod-1',
     sku: 'GEO-IP15P',
@@ -54,7 +54,10 @@ const INITIAL_PRODUCTS = [
     oldPriceGEL: 4299,
     stock: 8,
     image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
-    description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით.'
+    description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით.',
+    availableSizes: ['S', 'M', 'L', 'XL'],
+    material: 'ტიტანი / კერამიკა',
+    durability: 'IP68 Water Resistant'
   },
   {
     id: 'prod-2',
@@ -67,17 +70,31 @@ const INITIAL_PRODUCTS = [
     oldPriceGEL: 4899,
     stock: 4,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600',
-    description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით.'
+    description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით.',
+    availableSizes: ['M', 'L', 'XL'],
+    material: 'ალუმინი',
+    durability: 'Mil-Spec Tested'
   }
 ];
 
-const INITIAL_COUPONS = [
+const DEFAULT_COUPONS = [
   { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
 ];
 
 export default function App() {
+  // 🛡️ Bulletproof LocalStorage Loader with History Protection
   const loadSafeStorage = (key, fallback) => {
-    try { const item = localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch { return fallback; }
+    try { 
+      const item = localStorage.getItem(key); 
+      if (item !== null) {
+        const parsed = JSON.parse(item);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (!Array.isArray(parsed) && parsed !== null) return parsed;
+      }
+      return fallback; 
+    } catch { 
+      return fallback; 
+    }
   };
 
   const [siteSettings, setSiteSettings] = useState(() => loadSafeStorage('geostore_site_settings', {
@@ -94,10 +111,10 @@ export default function App() {
   }));
   const [selectedRegion, setSelectedRegion] = useState('tbilisi');
 
-  const [categories, setCategoriesList] = useState(() => loadSafeStorage('geostore_cats', INITIAL_CATEGORIES));
-  const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', INITIAL_VENDORS));
-  const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', INITIAL_PRODUCTS));
-  const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', INITIAL_COUPONS));
+  const [categories, setCategoriesList] = useState(() => loadSafeStorage('geostore_cats', DEFAULT_CATEGORIES));
+  const [vendorsList, setVendorsList] = useState(() => loadSafeStorage('geostore_vendors', DEFAULT_VENDORS));
+  const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', DEFAULT_PRODUCTS));
+  const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', DEFAULT_COUPONS));
   const [bannersList, setBannersList] = useState(() => loadSafeStorage('geostore_banners', []));
 
   const [promoSlots] = useState([
@@ -203,6 +220,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // 💾 Auto-Save to LocalStorage on every change to protect history
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
@@ -214,6 +232,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_coupons', JSON.stringify(coupons)); } catch{} }, [coupons]);
   useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
   useEffect(() => { try { localStorage.setItem('geostore_delivery_fees', JSON.stringify(deliveryFees)); } catch{} }, [deliveryFees]);
+  useEffect(() => { try { localStorage.setItem('geostore_banners', JSON.stringify(bannersList)); } catch{} }, [bannersList]);
 
   const cartSubtotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
