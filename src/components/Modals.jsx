@@ -48,18 +48,17 @@ export default function Modals({
     }
   };
 
-  // სტატუსის მიხედვით პროგრესის %-ის გამოთვლა
   const getStatusProgress = (status) => {
     const s = (status || '').toLowerCase();
     if (s.includes('ჩაბარებულია') || s.includes('დასრულებული')) return 100;
     if (s.includes('გზაშია') || s.includes('კურიერთან')) return 75;
     if (s.includes('მზადდება') || s.includes('მუშავდება')) return 40;
-    return 15; // ახალი შეკვეთა
+    return 15;
   };
 
   return (
     <>
-      {/* 1. შეკვეთის გაფორმების მოდალი რეგიონის ამორჩევით */}
+      {/* 1. შეკვეთის გაფორმების მოდალი */}
       {isCheckoutOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-md w-full p-8 space-y-6 shadow-2xl relative">
@@ -144,7 +143,6 @@ export default function Modals({
               </button>
             </div>
 
-            {/* Search Input Form */}
             <form onSubmit={handleSearchOrder} className="flex gap-2">
               <div className="relative flex-1">
                 <input 
@@ -167,8 +165,6 @@ export default function Modals({
 
             {trackedOrder ? (
               <div className="space-y-6 animate-in fade-in duration-300">
-                
-                {/* Order Summary Card */}
                 <div className="bg-[#121216] p-5 rounded-3xl border border-amber-500/20 space-y-3">
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
@@ -196,7 +192,6 @@ export default function Modals({
                   </div>
                 </div>
 
-                {/* 🚚 Visual Progress Bar */}
                 <div className="space-y-3 bg-[#121216] p-5 rounded-3xl border border-amber-500/20">
                   <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
                     <Clock className="w-4 h-4" /> მიწოდების სტატუსის პროგრესი
@@ -219,7 +214,6 @@ export default function Modals({
                   </div>
                 </div>
 
-                {/* 🗺️ INTERACTIVE SIMULATED LIVE MAP */}
                 <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-5 space-y-3 relative overflow-hidden shadow-2xl">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xs font-bold text-white flex items-center gap-2">
@@ -230,24 +224,19 @@ export default function Modals({
                     </span>
                   </div>
 
-                  {/* Simulated Map Graphic Container */}
                   <div className="h-44 bg-slate-900 rounded-2xl relative overflow-hidden flex items-center justify-center border border-amber-500/20 group">
                     <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
                     
-                    {/* Simulated Delivery Path Line */}
                     <div className="absolute w-3/4 h-1 bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full animate-pulse"></div>
 
-                    {/* Start Store Icon */}
                     <div className="absolute left-8 bg-amber-500 text-slate-950 p-2 rounded-full shadow-lg border border-amber-300 z-10">
                       <Navigation className="w-4 h-4" />
                     </div>
 
-                    {/* Courier Moving Icon */}
                     <div className="absolute left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 p-3 rounded-full shadow-2xl shadow-amber-500/50 animate-bounce z-20 border-2 border-white">
                       <Truck className="w-5 h-5" />
                     </div>
 
-                    {/* Customer Destination Icon */}
                     <div className="absolute right-8 bg-emerald-500 text-slate-950 p-2 rounded-full shadow-lg border border-emerald-300 z-10">
                       <MapPin className="w-4 h-4" />
                     </div>
