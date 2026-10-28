@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Complete Fashion Edition (All Features Integrated)
+// src/components/StoreView.jsx - Complete Fashion & Accessories Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -32,6 +32,9 @@ export default function StoreView({
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('შავი');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  // 🎁 სასაჩუქრე შეფუთვის State
+  const [isGiftWrapped, setIsGiftWrapped] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
 
@@ -70,6 +73,7 @@ export default function StoreView({
     setInstallmentMonths(12);
     setSelectedSize('M');
     setSelectedColor('შავი');
+    setIsGiftWrapped(false);
     setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
@@ -138,7 +142,6 @@ export default function StoreView({
     return (filteredProducts || []).filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
   }, [filteredProducts]);
 
-  // დამხმარე ფუნქცია "Shop the Look" შეთავაზებისთვის
   const getComplementaryProduct = (currentProd) => {
     if (!filteredProducts || filteredProducts.length <= 1) return null;
     const others = filteredProducts.filter(p => p.id !== currentProd.id);
@@ -171,14 +174,14 @@ export default function StoreView({
             <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
-            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და სტილის ონლაინ ბუტიკი'}
+            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და აქსესუარების ბუტიკი'}
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
-            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ უმაღლესი ხარისხის ტანსაცმელი და აქსესუარები.'}
+            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ ელიტარული ტანსაცმელი, სამკაულები და აქსესუარები.'}
           </p>
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
             <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ადგილზე მორგება</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> სწრაფი მიწოდება</span>
+            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> VIP მიწოდება</span>
           </div>
         </div>
 
@@ -468,8 +471,22 @@ export default function StoreView({
                 </div>
 
                 <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
-                  <span className="text-2xl sm:text-3xl font-black text-amber-400">{formatPrice(selectedProduct.priceGEL)}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-amber-400">
+                    {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0))}
+                  </span>
                   {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                </div>
+
+                {/* 🏷️ აქსესუარების & ტანსაცმლის მახასიათებლების პანელი (Specifications) */}
+                <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-2 gap-3 text-xs">
+                  <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
+                    <span className="text-slate-400 block text-[10px]">მასალა / შემადგენლობა</span>
+                    <b className="text-white font-bold mt-0.5 block">პრემიუმ ტყავი / ბამბა</b>
+                  </div>
+                  <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
+                    <span className="text-slate-400 block text-[10px]">კატეგორია / სტილი</span>
+                    <b className="text-amber-400 font-bold mt-0.5 block">{selectedProduct.category}</b>
+                  </div>
                 </div>
 
                 {/* 👕 ზომების არჩევანი (Size Selector) */}
@@ -517,13 +534,27 @@ export default function StoreView({
                   </div>
                 </div>
 
+                {/* 🎁 სასაჩუქრე შეფუთვის ოფცია (Gift Wrapping) */}
+                <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
+                      <Gift className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-xs">სასაჩუქრე პრემიუმ შეფუთვა</h4>
+                      <p className="text-[10px] text-slate-400">ელეგანტური ყუთი და ბაფთა (+5 ₾)</p>
+                    </div>
+                  </div>
+                  <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                </div>
+
                 {/* ✨ "SHOP THE LOOK" / COMPLETE THE LOOK SECTION */}
                 {getComplementaryProduct(selectedProduct) && (() => {
                   const compProd = getComplementaryProduct(selectedProduct);
                   return (
                     <div className="bg-gradient-to-r from-amber-950/30 via-[#121216] to-amber-950/30 p-4 rounded-3xl border border-amber-500/30 space-y-3">
                       <div className="flex items-center gap-2 text-amber-400 font-black text-xs">
-                        <Layers className="w-4 h-4" /> შეუხამე ეს ლუქი (Complete the Look)
+                        <Layers className="w-4 h-4" /> შეუხამე ეს ლუქი / აქსესუარი
                       </div>
                       <div className="flex items-center justify-between gap-3 bg-[#08080a] p-3 rounded-2xl border border-amber-500/20">
                         <div className="flex items-center gap-3">
@@ -536,13 +567,13 @@ export default function StoreView({
                       </div>
                       <button 
                         onClick={() => {
-                          addToCart({ ...selectedProduct, name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})` });
+                          addToCart({ ...selectedProduct, priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0), name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})${isGiftWrapped ? ' + სასაჩუქრე შეფუთვა' : ''}` });
                           addToCart(compProd);
                           setSelectedProduct(null);
                         }}
                         className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-lg cursor-pointer"
                       >
-                        🛍️ მთლიანი ლუქის დამატება კალათაში (დაზოგე)
+                        🛍️ მთლიანი კომპლექტის დამატება კალათაში
                       </button>
                     </div>
                   );
@@ -550,7 +581,7 @@ export default function StoreView({
 
                 <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                   <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
-                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'მაღალი ხარისხის პრემიუმ ტანსაცმელი ყოველდღიური სტილისთვის.'}</p>
+                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.'}</p>
                 </div>
 
                 <div className="flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
@@ -590,7 +621,7 @@ export default function StoreView({
                       className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
                     />
                     <textarea 
-                      placeholder="როგორ მოგეწონათ ტანსაცმელი? ზომა, ხარისხი..." 
+                      placeholder="როგორ მოგეწონათ პროდუქტი? ხარისხი..." 
                       value={newReviewComment} 
                       onChange={e => setNewReviewComment(e.target.value)}
                       required
@@ -630,7 +661,6 @@ export default function StoreView({
                           </div>
                           <p className="text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
                           
-                          {/* Display uploaded review photo */}
                           {rev.image && (
                             <div className="mt-2">
                               <img src={rev.image} alt="UGC Review" className="w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
@@ -642,10 +672,14 @@ export default function StoreView({
                   </div>
                 </div>
 
-                {/* 🛒 კალათაში დამატება არჩეული ზომითა და ფერით */}
+                {/* 🛒 კალათაში დამატება არჩეული პარამეტრებით */}
                 <button 
                   onClick={() => { 
-                    addToCart({ ...selectedProduct, name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})` }); 
+                    addToCart({ 
+                      ...selectedProduct, 
+                      priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0),
+                      name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})${isGiftWrapped ? ' + სასაჩუქრე შეფუთვა' : ''}` 
+                    }); 
                     setSelectedProduct(null); 
                   }} 
                   className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
