@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Fashion Edition with Size & Color Selector
+// src/components/StoreView.jsx - Fashion Edition with "Shop the Look" Feature
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -28,7 +28,6 @@ export default function StoreView({
   const [maxPrice, setMaxPrice] = useState('');
   const [installmentMonths, setInstallmentMonths] = useState(12);
 
-  // 👕 ტანსაცმლის ზომისა და ფერის არჩევის State
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('შავი');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
@@ -122,6 +121,16 @@ export default function StoreView({
   const flashSaleProducts = useMemo(() => {
     return (filteredProducts || []).filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
   }, [filteredProducts]);
+
+  // დამხმარე ფუნქცია "Shop the Look" შეთავაზებისთვის (პოულობს სხვა პროდუქტს ბაზიდან)
+  const getComplementaryProduct = (currentProd) => {
+    if (!filteredProducts || filteredProducts.length <= 1) return null;
+    const others = filteredProducts.filter(p => p.id !== currentProd.id);
+    if (others.length === 0) return null;
+    // ირჩევს სხვა პროდუქტს მუდმივად მიმდინარე აიდის მიხედვით
+    const index = currentProd.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % others.length;
+    return others[index];
+  };
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
@@ -403,7 +412,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal with Size & Color Selectors */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           <button 
@@ -492,6 +501,37 @@ export default function StoreView({
                     ))}
                   </div>
                 </div>
+
+                {/* ✨ "SHOP THE LOOK" / COMPLETE THE LOOK SECTION */}
+                {getComplementaryProduct(selectedProduct) && (() => {
+                  const compProd = getComplementaryProduct(selectedProduct);
+                  return (
+                    <div className="bg-gradient-to-r from-amber-950/30 via-[#121216] to-amber-950/30 p-4 rounded-3xl border border-amber-500/30 space-y-3">
+                      <div className="flex items-center gap-2 text-amber-400 font-black text-xs">
+                        <Layers className="w-4 h-4" /> შეუხამე ეს ლუქი (Complete the Look)
+                      </div>
+                      <div className="flex items-center justify-between gap-3 bg-[#08080a] p-3 rounded-2xl border border-amber-500/20">
+                        <div className="flex items-center gap-3">
+                          <img src={compProd.image} alt="" className="w-12 h-12 object-contain bg-slate-950 rounded-xl p-1 border border-amber-500/20" />
+                          <div>
+                            <h4 className="font-bold text-white text-xs line-clamp-1">{compProd.name}</h4>
+                            <span className="text-amber-400 font-black text-xs">{formatPrice(compProd.priceGEL)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          addToCart({ ...selectedProduct, name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})` });
+                          addToCart(compProd);
+                          setSelectedProduct(null);
+                        }}
+                        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-lg cursor-pointer"
+                      >
+                        🛍️ მთლიანი ლუქის დამატება კალათაში (დაზოგე)
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                   <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
@@ -586,7 +626,7 @@ export default function StoreView({
 
       {/* 📏 ზომების გიდის მოდალი (Size Guide Modal) */}
       {isSizeGuideOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/9ોર્ backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
             <button onClick={() => setIsSizeGuideOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
             
