@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Complete Fashion & Accessories Edition (All 4 Features Integrated)
+// src/components/StoreView.jsx - Complete Fashion, Shoes & Accessories Edition (100% Full Code)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -75,7 +75,9 @@ export default function StoreView({
     setSelectedProduct(prod);
     setActiveImage(prod.image);
     setInstallmentMonths(12);
-    setSelectedSize('M');
+    // ავტომატურად ვარჩევთ საწყის ზომას კატეგორიის მიხედვით
+    const isShoe = (prod.category || '').toLowerCase().includes('ფეხსაცმელ') || (prod.category || '').toLowerCase().includes('shoe');
+    setSelectedSize(isShoe ? '41' : 'M');
     setSelectedColor('შავი');
     setIsGiftWrapped(false);
     setGiftMessage('');
@@ -166,6 +168,7 @@ export default function StoreView({
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
+    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return <Footprints className="w-4 h-4 text-amber-400" />;
     if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
     if (name.includes('ლაპტოპ') || name.includes('computer') || name.includes('კომპიუტერ') || name.includes('notebook')) return <Laptop className="w-4 h-4 text-amber-400" />;
     if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-4 h-4 text-amber-400" />;
@@ -188,10 +191,10 @@ export default function StoreView({
             <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
-            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და აქსესუარების ბუტიკი'}
+            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და ფეხსაცმელების ბუტიკი'}
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
-            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ ელიტარული ტანსაცმელი, სამკაულები და აქსესუარები.'}
+            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ ელიტარული ტანსაცმელი, ფეხსაცმელები და აქსესუარები.'}
           </p>
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
             <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ადგილზე მორგება</span>
@@ -503,7 +506,7 @@ export default function StoreView({
                   </div>
                 </div>
 
-                {/* 👕 ზომების არჩევანი (Size Selector) */}
+                {/* 👕 ზომების არჩევანი (Size Selector - Shoes 38-44 or Apparel S-XXL) */}
                 <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
@@ -511,13 +514,16 @@ export default function StoreView({
                       <Ruler className="w-3.5 h-3.5" /> ზომების გიდი
                     </button>
                   </div>
-                  <div className="flex gap-2">
-                    {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                  <div className="flex flex-wrap gap-2">
+                    {((selectedProduct.category || '').toLowerCase().includes('ფეხსაცმელ') || (selectedProduct.category || '').toLowerCase().includes('shoe')
+                      ? ['38', '39', '40', '41', '42', '43', '44']
+                      : ['S', 'M', 'L', 'XL', 'XXL']
+                    ).map(size => (
                       <button
                         key={size}
                         type="button"
                         onClick={() => setSelectedSize(size)}
-                        className={`flex-1 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-400 border-amber-500/20 hover:text-white'}`}
+                        className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-400 border-amber-500/20 hover:text-white'}`}
                       >
                         {size}
                       </button>
@@ -769,7 +775,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 📏 ზომების გიდის მოდალი (Size Guide Modal) */}
+      {/* 📏 ზომების გიდის მოდალი (Size Guide Modal - Clothing & Shoes) */}
       {isSizeGuideOpen && (
         <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
@@ -781,28 +787,51 @@ export default function StoreView({
               </div>
               <div>
                 <h3 className="font-black text-sm text-white">ზომების გიდი (Size Chart)</h3>
-                <p className="text-[11px] text-slate-400">სტანდარტული გაზომვები სანტიმეტრებში</p>
+                <p className="text-[11px] text-slate-400">ტანსაცმელი და ფეხსაცმელები</p>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-center border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-amber-500/20 text-amber-400">
-                    <th className="py-2.5">ზომა</th>
-                    <th className="py-2.5">გულმკერდი</th>
-                    <th className="py-2.5">წელი</th>
-                    <th className="py-2.5">მხრები</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-300">
-                  <tr><td className="py-2 font-bold text-amber-300">S</td><td>88-92</td><td>70-74</td><td>42</td></tr>
-                  <tr><td className="py-2 font-bold text-amber-300">M</td><td>93-96</td><td>75-79</td><td>44</td></tr>
-                  <tr><td className="py-2 font-bold text-amber-300">L</td><td>97-102</td><td>80-85</td><td>46</td></tr>
-                  <tr><td className="py-2 font-bold text-amber-300">XL</td><td>103-108</td><td>86-91</td><td>48</td></tr>
-                  <tr><td className="py-2 font-bold text-amber-300">XXL</td><td>109-114</td><td>92-98</td><td>50</td></tr>
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              <div>
+                <span className="text-amber-400 font-bold block mb-2">👕 ტანსაცმლის ზომები:</span>
+                <table className="w-full text-center border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-amber-500/20 text-amber-400">
+                      <th className="py-2">ზომა</th>
+                      <th className="py-2">გულმკერდი</th>
+                      <th className="py-2">წელი</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-slate-300">
+                    <tr><td className="py-1.5 font-bold text-amber-300">S</td><td>88-92</td><td>70-74</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">M</td><td>93-96</td><td>75-79</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">L</td><td>97-102</td><td>80-85</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">XL</td><td>103-108</td><td>86-91</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div>
+                <span className="text-amber-400 font-bold block mb-2">👟 ფეხსაცმლის ზომები (EU):</span>
+                <table className="w-full text-center border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-amber-500/20 text-amber-400">
+                      <th className="py-2">EU (ზომა)</th>
+                      <th className="py-2">UK</th>
+                      <th className="py-2">სანტიმეტრი (CM)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-slate-300">
+                    <tr><td className="py-1.5 font-bold text-amber-300">38</td><td>5</td><td>24.0 სმ</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">39</td><td>6</td><td>24.5 სმ</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">40</td><td>6.5</td><td>25.0 სმ</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">41</td><td>7.5</td><td>26.0 სმ</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">42</td><td>8</td><td>26.5 სმ</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">43</td><td>9</td><td>27.5 სმ</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">44</td><td>9.5</td><td>28.0 სმ</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <button 
