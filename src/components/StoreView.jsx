@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Complete Fashion & Accessories Edition with Gift Note & VIP Warranty
+// src/components/StoreView.jsx - Complete Fashion & Accessories Edition (All 4 Features Integrated)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -154,6 +154,14 @@ export default function StoreView({
     if (others.length === 0) return null;
     const index = currentProd.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % others.length;
     return others[index];
+  };
+
+  // მსგავსი პროდუქტების სია (Cross-Sell / You May Also Like)
+  const getSimilarProducts = (currentProd) => {
+    if (!filteredProducts) return [];
+    return filteredProducts
+      .filter(p => p.id !== currentProd.id && p.category === currentProd.category)
+      .slice(0, 3);
   };
 
   const getCategoryIcon = (catName) => {
@@ -620,6 +628,28 @@ export default function StoreView({
                     </div>
                   );
                 })()}
+
+                {/* 💎 მსგავსი პროდუქტების რეკომენდაციები (You May Also Like / Cross-Sell) */}
+                {getSimilarProducts(selectedProduct).length > 0 && (
+                  <div className="space-y-3 pt-4 border-t border-amber-500/20">
+                    <h4 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                      <Compass className="w-4 h-4" /> მსგავსი პროდუქტები და აქსესუარები
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {getSimilarProducts(selectedProduct).map(simProd => (
+                        <div 
+                          key={simProd.id} 
+                          onClick={() => handleOpenProduct(simProd)}
+                          className="bg-[#121216] border border-amber-500/20 rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-amber-400 transition group/sim"
+                        >
+                          <img src={simProd.image} alt="" className="w-16 h-16 object-contain mb-2 group-hover/sim:scale-105 transition-transform" />
+                          <span className="text-[11px] font-bold text-white line-clamp-1 w-full">{simProd.name}</span>
+                          <span className="text-amber-400 font-black text-xs mt-1">{formatPrice(simProd.priceGEL)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                   <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
