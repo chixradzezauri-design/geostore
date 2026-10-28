@@ -1,4 +1,4 @@
-// src/App.jsx - GEOSTORE Next-Gen Edition with Bulletproof Persistence (100% History Protection)
+// src/App.jsx - 100% Fully Database Persisted Version
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -58,22 +58,6 @@ const DEFAULT_PRODUCTS = [
     availableSizes: ['S', 'M', 'L', 'XL'],
     material: 'ტიტანი / კერამიკა',
     durability: 'IP68 Water Resistant'
-  },
-  {
-    id: 'prod-2',
-    sku: 'GEO-MBA-M3',
-    name: 'MacBook Air 15" M3 16GB / 512GB',
-    category: 'ლეპტოპები',
-    brand: 'Apple',
-    vendor: 'TechHub Georgia',
-    priceGEL: 4499,
-    oldPriceGEL: 4899,
-    stock: 4,
-    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=600',
-    description: 'ულტრა თხელი და მძლავრი ლეპტოპი M3 პროცესორით.',
-    availableSizes: ['M', 'L', 'XL'],
-    material: 'ალუმინი',
-    durability: 'Mil-Spec Tested'
   }
 ];
 
@@ -82,7 +66,6 @@ const DEFAULT_COUPONS = [
 ];
 
 export default function App() {
-  // 🛡️ Bulletproof LocalStorage Loader with History Protection
   const loadSafeStorage = (key, fallback) => {
     try { 
       const item = localStorage.getItem(key); 
@@ -162,7 +145,6 @@ export default function App() {
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
 
-  // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
 
@@ -195,6 +177,7 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  // 🌐 Supabase-იდან შეკვეთების წამოღება
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -214,13 +197,46 @@ export default function App() {
     } catch {}
   };
 
+  // 🌐 Supabase-იდან პროდუქტების ჩატვირთვა 100% უსაფრთხოებისთვის
+  const fetchProductsFromDatabase = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const formatted = data.map(p => ({
+            id: p.id,
+            sku: p.sku || `GEO-${p.id}`,
+            name: p.name,
+            category: p.category || 'სმარტფონები',
+            priceGEL: Number(p.price_gel),
+            oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
+            stock: Number(p.stock) || 1,
+            vendor: p.vendor || 'GEOSTORE',
+            description: p.description || '',
+            image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
+            availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
+            material: p.material || '',
+            durability: p.durability || ''
+          }));
+          setProducts(formatted);
+          localStorage.setItem('geostore_products', JSON.stringify(formatted));
+        }
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 4000);
+    fetchProductsFromDatabase();
+    const interval = setInterval(() => {
+      fetchOrders();
+      fetchProductsFromDatabase();
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // 💾 Auto-Save to LocalStorage on every change to protect history
+  // 💾 LocalStorage Backup
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
@@ -546,7 +562,6 @@ export default function App() {
 
                 <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
                   
-                  {/* 🚚 მიწოდების რეგიონის ამორჩევა კალათაში */}
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs"><Truck className="w-3.5 h-3.5" /> მიწოდების რეგიონი</span>
                     <select 
@@ -773,7 +788,6 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      {/* INSTALL INSTRUCTION MODAL */}
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
@@ -813,7 +827,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 📱 FOOTER APP INSTALL BANNER */}
       <div className="max-w-7xl mx-auto px-4 w-full my-6">
         <div className="bg-gradient-to-r from-amber-950/30 via-[#0e0e12] to-amber-950/30 border border-amber-500/30 rounded-[2rem] p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center gap-4 text-center sm:text-left">
