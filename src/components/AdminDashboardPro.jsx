@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Sizes Manager & Full History Preservation
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Shoe & Apparel Sizes Manager
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -50,8 +50,8 @@ export default function AdminDashboardPro({
   const [productForm, setProductForm] = useState({
     name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ტყავი / 925 ვერცხლი',
-    durability: '3ATM Water Resistant',
-    availableSizes: ['S', 'M', 'L', 'XL'] // 👕 ნაგულისხმევი ზომები
+    durability: '3ATM Water Resistant / Anti-Slip Sole',
+    availableSizes: ['S', 'M', 'L', 'XL'] // 👕 ნაგულისხმევი ზომები (ტანსაცმელი / ფეხსაცმელი)
   });
   const [selectedImages, setSelectedImages] = useState([]);
 
@@ -903,23 +903,46 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
-                {/* 👕 მარაგში არსებული ზომების მითითება (Size Selector Manager) */}
-                <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
-                  <label className="text-slate-300 font-bold block">აირჩიეთ მარაგში არსებული ზომები:</label>
-                  <div className="flex gap-2">
-                    {['S', 'M', 'L', 'XL', 'XXL', '36', '38', '40', '42'].map(sz => {
-                      const isSelected = productForm.availableSizes?.includes(sz);
-                      return (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => handleToggleSizeSelection(sz)}
-                          className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
-                        >
-                          {sz}
-                        </button>
-                      );
-                    })}
+                {/* 👟👖 ტანსაცმლის და ფეხსაცმლის ზომების მართვა (Size Selector Manager) */}
+                <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-3">
+                  <label className="text-slate-300 font-bold block">აირჩიეთ მარაგში არსებული ზომები (ტანსაცმელი ან ფეხსაცმელი):</label>
+                  
+                  <div className="space-y-2">
+                    <span className="text-[11px] text-emerald-400 font-bold block">ტანსაცმლის ზომები:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {['S', 'M', 'L', 'XL', 'XXL'].map(sz => {
+                        const isSelected = productForm.availableSizes?.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleSizeSelection(sz)}
+                            className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[11px] text-emerald-400 font-bold block">ფეხსაცმლის ზომები (EU):</span>
+                    <div className="flex flex-wrap gap-2">
+                      {['38', '39', '40', '41', '42', '43', '44'].map(sz => {
+                        const isSelected = productForm.availableSizes?.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleSizeSelection(sz)}
+                            className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
@@ -1205,7 +1228,7 @@ export default function AdminDashboardPro({
               <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <input 
                   type="text" 
-                  placeholder="კატეგორიის დასახელება (მაგ: აქსესუარები)" 
+                  placeholder="კატეგორიის დასახელება (მაგ: ფეხსაცმელები)" 
                   required 
                   value={newCatName} 
                   onChange={e => setNewCatName(e.target.value)} 
@@ -1217,6 +1240,7 @@ export default function AdminDashboardPro({
                   onChange={e => setNewCatIcon(e.target.value)}
                   className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                 >
+                  <option value="Footprints">👟 ფეხსაცმელები</option>
                   <option value="Smartphone">📱 სმარტფონი / ტელეფონი</option>
                   <option value="Laptop">💻 ლაპტოპი / კომპიუტერი</option>
                   <option value="Headphones">🎧 ყურსასმენი / აუდიო</option>
@@ -1363,7 +1387,6 @@ export default function AdminDashboardPro({
         {adminTab === 'settings' && (
           <div className="space-y-6">
             
-            {/* 🚚 მიწოდების ტარიფების მართვის პანელი */}
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
