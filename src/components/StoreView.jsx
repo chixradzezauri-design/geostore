@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings (Fixed Close Button Overlap)
+// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings (Fixed Close Button & Safe Mobile Padding)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -397,20 +397,22 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal (Fixed mobile top padding to prevent browser bar overlap) */}
+      {/* Product Detail Modal (Fixed mobile top padding & absolute safe fixed close button) */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-6 sm:p-10 space-y-6 mt-16 sm:mt-auto mb-6">
-            
-            {/* Close button with high z-index and safe positioning */}
-            <button 
-              onClick={() => setSelectedProduct(null)} 
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/40 transition cursor-pointer z-50 shadow-xl"
-            >
-              <X className="w-6 h-6" />
-            </button>
+          
+          {/* Absolutely Positioned Safe Fixed Close Button for Mobile */}
+          <button 
+            onClick={() => setSelectedProduct(null)} 
+            className="fixed top-4 right-4 sm:absolute sm:top-6 sm:right-6 p-3.5 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/40 transition cursor-pointer z-[10000] shadow-2xl"
+            title="დახურვა"
+          >
+            <X className="w-6 h-6" />
+          </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start pt-6 sm:pt-0">
+          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-6 sm:p-10 space-y-6 pt-20 sm:pt-10 my-auto mb-10">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
               <div className="space-y-5">
                 <div className="bg-[#060608] rounded-[2.5rem] p-6 border border-amber-500/30 flex items-center justify-center h-64 sm:h-80 shadow-2xl">
                   <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
