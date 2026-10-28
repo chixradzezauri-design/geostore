@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Elite Gold Luxury Boutique Edition (Compact Minimalist Hero)
+// src/components/StoreView.jsx - Fashion Edition with Size & Color Selector
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -27,6 +27,11 @@ export default function StoreView({
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [installmentMonths, setInstallmentMonths] = useState(12);
+
+  // 👕 ტანსაცმლის ზომისა და ფერის არჩევის State
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState('შავი');
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
 
@@ -61,6 +66,8 @@ export default function StoreView({
     setSelectedProduct(prod);
     setActiveImage(prod.image);
     setInstallmentMonths(12);
+    setSelectedSize('M');
+    setSelectedColor('შავი');
     setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
@@ -140,14 +147,14 @@ export default function StoreView({
             <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
-            {siteSettings?.heroTitle || 'GEOSTORE — ელიტარული ტექნოლოგიები'}
+            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და სტილის ონლაინ ბუტიკი'}
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
-            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ უმაღლესი ხარისხის პროდუქცია განსაკუთრებული პირობებითა და გარანტიით.'}
+            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ უმაღლესი ხარისხის ტანსაცმელი და აქსესუარები.'}
           </p>
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური გარანტია</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> VIP მიწოდება</span>
+            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ადგილზე მორგება</span>
+            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> სწრაფი მიწოდება</span>
           </div>
         </div>
 
@@ -204,7 +211,6 @@ export default function StoreView({
           {/* Flash Sale Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {flashSaleProducts.map(prod => {
-              const isWish = wishlist.some(w => w.id === prod.id);
               return (
                 <div key={`flash-${prod.id}`} className="group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <div onClick={() => handleOpenProduct(prod)} className="relative bg-[#0d0d12] rounded-2xl p-4 h-44 flex items-center justify-center cursor-pointer overflow-hidden">
@@ -397,7 +403,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal */}
+      {/* Product Detail Modal with Size & Color Selectors */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           <button 
@@ -442,26 +448,59 @@ export default function StoreView({
                   {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                 </div>
 
-                <div className="bg-[#08080a] p-5 rounded-3xl border border-amber-500/30 space-y-3 shadow-inner">
+                {/* 👕 ზომების არჩევანი (Size Selector) */}
+                <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                   <div className="flex justify-between items-center">
-                    <span className="text-amber-400 font-black flex items-center gap-2 text-xs"><Calculator className="w-4 h-4" /> 0% განვადების კალკულატორი</span>
-                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg">თვეში: {Math.round(selectedProduct.priceGEL / installmentMonths)} ₾</span>
+                    <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
+                    <button onClick={() => setIsSizeGuideOpen(true)} className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
+                      <Ruler className="w-3.5 h-3.5" /> ზომების გიდი
+                    </button>
                   </div>
-                  <div className="flex gap-2 pt-1">
-                    {[6, 12, 24].map(m => (
-                      <button key={m} type="button" onClick={() => setInstallmentMonths(m)} className={`flex-1 py-2 rounded-xl font-bold text-xs transition cursor-pointer border ${installmentMonths === m ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#141418] text-slate-400 border-amber-500/20 hover:text-white'}`}>{m} თვე</button>
+                  <div className="flex gap-2">
+                    {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSize(size)}
+                        className={`flex-1 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-400 border-amber-500/20 hover:text-white'}`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 🎨 ფერების არჩევანი (Color Selector) */}
+                <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                  <span className="text-slate-300 font-bold block">ფერი: <b className="text-amber-400">{selectedColor}</b></span>
+                  <div className="flex gap-3">
+                    {[
+                      { name: 'შავი', bg: 'bg-slate-900 border-amber-400' },
+                      { name: 'თეთრი', bg: 'bg-slate-100 border-slate-300' },
+                      { name: 'კრემისფერი', bg: 'bg-amber-100 border-amber-300' },
+                      { name: 'ლურჯი', bg: 'bg-blue-600 border-blue-400' }
+                    ].map(col => (
+                      <button
+                        key={col.name}
+                        type="button"
+                        onClick={() => setSelectedColor(col.name)}
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === col.name ? 'border-amber-400 bg-amber-500/10 text-amber-300' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
+                      >
+                        <span className={`w-3.5 h-3.5 rounded-full border ${col.bg}`}></span>
+                        {col.name}
+                      </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                   <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
-                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'ამ პროდუქტის დეტალური აღწერა ჯერ არ არის დამატებული.'}</p>
+                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'მაღალი ხარისხის პრემიუმ ტანსაცმელი ყოველდღიური სტილისთვის.'}</p>
                 </div>
 
                 <div className="flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                   <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                  <span>ხელმისაწვდომია მარაგში: <b className="text-amber-400 font-black">{selectedProduct.stock || 1} ცალი</b></span>
+                  <span>მარაგშია: <b className="text-amber-400 font-black">ხელმისაწვდომია</b> (მორგება მიტანისას)</span>
                 </div>
 
                 {/* ⭐ REVIEWS & RATINGS SECTION */}
@@ -529,14 +568,68 @@ export default function StoreView({
                   </div>
                 </div>
 
-                <button onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6">
-                  <ShoppingBag className="w-5 h-5" /> კალათაში დამატება
+                {/* 🛒 კალათაში დამატება არჩეული ზომითა და ფერით */}
+                <button 
+                  onClick={() => { 
+                    addToCart({ ...selectedProduct, name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})` }); 
+                    setSelectedProduct(null); 
+                  }} 
+                  className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
+                >
+                  <ShoppingBag className="w-5 h-5" /> კალათაში დამატება ({selectedSize} / {selectedColor})
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* 📏 ზომების გიდის მოდალი (Size Guide Modal) */}
+      {isSizeGuideOpen && (
+        <div className="fixed inset-0 z-[10000] bg-slate-950/9ોર્ backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+            <button onClick={() => setIsSizeGuideOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
+            
+            <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
+              <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
+                <Ruler className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">ზომების გიდი (Size Chart)</h3>
+                <p className="text-[11px] text-slate-400">სტანდარტული გაზომვები სანტიმეტრებში</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-center border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-amber-500/20 text-amber-400">
+                    <th className="py-2.5">ზომა</th>
+                    <th className="py-2.5">გულმკერდი</th>
+                    <th className="py-2.5">წელი</th>
+                    <th className="py-2.5">მხრები</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-slate-300">
+                  <tr><td className="py-2 font-bold text-amber-300">S</td><td>88-92</td><td>70-74</td><td>42</td></tr>
+                  <tr><td className="py-2 font-bold text-amber-300">M</td><td>93-96</td><td>75-79</td><td>44</td></tr>
+                  <tr><td className="py-2 font-bold text-amber-300">L</td><td>97-102</td><td>80-85</td><td>46</td></tr>
+                  <tr><td className="py-2 font-bold text-amber-300">XL</td><td>103-108</td><td>86-91</td><td>48</td></tr>
+                  <tr><td className="py-2 font-bold text-amber-300">XXL</td><td>109-114</td><td>92-98</td><td>50</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <button 
+              onClick={() => setIsSizeGuideOpen(false)}
+              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
+            >
+              გასაგებია
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
