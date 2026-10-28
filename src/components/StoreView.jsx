@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Complete Fashion & Accessories Edition
+// src/components/StoreView.jsx - Complete Fashion & Accessories Edition with Gift Note & VIP Warranty
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -33,8 +33,12 @@ export default function StoreView({
   const [selectedColor, setSelectedColor] = useState('შავი');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
-  // 🎁 სასაჩუქრე შეფუთვის State
+  // 🎁 სასაჩუქრე შეფუთვის და ბარათის State
   const [isGiftWrapped, setIsGiftWrapped] = useState(false);
+  const [giftMessage, setGiftMessage] = useState('');
+
+  // 🛡️ VIP გარანტიის State
+  const [hasVipWarranty, setHasVipWarranty] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
 
@@ -74,6 +78,8 @@ export default function StoreView({
     setSelectedSize('M');
     setSelectedColor('შავი');
     setIsGiftWrapped(false);
+    setGiftMessage('');
+    setHasVipWarranty(false);
     setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
@@ -472,20 +478,20 @@ export default function StoreView({
 
                 <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
                   <span className="text-2xl sm:text-3xl font-black text-amber-400">
-                    {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0))}
+                    {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                   </span>
                   {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                 </div>
 
-                {/* 🏷️ აქსესუარების & ტანსაცმლის მახასიათებლების პანელი (Specifications) */}
+                {/* 🏷️ ტექნიკური მახასიათებლების პანელი (Specifications) */}
                 <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-2 gap-3 text-xs">
                   <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                     <span className="text-slate-400 block text-[10px]">მასალა / შემადგენლობა</span>
-                    <b className="text-white font-bold mt-0.5 block">პრემიუმ ტყავი / ბამბა</b>
+                    <b className="text-white font-bold mt-0.5 block">პრემიუმ ტყავი / 925 ვერცხლი</b>
                   </div>
                   <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
-                    <span className="text-slate-400 block text-[10px]">კატეგორია / სტილი</span>
-                    <b className="text-amber-400 font-bold mt-0.5 block">{selectedProduct.category}</b>
+                    <span className="text-slate-400 block text-[10px]">მდგრადობა / წყალგაუმტარობა</span>
+                    <b className="text-amber-400 font-bold mt-0.5 block">3ATM Water Resistant</b>
                   </div>
                 </div>
 
@@ -534,18 +540,49 @@ export default function StoreView({
                   </div>
                 </div>
 
-                {/* 🎁 სასაჩუქრე შეფუთვის ოფცია (Gift Wrapping) */}
-                <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
+                {/* 🎁 სასაჩუქრე შეფუთვა და ღია ბარათის ტექსტი (Gift Wrapping & Note) */}
+                <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
+                  <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
+                        <Gift className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-xs">სასაჩუქრე პრემიუმ შეფუთვა</h4>
+                        <p className="text-[10px] text-slate-400">ყუთი, ბაფთა და ბარათი (+5 ₾)</p>
+                      </div>
+                    </div>
+                    <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                  </div>
+
+                  {isGiftWrapped && (
+                    <div className="pt-2 animate-in fade-in">
+                      <div className="flex items-center gap-2 text-amber-400 font-bold mb-1.5 text-[11px]">
+                        <FileText className="w-3.5 h-3.5" /> სასაჩუქრე ბარათის ტექსტი (უფასო):
+                      </div>
+                      <textarea
+                        rows="2"
+                        placeholder="ჩაწერეთ თქვენი სურვილი, რომელიც ყუთში ჩადებულ ღია ბარათზე დაიბეჭდება..."
+                        value={giftMessage}
+                        onChange={(e) => setGiftMessage(e.target.value)}
+                        className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 text-xs resize-none shadow-inner"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* 🛡️ VIP გარანტია და დაზღვევა (Extended Warranty) */}
+                <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
-                      <Gift className="w-5 h-5" />
+                    <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
+                      <ShieldAlert className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white text-xs">სასაჩუქრე პრემიუმ შეფუთვა</h4>
-                      <p className="text-[10px] text-slate-400">ელეგანტური ყუთი და ბაფთა (+5 ₾)</p>
+                      <h4 className="font-bold text-white text-xs">VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)</h4>
+                      <p className="text-[10px] text-slate-400">სრული დაცვა დაზიანებისგან (+15 ₾)</p>
                     </div>
                   </div>
-                  <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                  <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
                 </div>
 
                 {/* ✨ "SHOP THE LOOK" / COMPLETE THE LOOK SECTION */}
@@ -567,7 +604,12 @@ export default function StoreView({
                       </div>
                       <button 
                         onClick={() => {
-                          addToCart({ ...selectedProduct, priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0), name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})${isGiftWrapped ? ' + სასაჩუქრე შეფუთვა' : ''}` });
+                          let customName = `${selectedProduct.name} (${selectedSize}, ${selectedColor})`;
+                          if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
+                          if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
+                          if (hasVipWarranty) customName += ' + VIP გარანტია';
+
+                          addToCart({ ...selectedProduct, priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0), name: customName });
                           addToCart(compProd);
                           setSelectedProduct(null);
                         }}
@@ -675,10 +717,15 @@ export default function StoreView({
                 {/* 🛒 კალათაში დამატება არჩეული პარამეტრებით */}
                 <button 
                   onClick={() => { 
+                    let customName = `${selectedProduct.name} (${selectedSize}, ${selectedColor})`;
+                    if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
+                    if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
+                    if (hasVipWarranty) customName += ' + VIP გარანტია';
+
                     addToCart({ 
                       ...selectedProduct, 
-                      priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0),
-                      name: `${selectedProduct.name} (${selectedSize}, ${selectedColor})${isGiftWrapped ? ' + სასაჩუქრე შეფუთვა' : ''}` 
+                      priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
+                      name: customName 
                     }); 
                     setSelectedProduct(null); 
                   }} 
