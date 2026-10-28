@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Luxury Boutique with Flash Sale Countdown, Advanced Filters, Comparison & Reviews/Ratings (Fixed Close Button & Safe Mobile Padding)
+// src/components/StoreView.jsx - Elite Gold Luxury Boutique Edition (Refined Store View)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -132,7 +132,7 @@ export default function StoreView({
     <div className="space-y-12 w-full pb-28 animate-in fade-in duration-500">
       
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[3rem] p-8 md:p-16 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 group">
+      <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/35 rounded-[3rem] p-8 md:p-16 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 group">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[160px] pointer-events-none group-hover:bg-amber-500/20 transition-all duration-700"></div>
 
         <div className="space-y-6 max-w-2xl text-center lg:text-left z-10">
