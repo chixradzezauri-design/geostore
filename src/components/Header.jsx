@@ -1,4 +1,4 @@
-// src/components/Header.jsx - Elite Gold Luxury Header (Refined Mobile Menu Layout)
+// src/components/Header.jsx - Elite Gold Luxury Boutique Edition (Refined & Optimized)
 import React, { useState } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
 
@@ -22,11 +22,11 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-[#0c0c0e]/95 border-b border-amber-500/30 w-full shadow-2xl backdrop-blur-2xl">
+      <header className="bg-[#0b0b0e]/95 border-b border-amber-500/30 w-full shadow-2xl backdrop-blur-2xl">
         {/* Top Announcement Bar */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-2 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 shrink-0" /> 
-          <span className="truncate">{siteSettings.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
+          <span className="truncate">{siteSettings?.topBarText || "GEOSTORE - ელიტარული ტექნიკის ბუტიკი"}</span>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
@@ -34,7 +34,7 @@ export default function Header({
           <div className="flex items-center gap-2 cursor-pointer group shrink-0" onClick={() => { setActiveTab('store'); setMobileMenuOpen(false); }}>
             <div className="bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-3 rounded-2xl text-slate-950 font-black flex items-center gap-2.5 shadow-xl shadow-amber-500/20 group-hover:scale-105 transition-all duration-300">
               <Store className="w-5 h-5" />
-              <span className="text-sm tracking-tight font-black">{siteSettings.storeName}</span>
+              <span className="text-sm tracking-tight font-black">{siteSettings?.storeName || 'GEOSTORE'}</span>
             </div>
           </div>
 
