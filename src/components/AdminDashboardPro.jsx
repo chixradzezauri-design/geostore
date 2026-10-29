@@ -811,19 +811,32 @@ export default function AdminDashboardPro({
     alert('🚀 შეტყობინება წარმატებით გაეგზავნა ყველა მომხმარებელს!');
   };
 
+  // 🌟 განახლებული შეკვეთის სტატუსის მართვის ფუნქცია (ბაზისა და ლოკალის ერთდროული განახლებით)
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status: newStatus })
       });
-      if (typeof setOrders === 'function') {
-        setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+
+      if (response.ok) {
+        if (typeof setOrders === 'function') {
+          setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        }
+        
+        try {
+          const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
+          const updatedLocal = localOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+          localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
+        } catch {}
+
+        logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
+      } else {
+        alert('ვერ მოხერხდა ბაზაში სტატუსის განახლება');
       }
-      logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
     } catch {
-      alert('შეცდომა შეკვეთის სტატუსის განახლებისას');
+      alert('ქსელის შეცდომა სტატუსის შეცვლისას');
     }
   };
 
