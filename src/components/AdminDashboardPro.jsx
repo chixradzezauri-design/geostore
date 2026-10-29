@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Safe Edition
+// src/components/AdminDashboardPro.jsx - Ultimate Safe Edition with Dynamic Category Features
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -386,6 +386,7 @@ export default function AdminDashboardPro({
     });
   };
 
+  // 🌟 დინამიური ველები: კატეგორიის შეცვლისას ავტომატურად ვარჩევთ შესაბამის ზომებს/მახასიათებლებს
   const handleCategoryChange = (catName) => {
     const nameLower = catName.toLowerCase();
     let defaultSizes = ['S', 'M', 'L', 'XL'];
@@ -414,7 +415,7 @@ export default function AdminDashboardPro({
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const defaultCat = safeCategories[0]?.name || 'ტანსაცმელი';
+    const defaultCat = safeCategories[0]?.name || 'სმარტფონები';
 
     const prodId = `prod-${Date.now()}`;
     const newProdPayload = {
@@ -1086,13 +1087,13 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Products Tab */}
+        {/* Products Tab with Dynamic Category Features */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური მორგებით)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -1113,7 +1114,7 @@ export default function AdminDashboardPro({
                   <select 
                     value={productForm.category} 
                     onChange={e => handleCategoryChange(e.target.value)} 
-                    className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
+                    className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                   >
                     {safeCategories.map(cat => (
                       <option key={cat.id} value={cat.name}>
@@ -1125,14 +1126,18 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="მომწოდებელი / ბრენდი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
+                {/* 🌟 დინამიური მახასიათებლები / ზომების ასორტიმენტი */}
                 <div className="bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 space-y-2">
-                  <label className="text-emerald-400 font-bold block flex items-center gap-2">
-                    <Shirt className="w-4 h-4" />
-                    <span>ზომები / მახასიათებლები:</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-emerald-400 font-bold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      <span>დინამიური მახასიათებლები კატეგორიისთვის: <span className="text-white underline">{productForm.category}</span></span>
+                    </label>
+                  </div>
+                  <p className="text-[11px] text-slate-400">ზომები და პარამეტრები ავტომატურად მოირგო არჩეული კატეგორიის მიხედვით:</p>
                   
-                  <div className="flex flex-wrap gap-2">
-                    {['S', 'M', 'L', 'XL', 'XXL', '38', '39', '40', '41', '42', '43', '44'].map(sz => {
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {['S', 'M', 'L', 'XL', 'XXL', '38', '39', '40', '41', '42', '43', '44', 'Standard / One Size', '8GB / 256GB SSD', '16GB / 512GB SSD', '32GB / 1TB SSD'].map(sz => {
                       const isSelected = productForm.availableSizes?.includes(sz);
                       return (
                         <button
@@ -1141,7 +1146,7 @@ export default function AdminDashboardPro({
                           onClick={() => handleToggleSizeSelection(sz)}
                           className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-slate-900 text-slate-400 border-emerald-500/20 hover:text-white'}`}
                         >
-                          {sz}
+                          {isSelected ? '✓ ' : '+ '}{sz}
                         </button>
                       );
                     })}
