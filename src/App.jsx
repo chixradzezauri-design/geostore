@@ -213,8 +213,9 @@ export default function App() {
           user_email: o.user_email || '',
           phone: o.phone,
           address: o.address,
-          totalGEL: o.total_gel,
-          status: o.status || 'ახალი'
+          totalGEL: Number(o.total_gel) || 0,
+          status: o.status || 'ახალი',
+          itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity})`).join(', ') : 'პროდუქტები'
         })));
       }
     } catch {}
@@ -254,7 +255,7 @@ export default function App() {
     const interval = setInterval(() => {
       fetchOrders();
       fetchProductsFromDatabase();
-    }, 5000);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
