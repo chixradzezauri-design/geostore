@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition with Advanced Notifications & Secure Auth
+// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,7 +7,6 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import GiftQuizModal from './components/GiftQuizModal'; // 🎁 საჩუქრების ქვიზის იმპორტი
 import OrderTrackerModal from './components/OrderTrackerModal'; // 📦 შეკვეთების ტრეკერის იმპორტი
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download } from 'lucide-react';
 
@@ -146,7 +145,6 @@ export default function App() {
   
   // მოდალების მდგომარეობები
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
-  const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -192,6 +190,10 @@ export default function App() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     showToast('🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
   };
+
+  const unreadNotificationsCount = useMemo(() => {
+    return notifications.filter(n => !n.read).length;
+  }, [notifications]);
 
   const fetchOrders = async () => {
     try {
@@ -461,11 +463,11 @@ export default function App() {
         setIsAuthOpen={setIsAuthOpen}
         setAuthMode={setAuthMode}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
-        setIsGiftQuizOpen={setIsGiftQuizOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
         setIsComparisonOpen={setIsComparisonOpen}
         setIsTrackerOpen={setIsTrackerOpen}
         setIsNotificationsOpen={setIsNotificationsOpen}
+        unreadNotificationsCount={unreadNotificationsCount}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleInstallClick={handleInstallClick}
@@ -754,7 +756,7 @@ export default function App() {
         )}
       </div>
 
-      {/* ძირითადი მოდალები (შეტყობინებების და ავტორიზაციის მხარდაჭერით) */}
+      {/* ძირითადი მოდალები */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -815,15 +817,6 @@ export default function App() {
         setIsComparisonOpen={setIsComparisonOpen}
         comparisonList={comparisonList}
         setComparisonList={setComparisonList}
-        addToCart={addToCart}
-        formatPrice={formatPrice}
-      />
-
-      {/* 🎁 საჩუქრების შერჩევის ქვიზის მოდალი */}
-      <GiftQuizModal 
-        isGiftQuizOpen={isGiftQuizOpen}
-        setIsGiftQuizOpen={setIsGiftQuizOpen}
-        products={products}
         addToCart={addToCart}
         formatPrice={formatPrice}
       />
