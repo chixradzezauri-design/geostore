@@ -118,7 +118,7 @@ export default function AdminDashboardPro({
 
   if (!adminLoggedIn) {
     return (
-      <div className="max-w-sm mx-auto bg-[#0d0d10] border border-emerald-500/35 rounded-[2.5rem] p-8 space-y-6 shadow-2xl backdrop-blur-3xl text-center my-16">
+      <div className="max-w-sm mx-auto bg-[#0d0d10] border border-emerald-500/35 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl text-center my-16">
         <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
           <Shield className="w-8 h-8 text-emerald-400 animate-pulse" />
         </div>
@@ -684,10 +684,10 @@ export default function AdminDashboardPro({
   const isAccessoryCat = currentCatLower.includes('აქსესუარ') || currentCatLower.includes('საათ') || currentCatLower.includes('ჩანთა');
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full pb-16 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
-      <div className="w-full lg:w-72 bg-[#0d0d10] border border-emerald-500/30 rounded-[2.5rem] p-6 space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
+      <div className="w-full lg:w-72 bg-[#0d0d10] border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
         <div className="flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
           <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
             <Shield className="w-5 h-5 text-emerald-400" />
@@ -720,7 +720,7 @@ export default function AdminDashboardPro({
               <button
                 key={tab.id}
                 onClick={() => setAdminTab(tab.id)}
-                className={`w-full px-4 py-3 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${
+                className={`w-full px-3.5 sm:px-4 py-3 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${
                   isActive 
                     ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-102' 
                     : 'bg-[#121216] text-slate-400 border border-emerald-500/10 hover:text-white hover:border-emerald-500/30'
@@ -752,9 +752,9 @@ export default function AdminDashboardPro({
       <div className="flex-1 w-full space-y-6">
 
         {/* Top Header Card */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2.5rem] p-6 gap-4 shadow-2xl backdrop-blur-3xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
-            <h2 className="text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
+            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
             <p className="text-xs text-slate-400 mt-0.5">პროდუქტები ინახება პირდაპირ Supabase ბაზაში სამუდამოდ:</p>
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
@@ -766,30 +766,30 @@ export default function AdminDashboardPro({
         {/* Analytics Tab */}
         {adminTab === 'analytics' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <div className="bg-[#0d0d10] border border-emerald-500/25 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              <div className="bg-[#0d0d10] border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
-                <p className="text-3xl font-black text-emerald-400">{formatPrice(proAnalytics?.totalRevenueGEL || 0)}</p>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-400">{formatPrice(proAnalytics?.totalRevenueGEL || 0)}</p>
                 <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">რეალური ბაზიდან</span>
               </div>
-              <div className="bg-[#0d0d10] border border-emerald-500/25 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+              <div className="bg-[#0d0d10] border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> სავარაუდო წმინდა მოგება</p>
-                <p className="text-3xl font-black text-cyan-400">{formatPrice(proAnalytics?.netProfitGEL || 0)}</p>
+                <p className="text-2xl sm:text-3xl font-black text-cyan-400">{formatPrice(proAnalytics?.netProfitGEL || 0)}</p>
                 <span className="text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">მარჟა ~25%</span>
               </div>
-              <div className="bg-[#0d0d10] border border-emerald-500/25 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+              <div className="bg-[#0d0d10] border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-emerald-300" /> სულ შეკვეთები</p>
-                <p className="text-3xl font-black text-emerald-300">{proAnalytics?.totalOrdersCount || 0}</p>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-300">{proAnalytics?.totalOrdersCount || 0}</p>
                 <span className="text-[10px] text-emerald-300/80 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">დადასტურებული</span>
               </div>
-              <div className="bg-[#0d0d10] border border-emerald-500/25 p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+              <div className="bg-[#0d0d10] border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
-                <p className="text-3xl font-black text-amber-400">{proAnalytics?.lowStockProducts?.length || 0} პროდუქტი</p>
+                <p className="text-2xl sm:text-3xl font-black text-amber-400">{proAnalytics?.lowStockProducts?.length || 0} პროდუქტი</p>
                 <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">საჭიროებს შევსებას</span>
               </div>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
                   <PackageCheck className="w-5 h-5 text-emerald-400" /> ბოლო შეკვეთები ვიტრინიდან
@@ -802,13 +802,13 @@ export default function AdminDashboardPro({
                   <p className="text-slate-500 text-xs py-6 text-center">შეკვეთები ჯერ არ ფიქსირდება.</p>
                 ) : (
                   orders.slice(0, 5).map(o => (
-                    <div key={o.id} className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
+                    <div key={o.id} className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
                       <div>
                         <span className="font-black text-emerald-400">#{o.id}</span>
-                        <span className="text-white font-bold ml-3">{o.customerName}</span>
+                        <span className="text-white font-bold ml-2 sm:ml-3">{o.customerName}</span>
                         <span className="text-slate-500 text-[10px] ml-2">({o.date})</span>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                         <span className="font-black text-white">{formatPrice(o.totalGEL)}</span>
                         <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">{o.status || 'ახალი'}</span>
                       </div>
@@ -822,7 +822,7 @@ export default function AdminDashboardPro({
 
         {/* Orders Tab */}
         {adminTab === 'orders' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსები
@@ -840,7 +840,7 @@ export default function AdminDashboardPro({
                 <p className="text-slate-500 text-xs py-6 text-center">შეკვეთები ჯერ არ ფიქსირდება.</p>
               ) : (
                 orders.map(o => (
-                  <div key={o.id} className="bg-[#08080a] p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner">
+                  <div key={o.id} className="bg-[#08080a] p-4 sm:p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
@@ -873,10 +873,10 @@ export default function AdminDashboardPro({
                           <Printer className="w-4 h-4" /> ბეჭდვა
                         </button>
 
-                        <div className="flex items-center gap-1 bg-[#121216] p-1 rounded-2xl border border-emerald-500/20">
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
+                        <div className="flex items-center gap-1 bg-[#121216] p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto max-w-full">
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition whitespace-nowrap ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition whitespace-nowrap ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition whitespace-nowrap ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
                         </div>
                       </div>
                     </div>
@@ -889,7 +889,7 @@ export default function AdminDashboardPro({
 
         {/* Support Tab */}
         {adminTab === 'support' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
             </h3>
@@ -898,15 +898,15 @@ export default function AdminDashboardPro({
                 <p className="text-slate-500 text-xs py-8 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
               ) : (
                 supportTickets.map(t => (
-                  <div key={t.id} className="bg-[#08080a] p-6 rounded-3xl border border-emerald-500/20 space-y-4 text-xs shadow-inner">
+                  <div key={t.id} className="bg-[#08080a] p-5 sm:p-6 rounded-3xl border border-emerald-500/20 space-y-4 text-xs shadow-inner">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
                         <span className="text-white font-black text-sm">{t.subject}</span>
                         <span className="text-slate-500 text-[10px]">({t.date})</span>
                       </div>
                       
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 flex-wrap">
                         <div className="flex items-center gap-1 bg-[#121216] p-1.5 rounded-2xl border border-emerald-500/20">
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
@@ -930,7 +930,7 @@ export default function AdminDashboardPro({
                       </div>
                     )}
 
-                    <div className="flex gap-3 pt-2">
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
                       <input 
                         type="text" 
                         placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
@@ -940,7 +940,7 @@ export default function AdminDashboardPro({
                       />
                       <button 
                         onClick={() => handleSendTicketReply(t.id)}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20"
+                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20"
                       >
                         <Send className="w-4 h-4" /> გაგზავნა
                       </button>
@@ -955,7 +955,7 @@ export default function AdminDashboardPro({
         {/* Products Tab */}
         {adminTab === 'products' && (
           <div className="space-y-6">
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
                   <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ინახება ბაზაში სამუდამოდ)
@@ -1137,7 +1137,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base">ბაზაში არსებული პროდუქტები ({products?.length || 0})</h3>
                 <div className="relative w-full sm:w-72">
@@ -1157,7 +1157,7 @@ export default function AdminDashboardPro({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">ფასი (₾):</span>
                         <input 
@@ -1189,7 +1189,7 @@ export default function AdminDashboardPro({
 
         {/* Discounts Tab */}
         {adminTab === 'discounts' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
             </h3>
@@ -1234,13 +1234,13 @@ export default function AdminDashboardPro({
 
         {/* Logs Tab */}
         {adminTab === 'logs' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
             </h3>
             <div className="space-y-3">
               {activityLogs.map(log => (
-                <div key={log.id} className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
+                <div key={log.id} className="bg-[#08080a] p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
                   <span className="font-bold text-slate-200">{log.action}</span>
                   <span className="text-slate-500 text-[10px]">{log.time}</span>
                 </div>
@@ -1251,7 +1251,7 @@ export default function AdminDashboardPro({
 
         {/* Broadcasts Tab */}
         {adminTab === 'broadcasts' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> გლობალური შეტყობინების (Broadcast) გაგზავნა
             </h3>
@@ -1288,7 +1288,7 @@ export default function AdminDashboardPro({
         {/* Banners Tab */}
         {adminTab === 'banners' && (
           <div className="space-y-6">
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Megaphone className="w-5 h-5 text-emerald-400" /> ახალი სარეკლამო ბანერის დამატება
               </h3>
@@ -1323,7 +1323,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">აქტიური ბანერები ({bannersList?.length || 0})</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(bannersList || []).map(b => (
@@ -1346,7 +1346,7 @@ export default function AdminDashboardPro({
         {/* Categories Tab */}
         {adminTab === 'categories' && (
           <div className="space-y-6">
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი კატეგორიის დამატება და იკონის არჩევა
               </h3>
@@ -1381,7 +1381,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">არსებული კატეგორიები ({categoriesList?.length || 0})</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(categoriesList || []).map((cat, idx) => {
@@ -1405,7 +1405,7 @@ export default function AdminDashboardPro({
         {/* Coupons Tab */}
         {adminTab === 'coupons' && (
           <div className="space-y-6">
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Tag className="w-5 h-5 text-emerald-400" /> ახალი კუპონის შექმნა
               </h3>
@@ -1416,7 +1416,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">აქტიური კუპონები ({coupons?.length || 0})</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(coupons || []).map(c => (
@@ -1436,7 +1436,7 @@ export default function AdminDashboardPro({
         {/* Vendors Tab */}
         {adminTab === 'vendors' && (
           <div className="space-y-6">
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Store className="w-5 h-5 text-emerald-400" /> ახალი ვენდორის დამატება და კომისია
               </h3>
@@ -1449,7 +1449,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(vendorsList || []).map(v => (
@@ -1471,7 +1471,7 @@ export default function AdminDashboardPro({
 
         {/* Users Tab */}
         {adminTab === 'users' && (
-          <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Users className="w-5 h-5 text-emerald-400" /> მომხმარებლების CRM მართვა ({usersList?.length || 0})
@@ -1509,7 +1509,7 @@ export default function AdminDashboardPro({
         {adminTab === 'settings' && (
           <div className="space-y-6">
             
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
               </h3>
@@ -1532,7 +1532,7 @@ export default function AdminDashboardPro({
               </button>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
               </h3>
@@ -1555,7 +1555,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Lock className="w-5 h-5 text-emerald-400" /> ადმინისტრატორის სარეკვიზიტო მონაცემები (უსაფრთხოება)
               </h3>
