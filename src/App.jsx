@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete & Database Persisted Edition
+// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,6 +7,8 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
+import GiftQuizModal from './components/GiftQuizModal'; // 🎁 საჩუქრების ქვიზის იმპორტი
+import OrderTrackerModal from './components/OrderTrackerModal'; // 📦 შეკვეთების ტრეკერის იმპორტი
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -135,6 +137,8 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '' });
   const [quickBuyProduct] = useState(null);
+  
+  // მოდალების მდგომარეობები
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -736,6 +740,7 @@ export default function App() {
         )}
       </div>
 
+      {/* ძირითადი მოდალები */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -758,6 +763,7 @@ export default function App() {
         deliveryFees={deliveryFees}
       />
 
+      {/* ფოტოებით ძებნის მოდალი */}
       <ImageSearchModal 
         isImageSearchOpen={isImageSearchOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
@@ -766,6 +772,7 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
+      {/* AI ასისტენტის მოდალი */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
@@ -776,12 +783,30 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
+      {/* პროდუქტების შედარების მოდალი */}
       <ProductCompareModal 
         isComparisonOpen={isComparisonOpen}
         setIsComparisonOpen={setIsComparisonOpen}
         comparisonList={comparisonList}
         setComparisonList={setComparisonList}
         addToCart={addToCart}
+        formatPrice={formatPrice}
+      />
+
+      {/* 🎁 საჩუქრების შერჩევის ქვიზის მოდალი */}
+      <GiftQuizModal 
+        isGiftQuizOpen={isGiftQuizOpen}
+        setIsGiftQuizOpen={setIsGiftQuizOpen}
+        products={products}
+        addToCart={addToCart}
+        formatPrice={formatPrice}
+      />
+
+      {/* 📦 შეკვეთების ლაივ-ტრეკერის მოდალი */}
+      <OrderTrackerModal 
+        isTrackerOpen={isTrackerOpen}
+        setIsTrackerOpen={setIsTrackerOpen}
+        orders={orders}
         formatPrice={formatPrice}
       />
 
