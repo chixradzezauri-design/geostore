@@ -477,7 +477,6 @@ export default function App() {
             siteSettings={siteSettings}
             promoSlots={promoSlots}
             categories={categories}
-            vendorsList={vendorsList}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
@@ -702,7 +701,7 @@ export default function App() {
                           setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
                           showToast('✅ Face ID / Passkey წარმატებით მიბმულია ანგარიშს!');
                         }
-                      } catch (err) {
+                      } catch {
                         alert('Passkey რეგისტრაციის შეცდომა ან გაუქმებულია.');
                       }
                     }}
