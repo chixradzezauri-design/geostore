@@ -1,4 +1,4 @@
-// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Enhanced UI/UX, Synonym Engine & Context Memory
+// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Real-Time DB Sync & Ultra-Flexible Search
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -11,13 +11,13 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-// 🔤 ქართული სინონიმების ლექსიკონი ჭკვიანი ძებნისთვის
+// 🔤 ქართული და ინგლისური სინონიმების გაფართოებული ლექსიკონი
 const SYNONYMS = {
   laptop: ['ლეპტოპი', 'ნოუთბუქი', 'laptop', 'macbook', 'მაქბუქი', 'კომპიუტერი'],
   phone: ['ტელეფონი', 'სმარტფონი', 'iphone', 'აიფონი', 'phone', 'მობილური'],
   cheap: ['იაფი', 'ბიუჯეტური', 'ფასდაკლებული', 'ხელმისაწვდომი'],
   expensive: ['ძვირი', 'ფლაგმანი', 'პრემიუმი', 'premium'],
-  discount: ['ფასდაკლება', 'sale', 'აქცია', 'კუპონი', 'პრომო']
+  discount: ['ფასდაკლება', 'sale', 'აქცია', 'კუპონი', 'პრომო', 'ფასდაკლებული']
 };
 
 export default function AiAssistantModal({
@@ -35,14 +35,14 @@ export default function AiAssistantModal({
   const initialGreeting = {
     id: 'm1',
     sender: 'ai',
-    text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული წვდომა პროდუქტებზე, თეგებზე, კუპონებზე, ვენდერებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?'
+    text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული რეალურ დროში წვდომა პროდუქტებზე, თეგებზე, კუპონებზე, ვენდერებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?'
   };
 
   const [messages, setMessages] = useState([initialGreeting]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [liveProducts, setLiveProducts] = useState(products);
-  const [lastQueryCategory, setLastQueryCategory] = useState(null); // 🧠 კონტექსტის მეხსიერება
+  const [lastQueryCategory, setLastQueryCategory] = useState(null);
   const messagesEndRef = useRef(null);
 
   // 🔄 პროდუქტების და თეგების დინამიური წამოღება Supabase ბაზიდან
@@ -52,23 +52,34 @@ export default function AiAssistantModal({
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
-          const formatted = data.map(p => ({
-            id: p.id,
-            sku: p.sku || 'N/A',
-            name: p.name,
-            category: p.category || 'ზოგადი',
-            priceGEL: Number(p.price_gel),
-            oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
-            stock: Number(p.stock) || 1,
-            vendor: p.vendor || 'GEOSTORE ოფიციალური',
-            image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
-            tags: p.tags ? (Array.isArray(p.tags) ? p.tags : String(p.tags).split(',').map(t => t.trim())) : [],
-            description: p.description || ''
-          }));
+          const formatted = data.map(p => {
+            // თეგების მოქნილი დამუშავება (თუ ტექსტია ან მასივია)
+            let parsedTags = [];
+            if (p.tags) {
+              if (Array.isArray(p.tags)) parsedTags = p.tags;
+              else parsedTags = String(p.tags).split(',').map(t => t.trim());
+            }
+
+            return {
+              id: p.id,
+              sku: p.sku || 'N/A',
+              name: p.name || '',
+              category: p.category || 'ზოგადი',
+              priceGEL: Number(p.price_gel) || 0,
+              oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
+              stock: Number(p.stock) || 1,
+              vendor: p.vendor || 'GEOSTORE ოფიციალური',
+              image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
+              tags: parsedTags,
+              description: p.description || ''
+            };
+          });
           setLiveProducts(formatted);
+          return formatted;
         }
       }
     } catch {}
+    return liveProducts.length > 0 ? liveProducts : products;
   };
 
   useEffect(() => {
@@ -94,15 +105,17 @@ export default function AiAssistantModal({
 
   if (!isAiAssistantOpen) return null;
 
-  // 🧠 გაძლიერებული AI ძრავი სინონიმებითა და კონტექსტური მეხსიერებით
-  const generateAiReply = (userQuery) => {
-    const query = userQuery.toLowerCase().trim();
-    const sourceProducts = liveProducts.length > 0 ? liveProducts : products;
+  // 🧠 ულტრა-მოქნილი AI ძრავი ჭკვიანი ძებნით
+  const generateAiReply = (userQuery, currentProductsList) => {
+    const rawQuery = userQuery.trim();
+    const query = rawQuery.toLowerCase();
+    const words = query.split(/\s+/).filter(w => w.length > 0);
+    const sourceProducts = currentProductsList && currentProductsList.length > 0 ? currentProductsList : (liveProducts.length > 0 ? liveProducts : products);
 
     // 1. სალამი და ზოგადი საუბარი
-    if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello')) {
+    if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello') || query.includes('გამარჯობაა')) {
       return {
-        text: 'გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, ფასებზე, თეგებზე, კუპონებზე ან შეკვეთის სტატუსზე!',
+        text: 'გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, თეგებზე (მაგ: NEW, SALE), ფასებზე, კუპონებზე ან შეკვეთის სტატუსზე!',
         products: []
       };
     }
@@ -149,7 +162,7 @@ export default function AiAssistantModal({
       };
     }
 
-    // 4. ვენდერები / მომწოდებლები
+    // 4. ვენდერები
     if (query.includes('ვენდერ') || query.includes('მომწოდებელ') || query.includes('პარტნიორ')) {
       const vendorNames = (vendorsList || []).map(v => `• ${v.name} (კომისია: ${v.commission}%)`).join('\n');
       return {
@@ -198,7 +211,7 @@ export default function AiAssistantModal({
       };
     }
 
-    // 7. 🧠 ბიუჯეტისა და კონტექსტის მიხედვით ძებნა
+    // 7. ბიუჯეტისა და კონტექსტის მიხედვით ძებნა
     const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel)/);
     const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
 
@@ -208,7 +221,7 @@ export default function AiAssistantModal({
     let activeCategory = null;
     if (isLaptopSearch) activeCategory = 'laptop';
     else if (isPhoneSearch) activeCategory = 'phone';
-    else if (lastQueryCategory) activeCategory = lastQueryCategory; // კონტექსტის აღდგენა
+    else if (lastQueryCategory) activeCategory = lastQueryCategory;
 
     if (activeCategory) setLastQueryCategory(activeCategory);
 
@@ -226,44 +239,45 @@ export default function AiAssistantModal({
       };
     }
 
-    // 8. 🏷️ თეგების სრული და ღრმა ინტელექტუალური ძებნა (Tags)
-    const matchingProductsByTag = sourceProducts.filter(p => 
-      p.tags && p.tags.some(tag => tag.toLowerCase().includes(query) || query.includes(tag.toLowerCase()))
-    );
+    // 8. 🏷️ ულტრა-ჭკვიანი ძებნა: თეგები, სახელები, აღწერა, სინონიმები (Smart Multi-Word Match)
+    const matchedProducts = sourceProducts.filter(p => {
+      const pName = (p.name || '').toLowerCase();
+      const pCat = (p.category || '').toLowerCase();
+      const pDesc = (p.description || '').toLowerCase();
+      const pSku = (p.sku || '').toLowerCase();
+      const pVendor = (p.vendor || '').toLowerCase();
+      
+      // ტეგების დაბალი რეგისტრის მასივი
+      const pTagsLower = (p.tags || []).map(t => String(t).toLowerCase().trim());
 
-    if (matchingProductsByTag.length > 0) {
+      // 1. პირდაპირი დამთხვევა თეგებში (მაგ: თუ მომხმარებელმა მიწერა "new")
+      const tagMatch = words.some(w => pTagsLower.some(t => t.includes(w) || w.includes(t)));
+
+      // 2. დამთხვევა სახელში, აღწერაში ან SKU-ში
+      const textMatch = words.some(w => pName.includes(w) || pCat.includes(w) || pDesc.includes(w) || pSku.includes(w) || pVendor.includes(w));
+
+      // 3. სინონიმების დამთხვევა
+      const synonymMatch = (isLaptopSearch && (pCat.includes('ლეპტოპ') || pName.includes('laptop') || pName.includes('macbook'))) ||
+                           (isPhoneSearch && (pCat.includes('სმარტფონ') || pName.includes('iphone') || pName.includes('phone')));
+
+      return tagMatch || textMatch || synonymMatch;
+    });
+
+    if (matchedProducts.length > 0) {
       return {
-        text: `🏷️ თეგების მიხედვით ვიპოვე შემდეგი პროდუქტები:`,
-        products: matchingProductsByTag.slice(0, 3)
+        text: `✨ თქვენი მოთხოვნის ("${rawQuery}") შესაბამისად ნაპოვნია ${matchedProducts.length} პროდუქტი:`,
+        products: matchedProducts.slice(0, 4)
       };
     }
 
-    // 9. ზოგადი ძიება სინონიმებით, სახელით, კატეგორიით, ვენდერით ან აღწერით
-    const generalMatches = sourceProducts.filter(p => 
-      p.name.toLowerCase().includes(query) ||
-      p.category.toLowerCase().includes(query) ||
-      (p.vendor && p.vendor.toLowerCase().includes(query)) ||
-      (p.description && p.description.toLowerCase().includes(query)) ||
-      (p.sku && p.sku.toLowerCase().includes(query)) ||
-      (isLaptopSearch && (p.category.toLowerCase().includes('ლეპტოპ') || p.name.toLowerCase().includes('laptop') || p.name.toLowerCase().includes('macbook'))) ||
-      (isPhoneSearch && (p.category.toLowerCase().includes('სმარტფონ') || p.name.toLowerCase().includes('iphone') || p.name.toLowerCase().includes('phone')))
-    );
-
-    if (generalMatches.length > 0) {
-      return {
-        text: `✨ თქვენი მოთხოვნის ("${userQuery}") შესაბამისად ნაპოვნია:`,
-        products: generalMatches.slice(0, 3)
-      };
-    }
-
-    // 10. სათადარიგო პასუხი
+    // 9. სათადარიგო პასუხი
     return {
-      text: `🤔 ზუსტი დამთხვევა ვერ ვიპოვე. სცადეთ სხვა საკვანძო სიტყვა, თეგი (მაგ: NEW, SALE, LAPTOP) ან აირჩიეთ შემოთავაზებული თემებიდან:`,
+      text: `🤔 პროდუქტი მოთხოვნით "${rawQuery}" ვერ მოიძებნა. სცადეთ სხვა სიტყვა, თეგი (მაგ: NEW, SALE) ან აირჩიეთ შემოთავაზებული ღილაკებიდან:`,
       products: sourceProducts.slice(0, 2)
     };
   };
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const queryText = textToSend || inputMessage;
     if (!queryText.trim()) return;
 
@@ -272,8 +286,11 @@ export default function AiAssistantModal({
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
+    // 🔄 რეალურ დროში Supabase-იდან უახლესი მონაცემების წამოღება ყოველ შეტყობინებაზე
+    const refreshedProducts = await fetchLiveProducts();
+
     setTimeout(() => {
-      const aiResult = generateAiReply(queryText);
+      const aiResult = generateAiReply(queryText, refreshedProducts);
       const aiMsg = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
@@ -282,7 +299,7 @@ export default function AiAssistantModal({
       };
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 400);
+    }, 300);
   };
 
   return (
@@ -299,7 +316,7 @@ export default function AiAssistantModal({
               <h3 className="font-black text-white text-xs sm:text-sm flex items-center gap-1.5">
                 GEOSTORE AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
-              <p className="text-[10px] text-emerald-400 font-bold">ინტელექტუალური ასისტენტი (24/7)</p>
+              <p className="text-[10px] text-emerald-400 font-bold">ინტელექტუალური ასისტენტი (Live DB Sync)</p>
             </div>
           </div>
           
@@ -344,8 +361,8 @@ export default function AiAssistantModal({
                               )}
                             </div>
                             {prod.tags && prod.tags.length > 0 && (
-                              <div className="flex gap-1 mt-1">
-                                {prod.tags.slice(0, 2).map((t, idx) => (
+                              <div className="flex gap-1 mt-1 flex-wrap">
+                                {prod.tags.map((t, idx) => (
                                   <span key={idx} className="bg-emerald-500/10 text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
                                     #{t}
                                   </span>
@@ -371,7 +388,7 @@ export default function AiAssistantModal({
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-[#141418] border border-emerald-500/20 p-3.5 rounded-3xl text-emerald-400 font-bold flex items-center gap-2 text-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI ამუშავებს სრულ ბაზასა და სინონიმებს...
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI ამოწმებს Supabase ბაზას რეალურ დროში...
               </div>
             </div>
           )}
@@ -380,7 +397,7 @@ export default function AiAssistantModal({
 
         {/* Quick Suggestion Chips */}
         <div className="px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto scrollbar-none text-[11px] shrink-0">
-          {['👋 გამარჯობა', '🏷️ NEW თეგი', '🔥 ფასდაკლებები', '🎫 კუპონები', '💻 ლეპტოპები', '📱 აიფონები', '💳 განვადება', '🚚 მიწოდება'].map((chip, idx) => (
+          {['👋 გამარჯობა', '🏷️ NEW', '🔥 ფასდაკლებები', '🎫 კუპონები', '💻 ლეპტოპები', '📱 აიფონები', '💳 განვადება', '🚚 მიწოდება'].map((chip, idx) => (
             <button 
               key={idx} 
               onClick={() => handleSendMessage(chip.replace(/[👋🏷️🔥🎫💻📱💳🚚]/g, '').trim())} 
