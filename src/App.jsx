@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition
+// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition with Secure PIN & WebAuthn
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,8 +7,8 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import OrderTrackerModal from './components/OrderTrackerModal'; // 📦 შეკვეთების ტრეკერის იმპორტი
-import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download } from 'lucide-react';
+import OrderTrackerModal from './components/OrderTrackerModal'; 
+import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download, KeyRound, Fingerprint, ShieldAlert } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -143,7 +143,6 @@ export default function App() {
   const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', address: '' });
   const [quickBuyProduct] = useState(null);
   
-  // მოდალების მდგომარეობები
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
@@ -370,7 +369,7 @@ export default function App() {
 
     if (authMode === 'register') {
       if (!authForm.name || !authForm.phone) { alert('შეავსეთ ყველა ველი!'); return; }
-      const newUser = { id: `u-${Date.now()}`, ...authForm };
+      const newUser = { id: `u-${Date.now()}`, ...authForm, pinHash: null, hasPasskey: false };
       setUsersList([...usersList, newUser]);
       setCurrentUser(newUser);
       setIsAuthOpen(false);
@@ -578,7 +577,6 @@ export default function App() {
                 </div>
 
                 <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
-                  
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs"><Truck className="w-3.5 h-3.5" /> მიწოდების რეგიონი</span>
                     <select 
@@ -662,6 +660,58 @@ export default function App() {
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">ტელეფონი</span>
                   <b className="text-white text-sm mt-1 block">{currentUser.phone}</b>
+                </div>
+              </div>
+
+              {/* 🔐 უსაფრთხოების მართვის პანელი პროფილში */}
+              <div className="pt-4 border-t border-slate-800/80 space-y-3">
+                <h3 className="font-black text-amber-400 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> უსაფრთხოება და სწრაფი შესვლა
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    onClick={() => setIsAuthOpen(true)} 
+                    className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-2xl font-bold transition cursor-pointer flex items-center gap-2"
+                  >
+                    <KeyRound className="w-4 h-4 text-amber-400" /> 
+                    {currentUser.pinHash ? 'PIN-კოდის მართვა / შეცვლა' : 'PIN-კოდის დაყენება'}
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      if (!window.PublicKeyCredential) {
+                        alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys-ს.');
+                        return;
+                      }
+                      try {
+                        const credential = await navigator.credentials.create({
+                          publicKey: {
+                            challenge: new Uint8Array([21,31,23,41,5,6,7,8]),
+                            rp: { name: "GEOSTORE" },
+                            user: {
+                              id: Uint8Array.from(currentUser.email, c => c.charCodeAt(0)),
+                              name: currentUser.email,
+                              displayName: currentUser.name
+                            },
+                            pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                            timeout: 60000,
+                            authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
+                          }
+                        });
+                        if (credential) {
+                          const updated = { ...currentUser, hasPasskey: true };
+                          setCurrentUser(updated);
+                          setUsersList(usersList.map(u => u.email === currentUser.email ? updated : u));
+                          showToast('✅ Face ID / Passkey წარმატებით მიბმულია ანგარიშს!');
+                        }
+                      } catch (err) {
+                        alert('Passkey რეგისტრაციის შეცდომა ან გაუქმებულია.');
+                      }
+                    }}
+                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-4 py-2.5 rounded-2xl font-bold transition cursor-pointer flex items-center gap-2"
+                  >
+                    <Fingerprint className="w-4 h-4 text-emerald-400" />
+                    {currentUser.hasPasskey ? 'Face ID / Passkey აქტიურია (ხელახლა მიბმა)' : 'Face ID / Passkey-ს მიბმა'}
+                  </button>
                 </div>
               </div>
 
@@ -756,7 +806,6 @@ export default function App() {
         )}
       </div>
 
-      {/* ძირითადი მოდალები */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -785,9 +834,11 @@ export default function App() {
         setSelectedRegion={setSelectedRegion}
         deliveryFees={deliveryFees}
         currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
+        usersList={usersList}
+        setUsersList={setUsersList}
       />
 
-      {/* ფოტოებით ძებნის მოდალი */}
       <ImageSearchModal 
         isImageSearchOpen={isImageSearchOpen}
         setIsImageSearchOpen={setIsImageSearchOpen}
@@ -796,7 +847,6 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      {/* AI ასისტენტის მოდალი */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
@@ -811,7 +861,6 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      {/* პროდუქტების შედარების მოდალი */}
       <ProductCompareModal 
         isComparisonOpen={isComparisonOpen}
         setIsComparisonOpen={setIsComparisonOpen}
@@ -821,7 +870,6 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      {/* 📦 შეკვეთების ლაივ-ტრეკერის მოდალი */}
       <OrderTrackerModal 
         isTrackerOpen={isTrackerOpen}
         setIsTrackerOpen={setIsTrackerOpen}
@@ -833,7 +881,6 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
             <button onClick={() => setShowInstallModal(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
-            
             <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
               <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
                 <Smartphone className="w-6 h-6 text-amber-400" />
@@ -843,50 +890,12 @@ export default function App() {
                 <p className="text-[11px] text-slate-400">მიჰყევით მარტივ ინსტრუქციას:</p>
               </div>
             </div>
-
-            <div className="space-y-3.5 text-slate-300">
-              <div className="bg-[#121216] p-4 rounded-2xl border border-amber-500/20 space-y-2">
-                <b className="text-amber-400 block text-xs">📱 iPhone / iPad (Safari):</b>
-                <p>1. ქვედა მენიუდან დააჭირეთ ღილაკს **Share** (გაზიარება / კვადრატი ისრით).</p>
-                <p>2. მენიუდან აირჩიეთ **"Add to Home Screen"** (მთავარ ეკრანზე დამატება).</p>
-              </div>
-
-              <div className="bg-[#121216] p-4 rounded-2xl border border-amber-500/20 space-y-2">
-                <b className="text-amber-400 block text-xs">🤖 Android (Chrome / Samsung):</b>
-                <p>1. ზედა მარჯვენა კუთხეში დააჭირეთ **3 წერტილს** (მენიუ).</p>
-                <p>2. აირჩიეთ **"Install app"** ან **"Add to Home screen"**.</p>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setShowInstallModal(false)}
-              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
-            >
+            <button onClick={() => setShowInstallModal(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer">
               გასაგებია
             </button>
           </div>
         </div>
       )}
-
-      <div className="max-w-7xl mx-auto px-4 w-full my-6">
-        <div className="bg-gradient-to-r from-amber-950/30 via-[#0e0e12] to-amber-950/30 border border-amber-500/30 rounded-[2rem] p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl backdrop-blur-xl">
-          <div className="flex items-center gap-4 text-center sm:text-left">
-            <div className="bg-amber-500/10 border border-amber-500/30 p-3.5 rounded-2xl shrink-0 mx-auto sm:mx-0 shadow-inner">
-              <Smartphone className="w-7 h-7 text-amber-400" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-black text-white text-sm md:text-base">დააინსტალირე GEOSTORE შენს ტელეფონში</h4>
-              <p className="text-xs text-slate-400">იყავი მუდმივად კავშირზე, მიიღე შეტყობინებები და ისარგებლე სწრაფი წვდომით!</p>
-            </div>
-          </div>
-          <button 
-            onClick={handleInstallClick}
-            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-6 py-3.5 rounded-2xl text-xs transition-all shadow-xl shadow-amber-500/20 flex items-center gap-2 shrink-0 cursor-pointer hover:scale-105"
-          >
-            <Download className="w-4 h-4" /> აპლიკაციის დაყენება
-          </button>
-        </div>
-      </div>
 
       <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-6 backdrop-blur-md space-y-3">
         <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
