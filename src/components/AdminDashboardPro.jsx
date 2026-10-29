@@ -181,7 +181,7 @@ export default function AdminDashboardPro({
 
   useEffect(() => {
     fetchTickets();
-    const interval = setInterval(fetchTickets, 5000);
+    const interval = setInterval(fetchTickets, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -1825,7 +1825,7 @@ export default function AdminDashboardPro({
                   <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
                   <input type="text" value={siteSettings.topBarText} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
+                <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
                   პარამეტრების შენახვა
                 </button>
               </form>
