@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Elite Smart Size System & Advanced Variants Edition (100% Full & Safe)
+// src/components/StoreView.jsx - Elite Smart Size System (Conditional Category Size Fix) & Advanced Variants Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -123,6 +123,15 @@ export default function StoreView({
     try { localStorage.setItem('geostore_product_reviews', JSON.stringify(allReviews)); } catch {}
   }, [allReviews]);
 
+  // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი, რომელსაც სჭირდება ზომები
+  const isClothingOrFootwear = (prod) => {
+    if (!prod) return false;
+    const cat = (prod.category || '').toLowerCase();
+    const name = (prod.name || '').toLowerCase();
+    const keywords = ['ტანსაცმელ', 'ფეხსაცმელ', 'შარვალ', 'ქურთუკ', 'პერანგ', 'შორტ', 'კაბა', 'shoe', 'cloth', 'shirt', 'jacket', 'pant', 'sneaker', 'ბათინკ', 'ქუდ', 'майк'];
+    return keywords.some(kw => cat.includes(kw) || name.includes(kw));
+  };
+
   const handleOpenProduct = (prod) => {
     setSelectedProduct(prod);
     setActiveImage(prod.image);
@@ -171,7 +180,6 @@ export default function StoreView({
       else rec = 'XXL';
     }
 
-    // შევამოწმოთ არის თუ არა მარაგში მითითებული ზომა
     const available = selectedProduct?.availableSizes || ['S', 'M', 'L', 'XL'];
     if (!available.includes(rec)) {
       rec = available[0] || 'M';
@@ -571,7 +579,7 @@ export default function StoreView({
                   onClick={() => handleOpenProduct(prod)} 
                   className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3.5 sm:py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> ზომის არჩევა & კალათა
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა & კალათა' : 'კალათაში დამატება'}
                 </button>
               </div>
             );
@@ -579,7 +587,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL WITH SMART SIZES & STOCK CHECK */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL (Conditional Size Selection for Clothing/Footwear ONLY) */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
@@ -587,7 +595,7 @@ export default function StoreView({
             
             <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი & ჭკვიანი ზომები
+                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
               </span>
               <button 
                 onClick={() => setSelectedProduct(null)} 
@@ -676,42 +684,44 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {/* 🌟 100% მარაგში არსებული ზომების სელექტორი & ჭკვიანი რეკომენდატორი */}
-                  <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
-                    <div className="flex justify-between items-center flex-wrap gap-2">
-                      <span className="text-slate-300 font-bold">აირჩიეთ ზომა (მხოლოდ მარაგშია): <b className="text-amber-400">{selectedSize}</b></span>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => setIsSmartSizeModalOpen(true)} className="text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-amber-500/20 transition shadow">
-                          <Calculator className="w-3.5 h-3.5 text-amber-400" /> ჭკვიანი ზომის შერჩევა
-                        </button>
-                        <button onClick={() => setIsSizeGuideOpen(true)} className="text-slate-400 hover:text-white font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
-                          <Ruler className="w-3.5 h-3.5" /> გიდი
-                        </button>
-                      </div>
-                    </div>
-
-                    {smartRecommendedSize && (
-                      <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-2xl text-amber-300 text-[11px] font-bold flex items-center gap-2 animate-in fade-in">
-                        <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>რეკომენდებული ზომა თქვენი პარამეტრებით: <b className="text-white underline">{smartRecommendedSize}</b></span>
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap gap-2 w-full">
-                      {(selectedProduct.availableSizes || ['S', 'M', 'L', 'XL']).map(size => {
-                        return (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => setSelectedSize(size)}
-                            className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
-                          >
-                            {size} 🟢
+                  {/* 🌟 ზომების ბლოკი ჩნდება მხოლოს ტანსაცმელსა და ფეხსაცმელზე! (AirPods / Electronics აღარ აჩვენებს) */}
+                  {isClothingOrFootwear(selectedProduct) && (
+                    <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                      <div className="flex justify-between items-center flex-wrap gap-2">
+                        <span className="text-slate-300 font-bold">აირჩიეთ ზომა (მხოლოდ მარაგშია): <b className="text-amber-400">{selectedSize}</b></span>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => setIsSmartSizeModalOpen(true)} className="text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-amber-500/20 transition shadow">
+                            <Calculator className="w-3.5 h-3.5 text-amber-400" /> ჭკვიანი ზომის შერჩევა
                           </button>
-                        );
-                      })}
+                          <button onClick={() => setIsSizeGuideOpen(true)} className="text-slate-400 hover:text-white font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
+                            <Ruler className="w-3.5 h-3.5" /> გიდი
+                          </button>
+                        </div>
+                      </div>
+
+                      {smartRecommendedSize && (
+                        <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-2xl text-amber-300 text-[11px] font-bold flex items-center gap-2 animate-in fade-in">
+                          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>რეკომენდებული ზომა თქვენი პარამეტრებით: <b className="text-white underline">{smartRecommendedSize}</b></span>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2 w-full">
+                        {(selectedProduct.availableSizes || ['S', 'M', 'L', 'XL']).map(size => {
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => setSelectedSize(size)}
+                              className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                            >
+                              {size} 🟢
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {((selectedProduct.availableColors && selectedProduct.availableColors.length > 0) || selectedProduct.colors) && (
                     <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
@@ -865,7 +875,8 @@ export default function StoreView({
 
                   <button 
                     onClick={() => { 
-                      let customName = `${selectedProduct.name} (ზომა: ${selectedSize}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
+                      const isCf = isClothingOrFootwear(selectedProduct);
+                      let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
                       if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
                       if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
                       if (hasVipWarranty) customName += ' + VIP გარანტია';
@@ -874,14 +885,14 @@ export default function StoreView({
                         ...selectedProduct, 
                         priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
                         name: customName,
-                        selectedSize: selectedSize,
+                        selectedSize: isCf ? selectedSize : null,
                         selectedColor: selectedColor
                       }); 
                       setSelectedProduct(null); 
                     }} 
                     className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
                   >
-                    <ShoppingBag className="w-5 h-5" /> კალათაში დამატება (ზომა: {selectedSize})
+                    <ShoppingBag className="w-5 h-5" /> კალათაში დამატება {isClothingOrFootwear(selectedProduct) ? `(ზომა: ${selectedSize})` : ''}
                   </button>
 
                 </div>
