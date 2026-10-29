@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition with Secure PIN & WebAuthn
+// src/App.jsx - 100% Fully Complete, Database Persisted & Secured with Secret URL (?admin=secret)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -113,6 +113,15 @@ export default function App() {
   ]);
 
   const [activeTab, setActiveTab] = useState('store'); 
+
+  // 🔒 საიდუმლო URL ბმულის შემოწმება (თუ URL-ში არის ?admin=secret, ავტომატურად ხსნის ადმინ პანელს)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') === 'secret') {
+      setActiveTab('admin');
+    }
+  }, []);
+
   const [selectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
   const [searchQuery, setSearchQuery] = useState('');
