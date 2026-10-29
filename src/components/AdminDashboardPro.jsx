@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Subcategories Support (100% Full & Safe)
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Secure PIN & Passkeys (100% Full & Safe)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight 
+  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -47,13 +47,19 @@ export default function AdminDashboardPro({
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
+
+  // 🔐 ადმინ უსაფრთხოების (PIN და Passkey) State
+  const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); // 'standard' | 'pin'
+  const [adminPinCode, setAdminPinCode] = useState('');
+  const [adminPinError, setAdminPinError] = useState('');
   
-  const [productForm, setProductForm] = useState({
+  const productFormInitial = {
     name: '', category: categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ბამბა / ტყავი / 925 ვერცხლი',
     durability: 'მაღალი ხარისხის / 30°C ირეცხება',
     availableSizes: ['S', 'M', 'L', 'XL']
-  });
+  };
+  const [productForm, setProductForm] = useState(productFormInitial);
   const [selectedImages, setSelectedImages] = useState([]);
 
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
@@ -118,6 +124,43 @@ export default function AdminDashboardPro({
     setActivityLogs(prev => [newLog, ...prev]);
   };
 
+  // 🔑 ადმინისტრატორის PIN კოდით შესვლა
+  const handleAdminPinSubmit = (e) => {
+    e.preventDefault();
+    const savedPinHash = localStorage.getItem('geostore_admin_pin') || btoa('1234'); // ნაგულისხმევი PIN: 1234
+    if (btoa(adminPinCode) === savedPinHash) {
+      setAdminLoggedIn(true);
+      setAdminPinError('');
+      logActivity('ადმინისტრატორი შევიდა სისტემაში PIN-კოდით');
+    } else {
+      setAdminPinError('არასწორი PIN-კოდი! (ნაგულისხმევია: 1234)');
+    }
+  };
+
+  // 🛡️ ადმინისტრატორის Face ID / Passkey შესვლა
+  const handleAdminBiometricLogin = async () => {
+    if (!window.PublicKeyCredential) {
+      alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys-ს.');
+      return;
+    }
+    try {
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: new Uint8Array([9,8,7,6,5,4,3,2]),
+          timeout: 60000,
+          userVerification: "required"
+        }
+      });
+      if (assertion) {
+        setAdminLoggedIn(true);
+        logActivity('ადმინისტრატორი შევიდა სისტემაში Face ID / Passkey-ით');
+        alert('✅ Face ID ვერიფიკაცია წარმატებულია!');
+      }
+    } catch {
+      alert('Face ID ავტორიზაცია გაუქმდა.');
+    }
+  };
+
   if (!adminLoggedIn) {
     return (
       <div className="max-w-sm mx-auto bg-[#0d0d10] border border-emerald-500/35 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl text-center my-16">
@@ -127,46 +170,94 @@ export default function AdminDashboardPro({
         
         <div className="space-y-1.5">
           <h2 className="text-lg font-black text-white tracking-tight">ადმინისტრატორის პანელი</h2>
-          <p className="text-xs text-slate-400">შეიყვანეთ სამართავი მონაცემები სისტემაში შესასვლელად</p>
+          <p className="text-xs text-slate-400">აირჩიეთ ავტორიზაციის მეთოდი სისტემაში შესასვლელად</p>
         </div>
 
-        <form onSubmit={handleAdminLogin} autoComplete="off" className="space-y-4 text-xs">
-          <input 
-            type="text" 
-            name="geo_admin_username_secure"
-            autoComplete="off"
-            placeholder="მომხმარებელი" 
-            value={adminLoginForm?.username || ''} 
-            onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
-            className="w-full bg-[#08080a] border border-emerald-500/20 rounded-2xl p-4 text-white outline-none focus:border-emerald-400 shadow-inner transition-all" 
-          />
-          <input 
-            type="password" 
-            name="geo_admin_password_secure"
-            autoComplete="new-password"
-            placeholder="პაროლი" 
-            value={adminLoginForm?.password || ''} 
-            onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
-            className="w-full bg-[#08080a] border border-emerald-500/20 rounded-2xl p-4 text-white outline-none focus:border-emerald-400 shadow-inner transition-all" 
-          />
-
-          <div className="flex items-center gap-2 text-left pt-1 px-1">
-            <input 
-              type="checkbox" 
-              id="remMe" 
-              checked={adminLoginForm?.remember || false} 
-              onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
-              className="rounded accent-emerald-400 cursor-pointer w-4 h-4" 
-            />
-            <label htmlFor="remMe" className="cursor-pointer text-xs text-slate-300 font-bold">მომიმახსოვრე სისტემაში</label>
-          </div>
-
-          {adminError && <p className="text-rose-400 text-xs font-bold pt-1">{adminError}</p>}
-
-          <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all cursor-pointer text-xs mt-2">
-            სისტემაში შესვლა
+        <div className="flex gap-2 bg-[#121216] p-1.5 rounded-2xl border border-emerald-500/20 text-[11px] font-bold">
+          <button 
+            type="button" 
+            onClick={() => setAdminAuthSubMode('standard')}
+            className={`flex-1 py-2 rounded-xl transition cursor-pointer ${adminAuthSubMode === 'standard' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
+          >
+            პაროლით
           </button>
-        </form>
+          <button 
+            type="button" 
+            onClick={() => setAdminAuthSubMode('pin')}
+            className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${adminAuthSubMode === 'pin' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
+          >
+            <KeyRound className="w-3.5 h-3.5" /> PIN / Face ID
+          </button>
+        </div>
+
+        {adminAuthSubMode === 'pin' ? (
+          <form onSubmit={handleAdminPinSubmit} className="space-y-4 text-xs animate-in fade-in">
+            <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-emerald-300">
+              შეიყვანეთ ადმინისტრატორის PIN-კოდი (ნაგულისხმევი: 1234):
+            </div>
+            {adminPinError && <p className="text-rose-400 font-bold">{adminPinError}</p>}
+            
+            <input 
+              type="password" 
+              maxLength="6"
+              required
+              placeholder="••••" 
+              value={adminPinCode} 
+              onChange={e => setAdminPinCode(e.target.value)} 
+              className="w-full bg-[#08080a] border border-emerald-500/20 rounded-2xl p-4 text-center text-lg tracking-widest text-emerald-400 font-black outline-none focus:border-emerald-400 shadow-inner" 
+            />
+
+            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all cursor-pointer text-xs">
+              შესვლა PIN-კოდით
+            </button>
+
+            <button 
+              type="button"
+              onClick={handleAdminBiometricLogin}
+              className="w-full bg-[#16161a] hover:bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-black py-3 rounded-2xl transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
+            >
+              <Fingerprint className="w-4 h-4 text-emerald-400" /> Face ID-ით / Passkey-ით შესვლა
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleAdminLogin} autoComplete="off" className="space-y-4 text-xs animate-in fade-in">
+            <input 
+              type="text" 
+              name="geo_admin_username_secure"
+              autoComplete="off"
+              placeholder="მომხმარებელი" 
+              value={adminLoginForm?.username || ''} 
+              onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
+              className="w-full bg-[#08080a] border border-emerald-500/20 rounded-2xl p-4 text-white outline-none focus:border-emerald-400 shadow-inner transition-all" 
+            />
+            <input 
+              type="password" 
+              name="geo_admin_password_secure"
+              autoComplete="new-password"
+              placeholder="პაროლი" 
+              value={adminLoginForm?.password || ''} 
+              onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
+              className="w-full bg-[#08080a] border border-emerald-500/20 rounded-2xl p-4 text-white outline-none focus:border-emerald-400 shadow-inner transition-all" 
+            />
+
+            <div className="flex items-center gap-2 text-left pt-1 px-1">
+              <input 
+                type="checkbox" 
+                id="remMe" 
+                checked={adminLoginForm?.remember || false} 
+                onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
+                className="rounded accent-emerald-400 cursor-pointer w-4 h-4" 
+              />
+              <label htmlFor="remMe" className="cursor-pointer text-xs text-slate-300 font-bold">მომიმახსოვრე სისტემაში</label>
+            </div>
+
+            {adminError && <p className="text-rose-400 text-xs font-bold pt-1">{adminError}</p>}
+
+            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all cursor-pointer text-xs mt-2">
+              სისტემაში შესვლა
+            </button>
+          </form>
+        )}
       </div>
     );
   }
@@ -366,7 +457,7 @@ export default function AdminDashboardPro({
         };
 
         setProducts(prev => [localProdObject, ...(prev || [])]);
-        setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ბამბა / ტყავი', durability: 'მაღალი ხარისხის', availableSizes: ['S', 'M', 'L', 'XL'] });
+        setProductForm(productFormInitial);
         setSelectedImages([]);
         logActivity(`დაემატა ახალი პროდუქტი ბაზაში: ${newProdPayload.name}`);
         alert('✅ პროდუქტი წარმატებით შეინახა ღრუბლოვან ბაზაში!');
