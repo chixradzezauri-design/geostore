@@ -200,7 +200,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // 🗑️ პროდუქტის წაშლა Supabase ბაზიდან
   const handleDeleteProduct = async (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) {
       try {
@@ -221,7 +220,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // ⚡ პროდუქტის სწრაფი განახლება (ფასი ან მარაგი) Supabase ბაზაში
   const handleQuickUpdateProduct = async (id, field, value) => {
     const val = field === 'priceGEL' || field === 'stock' ? Number(value) : value;
     
@@ -292,12 +290,13 @@ export default function AdminDashboardPro({
     }));
   };
 
-  // 💾 პროდუქტის შენახვა პირდაპირ Supabase ბაზაში
+  // 💾 პროდუქტის შენახვა Supabase ბაზაში მრავალი სურათის (gallery) მხარდაჭერით
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
 
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
+    const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const defaultCat = categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'ტანსაცმელი';
 
@@ -312,6 +311,7 @@ export default function AdminDashboardPro({
       old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
       stock: Number(productForm.stock) || 1,
       image: mainImage,
+      gallery: galleryImages, // 🌟 მრავალი სურათის მასივი ბაზისთვის
       description: productForm.description || '',
       available_sizes: productForm.availableSizes?.length > 0 ? productForm.availableSizes : ['S', 'M', 'L', 'XL'],
       material: productForm.material || '',
@@ -336,19 +336,19 @@ export default function AdminDashboardPro({
           oldPriceGEL: newProdPayload.old_price_gel,
           stock: newProdPayload.stock,
           image: newProdPayload.image,
+          gallery: galleryImages,
           description: newProdPayload.description,
           availableSizes: newProdPayload.available_sizes,
           material: newProdPayload.material,
           durability: newProdPayload.durability,
-          tags: tagsArray,
-          gallery: selectedImages.length > 0 ? selectedImages : [mainImage]
+          tags: tagsArray
         };
 
         setProducts(prev => [localProdObject, ...(prev || [])]);
         setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ბამბა / ტყავი', durability: 'მაღალი ხარისხის', availableSizes: ['S', 'M', 'L', 'XL'] });
         setSelectedImages([]);
         logActivity(`დაემატა ახალი პროდუქტი ბაზაში: ${newProdPayload.name}`);
-        alert('✅ პროდუქტი წარმატებით შეინახა ღრუბლოვან ბაზაში და არასდროს წაიშლება!');
+        alert('✅ პროდუქტი მრავალი სურათით წარმატებით შეინახა ღრუბლოვან ბაზაში!');
       } else {
         const err = await res.text();
         alert('შეცდომა ბაზაში შენახვისას: ' + err);
@@ -952,7 +952,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Products Tab - Smart Dynamic Category Engine & Supabase Persistence */}
+        {/* Products Tab */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
@@ -994,7 +994,6 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="მომწოდებელი / ბრენდი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
-                {/* 🧠 Smart Dynamic Category Selector (Sizes / Specs based on selected category) */}
                 <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
                   <label className="text-emerald-400 font-bold block flex items-center gap-2">
                     {isTechCat ? <Cpu className="w-4 h-4 text-cyan-400" /> : <Shirt className="w-4 h-4" />}
@@ -1073,18 +1072,17 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                {/* დინამიური მახასიათებლები */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder={isTechCat ? 'პროცესორი / ეკრანი (მაგ: Apple M3 / 16" Retina)' : 'მასალა / შემადგენლობა (მაგ: 100% ბამბა / ტყავი)'} 
+                    placeholder={isTechCat ? 'პროცესორი / ეკრანი' : 'მასალა / შემადგენლობა'} 
                     value={productForm.material} 
                     onChange={e => setProductForm({...productForm, material: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
                   />
                   <input 
                     type="text" 
-                    placeholder={isTechCat ? 'გარანტია / ბატარეა (მაგ: 1 წლიანი ოფიციალური გარანტია)' : 'მოვლა / მდგრადობა (მაგ: ირეცხება 30°C-ზე)'} 
+                    placeholder={isTechCat ? 'გარანტია / ბატარეა' : 'მოვლა / მდგრადობა'} 
                     value={productForm.durability} 
                     onChange={e => setProductForm({...productForm, durability: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1093,11 +1091,11 @@ export default function AdminDashboardPro({
 
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-emerald-400" /> ტეგები (გამოყავით მძიმით, მაგ: NEW, FASHION, PREMIUM, SALE):
+                    <Tag className="w-3.5 h-3.5 text-emerald-400" /> ტეგები (გამოყავით მძიმით):
                   </label>
                   <input 
                     type="text" 
-                    placeholder="მაგ: NEW, HOT, SALE, 2026" 
+                    placeholder="მაგ: NEW, HOT, SALE" 
                     value={productForm.tags} 
                     onChange={e => setProductForm({...productForm, tags: e.target.value})} 
                     className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1108,7 +1106,7 @@ export default function AdminDashboardPro({
                   <label className="text-slate-400 font-bold">პროდუქტის სრული აღწერა:</label>
                   <textarea 
                     rows="3"
-                    placeholder="დაწერეთ დეტალური ტექნიკური მახასიათებლები და აღწერა..." 
+                    placeholder="დაწერეთ დეტალური აღწერა..." 
                     value={productForm.description} 
                     onChange={e => setProductForm({...productForm, description: e.target.value})} 
                     className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" 
@@ -1273,7 +1271,7 @@ export default function AdminDashboardPro({
                 <label className="text-slate-400 font-bold">შეტყობინების ტექსტი</label>
                 <textarea 
                   rows="4"
-                  placeholder="დაწერეთ შეტყობინება, რომელიც გამოჩნდება მომხმარებლების პანელში..." 
+                  placeholder="დაწერეთ შეტყობინება..." 
                   required 
                   value={broadcastForm.message} 
                   onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} 
@@ -1298,7 +1296,7 @@ export default function AdminDashboardPro({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder="სათაური (მაგ: ზაფხულის ფასდაკლება!)" 
+                    placeholder="სათაური" 
                     required 
                     value={bannerForm.title} 
                     onChange={e => setBannerForm({...bannerForm, title: e.target.value})} 
@@ -1314,7 +1312,7 @@ export default function AdminDashboardPro({
                 </div>
                 <input 
                   type="text" 
-                  placeholder="ბანერის ფოტოს URL (სურვილისამებრ)" 
+                  placeholder="ბანერის ფოტოს URL" 
                   value={bannerForm.image} 
                   onChange={e => setBannerForm({...bannerForm, image: e.target.value})} 
                   className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1356,7 +1354,7 @@ export default function AdminDashboardPro({
               <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <input 
                   type="text" 
-                  placeholder="კატეგორიის დასახელება (მაგ: ლეპტოპები)" 
+                  placeholder="კატეგორიის დასახელება" 
                   required 
                   value={newCatName} 
                   onChange={e => setNewCatName(e.target.value)} 
@@ -1412,8 +1410,8 @@ export default function AdminDashboardPro({
                 <Tag className="w-5 h-5 text-emerald-400" /> ახალი კუპონის შექმნა
               </h3>
               <form onSubmit={handleCreateCoupon} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                <input type="text" placeholder="კოდი (მაგ: GEO2026)" required value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
-                <input type="number" placeholder="ფასდაკლება % (მაგ: 15)" required value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" placeholder="კოდი" required value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
+                <input type="number" placeholder="ფასდაკლება %" required value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კუპონის დამატება</button>
               </form>
             </div>
@@ -1444,7 +1442,7 @@ export default function AdminDashboardPro({
               </h3>
               <form onSubmit={handleAddVendor} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <input type="text" placeholder="ვენდორის სახელი *" required value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <input type="number" placeholder="კომისია % (მაგ: 10)" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" placeholder="კომისია %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
                   <Percent className="w-4 h-4" /> ვენდორის დამატება
                 </button>
