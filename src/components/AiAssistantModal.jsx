@@ -29,7 +29,7 @@ export default function AiAssistantModal({
   orders = [],
   coupons = [],
   siteSettings = {},
-  selectedProduct = null, // 🎯 ახალი: კონტექსტური პროდუქტი StoreView-დან
+  selectedProduct = null, // 🎯 კონტექსტური პროდუქტი StoreView-დან
   addToCart,
   formatPrice
 }) {
@@ -263,7 +263,7 @@ export default function AiAssistantModal({
       };
     }
 
-    // 8. 🏷️ ულტრა-ჭკვიანი ძებნა: თეგები, სახელები, აღწერა, სინონიმები (Smart Multi-Word Match)
+    // 8. 🏷️ ულტრა-ჭკვიანი ძებნა: თეგები, სახელები, აღწერა, სინონიმები
     const matchedProducts = sourceProducts.filter(p => {
       const pName = (p.name || '').toLowerCase();
       const pCat = (p.category || '').toLowerCase();
@@ -320,7 +320,7 @@ export default function AiAssistantModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
       <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-2xl h-[92vh] sm:h-[640px] flex flex-col justify-between shadow-2xl overflow-hidden">
         
         {/* Header */}
