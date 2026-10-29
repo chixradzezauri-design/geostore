@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition
+// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition with Secure PIN & Biometric Auth
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -12,7 +12,7 @@ import OrderTrackerModal from './components/OrderTrackerModal'; // 📦 შე�
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -740,7 +740,7 @@ export default function App() {
         )}
       </div>
 
-      {/* ძირითადი მოდალები */}
+      {/* ძირითადი მოდალები (currentUser გადაეცემა უსაფრთხო ავტორიზაციისთვის) */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -758,9 +758,13 @@ export default function App() {
         setIsTermsOpen={setIsTermsOpen}
         isWarrantyOpen={isWarrantyOpen}
         setIsWarrantyOpen={setIsWarrantyOpen}
+        isTrackerOpen={isTrackerOpen}
+        setIsTrackerOpen={setIsTrackerOpen}
+        orders={orders}
         selectedRegion={selectedRegion}
         setSelectedRegion={setSelectedRegion}
         deliveryFees={deliveryFees}
+        currentUser={currentUser}
       />
 
       {/* ფოტოებით ძებნის მოდალი */}
@@ -772,7 +776,7 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      {/* AI ასისტენტის მოდალი (გადაეცემა ყველა Live მონაცემი) */}
+      {/* AI ასისტენტის მოდალი */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
