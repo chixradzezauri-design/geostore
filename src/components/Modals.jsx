@@ -1,8 +1,8 @@
-// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with PIN & Face ID Quick Auth
+// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Advanced Notification Center & PIN/Face ID Auth
 import React, { useState } from 'react';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
-  Search, PackageCheck, CheckCircle2, Clock, Navigation, Map, KeyRound, Fingerprint, ShieldAlert 
+  Search, PackageCheck, CheckCircle2, Clock, Navigation, Map, KeyRound, Fingerprint, ShieldAlert, Bell, Sparkles, Tag 
 } from 'lucide-react';
 
 export default function Modals({
@@ -24,6 +24,10 @@ export default function Modals({
   setIsWarrantyOpen,
   isTrackerOpen,
   setIsTrackerOpen,
+  isNotificationsOpen,
+  setIsNotificationsOpen,
+  notifications = [],
+  markAllNotificationsAsRead,
   orders = [],
   selectedRegion,
   setSelectedRegion,
@@ -105,10 +109,8 @@ export default function Modals({
       return;
     }
     try {
-      // ვამოწმებთ მოწყობილობის ბიომეტრიულ შესაძლებლობას
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (available) {
-        // ვახდენთ WebAuthn იმიტაციას წარმატებული ვერიფიკაციისთვის
         alert('✅ Face ID / Touch ID ვერიფიკაცია წარმატებით დასრულდა!');
         setIsAuthOpen(false);
       } else {
@@ -322,7 +324,60 @@ export default function Modals({
         </div>
       )}
 
-      {/* 3. ავტორიზაცია / რეგისტრაცია (PIN-კოდით და Face ID-ით სწრაფი შესვლის მხარდაჭერით) */}
+      {/* 🔔 3. ADVANCED NOTIFICATIONS CENTER MODAL */}
+      {isNotificationsOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
+              <h3 className="font-black text-white text-base flex items-center gap-2.5">
+                <Bell className="w-5 h-5 text-amber-400 animate-bounce" /> შეტყობინებების ცენტრი
+              </h3>
+              <button onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-400 font-bold">სულ შეტყობინება: <b className="text-amber-400">{notifications.length}</b></span>
+              {notifications.length > 0 && (
+                <button 
+                  onClick={markAllNotificationsAsRead}
+                  className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                >
+                  ყველას წაკითხულად მონიშვნა
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+              {notifications.length === 0 ? (
+                <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
+                  <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
+                  <p className="text-slate-400 text-xs font-bold">ახალი შეტყობინებები არ არის.</p>
+                </div>
+              ) : (
+                notifications.map(n => (
+                  <div key={n.id} className="bg-[#121216] border border-amber-500/20 p-4 rounded-2xl space-y-1.5 shadow-inner hover:border-amber-400/50 transition">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-black text-amber-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {n.title}
+                      </span>
+                      <span className="text-[10px] text-slate-500">{n.date || 'ახალი'}</span>
+                    </div>
+                    <p className="text-slate-300 text-xs leading-relaxed">{n.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <button onClick={() => setIsNotificationsOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition shadow-lg shadow-amber-500/20 cursor-pointer text-xs">
+              დახურვა
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. ავტორიზაცია / რეგისტრაცია (PIN-კოდით და Face ID-ით სწრაფი შესვლის მხარდაჭერით) */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
@@ -486,7 +541,7 @@ export default function Modals({
         </div>
       )}
 
-      {/* 4. წესები და პირობები */}
+      {/* 5. წესები და პირობები */}
       {isTermsOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
@@ -523,7 +578,7 @@ export default function Modals({
         </div>
       )}
 
-      {/* 5. საგარანტიო წესები */}
+      {/* 6. საგარანტიო წესები */}
       {isWarrantyOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
