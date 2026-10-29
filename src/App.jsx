@@ -493,29 +493,29 @@ export default function App() {
           <AdminDashboardPro 
             adminLoggedIn={adminLoggedIn}
             setAdminLoggedIn={setAdminLoggedIn}
-            adminLoginForm={adminLoginForm}
+            adminLoginForm={adminLoginForm || { username: '', password: '', remember: false }}
             setAdminLoginForm={setAdminLoginForm}
             handleAdminLogin={handleAdminLogin}
             adminError={adminError}
             proAnalytics={proAnalytics}
-            orders={orders}
+            orders={orders || []}
             setOrders={setOrders}
-            usersList={usersList}
+            usersList={usersList || []}
             setUsersList={setUsersList}
-            products={products}
+            products={products || []}
             setProducts={setProducts}
-            vendorsList={vendorsList}
+            vendorsList={vendorsList || []}
             setVendorsList={setVendorsList}
-            coupons={coupons}
+            coupons={coupons || []}
             setCoupons={setCoupons}
-            categoriesList={categories}
+            categoriesList={Array.isArray(categories) ? categories.map(c => typeof c === 'object' && c !== null ? c.name : c) : ['სმარტფონები', 'ლეპტოპები']}
             setCategoriesList={setCategories}
-            bannersList={bannersList}
+            bannersList={bannersList || []}
             setBannersList={setBannersList}
-            siteSettings={siteSettings}
+            siteSettings={siteSettings || { storeName: 'GEOSTORE' }}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
-            deliveryFees={deliveryFees}
+            deliveryFees={deliveryFees || { tbilisi: 0, bigCities: 10, other: 15 }}
             setDeliveryFees={setDeliveryFees}
           />
         )}
