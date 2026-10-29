@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Advanced Edition with Dynamic Variants & Attributes Support
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Complete CRM & Variants
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -51,6 +51,11 @@ export default function AdminDashboardPro({
   const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); 
   const [adminPinCode, setAdminPinCode] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
+
+  // 🌟 CRM ედიტირების მენეჯმენტი
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editUserDiscount, setEditUserDiscount] = useState('');
+  const [editUserNotes, setEditUserNotes] = useState('');
 
   const safeCategories = React.useMemo(() => {
     try {
@@ -423,7 +428,6 @@ export default function AdminDashboardPro({
     });
   };
 
-  // 🌟 დინამიური ველები: კატეგორიის შეცვლისას ავტომატურად ვარჩევთ შესაბამის ზომებს/მახასიათებლებს
   const handleCategoryChange = (catName) => {
     const nameLower = catName.toLowerCase();
     let defaultSizes = ['S', 'M', 'L', 'XL'];
@@ -641,24 +645,6 @@ export default function AdminDashboardPro({
     logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${order.id}`);
   };
 
-  const handleChangeAdminCredentials = (e) => {
-    e.preventDefault();
-    if (!passwordForm.newUsername && !passwordForm.newPassword) return;
-
-    try {
-      if (passwordForm.newUsername) {
-        localStorage.setItem('geostore_admin_user', passwordForm.newUsername);
-      }
-      if (passwordForm.newPassword) {
-        localStorage.setItem('geostore_admin_pass', passwordForm.newPassword);
-      }
-    } catch {}
-
-    logActivity('შეიცვალა ადმინისტრატორის სარეკვიზიტი მონაცემები');
-    alert('🔒 ადმინისტრატორის მონაცემები წარმატებით განახლდა!');
-    setPasswordForm({ newUsername: '', newPassword: '' });
-  };
-
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
@@ -834,26 +820,64 @@ export default function AdminDashboardPro({
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
+  // 🌟 CRM მომხმარებელთა მართვის ფუნქციები:
   const handleToggleVipUser = (userId) => {
     if (typeof setUsersList === 'function') {
-      setUsersList(prev => (prev || []).map(u => u.id === userId ? { ...u, isVip: !u.isVip } : u));
+      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
     }
     logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
+  };
+
+  const handleToggleBlockUser = (userId) => {
+    if (typeof setUsersList === 'function') {
+      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
+    }
+    logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) ბლოკირების სტატუსი`);
+  };
+
+  const handleDeleteUser = (userId, userName) => {
+    if (window.confirm(`ნამდვილად გსურთ მომხმარებლის "${userName || userId}" წაშლა სისტემიდან?`)) {
+      if (typeof setUsersList === 'function') {
+        setUsersList(prev => (prev || []).filter(u => u.id !== userId && u.email !== userId));
+      }
+      logActivity(`წაიშალა მომხმარებელი: ${userName || userId}`);
+    }
+  };
+
+  const handleSaveUserCrm = (userId) => {
+    if (typeof setUsersList === 'function') {
+      setUsersList(prev => (prev || []).map(u => {
+        if (u.id === userId || u.email === userId) {
+          return {
+            ...u,
+            discountPercent: Number(editUserDiscount) || 0,
+            adminNotes: editUserNotes
+          };
+        }
+        return u;
+      }));
+    }
+    setEditingUserId(null);
+    setEditUserDiscount('');
+    setEditUserNotes('');
+    logActivity(`განახლდა CRM მონაცემები მომხმარებლისთვის (ID: ${userId})`);
+    alert('✅ მომხმარებლის მონაცემები წარმატებით განახლდა!');
   };
 
   const handleSaveSettings = (e) => {
     e.preventDefault();
     if (typeof setSiteSettings === 'function') {
-      setSiteSettings(settingsForm);
+      setSiteSettings(siteSettings);
     }
-    try { localStorage.setItem('geostore_site_settings', JSON.stringify(settingsForm)); } catch {}
+    try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch {}
     logActivity('განახლდა საიტის გლობალური პარამეტრები');
     alert('საიტის პარამეტრები წარმატებით განახლდა!');
   };
 
   const filteredUsers = (usersList || []).filter(u => 
     u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
-    u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+    u.email?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    u.phone?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
   const filteredProducts = (products || []).filter(p => 
@@ -935,11 +959,11 @@ export default function AdminDashboardPro({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">მართეთ პროდუქტების კატეგორიები, ზომები, ფერები და ინდივიდუალური ვარიანტები:</p>
+            <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
           </div>
           <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">ბაზა აქტიურია</span>
+            <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
           </div>
         </div>
 
@@ -963,9 +987,9 @@ export default function AdminDashboardPro({
                 <span className="text-[10px] text-emerald-300/80 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">დადასტურებული</span>
               </div>
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
-                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Bell className="w-4 h-4 text-amber-400" /> დაბალი მარაგი (≤ 3)</p>
-                <p className="text-2xl sm:text-3xl font-black text-amber-400">{proAnalytics?.lowStockProducts?.length || 0} პროდუქტი</p>
-                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">საჭიროებს შევსებას</span>
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Bell className="w-4 h-4 text-amber-400" /> რეგისტრირებული მომხმარებლები</p>
+                <p className="text-2xl sm:text-3xl font-black text-amber-400">{usersList?.length || 0}</p>
+                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">აქტიური ბაზა</span>
               </div>
             </div>
 
@@ -1389,7 +1413,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Other Tabs omitted for brevity in full response, keeping identical structure */}
         {adminTab === 'discounts' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -1617,35 +1640,120 @@ export default function AdminDashboardPro({
           </div>
         )}
 
+        {/* 🌟 FULL CRM USERS MANAGEMENT TAB */}
         {adminTab === 'users' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-emerald-400" /> მომხმარებლების CRM მართვა ({usersList?.length || 0})
+                <Users className="w-5 h-5 text-emerald-400" /> მრავალფუნქციური CRM მომხმარებლები ({usersList?.length || 0})
               </h3>
               <div className="relative w-full sm:w-72">
-                <input type="text" placeholder="ძებნა სახელით ან ემაილით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
-            <div className="space-y-3">
+
+            <div className="space-y-4">
               {(!filteredUsers || filteredUsers.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">მომხმარებლები ვერ მოიძებნა.</p>
               ) : (
-                filteredUsers.map((u, i) => (
-                  <div key={u.id || i} className="bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs shadow-inner">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-sm">{u.name}</h4>
-                        {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
+                filteredUsers.map((u, i) => {
+                  const uId = u.id || u.email || i;
+                  const isEditing = editingUserId === uId;
+
+                  return (
+                    <div key={uId} className={`bg-slate-950/60 p-5 rounded-3xl border transition space-y-3 shadow-inner ${u.isBlocked ? 'border-rose-500/40 bg-rose-950/10' : 'border-emerald-500/20'}`}>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <h4 className="font-black text-white text-sm">{u.name}</h4>
+                            {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
+                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">დაბლოკილი</span>}
+                            {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
+                          </div>
+                          <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
+                          {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                          <button 
+                            onClick={() => handleToggleVipUser(u.id || u.email)} 
+                            className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isVip ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-emerald-500/20 hover:text-white'}`}
+                            title="VIP სტატუსი"
+                          >
+                            <Star className="w-3.5 h-3.5" /> {u.isVip ? 'VIP მოხსნა' : 'VIP მინიჭება'}
+                          </button>
+
+                          <button 
+                            onClick={() => handleToggleBlockUser(u.id || u.email)} 
+                            className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
+                            title="ბლოკირება / განბლოკვა"
+                          >
+                            {u.isBlocked ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
+                            {u.isBlocked ? 'განბლოკვა' : 'დაბლოკვა'}
+                          </button>
+
+                          <button 
+                            onClick={() => {
+                              if (isEditing) {
+                                setEditingUserId(null);
+                              } else {
+                                setEditingUserId(uId);
+                                setEditUserDiscount(u.discountPercent || '');
+                                setEditUserNotes(u.adminNotes || '');
+                              }
+                            }} 
+                            className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
+                            title="პერსონალური ფასდაკლება & შენიშვნები"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+
+                          <button 
+                            onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
+                            className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
+                            title="მომხმარებლის წაშლა"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-slate-400 text-[11px] mt-0.5">📧 {u.email} | 📞 {u.phone}</p>
+
+                      {/* CRM Edit Box */}
+                      {isEditing && (
+                        <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
+                          <h5 className="font-black text-amber-400 text-xs">პერსონალური CRM პარამეტრები კლიენტისთვის: {u.name}</h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-slate-400 text-[10px] block mb-1">პერსონალური ფასდაკლება (%)</label>
+                              <input 
+                                type="number" 
+                                placeholder="მაგ: 10" 
+                                value={editUserDiscount} 
+                                onChange={e => setEditUserDiscount(e.target.value)} 
+                                className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-slate-400 text-[10px] block mb-1">ადმინისტრატორის შენიშვნა</label>
+                              <input 
+                                type="text" 
+                                placeholder="მაგ: VIP კლიენტი, ჰყავს ფასდაკლება" 
+                                value={editUserNotes} 
+                                onChange={e => setEditUserNotes(e.target.value)} 
+                                className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2 pt-1">
+                            <button onClick={() => setEditingUserId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
+                            <button onClick={() => handleSaveUserCrm(u.id || u.email)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button onClick={() => handleToggleVipUser(u.id)} className={`px-4 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow ${u.isVip ? 'bg-emerald-500 text-slate-950' : 'bg-slate-950 text-slate-300 border border-emerald-500/20 hover:text-white'}`}>
-                      <Star className="w-4 h-4" /> {u.isVip ? 'VIP სტატუსი მოხსნა' : 'VIP-ად მონიშვნა'}
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
