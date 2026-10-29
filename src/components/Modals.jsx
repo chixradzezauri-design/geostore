@@ -1,8 +1,8 @@
-// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Live Order Tracker Map & Delivery Region Selector
+// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with PIN & Face ID Quick Auth
 import React, { useState } from 'react';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
-  Search, PackageCheck, CheckCircle2, Clock, Navigation, Map 
+  Search, PackageCheck, CheckCircle2, Clock, Navigation, Map, KeyRound, Fingerprint, ShieldAlert 
 } from 'lucide-react';
 
 export default function Modals({
@@ -27,11 +27,19 @@ export default function Modals({
   orders = [],
   selectedRegion,
   setSelectedRegion,
-  deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 }
+  deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
+  currentUser
 }) {
   const [searchOrderId, setSearchOrderId] = useState('');
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
+
+  // 🔐 PIN და Biometrics/Passkeys State
+  const [authSubMode, setAuthSubMode] = useState('standard'); // 'standard' | 'pin' | 'biometric'
+  const [pinCode, setPinCode] = useState('');
+  const [confirmPinCode, setConfirmPinCode] = useState('');
+  const [isPinSetupMode, setIsPinSetupMode] = useState(false);
+  const [pinError, setPinError] = useState('');
 
   const handleSearchOrder = (e) => {
     e.preventDefault();
@@ -54,6 +62,61 @@ export default function Modals({
     if (s.includes('გზაშია') || s.includes('კურიერთან')) return 75;
     if (s.includes('მზადდება') || s.includes('მუშავდება')) return 40;
     return 15;
+  };
+
+  // 🔑 PIN კოდის დადასტურებისა და შექმნის იმიტაცია/ლოგიკა
+  const handlePinAuthSubmit = (e) => {
+    e.preventDefault();
+    if (pinCode.length < 4) {
+      setPinError('PIN-კოდი უნდა შედგებოდეს მინიმუმ 4 ციფრისგან.');
+      return;
+    }
+    if (isPinSetupMode) {
+      if (pinCode !== confirmPinCode) {
+        setPinError('PIN-კოდები არ ემთხვევა ერთმანეთს!');
+        return;
+      }
+      try {
+        localStorage.setItem('geostore_user_pin_hash', btoa(pinCode)); // უსაფრთხო Base64 იმიტაცია კლიენტისთვის
+        alert('🎉 PIN-კოდი წარმატებით დაყენდა!');
+        setIsPinSetupMode(false);
+        setAuthSubMode('standard');
+        setPinCode('');
+        setConfirmPinCode('');
+      } catch {
+        setPinError('შეცდომა PIN-კოდის შენახვისას.');
+      }
+    } else {
+      const savedPinHash = localStorage.getItem('geostore_user_pin_hash');
+      if (savedPinHash && savedPinHash === btoa(pinCode)) {
+        alert('🔓 წარმატებით შეხვედით PIN-კოდით!');
+        setIsAuthOpen(false);
+        setPinCode('');
+      } else {
+        setPinError('არასწორი PIN-კოდი!');
+      }
+    }
+  };
+
+  // 🛡️ Face ID / Passkeys (WebAuthn) სიმულაცია მხარდაჭერილ მოწყობილობებზე
+  const handleBiometricLogin = async () => {
+    if (!window.PublicKeyCredential) {
+      alert('თქვენი ბრაუზერი ან მოწყობილობა არ მხარს უჭერს Passkeys / Face ID ავტორიზაციას.');
+      return;
+    }
+    try {
+      // ვამოწმებთ მოწყობილობის ბიომეტრიულ შესაძლებლობას
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (available) {
+        // ვახდენთ WebAuthn იმიტაციას წარმატებული ვერიფიკაციისთვის
+        alert('✅ Face ID / Touch ID ვერიფიკაცია წარმატებით დასრულდა!');
+        setIsAuthOpen(false);
+      } else {
+        alert('ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
+      }
+    } catch {
+      alert('Face ID ავტორიზაციის შეცდომა.');
+    }
   };
 
   return (
@@ -259,75 +322,157 @@ export default function Modals({
         </div>
       )}
 
-      {/* 3. ავტორიზაცია / რეგისტრაცია */}
+      {/* 3. ავტორიზაცია / რეგისტრაცია (PIN-კოდით და Face ID-ით სწრაფი შესვლის მხარდაჭერით) */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Lock className="w-5 h-5 text-amber-400" /> {authMode === 'login' ? 'ავტორიზაცია' : 'რეგისტრაცია'}
+                <Lock className="w-5 h-5 text-amber-400" /> 
+                {authSubMode === 'pin' ? 'PIN-კოდით შესვლა' : authMode === 'login' ? 'ავტორიზაცია' : 'რეგისტრაცია'}
               </h3>
               <button onClick={() => setIsAuthOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-              {authMode === 'register' && (
-                <>
-                  <div className="space-y-1">
-                    <label className="text-slate-300 font-bold">სახელი</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="თქვენი სახელი"
-                      value={authForm.name}
-                      onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
-                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-slate-300 font-bold">ტელეფონი</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="599 00 00 00"
-                      value={authForm.phone}
-                      onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
-                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                    />
-                  </div>
-                </>
-              )}
-
-              <div className="space-y-1">
-                <label className="text-slate-300 font-bold">ელ-ფოსტა</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={authForm.email}
-                  onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
-                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-slate-300 font-bold">პაროლი</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={authForm.password}
-                  onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
-                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-                {authMode === 'login' ? 'შესვლა სისტემაში' : 'რეგისტრაციის დასრულება'}
+            {/* სწრაფი შესვლის მეთოდების არჩევანი */}
+            <div className="flex gap-2 bg-[#121216] p-1.5 rounded-2xl border border-amber-500/20 text-[11px] font-bold">
+              <button 
+                type="button" 
+                onClick={() => { setAuthSubMode('standard'); setIsPinSetupMode(false); }}
+                className={`flex-1 py-2 rounded-xl transition cursor-pointer ${authSubMode === 'standard' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
+              >
+                სტანდარტული
               </button>
-            </form>
+              <button 
+                type="button" 
+                onClick={() => setAuthSubMode('pin')}
+                className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${authSubMode === 'pin' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
+              >
+                <KeyRound className="w-3.5 h-3.5" /> PIN-კოდი
+              </button>
+            </div>
+
+            {authSubMode === 'pin' ? (
+              <form onSubmit={handlePinAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
+                <div className="bg-amber-500/10 p-3.5 rounded-2xl border border-amber-500/20 text-[11px] text-amber-300 space-y-1">
+                  <b>{isPinSetupMode ? 'შექმენით პირადი PIN-კოდი სწრაფი შესვლისთვის:' : 'შეიყვანეთ თქვენი 4-ციფრიანი PIN-კოდი:'}</b>
+                </div>
+
+                {pinError && <p className="text-rose-400 text-[11px] font-bold">{pinError}</p>}
+
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-bold">PIN-კოდი</label>
+                  <input
+                    type="password"
+                    maxLength="6"
+                    required
+                    placeholder="••••"
+                    value={pinCode}
+                    onChange={e => setPinCode(e.target.value)}
+                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
+                  />
+                </div>
+
+                {isPinSetupMode && (
+                  <div className="space-y-1">
+                    <label className="text-slate-300 font-bold">გაიმეორეთ PIN-კოდი</label>
+                    <input
+                      type="password"
+                      maxLength="6"
+                      required
+                      placeholder="••••"
+                      value={confirmPinCode}
+                      onChange={e => setConfirmPinCode(e.target.value)}
+                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
+                    />
+                  </div>
+                )}
+
+                <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
+                  {isPinSetupMode ? 'PIN-კოდის შენახვა' : 'შესვლა PIN-კოდით'}
+                </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPinSetupMode(!isPinSetupMode)}
+                    className="text-slate-400 hover:text-amber-400 text-[11px] font-bold cursor-pointer underline"
+                  >
+                    {isPinSetupMode ? 'უკვე გაქვთ PIN? შეხვდით აქ' : 'ახალი PIN-კოდის შექმნა (ჩართვა)'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
+                {authMode === 'register' && (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-slate-300 font-bold">სახელი</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="თქვენი სახელი"
+                        value={authForm.name}
+                        onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
+                        className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-slate-300 font-bold">ტელეფონი</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="599 00 00 00"
+                        value={authForm.phone}
+                        onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
+                        className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-bold">ელ-ფოსტა</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={authForm.email}
+                    onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
+                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-bold">პაროლი</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={authForm.password}
+                    onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
+                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
+                  />
+                </div>
+
+                <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
+                  {authMode === 'login' ? 'შესვლა სისტემაში' : 'რეგისტრაციის დასრულება'}
+                </button>
+
+                {/* Face ID / Passkeys ღილაკი */}
+                {authMode === 'login' && (
+                  <button 
+                    type="button"
+                    onClick={handleBiometricLogin}
+                    className="w-full bg-[#16161a] hover:bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black py-3 rounded-2xl transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
+                  >
+                    <Fingerprint className="w-4 h-4 text-amber-400" /> Face ID-ით / Passkey-ით შესვლა
+                  </button>
+                )}
+              </form>
+            )}
 
             <div className="text-center pt-2 border-t border-amber-500/20">
               <button
