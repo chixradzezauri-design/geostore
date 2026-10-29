@@ -41,8 +41,7 @@ export default function Modals({
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
 
-  // 🔐 PIN და Biometrics/Passkeys State
-  const [authSubMode, setAuthSubMode] = useState('standard'); // 'standard' | 'pin' | 'biometric'
+  const [authSubMode, setAuthSubMode] = useState('standard');
   const [pinCode, setPinCode] = useState('');
   const [confirmPinCode, setConfirmPinCode] = useState('');
   const [isPinSetupMode, setIsPinSetupMode] = useState(false);
@@ -72,7 +71,6 @@ export default function Modals({
     return 15;
   };
 
-  // 🔑 რეალური PIN კოდის დადასტურებისა და შემოწმების ლოგიკა
   const handlePinAuthSubmit = (e) => {
     e.preventDefault();
     if (failedAttempts >= 3) {
@@ -85,7 +83,6 @@ export default function Modals({
     }
 
     if (currentUser) {
-      // თუ მომხმარებელი უკვე ავტორიზებულია და აყენებს ან ცვლის PIN-ს
       if (isPinSetupMode) {
         if (pinCode !== confirmPinCode) {
           setPinError('PIN-კოდები არ ემთხვევა ერთმანეთს!');
@@ -104,7 +101,6 @@ export default function Modals({
         setConfirmPinCode('');
         setIsAuthOpen(false);
       } else {
-        // გადამოწმება
         if (currentUser.pinHash && currentUser.pinHash === btoa(pinCode)) {
           alert('🔓 PIN-კოდი სწორია!');
           setFailedAttempts(0);
@@ -116,7 +112,6 @@ export default function Modals({
         }
       }
     } else {
-      // თუ მომხმარებელი არ არის შესული და ცდილობს PIN-ით ავტორიზაციას
       const matchedUser = usersList.find(u => u.pinHash && u.pinHash === btoa(pinCode));
       if (matchedUser) {
         setCurrentUser(matchedUser);
@@ -131,7 +126,6 @@ export default function Modals({
     }
   };
 
-  // 🛡️ რეალური WebAuthn / Face ID შესვლა
   const handleBiometricLogin = async () => {
     if (!window.PublicKeyCredential) {
       alert('თქვენი ბრაუზერი ან მოწყობილობა არ მხარს უჭერს Passkeys / Face ID ავტორიზაციას.');
@@ -140,7 +134,6 @@ export default function Modals({
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (available) {
-        // ვახდენთ WebAuthn assertion მოთხოვნას
         const assertion = await navigator.credentials.get({
           publicKey: {
             challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
@@ -149,7 +142,6 @@ export default function Modals({
           }
         });
         if (assertion) {
-          // თუ არსებობს მიბმული მომხმარებელი, ვავტორიზებთ
           const passkeyUser = currentUser || usersList.find(u => u.hasPasskey) || usersList[0];
           if (passkeyUser) {
             setCurrentUser(passkeyUser);
@@ -327,7 +319,7 @@ export default function Modals({
                 <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-4 sm:p-5 space-y-3 relative overflow-hidden shadow-2xl">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xs font-bold text-white flex items-center gap-2">
-                      <Map className="w-4 h-4 text-amber-400" /> კურიერის ლაივ-რუკა
+                       კურიერის ლაივ-რუკა
                     </h4>
                     <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1 font-bold">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> GPS აქტიურია
