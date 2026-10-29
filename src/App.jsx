@@ -31,10 +31,10 @@ const sendTelegramNotification = (text) => {
 };
 
 const DEFAULT_CATEGORIES = [
-  { name: 'სმარტფონები', icon: 'Smartphone' },
-  { name: 'ლეპტოპები', icon: 'Laptop' },
-  { name: 'აქსესუარები', icon: 'Sparkles' },
-  { name: 'ჭკვიანი საათები', icon: 'Watch' }
+  { id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null },
+  { id: 'c2', name: 'ლეპტოპები', icon: 'Laptop', parentId: null },
+  { id: 'c3', name: 'აქსესუარები', icon: 'Sparkles', parentId: null },
+  { id: 'c4', name: 'ჭკვიანი საათები', icon: 'Watch', parentId: null }
 ];
 
 const DEFAULT_VENDORS = [
@@ -114,7 +114,6 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
 
-  // 🔒 საიდუმლო URL ბმულის შემოწმება (თუ URL-ში არის ?admin=secret, ავტომატურად ხსნის ადმინ პანელს)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'secret') {
@@ -517,14 +516,14 @@ export default function App() {
             setVendorsList={setVendorsList}
             coupons={coupons || []}
             setCoupons={setCoupons}
-            categoriesList={Array.isArray(categories) ? categories.map(c => typeof c === 'object' && c !== null ? c.name : c) : ['სმარტფონები', 'ლეპტოპები']}
+            categoriesList={categories}
             setCategoriesList={setCategories}
             bannersList={bannersList || []}
             setBannersList={setBannersList}
-            siteSettings={siteSettings || { storeName: 'GEOSTORE' }}
+            siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
-            deliveryFees={deliveryFees || { tbilisi: 0, bigCities: 10, other: 15 }}
+            deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
           />
         )}
@@ -670,7 +669,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 🔐 უსაფრთხოების მართვის პანელი პროფილში */}
               <div className="pt-4 border-t border-slate-800/80 space-y-3">
                 <h3 className="font-black text-amber-400 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" /> უსაფრთხოება და სწრაფი შესვლა
