@@ -1,24 +1,24 @@
-// src/components/Header.jsx - Elite Gold Luxury Boutique Edition (Fully Fixed & Safe)
+// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with Advanced Notifications Bell
 import React, { useState } from 'react';
 import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
   setActiveTab, 
-  wishlistCount = 0, 
-  cartCount = 0, 
+  wishlistCount, 
+  cartCount, 
   comparisonCount = 0,
   currentUser, 
-  setIsAuthOpen = () => {}, 
-  setAuthMode = () => {}, 
-  setIsAiAssistantOpen = () => {}, 
-  setIsImageSearchOpen = () => {}, 
-  setIsComparisonOpen = () => {},
-  setIsTrackerOpen = () => {},
-  setIsNotificationsOpen = () => {},
+  setIsAuthOpen, 
+  setAuthMode, 
+  setIsAiAssistantOpen, 
+  setIsImageSearchOpen, 
+  setIsComparisonOpen,
+  setIsTrackerOpen,
+  setIsNotificationsOpen,
   unreadNotificationsCount = 0,
-  searchQuery = '',
-  setSearchQuery = () => {}
+  searchQuery,
+  setSearchQuery
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -69,7 +69,7 @@ export default function Header({
             </button>
 
             {/* 🔔 Notifications Bell Button */}
-            <button onClick={() => setIsNotificationsOpen(true)} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400/50 transition-all shadow-sm cursor-pointer hover:scale-105" title="შეტყობინებები">
+            <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400/50 transition-all shadow-sm cursor-pointer hover:scale-105" title="შეტყობინებები">
               <Bell className="w-4 h-4 text-amber-400" />
               {unreadNotificationsCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 rounded-full w-5 h-5 text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">
@@ -112,7 +112,7 @@ export default function Header({
 
           {/* MOBILE QUICK BUTTONS & HAMBURGER */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button onClick={() => setIsNotificationsOpen(true)} className="relative p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
+            <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">
@@ -173,7 +173,7 @@ export default function Header({
               </button>
             </div>
 
-            <button onClick={() => { setIsNotificationsOpen(true); setMobileMenuOpen(false); }} className="w-full bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm transition cursor-pointer">
+            <button onClick={() => { setIsNotificationsOpen && setIsNotificationsOpen(true); setMobileMenuOpen(false); }} className="w-full bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm transition cursor-pointer">
               <Bell className="w-4 h-4 text-amber-400" /> შეტყობინებების ცენტრი ({unreadNotificationsCount})
             </button>
 
