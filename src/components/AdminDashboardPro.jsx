@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Dynamic Category-based Fields Manager
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Dynamic Category-based Fields Manager (Full Complete Code)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert 
+  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -48,9 +48,9 @@ export default function AdminDashboardPro({
   const [productSearchQuery, setProductSearchQuery] = useState('');
   
   const [productForm, setProductForm] = useState({
-    name: '', category: 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
-    material: 'პრემიუმ ტყავი / 925 ვერცხლი',
-    durability: '3ATM Water Resistant / Anti-Slip Sole',
+    name: '', category: 'ტანსაცმელი', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
+    material: 'პრემიუმ ბამბა / ტყავი / 925 ვერცხლი',
+    durability: 'მაღალი ხარისხის / 30°C ირეცხება',
     availableSizes: ['S', 'M', 'L', 'XL']
   });
   const [selectedImages, setSelectedImages] = useState([]);
@@ -59,7 +59,7 @@ export default function AdminDashboardPro({
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
   
   const [newCatName, setNewCatName] = useState('');
-  const [newCatIcon, setNewCatIcon] = useState('Smartphone');
+  const [newCatIcon, setNewCatIcon] = useState('Shirt');
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
@@ -243,6 +243,25 @@ export default function AdminDashboardPro({
     });
   };
 
+  const handleCategoryChange = (catName) => {
+    const nameLower = catName.toLowerCase();
+    let defaultSizes = ['S', 'M', 'L', 'XL'];
+
+    if (nameLower.includes('ფეხსაცმელ') || nameLower.includes('shoe')) {
+      defaultSizes = ['38', '39', '40', '41', '42', '43', '44'];
+    } else if (nameLower.includes('ტანსაცმელ') || nameLower.includes('ჩაცმა') || nameLower.includes('ქურთუკ') || nameLower.includes('შარვალ')) {
+      defaultSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+    } else if (nameLower.includes('აქსესუარ') || nameLower.includes('საათ') || nameLower.includes('ჩანთა')) {
+      defaultSizes = ['Standard / One Size'];
+    }
+
+    setProductForm(prev => ({
+      ...prev,
+      category: catName,
+      availableSizes: defaultSizes
+    }));
+  };
+
   const handleSaveProduct = (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
@@ -250,7 +269,7 @@ export default function AdminDashboardPro({
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-    const defaultCat = categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'სმარტფონები';
+    const defaultCat = categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'ტანსაცმელი';
 
     const newProd = {
       id: `prod-${Date.now()}`,
@@ -267,7 +286,7 @@ export default function AdminDashboardPro({
     };
 
     setProducts(prev => [newProd, ...(prev || [])]);
-    setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ტყავი / 925 ვერცხლი', durability: '3ATM Water Resistant', availableSizes: ['S', 'M', 'L', 'XL'] });
+    setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ბამბა / ტყავი', durability: 'მაღალი ხარისხის', availableSizes: ['S', 'M', 'L', 'XL'] });
     setSelectedImages([]);
     logActivity(`დაემატა ახალი პროდუქტი დინამიური პარამეტრებით: ${newProd.name}`);
     alert('✅ პროდუქტი წარმატებით დაემატა!');
@@ -343,7 +362,7 @@ export default function AdminDashboardPro({
           <div class="header">
             <div>
               <div class="store-name">GEOSTORE</div>
-              <p>ონლაინ მარკეტფლეისი საქართველოში</p>
+              <p>მოდისა და ტანსაცმლის ბუტიკი საქართველოში</p>
             </div>
             <div style="text-align: right;">
               <h2>შეკვეთა #${order.id}</h2>
@@ -497,7 +516,7 @@ export default function AdminDashboardPro({
     const newB = {
       id: `b-${Date.now()}`,
       ...bannerForm,
-      image: bannerForm.image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
+      image: bannerForm.image || 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200'
     };
     setBannersList(prev => [...(prev || []), newB]);
     setBannerForm({ title: '', subtitle: '', image: '', link: '' });
@@ -603,7 +622,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h3 className="font-black text-white text-sm">GEOSTORE Admin</h3>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Pro Dashboard</p>
+            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Boutique Edition</p>
           </div>
         </div>
 
@@ -664,7 +683,7 @@ export default function AdminDashboardPro({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2.5rem] p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">აი რა ხდება დღეს თქვენს ონლაინ მარკეტფლეისში:</p>
+            <p className="text-xs text-slate-400 mt-0.5">მართეთ მოდის, ფეხსაცმლისა და აქსესუარების კოლექციები:</p>
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -861,13 +880,13 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Products Tab */}
+        {/* Products Tab - Dynamic Fashion & Shoe Category Engine */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური პარამეტრები)
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური ზომები & მოდის ველები)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -887,8 +906,8 @@ export default function AdminDashboardPro({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <select 
                     value={productForm.category} 
-                    onChange={e => setProductForm({...productForm, category: e.target.value})} 
-                    className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
+                    onChange={e => handleCategoryChange(e.target.value)} 
+                    className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
                   >
                     {(categoriesList || []).map(cat => {
                       const cName = typeof cat === 'object' ? cat.name : cat;
@@ -900,15 +919,36 @@ export default function AdminDashboardPro({
                     })}
                   </select>
                   <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="text" placeholder="ვენდორი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" placeholder="მომწოდებელი / ბრენდი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
-                {/* 👟👖 ჭკვიანი დინამიური ზომების მართვა არჩეული კატეგორიის მიხედვით */}
-                {(productForm.category === 'ფეხსაცმელები' || productForm.category === 'ფეხსაცმელი') && (
-                  <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
-                    <label className="text-emerald-400 font-bold block">👟 აირჩიეთ ფეხსაცმლის ზომები (EU):</label>
+                {/* 👟👖 დინამიური ზომების არჩევანი კატეგორიის მიხედვით */}
+                <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
+                  <label className="text-emerald-400 font-bold block flex items-center gap-2">
+                    <Shirt className="w-4 h-4" /> არჩეული კატეგორიის ხელმისაწვდომი ზომები:
+                  </label>
+                  
+                  {/* ფეხსაცმელები */}
+                  {(productForm.category.toLowerCase().includes('ფეხსაცმელ') || productForm.category.toLowerCase().includes('shoe')) ? (
                     <div className="flex flex-wrap gap-2">
-                      {['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'].map(sz => {
+                      {['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'].map(sz => {
+                        const isSelected = productForm.availableSizes?.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleSizeSelection(sz)}
+                            className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                          >
+                            EU {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (productForm.category.toLowerCase().includes('აქსესუარ') || productForm.category.toLowerCase().includes('საათ')) ? (
+                    /* აქსესუარები */
+                    <div className="flex flex-wrap gap-2">
+                      {['Standard / One Size', 'S/M', 'L/XL', '40mm', '44mm', '45mm'].map(sz => {
                         const isSelected = productForm.availableSizes?.includes(sz);
                         return (
                           <button
@@ -922,12 +962,8 @@ export default function AdminDashboardPro({
                         );
                       })}
                     </div>
-                  </div>
-                )}
-
-                {(productForm.category === 'ტანსაცმელი' || productForm.category === 'ტანსაცმელები') && (
-                  <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
-                    <label className="text-emerald-400 font-bold block">👕 აირჩიეთ ტანსაცმლის ზომები:</label>
+                  ) : (
+                    /* ტანსაცმელი და სხვა */
                     <div className="flex flex-wrap gap-2">
                       {['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'].map(sz => {
                         const isSelected = productForm.availableSizes?.includes(sz);
@@ -943,29 +979,21 @@ export default function AdminDashboardPro({
                         );
                       })}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {/* დინამიური აღწერის/მახასიათებლების ველები კატეგორიის მიხედვით */}
+                {/* დინამიური მახასიათებლები */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder={
-                      (productForm.category === 'ფეხსაცმელები' || productForm.category === 'ფეხსაცმელი') ? 'ძირის მასალა / წყალგაუმტარობა (მაგ: Anti-Slip Sole)' :
-                      (productForm.category === 'ტანსაცმელი' || productForm.category === 'ტანსაცმელები') ? 'ქსოვილის შემადგენლობა (მაგ: 100% ბამბა / Premium Cotton)' :
-                      'მასალა / შემადგენლობა (მაგ: პრემიუმ ტყავი / 925 ვერცხლი)'
-                    } 
+                    placeholder="მასალა / შემადგენლობა (მაგ: 100% ბამბა / ნატურალური ტყავი)" 
                     value={productForm.material} 
                     onChange={e => setProductForm({...productForm, material: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
                   />
                   <input 
                     type="text" 
-                    placeholder={
-                      (productForm.category === 'ფეხსაცმელები' || productForm.category === 'ფეხსაცმელი') ? 'სეზონი / კომფორტი (მაგ: ყველა სეზონი / ორთოპედიული)' :
-                      (productForm.category === 'ტანსაცმელი' || productForm.category === 'ტანსაცმელები') ? 'მოვლა / რეცხვა (მაგ: ირეცხება 30°C-ზე)' :
-                      'მდგრადობა / წყალგაუმტარობა (მაგ: 3ATM Water Resistant)'
-                    } 
+                    placeholder="მოვლა / მდგრადობა (მაგ: ირეცხება 30°C-ზე / წყალგაუმტარი 3ATM)" 
                     value={productForm.durability} 
                     onChange={e => setProductForm({...productForm, durability: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -974,11 +1002,11 @@ export default function AdminDashboardPro({
 
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-emerald-400" /> ტეგები (გამოყავით მძიმით, მაგ: HOT, NEW, 0% განვადება):
+                    <Tag className="w-3.5 h-3.5 text-emerald-400" /> ტეგები (გამოყავით მძიმით, მაგ: NEW, FASHION, PREMIUM, SALE):
                   </label>
                   <input 
                     type="text" 
-                    placeholder="მაგ: HOT, NEW, 0% განვადება" 
+                    placeholder="მაგ: NEW, FASHION, SALE, 2026 COLLECTION" 
                     value={productForm.tags} 
                     onChange={e => setProductForm({...productForm, tags: e.target.value})} 
                     className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -989,7 +1017,7 @@ export default function AdminDashboardPro({
                   <label className="text-slate-400 font-bold">პროდუქტის სრული აღწერა:</label>
                   <textarea 
                     rows="3"
-                    placeholder="დაწერეთ დეტალური ტექნიკური მახასიათებლები და აღწერა..." 
+                    placeholder="დაწერეთ დეტალური აღწერა, მორგების სტილი (Fit) და სხვ..." 
                     value={productForm.description} 
                     onChange={e => setProductForm({...productForm, description: e.target.value})} 
                     className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" 
@@ -1179,7 +1207,7 @@ export default function AdminDashboardPro({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder="სათაური (მაგ: ზაფხულის ფასდაკლება!)" 
+                    placeholder="სათაური (მაგ: ახალი საგაზაფხულო კოლექცია!)" 
                     required 
                     value={bannerForm.title} 
                     onChange={e => setBannerForm({...bannerForm, title: e.target.value})} 
@@ -1249,17 +1277,13 @@ export default function AdminDashboardPro({
                   onChange={e => setNewCatIcon(e.target.value)}
                   className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                 >
+                  <option value="Shirt">👕 ტანსაცმელი</option>
                   <option value="Footprints">👟 ფეხსაცმელები</option>
-                  <option value="Smartphone">📱 სმარტფონი / ტელეფონი</option>
-                  <option value="Laptop">💻 ლაპტოპი / კომპიუტერი</option>
-                  <option value="Headphones">🎧 ყურსასმენი / აუდიო</option>
-                  <option value="Watch">⌚ საათი</option>
-                  <option value="Camera">📷 ფოტო / ვიდეო კამერა</option>
-                  <option value="Tv">📺 ტელევიზორი / მონიტორი</option>
-                  <option value="Speaker">🔊 დინამიკი</option>
-                  <option value="Gamepad2">🎮 გეიმინგი</option>
-                  <option value="Tablet">📱 ტაბლეტი</option>
+                  <option value="Gem">💎 აქსესუარები / სამკაული</option>
+                  <option value="Watch">⌚ საათები</option>
                   <option value="Sparkles">✨ ზოგადი / სხვა</option>
+                  <option value="Smartphone">📱 სმარტფონები</option>
+                  <option value="Laptop">💻 ლეპტოპები</option>
                 </select>
 
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
