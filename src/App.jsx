@@ -517,7 +517,7 @@ export default function App() {
             coupons={coupons || []}
             setCoupons={setCoupons}
             categoriesList={categories}
-            setCategoriesList={setCategories}
+            setCategoriesList={setCategoriesList} 
             bannersList={bannersList || []}
             setBannersList={setBannersList}
             siteSettings={siteSettings}
