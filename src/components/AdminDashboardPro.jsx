@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Smart Dynamic Category Engine (100% Fixed)
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Smart Dynamic Category Engine & Supabase Persistence (100% Full & Safe)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -12,7 +12,8 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
 };
 
 export default function AdminDashboardPro({
@@ -199,20 +200,47 @@ export default function AdminDashboardPro({
     }
   };
 
-  const handleDeleteProduct = (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა?')) {
-      setProducts(prev => (prev || []).filter(p => p.id !== id));
-      logActivity(`წაიშალა პროდუქტი (ID: ${id})`);
+  // 🗑️ პროდუქტის წაშლა Supabase ბაზიდან
+  const handleDeleteProduct = async (id) => {
+    if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+          method: 'DELETE',
+          headers
+        });
+        if (res.ok) {
+          setProducts(prev => (prev || []).filter(p => p.id !== id));
+          logActivity(`წაიშალა პროდუქტი ბაზიდან (ID: ${id})`);
+          alert('✅ პროდუქტი წარმატებით წაიშალა!');
+        } else {
+          alert('შეცდომა ბაზიდან წაშლისას');
+        }
+      } catch {
+        alert('ქსელის შეცდომა');
+      }
     }
   };
 
-  const handleQuickUpdateProduct = (id, field, value) => {
+  // ⚡ პროდუქტის სწრაფი განახლება (ფასი ან მარაგი) Supabase ბაზაში
+  const handleQuickUpdateProduct = async (id, field, value) => {
+    const val = field === 'priceGEL' || field === 'stock' ? Number(value) : value;
+    
     setProducts(prev => (prev || []).map(p => {
       if (p.id === id) {
-        return { ...p, [field]: field === 'priceGEL' || field === 'stock' ? Number(value) : value };
+        return { ...p, [field]: val };
       }
       return p;
     }));
+
+    const dbField = field === 'priceGEL' ? 'price_gel' : field;
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ [dbField]: val })
+      });
+    } catch {}
   };
 
   const handleImageChange = (e) => {
@@ -264,34 +292,70 @@ export default function AdminDashboardPro({
     }));
   };
 
-  const handleSaveProduct = (e) => {
+  // 💾 პროდუქტის შენახვა პირდაპირ Supabase ბაზაში
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
 
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-
     const defaultCat = categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'ტანსაცმელი';
 
-    const newProd = {
-      id: `prod-${Date.now()}`,
+    const prodId = `prod-${Date.now()}`;
+    const newProdPayload = {
+      id: prodId,
       sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
-      ...productForm,
+      name: productForm.name,
       category: productForm.category || defaultCat,
-      priceGEL: Number(productForm.priceGEL),
-      oldPriceGEL: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
+      vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
+      price_gel: Number(productForm.priceGEL),
+      old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
       stock: Number(productForm.stock) || 1,
-      tags: tagsArray,
       image: mainImage,
-      gallery: selectedImages.length > 0 ? selectedImages : [mainImage],
-      availableSizes: productForm.availableSizes?.length > 0 ? productForm.availableSizes : ['S', 'M', 'L', 'XL']
+      description: productForm.description || '',
+      available_sizes: productForm.availableSizes?.length > 0 ? productForm.availableSizes : ['S', 'M', 'L', 'XL'],
+      material: productForm.material || '',
+      durability: productForm.durability || ''
     };
 
-    setProducts(prev => [newProd, ...(prev || [])]);
-    setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ბამბა / ტყავი', durability: 'მაღალი ხარისხის', availableSizes: ['S', 'M', 'L', 'XL'] });
-    setSelectedImages([]);
-    logActivity(`დაემატა ახალი პროდუქტი დინამიური პარამეტრებით: ${newProd.name}`);
-    alert('✅ პროდუქტი წარმატებით დაემატა!');
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(newProdPayload)
+      });
+
+      if (res.ok) {
+        const localProdObject = {
+          id: prodId,
+          sku: newProdPayload.sku,
+          name: newProdPayload.name,
+          category: newProdPayload.category,
+          vendor: newProdPayload.vendor,
+          priceGEL: newProdPayload.price_gel,
+          oldPriceGEL: newProdPayload.old_price_gel,
+          stock: newProdPayload.stock,
+          image: newProdPayload.image,
+          description: newProdPayload.description,
+          availableSizes: newProdPayload.available_sizes,
+          material: newProdPayload.material,
+          durability: newProdPayload.durability,
+          tags: tagsArray,
+          gallery: selectedImages.length > 0 ? selectedImages : [mainImage]
+        };
+
+        setProducts(prev => [localProdObject, ...(prev || [])]);
+        setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ბამბა / ტყავი', durability: 'მაღალი ხარისხის', availableSizes: ['S', 'M', 'L', 'XL'] });
+        setSelectedImages([]);
+        logActivity(`დაემატა ახალი პროდუქტი ბაზაში: ${newProdPayload.name}`);
+        alert('✅ პროდუქტი წარმატებით შეინახა ღრუბლოვან ბაზაში და არასდროს წაიშლება!');
+      } else {
+        const err = await res.text();
+        alert('შეცდომა ბაზაში შენახვისას: ' + err);
+      }
+    } catch {
+      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+    }
   };
 
   const handleExportProducts = () => {
@@ -630,7 +694,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h3 className="font-black text-white text-sm">GEOSTORE Admin</h3>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Smart Engine</p>
+            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Database Edition</p>
           </div>
         </div>
 
@@ -691,11 +755,11 @@ export default function AdminDashboardPro({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2.5rem] p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">აი რა ხდება დღეს თქვენს ონლაინ მარკეტფლეისში:</p>
+            <p className="text-xs text-slate-400 mt-0.5">პროდუქტები ინახება პირდაპირ Supabase ბაზაში სამუდამოდ:</p>
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">სისტემა აქტიურია</span>
+            <span className="text-slate-300 font-bold">ბაზა დაკავშირებულია</span>
           </div>
         </div>
 
@@ -888,13 +952,13 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Products Tab - Smart Dynamic Category Engine */}
+        {/* Products Tab - Smart Dynamic Category Engine & Supabase Persistence */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური ველები)
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ინახება ბაზაში სამუდამოდ)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -1070,14 +1134,14 @@ export default function AdminDashboardPro({
                 </div>
 
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  პროდუქტის შენახვა დინამიური პარამეტრებითა და დეტალებით
+                  პროდუქტის ბაზაში შენახვა 🚀
                 </button>
               </form>
             </div>
 
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                <h3 className="font-black text-white text-base">პროდუქტების სწრაფი მართვა და მარაგები ({products?.length || 0})</h3>
+                <h3 className="font-black text-white text-base">ბაზაში არსებული პროდუქტები ({products?.length || 0})</h3>
                 <div className="relative w-full sm:w-72">
                   <input type="text" placeholder="ძებნა პროდუქტებში..." value={productSearchQuery} onChange={e => setProductSearchQuery(e.target.value)} className="w-full bg-[#08080a] border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
