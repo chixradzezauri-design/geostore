@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Elite Gold Fashion & Tech Boutique Edition with Subcategories Support (100% Full & Safe)
+// src/components/StoreView.jsx - Elite Gold Fashion & Tech Boutique Edition with Advanced Variants Support (100% Full & Safe)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -49,6 +49,7 @@ export default function StoreView({
           description: p.description,
           availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
           availableColors: p.available_colors || ['შავი', 'თეთრი'],
+          variants: p.variants || [],
           material: p.material,
           durability: p.durability,
           tags: p.tags || [],
@@ -76,6 +77,7 @@ export default function StoreView({
 
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('');
+  const [selectedCustomVariant, setSelectedCustomVariant] = useState(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   const [isGiftWrapped, setIsGiftWrapped] = useState(false);
@@ -119,12 +121,13 @@ export default function StoreView({
     setSelectedProduct(prod);
     setActiveImage(prod.image);
     
-    const isShoe = (prod.category || '').toLowerCase().includes('ფეხსაცმელ') || (prod.category || '').toLowerCase().includes('shoe');
-    const defaultSizes = prod.availableSizes || (isShoe ? ['38', '39', '40', '41', '42'] : ['S', 'M', 'L', 'XL']);
+    const defaultSizes = prod.availableSizes || ['S', 'M', 'L', 'XL'];
     setSelectedSize(defaultSizes[0] || 'M');
 
-    const defaultColors = prod.availableColors || (prod.colors ? prod.colors.split(',').map(c => c.trim()) : []);
+    const defaultColors = prod.availableColors || ['შავი'];
     setSelectedColor(defaultColors[0] || '');
+
+    setSelectedCustomVariant(prod.variants && prod.variants.length > 0 ? prod.variants[0] : null);
 
     setIsGiftWrapped(false);
     setGiftMessage('');
@@ -230,6 +233,8 @@ export default function StoreView({
     if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-4 h-4 text-amber-400" />;
     return <Sparkles className="w-4 h-4 text-amber-400" />;
   };
+
+  const currentBasePrice = selectedCustomVariant ? selectedCustomVariant.priceGEL : (selectedProduct?.priceGEL || 0);
 
   return (
     <div className="space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -531,7 +536,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL WITH VARIANTS */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
@@ -539,7 +544,7 @@ export default function StoreView({
             
             <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
+                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი & ვარიანტები
               </span>
               <button 
                 onClick={() => setSelectedProduct(null)} 
@@ -581,10 +586,35 @@ export default function StoreView({
 
                   <div className="bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
                     <span className="text-xl sm:text-3xl font-black text-amber-400">
-                      {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
+                      {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
                     {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
+
+                  {/* 🌟 ინდივიდუალური ვარიანტები (Variants Selection) */}
+                  {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+                    <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/30">
+                      <span className="text-amber-400 font-bold block flex items-center gap-1.5">
+                        <Layers className="w-4 h-4" /> აირჩიეთ ინდივიდუალური ვარიანტი:
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {selectedProduct.variants.map(v => {
+                          const isSel = selectedCustomVariant?.id === v.id;
+                          return (
+                            <button
+                              key={v.id}
+                              type="button"
+                              onClick={() => setSelectedCustomVariant(v)}
+                              className={`p-3 rounded-2xl text-left transition cursor-pointer border flex justify-between items-center ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
+                            >
+                              <span>{v.name}</span>
+                              <span className="font-black">{v.priceGEL} ₾</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {(selectedProduct.material || selectedProduct.durability) && (
                     <div className="bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -776,14 +806,14 @@ export default function StoreView({
 
                   <button 
                     onClick={() => { 
-                      let customName = `${selectedProduct.name} (${selectedSize}${selectedColor ? `, ${selectedColor}` : ''})`;
+                      let customName = `${selectedProduct.name} (${selectedSize}${selectedColor ? `, ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
                       if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
                       if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
                       if (hasVipWarranty) customName += ' + VIP გარანტია';
 
                       addToCart({ 
                         ...selectedProduct, 
-                        priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
+                        priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
                         name: customName 
                       }); 
                       setSelectedProduct(null); 
