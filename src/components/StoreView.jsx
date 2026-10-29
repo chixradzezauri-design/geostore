@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Elite Gold Fashion & Tech Boutique Edition with Advanced Variants Support (100% Full & Safe)
+// src/components/StoreView.jsx - Elite Smart Size System & Advanced Variants Edition (100% Full & Safe)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -44,7 +44,7 @@ export default function StoreView({
           vendor: p.vendor,
           priceGEL: p.price_gel,
           oldPriceGEL: p.old_price_gel,
-          stock: p.stock,
+          stock: p.stock ?? 10,
           image: p.image,
           description: p.description,
           availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
@@ -79,6 +79,12 @@ export default function StoreView({
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedCustomVariant, setSelectedCustomVariant] = useState(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  // 🌟 ჭკვიანი ზომის შერჩევის სახელმწიფო (Smart Size Recommender)
+  const [isSmartSizeModalOpen, setIsSmartSizeModalOpen] = useState(false);
+  const [userHeight, setUserHeight] = useState('');
+  const [userWeight, setUserWeight] = useState('');
+  const [smartRecommendedSize, setSmartRecommendedSize] = useState(null);
 
   const [isGiftWrapped, setIsGiftWrapped] = useState(false);
   const [giftMessage, setGiftMessage] = useState('');
@@ -132,10 +138,47 @@ export default function StoreView({
     setIsGiftWrapped(false);
     setGiftMessage('');
     setHasVipWarranty(false);
+    setSmartRecommendedSize(null);
+    setUserHeight('');
+    setUserWeight('');
     setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
     setNewReviewImage('');
+  };
+
+  const handleCalculateSmartSize = (e) => {
+    e.preventDefault();
+    const h = Number(userHeight);
+    const w = Number(userWeight);
+    if (!h || !w) return;
+
+    let rec = 'M';
+    const cat = (selectedProduct?.category || '').toLowerCase();
+    const isShoe = cat.includes('ფეხსაცმელ') || cat.includes('shoe');
+
+    if (isShoe) {
+      if (h < 165) rec = '39';
+      else if (h < 172) rec = '40';
+      else if (h < 178) rec = '41';
+      else if (h < 184) rec = '42';
+      else rec = '43';
+    } else {
+      if (w < 60) rec = 'S';
+      else if (w < 72) rec = 'M';
+      else if (w < 85) rec = 'L';
+      else if (w < 98) rec = 'XL';
+      else rec = 'XXL';
+    }
+
+    // შევამოწმოთ არის თუ არა მარაგში მითითებული ზომა
+    const available = selectedProduct?.availableSizes || ['S', 'M', 'L', 'XL'];
+    if (!available.includes(rec)) {
+      rec = available[0] || 'M';
+    }
+
+    setSmartRecommendedSize(rec);
+    setSelectedSize(rec);
   };
 
   const handleReviewImageChange = (e) => {
@@ -525,10 +568,10 @@ export default function StoreView({
                 </div>
 
                 <button 
-                  onClick={() => addToCart(prod)} 
+                  onClick={() => handleOpenProduct(prod)} 
                   className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3.5 sm:py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> კალათაში დამატება
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> ზომის არჩევა & კალათა
                 </button>
               </div>
             );
@@ -536,7 +579,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL WITH VARIANTS */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL WITH SMART SIZES & STOCK CHECK */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
@@ -544,7 +587,7 @@ export default function StoreView({
             
             <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი & ვარიანტები
+                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი & ჭკვიანი ზომები
               </span>
               <button 
                 onClick={() => setSelectedProduct(null)} 
@@ -633,24 +676,40 @@ export default function StoreView({
                     </div>
                   )}
 
-                  <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
-                      <button onClick={() => setIsSizeGuideOpen(true)} className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
-                        <Ruler className="w-3.5 h-3.5" /> ზომების გიდი
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 w-full">
-                      {(selectedProduct.availableSizes || ['S', 'M', 'L', 'XL']).map(size => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => setSelectedSize(size)}
-                          className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-400 border-amber-500/20 hover:text-white'}`}
-                        >
-                          {size}
+                  {/* 🌟 100% მარაგში არსებული ზომების სელექტორი & ჭკვიანი რეკომენდატორი */}
+                  <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <div className="flex justify-between items-center flex-wrap gap-2">
+                      <span className="text-slate-300 font-bold">აირჩიეთ ზომა (მხოლოდ მარაგშია): <b className="text-amber-400">{selectedSize}</b></span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setIsSmartSizeModalOpen(true)} className="text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-amber-500/20 transition shadow">
+                          <Calculator className="w-3.5 h-3.5 text-amber-400" /> ჭკვიანი ზომის შერჩევა
                         </button>
-                      ))}
+                        <button onClick={() => setIsSizeGuideOpen(true)} className="text-slate-400 hover:text-white font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
+                          <Ruler className="w-3.5 h-3.5" /> გიდი
+                        </button>
+                      </div>
+                    </div>
+
+                    {smartRecommendedSize && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-2xl text-amber-300 text-[11px] font-bold flex items-center gap-2 animate-in fade-in">
+                        <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>რეკომენდებული ზომა თქვენი პარამეტრებით: <b className="text-white underline">{smartRecommendedSize}</b></span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 w-full">
+                      {(selectedProduct.availableSizes || ['S', 'M', 'L', 'XL']).map(size => {
+                        return (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => setSelectedSize(size)}
+                            className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                          >
+                            {size} 🟢
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -806,7 +865,7 @@ export default function StoreView({
 
                   <button 
                     onClick={() => { 
-                      let customName = `${selectedProduct.name} (${selectedSize}${selectedColor ? `, ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
+                      let customName = `${selectedProduct.name} (ზომა: ${selectedSize}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
                       if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
                       if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
                       if (hasVipWarranty) customName += ' + VIP გარანტია';
@@ -814,13 +873,15 @@ export default function StoreView({
                       addToCart({ 
                         ...selectedProduct, 
                         priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
-                        name: customName 
+                        name: customName,
+                        selectedSize: selectedSize,
+                        selectedColor: selectedColor
                       }); 
                       setSelectedProduct(null); 
                     }} 
                     className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
                   >
-                    <ShoppingBag className="w-5 h-5" /> კალათაში დამატება ({selectedSize} {selectedColor ? `/ ${selectedColor}` : ''})
+                    <ShoppingBag className="w-5 h-5" /> კალათაში დამატება (ზომა: {selectedSize})
                   </button>
 
                 </div>
@@ -828,6 +889,57 @@ export default function StoreView({
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი (Smart Size Recommender Modal) */}
+      {isSmartSizeModalOpen && (
+        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <form onSubmit={handleCalculateSmartSize} className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+            <button type="button" onClick={() => setIsSmartSizeModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
+            
+            <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
+              <div className="bg-amber-500/20 p-3 rounded-2xl border border-amber-500/30">
+                <Calculator className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white">ჭკვიანი ზომის შერჩევა</h3>
+                <p className="text-[11px] text-slate-400">მიეთითეთ თქვენი პარამეტრები</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-slate-300 font-bold block mb-1">თქვენი სიმაღლე (სმ):</label>
+                <input 
+                  type="number" 
+                  placeholder="მაგ: 178" 
+                  required
+                  value={userHeight}
+                  onChange={e => setUserHeight(e.target.value)}
+                  className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-3 text-white outline-none focus:border-amber-400"
+                />
+              </div>
+              <div>
+                <label className="text-slate-300 font-bold block mb-1">თქვენი წონა (კგ):</label>
+                <input 
+                  type="number" 
+                  placeholder="მაგ: 75" 
+                  required
+                  value={userWeight}
+                  onChange={e => setUserWeight(e.target.value)}
+                  className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-3 text-white outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit"
+              className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
+            >
+              ზომის გამოთვლა & შერჩევა
+            </button>
+          </form>
         </div>
       )}
 
@@ -863,6 +975,7 @@ export default function StoreView({
                     <tr><td className="py-1.5 font-bold text-amber-300">M</td><td>93-96</td><td>75-79</td></tr>
                     <tr><td className="py-1.5 font-bold text-amber-300">L</td><td>97-102</td><td>80-85</td></tr>
                     <tr><td className="py-1.5 font-bold text-amber-300">XL</td><td>103-108</td><td>86-91</td></tr>
+                    <tr><td className="py-1.5 font-bold text-amber-300">XXL</td><td>109-115</td><td>92-98</td></tr>
                   </tbody>
                 </table>
               </div>
