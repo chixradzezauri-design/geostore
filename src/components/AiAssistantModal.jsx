@@ -1,4 +1,4 @@
-// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Real-Time DB Sync & Ultra-Flexible Search
+// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Real-Time DB Sync & Product Context
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -29,21 +29,40 @@ export default function AiAssistantModal({
   orders = [],
   coupons = [],
   siteSettings = {},
+  selectedProduct = null, // 🎯 ახალი: კონტექსტური პროდუქტი StoreView-დან
   addToCart,
   formatPrice
 }) {
-  const initialGreeting = {
-    id: 'm1',
-    sender: 'ai',
-    text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული რეალურ დროში წვდომა პროდუქტებზე, თეგებზე, კუპონებზე, ვენდერებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?'
+  const getInitialGreeting = () => {
+    if (selectedProduct) {
+      return {
+        id: 'm1',
+        sender: 'ai',
+        text: `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ? გსურთ გაიგოთ მეტი მახასიათებლებზე, მასალაზე ან მარაგზე?`,
+        recommendedProducts: [selectedProduct]
+      };
+    }
+    return {
+      id: 'm1',
+      sender: 'ai',
+      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული რეალურ დროში წვდომა პროდუქტებზე, თეგებზე, კუპონებზე, ვენდერებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?'
+    };
   };
 
-  const [messages, setMessages] = useState([initialGreeting]);
+  const [messages, setMessages] = useState([getInitialGreeting()]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [liveProducts, setLiveProducts] = useState(products);
   const [lastQueryCategory, setLastQueryCategory] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // როდესაც ჩატი იხსნება ან იცვლება selectedProduct, განახლდეს საწყისი მისალმება
+  useEffect(() => {
+    if (isAiAssistantOpen) {
+      setMessages([getInitialGreeting()]);
+      fetchLiveProducts();
+    }
+  }, [isAiAssistantOpen, selectedProduct]);
 
   // 🔄 პროდუქტების და თეგების დინამიური წამოღება Supabase ბაზიდან
   const fetchLiveProducts = async () => {
@@ -53,7 +72,6 @@ export default function AiAssistantModal({
         const data = await res.json();
         if (data && data.length > 0) {
           const formatted = data.map(p => {
-            // თეგების მოქნილი დამუშავება (თუ ტექსტია ან მასივია)
             let parsedTags = [];
             if (p.tags) {
               if (Array.isArray(p.tags)) parsedTags = p.tags;
@@ -71,7 +89,9 @@ export default function AiAssistantModal({
               vendor: p.vendor || 'GEOSTORE ოფიციალური',
               image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
               tags: parsedTags,
-              description: p.description || ''
+              description: p.description || '',
+              material: p.material || '',
+              durability: p.durability || ''
             };
           });
           setLiveProducts(formatted);
@@ -81,12 +101,6 @@ export default function AiAssistantModal({
     } catch {}
     return liveProducts.length > 0 ? liveProducts : products;
   };
-
-  useEffect(() => {
-    if (isAiAssistantOpen) {
-      fetchLiveProducts();
-    }
-  }, [isAiAssistantOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -99,7 +113,7 @@ export default function AiAssistantModal({
   }, [messages, isAiAssistantOpen]);
 
   const handleResetChat = () => {
-    setMessages([initialGreeting]);
+    setMessages([getInitialGreeting()]);
     setLastQueryCategory(null);
   };
 
@@ -115,8 +129,10 @@ export default function AiAssistantModal({
     // 1. სალამი და ზოგადი საუბარი
     if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello') || query.includes('გამარჯობაა')) {
       return {
-        text: 'გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, თეგებზე (მაგ: NEW, SALE), ფასებზე, კუპონებზე ან შეკვეთის სტატუსზე!',
-        products: []
+        text: selectedProduct 
+          ? `დიახ! კვლავ ვსაუბრობთ პროდუქტზე "${selectedProduct.name}". რით შეგვიძლია გავაგრძელოთ?`
+          : 'გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, თეგებზე (მაგ: NEW, SALE), ფასებზე, კუპონებზე ან შეკვეთის სტატუსზე!',
+        products: selectedProduct ? [selectedProduct] : []
       };
     }
 
@@ -124,6 +140,14 @@ export default function AiAssistantModal({
       return {
         text: 'მე ვარ GEOSTORE-ის სრულუფლებიანი AI ასისტენტი 🤖. მაქვს სრული წვდომა:\n\n• პროდუქტების კატალოგზე და თეგებზე (Tags)\n• მიმდინარე ფასდაკლებებსა და პრომო კუპონებზე\n• ვენდერებისა და პარტნიორების სიებზე\n• შეკვეთების ტრეკინგზე (#ORD კოდით)\n• მიწოდების, გარანტიისა და განვადების პირობებზე',
         products: []
+      };
+    }
+
+    // თუ მომხმარებელი კითხულობს მიმდინარე გახსნილ პროდუქტზე
+    if (selectedProduct && (query.includes('ეს') || query.includes('პროდუქტ') || query.includes('მასალა') || query.includes('ზომა') || query.includes('ფასი') || query.includes('აღწერა'))) {
+      return {
+        text: `📦 პროდუქტი: ${selectedProduct.name}\n💰 ფასი: ${formatPrice(selectedProduct.priceGEL)}\n🏷️ კატეგორია: ${selectedProduct.category}\n${selectedProduct.material ? `🧵 მასალა: ${selectedProduct.material}\n` : ''}${selectedProduct.durability ? `🛡️ მდგრადობა: ${selectedProduct.durability}\n` : ''}\n📝 აღწერა: ${selectedProduct.description || 'არ არის მითითებული.'}`,
+        products: [selectedProduct]
       };
     }
 
@@ -247,16 +271,10 @@ export default function AiAssistantModal({
       const pSku = (p.sku || '').toLowerCase();
       const pVendor = (p.vendor || '').toLowerCase();
       
-      // ტეგების დაბალი რეგისტრის მასივი
       const pTagsLower = (p.tags || []).map(t => String(t).toLowerCase().trim());
 
-      // 1. პირდაპირი დამთხვევა თეგებში (მაგ: თუ მომხმარებელმა მიწერა "new")
       const tagMatch = words.some(w => pTagsLower.some(t => t.includes(w) || w.includes(t)));
-
-      // 2. დამთხვევა სახელში, აღწერაში ან SKU-ში
       const textMatch = words.some(w => pName.includes(w) || pCat.includes(w) || pDesc.includes(w) || pSku.includes(w) || pVendor.includes(w));
-
-      // 3. სინონიმების დამთხვევა
       const synonymMatch = (isLaptopSearch && (pCat.includes('ლეპტოპ') || pName.includes('laptop') || pName.includes('macbook'))) ||
                            (isPhoneSearch && (pCat.includes('სმარტფონ') || pName.includes('iphone') || pName.includes('phone')));
 
@@ -286,7 +304,6 @@ export default function AiAssistantModal({
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    // 🔄 რეალურ დროში Supabase-იდან უახლესი მონაცემების წამოღება ყოველ შეტყობინებაზე
     const refreshedProducts = await fetchLiveProducts();
 
     setTimeout(() => {
@@ -316,7 +333,9 @@ export default function AiAssistantModal({
               <h3 className="font-black text-white text-xs sm:text-sm flex items-center gap-1.5">
                 GEOSTORE AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
-              <p className="text-[10px] text-emerald-400 font-bold">ინტელექტუალური ასისტენტი (Live DB Sync)</p>
+              <p className="text-[10px] text-emerald-400 font-bold">
+                {selectedProduct ? `კონტექსტი: ${selectedProduct.name}` : 'ინტელექტუალური ასისტენტი (Live DB Sync)'}
+              </p>
             </div>
           </div>
           
