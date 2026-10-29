@@ -57,6 +57,35 @@ export default function AdminDashboardPro({
   const [editUserDiscount, setEditUserDiscount] = useState('');
   const [editUserNotes, setEditUserNotes] = useState('');
 
+  // 🌟 შეკვეთების რეალურ დროში წამოღება Supabase ბაზიდან ადმინ პანელისთვის
+  const fetchAdminOrders = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof setOrders === 'function') {
+          setOrders(data.map(o => ({
+            id: o.id,
+            date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+            customerName: o.customer_name,
+            user_email: o.user_email || '',
+            phone: o.phone,
+            address: o.address,
+            totalGEL: Number(o.total_gel) || 0,
+            status: o.status || 'ახალი',
+            itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity})`).join(', ') : 'პროდუქტები'
+          })));
+        }
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchAdminOrders();
+    const interval = setInterval(fetchAdminOrders, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   const safeCategories = React.useMemo(() => {
     try {
       if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null }];
