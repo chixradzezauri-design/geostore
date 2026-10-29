@@ -60,8 +60,8 @@ export default function Modals({
     <>
       {/* 1. შეკვეთის გაფორმების მოდალი */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-md w-full p-8 space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-thin">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <ShoppingBag className="w-5 h-5 text-amber-400" /> შეკვეთის გაფორმება
@@ -131,8 +131,8 @@ export default function Modals({
 
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
       {isTrackerOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
             
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -164,8 +164,8 @@ export default function Modals({
             )}
 
             {trackedOrder ? (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="bg-[#121216] p-5 rounded-3xl border border-amber-500/20 space-y-3">
+              <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+                <div className="bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20 space-y-3">
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold block">შეკვეთის კოდი</span>
@@ -192,7 +192,7 @@ export default function Modals({
                   </div>
                 </div>
 
-                <div className="space-y-3 bg-[#121216] p-5 rounded-3xl border border-amber-500/20">
+                <div className="space-y-3 bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20">
                   <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
                     <Clock className="w-4 h-4" /> მიწოდების სტატუსის პროგრესი
                   </h4>
@@ -205,7 +205,7 @@ export default function Modals({
                       ></div>
                     </div>
 
-                    <div className="grid grid-cols-4 text-[10px] text-center font-bold text-slate-400">
+                    <div className="grid grid-cols-4 text-[9px] sm:text-[10px] text-center font-bold text-slate-400">
                       <div className={getStatusProgress(trackedOrder.status) >= 15 ? 'text-amber-400' : ''}>1. მიღებულია</div>
                       <div className={getStatusProgress(trackedOrder.status) >= 40 ? 'text-amber-400' : ''}>2. მზადდება</div>
                       <div className={getStatusProgress(trackedOrder.status) >= 75 ? 'text-amber-400' : ''}>3. გზაშია 🚚</div>
@@ -214,7 +214,7 @@ export default function Modals({
                   </div>
                 </div>
 
-                <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-5 space-y-3 relative overflow-hidden shadow-2xl">
+                <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-4 sm:p-5 space-y-3 relative overflow-hidden shadow-2xl">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xs font-bold text-white flex items-center gap-2">
                       <Map className="w-4 h-4 text-amber-400" /> კურიერის ლაივ-რუკა
@@ -224,7 +224,7 @@ export default function Modals({
                     </span>
                   </div>
 
-                  <div className="h-44 bg-slate-900 rounded-2xl relative overflow-hidden flex items-center justify-center border border-amber-500/20 group">
+                  <div className="h-40 sm:h-44 bg-slate-900 rounded-2xl relative overflow-hidden flex items-center justify-center border border-amber-500/20 group">
                     <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
                     
                     <div className="absolute w-3/4 h-1 bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full animate-pulse"></div>
@@ -261,8 +261,8 @@ export default function Modals({
 
       {/* 3. ავტორიზაცია / რეგისტრაცია */}
       {isAuthOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-sm w-full p-8 space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Lock className="w-5 h-5 text-amber-400" /> {authMode === 'login' ? 'ავტორიზაცია' : 'რეგისტრაცია'}
@@ -343,8 +343,8 @@ export default function Modals({
 
       {/* 4. წესები და პირობები */}
       {isTermsOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-xl w-full p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <FileText className="w-5 h-5 text-amber-400" /> წესები და პირობები
@@ -354,7 +354,7 @@ export default function Modals({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-none">
+            <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-thin">
               <div className="space-y-2 bg-[#121216] p-4 rounded-2xl border border-amber-500/20">
                 <h4 className="font-black text-amber-300 text-sm">1. ზოგადი დებულებები</h4>
                 <p>GEOSTORE მარკეტფლეისზე შეკვეთის გაფორმებით მომხმარებელი ეთანხმება წინამდებარე წესებსა და პირობებს.</p>
@@ -380,8 +380,8 @@ export default function Modals({
 
       {/* 5. საგარანტიო წესები */}
       {isWarrantyOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2.5rem] max-w-xl w-full p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-amber-400" /> საგარანტიო წესები
@@ -391,7 +391,7 @@ export default function Modals({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-none">
+            <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-thin">
               <div className="space-y-2 bg-[#121216] p-4 rounded-2xl border border-amber-500/20">
                 <h4 className="font-black text-amber-300 text-sm">1. ოფიციალური გარანტია</h4>
                 <p>GEOSTORE-ზე წარმოდგენილ ყველა ტექნიკაზე მოქმედებს 1-დან 3 წლამდე ქარხნული გარანტია.</p>
