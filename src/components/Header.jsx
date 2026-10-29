@@ -1,6 +1,6 @@
-// src/components/Header.jsx - Elite Gold Luxury Boutique Edition (Refined & Optimized)
+// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with Advanced Notifications Bell
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
@@ -15,6 +15,8 @@ export default function Header({
   setIsImageSearchOpen, 
   setIsComparisonOpen,
   setIsTrackerOpen,
+  setIsNotificationsOpen,
+  unreadNotificationsCount = 0,
   searchQuery,
   setSearchQuery
 }) {
@@ -66,6 +68,16 @@ export default function Header({
               <PackageCheck className="w-4 h-4 text-amber-400" /> შეკვეთის ძებნა
             </button>
 
+            {/* 🔔 Notifications Bell Button */}
+            <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-3 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400/50 transition-all shadow-sm cursor-pointer hover:scale-105" title="შეტყობინებები">
+              <Bell className="w-4 h-4 text-amber-400" />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 rounded-full w-5 h-5 text-[10px] font-black flex items-center justify-center shadow-md animate-bounce">
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+
             <button onClick={() => setIsAiAssistantOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 hover:bg-amber-500/20 transition-all shadow-sm cursor-pointer hover:scale-105">
               <Bot className="w-4 h-4 text-amber-400 animate-pulse" /> AI ასისტენტი
             </button>
@@ -100,6 +112,15 @@ export default function Header({
 
           {/* MOBILE QUICK BUTTONS & HAMBURGER */}
           <div className="flex items-center gap-2 lg:hidden">
+            <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
+              <Bell className="w-4 h-4" />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[10px] font-black flex items-center justify-center">
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+
             <button onClick={() => setIsImageSearchOpen(true)} className="p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
               <Camera className="w-4 h-4" />
             </button>
@@ -144,7 +165,7 @@ export default function Header({
               </button>
             </div>
 
-            {/* Smart Features Grid (AI & Tracker) */}
+            {/* Smart Features Grid (AI & Tracker & Notifications) */}
             <div className="grid grid-cols-2 gap-2.5">
               <button onClick={() => { setIsTrackerOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm active:scale-95 transition cursor-pointer">
                 <PackageCheck className="w-4 h-4 text-amber-400" /> შეკვეთის ძებნა
@@ -153,6 +174,10 @@ export default function Header({
                 <Bot className="w-4 h-4 text-amber-400" /> AI ასისტენტი
               </button>
             </div>
+
+            <button onClick={() => { setIsNotificationsOpen && setIsNotificationsOpen(true); setMobileMenuOpen(false); }} className="w-full bg-amber-500/10 text-amber-300 p-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/30 shadow-sm transition cursor-pointer">
+              <Bell className="w-4 h-4 text-amber-400" /> შეტყობინებების ცენტრი ({unreadNotificationsCount})
+            </button>
 
             {/* Grid Cards for Navigation */}
             <div className="grid grid-cols-2 gap-2.5 text-xs font-bold pt-1">
