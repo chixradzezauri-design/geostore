@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Elite Smart Size System (Conditional Category Size Fix) & Advanced Variants Edition
+// src/components/StoreView.jsx - Elite Smart Size System, Conditional Sizes & Sticky Cart Button Edition (100% Full & Safe)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -123,7 +123,7 @@ export default function StoreView({
     try { localStorage.setItem('geostore_product_reviews', JSON.stringify(allReviews)); } catch {}
   }, [allReviews]);
 
-  // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი, რომელსაც სჭირდება ზომები
+  // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი
   const isClothingOrFootwear = (prod) => {
     if (!prod) return false;
     const cat = (prod.category || '').toLowerCase();
@@ -262,7 +262,7 @@ export default function StoreView({
     } else if (sortBy === 'price-desc') {
       result.sort((a, b) => b.priceGEL - a.priceGEL);
     } else if (sortBy === 'name-asc') {
-      result.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
+      result.sort((a, b) => b.name.localeCompare(a.name, 'ka'));
     }
 
     return result;
@@ -587,13 +587,14 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL (Conditional Size Selection for Clothing/Footwear ONLY) */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL WITH CONDITIONAL SIZES & STICKY CART BUTTON */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
           <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
             
-            <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
+            {/* Header */}
+            <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0 z-20">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
               </span>
@@ -606,7 +607,8 @@ export default function StoreView({
               </button>
             </div>
 
-            <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin">
+            {/* Scrollable Content Area */}
+            <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 <div className="space-y-4">
@@ -684,7 +686,7 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {/* 🌟 ზომების ბლოკი ჩნდება მხოლოს ტანსაცმელსა და ფეხსაცმელზე! (AirPods / Electronics აღარ აჩვენებს) */}
+                  {/* 🌟 ზომების ბლოკი ჩნდება მხოლოდ ტანსაცმელსა და ფეხსაცმელზე! */}
                   {isClothingOrFootwear(selectedProduct) && (
                     <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
@@ -873,30 +875,33 @@ export default function StoreView({
                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => { 
-                      const isCf = isClothingOrFootwear(selectedProduct);
-                      let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
-                      if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
-                      if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
-                      if (hasVipWarranty) customName += ' + VIP გარანტია';
-
-                      addToCart({ 
-                        ...selectedProduct, 
-                        priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
-                        name: customName,
-                        selectedSize: isCf ? selectedSize : null,
-                        selectedColor: selectedColor
-                      }); 
-                      setSelectedProduct(null); 
-                    }} 
-                    className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
-                  >
-                    <ShoppingBag className="w-5 h-5" /> კალათაში დამატება {isClothingOrFootwear(selectedProduct) ? `(ზომა: ${selectedSize})` : ''}
-                  </button>
-
                 </div>
               </div>
+            </div>
+
+            {/* 🌟 STICKY / FIXED FOOTER CART BUTTON (მუდმივად ჩანს მოდალის ბოლოში) */}
+            <div className="absolute bottom-0 left-0 right-0 bg-[#121216]/95 backdrop-blur-xl border-t border-amber-500/30 p-4 sm:p-5 shadow-2xl z-30">
+              <button 
+                onClick={() => { 
+                  const isCf = isClothingOrFootwear(selectedProduct);
+                  let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
+                  if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
+                  if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
+                  if (hasVipWarranty) customName += ' + VIP გარანტია';
+
+                  addToCart({ 
+                    ...selectedProduct, 
+                    priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
+                    name: customName,
+                    selectedSize: isCf ? selectedSize : null,
+                    selectedColor: selectedColor
+                  }); 
+                  setSelectedProduct(null); 
+                }} 
+                className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+              >
+                <ShoppingBag className="w-5 h-5" /> კალათაში დამატება {isClothingOrFootwear(selectedProduct) ? `(ზომა: ${selectedSize})` : ''} — {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
+              </button>
             </div>
 
           </div>
