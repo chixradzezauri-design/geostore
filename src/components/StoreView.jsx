@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24ilastKey...RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -74,7 +74,6 @@ export default function StoreView({
   const [sortBy, setSortBy] = useState('default');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [installmentMonths, setInstallmentMonths] = useState(12);
 
   // 👕 ზომისა და ფერის State
   const [selectedSize, setSelectedSize] = useState('M');
@@ -126,7 +125,6 @@ export default function StoreView({
   const handleOpenProduct = (prod) => {
     setSelectedProduct(prod);
     setActiveImage(prod.image);
-    setInstallmentMonths(12);
     
     const isShoe = (prod.category || '').toLowerCase().includes('ფეხსაცმელ') || (prod.category || '').toLowerCase().includes('shoe');
     const defaultSizes = prod.availableSizes || (isShoe ? ['38', '39', '40', '41', '42'] : ['S', 'M', 'L', 'XL']);
@@ -197,8 +195,7 @@ export default function StoreView({
     if (selectedSubCategory) {
       result = result.filter(p => p.category === selectedSubCategory);
     } else if (selectedCategory && selectedCategory !== 'ყველა') {
-      // ვამოწმებთ არის თუ არა მთავარი კატეგორია და ვეძებთ მის შვილობილ სუბკატეგორიებშიც
-      const matchedParent = mainCategories.find(c => c.name === selectedCategory);
+      const matchedParent = mainCategories.find(c => (typeof c === 'object' ? c.name : c) === selectedCategory);
       if (matchedParent) {
         const pId = matchedParent.id || matchedParent.name;
         const subNames = getSubCategories(pId).map(s => s.name);
@@ -394,7 +391,7 @@ export default function StoreView({
           })}
         </div>
 
-        {/* Subcategories Dropdown Bar (თუ მთავარ კატეგორიას აქვს სუბკატეგორიები) */}
+        {/* Subcategories Dropdown Bar */}
         {openParentCatId && (
           <div className="bg-[#0e0e12] border border-amber-500/30 p-4 rounded-3xl flex flex-wrap items-center gap-2.5 animate-in fade-in duration-300 shadow-xl">
             <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5 mr-2">
@@ -543,7 +540,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL (No Lag / Smooth Scroll) */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
