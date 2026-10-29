@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - 100% Fully Complete & Supabase Integrated Edition
+// src/components/StoreView.jsx - Elite Gold Fashion & Tech Boutique Edition (Optimized & Refined)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24ilastKey...RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -66,7 +66,6 @@ export default function StoreView({
     return () => clearInterval(interval);
   }, []);
 
-  // ვიყენებთ ბაზიდან წამოღებულ პროდუქტებს, ხოლო თუ ბაზა ცარიელია - საწყის პროდუქტებს
   const activeProducts = dbProducts.length > 0 ? dbProducts : (initialFilteredProducts || []);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -219,7 +218,7 @@ export default function StoreView({
   };
 
   return (
-    <div className="space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden">
+    <div className="space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
       {/* 🌟 HERO BANNER */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[2rem] p-5 sm:p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 group">
@@ -229,7 +228,7 @@ export default function StoreView({
           <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase shadow-inner">
             <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
             {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და ფეხსაცმელების ბუტიკი'}
           </h1>
           <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
@@ -258,43 +257,43 @@ export default function StoreView({
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-6 md:p-8 shadow-2xl space-y-6">
+        <div className="bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
                 <Timer className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  ⚡ FLASH SALE <span className="text-amber-400 text-xs bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/30">დროში შეზღუდული შეთავაზება</span>
+                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                  ⚡ FLASH SALE <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">დროში შეზღუდული შეთავაზება</span>
                 </h3>
                 <p className="text-slate-400 text-xs">იჩქარეთ, ფასდაკლება იწურება!</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 text-xs font-black">
-              <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
-                <span className="text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="block text-[9px] text-slate-400 uppercase">საათი</span>
+              <div className="bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+                <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">საათი</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
-              <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
-                <span className="text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="block text-[9px] text-slate-400 uppercase">წუთი</span>
+              <div className="bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+                <span className="text-sm sm:text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">წუთი</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
-              <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
-                <span className="text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="block text-[9px] text-slate-400 uppercase">წამი</span>
+              <div className="bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+                <span className="text-sm sm:text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">წამი</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {flashSaleProducts.map(prod => {
               return (
                 <div key={`flash-${prod.id}`} className="group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
-                  <div onClick={() => handleOpenProduct(prod)} className="relative bg-[#0d0d12] rounded-2xl p-4 h-44 flex items-center justify-center cursor-pointer overflow-hidden">
+                  <div onClick={() => handleOpenProduct(prod)} className="relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
                     <img src={prod.image} alt="" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                     <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
                   </div>
@@ -321,15 +320,15 @@ export default function StoreView({
           <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> კატეგორიები
           </h3>
-          <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-1.5 rounded-xl border border-amber-500/20 shadow-inner">
+          <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-3 sm:px-4 py-1.5 rounded-xl border border-amber-500/20 shadow-inner">
             {processedProducts?.length || 0} პროდუქტი ვიტრინაზე
           </span>
         </div>
         
-        <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-none px-1">
+        <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-3 scrollbar-none px-1">
           <button 
             onClick={() => setSelectedCategory('ყველა')} 
-            className={`px-6 py-3.5 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-lg ${
+            className={`px-5 sm:px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-lg ${
               selectedCategory === 'ყველა' 
                 ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
                 : 'bg-[#121216] text-slate-400 border border-amber-500/15 hover:text-white hover:border-amber-500/30'
@@ -344,7 +343,7 @@ export default function StoreView({
               <button 
                 key={cat.id || catName} 
                 onClick={() => setSelectedCategory(catName)} 
-                className={`px-6 py-3.5 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2.5 cursor-pointer shadow-lg ${
+                className={`px-5 sm:px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-lg ${
                   selectedCategory === catName 
                     ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
                     : 'bg-[#121216] text-slate-400 border border-amber-500/15 hover:text-white hover:border-amber-500/30'
@@ -359,17 +358,17 @@ export default function StoreView({
       </div>
 
       {/* Filters & Sorting */}
-      <div className="bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 text-slate-400 font-bold">
-            <SlidersHorizontal className="w-4 h-4 text-amber-400" /> ფასი (₾):
+      <div className="bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+        <div className="flex items-center gap-2.5 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+            <SlidersHorizontal className="w-4 h-4 text-amber-400" /> ფასი:
           </div>
           <input 
             type="number" 
             placeholder="Min" 
             value={minPrice} 
             onChange={e => setMinPrice(e.target.value)}
-            className="w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            className="w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           <span className="text-slate-500">-</span>
           <input 
@@ -377,21 +376,21 @@ export default function StoreView({
             placeholder="Max" 
             value={maxPrice} 
             onChange={e => setMaxPrice(e.target.value)}
-            className="w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            className="w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-2 cursor-pointer">გასუფთავება</button>
+            <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">გასუფთავება</button>
           )}
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-          <div className="flex items-center gap-2 text-slate-400 font-bold">
+        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+          <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> დალაგება:
           </div>
           <select 
             value={sortBy} 
             onChange={e => setSortBy(e.target.value)}
-            className="bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold"
+            className="bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
             <option value="default">ნაგულისხმევი</option>
             <option value="price-asc">ფასით: დაბლიდან მაღლა ⬆</option>
@@ -407,7 +406,7 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -418,17 +417,17 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <div key={prod.id} className="group bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem] p-5 flex flex-col justify-between hover:border-amber-400 transition-all duration-500 shadow-2xl hover:shadow-amber-500/15">
+              <div key={prod.id} className="group bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem] p-4 sm:p-5 flex flex-col justify-between hover:border-amber-400 transition-all duration-500 shadow-2xl hover:shadow-amber-500/15">
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
-                  className="relative bg-[#060608] rounded-3xl p-6 border border-amber-500/10 flex items-center justify-center h-60 overflow-hidden cursor-pointer group/img"
+                  className="relative bg-[#060608] rounded-3xl p-5 sm:p-6 border border-amber-500/10 flex items-center justify-center h-52 sm:h-60 overflow-hidden cursor-pointer group/img"
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
-                    className="absolute top-4 right-4 p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
+                    className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2.5 sm:p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
                     title="სურვილების სიაში დამატება"
                   >
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
@@ -436,18 +435,18 @@ export default function StoreView({
 
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
-                    className={`absolute top-16 right-4 p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
+                    className={`absolute top-14 right-3 sm:top-16 sm:right-4 p-2.5 sm:p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
                     title="შედარებაში დამატება"
                   >
                     <Scale className="w-4 h-4" />
                   </button>
 
-                  <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 z-10">
                     {prod.oldPriceGEL && (
-                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">ფასდაკლება</span>
+                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">ფასდაკლება</span>
                     )}
                     {tagsArray.slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow">{tag}</span>
+                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{tag}</span>
                     ))}
                   </div>
 
@@ -456,23 +455,23 @@ export default function StoreView({
                   </div>
                 </div>
 
-                <div className="py-4 space-y-3">
+                <div className="py-3 sm:py-4 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-3 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
-                    <div className="flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
+                    <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
+                    <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
-                  <div className="flex items-baseline gap-3 pt-1">
-                    <p className="text-amber-400 font-black text-lg">{formatPrice(prod.priceGEL)}</p>
+                  <h3 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <div className="flex items-baseline gap-2.5 pt-0.5">
+                    <p className="text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
                     {prod.oldPriceGEL && <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
                 <button 
                   onClick={() => addToCart(prod)} 
-                  className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
+                  className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3.5 sm:py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> კალათაში დამატება
                 </button>
@@ -484,12 +483,12 @@ export default function StoreView({
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL (No Lag / Smooth Scroll) */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[85vh]">
+          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
             
             {/* Modal Header Bar with Close Button */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
+            <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
               </span>
@@ -503,19 +502,19 @@ export default function StoreView({
             </div>
 
             {/* Modal Scrollable Body */}
-            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 {/* Left: Images */}
                 <div className="space-y-4">
-                  <div className="bg-[#060608] rounded-[2.5rem] p-6 border border-amber-500/30 flex items-center justify-center h-64 sm:h-80 shadow-2xl">
+                  <div className="bg-[#060608] rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 border border-amber-500/30 flex items-center justify-center h-60 sm:h-80 shadow-2xl">
                     <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                    <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
                       {selectedProduct.gallery.map((img, idx) => (
-                        <button key={idx} onClick={() => setActiveImage(img)} className={`w-20 h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
+                        <button key={idx} onClick={() => setActiveImage(img)} className={`w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
                           <img src={img} alt="" className="w-full h-full object-contain rounded-xl" />
                         </button>
                       ))}
@@ -524,26 +523,26 @@ export default function StoreView({
                 </div>
 
                 {/* Right: Info & Selectors */}
-                <div className="space-y-6 text-xs w-full">
+                <div className="space-y-5 sm:space-y-6 text-xs w-full">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
-                      <span className="text-[11px] text-slate-400 font-bold bg-[#141418] px-3.5 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
+                      <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-white leading-tight pt-2">{selectedProduct.name}</h2>
+                    <h2 className="text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
                     <p className="text-slate-400 text-xs">მომწოდებელი: <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                   </div>
 
-                  <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
-                    <span className="text-2xl sm:text-3xl font-black text-amber-400">
+                  <div className="bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
+                    <span className="text-xl sm:text-3xl font-black text-amber-400">
                       {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
-                    {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                    {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
-                  {/* 1 & 2. მასალა და მდგრადობა / წყალგაუმტარობა */}
+                  {/* 1 & 2. მასალა და მდგრადობა */}
                   {(selectedProduct.material || selectedProduct.durability) && (
-                    <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {selectedProduct.material && (
                         <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                           <span className="text-slate-400 block text-[10px]">მასალა / შემადგენლობა</span>
@@ -647,7 +646,7 @@ export default function StoreView({
                   </div>
 
                   {/* Description */}
-                  <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
+                  <div className="space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
                     <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.'}</p>
                   </div>
