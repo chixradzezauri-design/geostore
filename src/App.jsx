@@ -496,7 +496,7 @@ export default function App() {
             coupons={coupons}
             setCoupons={setCoupons}
             categoriesList={categories}
-            setCategoriesList={setCategoriesList}
+            setCategoriesList={setCategories}
             bannersList={bannersList}
             setBannersList={setBannersList}
             siteSettings={siteSettings}
@@ -772,13 +772,17 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      {/* AI ასისტენტის მოდალი */}
+      {/* AI ასისტენტის მოდალი (გადაეცემა ყველა Live მონაცემი) */}
       <AiAssistantModal 
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         products={products}
         categories={categories}
+        vendorsList={vendorsList}
         orders={orders}
+        coupons={coupons}
+        siteSettings={siteSettings}
+        deliveryFees={deliveryFees}
         addToCart={addToCart}
         formatPrice={formatPrice}
       />
