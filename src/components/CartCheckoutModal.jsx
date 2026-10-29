@@ -1,6 +1,6 @@
-// src/components/CartCheckoutModal.jsx - 100% Full Code with Supabase Order Persistence
+// src/components/CartCheckoutModal.jsx - 100% Full Code with Smart Size Persistence & Supabase Order Persistence
 import React, { useState } from 'react';
-import { ShoppingBag, X, Trash2, Plus, Minus, CheckCircle2, ShieldCheck, Truck, Tag, CreditCard, Send } from 'lucide-react';
+import { ShoppingBag, X, Trash2, Plus, Minus, CheckCircle2, ShieldCheck, Truck, Tag, CreditCard, Send, Ruler } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
@@ -80,7 +80,7 @@ export default function CartCheckoutModal({
   const discountAmount = appliedCoupon ? Math.round(subtotal * (appliedCoupon.discountPercent / 100)) : 0;
   const finalTotal = Math.max(0, subtotal - discountAmount) + deliveryCost;
 
-  // 🚀 შეკვეთის გაფორმება და პირდაპირ Supabase ბაზაში გაგზავნა
+  // 🚀 შეკვეთის გაფორმება და პირდაპირ Supabase ბაზაში გაგზავნა ზომების ინტეგრაციით
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
     if (cart.length === 0) return;
@@ -90,7 +90,7 @@ export default function CartCheckoutModal({
     }
 
     const orderId = Math.floor(100000 + Math.random() * 900000);
-    const itemSummary = cart.map(i => `${i.name} (x${i.quantity || 1})`).join(', ');
+    const itemSummary = cart.map(i => `${i.name} ${i.selectedSize ? `[ზომა: ${i.selectedSize}]` : ''} (x${i.quantity || 1})`).join(', ');
 
     const newOrderPayload = {
       id: String(orderId),
@@ -144,7 +144,7 @@ export default function CartCheckoutModal({
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-emerald-500/25 bg-[#121216] shrink-0">
           <span className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4" /> კალათა და შეკვეთის გაფორმება
+            <ShoppingBag className="w-4 h-4" /> კალათა & ზომების კონტროლი
           </span>
           <button onClick={onClose} className="p-2 bg-[#1a1a20] hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 rounded-2xl border border-emerald-500/30 transition cursor-pointer">
             <X className="w-5 h-5" />
@@ -160,7 +160,7 @@ export default function CartCheckoutModal({
               </div>
               <h2 className="text-2xl font-black text-white">შეკვეთა წარმატებით გაფორმდა! 🎉</h2>
               <p className="text-slate-400 text-xs max-w-md mx-auto">
-                თქვენი შეკვეთის ნომერია <b className="text-emerald-400">#{lastOrderId}</b>. ოპერატორი მალე დაგიკავშირდებათ დეტალების დასაზუსტებლად.
+                თქვენი შეკვეთის ნომერია <b className="text-emerald-400">#{lastOrderId}</b>. ოპერატორი მალე დაგიკავშირდებათ ზომებისა და დეტალების დასაზუსტებლად.
               </p>
               <button 
                 onClick={onClose} 
@@ -188,6 +188,11 @@ export default function CartCheckoutModal({
                       <img src={item.image} alt="" className="w-14 h-14 object-contain bg-[#121216] p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-bold text-white text-sm">{item.name}</h4>
+                        {item.selectedSize && (
+                          <p className="text-amber-400 font-bold text-[11px] flex items-center gap-1 mt-0.5">
+                            <Ruler className="w-3 h-3" /> არჩეული ზომა: {item.selectedSize}
+                          </p>
+                        )}
                         <p className="text-emerald-400 font-black mt-0.5">{formatPrice(item.priceGEL)}</p>
                       </div>
                     </div>
