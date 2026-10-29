@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Dynamic Category-based Fields Manager (Full Complete Code)
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Smart Dynamic Category Engine (100% Fixed)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem
+  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -253,6 +253,8 @@ export default function AdminDashboardPro({
       defaultSizes = ['S', 'M', 'L', 'XL', 'XXL'];
     } else if (nameLower.includes('აქსესუარ') || nameLower.includes('საათ') || nameLower.includes('ჩანთა')) {
       defaultSizes = ['Standard / One Size'];
+    } else if (nameLower.includes('ლეპტოპ') || nameLower.includes('სმარტფონ') || nameLower.includes('ტექნიკ') || nameLower.includes('კომპიუტერ')) {
+      defaultSizes = ['8GB / 256GB SSD', '16GB / 512GB SSD', '32GB / 1TB SSD'];
     }
 
     setProductForm(prev => ({
@@ -362,7 +364,7 @@ export default function AdminDashboardPro({
           <div class="header">
             <div>
               <div class="store-name">GEOSTORE</div>
-              <p>მოდისა და ტანსაცმლის ბუტიკი საქართველოში</p>
+              <p>ონლაინ მარკეტფლეისი საქართველოში</p>
             </div>
             <div style="text-align: right;">
               <h2>შეკვეთა #${order.id}</h2>
@@ -516,7 +518,7 @@ export default function AdminDashboardPro({
     const newB = {
       id: `b-${Date.now()}`,
       ...bannerForm,
-      image: bannerForm.image || 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200'
+      image: bannerForm.image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
     };
     setBannersList(prev => [...(prev || []), newB]);
     setBannerForm({ title: '', subtitle: '', image: '', link: '' });
@@ -611,6 +613,12 @@ export default function AdminDashboardPro({
     p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
   );
 
+  const currentCatLower = productForm.category.toLowerCase();
+  const isShoesCat = currentCatLower.includes('ფეხსაცმელ') || currentCatLower.includes('shoe');
+  const isClothingCat = currentCatLower.includes('ტანსაცმელ') || currentCatLower.includes('ჩაცმა') || currentCatLower.includes('ქურთუკ') || currentCatLower.includes('შარვალ');
+  const isTechCat = currentCatLower.includes('ლეპტოპ') || currentCatLower.includes('სმარტფონ') || currentCatLower.includes('ტექნიკ') || currentCatLower.includes('კომპიუტერ');
+  const isAccessoryCat = currentCatLower.includes('აქსესუარ') || currentCatLower.includes('საათ') || currentCatLower.includes('ჩანთა');
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full pb-16 items-start">
       
@@ -622,7 +630,7 @@ export default function AdminDashboardPro({
           </div>
           <div>
             <h3 className="font-black text-white text-sm">GEOSTORE Admin</h3>
-            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Boutique Edition</p>
+            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Smart Engine</p>
           </div>
         </div>
 
@@ -683,7 +691,7 @@ export default function AdminDashboardPro({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2.5rem] p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">მართეთ მოდის, ფეხსაცმლისა და აქსესუარების კოლექციები:</p>
+            <p className="text-xs text-slate-400 mt-0.5">აი რა ხდება დღეს თქვენს ონლაინ მარკეტფლეისში:</p>
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -880,13 +888,13 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Products Tab - Dynamic Fashion & Shoe Category Engine */}
+        {/* Products Tab - Smart Dynamic Category Engine */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური ზომები & მოდის ველები)
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (დინამიური ველები)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -922,14 +930,19 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="მომწოდებელი / ბრენდი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
 
-                {/* 👟👖 დინამიური ზომების არჩევანი კატეგორიის მიხედვით */}
+                {/* 🧠 Smart Dynamic Category Selector (Sizes / Specs based on selected category) */}
                 <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
                   <label className="text-emerald-400 font-bold block flex items-center gap-2">
-                    <Shirt className="w-4 h-4" /> არჩეული კატეგორიის ხელმისაწვდომი ზომები:
+                    {isTechCat ? <Cpu className="w-4 h-4 text-cyan-400" /> : <Shirt className="w-4 h-4" />}
+                    <span>
+                      {isTechCat ? 'ტექნიკის მახასიათებლები / მეხსიერების კონფიგურაცია:' :
+                       isShoesCat ? 'ფეხსაცმლის ზომები (EU):' :
+                       isAccessoryCat ? 'აქსესუარის ფორმატი / ზომა:' :
+                       'ტანსაცმლის ზომები:'}
+                    </span>
                   </label>
                   
-                  {/* ფეხსაცმელები */}
-                  {(productForm.category.toLowerCase().includes('ფეხსაცმელ') || productForm.category.toLowerCase().includes('shoe')) ? (
+                  {isShoesCat ? (
                     <div className="flex flex-wrap gap-2">
                       {['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'].map(sz => {
                         const isSelected = productForm.availableSizes?.includes(sz);
@@ -945,8 +958,23 @@ export default function AdminDashboardPro({
                         );
                       })}
                     </div>
-                  ) : (productForm.category.toLowerCase().includes('აქსესუარ') || productForm.category.toLowerCase().includes('საათ')) ? (
-                    /* აქსესუარები */
+                  ) : isTechCat ? (
+                    <div className="flex flex-wrap gap-2">
+                      {['8GB / 256GB SSD', '16GB / 512GB SSD', '32GB / 1TB SSD', '64GB / 2TB SSD', '128GB', '256GB', '512GB', '1TB'].map(sz => {
+                        const isSelected = productForm.availableSizes?.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => handleToggleSizeSelection(sz)}
+                            className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-cyan-400 text-slate-950 border-cyan-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : isAccessoryCat ? (
                     <div className="flex flex-wrap gap-2">
                       {['Standard / One Size', 'S/M', 'L/XL', '40mm', '44mm', '45mm'].map(sz => {
                         const isSelected = productForm.availableSizes?.includes(sz);
@@ -963,7 +991,6 @@ export default function AdminDashboardPro({
                       })}
                     </div>
                   ) : (
-                    /* ტანსაცმელი და სხვა */
                     <div className="flex flex-wrap gap-2">
                       {['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'].map(sz => {
                         const isSelected = productForm.availableSizes?.includes(sz);
@@ -986,14 +1013,14 @@ export default function AdminDashboardPro({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder="მასალა / შემადგენლობა (მაგ: 100% ბამბა / ნატურალური ტყავი)" 
+                    placeholder={isTechCat ? 'პროცესორი / ეკრანი (მაგ: Apple M3 / 16" Retina)' : 'მასალა / შემადგენლობა (მაგ: 100% ბამბა / ტყავი)'} 
                     value={productForm.material} 
                     onChange={e => setProductForm({...productForm, material: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
                   />
                   <input 
                     type="text" 
-                    placeholder="მოვლა / მდგრადობა (მაგ: ირეცხება 30°C-ზე / წყალგაუმტარი 3ATM)" 
+                    placeholder={isTechCat ? 'გარანტია / ბატარეა (მაგ: 1 წლიანი ოფიციალური გარანტია)' : 'მოვლა / მდგრადობა (მაგ: ირეცხება 30°C-ზე)'} 
                     value={productForm.durability} 
                     onChange={e => setProductForm({...productForm, durability: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1006,7 +1033,7 @@ export default function AdminDashboardPro({
                   </label>
                   <input 
                     type="text" 
-                    placeholder="მაგ: NEW, FASHION, SALE, 2026 COLLECTION" 
+                    placeholder="მაგ: NEW, HOT, SALE, 2026" 
                     value={productForm.tags} 
                     onChange={e => setProductForm({...productForm, tags: e.target.value})} 
                     className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1017,7 +1044,7 @@ export default function AdminDashboardPro({
                   <label className="text-slate-400 font-bold">პროდუქტის სრული აღწერა:</label>
                   <textarea 
                     rows="3"
-                    placeholder="დაწერეთ დეტალური აღწერა, მორგების სტილი (Fit) და სხვ..." 
+                    placeholder="დაწერეთ დეტალური ტექნიკური მახასიათებლები და აღწერა..." 
                     value={productForm.description} 
                     onChange={e => setProductForm({...productForm, description: e.target.value})} 
                     className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" 
@@ -1043,7 +1070,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  პროდუქტის შენახვა დინამიური ზომებითა და დეტალებით
+                  პროდუქტის შენახვა დინამიური პარამეტრებითა და დეტალებით
                 </button>
               </form>
             </div>
@@ -1207,7 +1234,7 @@ export default function AdminDashboardPro({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder="სათაური (მაგ: ახალი საგაზაფხულო კოლექცია!)" 
+                    placeholder="სათაური (მაგ: ზაფხულის ფასდაკლება!)" 
                     required 
                     value={bannerForm.title} 
                     onChange={e => setBannerForm({...bannerForm, title: e.target.value})} 
@@ -1265,7 +1292,7 @@ export default function AdminDashboardPro({
               <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <input 
                   type="text" 
-                  placeholder="კატეგორიის დასახელება (მაგ: ფეხსაცმელები)" 
+                  placeholder="კატეგორიის დასახელება (მაგ: ლეპტოპები)" 
                   required 
                   value={newCatName} 
                   onChange={e => setNewCatName(e.target.value)} 
@@ -1277,13 +1304,13 @@ export default function AdminDashboardPro({
                   onChange={e => setNewCatIcon(e.target.value)}
                   className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                 >
+                  <option value="Laptop">💻 ლეპტოპი / კომპიუტერი</option>
+                  <option value="Smartphone">📱 სმარტფონი</option>
                   <option value="Shirt">👕 ტანსაცმელი</option>
                   <option value="Footprints">👟 ფეხსაცმელები</option>
-                  <option value="Gem">💎 აქსესუარები / სამკაული</option>
+                  <option value="Gem">💎 აქსესუარები</option>
                   <option value="Watch">⌚ საათები</option>
-                  <option value="Sparkles">✨ ზოგადი / სხვა</option>
-                  <option value="Smartphone">📱 სმარტფონები</option>
-                  <option value="Laptop">💻 ლეპტოპები</option>
+                  <option value="Sparkles">✨ სხვა</option>
                 </select>
 
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
