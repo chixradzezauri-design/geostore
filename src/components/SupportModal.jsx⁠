@@ -1,0 +1,163 @@
+// src/components/SupportModal.jsx - 100% Full Code with Supabase Support Tickets Persistence
+import React, { useState } from 'react';
+import { HelpCircle, X, Send, CheckCircle2, MessageSquare, ShieldCheck } from 'lucide-react';
+
+const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+export default function SupportModal({ isOpen, onClose }) {
+  const [supportForm, setSupportForm] = useState({
+    customerName: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+
+  const [isSent, setIsSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmitTicket = async (e) => {
+    e.preventDefault();
+    if (!supportForm.customerName || !supportForm.email || !supportForm.subject || !supportForm.message) {
+      alert('გთხოვთ შეავსოთ ყველა ველი!');
+      return;
+    }
+
+    setLoading(true);
+
+    const ticketPayload = {
+      customer_name: supportForm.customerName.trim(),
+      email: supportForm.email.trim(),
+      subject: supportForm.subject.trim(),
+      message: supportForm.message.trim(),
+      status: 'ღია'
+    };
+
+    try {
+      const res = `${SUPABASE_URL}/rest/v1/support_tickets`;
+      const response = await fetch(res, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(ticketPayload)
+      });
+
+      if (response.ok) {
+        setIsSent(true);
+        setSupportForm({ customerName: '', email: '', subject: '', message: '' });
+      } else {
+        const errText = await response.text();
+        alert('შეცდომა ტიგეტის გაგზავნისას: ' + errText);
+      }
+    } catch {
+      alert('ქსელის შეცდომა სერვერთან მიერთებისას.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[99999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in">
+      <div className="relative bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col my-auto">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-emerald-500/25 bg-[#121216]">
+          <span className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+            <HelpCircle className="w-4 h-4" /> 24/7 ონლაინ მხარდაჭერა
+          </span>
+          <button onClick={onClose} className="p-2 bg-[#1a1a20] hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 rounded-2xl border border-emerald-500/35 transition cursor-pointer">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 sm:p-8 space-y-6">
+          {isSent ? (
+            <div className="text-center py-10 space-y-4">
+              <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/40 rounded-2xl flex items-center justify-center mx-auto shadow-inner animate-bounce">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-black text-white">შეკვეთა/შეკითხვა მიღებულია! 🚀</h3>
+              <p className="text-slate-400 text-xs max-w-sm mx-auto">
+                თქვენი შეტყობინება წარმატებით გაეგზავნა ადმინისტრაციას. ჩვენი გუნდი მალე გიპასუხებთ ელ-ფოსტაზე.
+              </p>
+              <button 
+                onClick={() => { setIsSent(false); onClose(); }} 
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20 mt-2"
+              >
+                ფანჯრის დახურვა
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmitTicket} className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-bold">თქვენი სახელი *</label>
+                <input 
+                  type="text" 
+                  placeholder="მაგ: გიორგი ბერიძე" 
+                  required 
+                  value={supportForm.customerName}
+                  onChange={e => setSupportForm({...supportForm, customerName: e.target.value})}
+                  className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-bold">ელ-ფოსტა (პასუხის მისაღებად) *</label>
+                <input 
+                  type="email" 
+                  placeholder="მაგ: giorgi@example.com" 
+                  required 
+                  value={supportForm.email}
+                  onChange={e => setSupportForm({...supportForm, email: e.target.value})}
+                  className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-bold">საკითხი / თემა *</label>
+                <input 
+                  type="text" 
+                  placeholder="მაგ: შეკვეთის სტატუსი ან ზომის შეცვლა" 
+                  required 
+                  value={supportForm.subject}
+                  onChange={e => setSupportForm({...supportForm, subject: e.target.value})}
+                  className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-400 font-bold">შეტყობინება / კითხვა *</label>
+                <textarea 
+                  rows="4" 
+                  placeholder="აღწერეთ დეტალურად თქვენი კითხვა..." 
+                  required 
+                  value={supportForm.message}
+                  onChange={e => setSupportForm({...supportForm, message: e.target.value})}
+                  className="w-full bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center gap-2 text-xs"
+              >
+                <Send className="w-4 h-4" /> {loading ? 'იგზავნება...' : 'მხარდაჭერისთვის მიმართვა'}
+              </button>
+            </form>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
