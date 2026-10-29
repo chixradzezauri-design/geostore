@@ -418,7 +418,7 @@ export default function App() {
     const regionText = selectedRegion === 'tbilisi' ? 'თბილისი / რუსთავი' : selectedRegion === 'bigCities' ? 'დიდი ქალაქები' : 'სხვა რეგიონები';
 
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
         headers: { ...headers, 'Prefer': 'return=representation' },
         body: JSON.stringify({
@@ -432,13 +432,20 @@ export default function App() {
           status: 'ახალი'
         })
       });
+
+      if (!response.ok) {
+        throw new Error('ბაზასთან კავშირის შეცდომა');
+      }
+
       sendTelegramNotification(`🚨 *ახალი შეკვეთა #${orderId}*\n👤 მყიდველი: ${checkoutForm.name}\n📞 ტელეფონი: ${checkoutForm.phone}\n📍 რეგიონი: ${regionText} (${currentDeliveryCost} ₾)\n💰 სულ თანხა: ${cartTotalGEL} ₾${appliedCoupon ? ` (პრომო: ${appliedCoupon.code})` : ''}`);
       setIsCheckoutOpen(false);
       setCart([]);
       setAppliedCoupon(null);
-      showToast('✅ შეკვეთა წარმატებით გაფორმდა!');
+      showToast(`✅ შეკვეთა #${orderId} წარმატებით გაფორმდა და ჩაიწერა ბაზაში!`);
       fetchOrders();
-    } catch { alert('შეცდომა შეკვეთისას'); }
+    } catch (err) { 
+      alert('შეცდომა: მონაცემთა ბაზასთან კავშირი ვერ მოხერხდა ან შეკვეთა არ ჩაიწერა. გთხოვთ სცადოთ თავიდან.'); 
+    }
   };
 
   const filteredProducts = useMemo(() => {
