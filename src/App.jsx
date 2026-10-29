@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition with Secure PIN & Biometric Auth
+// src/App.jsx - 100% Fully Complete, Database Persisted & Unified Edition with Advanced Notifications & Secure Auth
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -67,6 +67,11 @@ const DEFAULT_COUPONS = [
   { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
 ];
 
+const DEFAULT_NOTIFICATIONS = [
+  { id: 'n1', title: 'მოგესალმებით GEOSTORE-ში!', message: 'ისარგებლეთ 10% ფასდაკლებით პრომო-კოდით: GEOSTORE2026', date: 'დღეს', read: false },
+  { id: 'n2', title: 'უფასო მიწოდება', message: 'მიწოდება თბილისის მასშტაბით სრულიად უფასოა!', date: 'გუშინ', read: false }
+];
+
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
     try { 
@@ -101,6 +106,7 @@ export default function App() {
   const [products, setProducts] = useState(() => loadSafeStorage('geostore_products', DEFAULT_PRODUCTS));
   const [coupons, setCoupons] = useState(() => loadSafeStorage('geostore_coupons', DEFAULT_COUPONS));
   const [bannersList, setBannersList] = useState(() => loadSafeStorage('geostore_banners', []));
+  const [notifications, setNotifications] = useState(() => loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS));
 
   const [promoSlots] = useState([
     { id: 'ps1', title: 'საგაზაფხულო ფასდაკლებები', tag: 'HOT DEAL', bgGradient: 'from-emerald-600/30 to-teal-800/40' },
@@ -143,6 +149,7 @@ export default function App() {
   const [isGiftQuizOpen, setIsGiftQuizOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
@@ -179,6 +186,11 @@ export default function App() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    showToast('🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
   };
 
   const fetchOrders = async () => {
@@ -250,6 +262,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch{} }, [siteSettings]);
   useEffect(() => { try { localStorage.setItem('geostore_delivery_fees', JSON.stringify(deliveryFees)); } catch{} }, [deliveryFees]);
   useEffect(() => { try { localStorage.setItem('geostore_banners', JSON.stringify(bannersList)); } catch{} }, [bannersList]);
+  useEffect(() => { try { localStorage.setItem('geostore_notifications', JSON.stringify(notifications)); } catch{} }, [notifications]);
 
   const cartSubtotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct ? [quickBuyProduct] : cart;
@@ -452,6 +465,7 @@ export default function App() {
         setIsImageSearchOpen={setIsImageSearchOpen}
         setIsComparisonOpen={setIsComparisonOpen}
         setIsTrackerOpen={setIsTrackerOpen}
+        setIsNotificationsOpen={setIsNotificationsOpen}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleInstallClick={handleInstallClick}
@@ -740,7 +754,7 @@ export default function App() {
         )}
       </div>
 
-      {/* ძირითადი მოდალები (currentUser გადაეცემა უსაფრთხო ავტორიზაციისთვის) */}
+      {/* ძირითადი მოდალები (შეტყობინებების და ავტორიზაციის მხარდაჭერით) */}
       <Modals 
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -760,6 +774,10 @@ export default function App() {
         setIsWarrantyOpen={setIsWarrantyOpen}
         isTrackerOpen={isTrackerOpen}
         setIsTrackerOpen={setIsTrackerOpen}
+        isNotificationsOpen={isNotificationsOpen}
+        setIsNotificationsOpen={setIsNotificationsOpen}
+        notifications={notifications}
+        markAllNotificationsAsRead={markAllNotificationsAsRead}
         orders={orders}
         selectedRegion={selectedRegion}
         setSelectedRegion={setSelectedRegion}
