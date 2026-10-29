@@ -31,7 +31,6 @@ export default function StoreView({
 }) {
   const [dbProducts, setDbProducts] = useState([]);
 
-  // 🔄 პროდუქტების ავტომატური წამოღება პირდაპირ Supabase ბაზიდან
   const fetchProductsFromSupabase = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`, { headers });
@@ -75,19 +74,14 @@ export default function StoreView({
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
-  // 👕 ზომისა და ფერის State
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
-  // 🎁 სასაჩუქრე შეფუთვის და ბარათის State
   const [isGiftWrapped, setIsGiftWrapped] = useState(false);
   const [giftMessage, setGiftMessage] = useState('');
-
-  // 🛡️ VIP გარანტიის State
   const [hasVipWarranty, setHasVipWarranty] = useState(false);
 
-  // 📁 აქტიური სუბკატეგორიის State
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openParentCatId, setOpenParentCatId] = useState(null);
 
@@ -109,7 +103,6 @@ export default function StoreView({
     return () => clearInterval(timer);
   }, []);
 
-  // 💬 შეფასებების და ფოტოების State
   const [allReviews, setAllReviews] = useState(() => {
     try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
   });
@@ -179,7 +172,6 @@ export default function StoreView({
     setNewReviewImage('');
   };
 
-  // 📂 მთავარი და სუბკატეგორიების დაყოფა
   const mainCategories = useMemo(() => {
     return (categories || []).filter(c => !c.parentId);
   }, [categories]);
@@ -188,7 +180,6 @@ export default function StoreView({
     return (categories || []).filter(c => c.parentId === parentId);
   };
 
-  // 🛒 ფილტრაცია კატეგორიების, სუბკატეგორიებისა და ფასის მიხედვით
   const processedProducts = useMemo(() => {
     let result = [...activeProducts];
 
@@ -546,7 +537,6 @@ export default function StoreView({
           
           <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
             
-            {/* Modal Header Bar with Close Button */}
             <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
@@ -560,11 +550,9 @@ export default function StoreView({
               </button>
             </div>
 
-            {/* Modal Scrollable Body */}
             <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
-                {/* Left: Images */}
                 <div className="space-y-4">
                   <div className="bg-[#060608] rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 border border-amber-500/30 flex items-center justify-center h-60 sm:h-80 shadow-2xl">
                     <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
@@ -581,7 +569,6 @@ export default function StoreView({
                   )}
                 </div>
 
-                {/* Right: Info & Selectors */}
                 <div className="space-y-5 sm:space-y-6 text-xs w-full">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -599,7 +586,6 @@ export default function StoreView({
                     {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
-                  {/* 1 & 2. მასალა და მდგრადობა */}
                   {(selectedProduct.material || selectedProduct.durability) && (
                     <div className="bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {selectedProduct.material && (
@@ -617,7 +603,6 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {/* Size Selector */}
                   <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
@@ -639,7 +624,6 @@ export default function StoreView({
                     </div>
                   </div>
 
-                  {/* 3. ფერების არჩევანი */}
                   {((selectedProduct.availableColors && selectedProduct.availableColors.length > 0) || selectedProduct.colors) && (
                     <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
                       <span className="text-slate-300 font-bold block">ფერი: <b className="text-amber-400">{selectedColor}</b></span>
@@ -659,7 +643,6 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {/* Gift Wrapping */}
                   <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
                     <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
                       <div className="flex items-center gap-3">
@@ -690,7 +673,6 @@ export default function StoreView({
                     )}
                   </div>
 
-                  {/* VIP Warranty */}
                   <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
                     <div className="flex items-center gap-3">
                       <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
@@ -704,7 +686,6 @@ export default function StoreView({
                     <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
                   </div>
 
-                  {/* Description */}
                   <div className="space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
                     <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.'}</p>
@@ -715,7 +696,6 @@ export default function StoreView({
                     <span>მარაგშია: <b className="text-amber-400 font-black">ხელმისაწვდომია</b> (მორგება მიტანისას)</span>
                   </div>
 
-                  {/* Reviews & UGC */}
                   <div className="space-y-4 pt-4 border-t border-amber-500/20">
                     <h3 className="text-sm font-black text-white flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა ფოტო-შეფასებები ({(allReviews[selectedProduct.id] || []).length})
@@ -794,7 +774,6 @@ export default function StoreView({
                     </div>
                   </div>
 
-                  {/* Add to Cart button inside modal */}
                   <button 
                     onClick={() => { 
                       let customName = `${selectedProduct.name} (${selectedSize}${selectedColor ? `, ${selectedColor}` : ''})`;
