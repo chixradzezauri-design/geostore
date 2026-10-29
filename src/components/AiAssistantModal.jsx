@@ -1,4 +1,4 @@
-// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Real-Time DB Sync & Product Context
+// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Real-Time DB Sync & Dynamic Site Data
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -30,6 +30,7 @@ export default function AiAssistantModal({
   coupons = [],
   siteSettings = {},
   selectedProduct = null, // 🎯 კონტექსტური პროდუქტი StoreView-დან
+  deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 }, // 🚀 დინამიური მიწოდების ტარიფები პირდაპირ აპლიკაციიდან
   addToCart,
   formatPrice
 }) {
@@ -45,7 +46,7 @@ export default function AiAssistantModal({
     return {
       id: 'm1',
       sender: 'ai',
-      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული რეალურ დროში წვდომა პროდუქტებზე, თეგებზე, კუპონებზე, ვენდერებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?'
+      text: `გამარჯობა! 👋 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული რეალურ დროში წვდომა პროდუქტებზე, თეგებზე, აქტიურ კუპონებზე, ვენდერებზე, ტარიფებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?`
     };
   };
 
@@ -119,7 +120,7 @@ export default function AiAssistantModal({
 
   if (!isAiAssistantOpen) return null;
 
-  // 🧠 ულტრა-მოქნილი AI ძრავი ჭკვიანი ძებნით
+  // 🧠 ულტრა-მოქნილი AI ძრავი ჭკვიანი ძებნით და Live მონაცემებით
   const generateAiReply = (userQuery, currentProductsList) => {
     const rawQuery = userQuery.trim();
     const query = rawQuery.toLowerCase();
@@ -131,14 +132,14 @@ export default function AiAssistantModal({
       return {
         text: selectedProduct 
           ? `დიახ! კვლავ ვსაუბრობთ პროდუქტზე "${selectedProduct.name}". რით შეგვიძლია გავაგრძელოთ?`
-          : 'გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, თეგებზე (მაგ: NEW, SALE), ფასებზე, კუპონებზე ან შეკვეთის სტატუსზე!',
+          : `გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, თეგებზე (მაგ: NEW, SALE), ფასებზე, კუპონებზე ან შეკვეთის სტატუსზე!`,
         products: selectedProduct ? [selectedProduct] : []
       };
     }
 
     if (query.includes('ვინ') || query.includes('შეგიძლია') || query.includes('რისი')) {
       return {
-        text: 'მე ვარ GEOSTORE-ის სრულუფლებიანი AI ასისტენტი 🤖. მაქვს სრული წვდომა:\n\n• პროდუქტების კატალოგზე და თეგებზე (Tags)\n• მიმდინარე ფასდაკლებებსა და პრომო კუპონებზე\n• ვენდერებისა და პარტნიორების სიებზე\n• შეკვეთების ტრეკინგზე (#ORD კოდით)\n• მიწოდების, გარანტიისა და განვადების პირობებზე',
+        text: `მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის სრულუფლებიანი AI ასისტენტი 🤖. მაქვს სრული რეალურ დროში წვდომა:\n\n• პროდუქტების კატალოგზე და თეგებზე (Tags)\n• მიმდინარე ფასდაკლებებსა და პრომო კუპონებზე\n• ვენდერებისა და პარტნიორების სიებზე\n• შეკვეთების ტრეკინგზე (#ORD კოდით)\n• მიწოდების აქტუალურ ტარიფებზე, გარანტიასა და განვადებაზე`,
         products: []
       };
     }
@@ -190,7 +191,7 @@ export default function AiAssistantModal({
     if (query.includes('ვენდერ') || query.includes('მომწოდებელ') || query.includes('პარტნიორ')) {
       const vendorNames = (vendorsList || []).map(v => `• ${v.name} (კომისია: ${v.commission}%)`).join('\n');
       return {
-        text: `🏪 GEOSTORE წარმოადგენს მრავალვენდერიან მარკეტფლეისს. ოფიციალური პარტნიორები:\n\n${vendorNames || '• GEOSTORE ოფიციალური'}`,
+        text: `🏪 ${siteSettings?.storeName || 'GEOSTORE'} წარმოადგენს მრავალვენდერიან მარკეტფლეისს. ოფიციალური პარტნიორები:\n\n${vendorNames || '• GEOSTORE ოფიციალური'}`,
         products: []
       };
     }
@@ -213,17 +214,17 @@ export default function AiAssistantModal({
       };
     }
 
-    // 6. პირობები (მიწოდება, გარანტია, განვადება)
+    // 6. პირობები (მიწოდება დინამიური ტარიფებით, გარანტია, განვადება)
     if (query.includes('გარანტია')) {
       return {
-        text: '🛡️ GEOSTORE-ის ყველა პროდუქტზე მოქმედებს ოფიციალური ქარხნული გარანტია.',
+        text: `🛡️ ${siteSettings?.storeName || 'GEOSTORE'}-ის ყველა პროდუქტზე მოქმედებს ოფიციალური ქარხნული გარანტია.`,
         products: []
       };
     }
 
     if (query.includes('მიწოდება') || query.includes('კურიერი') || query.includes('ტარიფ')) {
       return {
-        text: '🚀 მიწოდება ხორციელდება მთელი საქართველოს მასშტაბით:\n• თბილისი / რუსთავი: უფასო\n• დიდი ქალაქები: 10 ₾\n• სხვა რეგიონები: 15 ₾',
+        text: `🚀 მიწოდება ხორციელდება მთელი საქართველოს მასშტაბით:\n• თბილისი / რუსთავი: ${deliveryFees.tbilisi === 0 ? 'უფასო' : `${deliveryFees.tbilisi} ₾`}\n• დიდი ქალაქები (ქუთაისი, ბათუმი): ${deliveryFees.bigCities} ₾\n• სხვა რეგიონები / მთიანი ზონა: ${deliveryFees.other} ₾`,
         products: []
       };
     }
@@ -331,7 +332,7 @@ export default function AiAssistantModal({
             </div>
             <div>
               <h3 className="font-black text-white text-xs sm:text-sm flex items-center gap-1.5">
-                GEOSTORE AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                {siteSettings?.storeName || 'GEOSTORE'} AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
               <p className="text-[10px] text-emerald-400 font-bold">
                 {selectedProduct ? `კონტექსტი: ${selectedProduct.name}` : 'ინტელექტუალური ასისტენტი (Live DB Sync)'}
