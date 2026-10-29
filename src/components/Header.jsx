@@ -1,6 +1,6 @@
 // src/components/Header.jsx - Elite Gold Luxury Boutique Edition (Refined & Optimized)
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Smartphone, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
