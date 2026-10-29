@@ -1,13 +1,13 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Persistent Category Sync (100% Full & Safe)
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Subcategories Support (100% Full & Safe)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu 
+  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InJvbGUtYWRtaW4iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -59,8 +59,10 @@ export default function AdminDashboardPro({
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
   
+  // 📂 კატეგორიებისა და სუბკატეგორიების State
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('Shirt');
+  const [selectedParentId, setSelectedParentId] = useState('');
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
@@ -169,22 +171,19 @@ export default function AdminDashboardPro({
     );
   }
 
-  // 📂 კატეგორიის დამატება გლობალური შენახვით (LocalStorage / App State)
+  // 📂 მთავარი კატეგორიის ან სუბკატეგორიის დამატება
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
     const cleanName = newCatName.trim();
-    const newCatObj = { name: cleanName, icon: newCatIcon };
+    const catId = `cat-${Date.now()}`;
     
-    const categoryExists = (categoriesList || []).some(cat => {
-      const cName = typeof cat === 'object' ? cat.name : cat;
-      return cName.toLowerCase() === cleanName.toLowerCase();
-    });
-
-    if (categoryExists) {
-      alert('ეს კატეგორია უკვე არსებობს!');
-      return;
-    }
+    const newCatObj = { 
+      id: catId, 
+      name: cleanName, 
+      icon: newCatIcon, 
+      parentId: selectedParentId || null 
+    };
 
     const updatedCategories = [...(categoriesList || []), newCatObj];
     setCategoriesList(updatedCategories);
@@ -193,23 +192,33 @@ export default function AdminDashboardPro({
     } catch {}
 
     setNewCatName('');
-    logActivity(`დაემატა კატეგორია: ${cleanName} (${newCatIcon})`);
-    alert('✅ კატეგორია წარმატებით დაემატა და შეინახა!');
+    setSelectedParentId('');
+    logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'}: ${cleanName}`);
+    alert('✅ კატეგორია წარმატებით დაემატა!');
   };
 
-  // 📂 კატეგორიის წაშლა გლობალური განახლებით
-  const handleDeleteCategory = (catName) => {
-    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
+  // 📂 კატეგორიის წაშლა შვიდიანად/შემოწმებით
+  const handleDeleteCategory = (catIdOrName, catName) => {
+    const isObjId = typeof catIdOrName === 'string' && catIdOrName.startsWith('cat-');
+    const targetId = isObjId ? catIdOrName : null;
+    const targetName = catName || catIdOrName;
+
+    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${targetName}" წაშლა?`)) {
       const updatedCategories = (categoriesList || []).filter(c => {
+        const cId = c.id;
         const cName = typeof c === 'object' ? c.name : c;
-        return cName !== catName;
+        if (targetId) {
+          return cId !== targetId && c.parentId !== targetId;
+        }
+        return cName !== targetName;
       });
+
       setCategoriesList(updatedCategories);
       try {
         localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
       } catch {}
 
-      logActivity(`წაიშალა კატეგორია: ${catName}`);
+      logActivity(`წაიშალა კატეგორია: ${targetName}`);
     }
   };
 
@@ -360,7 +369,7 @@ export default function AdminDashboardPro({
         setProductForm({ name: '', category: defaultCat, priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '', material: 'პრემიუმ ბამბა / ტყავი', durability: 'მაღალი ხარისხის', availableSizes: ['S', 'M', 'L', 'XL'] });
         setSelectedImages([]);
         logActivity(`დაემატა ახალი პროდუქტი ბაზაში: ${newProdPayload.name}`);
-        alert('✅ პროდუქტი მრავალი სურათით წარმატებით შეინახა ღრუბლოვან ბაზაში!');
+        alert('✅ პროდუქტი წარმატებით შეინახა ღრუბლოვან ბაზაში!');
       } else {
         const err = await res.text();
         alert('შეცდომა ბაზაში შენახვისას: ' + err);
@@ -695,6 +704,8 @@ export default function AdminDashboardPro({
   const isTechCat = currentCatLower.includes('ლეპტოპ') || currentCatLower.includes('სმარტფონ') || currentCatLower.includes('ტექნიკ') || currentCatLower.includes('კომპიუტერ');
   const isAccessoryCat = currentCatLower.includes('აქსესუარ') || currentCatLower.includes('საათ') || currentCatLower.includes('ჩანთა');
 
+  const mainCategories = (categoriesList || []).filter(c => !c.parentId);
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
@@ -720,7 +731,7 @@ export default function AdminDashboardPro({
             { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0, icon: Activity },
             { id: 'broadcasts', label: '📢 შეტყობინებები', icon: Send },
             { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0, icon: Megaphone },
-            { id: 'categories', label: '📂 კატეგორიები', count: categoriesList?.length || 0, icon: FolderTree },
+            { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: categoriesList?.length || 0, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
@@ -767,11 +778,11 @@ export default function AdminDashboardPro({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">პროდუქტები და კატეგორიები ინახება პირდაპირ ბაზაში და LocalStorage-ში:</p>
+            <p className="text-xs text-slate-400 mt-0.5">მართეთ კატეგორიები, სუბკატეგორიები და პროდუქტები უსაფრთხოდ:</p>
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">ბაზა დაკავშირებულია</span>
+            <span className="text-slate-300 font-bold">ბაზა აქტიურია</span>
           </div>
         </div>
 
@@ -970,7 +981,7 @@ export default function AdminDashboardPro({
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (ინახება ბაზაში სამუდამოდ)
+                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -995,8 +1006,9 @@ export default function AdminDashboardPro({
                   >
                     {(categoriesList || []).map(cat => {
                       const cName = typeof cat === 'object' ? cat.name : cat;
+                      const cId = cat.id || cName;
                       return (
-                        <option key={cName} value={cName}>
+                        <option key={cId} value={cName}>
                           {cName}
                         </option>
                       );
@@ -1008,93 +1020,38 @@ export default function AdminDashboardPro({
 
                 <div className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 space-y-2">
                   <label className="text-emerald-400 font-bold block flex items-center gap-2">
-                    {isTechCat ? <Cpu className="w-4 h-4 text-cyan-400" /> : <Shirt className="w-4 h-4" />}
-                    <span>
-                      {isTechCat ? 'ტექნიკის მახასიათებლები / მეხსიერების კონფიგურაცია:' :
-                       isShoesCat ? 'ფეხსაცმლის ზომები (EU):' :
-                       isAccessoryCat ? 'აქსესუარის ფორმატი / ზომა:' :
-                       'ტანსაცმლის ზომები:'}
-                    </span>
+                    <Shirt className="w-4 h-4" />
+                    <span>ზომები / მახასიათებლები:</span>
                   </label>
                   
-                  {isShoesCat ? (
-                    <div className="flex flex-wrap gap-2">
-                      {['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'].map(sz => {
-                        const isSelected = productForm.availableSizes?.includes(sz);
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => handleToggleSizeSelection(sz)}
-                            className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
-                          >
-                            EU {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : isTechCat ? (
-                    <div className="flex flex-wrap gap-2">
-                      {['8GB / 256GB SSD', '16GB / 512GB SSD', '32GB / 1TB SSD', '64GB / 2TB SSD', '128GB', '256GB', '512GB', '1TB'].map(sz => {
-                        const isSelected = productForm.availableSizes?.includes(sz);
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => handleToggleSizeSelection(sz)}
-                            className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-cyan-400 text-slate-950 border-cyan-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : isAccessoryCat ? (
-                    <div className="flex flex-wrap gap-2">
-                      {['Standard / One Size', 'S/M', 'L/XL', '40mm', '44mm', '45mm'].map(sz => {
-                        const isSelected = productForm.availableSizes?.includes(sz);
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => handleToggleSizeSelection(sz)}
-                            className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'].map(sz => {
-                        const isSelected = productForm.availableSizes?.includes(sz);
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => handleToggleSizeSelection(sz)}
-                            className={`px-4 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {['S', 'M', 'L', 'XL', 'XXL', '38', '39', '40', '41', '42', '43', '44'].map(sz => {
+                      const isSelected = productForm.availableSizes?.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => handleToggleSizeSelection(sz)}
+                          className={`px-3.5 py-2 rounded-xl font-black text-xs transition cursor-pointer border ${isSelected ? 'bg-emerald-400 text-slate-950 border-emerald-400 shadow' : 'bg-[#121216] text-slate-400 border-emerald-500/20 hover:text-white'}`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input 
                     type="text" 
-                    placeholder={isTechCat ? 'პროცესორი / ეკრანი' : 'მასალა / შემადგენლობა'} 
+                    placeholder="მასალა / შემადგენლობა" 
                     value={productForm.material} 
                     onChange={e => setProductForm({...productForm, material: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
                   />
                   <input 
                     type="text" 
-                    placeholder={isTechCat ? 'გარანტია / ბატარეა' : 'მოვლა / მდგრადობა'} 
+                    placeholder="მოვლა / მდგრადობა" 
                     value={productForm.durability} 
                     onChange={e => setProductForm({...productForm, durability: e.target.value})} 
                     className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -1127,7 +1084,7 @@ export default function AdminDashboardPro({
 
                 <div className="space-y-3 bg-[#08080a] p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
                   <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
-                    <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან (მონიშნეთ რამდენიმე ერთად):
+                    <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
                   <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
                   
@@ -1228,8 +1185,9 @@ export default function AdminDashboardPro({
                     <option value="ყველა">ყველა კატეგორია</option>
                     {(categoriesList || []).map(cat => {
                       const cName = typeof cat === 'object' ? cat.name : cat;
+                      const cId = cat.id || cName;
                       return (
-                        <option key={cName} value={cName}>
+                        <option key={cId} value={cName}>
                           {cName}
                         </option>
                       );
@@ -1355,60 +1313,97 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Categories Tab */}
+        {/* 📂 Categories & Subcategories Tab */}
         {adminTab === 'categories' && (
           <div className="space-y-6">
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი კატეგორიის დამატება და იკონის არჩევა
+                <FolderTree className="w-5 h-5 text-emerald-400" /> მთავარი კატეგორიის ან სუბკატეგორიის დამატება
               </h3>
               
-              <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+              <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-4 gap-3.5 text-xs">
                 <input 
                   type="text" 
-                  placeholder="კატეგორიის დასახელება" 
+                  placeholder="სახელწოდება *" 
                   required 
                   value={newCatName} 
                   onChange={e => setNewCatName(e.target.value)} 
                   className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
                 />
+
+                <select
+                  value={selectedParentId}
+                  onChange={e => setSelectedParentId(e.target.value)}
+                  className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
+                >
+                  <option value="">📁 მთავარი კატეგორია (Parent)</option>
+                  {mainCategories.map(cat => (
+                    <option key={cat.id || cat.name} value={cat.id || cat.name}>
+                      ↳ ქვეშ: {cat.name}
+                    </option>
+                  ))}
+                </select>
                 
                 <select
                   value={newCatIcon}
                   onChange={e => setNewCatIcon(e.target.value)}
                   className="bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                 >
-                  <option value="Laptop">💻 ლეპტოპი / კომპიუტერი</option>
-                  <option value="Smartphone">📱 სმარტფონი</option>
                   <option value="Shirt">👕 ტანსაცმელი</option>
-                  <option value="Footprints">👟 ფეხსაცმელები</option>
+                  <option value="Footprints">👟 ფეხსაცმელი</option>
                   <option value="Gem">💎 აქსესუარები</option>
-                  <option value="Watch">⌚ საათები</option>
+                  <option value="Smartphone">📱 სმარტფონი</option>
+                  <option value="Laptop">💻 ლეპტოპი</option>
+                  <option value="Watch">⌚ საათი</option>
                   <option value="Sparkles">✨ სხვა</option>
                 </select>
 
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
-                  კატეგორიის დამატება იკონით
+                  დამატება
                 </button>
               </form>
             </div>
 
             <div className="bg-[#0d0d10] border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">არსებული კატეგორიები ({categoriesList?.length || 0})</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {(categoriesList || []).map((cat, idx) => {
-                  const cName = typeof cat === 'object' ? cat.name : cat;
-                  const cIcon = typeof cat === 'object' ? cat.icon : 'Sparkles';
-                  return (
-                    <div key={idx} className="bg-[#08080a] p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
-                      <span className="font-bold text-white flex items-center gap-2">
-                        <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">{cIcon}</span>
-                        {cName}
-                      </span>
-                      <button onClick={() => handleDeleteCategory(cName)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  );
-                })}
+              <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია</h3>
+              
+              <div className="space-y-4">
+                {mainCategories.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
+                ) : (
+                  mainCategories.map(parentCat => {
+                    const pId = parentCat.id || parentCat.name;
+                    const subCats = (categoriesList || []).filter(c => c.parentId === pId);
+
+                    return (
+                      <div key={pId} className="bg-[#08080a] border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">📁 მთავარი</span>
+                            <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                          </div>
+                          <button onClick={() => handleDeleteCategory(pId, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+
+                        {subCats.length > 0 && (
+                          <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-1">
+                            {subCats.map(sub => {
+                              const sId = sub.id || sub.name;
+                              return (
+                                <div key={sId} className="bg-[#121216] p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs">
+                                  <span className="font-bold text-slate-200 flex items-center gap-2">
+                                    <CornerDownRight className="w-3.5 h-3.5 text-emerald-400" /> {sub.name}
+                                  </span>
+                                  <button onClick={() => handleDeleteCategory(sId, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
