@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Elite Secure Edition (100% Full & Safe)
+// src/components/AdminDashboardPro.jsx - Ultimate Safe Edition
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -52,23 +52,28 @@ export default function AdminDashboardPro({
   const [adminPinCode, setAdminPinCode] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
 
-  // 🛡️ უსაფრთხო კატეგორიების მასივის ჰარმონიზაცია (სტრიქონების და ობიექტების ერთიანობა)
+  // 🛡️ 100% უსაფრთხო კატეგორიების ჰარმონიზაცია (თეთრი ეკრანის თავიდან ასაცილებლად)
   const safeCategories = React.useMemo(() => {
-    if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone' }];
-    return categoriesList.map((cat, idx) => {
-      if (typeof cat === 'string') {
-        return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null };
-      }
-      if (cat && typeof cat === 'object') {
-        return {
-          id: cat.id || `cat-obj-${idx}`,
-          name: cat.name || 'კატეგორია',
-          icon: cat.icon || 'Shirt',
-          parentId: cat.parentId || null
-        };
-      }
-      return null;
-    }).filter(Boolean);
+    try {
+      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null }];
+      return categoriesList.map((cat, idx) => {
+        if (!cat) return null;
+        if (typeof cat === 'string') {
+          return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null };
+        }
+        if (typeof cat === 'object') {
+          return {
+            id: cat.id || `cat-obj-${idx}`,
+            name: cat.name || 'კატეგორია',
+            icon: cat.icon || 'Shirt',
+            parentId: cat.parentId || null
+          };
+        }
+        return null;
+      }).filter(Boolean);
+    } catch {
+      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null }];
+    }
   }, [categoriesList]);
   
   const productFormInitial = {
@@ -124,13 +129,6 @@ export default function AdminDashboardPro({
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
     { id: 'l2', action: 'სისტემის მონაცემები წარმატებით ჩაიტვირთა', time: new Date().toLocaleTimeString('ka-GE') }
   ]);
-
-  const [settingsForm, setSettingsForm] = useState({
-    storeName: siteSettings?.storeName || 'GEOSTORE',
-    topBarText: siteSettings?.topBarText || '',
-    heroTitle: siteSettings?.heroTitle || '',
-    heroSubtitle: siteSettings?.heroSubtitle || ''
-  });
 
   const logActivity = (actionText) => {
     const newLog = {
