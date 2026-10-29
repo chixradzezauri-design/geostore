@@ -7,7 +7,6 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import OrderTrackerModal from './components/OrderTrackerModal'; 
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download, KeyRound, Fingerprint, ShieldAlert } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -867,13 +866,6 @@ export default function App() {
         comparisonList={comparisonList}
         setComparisonList={setComparisonList}
         addToCart={addToCart}
-        formatPrice={formatPrice}
-      />
-
-      <OrderTrackerModal 
-        isTrackerOpen={isTrackerOpen}
-        setIsTrackerOpen={setIsTrackerOpen}
-        orders={orders}
         formatPrice={formatPrice}
       />
 
