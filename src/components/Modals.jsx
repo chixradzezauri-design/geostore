@@ -154,7 +154,7 @@ export default function Modals({
       } else {
         alert('ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
       }
-    } catch (err) {
+    } catch {
       alert('Face ID ავტორიზაცია გაუქმდა ან ვერ მოხერხდა.');
     }
   };
