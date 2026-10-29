@@ -1,6 +1,15 @@
-// src/components/AiAssistantModal.jsx - Ultimate AI Concierge with Full Store Access & Multi-Topic Intelligence
+// src/components/AiAssistantModal.jsx - Ultimate AI Concierge with Full Database Sync & Intelligence
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, ArrowRight, Lightbulb, PackageCheck, Store, ShieldCheck, Truck, Tag } from 'lucide-react';
+
+const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24ilastKey...RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM";
+
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json'
+};
 
 export default function AiAssistantModal({
   isAiAssistantOpen,
@@ -16,12 +25,42 @@ export default function AiAssistantModal({
     {
       id: 'm1',
       sender: 'ai',
-      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი AI კონსიერჟი. მაქვს სრული წვდომა ჩვენს კატალოგზე, ვენდერებზე, შეკვეთებსა და მიწოდების პირობებზე. რით შემიძლია დაგეხმაროთ დღეს?'
+      text: 'გამარჯობა! 👋 მე ვარ GEOSTORE-ის მთავარი AI კონსიერჟი. მაქვს სრული წვდომა ჩვენს ღრუბლოვან კატალოგზე, ვენდერებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [liveProducts, setLiveProducts] = useState(products);
   const messagesEndRef = useRef(null);
+
+  // 🔄 პროდუქტების დინამიური წამოღება პირდაპირ Supabase ბაზიდან
+  useEffect(() => {
+    const fetchLiveProducts = async () => {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const formatted = data.map(p => ({
+              id: p.id,
+              name: p.name,
+              category: p.category || 'სმარტფონები',
+              priceGEL: Number(p.price_gel),
+              oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
+              stock: Number(p.stock) || 1,
+              vendor: p.vendor || 'GEOSTORE',
+              image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800'
+            }));
+            setLiveProducts(formatted);
+          }
+        }
+      } catch {}
+    };
+
+    if (isAiAssistantOpen) {
+      fetchLiveProducts();
+    }
+  }, [isAiAssistantOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,64 +74,39 @@ export default function AiAssistantModal({
 
   if (!isAiAssistantOpen) return null;
 
-  // 🧠 სრული წვდომისა და მრავალმხრივი ინტელექტის გენერატორი
+  // 🧠 გაძლიერებული AI ძრავი სრული ბაზის მხარდაჭერით
   const generateAiReply = (userQuery) => {
     const query = userQuery.toLowerCase().trim();
     let matchedProducts = [];
+    const sourceProducts = liveProducts.length > 0 ? liveProducts : products;
 
-    // 1. მეგობრული საუბარი და ზოგადი შეკითხვები
-    if (query.includes('როგორ') && (query.includes('ხარ') || query.includes('ბრძანდებით') || query.includes('გისვამ'))) {
+    if (query.includes('როგორ') && (query.includes('ხარ') || query.includes('ბრძანდებით'))) {
       return {
-        text: 'გმადლობთ, მშვენივრად! 🤖 მზად ვარ დაგეხმაროთ ნებისმიერ საკითხში — იქნება ეს ტექნიკის შერჩევა, ფასდაკლებები თუ შეკვეთის ტრეკინგი.',
+        text: 'გმადლობთ, იდეალურად! 🤖 მზად ვარ დაგეხმაროთ პროდუქტების შერჩევაში ან შეკვეთის სტატუსის გადამოწმებაში.',
         products: []
       };
     }
 
-    if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello') || query.includes('hi')) {
+    if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით')) {
       return {
         text: 'გამარჯობა! 🌟 სიამოვნებით გესაუბრებით. რა გაინტერესებთ დღეს GEOSTORE-ში?',
         products: []
       };
     }
 
-    if (query.includes('ვინ') || query.includes('შენი') || query.includes('შეგიძლია') || query.includes('რისი')) {
+    if (query.includes('ვინ') || query.includes('შეგიძლია')) {
       return {
-        text: 'მე ვარ GEOSTORE-ის სრულუფლებიანი AI ასისტენტი 🤖. მე დამევალა:\n\n• პროდუქტების შერჩევა კატეგორიებისა და ბიუჯეტის მიხედვით\n• ვენდერებისა და ოფიციალური პარტნიორების შესახებ ინფორმაციის მოწოდება\n• შეკვეთების სტატუსის შემოწმება (#ORD კოდით)\n• მიწოდების, გარანტიისა და 0% განვადების პირობების ახსნა',
+        text: 'მე ვარ GEOSTORE-ის ინტელექტუალური AI ასისტენტი 🤖. დამევალა:\n\n• პროდუქტების მოძიება ბიუჯეტისა და კატეგორიის მიხედვით\n• შეკვეთების სტატუსის შემოწმება (#ORD კოდით)\n• ინფორმაციის მოწოდება მიწოდებასა და გარანტიაზე',
         products: []
       };
     }
 
-    if (query.includes('მადლობა') || query.includes('გმადლობ') || query.includes('გაიხარე') || query.includes('thanks')) {
-      return {
-        text: 'დიდი არაფრის! ❤️ ყოველთვის მზად ვარ დასახმარებლად. თუ კიდევ რაიმე დაგჭირდებათ, აქ ვარ!',
-        products: []
-      };
-    }
-
-    // 2. კატეგორიების შესახებ შეკითხვები
-    if (query.includes('კატეგორია') || query.includes('რა გაქვთ') || query.includes('რას ყიდით') || query.includes('არჩევანი')) {
-      const catNames = (categories || []).map(c => typeof c === 'object' ? c.name : c).join(', ');
-      return {
-        text: `🛒 ჩვენთან წარმოდგენილია შემდეგი ძირითადი კატეგორიები: ${catNames || 'სმარტფონები, ლეპტოპები, აქსესუარები'}. შეგიძლიათ მომწეროთ რომელიმე მათგანი და სრულ სიას გაგიზიარებთ!`,
-        products: products.slice(0, 2)
-      };
-    }
-
-    // 3. ვენდერების/მომწოდებლების შესახებ შეკითხვები
-    if (query.includes('ვენდერ') || query.includes('მომწოდებელ') || query.includes('სადღა') || query.includes('ბრენდ')) {
-      const vendorNames = (vendorsList || []).map(v => `• ${v.name} (სტატუსი: ${v.status})`).join('\n');
-      return {
-        text: `店铺 GEOSTORE წარმოადგენს მრავალვენდერიან მარკეტფლეისს. ჩვენი ოფიციალური პარტნიორები და მომწოდებლები არიან:\n\n${vendorNames}`,
-        products: []
-      };
-    }
-
-    // 4. შეკვეთის სტატუსის შემოწმება (#ORD-1234)
-    const orderMatch = query.match(/ord[-\s]?\d+/i);
-    if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი') || query.includes('ტრეკინგ')) {
+    // შეკვეთის ტრეკინგი
+    const orderMatch = query.match(/ord[-\s]?\d+/i) || query.match(/#?\d{4,}/);
+    if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი')) {
       if (orderMatch) {
         const orderIdClean = orderMatch[0].toUpperCase().replace(/\s+/g, '');
-        const foundOrder = (orders || []).find(o => o.id?.toUpperCase() === orderIdClean || o.id?.toUpperCase() === `#${orderIdClean}`);
+        const foundOrder = (orders || []).find(o => o.id?.toUpperCase().includes(orderIdClean));
         
         if (foundOrder) {
           return {
@@ -101,88 +115,94 @@ export default function AiAssistantModal({
           };
         } else {
           return {
-            text: `🔍 შეკვეთა კოდით "${orderMatch[0].toUpperCase()}" ვერ მოიძებნა. გთხოვთ გადაამოწმოთ კოდი!`,
+            text: `🔍 შეკვეთა კოდით "${orderMatch[0].toUpperCase()}" ვერ მოიძებნა ბაზაში.`,
             products: []
           };
         }
       } else {
         return {
-          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მოწეროთ შეკვეთის უნიკალური კოდი (მაგალითად: ORD-9572)! 📦',
+          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მომწეროთ შეკვეთის უნიკალური ნომერი (მაგ: ORD-1025)! 📦',
           products: []
         };
       }
     }
 
-    // 5. პირობები (გარანტია, მიწოდება, განვადება)
-    if (query.includes('გარანტია') || query.includes('საგარანტიო')) {
+    if (query.includes('კატეგორია') || query.includes('რას ყიდით')) {
+      const catNames = (categories || []).map(c => typeof c === 'object' ? c.name : c).join(', ');
       return {
-        text: '🛡️ GEOSTORE-ის ყველა პროდუქტზე მოქმედებს მინიმუმ 1-ლიანი ოფიციალური მწარმოებლის გარანტია.',
+        text: `🛒 ძირითადი კატეგორიები: ${catNames || 'სმარტფონები, ლეპტოპები, აქსესუარები'}. აირჩიეთ სასურველი მიმართულება!`,
+        products: sourceProducts.slice(0, 2)
+      };
+    }
+
+    if (query.includes('გარანტია')) {
+      return {
+        text: '🛡️ GEOSTORE-ის ყველა პროდუქტზე მოქმედებს ოფიციალური ქარხნული გარანტია.',
         products: []
       };
     }
 
-    if (query.includes('მიწოდება') || query.includes('მიტანა') || query.includes('კურიერი')) {
+    if (query.includes('მიწოდება') || query.includes('კურიერი')) {
       return {
-        text: '🚀 მიწოდება ხორციელდება მთელი საქართველოს მასშტაბით! თბილისში მიწოდება უფასოა ან ტარიფირებულია რეგიონის მიხედვით.',
+        text: '🚀 მიწოდება ხორციელდება საქართველოს მასშტაბით. თბილისში მიწოდება უფასოა!',
         products: []
       };
     }
 
-    if (query.includes('განვადება') || query.includes('0%') || query.includes('თვე')) {
+    if (query.includes('განვადება')) {
       return {
-        text: '💳 GEOSTORE-ში ხელმისაწვდომია 0%-იანი განვადება 6, 12 და 24 თვემდე პერიოდით საქართველოს წამყვანი ბანკებიდან.',
+        text: '💳 ხელმისაწვდომია 0%-იანი განვადება წამყვანი ბანკებიდან.',
         products: []
       };
     }
 
-    // 6. ბიუჯეტისა და ფასდაკლებების ძებნა
+    // ბიუჯეტის მიხედვით ძებნა
     const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel)/);
     const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
 
     if (maxBudget) {
-      matchedProducts = products.filter(p => p.priceGEL <= maxBudget);
+      matchedProducts = sourceProducts.filter(p => p.priceGEL <= maxBudget);
       return { 
-        text: `აი საუკეთესო პროდუქტები (${maxBudget} ₾-მდე):`, 
-        products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) 
+        text: `აი საუკეთესო პროდუქტები ბიუჯეტის მიხედვით (${maxBudget} ₾-მდე):`, 
+        products: matchedProducts.slice(0, 3) 
       };
     } 
-    
-    if (query.includes('ფასდაკლება') || query.includes('აქცია') || query.includes('sale')) {
-      matchedProducts = products.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
+
+    if (query.includes('ფასდაკლება') || query.includes('sale')) {
+      matchedProducts = sourceProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return { 
-        text: '🔥 მიმდინარე სპეციალური ფასდაკლებები და შეთავაზებები:', 
-        products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) 
+        text: '🔥 მიმდინარე სპეციალური ფასდაკლებები:', 
+        products: matchedProducts.slice(0, 3) 
       };
     } 
 
     if (query.includes('ლეპტოპ') || query.includes('laptop') || query.includes('macbook')) {
-      matchedProducts = products.filter(p => p.category === 'ლეპტოპები' || p.name.toLowerCase().includes('macbook') || p.name.toLowerCase().includes('laptop'));
-      return { text: '💻 ჩვენი საუკეთესო ლეპტოპების კოლექცია:', products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) };
+      matchedProducts = sourceProducts.filter(p => (p.category || '').toLowerCase().includes('ლეპტოპ') || p.name.toLowerCase().includes('laptop'));
+      return { text: '💻 საუკეთესო ლეპტოპების კოლექცია:', products: matchedProducts.slice(0, 3) };
     } 
 
     if (query.includes('ტელეფონ') || query.includes('phone') || query.includes('iphone') || query.includes('სმარტფონ')) {
-      matchedProducts = products.filter(p => p.category === 'სმარტფონები' || p.name.toLowerCase().includes('iphone'));
-      return { text: '📱 სმარტფონების ფლაგმანური არჩევანი:', products: (matchedProducts.length > 0 ? matchedProducts : products).slice(0, 3) };
+      matchedProducts = sourceProducts.filter(p => (p.category || '').toLowerCase().includes('სმარტფონ') || p.name.toLowerCase().includes('iphone'));
+      return { text: '📱 სმარტფონების ფლაგმანური არჩევანი:', products: matchedProducts.slice(0, 3) };
     }
 
-    // ზოგადი ძიება პროდუქტებში
-    matchedProducts = products.filter(p => 
+    // ზოგადი ტექსტური ძიება ბაზაში
+    matchedProducts = sourceProducts.filter(p => 
       p.name.toLowerCase().includes(query) || 
-      p.category.toLowerCase().includes(query) ||
-      (p.brand && p.brand.toLowerCase().includes(query))
+      (p.category && p.category.toLowerCase().includes(query)) ||
+      (p.vendor && p.vendor.toLowerCase().includes(query))
     );
 
     if (matchedProducts.length > 0) {
       return {
-        text: `✨ თქვენი მოთხოვნის შესაბამისად ვიპოვე შემდეგი პროდუქტები:`,
+        text: `✨ მოთხოვნის შესაბამისად ვიპოვე შემდეგი პროდუქტები:`,
         products: matchedProducts.slice(0, 3)
       };
     }
 
-    // 7. სათადარიგო პასუხი
     return {
-      text: `🤔 ვეცადე პასუხის მოძებნა, მაგრამ ვერსად ვნახე ზუსტი დამთხვევა. შეგიძლიათ მკითხოთ პროდუქტებზე, ვენდერებზე, მიწოდებაზე ან განვადებაზე! აი რამდენიმე პოპულარული ნივთი:`,
-      products: products.slice(0, 2)
+      text: `🤔 ზუსტი დამთხვევა ვერ ვიპოვე. სცადეთ სხვა საკვანძო სიტყვა (მაგ: "ლეპტოპი", "აიფონი", "ფასდაკლება") ან აირჩიეთ შემოთავაზებული თემებიდან:`,
+      products: sourceProducts.slice(0, 2)
     };
   };
 
@@ -205,7 +225,7 @@ export default function AiAssistantModal({
       };
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 500);
+    }, 400);
   };
 
   return (
@@ -222,7 +242,7 @@ export default function AiAssistantModal({
               <h3 className="font-black text-white text-sm flex items-center gap-1.5">
                 GEOSTORE AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
-              <p className="text-[10px] text-emerald-400 font-bold">სრული წვდომის ინტელექტუალური ასისტენტი (24/7)</p>
+              <p className="text-[10px] text-emerald-400 font-bold">ღრუბლოვანი ბაზის ინტელექტუალური ასისტენტი (24/7)</p>
             </div>
           </div>
           <button onClick={() => setIsAiAssistantOpen(false)} className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
@@ -265,7 +285,7 @@ export default function AiAssistantModal({
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-[#141418] border border-emerald-500/20 p-4 rounded-3xl text-emerald-400 font-bold flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI ფიქრობს...
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI ეძებს ბაზაში...
               </div>
             </div>
           )}
@@ -274,10 +294,10 @@ export default function AiAssistantModal({
 
         {/* Quick Suggestion Chips */}
         <div className="px-6 py-2 flex gap-2 overflow-x-auto scrollbar-none text-[11px] shrink-0">
-          {['👋 გამარჯობა', '🛒 კატეგორიები', '🏪 ვენდერები', '🔥 ფასდაკლებები', '💳 განვადება', '🚚 მიწოდება'].map((chip, idx) => (
+          {['👋 გამარჯობა', '🛒 კატეგორიები', '🔥 ფასდაკლებები', '💳 განვადება', '🚚 მიწოდება'].map((chip, idx) => (
             <button 
               key={idx} 
-              onClick={() => handleSendMessage(chip.replace(/[👋🛒🏪🔥💳🚚]/g, '').trim())} 
+              onClick={() => handleSendMessage(chip.replace(/[👋🛒🔥💳🚚]/g, '').trim())} 
               className="bg-[#141418] hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0"
             >
               <Lightbulb className="w-3 h-3" /> {chip}
@@ -289,7 +309,7 @@ export default function AiAssistantModal({
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-4 bg-[#121216] border-t border-emerald-500/20 flex gap-3 shrink-0">
           <input 
             type="text" 
-            placeholder="ჰკითხეთ AI-ს ნებისმიერი რამ კატეგორიებზე, პროდუქტებზე ან შეკვეთებზე..." 
+            placeholder="ჰკითხეთ AI-ს პროდუქტებზე, ფასებზე ან შეკვეთებზე..." 
             value={inputMessage} 
             onChange={e => setInputMessage(e.target.value)} 
             className="flex-1 bg-[#08080a] border border-emerald-500/20 p-3.5 rounded-2xl text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
