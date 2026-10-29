@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Database Persisted Version
+// src/App.jsx - 100% Fully Complete & Database Persisted Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -177,7 +177,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // 🌐 Supabase-იდან შეკვეთების წამოღება
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -197,7 +196,6 @@ export default function App() {
     } catch {}
   };
 
-  // 🌐 Supabase-იდან პროდუქტების ჩატვირთვა 100% უსაფრთხოებისთვის
   const fetchProductsFromDatabase = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`, { headers });
@@ -236,7 +234,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // 💾 LocalStorage Backup
   useEffect(() => { try { localStorage.setItem('geostore_users_list', JSON.stringify(usersList)); } catch{} }, [usersList]);
   useEffect(() => { try { localStorage.setItem('geostore_current_user', JSON.stringify(currentUser)); } catch{} }, [currentUser]);
   useEffect(() => { try { localStorage.setItem('geostore_products', JSON.stringify(products)); } catch{} }, [products]);
