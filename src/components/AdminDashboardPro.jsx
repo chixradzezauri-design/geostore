@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Smart Dynamic Category Engine & Supabase Persistence (100% Full & Safe)
+// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Persistent Category Sync (100% Full & Safe)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -49,7 +49,7 @@ export default function AdminDashboardPro({
   const [productSearchQuery, setProductSearchQuery] = useState('');
   
   const [productForm, setProductForm] = useState({
-    name: '', category: 'ტანსაცმელი', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
+    name: '', category: categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ბამბა / ტყავი / 925 ვერცხლი',
     durability: 'მაღალი ხარისხის / 30°C ირეცხება',
     availableSizes: ['S', 'M', 'L', 'XL']
@@ -169,14 +169,16 @@ export default function AdminDashboardPro({
     );
   }
 
+  // 📂 კატეგორიის დამატება გლობალური შენახვით (LocalStorage / App State)
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
-    const newCatObj = { name: newCatName.trim(), icon: newCatIcon };
+    const cleanName = newCatName.trim();
+    const newCatObj = { name: cleanName, icon: newCatIcon };
     
     const categoryExists = (categoriesList || []).some(cat => {
       const cName = typeof cat === 'object' ? cat.name : cat;
-      return cName === newCatName.trim();
+      return cName.toLowerCase() === cleanName.toLowerCase();
     });
 
     if (categoryExists) {
@@ -184,18 +186,29 @@ export default function AdminDashboardPro({
       return;
     }
 
-    setCategoriesList(prev => [...(prev || []), newCatObj]);
+    const updatedCategories = [...(categoriesList || []), newCatObj];
+    setCategoriesList(updatedCategories);
+    try {
+      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
+    } catch {}
+
     setNewCatName('');
-    logActivity(`დაემატა კატეგორია: ${newCatName.trim()} (${newCatIcon})`);
-    alert('✅ კატეგორია და იკონი წარმატებით დაემატა!');
+    logActivity(`დაემატა კატეგორია: ${cleanName} (${newCatIcon})`);
+    alert('✅ კატეგორია წარმატებით დაემატა და შეინახა!');
   };
 
+  // 📂 კატეგორიის წაშლა გლობალური განახლებით
   const handleDeleteCategory = (catName) => {
     if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${catName}" წაშლა?`)) {
-      setCategoriesList(prev => (prev || []).filter(c => {
+      const updatedCategories = (categoriesList || []).filter(c => {
         const cName = typeof c === 'object' ? c.name : c;
         return cName !== catName;
-      }));
+      });
+      setCategoriesList(updatedCategories);
+      try {
+        localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
+      } catch {}
+
       logActivity(`წაიშალა კატეგორია: ${catName}`);
     }
   };
@@ -290,7 +303,6 @@ export default function AdminDashboardPro({
     }));
   };
 
-  // 💾 პროდუქტის შენახვა Supabase ბაზაში მრავალი სურათის (gallery) მხარდაჭერით
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
@@ -311,7 +323,7 @@ export default function AdminDashboardPro({
       old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
       stock: Number(productForm.stock) || 1,
       image: mainImage,
-      gallery: galleryImages, // 🌟 მრავალი სურათის მასივი ბაზისთვის
+      gallery: galleryImages,
       description: productForm.description || '',
       available_sizes: productForm.availableSizes?.length > 0 ? productForm.availableSizes : ['S', 'M', 'L', 'XL'],
       material: productForm.material || '',
@@ -755,7 +767,7 @@ export default function AdminDashboardPro({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#0d0d10] border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">პროდუქტები ინახება პირდაპირ Supabase ბაზაში სამუდამოდ:</p>
+            <p className="text-xs text-slate-400 mt-0.5">პროდუქტები და კატეგორიები ინახება პირდაპირ ბაზაში და LocalStorage-ში:</p>
           </div>
           <div className="flex items-center gap-3 bg-[#121216] border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
