@@ -52,9 +52,12 @@ export default function AdminDashboardPro({
   const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); // 'standard' | 'pin'
   const [adminPinCode, setAdminPinCode] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
+
+  // უსაფრთხო კატეგორიების მასივი
+  const safeCategories = Array.isArray(categoriesList) ? categoriesList : [];
   
   const productFormInitial = {
-    name: '', category: categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
+    name: '', category: safeCategories[0] ? (typeof safeCategories[0] === 'object' ? safeCategories[0].name : safeCategories[0]) : 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ბამბა / ტყავი / 925 ვერცხლი',
     durability: 'მაღალი ხარისხის / 30°C ირეცხება',
     availableSizes: ['S', 'M', 'L', 'XL']
@@ -127,7 +130,7 @@ export default function AdminDashboardPro({
   // 🔑 ადმინისტრატორის PIN კოდით შესვლა
   const handleAdminPinSubmit = (e) => {
     e.preventDefault();
-    const savedPinHash = localStorage.getItem('geostore_admin_pin') || btoa('1234'); // ნაგულისხმევი PIN: 1234
+    const savedPinHash = localStorage.getItem('geostore_admin_pin') || btoa('1234'); 
     if (btoa(adminPinCode) === savedPinHash) {
       if (typeof setAdminLoggedIn === 'function') setAdminLoggedIn(true);
       setAdminPinError('');
@@ -276,7 +279,7 @@ export default function AdminDashboardPro({
       parentId: selectedParentId || null 
     };
 
-    const updatedCategories = [...(categoriesList || []), newCatObj];
+    const updatedCategories = [...safeCategories, newCatObj];
     if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
     try {
       localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
@@ -288,14 +291,14 @@ export default function AdminDashboardPro({
     alert('✅ კატეგორია წარმატებით დაემატა!');
   };
 
-  // 📂 კატეგორიის წაშლა შვიდიანად/შემოწმებით
+  // 📂 კატეგორიის წაშლა
   const handleDeleteCategory = (catIdOrName, catName) => {
     const isObjId = typeof catIdOrName === 'string' && catIdOrName.startsWith('cat-');
     const targetId = isObjId ? catIdOrName : null;
     const targetName = catName || catIdOrName;
 
     if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${targetName}" წაშლა?`)) {
-      const updatedCategories = (categoriesList || []).filter(c => {
+      const updatedCategories = safeCategories.filter(c => {
         const cId = c.id;
         const cName = typeof c === 'object' ? c.name : c;
         if (targetId) {
@@ -414,7 +417,7 @@ export default function AdminDashboardPro({
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const defaultCat = categoriesList?.[0] ? (typeof categoriesList[0] === 'object' ? categoriesList[0].name : categoriesList[0]) : 'ტანსაცმელი';
+    const defaultCat = safeCategories[0] ? (typeof safeCategories[0] === 'object' ? safeCategories[0].name : safeCategories[0]) : 'ტანსაცმელი';
 
     const prodId = `prod-${Date.now()}`;
     const newProdPayload = {
@@ -815,7 +818,7 @@ export default function AdminDashboardPro({
     p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
   );
 
-  const mainCategories = (categoriesList || []).filter(c => !c.parentId);
+  const mainCategories = safeCategories.filter(c => !c.parentId);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
@@ -842,7 +845,7 @@ export default function AdminDashboardPro({
             { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0, icon: Activity },
             { id: 'broadcasts', label: '📢 შეტყობინებები', icon: Send },
             { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0, icon: Megaphone },
-            { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: categoriesList?.length || 0, icon: FolderTree },
+            { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
@@ -1115,9 +1118,9 @@ export default function AdminDashboardPro({
                     onChange={e => handleCategoryChange(e.target.value)} 
                     className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
                   >
-                    {(categoriesList || []).map(cat => {
-                      const cName = typeof cat === 'object' ? cat.name : cat;
-                      const cId = cat.id || cName;
+                    {safeCategories.map(cat => {
+                      const cName = typeof cat === 'object' && cat !== null ? (cat.name || 'კატეგორია') : String(cat);
+                      const cId = (typeof cat === 'object' && cat !== null ? cat.id : null) || cName;
                       return (
                         <option key={cId} value={cName}>
                           {cName}
@@ -1294,9 +1297,9 @@ export default function AdminDashboardPro({
                     className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                   >
                     <option value="ყველა">ყველა კატეგორია</option>
-                    {(categoriesList || []).map(cat => {
-                      const cName = typeof cat === 'object' ? cat.name : cat;
-                      const cId = cat.id || cName;
+                    {safeCategories.map(cat => {
+                      const cName = typeof cat === 'object' && cat !== null ? (cat.name || 'კატეგორია') : String(cat);
+                      const cId = (typeof cat === 'object' && cat !== null ? cat.id : null) || cName;
                       return (
                         <option key={cId} value={cName}>
                           {cName}
@@ -1448,11 +1451,15 @@ export default function AdminDashboardPro({
                   className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
                 >
                   <option value="">📁 მთავარი კატეგორია (Parent)</option>
-                  {mainCategories.map(cat => (
-                    <option key={cat.id || cat.name} value={cat.id || cat.name}>
-                      ↳ ქვეშ: {cat.name}
-                    </option>
-                  ))}
+                  {mainCategories.map(cat => {
+                    const cName = typeof cat === 'object' && cat !== null ? (cat.name || 'კატეგორია') : String(cat);
+                    const cId = (typeof cat === 'object' && cat !== null ? cat.id : null) || cName;
+                    return (
+                      <option key={cId} value={cId}>
+                        ↳ ქვეშ: {cName}
+                      </option>
+                    );
+                  })}
                 </select>
                 
                 <select
@@ -1483,29 +1490,31 @@ export default function AdminDashboardPro({
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
                 ) : (
                   mainCategories.map(parentCat => {
-                    const pId = parentCat.id || parentCat.name;
-                    const subCats = (categoriesList || []).filter(c => c.parentId === pId);
+                    const pName = typeof parentCat === 'object' && parentCat !== null ? (parentCat.name || 'კატეგორია') : String(parentCat);
+                    const pId = (typeof parentCat === 'object' && parentCat !== null ? parentCat.id : null) || pName;
+                    const subCats = safeCategories.filter(c => typeof c === 'object' && c !== null && c.parentId === pId);
 
                     return (
                       <div key={pId} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2.5">
                             <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">📁 მთავარი</span>
-                            <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                            <h4 className="font-black text-white text-sm">{pName}</h4>
                           </div>
-                          <button onClick={() => handleDeleteCategory(pId, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteCategory(pId, pName)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
 
                         {subCats.length > 0 && (
                           <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-1">
                             {subCats.map(sub => {
-                              const sId = sub.id || sub.name;
+                              const sName = sub.name || 'სუბკატეგორია';
+                              const sId = sub.id || sName;
                               return (
                                 <div key={sId} className="bg-slate-950 p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs">
                                   <span className="font-bold text-slate-200 flex items-center gap-2">
-                                    <CornerDownRight className="w-3.5 h-3.5 text-emerald-400" /> {sub.name}
+                                    <CornerDownRight className="w-3.5 h-3.5 text-emerald-400" /> {sName}
                                   </span>
-                                  <button onClick={() => handleDeleteCategory(sId, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => handleDeleteCategory(sId, sName)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
                                 </div>
                               );
                             })}
