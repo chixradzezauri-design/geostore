@@ -1,9 +1,9 @@
-// src/components/StoreView.jsx - Elite Gold Fashion & Tech Boutique Edition (Optimized & Refined)
+// src/components/StoreView.jsx - Elite Gold Fashion & Tech Boutique Edition with Subcategories Support (100% Full & Safe)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints 
+  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -18,7 +18,7 @@ const headers = {
 export default function StoreView({
   siteSettings,
   promoSlots,
-  categories,
+  categories = [],
   selectedCategory,
   setSelectedCategory,
   filteredProducts: initialFilteredProducts,
@@ -87,6 +87,10 @@ export default function StoreView({
 
   // 🛡️ VIP გარანტიის State
   const [hasVipWarranty, setHasVipWarranty] = useState(false);
+
+  // 📁 აქტიური სუბკატეგორიის State
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const [openParentCatId, setOpenParentCatId] = useState(null);
 
   const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
 
@@ -177,10 +181,32 @@ export default function StoreView({
     setNewReviewImage('');
   };
 
+  // 📂 მთავარი და სუბკატეგორიების დაყოფა
+  const mainCategories = useMemo(() => {
+    return (categories || []).filter(c => !c.parentId);
+  }, [categories]);
+
+  const getSubCategories = (parentId) => {
+    return (categories || []).filter(c => c.parentId === parentId);
+  };
+
+  // 🛒 ფილტრაცია კატეგორიების, სუბკატეგორიებისა და ფასის მიხედვით
   const processedProducts = useMemo(() => {
-    let result = selectedCategory && selectedCategory !== 'ყველა' 
-      ? activeProducts.filter(p => p.category === selectedCategory) 
-      : [...activeProducts];
+    let result = [...activeProducts];
+
+    if (selectedSubCategory) {
+      result = result.filter(p => p.category === selectedSubCategory);
+    } else if (selectedCategory && selectedCategory !== 'ყველა') {
+      // ვამოწმებთ არის თუ არა მთავარი კატეგორია და ვეძებთ მის შვილობილ სუბკატეგორიებშიც
+      const matchedParent = mainCategories.find(c => c.name === selectedCategory);
+      if (matchedParent) {
+        const pId = matchedParent.id || matchedParent.name;
+        const subNames = getSubCategories(pId).map(s => s.name);
+        result = result.filter(p => p.category === selectedCategory || subNames.includes(p.category));
+      } else {
+        result = result.filter(p => p.category === selectedCategory);
+      }
+    }
 
     if (minPrice !== '' && !isNaN(minPrice)) {
       result = result.filter(p => p.priceGEL >= Number(minPrice));
@@ -198,7 +224,7 @@ export default function StoreView({
     }
 
     return result;
-  }, [activeProducts, selectedCategory, minPrice, maxPrice, sortBy]);
+  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories]);
 
   const flashSaleProducts = useMemo(() => {
     return activeProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
@@ -314,20 +340,21 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Categories */}
+      {/* 📁 Categories & Subcategories Bar */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> კატეგორიები
+            <FolderTree className="w-4 h-4" /> მთავარი კატეგორიები და სუბკატეგორიები
           </h3>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-3 sm:px-4 py-1.5 rounded-xl border border-amber-500/20 shadow-inner">
             {processedProducts?.length || 0} პროდუქტი ვიტრინაზე
           </span>
         </div>
         
-        <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-3 scrollbar-none px-1">
+        {/* Main Categories Row */}
+        <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none px-1">
           <button 
-            onClick={() => setSelectedCategory('ყველა')} 
+            onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} 
             className={`px-5 sm:px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-lg ${
               selectedCategory === 'ყველა' 
                 ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
@@ -337,24 +364,59 @@ export default function StoreView({
             <Sparkles className="w-4 h-4 text-slate-950" /> ყველა კატეგორია
           </button>
           
-          {(categories || []).map(cat => {
-            const catName = typeof cat === 'object' ? cat.name : cat;
+          {(mainCategories.length > 0 ? mainCategories : (categories || []).map(c => typeof c === 'object' ? c : { id: c, name: c })).map(cat => {
+            const catName = cat.name;
+            const catId = cat.id || catName;
+            const subCats = getSubCategories(catId);
+            const isSelected = selectedCategory === catName;
+            const isOpen = openParentCatId === catId;
+
             return (
-              <button 
-                key={cat.id || catName} 
-                onClick={() => setSelectedCategory(catName)} 
-                className={`px-5 sm:px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-lg ${
-                  selectedCategory === catName 
-                    ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
-                    : 'bg-[#121216] text-slate-400 border border-amber-500/15 hover:text-white hover:border-amber-500/30'
-                }`}
-              >
-                {getCategoryIcon(catName)}
-                <span>{catName}</span>
-              </button>
+              <div key={catId} className="relative inline-block">
+                <button 
+                  onClick={() => { 
+                    setSelectedCategory(catName); 
+                    setSelectedSubCategory(null);
+                    setOpenParentCatId(isOpen ? null : catId);
+                  }} 
+                  className={`px-5 sm:px-6 py-3 rounded-2xl font-black text-xs whitespace-nowrap transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-lg ${
+                    isSelected 
+                      ? 'bg-amber-400 text-slate-950 shadow-amber-500/30 scale-105 ring-2 ring-amber-400/50' 
+                      : 'bg-[#121216] text-slate-400 border border-amber-500/15 hover:text-white hover:border-amber-500/30'
+                  }`}
+                >
+                  {getCategoryIcon(catName)}
+                  <span>{catName}</span>
+                  {subCats.length > 0 && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
+                </button>
+              </div>
             );
           })}
         </div>
+
+        {/* Subcategories Dropdown Bar (თუ მთავარ კატეგორიას აქვს სუბკატეგორიები) */}
+        {openParentCatId && (
+          <div className="bg-[#0e0e12] border border-amber-500/30 p-4 rounded-3xl flex flex-wrap items-center gap-2.5 animate-in fade-in duration-300 shadow-xl">
+            <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5 mr-2">
+              <CornerDownRight className="w-3.5 h-3.5" /> სუბკატეგორიები:
+            </span>
+            <button
+              onClick={() => setSelectedSubCategory(null)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
+            >
+              ყველა ({selectedCategory})
+            </button>
+            {getSubCategories(openParentCatId).map(sub => (
+              <button
+                key={sub.id || sub.name}
+                onClick={() => setSelectedSubCategory(sub.name)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${selectedSubCategory === sub.name ? 'bg-amber-400 text-slate-950 border-amber-400 shadow' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
+              >
+                {sub.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filters & Sorting */}
