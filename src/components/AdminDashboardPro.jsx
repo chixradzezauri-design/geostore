@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Swirly/Shoplyti Pro Edition with Secure PIN & Passkeys (100% Full & Safe)
+// src/components/AdminDashboardPro.jsx - Elite Secure Edition (100% Full & Safe)
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Camera as CameraIcon, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -48,16 +48,31 @@ export default function AdminDashboardPro({
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
 
-  // 🔐 ადმინ უსაფრთხოების (PIN და Passkey) State
-  const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); // 'standard' | 'pin'
+  const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); 
   const [adminPinCode, setAdminPinCode] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
 
-  // უსაფრთხო კატეგორიების მასივი
-  const safeCategories = Array.isArray(categoriesList) ? categoriesList : [];
+  // 🛡️ უსაფრთხო კატეგორიების მასივის ჰარმონიზაცია (სტრიქონების და ობიექტების ერთიანობა)
+  const safeCategories = React.useMemo(() => {
+    if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone' }];
+    return categoriesList.map((cat, idx) => {
+      if (typeof cat === 'string') {
+        return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null };
+      }
+      if (cat && typeof cat === 'object') {
+        return {
+          id: cat.id || `cat-obj-${idx}`,
+          name: cat.name || 'კატეგორია',
+          icon: cat.icon || 'Shirt',
+          parentId: cat.parentId || null
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  }, [categoriesList]);
   
   const productFormInitial = {
-    name: '', category: safeCategories[0] ? (typeof safeCategories[0] === 'object' ? safeCategories[0].name : safeCategories[0]) : 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
+    name: '', category: safeCategories[0]?.name || 'სმარტფონები', priceGEL: '', oldPriceGEL: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: 'პრემიუმ ბამბა / ტყავი / 925 ვერცხლი',
     durability: 'მაღალი ხარისხის / 30°C ირეცხება',
     availableSizes: ['S', 'M', 'L', 'XL']
@@ -68,7 +83,6 @@ export default function AdminDashboardPro({
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
   const [vendorForm, setVendorForm] = useState({ name: '', commission: '' });
   
-  // 📂 კატეგორიებისა და სუბკატეგორიების State
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('Shirt');
   const [selectedParentId, setSelectedParentId] = useState('');
@@ -127,7 +141,6 @@ export default function AdminDashboardPro({
     setActivityLogs(prev => [newLog, ...(prev || [])]);
   };
 
-  // 🔑 ადმინისტრატორის PIN კოდით შესვლა
   const handleAdminPinSubmit = (e) => {
     e.preventDefault();
     const savedPinHash = localStorage.getItem('geostore_admin_pin') || btoa('1234'); 
@@ -140,7 +153,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // 🛡️ ადმინისტრატორის Face ID / Passkey შესვლა
   const handleAdminBiometricLogin = async () => {
     if (!window.PublicKeyCredential) {
       alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys-ს.');
@@ -265,7 +277,6 @@ export default function AdminDashboardPro({
     );
   }
 
-  // 📂 მთავარი კატეგორიის ან სუბკატეგორიის დამატება
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -291,21 +302,9 @@ export default function AdminDashboardPro({
     alert('✅ კატეგორია წარმატებით დაემატა!');
   };
 
-  // 📂 კატეგორიის წაშლა
-  const handleDeleteCategory = (catIdOrName, catName) => {
-    const isObjId = typeof catIdOrName === 'string' && catIdOrName.startsWith('cat-');
-    const targetId = isObjId ? catIdOrName : null;
-    const targetName = catName || catIdOrName;
-
+  const handleDeleteCategory = (targetId, targetName) => {
     if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${targetName}" წაშლა?`)) {
-      const updatedCategories = safeCategories.filter(c => {
-        const cId = c.id;
-        const cName = typeof c === 'object' ? c.name : c;
-        if (targetId) {
-          return cId !== targetId && c.parentId !== targetId;
-        }
-        return cName !== targetName;
-      });
+      const updatedCategories = safeCategories.filter(c => c.id !== targetId && c.parentId !== targetId);
 
       if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
       try {
@@ -417,7 +416,7 @@ export default function AdminDashboardPro({
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const defaultCat = safeCategories[0] ? (typeof safeCategories[0] === 'object' ? safeCategories[0].name : safeCategories[0]) : 'ტანსაცმელი';
+    const defaultCat = safeCategories[0]?.name || 'ტანსაცმელი';
 
     const prodId = `prod-${Date.now()}`;
     const newProdPayload = {
@@ -1118,15 +1117,11 @@ export default function AdminDashboardPro({
                     onChange={e => handleCategoryChange(e.target.value)} 
                     className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
                   >
-                    {safeCategories.map(cat => {
-                      const cName = typeof cat === 'object' && cat !== null ? (cat.name || 'კატეგორია') : String(cat);
-                      const cId = (typeof cat === 'object' && cat !== null ? cat.id : null) || cName;
-                      return (
-                        <option key={cId} value={cName}>
-                          {cName}
-                        </option>
-                      );
-                    })}
+                    {safeCategories.map(cat => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                   <input type="number" placeholder="მარაგი (რაოდენობა)" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <input type="text" placeholder="მომწოდებელი / ბრენდი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -1297,15 +1292,11 @@ export default function AdminDashboardPro({
                     className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
                   >
                     <option value="ყველა">ყველა კატეგორია</option>
-                    {safeCategories.map(cat => {
-                      const cName = typeof cat === 'object' && cat !== null ? (cat.name || 'კატეგორია') : String(cat);
-                      const cId = (typeof cat === 'object' && cat !== null ? cat.id : null) || cName;
-                      return (
-                        <option key={cId} value={cName}>
-                          {cName}
-                        </option>
-                      );
-                    })}
+                    {safeCategories.map(cat => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1451,15 +1442,11 @@ export default function AdminDashboardPro({
                   className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold"
                 >
                   <option value="">📁 მთავარი კატეგორია (Parent)</option>
-                  {mainCategories.map(cat => {
-                    const cName = typeof cat === 'object' && cat !== null ? (cat.name || 'კატეგორია') : String(cat);
-                    const cId = (typeof cat === 'object' && cat !== null ? cat.id : null) || cName;
-                    return (
-                      <option key={cId} value={cId}>
-                        ↳ ქვეშ: {cName}
-                      </option>
-                    );
-                  })}
+                  {mainCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      ↳ ქვეშ: {cat.name}
+                    </option>
+                  ))}
                 </select>
                 
                 <select
@@ -1490,34 +1477,28 @@ export default function AdminDashboardPro({
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
                 ) : (
                   mainCategories.map(parentCat => {
-                    const pName = typeof parentCat === 'object' && parentCat !== null ? (parentCat.name || 'კატეგორია') : String(parentCat);
-                    const pId = (typeof parentCat === 'object' && parentCat !== null ? parentCat.id : null) || pName;
-                    const subCats = safeCategories.filter(c => typeof c === 'object' && c !== null && c.parentId === pId);
+                    const subCats = safeCategories.filter(c => c.parentId === parentCat.id);
 
                     return (
-                      <div key={pId} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
+                      <div key={parentCat.id} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2.5">
                             <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">📁 მთავარი</span>
-                            <h4 className="font-black text-white text-sm">{pName}</h4>
+                            <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
                           </div>
-                          <button onClick={() => handleDeleteCategory(pId, pName)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteCategory(parentCat.id, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
 
                         {subCats.length > 0 && (
                           <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-1">
-                            {subCats.map(sub => {
-                              const sName = sub.name || 'სუბკატეგორია';
-                              const sId = sub.id || sName;
-                              return (
-                                <div key={sId} className="bg-slate-950 p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs">
-                                  <span className="font-bold text-slate-200 flex items-center gap-2">
-                                    <CornerDownRight className="w-3.5 h-3.5 text-emerald-400" /> {sName}
-                                  </span>
-                                  <button onClick={() => handleDeleteCategory(sId, sName)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
-                                </div>
-                              );
-                            })}
+                            {subCats.map(sub => (
+                              <div key={sub.id} className="bg-slate-950 p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-200 flex items-center gap-2">
+                                  <CornerDownRight className="w-3.5 h-3.5 text-emerald-400" /> {sub.name}
+                                </span>
+                                <button onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
