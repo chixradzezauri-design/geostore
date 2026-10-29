@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Complete Fashion, Shoes & Accessories Edition (100% Full Code)
+// src/components/StoreView.jsx - Complete Fashion, Shoes & Accessories Edition (100% Full Code & Smooth Modal Fixed)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -75,7 +75,6 @@ export default function StoreView({
     setSelectedProduct(prod);
     setActiveImage(prod.image);
     setInstallmentMonths(12);
-    // ავტომატურად ვარჩევთ საწყის ზომას კატეგორიის მიხედვით
     const isShoe = (prod.category || '').toLowerCase().includes('ფეხსაცმელ') || (prod.category || '').toLowerCase().includes('shoe');
     setSelectedSize(isShoe ? '41' : 'M');
     setSelectedColor('შავი');
@@ -158,7 +157,6 @@ export default function StoreView({
     return others[index];
   };
 
-  // მსგავსი პროდუქტების სია (Cross-Sell / You May Also Like)
   const getSimilarProducts = (currentProd) => {
     if (!filteredProducts) return [];
     return filteredProducts
@@ -182,7 +180,7 @@ export default function StoreView({
   return (
     <div className="space-y-8 w-full pb-28 animate-in fade-in duration-500">
       
-      {/* 🌟 COMPACT MINIMALIST HERO BANNER */}
+      {/* 🌟 HERO BANNER */}
       <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[2rem] p-5 sm:p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 group">
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -233,7 +231,6 @@ export default function StoreView({
               </div>
             </div>
 
-            {/* Countdown Clock */}
             <div className="flex items-center gap-2 text-xs font-black">
               <div className="bg-[#141418] border border-amber-500/30 px-4 py-2.5 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
@@ -252,7 +249,6 @@ export default function StoreView({
             </div>
           </div>
 
-          {/* Flash Sale Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {flashSaleProducts.map(prod => {
               return (
@@ -389,7 +385,6 @@ export default function StoreView({
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
-                  {/* Wishlist Button */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
                     className="absolute top-4 right-4 p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
@@ -398,7 +393,6 @@ export default function StoreView({
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
 
-                  {/* ⚖️ Compare Button */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
                     className={`absolute top-16 right-4 p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
@@ -447,335 +441,289 @@ export default function StoreView({
         </div>
       )}
 
-      {/* Product Detail Modal */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL (No Lag / Smooth Scroll) */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <button 
-            onClick={() => setSelectedProduct(null)} 
-            className="fixed top-4 right-4 sm:absolute sm:top-6 sm:right-6 p-3.5 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/40 transition cursor-pointer z-[10000] shadow-2xl"
-            title="დახურვა"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          
+          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[85vh]">
+            
+            {/* Modal Header Bar with Close Button */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0">
+              <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
+              </span>
+              <button 
+                onClick={() => setSelectedProduct(null)} 
+                className="p-2.5 bg-[#1e1e24] hover:bg-rose-500/20 text-slate-200 hover:text-rose-400 rounded-2xl border border-amber-500/30 transition cursor-pointer shadow"
+                title="დახურვა"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2.5rem] sm:rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl p-6 sm:p-10 space-y-6 pt-20 sm:pt-10 my-auto mb-10">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-              <div className="space-y-5">
-                <div className="bg-[#060608] rounded-[2.5rem] p-6 border border-amber-500/30 flex items-center justify-center h-64 sm:h-80 shadow-2xl">
-                  <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
-                </div>
+            {/* Modal Scrollable Body */}
+            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 
-                {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                    {selectedProduct.gallery.map((img, idx) => (
-                      <button key={idx} onClick={() => setActiveImage(img)} className={`w-20 h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
-                        <img src={img} alt="" className="w-full h-full object-contain rounded-xl" />
-                      </button>
-                    ))}
+                {/* Left: Images */}
+                <div className="space-y-4">
+                  <div className="bg-[#060608] rounded-[2.5rem] p-6 border border-amber-500/30 flex items-center justify-center h-64 sm:h-80 shadow-2xl">
+                    <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
-                )}
-              </div>
-
-              <div className="space-y-6 text-xs max-h-[60vh] sm:max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
-                    <span className="text-[11px] text-slate-400 font-bold bg-[#141418] px-3.5 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
-                  </div>
-                  <h2 className="text-xl sm:text-3xl font-black text-white leading-tight pt-2">{selectedProduct.name}</h2>
-                  <p className="text-slate-400 text-xs">მომწოდებელი: <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
-                </div>
-
-                <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
-                  <span className="text-2xl sm:text-3xl font-black text-amber-400">
-                    {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
-                  </span>
-                  {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
-                </div>
-
-                {/* 🏷️ ტექნიკური მახასიათებლების პანელი (Specifications) */}
-                <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
-                    <span className="text-slate-400 block text-[10px]">მასალა / შემადგენლობა</span>
-                    <b className="text-white font-bold mt-0.5 block">პრემიუმ ტყავი / 925 ვერცხლი</b>
-                  </div>
-                  <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
-                    <span className="text-slate-400 block text-[10px]">მდგრადობა / წყალგაუმტარობა</span>
-                    <b className="text-amber-400 font-bold mt-0.5 block">3ATM Water Resistant</b>
-                  </div>
-                </div>
-
-                {/* 👕 ზომების არჩევანი (Size Selector - Shoes 38-44 or Apparel S-XXL) */}
-                <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
-                    <button onClick={() => setIsSizeGuideOpen(true)} className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
-                      <Ruler className="w-3.5 h-3.5" /> ზომების გიდი
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {((selectedProduct.category || '').toLowerCase().includes('ფეხსაცმელ') || (selectedProduct.category || '').toLowerCase().includes('shoe')
-                      ? ['38', '39', '40', '41', '42', '43', '44']
-                      : ['S', 'M', 'L', 'XL', 'XXL']
-                    ).map(size => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => setSelectedSize(size)}
-                        className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-400 border-amber-500/20 hover:text-white'}`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 🎨 ფერების არჩევანი (Color Selector) */}
-                <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
-                  <span className="text-slate-300 font-bold block">ფერი: <b className="text-amber-400">{selectedColor}</b></span>
-                  <div className="flex gap-3">
-                    {[
-                      { name: 'შავი', bg: 'bg-slate-900 border-amber-400' },
-                      { name: 'თეთრი', bg: 'bg-slate-100 border-slate-300' },
-                      { name: 'კრემისფერი', bg: 'bg-amber-100 border-amber-300' },
-                      { name: 'ლურჯი', bg: 'bg-blue-600 border-blue-400' }
-                    ].map(col => (
-                      <button
-                        key={col.name}
-                        type="button"
-                        onClick={() => setSelectedColor(col.name)}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === col.name ? 'border-amber-400 bg-amber-500/10 text-amber-300' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
-                      >
-                        <span className={`w-3.5 h-3.5 rounded-full border ${col.bg}`}></span>
-                        {col.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 🎁 სასაჩუქრე შეფუთვა და ღია ბარათის ტექსტი (Gift Wrapping & Note) */}
-                <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
-                  <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
-                        <Gift className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-white text-xs">სასაჩუქრე პრემიუმ შეფუთვა</h4>
-                        <p className="text-[10px] text-slate-400">ყუთი, ბაფთა და ბარათი (+5 ₾)</p>
-                      </div>
-                    </div>
-                    <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
-                  </div>
-
-                  {isGiftWrapped && (
-                    <div className="pt-2 animate-in fade-in">
-                      <div className="flex items-center gap-2 text-amber-400 font-bold mb-1.5 text-[11px]">
-                        <FileText className="w-3.5 h-3.5" /> სასაჩუქრე ბარათის ტექსტი (უფასო):
-                      </div>
-                      <textarea
-                        rows="2"
-                        placeholder="ჩაწერეთ თქვენი სურვილი, რომელიც ყუთში ჩადებულ ღია ბარათზე დაიბეჭდება..."
-                        value={giftMessage}
-                        onChange={(e) => setGiftMessage(e.target.value)}
-                        className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 text-xs resize-none shadow-inner"
-                      />
+                  
+                  {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                      {selectedProduct.gallery.map((img, idx) => (
+                        <button key={idx} onClick={() => setActiveImage(img)} className={`w-20 h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
+                          <img src={img} alt="" className="w-full h-full object-contain rounded-xl" />
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
 
-                {/* 🛡️ VIP გარანტია და დაზღვევა (Extended Warranty) */}
-                <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
-                      <ShieldAlert className="w-5 h-5" />
+                {/* Right: Info & Selectors */}
+                <div className="space-y-6 text-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3.5 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
+                      <span className="text-[11px] text-slate-400 font-bold bg-[#141418] px-3.5 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-white text-xs">VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)</h4>
-                      <p className="text-[10px] text-slate-400">სრული დაცვა დაზიანებისგან (+15 ₾)</p>
+                    <h2 className="text-xl sm:text-2xl font-black text-white leading-tight pt-2">{selectedProduct.name}</h2>
+                    <p className="text-slate-400 text-xs">მომწოდებელი: <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
+                  </div>
+
+                  <div className="bg-[#141418] p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
+                    <span className="text-2xl sm:text-3xl font-black text-amber-400">
+                      {formatPrice(selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
+                    </span>
+                    {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                  </div>
+
+                  {/* Specs */}
+                  <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-2 gap-3 text-xs">
+                    <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
+                      <span className="text-slate-400 block text-[10px]">მასალა / შემადგენლობა</span>
+                      <b className="text-white font-bold mt-0.5 block">პრემიუმ ტყავი / 925 ვერცხლი</b>
+                    </div>
+                    <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
+                      <span className="text-slate-400 block text-[10px]">მდგრადობა / წყალგაუმტარობა</span>
+                      <b className="text-amber-400 font-bold mt-0.5 block">3ATM Water Resistant</b>
                     </div>
                   </div>
-                  <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
-                </div>
 
-                {/* ✨ "SHOP THE LOOK" / COMPLETE THE LOOK SECTION */}
-                {getComplementaryProduct(selectedProduct) && (() => {
-                  const compProd = getComplementaryProduct(selectedProduct);
-                  return (
-                    <div className="bg-gradient-to-r from-amber-950/30 via-[#121216] to-amber-950/30 p-4 rounded-3xl border border-amber-500/30 space-y-3">
-                      <div className="flex items-center gap-2 text-amber-400 font-black text-xs">
-                        <Layers className="w-4 h-4" /> შეუხამე ეს ლუქი / აქსესუარი
-                      </div>
-                      <div className="flex items-center justify-between gap-3 bg-[#08080a] p-3 rounded-2xl border border-amber-500/20">
-                        <div className="flex items-center gap-3">
-                          <img src={compProd.image} alt="" className="w-12 h-12 object-contain bg-slate-950 rounded-xl p-1 border border-amber-500/20" />
-                          <div>
-                            <h4 className="font-bold text-white text-xs line-clamp-1">{compProd.name}</h4>
-                            <span className="text-amber-400 font-black text-xs">{formatPrice(compProd.priceGEL)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          let customName = `${selectedProduct.name} (${selectedSize}, ${selectedColor})`;
-                          if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
-                          if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
-                          if (hasVipWarranty) customName += ' + VIP გარანტია';
-
-                          addToCart({ ...selectedProduct, priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0), name: customName });
-                          addToCart(compProd);
-                          setSelectedProduct(null);
-                        }}
-                        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition shadow-lg cursor-pointer"
-                      >
-                        🛍️ მთლიანი კომპლექტის დამატება კალათაში
+                  {/* Size Selector */}
+                  <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300 font-bold">აირჩიეთ ზომა: <b className="text-amber-400">{selectedSize}</b></span>
+                      <button onClick={() => setIsSizeGuideOpen(true)} className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
+                        <Ruler className="w-3.5 h-3.5" /> ზომების გიდი
                       </button>
                     </div>
-                  );
-                })()}
-
-                {/* 💎 მსგავსი პროდუქტების რეკომენდაციები (You May Also Like / Cross-Sell) */}
-                {getSimilarProducts(selectedProduct).length > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-amber-500/20">
-                    <h4 className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                      <Compass className="w-4 h-4" /> მსგავსი პროდუქტები და აქსესუარები
-                    </h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {getSimilarProducts(selectedProduct).map(simProd => (
-                        <div 
-                          key={simProd.id} 
-                          onClick={() => handleOpenProduct(simProd)}
-                          className="bg-[#121216] border border-amber-500/20 rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-amber-400 transition group/sim"
+                    <div className="flex flex-wrap gap-2">
+                      {((selectedProduct.category || '').toLowerCase().includes('ფეხსაცმელ') || (selectedProduct.category || '').toLowerCase().includes('shoe')
+                        ? ['38', '39', '40', '41', '42', '43', '44']
+                        : ['S', 'M', 'L', 'XL', 'XXL']
+                      ).map(size => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setSelectedSize(size)}
+                          className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-400 border-amber-500/20 hover:text-white'}`}
                         >
-                          <img src={simProd.image} alt="" className="w-16 h-16 object-contain mb-2 group-hover/sim:scale-105 transition-transform" />
-                          <span className="text-[11px] font-bold text-white line-clamp-1 w-full">{simProd.name}</span>
-                          <span className="text-amber-400 font-black text-xs mt-1">{formatPrice(simProd.priceGEL)}</span>
-                        </div>
+                          {size}
+                        </button>
                       ))}
                     </div>
                   </div>
-                )}
 
-                <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
-                  <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
-                  <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.'}</p>
-                </div>
-
-                <div className="flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
-                  <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                  <span>მარაგშია: <b className="text-amber-400 font-black">ხელმისაწვდომია</b> (მორგება მიტანისას)</span>
-                </div>
-
-                {/* ⭐ REVIEWS & UGC PHOTO REVIEWS SECTION */}
-                <div className="space-y-4 pt-4 border-t border-amber-500/20">
-                  <h3 className="text-sm font-black text-white flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა ფოტო-შეფასებები ({(allReviews[selectedProduct.id] || []).length})
-                  </h3>
-
-                  {/* Add Review Form with Photo Upload */}
-                  <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
-                    <span className="text-amber-300 font-bold block text-xs">დატოვეთ შეფასება და ატვირთეთ ფოტო:</span>
-                    <div className="flex gap-2 items-center">
-                      <span className="text-slate-400">შეფასება:</span>
-                      <select 
-                        value={newReviewRating} 
-                        onChange={e => setNewReviewRating(Number(e.target.value))}
-                        className="bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
-                      >
-                        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                        <option value="4">⭐⭐⭐⭐ (4)</option>
-                        <option value="3">⭐⭐⭐ (3)</option>
-                        <option value="2">⭐⭐ (2)</option>
-                        <option value="1">⭐ (1)</option>
-                      </select>
+                  {/* Color Selector */}
+                  <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <span className="text-slate-300 font-bold block">ფერი: <b className="text-amber-400">{selectedColor}</b></span>
+                    <div className="flex gap-3">
+                      {[
+                        { name: 'შავი', bg: 'bg-slate-900 border-amber-400' },
+                        { name: 'თეთრი', bg: 'bg-slate-100 border-slate-300' },
+                        { name: 'კრემისფერი', bg: 'bg-amber-100 border-amber-300' },
+                        { name: 'ლურჯი', bg: 'bg-blue-600 border-blue-400' }
+                      ].map(col => (
+                        <button
+                          key={col.name}
+                          type="button"
+                          onClick={() => setSelectedColor(col.name)}
+                          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === col.name ? 'border-amber-400 bg-amber-500/10 text-amber-300' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
+                        >
+                          <span className={`w-3.5 h-3.5 rounded-full border ${col.bg}`}></span>
+                          {col.name}
+                        </button>
+                      ))}
                     </div>
-                    <input 
-                      type="text" 
-                      placeholder="თქვენი სახელი *" 
-                      value={newReviewAuthor} 
-                      onChange={e => setNewReviewAuthor(e.target.value)}
-                      required
-                      className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
-                    />
-                    <textarea 
-                      placeholder="როგორ მოგეწონათ პროდუქტი? ხარისხი..." 
-                      value={newReviewComment} 
-                      onChange={e => setNewReviewComment(e.target.value)}
-                      required
-                      rows="2"
-                      className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
-                    ></textarea>
+                  </div>
 
-                    {/* Photo Upload for Review */}
-                    <div className="flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
-                      <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
-                        <ImageIcon className="w-4 h-4" /> ატვირთეთ ფოტო:
-                        <input type="file" accept="image/*" onChange={handleReviewImageChange} className="hidden" />
-                      </label>
-                      {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ ფოტო არჩეულია</span>}
-                    </div>
-
-                    <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
-                      შეფასების და ფოტოს გამოქვეყნება
-                    </button>
-                  </form>
-
-                  {/* Reviews List with Photos */}
-                  <div className="space-y-3 pt-2">
-                    {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
-                      <p className="text-slate-500 text-xs text-center py-4">ამ პროდუქტზე ჯერ არ არის შეფასებები. იყავი პირველი!</p>
-                    ) : (
-                      allReviews[selectedProduct.id].map(rev => (
-                        <div key={rev.id} className="bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
-                          <div className="flex justify-between items-center">
-                            <b className="text-white text-xs">{rev.author}</b>
-                            <span className="text-[10px] text-slate-500">{rev.date}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-amber-400 text-xs">
-                            {Array.from({ length: rev.rating }).map((_, i) => (
-                              <Star key={i} className="w-3 h-3 fill-amber-400" />
-                            ))}
-                          </div>
-                          <p className="text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
-                          
-                          {rev.image && (
-                            <div className="mt-2">
-                              <img src={rev.image} alt="UGC Review" className="w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
-                            </div>
-                          )}
+                  {/* Gift Wrapping */}
+                  <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
+                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
+                          <Gift className="w-5 h-5" />
                         </div>
-                      ))
+                        <div>
+                          <h4 className="font-bold text-white text-xs">სასაჩუქრე პრემიუმ შეფუთვა</h4>
+                          <p className="text-[10px] text-slate-400">ყუთი, ბაფთა და ბარათი (+5 ₾)</p>
+                        </div>
+                      </div>
+                      <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                    </div>
+
+                    {isGiftWrapped && (
+                      <div className="pt-2 animate-in fade-in">
+                        <div className="flex items-center gap-2 text-amber-400 font-bold mb-1.5 text-[11px]">
+                          <FileText className="w-3.5 h-3.5" /> სასაჩუქრე ბარათის ტექსტი (უფასო):
+                        </div>
+                        <textarea
+                          rows="2"
+                          placeholder="ჩაწერეთ თქვენი სურვილი..."
+                          value={giftMessage}
+                          onChange={(e) => setGiftMessage(e.target.value)}
+                          className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 text-xs resize-none shadow-inner"
+                        />
+                      </div>
                     )}
                   </div>
+
+                  {/* VIP Warranty */}
+                  <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
+                        <ShieldAlert className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-xs">VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)</h4>
+                        <p className="text-[10px] text-slate-400">სრული დაცვა დაზიანებისგან (+15 ₾)</p>
+                      </div>
+                    </div>
+                    <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-2 bg-[#101014] p-5 rounded-3xl border border-amber-500/20 shadow-inner">
+                    <span className="text-amber-300 font-bold block text-sm">პროდუქტის აღწერა:</span>
+                    <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.'}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
+                    <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
+                    <span>მარაგშია: <b className="text-amber-400 font-black">ხელმისაწვდომია</b> (მორგება მიტანისას)</span>
+                  </div>
+
+                  {/* Reviews & UGC */}
+                  <div className="space-y-4 pt-4 border-t border-amber-500/20">
+                    <h3 className="text-sm font-black text-white flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-amber-400" /> მომხმარებელთა ფოტო-შეფასებები ({(allReviews[selectedProduct.id] || []).length})
+                    </h3>
+
+                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
+                      <span className="text-amber-300 font-bold block text-xs">დატოვეთ შეფასება და ატვირთეთ ფოტო:</span>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-slate-400">შეფასება:</span>
+                        <select 
+                          value={newReviewRating} 
+                          onChange={e => setNewReviewRating(Number(e.target.value))}
+                          className="bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
+                        >
+                          <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                          <option value="4">⭐⭐⭐⭐ (4)</option>
+                          <option value="3">⭐⭐⭐ (3)</option>
+                          <option value="2">⭐⭐ (2)</option>
+                          <option value="1">⭐ (1)</option>
+                        </select>
+                      </div>
+                      <input 
+                        type="text" 
+                        placeholder="თქვენი სახელი *" 
+                        value={newReviewAuthor} 
+                        onChange={e => setNewReviewAuthor(e.target.value)}
+                        required
+                        className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
+                      />
+                      <textarea 
+                        placeholder="როგორ მოგეწონათ პროდუქტი?..." 
+                        value={newReviewComment} 
+                        onChange={e => setNewReviewComment(e.target.value)}
+                        required
+                        rows="2"
+                        className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
+                      ></textarea>
+
+                      <div className="flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
+                        <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
+                          <ImageIcon className="w-4 h-4" /> ატვირთეთ ფოტო:
+                          <input type="file" accept="image/*" onChange={handleReviewImageChange} className="hidden" />
+                        </label>
+                        {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ ფოტო არჩეულია</span>}
+                      </div>
+
+                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
+                        შეფასების და ფოტოს გამოქვეყნება
+                      </button>
+                    </form>
+
+                    <div className="space-y-3 pt-2">
+                      {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
+                        <p className="text-slate-500 text-xs text-center py-4">ამ პროდუქტზე ჯერ არ არის შეფასებები.</p>
+                      ) : (
+                        allReviews[selectedProduct.id].map(rev => (
+                          <div key={rev.id} className="bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
+                            <div className="flex justify-between items-center">
+                              <b className="text-white text-xs">{rev.author}</b>
+                              <span className="text-[10px] text-slate-500">{rev.date}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-amber-400 text-xs">
+                              {Array.from({ length: rev.rating }).map((_, i) => (
+                                <Star key={i} className="w-3 h-3 fill-amber-400" />
+                              ))}
+                            </div>
+                            <p className="text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
+                            {rev.image && (
+                              <div className="mt-2">
+                                <img src={rev.image} alt="UGC" className="w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Add to Cart button inside modal */}
+                  <button 
+                    onClick={() => { 
+                      let customName = `${selectedProduct.name} (${selectedSize}, ${selectedColor})`;
+                      if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
+                      if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
+                      if (hasVipWarranty) customName += ' + VIP გარანტია';
+
+                      addToCart({ 
+                        ...selectedProduct, 
+                        priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
+                        name: customName 
+                      }); 
+                      setSelectedProduct(null); 
+                    }} 
+                    className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
+                  >
+                    <ShoppingBag className="w-5 h-5" /> კალათაში დამატება ({selectedSize} / {selectedColor})
+                  </button>
+
                 </div>
-
-                {/* 🛒 კალათაში დამატება არჩეული პარამეტრებით */}
-                <button 
-                  onClick={() => { 
-                    let customName = `${selectedProduct.name} (${selectedSize}, ${selectedColor})`;
-                    if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
-                    if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
-                    if (hasVipWarranty) customName += ' + VIP გარანტია';
-
-                    addToCart({ 
-                      ...selectedProduct, 
-                      priceGEL: selectedProduct.priceGEL + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
-                      name: customName 
-                    }); 
-                    setSelectedProduct(null); 
-                  }} 
-                  className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4.5 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 mt-6"
-                >
-                  <ShoppingBag className="w-5 h-5" /> კალათაში დამატება ({selectedSize} / {selectedColor})
-                </button>
               </div>
             </div>
+
           </div>
         </div>
       )}
 
-      {/* 📏 ზომების გიდის მოდალი (Size Guide Modal - Clothing & Shoes) */}
+      {/* 📏 ზომების გიდის მოდალი */}
       {isSizeGuideOpen && (
         <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
