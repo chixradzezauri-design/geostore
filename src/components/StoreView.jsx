@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - 100% Fully Complete & Fixed Edition
+// src/components/StoreView.jsx - 100% Fully Complete & Supabase Integrated Edition
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -6,13 +6,22 @@ import {
   Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints 
 } from 'lucide-react';
 
+const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+
+const headers = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Content-Type': 'application/json'
+};
+
 export default function StoreView({
   siteSettings,
   promoSlots,
   categories,
   selectedCategory,
   setSelectedCategory,
-  filteredProducts,
+  filteredProducts: initialFilteredProducts,
   wishlist,
   toggleWishlist,
   comparisonList = [],
@@ -20,6 +29,46 @@ export default function StoreView({
   addToCart,
   formatPrice
 }) {
+  const [dbProducts, setDbProducts] = useState([]);
+
+  // 🔄 პროდუქტების ავტომატური წამოღება პირდაპირ Supabase ბაზიდან
+  const fetchProductsFromSupabase = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        const formatted = data.map(p => ({
+          id: p.id,
+          sku: p.sku,
+          name: p.name,
+          category: p.category,
+          vendor: p.vendor,
+          priceGEL: p.price_gel,
+          oldPriceGEL: p.old_price_gel,
+          stock: p.stock,
+          image: p.image,
+          description: p.description,
+          availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
+          availableColors: p.available_colors || ['შავი', 'თეთრი'],
+          material: p.material,
+          durability: p.durability,
+          tags: p.tags || [],
+          gallery: p.gallery || [p.image]
+        }));
+        setDbProducts(formatted);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchProductsFromSupabase();
+    const interval = setInterval(fetchProductsFromSupabase, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ვიყენებთ ბაზიდან წამოღებულ პროდუქტებს, ხოლო თუ ბაზა ცარიელია - საწყის პროდუქტებს
+  const activeProducts = dbProducts.length > 0 ? dbProducts : (initialFilteredProducts || []);
+
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
 
@@ -130,7 +179,9 @@ export default function StoreView({
   };
 
   const processedProducts = useMemo(() => {
-    let result = [...(filteredProducts || [])];
+    let result = selectedCategory && selectedCategory !== 'ყველა' 
+      ? activeProducts.filter(p => p.category === selectedCategory) 
+      : [...activeProducts];
 
     if (minPrice !== '' && !isNaN(minPrice)) {
       result = result.filter(p => p.priceGEL >= Number(minPrice));
@@ -148,26 +199,11 @@ export default function StoreView({
     }
 
     return result;
-  }, [filteredProducts, minPrice, maxPrice, sortBy]);
+  }, [activeProducts, selectedCategory, minPrice, maxPrice, sortBy]);
 
   const flashSaleProducts = useMemo(() => {
-    return (filteredProducts || []).filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
-  }, [filteredProducts]);
-
-  const getComplementaryProduct = (currentProd) => {
-    if (!filteredProducts || filteredProducts.length <= 1) return null;
-    const others = filteredProducts.filter(p => p.id !== currentProd.id);
-    if (others.length === 0) return null;
-    const index = currentProd.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % others.length;
-    return others[index];
-  };
-
-  const getSimilarProducts = (currentProd) => {
-    if (!filteredProducts) return [];
-    return filteredProducts
-      .filter(p => p.id !== currentProd.id && p.category === currentProd.category)
-      .slice(0, 3);
-  };
+    return activeProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
+  }, [activeProducts]);
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
@@ -505,7 +541,7 @@ export default function StoreView({
                     {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
-                  {/* 1 & 2. მასალა და მდგრადობა / წყალგაუმტარობა (გამოჩნდება მხოლოდ მაშინ, თუ რეალურად აქვს მითითებული!) */}
+                  {/* 1 & 2. მასალა და მდგრადობა / წყალგაუმტარობა */}
                   {(selectedProduct.material || selectedProduct.durability) && (
                     <div className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {selectedProduct.material && (
@@ -532,11 +568,7 @@ export default function StoreView({
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-2 w-full">
-                      {(selectedProduct.availableSizes || (
-                        ((selectedProduct.category || '').toLowerCase().includes('ფეხსაცმელ') || (selectedProduct.category || '').toLowerCase().includes('shoe'))
-                          ? ['38', '39', '40', '41', '42', '43', '44']
-                          : ['S', 'M', 'L', 'XL', 'XXL']
-                      )).map(size => (
+                      {(selectedProduct.availableSizes || ['S', 'M', 'L', 'XL']).map(size => (
                         <button
                           key={size}
                           type="button"
@@ -549,7 +581,7 @@ export default function StoreView({
                     </div>
                   </div>
 
-                  {/* 3. ფერების არჩევანი (ჩნდება მხოლოდ მაშინ, როცა ადმინი პროდუქტს მიანიჭებს ფერებს) */}
+                  {/* 3. ფერების არჩევანი */}
                   {((selectedProduct.availableColors && selectedProduct.availableColors.length > 0) || selectedProduct.colors) && (
                     <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
                       <span className="text-slate-300 font-bold block">ფერი: <b className="text-amber-400">{selectedColor}</b></span>
