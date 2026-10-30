@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -431,6 +431,7 @@ export default function AdminDashboardPro({
     if (!expenseForm.amount || !expenseForm.description) return;
     
     const newExp = {
+      id: `exp-${Date.now()}`,
       category: expenseForm.category,
       amount: Number(expenseForm.amount),
       date: expenseForm.date,
@@ -445,13 +446,12 @@ export default function AdminDashboardPro({
       });
 
       if (res.ok) {
-        fetchExpenses();
+        setExpenses(prev => [newExp, ...prev]);
         setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
         alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
       } else {
-        const errText = await res.text();
-        alert('შეცდომა ბაზაში შენახვისას: ' + errText);
+        alert('შეცდომა ბაზაში შენახვისას');
       }
     } catch {
       alert('ქსელის შეცდომა სერვერთან მიერთებისას');
