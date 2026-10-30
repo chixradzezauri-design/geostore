@@ -87,7 +87,6 @@ export default function App() {
     }
   };
 
-  // 🌟 მრავალენოვანი სისტემის მდგომარეობა (ნაგულისხმევად ქართული, ინახება localStorage-ში)
   const [currentLang, setCurrLang] = useState(() => {
     try { return localStorage.getItem('geostore_lang') || 'ka'; } catch { return 'ka'; }
   });
@@ -123,7 +122,6 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
 
-  // 🔒 უსაფრთხოების შემოწმება: ადმინ პანელი იხსნება მხოლოდ URL-ში ?admin=secret არსებობისას.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'secret') {
@@ -495,38 +493,41 @@ export default function App() {
   const formatPrice = (p) => `${p.toLocaleString('ka-GE')} ₾`;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden">
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
         </div>
       )}
 
-      <Header 
-        siteSettings={siteSettings}
-        setActiveTab={setActiveTab}
-        activeTab={activeTab}
-        wishlistCount={wishlist.length}
-        cartCount={cart.reduce((a,b)=>a+b.quantity,0)}
-        comparisonCount={comparisonList.length}
-        currentUser={currentUser}
-        setIsAuthOpen={setIsAuthOpen}
-        setAuthMode={setAuthMode}
-        setIsAiAssistantOpen={setIsAiAssistantOpen}
-        setIsImageSearchOpen={setIsImageSearchOpen}
-        setIsComparisonOpen={setIsComparisonOpen}
-        setIsTrackerOpen={setIsTrackerOpen}
-        setIsNotificationsOpen={setIsNotificationsOpen}
-        unreadNotificationsCount={unreadNotificationsCount}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        handleInstallClick={handleInstallClick}
-        currentLang={currentLang}
-        setCurrLang={setCurrLang}
-      />
+      {/* 🌟 Layout-ის ზომების გამოსწორება და კონტეინერის ჰარმონიზაცია */}
+      <div className="w-full max-w-full overflow-hidden">
+        <Header 
+          siteSettings={siteSettings}
+          setActiveTab={setActiveTab}
+          activeTab={activeTab}
+          wishlistCount={wishlist.length}
+          cartCount={cart.reduce((a,b)=>a+b.quantity,0)}
+          comparisonCount={comparisonList.length}
+          currentUser={currentUser}
+          setIsAuthOpen={setIsAuthOpen}
+          setAuthMode={setAuthMode}
+          setIsAiAssistantOpen={setIsAiAssistantOpen}
+          setIsImageSearchOpen={setIsImageSearchOpen}
+          setIsComparisonOpen={setIsComparisonOpen}
+          setIsTrackerOpen={setIsTrackerOpen}
+          setIsNotificationsOpen={setIsNotificationsOpen}
+          unreadNotificationsCount={unreadNotificationsCount}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          handleInstallClick={handleInstallClick}
+          currentLang={currentLang}
+          setCurrLang={setCurrLang}
+        />
+      </div>
 
-      {/* 🌟 AI გარდერობზე გადასვლის სწრაფი ღილაკი მთავარ მენიუში */}
-      <div className="max-w-7xl mx-auto px-4 pt-4 w-full flex justify-end">
+      {/* 🌟 AI გარდერობზე გადასვლის სწრაფი ღილაკი მთავარ მენიუში (ზომების კონტროლით) */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 flex justify-end box-border">
         <button 
           onClick={() => setActiveTab('wardrobe')}
           className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${activeTab === 'wardrobe' ? 'bg-emerald-400 text-slate-950 border-emerald-400' : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30 hover:bg-slate-900'}`}
@@ -535,7 +536,7 @@ export default function App() {
         </button>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 space-y-8">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
           <StoreView 
             siteSettings={siteSettings}
@@ -553,7 +554,6 @@ export default function App() {
           />
         )}
 
-        {/* 🌟 AI ციფრული გარდერობის ვიუ */}
         {activeTab === 'wardrobe' && (
           <AIDigitalWardrobe 
             products={products}
@@ -562,7 +562,6 @@ export default function App() {
           />
         )}
 
-        {/* 🔒 დაცული ადმინ პანელი */}
         {activeTab === 'admin' && (
           <AdminDashboardPro 
             adminLoggedIn={adminLoggedIn}
@@ -961,7 +960,7 @@ export default function App() {
         </div>
       )}
 
-      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-6 backdrop-blur-md space-y-3">
+      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-6 backdrop-blur-md space-y-3 w-full">
         <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
           <button onClick={() => setIsTermsOpen(true)} className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"><FileText className="w-4 h-4" /> {t.terms}</button>
           <span>•</span>
