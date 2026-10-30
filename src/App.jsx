@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Secured with Secret URL (?admin=secret)
+// src/App.jsx - 100% Fully Complete, Database Persisted & Secured with AI Digital Wardrobe Integration
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,6 +7,7 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
+import AIDigitalWardrobe from './components/AIDigitalWardrobe'; // 🌟 AI ციფრული გარდერობის ინტეგრაცია
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download, KeyRound, Fingerprint, ShieldAlert } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -508,7 +509,17 @@ export default function App() {
         handleInstallClick={handleInstallClick}
       />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1 space-y-8">
+      {/* 🌟 AI გარდერობზე გადასვლის სწრაფი ღილაკი მთავარ მენიუში */}
+      <div className="max-w-7xl mx-auto px-4 pt-4 w-full flex justify-end">
+        <button 
+          onClick={() => setActiveTab('wardrobe')}
+          className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${activeTab === 'wardrobe' ? 'bg-emerald-400 text-slate-950 border-emerald-400' : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30 hover:bg-slate-900'}`}
+        >
+          <Sparkles className="w-4 h-4" /> AI ციფრული გარდერობი
+        </button>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 space-y-8">
         {activeTab === 'store' && (
           <StoreView 
             siteSettings={siteSettings}
@@ -521,6 +532,15 @@ export default function App() {
             toggleWishlist={toggleWishlist}
             comparisonList={comparisonList}
             toggleComparison={toggleComparison}
+            addToCart={addToCart}
+            formatPrice={formatPrice}
+          />
+        )}
+
+        {/* 🌟 AI ციფრული გარდერობის ვიუ */}
+        {activeTab === 'wardrobe' && (
+          <AIDigitalWardrobe 
+            products={products}
             addToCart={addToCart}
             formatPrice={formatPrice}
           />
