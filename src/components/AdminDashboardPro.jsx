@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Expenses, AI Analyst & COGS
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Supabase Expenses Sync, AI Analyst & COGS
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -68,7 +68,7 @@ export default function AdminDashboardPro({
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
-  // 🌟 ახალი ფინანსური და ბიზნეს-ინტელექტის სახელმწიფოები
+  // 🌟 ფინანსური და ბიზნეს-ინტელექტის სახელმწიფოები
   const [calcForm, setCalcForm] = useState({
     purchaseCost: '45',
     sellingPrice: '99',
@@ -80,16 +80,8 @@ export default function AdminDashboardPro({
     quantity: '1'
   });
 
-  const [expenses, setExpenses] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_admin_expenses');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      { id: 'exp-1', category: 'რეკლამა & მარკეტინგი', amount: 350, date: '2026-03-01', description: 'Facebook Ads კამპანია' },
-      { id: 'exp-2', category: 'საიტი & ჰოსტინგი', amount: 120, date: '2026-03-02', description: 'Supabase სერვერი' }
-    ];
-  });
+  // 🌟 ხარჯების მართვის სახელმწიფო
+  const [expenses, setExpenses] = useState([]);
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
 
   const [aiQuery, setAiQuery] = useState('');
@@ -98,9 +90,22 @@ export default function AdminDashboardPro({
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
+  // 🌟 ხარჯების წამოღება Supabase ბაზიდან
+  const fetchExpenses = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setExpenses(data || []);
+      }
+    } catch {}
+  };
+
   useEffect(() => {
-    try { localStorage.setItem('geostore_admin_expenses', JSON.stringify(expenses)); } catch {}
-  }, [expenses]);
+    fetchExpenses();
+    const interval = setInterval(fetchExpenses, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 🌟 შეკვეთების რეალურ დროში წამოღება Supabase ბაზიდან ადმინ პანელისთვის
   const fetchAdminOrders = async () => {
@@ -266,7 +271,7 @@ export default function AdminDashboardPro({
     return { discountedPrice, revenue, grossProfit, netProfit, profitMargin, markup };
   }, [calcForm]);
 
-  // 🌟 ფინანსური მიმოხილვა ანალიტიკისთვის
+  // 🌟 ფინანსური მიმოხილვა ანალიტიკისთვის (Supabase ხარჯების გამოყენებით)
   const financialOverview = useMemo(() => {
     const totalSalesRevenue = (orders || []).reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
     const totalExpenses = expenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
@@ -296,17 +301,59 @@ export default function AdminDashboardPro({
     }, 800);
   };
 
-  const handleAddExpense = (e) => {
+  // 🌟 ხარჯის დამატება Supabase ბაზაში
+  const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!expenseForm.amount || !expenseForm.description) return;
+    
     const newExp = {
       id: `exp-${Date.now()}`,
-      ...expenseForm,
-      amount: Number(expenseForm.amount)
+      category: expenseForm.category,
+      amount: Number(expenseForm.amount),
+      date: expenseForm.date,
+      description: expenseForm.description
     };
-    setExpenses(prev => [newExp, ...prev]);
-    setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
-    alert('✅ ხარჯი წარმატებით დაემატა!');
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(newExp)
+      });
+
+      if (res.ok) {
+        setExpenses(prev => [newExp, ...prev]);
+        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+        logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
+        alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
+      } else {
+        alert('შეცდომა ბაზაში შენახვისას');
+      }
+    } catch {
+      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+    }
+  };
+
+  // 🌟 ხარჯის წაშლა Supabase ბაზიდან
+  const handleDeleteExpense = async (id) => {
+    if (window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${id}`, {
+          method: 'DELETE',
+          headers
+        });
+
+        if (res.ok) {
+          setExpenses(prev => prev.filter(e => e.id !== id));
+          logActivity(`წაიშალა ხარჯი (ID: ${id})`);
+          alert('✅ ხარჯი წარმატებით წაიშალა!');
+        } else {
+          alert('შეცდომა წაშლისას');
+        }
+      } catch {
+        alert('ქსელის შეცდომა');
+      }
+    }
   };
 
   const handleAdminPinSubmit = (e) => {
@@ -1299,12 +1346,12 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 3. EXPENSES TAB */}
+        {/* 🌟 3. EXPENSES TAB (SUPABASE SYNCED) */}
         {adminTab === 'expenses' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება
+                <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება (Supabase ბაზაში)
               </h3>
               <form onSubmit={handleAddExpense} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1320,24 +1367,28 @@ export default function AdminDashboardPro({
                   <input type="date" value={expenseForm.date} onChange={e => setExpenseForm({...expenseForm, date: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
                 </div>
                 <input type="text" required placeholder="აღწერა (მაგ: Facebook Ads)" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება</button>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება ბაზაში</button>
               </form>
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">ხარჯების ისტორია ({expenses.length})</h3>
+              <h3 className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
               <div className="space-y-3">
-                {expenses.map(exp => (
-                  <div key={exp.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
-                    <div>
-                      <b className="text-white">{exp.description}</b> <span className="text-slate-400">({exp.category})</span> 
-                      <span className="text-slate-500 text-[10px] ml-2">{exp.date}</span>
+                {expenses.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-4">ხარჯები ჯერ არ არის დამატებული.</p>
+                ) : (
+                  expenses.map(exp => (
+                    <div key={exp.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
+                      <div>
+                        <b className="text-white">{exp.description}</b> <span className="text-slate-400">({exp.category})</span> 
+                        <span className="text-slate-500 text-[10px] ml-2">{exp.date}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-black text-rose-400">-{exp.amount} ₾</span>
+                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-400 hover:text-rose-300 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-black text-rose-400">-{exp.amount} ₾</span>
-                      <button onClick={() => setExpenses(prev => prev.filter(e => e.id !== exp.id))} className="text-rose-400"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
