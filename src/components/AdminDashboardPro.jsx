@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Supabase Expenses Sync, AI Analyst, COGS & Advanced Staff ACL
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Category-Specific Attributes, Dynamic Variants Builder & Full Supabase Sync
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -206,14 +206,24 @@ export default function AdminDashboardPro({
     }
   }, [categoriesList]);
   
+  // 🌟 პროდუქტის ფორმის საწყისი მდგომარეობა
   const productFormInitial = {
-    name: '', category: safeCategories[0]?.name || 'სმარტფონები', priceGEL: '', oldPriceGEL: '', purchaseCost: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
+    name: '', category: safeCategories[0]?.name || 'ტანსაცმელი', priceGEL: '', oldPriceGEL: '', purchaseCost: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: '',
     durability: '',
+    brand: 'GEOSTORE',
+    model: '',
+    cpu: '',
+    ram: '',
+    storage: '',
+    gpu: '',
+    screenSize: '',
+    os: '',
     availableSizes: ['S', 'M', 'L', 'XL'],
     availableColors: ['შავი', 'თეთრი'],
-    customAttributes: ''
+    isFeatured: false
   };
+
   const [productForm, setProductForm] = useState(productFormInitial);
   const [selectedImages, setSelectedImages] = useState([]);
 
@@ -240,6 +250,32 @@ export default function AdminDashboardPro({
 
   const handleRemoveCustomVariant = (id) => {
     setProductVariants(prev => prev.filter(v => v.id !== id));
+  };
+
+  const handleCategoryChange = (catName) => {
+    const nameLower = catName.toLowerCase();
+    let defaultSizes = ['S', 'M', 'L', 'XL'];
+    let defaultColors = ['შავი', 'თეთრი'];
+
+    if (nameLower.includes('ფეხსაცმელ') || nameLower.includes('shoe')) {
+      defaultSizes = ['38', '39', '40', '41', '42', '43', '44'];
+    } else if (nameLower.includes('ტანსაცმელ') || nameLower.includes('ჩაცმა') || nameLower.includes('ქურთუკ') || nameLower.includes('შარვალ')) {
+      defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+    } else if (nameLower.includes('სმარტფონ') || nameLower.includes('ტელეფონ')) {
+      defaultSizes = ['128GB', '256GB', '512GB', '1TB'];
+      defaultColors = ['ტიტანი', 'ვერცხლისფერი', 'შავი', 'ოქროსფერი'];
+    } else if (nameLower.includes('ლეპტოპ') || nameLower.includes('კომპიუტერ')) {
+      defaultSizes = ['8GB RAM / 256GB SSD', '16GB RAM / 512GB SSD', '32GB RAM / 1TB SSD'];
+    } else if (nameLower.includes('აქსესუარ') || nameLower.includes('საათ')) {
+      defaultSizes = ['Standard / One Size'];
+    }
+
+    setProductForm(prev => ({
+      ...prev,
+      category: catName,
+      availableSizes: defaultSizes,
+      availableColors: defaultColors
+    }));
   };
 
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
@@ -793,30 +829,7 @@ export default function AdminDashboardPro({
     });
   };
 
-  const handleCategoryChange = (catName) => {
-    const nameLower = catName.toLowerCase();
-    let defaultSizes = ['S', 'M', 'L', 'XL'];
-    let defaultColors = ['შავი', 'თეთრი'];
-
-    if (nameLower.includes('ფეხსაცმელ') || nameLower.includes('shoe')) {
-      defaultSizes = ['38', '39', '40', '41', '42', '43', '44'];
-    } else if (nameLower.includes('ტანსაცმელ') || nameLower.includes('ჩაცმა') || nameLower.includes('ქურთუკ') || nameLower.includes('შარვალ')) {
-      defaultSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-    } else if (nameLower.includes('სმარტფონ') || nameLower.includes('ტელეფონ') || nameLower.includes('ელექტრონიკ') || nameLower.includes('ლეპტოპ')) {
-      defaultSizes = ['64GB', '128GB', '256GB', '512GB', '1TB', '8GB RAM', '16GB RAM'];
-      defaultColors = ['ტიტანი', 'ვერცხლისფერი', 'შავი', 'ოქროსფერი'];
-    } else if (nameLower.includes('აქსესუარ') || nameLower.includes('საათ')) {
-      defaultSizes = ['Standard / One Size'];
-    }
-
-    setProductForm(prev => ({
-      ...prev,
-      category: catName,
-      availableSizes: defaultSizes,
-      availableColors: defaultColors
-    }));
-  };
-
+  // 🌟 პროდუქტის შენახვა სრული კატეგორიის მახასიათებლებით და ვარიანტებით
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
@@ -824,14 +837,13 @@ export default function AdminDashboardPro({
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const defaultCat = safeCategories[0]?.name || 'სმარტფონები';
 
     const prodId = `prod-${Date.now()}`;
     const newProdPayload = {
       id: prodId,
       sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       name: productForm.name,
-      category: productForm.category || defaultCat,
+      category: productForm.category,
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
       price_gel: Number(productForm.priceGEL),
       old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
@@ -840,11 +852,19 @@ export default function AdminDashboardPro({
       image: mainImage,
       gallery: galleryImages,
       description: productForm.description || '',
-      available_sizes: productForm.availableSizes?.length > 0 ? productForm.availableSizes : ['S', 'M', 'L', 'XL'],
-      available_colors: productForm.availableColors?.length > 0 ? productForm.availableColors : ['შავი', 'თეთრი'],
+      available_sizes: productForm.availableSizes || [],
+      available_colors: productForm.availableColors || [],
       variants: productVariants,
       material: productForm.material || '',
-      durability: productForm.durability || ''
+      brand: productForm.brand || 'GEOSTORE',
+      model: productForm.model || '',
+      cpu: productForm.cpu || '',
+      ram: productForm.ram || '',
+      storage: productForm.storage || '',
+      gpu: productForm.gpu || '',
+      screen_size: productForm.screenSize || '',
+      os: productForm.os || '',
+      is_featured: productForm.isFeatured || false
     };
 
     try {
@@ -872,7 +892,14 @@ export default function AdminDashboardPro({
           availableColors: newProdPayload.available_colors,
           variants: productVariants,
           material: newProdPayload.material,
-          durability: newProdPayload.durability,
+          brand: newProdPayload.brand,
+          model: newProdPayload.model,
+          cpu: newProdPayload.cpu,
+          ram: newProdPayload.ram,
+          storage: newProdPayload.storage,
+          gpu: newProdPayload.gpu,
+          screenSize: newProdPayload.screen_size,
+          os: newProdPayload.os,
           tags: tagsArray
         };
 
@@ -882,8 +909,8 @@ export default function AdminDashboardPro({
         setProductForm(productFormInitial);
         setSelectedImages([]);
         setProductVariants([]);
-        logActivity(`დაემატა ახალი პროდუქტი ვარიანტებით: ${newProdPayload.name}`);
-        alert('✅ პროდუქტი და მისი ვარიანტები წარმატებით შეინახა ბაზაში!');
+        logActivity(`დაემატა ახალი პროდუქტი მახასიათებლებით: ${newProdPayload.name}`);
+        alert('✅ პროდუქტი და მისი მახასიათებლები წარმატებით შეინახა ბაზაში!');
       } else {
         const err = await res.text();
         alert('შეცდომა ბაზაში შენახვისას: ' + err);
@@ -1267,6 +1294,12 @@ export default function AdminDashboardPro({
 
   const mainCategories = safeCategories.filter(c => !c.parentId);
 
+  const catLower = productForm.category.toLowerCase();
+  const isClothing = catLower.includes('ტანსაცმელ') || catLower.includes('ქურთუკ') || catLower.includes('შარვალ');
+  const isShoes = catLower.includes('ფეხსაცმელ') || catLower.includes('shoe');
+  const isLaptop = catLower.includes('ლეპტოპ') || catLower.includes('კომპიუტერ');
+  const isPhone = catLower.includes('სმარტფონ') || catLower.includes('ტელეფონ');
+
   return (
     <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
@@ -1290,7 +1323,7 @@ export default function AdminDashboardPro({
             { id: 'ai_analyst', label: '🤖 AI ბიზნეს ასისტენტი', icon: Sparkles },
             { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
-            { id: 'products', label: '🏷️ პროდუქტები & COGS', count: products?.length || 0, icon: Store },
+            { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
             { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0, icon: Activity },
@@ -1836,13 +1869,13 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Products Tab with COGS & Variants Builder */}
+        {/* 🌟 🏷️ PRODUCTS & DYNAMIC ATTRIBUTES TAB */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> ახალი პროდუქტის დამატება (COGS & ვარიანტებით)
+                  <Plus className="w-5 h-5 text-emerald-400" /> პროდუქტის დამატება (კატეგორიის მახასიათებრებით & ვარიანტებით)
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -1852,45 +1885,153 @@ export default function AdminDashboardPro({
                 </button>
               </div>
 
-              <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
+                {/* ძირითადი ველები */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <input type="text" placeholder="პროდუქტის დასახელება *" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="number" placeholder="გასაყიდი ფასი GEL *" required value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="number" placeholder="თვითღირებულება (COGS ₾)" value={productForm.purchaseCost} onChange={e => setProductForm({...productForm, purchaseCost: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner" />
+                  <div>
+                    <label className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
+                    <input type="text" required placeholder="მაგ: ჰუდი / iPhone" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (GEL) *</label>
+                    <input type="number" required placeholder="99" value={productForm.priceGEL} onChange={e => setProductForm({...productForm, priceGEL: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-black outline-none focus:border-emerald-400 shadow-inner" />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-bold block mb-1">თვითღირებულება (COGS ₾)</label>
+                    <input type="number" placeholder="45" value={productForm.purchaseCost} onChange={e => setProductForm({...productForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-cyan-400 font-bold outline-none focus:border-emerald-400 shadow-inner" />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <select 
-                    value={productForm.category} 
-                    onChange={e => handleCategoryChange(e.target.value)} 
-                    className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
-                  >
-                    {safeCategories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
-                    ))}
-                  </select>
-                  <input type="number" placeholder="ზოგადი მარაგი" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="text" placeholder="მომწოდებელი / ბრენდი" value={productForm.vendor} onChange={e => setProductForm({...productForm, vendor: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <div>
+                    <label className="text-slate-400 font-bold block mb-1">კატეგორია *</label>
+                    <select 
+                      value={productForm.category} 
+                      onChange={e => handleCategoryChange(e.target.value)} 
+                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer"
+                    >
+                      {safeCategories.map(cat => (
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-bold block mb-1">ბრენდი</label>
+                    <input type="text" placeholder="Apple / Nike" value={productForm.brand} onChange={e => setProductForm({...productForm, brand: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 font-bold block mb-1">მარაგი</label>
+                    <input type="number" placeholder="10" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  </div>
+                </div>
+
+                {/* 🌟 კატეგორიის დინამიური მახასიათებლები */}
+                <div className="bg-slate-950 p-5 rounded-3xl border border-emerald-500/30 space-y-4 shadow-inner">
+                  <h4 className="font-black text-amber-400 text-sm flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" /> 
+                    <span>კატეგორიის მახასიათებლები: {productForm.category}</span>
+                  </h4>
+
+                  {isClothing && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ზომები</label>
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">მასალა</label>
+                        <input type="text" placeholder="100% ბამბა" value={productForm.material} onChange={e => setProductForm({...productForm, material: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ფერები</label>
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {isShoes && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ზომები (EU)</label>
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">მასალა</label>
+                        <input type="text" placeholder="ტყავი" value={productForm.material} onChange={e => setProductForm({...productForm, material: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ფერები</label>
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {isLaptop && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">პროცესორი (CPU)</label>
+                        <input type="text" placeholder="Apple M3 / Intel i7" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">RAM</label>
+                        <input type="text" placeholder="16GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">SSD</label>
+                        <input type="text" placeholder="512GB" value={productForm.storage} onChange={e => setProductForm({...productForm, storage: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {isPhone && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">მეხსიერება</label>
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">RAM</label>
+                        <input type="text" placeholder="8GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ფერები</label>
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                    </div>
+                  )}
+
+                  {!isClothing && !isShoes && !isLaptop && !isPhone && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ზომები</label>
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ფერები</label>
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 🌟 ვარიანტების ბილდერი */}
-                <div className="bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 space-y-3">
-                  <label className="text-amber-400 font-bold flex items-center gap-2">
+                <div className="bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                  <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
                     <Layers className="w-4 h-4" />
-                    <span>ინდივიდუალური ვარიანტების დამატება (ფასი & მარაგი)</span>
-                  </label>
+                    <span>ვარიანტების ბილდერი (ინდივიდუალური ფასი & მარაგი)</span>
+                  </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
-                    <input type="text" placeholder="ვარიანტი (მაგ: 256GB / შავი)" value={newVarName} onChange={e => setNewVarName(e.target.value)} className="bg-slate-900 border border-emerald-500/20 p-2.5 rounded-xl text-white outline-none text-xs" />
-                    <input type="number" placeholder="ფასი (GEL)" value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} className="bg-slate-900 border border-emerald-500/20 p-2.5 rounded-xl text-white outline-none text-xs" />
-                    <input type="number" placeholder="მარაგი" value={newVarStock} onChange={e => setNewVarStock(e.target.value)} className="bg-slate-900 border border-emerald-500/20 p-2.5 rounded-xl text-white outline-none text-xs" />
-                    <button type="button" onClick={handleAddCustomVariant} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl transition cursor-pointer text-xs">+ ვარიანტი</button>
+                    <input type="text" placeholder="ვარიანტი (მაგ: შავი / 256GB)" value={newVarName} onChange={e => setNewVarName(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
+                    <input type="number" placeholder="ფასი (GEL)" value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
+                    <input type="number" placeholder="მარაგი" value={newVarStock} onChange={e => setNewVarStock(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
+                    <button type="button" onClick={handleAddCustomVariant} className="bg-amber-500 text-slate-950 font-black py-3 rounded-xl cursor-pointer hover:bg-amber-400 transition">+ ვარიანტი</button>
                   </div>
                   {productVariants.length > 0 && (
                     <div className="space-y-2 pt-2">
                       {productVariants.map(v => (
-                        <div key={v.id} className="bg-slate-900 p-3 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs">
-                          <div><b className="text-white">{v.name}</b> <span className="text-emerald-400 font-bold ml-3">{v.priceGEL} ₾</span></div>
-                          <button type="button" onClick={() => handleRemoveCustomVariant(v.id)} className="text-rose-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div key={v.id} className="bg-slate-900 p-3 rounded-2xl border border-amber-500/20 flex justify-between items-center text-xs">
+                          <div><b className="text-white">{v.name}</b> <span className="text-emerald-400 font-bold ml-3">{v.priceGEL} ₾</span> <span className="text-slate-400 ml-2">(მარაგი: {v.stock})</span></div>
+                          <button type="button" onClick={() => handleRemoveCustomVariant(v.id)} className="text-rose-400 hover:text-rose-300 p-1"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       ))}
                     </div>
