@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Category & Subcategory Management
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Category Banner Management
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -57,10 +57,11 @@ export default function AdminDashboardPro({
   const [editUserDiscount, setEditUserDiscount] = useState('');
   const [editUserNotes, setEditUserNotes] = useState('');
 
-  // 🌟 კატეგორიების რედაქტირების სახელმწიფო
+  // 🌟 კატეგორიების რედაქტირების სახელმწიფო (ფოტოს მხარდაჭერით)
   const [editingCatId, setEditingCatId] = useState(null);
   const [editCatName, setEditCatName] = useState('');
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
+  const [editCatImage, setEditCatImage] = useState('');
 
   // 🌟 შეკვეთების რეალურ დროში წამოღება Supabase ბაზიდან ადმინ პანელისთვის
   const fetchAdminOrders = async () => {
@@ -93,24 +94,25 @@ export default function AdminDashboardPro({
 
   const safeCategories = React.useMemo(() => {
     try {
-      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null }];
+      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
       return categoriesList.map((cat, idx) => {
         if (!cat) return null;
         if (typeof cat === 'string') {
-          return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null };
+          return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null, image: '' };
         }
         if (typeof cat === 'object') {
           return {
             id: cat.id || `cat-obj-${idx}`,
             name: cat.name || 'კატეგორია',
             icon: cat.icon || 'Shirt',
-            parentId: cat.parentId || null
+            parentId: cat.parentId || null,
+            image: cat.image || ''
           };
         }
         return null;
       }).filter(Boolean);
     } catch {
-      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null }];
+      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
     }
   }, [categoriesList]);
   
@@ -155,6 +157,7 @@ export default function AdminDashboardPro({
   
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('Shirt');
+  const [newCatImage, setNewCatImage] = useState('');
   const [selectedParentId, setSelectedParentId] = useState('');
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
@@ -350,7 +353,8 @@ export default function AdminDashboardPro({
       id: catId, 
       name: cleanName, 
       icon: newCatIcon, 
-      parentId: selectedParentId || null 
+      parentId: selectedParentId || null,
+      image: newCatImage.trim() || ''
     };
 
     const updatedCategories = [...safeCategories, newCatObj];
@@ -360,16 +364,17 @@ export default function AdminDashboardPro({
     } catch {}
 
     setNewCatName('');
+    setNewCatImage('');
     setSelectedParentId('');
-    logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'}: ${cleanName}`);
-    alert('✅ კატეგორია წარმატებით დაემატა!');
+    logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'} ფოტოთი: ${cleanName}`);
+    alert('✅ კატეგორია და მისი ბანერი წარმატებით დაემატა!');
   };
 
   const handleSaveEditedCategory = (catId) => {
     if (!editCatName.trim()) return;
     const updatedCategories = safeCategories.map(c => {
       if (c.id === catId) {
-        return { ...c, name: editCatName.trim(), icon: editCatIcon };
+        return { ...c, name: editCatName.trim(), icon: editCatIcon, image: editCatImage.trim() };
       }
       return c;
     });
@@ -381,6 +386,7 @@ export default function AdminDashboardPro({
 
     setEditingCatId(null);
     setEditCatName('');
+    setEditCatImage('');
     logActivity(`განახლდა კატეგორია (ID: ${catId})`);
     alert('✅ კატეგორია წარმატებით განახლდა!');
   };
@@ -1580,36 +1586,44 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 ENHANCED CATEGORIES & SUBCATEGORIES MANAGEMENT TAB */}
+        {/* 🌟 ENHANCED CATEGORIES & SUBCATEGORIES MANAGEMENT TAB WITH BANNER IMAGES */}
         {adminTab === 'categories' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება
+                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოთი/ბანერით)
               </h3>
-              <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-4 gap-3.5 text-xs">
-                <input type="text" placeholder="სახელწოდება *" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
-                  <option value="">📁 მთავარი კატეგორია (Parent)</option>
-                  {mainCategories.map(cat => (
-                    <option key={cat.id} value={cat.id}>↳ ქვეშ: {cat.name}</option>
-                  ))}
-                </select>
-                <select value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
-                  <option value="Shirt">👕 ტანსაცმელი</option>
-                  <option value="Footprints">👟 ფეხსაცმელი</option>
-                  <option value="Gem">💎 აქსესუარები</option>
-                  <option value="Smartphone">📱 სმარტფონი</option>
-                  <option value="Laptop">💻 ლეპტოპი</option>
-                  <option value="Watch">⌚ საათი</option>
-                  <option value="Sparkles">✨ სხვა</option>
-                </select>
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">დამატება</button>
+              <form onSubmit={handleAddCategory} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <input type="text" placeholder="სახელწოდება *" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
+                    <option value="">📁 მთავარი კატეგორია (Parent)</option>
+                    {mainCategories.map(cat => (
+                      <option key={cat.id} value={cat.id}>↳ ქვეშ: {cat.name}</option>
+                    ))}
+                  </select>
+                  <select value={newCatIcon} onChange={e => setNewCatIcon(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                    <option value="Shirt">👕 ტანსაცმელი</option>
+                    <option value="Footprints">👟 ფეხსაცმელი</option>
+                    <option value="Gem">💎 აქსესუარები</option>
+                    <option value="Smartphone">📱 სმარტფონი</option>
+                    <option value="Laptop">💻 ლეპტოპი</option>
+                    <option value="Watch">⌚ საათი</option>
+                    <option value="Sparkles">✨ სხვა</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 font-bold flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-emerald-400" /> კატეგორიის ფოტოს / ბანერის URL:
+                  </label>
+                  <input type="text" placeholder="მაგ: https://images.unsplash.com/... (სურვილისამებრ)" value={newCatImage} onChange={e => setNewCatImage(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                </div>
+                <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კატეგორიის დამატება 🚀</button>
               </form>
             </div>
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და რედაქტირება</h3>
+              <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და ფოტოების მართვა</h3>
               <div className="space-y-4">
                 {mainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
@@ -1620,29 +1634,26 @@ export default function AdminDashboardPro({
 
                     return (
                       <div key={parentCat.id} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">📁 მთავარი</span>
-                            {isEditingParent ? (
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="text" 
-                                  value={editCatName} 
-                                  onChange={e => setEditCatName(e.target.value)} 
-                                  className="bg-slate-900 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-white text-xs outline-none"
-                                />
-                                <button onClick={() => handleSaveEditedCategory(parentCat.id)} className="bg-emerald-500 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs">შენახვა</button>
-                                <button onClick={() => setEditingCatId(null)} className="text-slate-400 text-xs px-2">გაუქმება</button>
-                              </div>
+                        <div className="flex justify-between items-center flex-wrap gap-3">
+                          <div className="flex items-center gap-3">
+                            {parentCat.image ? (
+                              <img src={parentCat.image} alt="" className="w-12 h-12 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />
                             ) : (
-                              <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                              <div className="w-12 h-12 bg-slate-900 rounded-xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold">📷 No Img</div>
                             )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">📁 მთავარი</span>
+                                <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                              </div>
+                              {parentCat.image && <p className="text-slate-500 text-[10px] truncate max-w-xs mt-0.5">{parentCat.image}</p>}
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-2">
                             {!isEditingParent && (
                               <button 
-                                onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); }} 
+                                onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(parentCat.image || ''); }} 
                                 className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
                                 title="რედაქტირება"
                               >
@@ -1653,42 +1664,89 @@ export default function AdminDashboardPro({
                           </div>
                         </div>
 
+                        {/* Edit Parent Box */}
+                        {isEditingParent && (
+                          <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
+                            <h5 className="font-black text-amber-400 text-xs">კატეგორიის რედაქტირება: {parentCat.name}</h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-slate-400 text-[10px] block mb-1">სახელწოდება</label>
+                                <input 
+                                  type="text" 
+                                  value={editCatName} 
+                                  onChange={e => setEditCatName(e.target.value)} 
+                                  className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-slate-400 text-[10px] block mb-1">ფოტოს / ბანერის URL</label>
+                                <input 
+                                  type="text" 
+                                  value={editCatImage} 
+                                  onChange={e => setEditCatImage(e.target.value)} 
+                                  placeholder="https://..."
+                                  className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-1">
+                              <button onClick={() => setEditingCatId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
+                              <button onClick={() => handleSaveEditedCategory(parentCat.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
+                            </div>
+                          </div>
+                        )}
+
                         {subCats.length > 0 && (
-                          <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-1">
+                          <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-2">
                             {subCats.map(sub => {
                               const isEditingSub = editingCatId === sub.id;
                               return (
-                                <div key={sub.id} className="bg-slate-950 p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs gap-2">
-                                  <div className="flex items-center gap-2 flex-1">
-                                    <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                    {isEditingSub ? (
-                                      <div className="flex items-center gap-2 flex-1">
+                                <div key={sub.id} className="bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/15 space-y-2">
+                                  <div className="flex justify-between items-center text-xs gap-2">
+                                    <div className="flex items-center gap-2.5 flex-1">
+                                      <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                      {sub.image && <img src={sub.image} alt="" className="w-8 h-8 object-cover rounded-lg border border-emerald-500/20 shrink-0" />}
+                                      <span className="font-bold text-slate-200">{sub.name}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5">
+                                      {!isEditingSub && (
+                                        <button 
+                                          onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(sub.image || ''); }} 
+                                          className="p-1.5 bg-slate-900 text-amber-400 rounded-lg cursor-pointer"
+                                          title="სუბკატეგორიის რედაქტირება"
+                                        >
+                                          <Edit3 className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                      <button onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                                    </div>
+                                  </div>
+
+                                  {isEditingSub && (
+                                    <div className="bg-slate-900 p-3 rounded-xl border border-amber-500/30 space-y-2.5 animate-in fade-in">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <input 
                                           type="text" 
                                           value={editCatName} 
                                           onChange={e => setEditCatName(e.target.value)} 
-                                          className="bg-slate-900 border border-emerald-500/30 px-3 py-1 rounded-xl text-white text-xs outline-none w-full"
+                                          placeholder="სახელი"
+                                          className="bg-slate-950 border border-amber-500/20 p-2 rounded-lg text-white text-xs outline-none w-full"
                                         />
-                                        <button onClick={() => handleSaveEditedCategory(sub.id)} className="bg-emerald-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-[10px]">შენახვა</button>
-                                        <button onClick={() => setEditingCatId(null)} className="text-slate-400 text-[10px]">გაუქმება</button>
+                                        <input 
+                                          type="text" 
+                                          value={editCatImage} 
+                                          onChange={e => setEditCatImage(e.target.value)} 
+                                          placeholder="ფოტოს URL"
+                                          className="bg-slate-950 border border-amber-500/20 p-2 rounded-lg text-white text-xs outline-none w-full"
+                                        />
                                       </div>
-                                    ) : (
-                                      <span className="font-bold text-slate-200">{sub.name}</span>
-                                    )}
-                                  </div>
-
-                                  <div className="flex items-center gap-1.5">
-                                    {!isEditingSub && (
-                                      <button 
-                                        onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); }} 
-                                        className="p-1.5 bg-slate-900 text-amber-400 rounded-lg cursor-pointer"
-                                        title="სუბკატეგორიის რედაქტირება"
-                                      >
-                                        <Edit3 className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                    <button onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
-                                  </div>
+                                      <div className="flex justify-end gap-2">
+                                        <button onClick={() => setEditingCatId(null)} className="px-2.5 py-1 bg-slate-950 text-slate-400 rounded-lg text-[10px]">გაუქმება</button>
+                                        <button onClick={() => handleSaveEditedCategory(sub.id)} className="px-3 py-1 bg-amber-400 text-slate-950 rounded-lg font-black text-[10px]">შენახვა</button>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
@@ -1795,7 +1853,7 @@ export default function AdminDashboardPro({
                             <h4 className="font-black text-white text-sm">{u.name}</h4>
                             {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
                             {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">დაბლოკილი</span>}
-                            {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
+                            {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
                           <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
                           {u.adminNotes && <p className="text-amber-300 text-[11px] mt-1 italic">📝 შენიშვნა: "{u.adminNotes}"</p>}
