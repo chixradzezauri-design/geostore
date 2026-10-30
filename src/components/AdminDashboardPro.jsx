@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Supabase Expenses Sync, AI Analyst, COGS & Staff Roles (ACL)
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Supabase Expenses Sync, AI Analyst, COGS & Advanced Staff ACL
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -68,18 +68,44 @@ export default function AdminDashboardPro({
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
-  // 🌟 თანამშრომლებისა და მენეჯერების როლების მართვის (ACL) სახელმწიფო
+  // 🌟 თანამშრომლებისა და მენეჯერების როლების მართვის (ACL) გაუმჯობესებული სახელმწიფო
   const [staffList, setStaffList] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_staff_list');
       if (saved) return JSON.parse(saved);
     } catch {}
     return [
-      { id: 'st-1', name: 'გიორგი მენეჯერი', email: 'manager@geostore.ge', role: 'მენეჯერი', permissions: { products: true, orders: true, analytics: false } },
-      { id: 'st-2', name: 'ნინო ოპერატორი', email: 'operator@geostore.ge', role: 'ოპერატორი', permissions: { products: false, orders: true, analytics: false } }
+      { 
+        id: 'st-1', 
+        name: 'გიორგი მენეჯერი', 
+        email: 'manager@geostore.ge', 
+        role: 'მენეჯერი', 
+        permissions: { products: true, orders: true, analytics: true, expenses: true, crm: true, settings: false } 
+      },
+      { 
+        id: 'st-2', 
+        name: 'ნინო ოპერატორი', 
+        email: 'operator@geostore.ge', 
+        role: 'ოპერატორი', 
+        permissions: { products: false, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
+      }
     ];
   });
-  const [staffForm, setStaffForm] = useState({ name: '', email: '', role: 'მენეჯერი', password: '' });
+
+  const [staffForm, setStaffForm] = useState({ 
+    name: '', 
+    email: '', 
+    role: 'მენეჯერი', 
+    permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
+  });
+  
+  // საიტზე არსებული რეგისტრირებული მომხმარებლიდან თანამშრომლად დამატების სახელმწიფო
+  const [selectedUserEmailForStaff, setSelectedUserEmailForStaff] = useState('');
+
+  // 🌟 რედაქტირებაში მყოფი თანამშრომლის ID და უფლებები
+  const [editingStaffId, setEditingStaffId] = useState(null);
+  const [editStaffRole, setEditStaffRole] = useState('');
+  const [editStaffPermissions, setEditStaffPermissions] = useState({});
 
   // 🌟 ფინანსური და ბიზნეს-ინტელექტის სახელმწიფოები
   const [calcForm, setCalcForm] = useState({
@@ -270,7 +296,7 @@ export default function AdminDashboardPro({
     setActivityLogs(prev => [newLog, ...(prev || [])]);
   };
 
-  // 🌟 თანამშრომლის დამატების ფუნქცია
+  // 🌟 თანამშრომლის დამატების ფუნქცია (ხელით შეყვანილი მონაცემებით)
   const handleAddStaff = (e) => {
     e.preventDefault();
     if (!staffForm.name || !staffForm.email) return;
@@ -279,16 +305,65 @@ export default function AdminDashboardPro({
       name: staffForm.name.trim(),
       email: staffForm.email.trim(),
       role: staffForm.role,
-      permissions: {
-        products: staffForm.role === 'მენეჯერი' || staffForm.role === 'პროდუქტების მენეჯერი',
-        orders: true,
-        analytics: staffForm.role === 'მენეჯერი' || staffForm.role === 'ფინანსისტი'
-      }
+      permissions: { ...staffForm.permissions }
     };
     setStaffList(prev => [...prev, newStaffMember]);
-    setStaffForm({ name: '', email: '', role: 'მენეჯერი', password: '' });
+    setStaffForm({ 
+      name: '', 
+      email: '', 
+      role: 'მენეჯერი', 
+      permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
+    });
     logActivity(`დაემატა ახალი თანამშრომელი: ${newStaffMember.name} (${newStaffMember.role})`);
     alert('✅ თანამშრომელი წარმატებით დაემატა სისტემას!');
+  };
+
+  // 🌟 არსებული რეგისტრირებული მომხმარებლის მენეჯერად/თანამშრომლად დამატება
+  const handleAddExistingUserAsStaff = (e) => {
+    e.preventDefault();
+    if (!selectedUserEmailForStaff) return;
+    
+    const targetUser = (usersList || []).find(u => u.email === selectedUserEmailForStaff || u.id === selectedUserEmailForStaff);
+    if (!targetUser) {
+      alert('მომხმარებელი ვერ მოიძებნა');
+      return;
+    }
+
+    const alreadyExists = staffList.some(s => s.email === targetUser.email);
+    if (alreadyExists) {
+      alert('⚠️ ეს მომხმარებელი უკვე არის თანამშრომლების სიაში!');
+      return;
+    }
+
+    const newStaffMember = {
+      id: `st-${Date.now()}`,
+      name: targetUser.name || 'მომხმარებელი',
+      email: targetUser.email || 'user@geostore.ge',
+      role: 'მენეჯერი',
+      permissions: { products: true, orders: true, analytics: true, expenses: false, crm: true, settings: false }
+    };
+
+    setStaffList(prev => [...prev, newStaffMember]);
+    setSelectedUserEmailForStaff('');
+    logActivity(`რეგისტრირებული მომხმარებელი (${newStaffMember.email}) დაწინაურდა მენეჯერად`);
+    alert(`✅ მომხმარებელი (${newStaffMember.name}) წარმატებით დაემატა მენეჯერების სიაში!`);
+  };
+
+  // 🌟 თანამშრომლის უფლებებისა და როლის შენახვა ედიტირებისას
+  const handleSaveEditedStaff = (staffId) => {
+    setStaffList(prev => prev.map(s => {
+      if (s.id === staffId) {
+        return {
+          ...s,
+          role: editStaffRole,
+          permissions: { ...editStaffPermissions }
+        };
+      }
+      return s;
+    }));
+    setEditingStaffId(null);
+    logActivity(`განახლდა თანამშრომლის (ID: ${staffId}) როლი და უფლებები`);
+    alert('✅ თანამშრომლის უფლებები წარმატებით განახლდა!');
   };
 
   // 🌟 თანამშრომლის წაშლის ფუნქცია
@@ -526,7 +601,7 @@ export default function AdminDashboardPro({
         {adminAuthSubMode === 'pin' ? (
           <form onSubmit={handleAdminPinSubmit} className="space-y-4 text-xs animate-in fade-in">
             <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-emerald-300">
-              შეიყვანეთ ადმინისტრატორის PIN-კოდი (ნაგულისხმევი: 1234):
+              შეიყვანეთ ადმინისტრატორის PIN-კოდი (ნაგულისხმევია: 1234):
             </div>
             {adminPinError && <p className="text-rose-400 font-bold">{adminPinError}</p>}
             
@@ -715,28 +790,6 @@ export default function AdminDashboardPro({
 
     Promise.all(promises).then(base64Images => {
       setSelectedImages(prev => [...(prev || []), ...base64Images]);
-    });
-  };
-
-  const handleToggleSizeSelection = (size) => {
-    setProductForm(prev => {
-      const current = prev.availableSizes || [];
-      if (current.includes(size)) {
-        return { ...prev, availableSizes: current.filter(s => s !== size) };
-      } else {
-        return { ...prev, availableSizes: [...current, size] };
-      }
-    });
-  };
-
-  const handleToggleColorSelection = (color) => {
-    setProductForm(prev => {
-      const current = prev.availableColors || [];
-      if (current.includes(color)) {
-        return { ...prev, availableColors: current.filter(c => c !== color) };
-      } else {
-        return { ...prev, availableColors: [...current, color] };
-      }
     });
   };
 
@@ -1467,53 +1520,184 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 5. STAFF ROLES & PERMISSIONS TAB (ACL) */}
+        {/* 🌟 5. ENHANCED STAFF ROLES & PERMISSIONS TAB (ACL & PROMOTE REGISTERED USERS) */}
         {adminTab === 'staff' && (
           <div className="space-y-6">
+            
+            {/* არსებული რეგისტრირებული მომხმარებლების მენეჯერად დანიშვნა */}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის დამატება & წვდომის როლები (ACL)
+                <Users className="w-5 h-5 text-emerald-400" /> არსებული რეგისტრირებული მომხმარებლისთვის მენეჯერის უფლებების მინიჭება
+              </h3>
+              <form onSubmit={handleAddExistingUserAsStaff} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+                <select 
+                  value={selectedUserEmailForStaff} 
+                  onChange={e => setSelectedUserEmailForStaff(e.target.value)} 
+                  className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner sm:col-span-2 cursor-pointer"
+                >
+                  <option value="">-- აირჩიეთ საიტზე რეგისტრირებული მომხმარებელი --</option>
+                  {(usersList || []).map(u => (
+                    <option key={u.id || u.email} value={u.email}>
+                      {u.name ? `${u.name} (${u.email})` : u.email} {u.isVip ? '⭐ VIP' : ''}
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 px-4 rounded-2xl transition cursor-pointer shadow-lg">
+                  + მენეჯერად დანიშვნა
+                </button>
+              </form>
+            </div>
+
+            {/* ახალი თანამშრომლის შექმნა ხელით */}
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
+                <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის ხელით შექმნა & დეტალური უფლებები (ACL)
               </h3>
               <form onSubmit={handleAddStaff} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <input type="text" placeholder="თანამშრომლის სახელი *" required value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <input type="email" placeholder="ელ-ფოსტა *" required value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <select value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
-                    <option value="მენეჯერი">მენეჯერი (სრული წვდომა)</option>
-                    <option value="ოპერატორი">ოპერატორი (მხოლოდ შეკვეთები)</option>
-                    <option value="ფინანსისტი">ფინანსისტი (ხარჯები & ანალიტიკა)</option>
+                    <option value="მენეჯერი">მენეჯერი</option>
+                    <option value="ოპერატორი">ოპერატორი</option>
+                    <option value="ფინანსისტი">ფინანსისტი</option>
                     <option value="პროდუქტების მენეჯერი">პროდუქტების მენეჯერი</option>
                   </select>
                 </div>
+
+                {/* პერმიშენების მონიშვნა */}
+                <div className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
+                  <span className="text-slate-400 font-bold block mb-2">მოდულებზე წვდომის უფლებები:</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { key: 'products', label: 'პროდუქტების მართვა' },
+                      { key: 'orders', label: 'შეკვეთების მართვა' },
+                      { key: 'analytics', label: 'ანალიტიკა' },
+                      { key: 'expenses', label: 'ხარჯები & ფინანსები' },
+                      { key: 'crm', label: 'CRM მომხმარებლები' },
+                      { key: 'settings', label: 'საიტის პარამეტრები' }
+                    ].map(p => (
+                      <label key={p.key} className="flex items-center gap-2 cursor-pointer text-slate-300 font-bold">
+                        <input 
+                          type="checkbox" 
+                          checked={staffForm.permissions[p.key] || false}
+                          onChange={e => {
+                            const val = e.target.checked;
+                            setStaffForm(prev => ({
+                              ...prev,
+                              permissions: { ...prev.permissions, [p.key]: val }
+                            }));
+                          }}
+                          className="accent-emerald-400 w-4 h-4 rounded cursor-pointer"
+                        />
+                        <span>{p.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ თანამშრომლის სისტემაში დამატება</button>
               </form>
             </div>
 
+            {/* თანამშრომლების სია და ედიტირების შესაძლებლობა */}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
               <div className="space-y-3">
                 {staffList.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
                 ) : (
-                  staffList.map(st => (
-                    <div key={st.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs shadow-inner">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <b className="text-white text-sm">{st.name}</b>
-                          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">{st.role}</span>
+                  staffList.map(st => {
+                    const isEditing = editingStaffId === st.id;
+
+                    return (
+                      <div key={st.id} className="bg-slate-950/60 p-4 sm:p-5 rounded-3xl border border-emerald-500/20 space-y-3 shadow-inner">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                          <div>
+                            <div className="flex items-center gap-2.5">
+                              <b className="text-white text-sm">{st.name}</b>
+                              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">{st.role}</span>
+                            </div>
+                            <p className="text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button 
+                              onClick={() => {
+                                if (isEditing) {
+                                  setEditingStaffId(null);
+                                } else {
+                                  setEditingStaffId(st.id);
+                                  setEditStaffRole(st.role || 'მენეჯერი');
+                                  setEditStaffPermissions({ ...(st.permissions || {}) });
+                                }
+                              }}
+                              className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" /> უფლებების შეცვლა
+                            </button>
+                            <button onClick={() => handleDeleteStaff(st.id, st.name)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                          </div>
                         </div>
-                        <p className="text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
+
+                        {/* უფლებების ჩიპები */}
+                        {!isEditing && (
+                          <div className="flex flex-wrap gap-1.5 pt-1 text-[10px]">
+                            {Object.entries(st.permissions || {}).map(([key, val]) => (
+                              <span key={key} className={`px-2.5 py-1 rounded-xl border ${val ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
+                                {key}: {val ? '✓' : '✗'}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* ედიტირების ინლაინ ბოქსი */}
+                        {isEditing && (
+                          <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in text-xs">
+                            <div className="space-y-1">
+                              <label className="text-slate-400 font-bold">როლი</label>
+                              <input 
+                                type="text" 
+                                value={editStaffRole} 
+                                onChange={e => setEditStaffRole(e.target.value)} 
+                                className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none" 
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-slate-400 font-bold block">უფლებები:</span>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {[
+                                  { key: 'products', label: 'პროდუქტები' },
+                                  { key: 'orders', label: 'შეკვეთები' },
+                                  { key: 'analytics', label: 'ანალიტიკა' },
+                                  { key: 'expenses', label: 'ხარჯები' },
+                                  { key: 'crm', label: 'CRM' },
+                                  { key: 'settings', label: 'პარამეტრები' }
+                                ].map(p => (
+                                  <label key={p.key} className="flex items-center gap-2 cursor-pointer text-slate-300 font-bold">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={editStaffPermissions[p.key] || false}
+                                      onChange={e => {
+                                        const val = e.target.checked;
+                                        setEditStaffPermissions(prev => ({ ...prev, [p.key]: val }));
+                                      }}
+                                      className="accent-amber-400 w-3.5 h-3.5 rounded cursor-pointer"
+                                    />
+                                    <span>{p.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-2">
+                              <button onClick={() => setEditingStaffId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold">გაუქმება</button>
+                              <button onClick={() => handleSaveEditedStaff(st.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black">ცვლილებების შენახვა</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                        <div className="flex gap-1 text-[10px] text-slate-400">
-                          <span className={`px-2 py-1 rounded-lg border ${st.permissions?.orders ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 border-slate-800'}`}>შეკვეთები</span>
-                          <span className={`px-2 py-1 rounded-lg border ${st.permissions?.products ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 border-slate-800'}`}>პროდუქტები</span>
-                          <span className={`px-2 py-1 rounded-lg border ${st.permissions?.analytics ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 border-slate-800'}`}>ანალიტიკა</span>
-                        </div>
-                        <button onClick={() => handleDeleteStaff(st.id, st.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
