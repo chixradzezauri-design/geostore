@@ -167,7 +167,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* 📱 MOBILE REFINED GRID MENU */}
+        {/* 📱 MOBILE REFINED GRID MENU (გასწორებული ავტორიზაციისა და კალათის სექციით) */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
             
@@ -200,39 +200,41 @@ export default function Header({
               </button>
             </div>
 
+            {/* 🌟 მთავარი სწრაფი ღილაკები (კალათა და ფავორიტები მობილურისთვის) */}
             <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-              <button onClick={() => { setActiveTab('wardrobe'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Shirt className="w-4 h-4 text-amber-400" /> {t.wardrobe}
+              <button onClick={() => { setActiveTab('cart'); setMobileMenuOpen(false); }} className="p-3 bg-amber-400 text-slate-950 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
+                <ShoppingBag className="w-4 h-4" /> {t.cart} ({cartCount})
               </button>
-              <button onClick={() => { setActiveTab('ai-stylist'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Bot className="w-4 h-4 text-amber-400" /> {t.aiStylist}
-              </button>
-              <button onClick={() => { setActiveTab('my-outfits'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" /> {t.myOutfits}
-              </button>
-              <button onClick={() => { setActiveTab('style-recommendations'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Store className="w-4 h-4 text-amber-400" /> {t.recommendations}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-              <button onClick={() => { setIsTrackerOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
-                <PackageCheck className="w-4 h-4 text-amber-400" /> {t.orderTracker}
-              </button>
-              <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
+              <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center justify-center gap-2">
                 <Heart className="w-4 h-4 text-rose-500" /> {t.wishlist} ({wishlistCount})
               </button>
             </div>
 
+            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+              <button onClick={() => { setActiveTab('wardrobe'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
+                <Shirt className="w-4 h-4 text-amber-400" /> {t.wardrobe}
+              </button>
+              <button onClick={() => { setIsTrackerOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
+                <PackageCheck className="w-4 h-4 text-amber-400" /> {t.orderTracker}
+              </button>
+            </div>
+
+            {/* 🌟 ამოწეული და მკაფიო ავტორიზაციის / პროფილის ღილაკი მობილურისთვის */}
             <div className="space-y-2 pt-2 border-t border-amber-500/20">
               {currentUser ? (
-                <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-[#121216] rounded-2xl text-amber-400 text-left border border-amber-500/20 flex items-center gap-2 text-xs font-bold">
-                  <User className="w-4 h-4" /> {t.profile}: {currentUser.name}
+                <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full p-4 bg-amber-500/20 rounded-2xl text-amber-300 text-left border border-amber-500/40 flex items-center justify-between text-xs font-black">
+                  <span className="flex items-center gap-2"><User className="w-4 h-4 text-amber-400" /> {t.profile}: {currentUser.name}</span>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">აქტიური</span>
                 </button>
               ) : (
-                <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-amber-400 text-slate-950 font-black rounded-2xl text-center text-xs">
-                  🔑 {t.login}
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-amber-400 text-slate-950 font-black rounded-2xl text-center text-xs shadow-lg">
+                    🔑 {t.login}
+                  </button>
+                  <button onClick={() => { setAuthMode('register'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-[#16161a] text-amber-400 border border-amber-500/40 font-black rounded-2xl text-center text-xs">
+                    ✨ რეგისტრაცია
+                  </button>
+                </div>
               )}
             </div>
 
