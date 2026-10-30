@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Supabase Expenses Sync, AI Analyst & COGS
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security, Supabase Expenses Sync, AI Analyst, COGS & Staff Roles (ACL)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3, Calculator, Wallet 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -68,6 +68,19 @@ export default function AdminDashboardPro({
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
+  // 🌟 თანამშრომლებისა და მენეჯერების როლების მართვის (ACL) სახელმწიფო
+  const [staffList, setStaffList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('geostore_staff_list');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { id: 'st-1', name: 'გიორგი მენეჯერი', email: 'manager@geostore.ge', role: 'მენეჯერი', permissions: { products: true, orders: true, analytics: false } },
+      { id: 'st-2', name: 'ნინო ოპერატორი', email: 'operator@geostore.ge', role: 'ოპერატორი', permissions: { products: false, orders: true, analytics: false } }
+    ];
+  });
+  const [staffForm, setStaffForm] = useState({ name: '', email: '', role: 'მენეჯერი', password: '' });
+
   // 🌟 ფინანსური და ბიზნეს-ინტელექტის სახელმწიფოები
   const [calcForm, setCalcForm] = useState({
     purchaseCost: '45',
@@ -89,6 +102,13 @@ export default function AdminDashboardPro({
     { role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
+
+  // 🌟 თანამშრომლების შენახვა LocalStorage-ში
+  useEffect(() => {
+    try {
+      localStorage.setItem('geostore_staff_list', JSON.stringify(staffList));
+    } catch {}
+  }, [staffList]);
 
   // 🌟 ხარჯების წამოღება Supabase ბაზიდან
   const fetchExpenses = async () => {
@@ -248,6 +268,35 @@ export default function AdminDashboardPro({
       time: new Date().toLocaleTimeString('ka-GE') + ' (' + new Date().toLocaleDateString('ka-GE') + ')'
     };
     setActivityLogs(prev => [newLog, ...(prev || [])]);
+  };
+
+  // 🌟 თანამშრომლის დამატების ფუნქცია
+  const handleAddStaff = (e) => {
+    e.preventDefault();
+    if (!staffForm.name || !staffForm.email) return;
+    const newStaffMember = {
+      id: `st-${Date.now()}`,
+      name: staffForm.name.trim(),
+      email: staffForm.email.trim(),
+      role: staffForm.role,
+      permissions: {
+        products: staffForm.role === 'მენეჯერი' || staffForm.role === 'პროდუქტების მენეჯერი',
+        orders: true,
+        analytics: staffForm.role === 'მენეჯერი' || staffForm.role === 'ფინანსისტი'
+      }
+    };
+    setStaffList(prev => [...prev, newStaffMember]);
+    setStaffForm({ name: '', email: '', role: 'მენეჯერი', password: '' });
+    logActivity(`დაემატა ახალი თანამშრომელი: ${newStaffMember.name} (${newStaffMember.role})`);
+    alert('✅ თანამშრომელი წარმატებით დაემატა სისტემას!');
+  };
+
+  // 🌟 თანამშრომლის წაშლის ფუნქცია
+  const handleDeleteStaff = (staffId, staffName) => {
+    if (window.confirm(`ნამდვილად გსურთ თანამშრომლის "${staffName}" წაშლა?`)) {
+      setStaffList(prev => prev.filter(s => s.id !== staffId));
+      logActivity(`წაიშალა თანამშრომელი: ${staffName}`);
+    }
   };
 
   // 🌟 კალკულატორის გამოთვლები
@@ -1186,6 +1235,7 @@ export default function AdminDashboardPro({
             { id: 'calculator', label: '🧮 მოგების კალკულატორი', icon: Calculator },
             { id: 'expenses', label: '💸 ხარჯების მართვა', count: expenses.length, icon: Wallet },
             { id: 'ai_analyst', label: '🤖 AI ბიზნეს ასისტენტი', icon: Sparkles },
+            { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & COGS', count: products?.length || 0, icon: Store },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
@@ -1414,6 +1464,59 @@ export default function AdminDashboardPro({
               <input type="text" placeholder="დასვით კითხვა (მაგ: რა არის ჩვენი სუფთა მოგება?)..." value={aiQuery} onChange={e => setAiQuery(e.target.value)} className="flex-1 bg-slate-950 border border-emerald-500/25 p-4 rounded-2xl text-xs text-white outline-none shadow-inner" />
               <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-6 py-4 rounded-2xl cursor-pointer shadow-lg">გაგზავნა</button>
             </form>
+          </div>
+        )}
+
+        {/* 🌟 5. STAFF ROLES & PERMISSIONS TAB (ACL) */}
+        {adminTab === 'staff' && (
+          <div className="space-y-6">
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
+                <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის დამატება & წვდომის როლები (ACL)
+              </h3>
+              <form onSubmit={handleAddStaff} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <input type="text" placeholder="თანამშრომლის სახელი *" required value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="email" placeholder="ელ-ფოსტა *" required value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <select value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                    <option value="მენეჯერი">მენეჯერი (სრული წვდომა)</option>
+                    <option value="ოპერატორი">ოპერატორი (მხოლოდ შეკვეთები)</option>
+                    <option value="ფინანსისტი">ფინანსისტი (ხარჯები & ანალიტიკა)</option>
+                    <option value="პროდუქტების მენეჯერი">პროდუქტების მენეჯერი</option>
+                  </select>
+                </div>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ თანამშრომლის სისტემაში დამატება</button>
+              </form>
+            </div>
+
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
+              <h3 className="font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
+              <div className="space-y-3">
+                {staffList.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
+                ) : (
+                  staffList.map(st => (
+                    <div key={st.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs shadow-inner">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <b className="text-white text-sm">{st.name}</b>
+                          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">{st.role}</span>
+                        </div>
+                        <p className="text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
+                      </div>
+                      <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <div className="flex gap-1 text-[10px] text-slate-400">
+                          <span className={`px-2 py-1 rounded-lg border ${st.permissions?.orders ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 border-slate-800'}`}>შეკვეთები</span>
+                          <span className={`px-2 py-1 rounded-lg border ${st.permissions?.products ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 border-slate-800'}`}>პროდუქტები</span>
+                          <span className={`px-2 py-1 rounded-lg border ${st.permissions?.analytics ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 border-slate-800'}`}>ანალიტიკა</span>
+                        </div>
+                        <button onClick={() => handleDeleteStaff(st.id, st.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         )}
 
