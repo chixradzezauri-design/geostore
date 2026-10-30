@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with File Upload & Auto-Sizing for Categories & Products
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Fixed Category Image Rendering
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -182,27 +182,30 @@ export default function AdminDashboardPro({
     return () => clearInterval(interval);
   }, []);
 
+  // 🌟 უზრუნველყოფს კატეგორიების ფოტოების (image და img) ერთგვაროვან წაკითხვას მთავარი გვერდისა და ადმინისთვის
   const safeCategories = React.useMemo(() => {
     try {
       if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
       return categoriesList.map((cat, idx) => {
         if (!cat) return null;
         if (typeof cat === 'string') {
-          return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null, image: '' };
+          return { id: `cat-str-${idx}`, name: cat, icon: 'Shirt', parentId: null, image: '', img: '' };
         }
         if (typeof cat === 'object') {
+          const catImg = cat.image || cat.img || '';
           return {
             id: cat.id || `cat-obj-${idx}`,
             name: cat.name || 'კატეგორია',
             icon: cat.icon || 'Shirt',
             parentId: cat.parentId || null,
-            image: cat.image || ''
+            image: catImg,
+            img: catImg
           };
         }
         return null;
       }).filter(Boolean);
     } catch {
-      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
+      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '', img: '' }];
     }
   }, [categoriesList]);
   
@@ -728,13 +731,15 @@ export default function AdminDashboardPro({
     if (!newCatName.trim()) return;
     const cleanName = newCatName.trim();
     const catId = `cat-${Date.now()}`;
+    const cleanImage = newCatImage.trim() || '';
     
     const newCatObj = { 
       id: catId, 
       name: cleanName, 
       icon: newCatIcon, 
       parentId: selectedParentId || null,
-      image: newCatImage.trim() || '' // ატვირთული ფოტოს ბაზა ან ლინკი
+      image: cleanImage, 
+      img: cleanImage // 🌟 უზრუნველყოფს თავსებადობას მთავარ გვერდთან
     };
 
     const updatedCategories = [...safeCategories, newCatObj];
@@ -752,9 +757,17 @@ export default function AdminDashboardPro({
 
   const handleSaveEditedCategory = (catId) => {
     if (!editCatName.trim()) return;
+    const cleanImg = editCatImage.trim();
+
     const updatedCategories = safeCategories.map(c => {
       if (c.id === catId) {
-        return { ...c, name: editCatName.trim(), icon: editCatIcon, image: editCatImage.trim() };
+        return { 
+          ...c, 
+          name: editCatName.trim(), 
+          icon: editCatIcon, 
+          image: cleanImg, 
+          img: cleanImg // 🌟 განახლება ორივე ველით
+        };
       }
       return c;
     });
@@ -2294,13 +2307,14 @@ export default function AdminDashboardPro({
                   mainCategories.map(parentCat => {
                     const subCats = safeCategories.filter(c => c.parentId === parentCat.id);
                     const isEditingParent = editingCatId === parentCat.id;
+                    const displayImage = parentCat.image || parentCat.img;
 
                     return (
                       <div key={parentCat.id} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
                         <div className="flex justify-between items-center flex-wrap gap-3">
                           <div className="flex items-center gap-3">
-                            {parentCat.image ? (
-                              <img src={parentCat.image} alt="" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
+                            {displayImage ? (
+                              <img src={displayImage} alt="" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
                               <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">No Img</div>
                             )}
@@ -2315,7 +2329,7 @@ export default function AdminDashboardPro({
                           <div className="flex items-center gap-2">
                             {!isEditingParent && (
                               <button 
-                                onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(parentCat.image || ''); }} 
+                                onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(displayImage || ''); }} 
                                 className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
                                 title="რედაქტირება"
                               >
@@ -2366,19 +2380,20 @@ export default function AdminDashboardPro({
                           <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-2">
                             {subCats.map(sub => {
                               const isEditingSub = editingCatId === sub.id;
+                              const subImg = sub.image || sub.img;
                               return (
                                 <div key={sub.id} className="bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/15 space-y-2">
                                   <div className="flex justify-between items-center text-xs gap-2">
                                     <div className="flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {sub.image && <img src={sub.image} alt="" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
+                                      {subImg && <img src={subImg} alt="" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200">{sub.name}</span>
                                     </div>
 
                                     <div className="flex items-center gap-1.5">
                                       {!isEditingSub && (
                                         <button 
-                                          onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(sub.image || ''); }} 
+                                          onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(subImg || ''); }} 
                                           className="p-1.5 bg-slate-900 text-amber-400 rounded-lg cursor-pointer"
                                           title="სუბკატეგორიის რედაქტირება"
                                         >
