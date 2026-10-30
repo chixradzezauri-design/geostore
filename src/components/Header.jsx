@@ -1,6 +1,7 @@
-// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with Hidden Admin Entry
+// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with Language Switcher & Hidden Admin Entry
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell, Shirt } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell, Shirt, Globe } from 'lucide-react';
+import { translations } from '../utils/translations';
 
 export default function Header({ 
   siteSettings, 
@@ -19,9 +20,19 @@ export default function Header({
   setIsNotificationsOpen,
   unreadNotificationsCount = 0,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  currentLang = 'ka',
+  setCurrLang
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const t = translations[currentLang] || translations.ka;
+
+  const handleLangChange = (lang) => {
+    if (typeof setCurrLang === 'function') {
+      setCurrLang(lang);
+      try { localStorage.setItem('geostore_lang', lang); } catch {}
+    }
+  };
 
   return (
     <>
@@ -29,7 +40,7 @@ export default function Header({
         {/* Top Announcement Bar */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-4 font-black text-center flex items-center justify-center gap-2 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 shrink-0" /> 
-          <span className="truncate">{siteSettings?.topBarText || "GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი"}</span>
+          <span className="truncate">{siteSettings?.topBarText || t.topBarText}</span>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-4">
@@ -37,23 +48,23 @@ export default function Header({
           <div className="flex items-center gap-2 cursor-pointer group shrink-0" onClick={() => { setActiveTab('store'); setMobileMenuOpen(false); }}>
             <div className="bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-2.5 sm:p-3 rounded-2xl text-slate-950 font-black flex items-center gap-2 shadow-xl shadow-amber-500/20 group-hover:scale-105 transition-all duration-300">
               <Store className="w-5 h-5" />
-              <span className="text-xs sm:text-sm tracking-tight font-black">{siteSettings?.storeName || 'GEOSTORE'}</span>
+              <span className="text-xs sm:text-sm tracking-tight font-black">{siteSettings?.storeName || t.storeName}</span>
             </div>
           </div>
 
           {/* QUICK WARDROBE NAV (Desktop) */}
           <div className="hidden xl:flex items-center gap-1.5 bg-[#121216] p-1.5 rounded-2xl border border-amber-500/20 text-xs font-bold">
             <button onClick={() => setActiveTab('wardrobe')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'wardrobe' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Shirt className="w-3.5 h-3.5" /> ჩემი გარდერობი
+              <Shirt className="w-3.5 h-3.5" /> {t.wardrobe}
             </button>
             <button onClick={() => setActiveTab('ai-stylist')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'ai-stylist' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Bot className="w-3.5 h-3.5" /> AI სტილისტი
+              <Bot className="w-3.5 h-3.5" /> {t.aiStylist}
             </button>
             <button onClick={() => setActiveTab('my-outfits')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'my-outfits' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Sparkles className="w-3.5 h-3.5" /> ჩემი ლუქები
+              <Sparkles className="w-3.5 h-3.5" /> {t.myOutfits}
             </button>
             <button onClick={() => setActiveTab('style-recommendations')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'style-recommendations' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Store className="w-3.5 h-3.5" /> სტილის რეკომენდაციები
+              <Store className="w-3.5 h-3.5" /> {t.recommendations}
             </button>
           </div>
 
@@ -62,7 +73,7 @@ export default function Header({
             <div className="relative flex-1 group">
               <input
                 type="text"
-                placeholder="მოძებნე სასურველი პროდუქტი..."
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-[#121216] border border-amber-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 shadow-inner transition-all"
@@ -79,10 +90,17 @@ export default function Header({
             </button>
           </div>
 
-          {/* DESKTOP ACTIONS (მოხსნილია საჯარო ადმინ ღილაკი) */}
+          {/* DESKTOP ACTIONS */}
           <div className="hidden lg:flex items-center gap-2.5">
+            {/* 🌟 LANGUAGE SWITCHER */}
+            <div className="flex items-center bg-[#121216] p-1 rounded-2xl border border-amber-500/20 text-[11px] font-black">
+              <button onClick={() => handleLangChange('ka')} className={`px-2 py-1.5 rounded-xl transition cursor-pointer ${currentLang === 'ka' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>GEO 🇬🇪</button>
+              <button onClick={() => handleLangChange('en')} className={`px-2 py-1.5 rounded-xl transition cursor-pointer ${currentLang === 'en' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>EN 🇬🇧</button>
+              <button onClick={() => handleLangChange('ru')} className={`px-2 py-1.5 rounded-xl transition cursor-pointer ${currentLang === 'ru' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>RU 🇷🇺</button>
+            </div>
+
             <button onClick={() => setIsTrackerOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-amber-500/25 transition shadow-sm cursor-pointer" title="შეკვეთის ტრეკერი">
-              <PackageCheck className="w-4 h-4 text-amber-400" /> ძებნა
+              <PackageCheck className="w-4 h-4 text-amber-400" /> {t.orderTracker}
             </button>
 
             {/* 🔔 Notifications Bell Button */}
@@ -96,7 +114,7 @@ export default function Header({
             </button>
 
             <button onClick={() => setIsAiAssistantOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-amber-500/25 transition shadow-sm cursor-pointer">
-              <Bot className="w-4 h-4 text-amber-400 animate-pulse" /> AI
+              <Bot className="w-4 h-4 text-amber-400 animate-pulse" /> {t.aiAssistant}
             </button>
 
             <button onClick={() => setIsComparisonOpen(true)} className="relative p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400 transition shadow-sm cursor-pointer" title="შედარება">
@@ -119,7 +137,7 @@ export default function Header({
                 <User className="w-4 h-4" /> {currentUser.name}
               </button>
             ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg transition cursor-pointer">შესვლა</button>
+              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg transition cursor-pointer">{t.login}</button>
             )}
           </div>
 
@@ -149,15 +167,25 @@ export default function Header({
           </div>
         </div>
 
-        {/* 📱 MOBILE REFINED GRID MENU (მოხსნილია ადმინ პანელის ღილაკი) */}
+        {/* 📱 MOBILE REFINED GRID MENU */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
             
+            {/* Mobile Language Switcher */}
+            <div className="flex items-center justify-between bg-[#121216] p-2 rounded-2xl border border-amber-500/20 text-xs font-black">
+              <span className="text-slate-400 flex items-center gap-1.5 pl-2"><Globe className="w-3.5 h-3.5 text-amber-400" /> ენა / Language:</span>
+              <div className="flex gap-1">
+                <button onClick={() => handleLangChange('ka')} className={`px-2.5 py-1 rounded-xl transition ${currentLang === 'ka' ? 'bg-amber-400 text-slate-950' : 'text-slate-400'}`}>GEO 🇬🇪</button>
+                <button onClick={() => handleLangChange('en')} className={`px-2.5 py-1 rounded-xl transition ${currentLang === 'en' ? 'bg-amber-400 text-slate-950' : 'text-slate-400'}`}>EN 🇬🇧</button>
+                <button onClick={() => handleLangChange('ru')} className={`px-2.5 py-1 rounded-xl transition ${currentLang === 'ru' ? 'bg-amber-400 text-slate-950' : 'text-slate-400'}`}>RU 🇷🇺</button>
+              </div>
+            </div>
+
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="ძებნა პროდუქტებში..."
+                  placeholder={t.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-[#121216] border border-amber-500/25 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 outline-none"
@@ -174,36 +202,36 @@ export default function Header({
 
             <div className="grid grid-cols-2 gap-2 text-xs font-bold">
               <button onClick={() => { setActiveTab('wardrobe'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Shirt className="w-4 h-4 text-amber-400" /> ჩემი გარდერობი
+                <Shirt className="w-4 h-4 text-amber-400" /> {t.wardrobe}
               </button>
               <button onClick={() => { setActiveTab('ai-stylist'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Bot className="w-4 h-4 text-amber-400" /> AI სტილისტი
+                <Bot className="w-4 h-4 text-amber-400" /> {t.aiStylist}
               </button>
               <button onClick={() => { setActiveTab('my-outfits'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" /> ჩემი ლუქები
+                <Sparkles className="w-4 h-4 text-amber-400" /> {t.myOutfits}
               </button>
               <button onClick={() => { setActiveTab('style-recommendations'); setMobileMenuOpen(false); }} className="p-3 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Store className="w-4 h-4 text-amber-400" /> რეკომენდაციები
+                <Store className="w-4 h-4 text-amber-400" /> {t.recommendations}
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs font-bold">
               <button onClick={() => { setIsTrackerOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
-                <PackageCheck className="w-4 h-4 text-amber-400" /> შეკვეთის ძებნა
+                <PackageCheck className="w-4 h-4 text-amber-400" /> {t.orderTracker}
               </button>
-              <button onClick={() => { setIsComparisonOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
-                <Scale className="w-4 h-4 text-amber-400" /> შედარება ({comparisonCount})
+              <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-3 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
+                <Heart className="w-4 h-4 text-rose-500" /> {t.wishlist} ({wishlistCount})
               </button>
             </div>
 
             <div className="space-y-2 pt-2 border-t border-amber-500/20">
               {currentUser ? (
                 <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-[#121216] rounded-2xl text-amber-400 text-left border border-amber-500/20 flex items-center gap-2 text-xs font-bold">
-                  <User className="w-4 h-4" /> პროფილი: {currentUser.name}
+                  <User className="w-4 h-4" /> {t.profile}: {currentUser.name}
                 </button>
               ) : (
                 <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-amber-400 text-slate-950 font-black rounded-2xl text-center text-xs">
-                  🔑 შესვლა / რეგისტრაცია
+                  🔑 {t.login}
                 </button>
               )}
             </div>
