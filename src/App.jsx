@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete with Secured Hidden Admin Access (?admin=secret)
+// src/App.jsx - 100% Fully Complete with Secure Hidden Admin Login Prompt (?admin=secret)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -115,13 +115,13 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
 
-  // 🔒 მკაცრი უსაფრთხოების შემოწმება: ადმინ პანელი იხსნება მხოლოდ URL-ში ?admin=secret არსებობისას
+  // 🔒 უსაფრთხოების შემოწმება: ადმინ პანელი იხსნება მხოლოდ URL-ში ?admin=secret არსებობისას.
+  // თავად AdminDashboardPro კომპონენტში კი ავტომატურად მოთხოვნილია ლოგინი (adminLoggedIn === false-ისას აჩვენებს იუზერის და პაროლის ფორმას).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'secret') {
       setActiveTab('admin');
     } else {
-      // თუ ჩვეულებრივი მომხმარებელია და ცდილობს admin ტაბზე გადართვას, ავტომატურად ვუბრუნებთ store-ს
       if (activeTab === 'admin') {
         setActiveTab('store');
       }
@@ -552,7 +552,7 @@ export default function App() {
           />
         )}
 
-        {/* 🔒 დაცული ადმინ პანელი (იხსნება მხოლოდ ?admin=secret URL პარამეტრით) */}
+        {/* 🔒 დაცული ადმინ პანელი (იხსნება მხოლოდ ?admin=secret URL პარამეტრით, შიგნით კი მოითხოვს ადმინ ავტორიზაციას) */}
         {activeTab === 'admin' && (
           <AdminDashboardPro 
             adminLoggedIn={adminLoggedIn}
