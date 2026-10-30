@@ -431,7 +431,6 @@ export default function AdminDashboardPro({
     if (!expenseForm.amount || !expenseForm.description) return;
     
     const newExp = {
-      id: `exp-${Date.now()}`,
       category: expenseForm.category,
       amount: Number(expenseForm.amount),
       date: expenseForm.date,
@@ -446,12 +445,13 @@ export default function AdminDashboardPro({
       });
 
       if (res.ok) {
-        setExpenses(prev => [newExp, ...prev]);
+        fetchExpenses();
         setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
         alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
       } else {
-        alert('შეცდომა ბაზაში შენახვისას');
+        const errText = await res.text();
+        alert('შეცდომა ბაზაში შენახვისას: ' + errText);
       }
     } catch {
       alert('ქსელის შეცდომა სერვერთან მიერთებისას');
