@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Complete CRM & Variants
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Category & Subcategory Management
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -56,6 +56,11 @@ export default function AdminDashboardPro({
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserDiscount, setEditUserDiscount] = useState('');
   const [editUserNotes, setEditUserNotes] = useState('');
+
+  // 🌟 კატეგორიების რედაქტირების სახელმწიფო
+  const [editingCatId, setEditingCatId] = useState(null);
+  const [editCatName, setEditCatName] = useState('');
+  const [editCatIcon, setEditCatIcon] = useState('Shirt');
 
   // 🌟 შეკვეთების რეალურ დროში წამოღება Supabase ბაზიდან ადმინ პანელისთვის
   const fetchAdminOrders = async () => {
@@ -358,6 +363,26 @@ export default function AdminDashboardPro({
     setSelectedParentId('');
     logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'}: ${cleanName}`);
     alert('✅ კატეგორია წარმატებით დაემატა!');
+  };
+
+  const handleSaveEditedCategory = (catId) => {
+    if (!editCatName.trim()) return;
+    const updatedCategories = safeCategories.map(c => {
+      if (c.id === catId) {
+        return { ...c, name: editCatName.trim(), icon: editCatIcon };
+      }
+      return c;
+    });
+
+    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
+    try {
+      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
+    } catch {}
+
+    setEditingCatId(null);
+    setEditCatName('');
+    logActivity(`განახლდა კატეგორია (ID: ${catId})`);
+    alert('✅ კატეგორია წარმატებით განახლდა!');
   };
 
   const handleDeleteCategory = (targetId, targetName) => {
@@ -1555,11 +1580,12 @@ export default function AdminDashboardPro({
           </div>
         )}
 
+        {/* 🌟 ENHANCED CATEGORIES & SUBCATEGORIES MANAGEMENT TAB */}
         {adminTab === 'categories' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <FolderTree className="w-5 h-5 text-emerald-400" /> მთავარი კატეგორიის ან სუბკატეგორიის დამატება
+                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება
               </h3>
               <form onSubmit={handleAddCategory} className="grid grid-cols-1 sm:grid-cols-4 gap-3.5 text-xs">
                 <input type="text" placeholder="სახელწოდება *" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -1581,33 +1607,91 @@ export default function AdminDashboardPro({
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">დამატება</button>
               </form>
             </div>
+
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია</h3>
+              <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და რედაქტირება</h3>
               <div className="space-y-4">
                 {mainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
                 ) : (
                   mainCategories.map(parentCat => {
                     const subCats = safeCategories.filter(c => c.parentId === parentCat.id);
+                    const isEditingParent = editingCatId === parentCat.id;
+
                     return (
                       <div key={parentCat.id} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center flex-wrap gap-2">
                           <div className="flex items-center gap-2.5">
                             <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">📁 მთავარი</span>
-                            <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                            {isEditingParent ? (
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="text" 
+                                  value={editCatName} 
+                                  onChange={e => setEditCatName(e.target.value)} 
+                                  className="bg-slate-900 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-white text-xs outline-none"
+                                />
+                                <button onClick={() => handleSaveEditedCategory(parentCat.id)} className="bg-emerald-500 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs">შენახვა</button>
+                                <button onClick={() => setEditingCatId(null)} className="text-slate-400 text-xs px-2">გაუქმება</button>
+                              </div>
+                            ) : (
+                              <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
+                            )}
                           </div>
-                          <button onClick={() => handleDeleteCategory(parentCat.id, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+
+                          <div className="flex items-center gap-2">
+                            {!isEditingParent && (
+                              <button 
+                                onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); }} 
+                                className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
+                                title="რედაქტირება"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button onClick={() => handleDeleteCategory(parentCat.id, parentCat.name)} className="text-rose-400 hover:text-rose-300 p-2 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                          </div>
                         </div>
+
                         {subCats.length > 0 && (
                           <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-1">
-                            {subCats.map(sub => (
-                              <div key={sub.id} className="bg-slate-950 p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs">
-                                <span className="font-bold text-slate-200 flex items-center gap-2">
-                                  <CornerDownRight className="w-3.5 h-3.5 text-emerald-400" /> {sub.name}
-                                </span>
-                                <button onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
-                              </div>
-                            ))}
+                            {subCats.map(sub => {
+                              const isEditingSub = editingCatId === sub.id;
+                              return (
+                                <div key={sub.id} className="bg-slate-950 p-3 rounded-2xl border border-emerald-500/15 flex justify-between items-center text-xs gap-2">
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                    {isEditingSub ? (
+                                      <div className="flex items-center gap-2 flex-1">
+                                        <input 
+                                          type="text" 
+                                          value={editCatName} 
+                                          onChange={e => setEditCatName(e.target.value)} 
+                                          className="bg-slate-900 border border-emerald-500/30 px-3 py-1 rounded-xl text-white text-xs outline-none w-full"
+                                        />
+                                        <button onClick={() => handleSaveEditedCategory(sub.id)} className="bg-emerald-500 text-slate-950 font-black px-2.5 py-1 rounded-xl text-[10px]">შენახვა</button>
+                                        <button onClick={() => setEditingCatId(null)} className="text-slate-400 text-[10px]">გაუქმება</button>
+                                      </div>
+                                    ) : (
+                                      <span className="font-bold text-slate-200">{sub.name}</span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    {!isEditingSub && (
+                                      <button 
+                                        onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); }} 
+                                        className="p-1.5 bg-slate-900 text-amber-400 rounded-lg cursor-pointer"
+                                        title="სუბკატეგორიის რედაქტირება"
+                                      >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    <button onClick={() => handleDeleteCategory(sub.id, sub.name)} className="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -1710,7 +1794,7 @@ export default function AdminDashboardPro({
                           <div className="flex items-center gap-2.5 flex-wrap">
                             <h4 className="font-black text-white text-sm">{u.name}</h4>
                             {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
-                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">დაბლოკილი</span>}
+                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">დაბლოკილი</span>}
                             {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
                           <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
