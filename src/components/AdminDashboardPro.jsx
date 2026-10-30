@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Category Banner Management
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Security & Password/FaceID Management
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -51,6 +51,11 @@ export default function AdminDashboardPro({
   const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); 
   const [adminPinCode, setAdminPinCode] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
+
+  // 🌟 უსაფრთხოების მართვის სახელმწიფო (პაროლისა და PIN-ის შეცვლა)
+  const [newAdminUsername, setNewAdminUsername] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminPin, setNewAdminPin] = useState('');
 
   // 🌟 CRM ედიტირების მენეჯმენტი
   const [editingUserId, setEditingUserId] = useState(null);
@@ -163,7 +168,6 @@ export default function AdminDashboardPro({
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
-  const [passwordForm, setPasswordForm] = useState({ newUsername: '', newPassword: '' });
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
@@ -239,6 +243,60 @@ export default function AdminDashboardPro({
       }
     } catch {
       alert('Face ID ავტორიზაცია გაუქმდა.');
+    }
+  };
+
+  // 🌟 უსაფრთხოების განახლების ფუნქცია (პაროლისა და PIN-ის შენახვა)
+  const handleSaveSecuritySettings = (e) => {
+    e.preventDefault();
+    try {
+      if (newAdminUsername.trim()) {
+        localStorage.setItem('geostore_admin_username', newAdminUsername.trim());
+      }
+      if (newAdminPassword.trim()) {
+        localStorage.setItem('geostore_admin_password', newAdminPassword.trim());
+      }
+      if (newAdminPin.trim()) {
+        localStorage.setItem('geostore_admin_pin', btoa(newAdminPin.trim()));
+      }
+      logActivity('განახლდა ადმინისტრატორის უსაფრთხოების პარამეტრები (პაროლი / PIN)');
+      alert('✅ ადმინისტრატორის პაროლი და PIN-კოდი წარმატებით განახლდა!');
+      setNewAdminUsername('');
+      setNewAdminPassword('');
+      setNewAdminPin('');
+    } catch {
+      alert('შეცდომა პარამეტრების შენახვისას');
+    }
+  };
+
+  // 🌟 Face ID / Passkeys რეგისტრაციის ფუნქცია
+  const handleRegisterFaceId = async () => {
+    if (!window.PublicKeyCredential) {
+      alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys/Face ID ტექნოლოგიას.');
+      return;
+    }
+    try {
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
+          rp: { name: "GEOSTORE Admin" },
+          user: {
+            id: new Uint8Array([1]),
+            name: "admin@geostore.ge",
+            displayName: "GeoStore Admin"
+          },
+          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          timeout: 60000,
+          attestation: "direct"
+        }
+      });
+      if (credential) {
+        localStorage.setItem('geostore_faceid_registered', 'true');
+        logActivity('წარმატებით დარეგისტრირდა Face ID / Passkey უსაფრთხოება');
+        alert('✅ Face ID / Biometric Passkey წარმატებით დაუკავშირდა თქვენს ადმინ პანელს!');
+      }
+    } catch {
+      alert('Face ID-ის რეგისტრაცია გაუქმდა ან ვერ მოხერხდა.');
     }
   };
 
@@ -989,7 +1047,7 @@ export default function AdminDashboardPro({
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
-            { id: 'settings', label: '⚙️ პარამეტრები', icon: Settings }
+            { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].map(tab => {
             const IconComp = tab.icon;
             const isActive = adminTab === tab.id;
@@ -1943,8 +2001,65 @@ export default function AdminDashboardPro({
           </div>
         )}
 
+        {/* 🌟 SETTINGS & ADVANCED ADMIN SECURITY TAB (PASSWORD / PIN & FACE ID) */}
         {adminTab === 'settings' && (
           <div className="space-y-6">
+            {/* 🔒 Security & Password / FaceID Settings */}
+            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
+                <Lock className="w-5 h-5 text-emerald-400" /> ადმინისტრატორის უსაფრთხოება (პაროლი, PIN & Face ID)
+              </h3>
+              
+              <form onSubmit={handleSaveSecuritySettings} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className="space-y-1">
+                    <label className="text-slate-400 font-bold">ახალი მომხმარებელი</label>
+                    <input 
+                      type="text" 
+                      placeholder="ახალი სახელი" 
+                      value={newAdminUsername} 
+                      onChange={e => setNewAdminUsername(e.target.value)} 
+                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-slate-400 font-bold">ახალი პაროლი</label>
+                    <input 
+                      type="password" 
+                      placeholder="ახალი პაროლი" 
+                      value={newAdminPassword} 
+                      onChange={e => setNewAdminPassword(e.target.value)} 
+                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-slate-400 font-bold">ახალი 4-ნიშნა PIN</label>
+                    <input 
+                      type="password" 
+                      maxLength="6"
+                      placeholder="PIN (მაგ: 1234)" 
+                      value={newAdminPin} 
+                      onChange={e => setNewAdminPin(e.target.value)} 
+                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-black tracking-widest text-center outline-none focus:border-emerald-400 shadow-inner" 
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button type="submit" className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
+                    🔒 პაროლისა და PIN-ის განახლება
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleRegisterFaceId}
+                    className="flex-1 bg-slate-950 hover:bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-black py-4 rounded-2xl transition cursor-pointer text-xs flex items-center justify-center gap-2"
+                  >
+                    <Fingerprint className="w-4 h-4 text-emerald-400" /> Face ID / Passkey-ის რეგისტრაცია
+                  </button>
+                </div>
+              </form>
+            </div>
+
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
@@ -1967,6 +2082,7 @@ export default function AdminDashboardPro({
                 ტარიფების შენახვა
               </button>
             </div>
+
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
