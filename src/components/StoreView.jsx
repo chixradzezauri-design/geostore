@@ -1,4 +1,4 @@
-// src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe)
+// src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -234,7 +234,6 @@ export default function StoreView({
     return (categories || []).filter(c => c.parentId === parentId);
   };
 
-  // 🌟 დამხმარე ფუნქცია: ზუსტი პროდუქტების რაოდენობა კატეგორიისთვის/სუბკატეგორიისთვის
   const getCategoryProductCount = (catName, isSub = false) => {
     if (!activeProducts || activeProducts.length === 0) return 0;
     if (!isSub) {
@@ -278,7 +277,7 @@ export default function StoreView({
     } else if (sortBy === 'price-desc') {
       result.sort((a, b) => b.priceGEL - a.priceGEL);
     } else if (sortBy === 'name-asc') {
-      result.sort((a, b) => b.name.localeCompare(a.name, 'ka'));
+      result.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
     }
 
     return result;
@@ -400,7 +399,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION */}
+      {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
@@ -414,7 +413,6 @@ export default function StoreView({
           </span>
         </div>
         
-        {/* Breadcrumb Navigation if category or subcategory is selected */}
         {(selectedCategory !== 'ყველა' || selectedSubCategory) && (
           <div className="flex items-center gap-2 text-xs bg-[#121216] px-4 py-3 rounded-2xl border border-amber-500/30 shadow">
             <span className="text-slate-400 font-bold">ნავიგაცია:</span>
@@ -441,9 +439,8 @@ export default function StoreView({
           </div>
         )}
 
-        {/* 🌟 Premium Category Cards Grid */}
+        {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* 'All Categories' Card */}
           <div 
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
             className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
@@ -467,10 +464,10 @@ export default function StoreView({
             </div>
           </div>
 
-          {/* Dynamic Main Category Cards */}
           {(mainCategories.length > 0 ? mainCategories : (categories || []).map(c => typeof c === 'object' ? c : { id: c, name: c })).map(cat => {
             const catName = cat.name;
             const catId = cat.id || catName;
+            const catImage = cat.image || cat.img; // 🌟 ადმინ პანელიდან ატვირთული ფოტო
             const subCats = getSubCategories(catId);
             const isSelected = selectedCategory === catName;
             const isOpen = openParentCatId === catId;
@@ -490,12 +487,22 @@ export default function StoreView({
                     : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
                 }`}
               >
+                {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
+                {catImage && (
+                  <div className="absolute inset-0 opacity-25 group-hover:opacity-40 transition-opacity pointer-events-none">
+                    <img src={catImage} alt={catName} className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
-                  <div className="bg-[#1a1a22] border border-amber-500/30 p-2.5 rounded-2xl text-amber-400 shadow-md">
-                    {getCategoryIcon(catName)}
+                  <div className="bg-[#1a1a22] border border-amber-500/30 w-10 h-10 rounded-2xl overflow-hidden text-amber-400 shadow-md flex items-center justify-center shrink-0">
+                    {catImage ? (
+                      <img src={catImage} alt={catName} className="w-full h-full object-cover" />
+                    ) : (
+                      getCategoryIcon(catName)
+                    )}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 z-10">
                     {subCats.length > 0 && <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700">{subCats.length} სუბ</span>}
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
                   </div>
@@ -509,7 +516,6 @@ export default function StoreView({
           })}
         </div>
 
-        {/* Subcategories Bar if Parent Category is Clicked */}
         {openParentCatId && getSubCategories(openParentCatId).length > 0 && (
           <div className="bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
@@ -669,13 +675,12 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL WITH CONDITIONAL SIZES & STICKY CART BUTTON */}
+      {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
           <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
             
-            {/* Header */}
             <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0 z-20">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
@@ -689,7 +694,6 @@ export default function StoreView({
               </button>
             </div>
 
-            {/* Scrollable Content Area */}
             <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
@@ -726,7 +730,6 @@ export default function StoreView({
                     {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
-                  {/* 🌟 ინდივიდუალური ვარიანტები (Variants Selection) */}
                   {selectedProduct.variants && selectedProduct.variants.length > 0 && (
                     <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/30">
                       <span className="text-amber-400 font-bold block flex items-center gap-1.5">
@@ -768,7 +771,6 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {/* 🌟 ზომების ბლოკი ჩნდება მხოლოდ ტანსაცმელსა და ფეხსაცმელზე! */}
                   {isClothingOrFootwear(selectedProduct) && (
                     <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
@@ -961,7 +963,6 @@ export default function StoreView({
               </div>
             </div>
 
-            {/* 🌟 STICKY / FIXED FOOTER CART BUTTON (მუდმივად ჩანს მოდალის ბოლოში) */}
             <div className="absolute bottom-0 left-0 right-0 bg-[#121216]/95 backdrop-blur-xl border-t border-amber-500/30 p-4 sm:p-5 shadow-2xl z-30">
               <button 
                 onClick={() => { 
@@ -990,7 +991,7 @@ export default function StoreView({
         </div>
       )}
 
-      {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი (Smart Size Recommender Modal) */}
+      {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
         <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
           <form onSubmit={handleCalculateSmartSize} className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
