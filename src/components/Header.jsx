@@ -1,6 +1,6 @@
-// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with AI Digital Wardrobe & Full Preservation
+// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with Hidden Admin Entry
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Search, Shield, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell, Shirt } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell, Shirt } from 'lucide-react';
 
 export default function Header({ 
   siteSettings, 
@@ -79,7 +79,7 @@ export default function Header({
             </button>
           </div>
 
-          {/* DESKTOP ACTIONS */}
+          {/* DESKTOP ACTIONS (მოხსნილია საჯარო ადმინ ღილაკი) */}
           <div className="hidden lg:flex items-center gap-2.5">
             <button onClick={() => setIsTrackerOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-amber-500/25 transition shadow-sm cursor-pointer" title="შეკვეთის ტრეკერი">
               <PackageCheck className="w-4 h-4 text-amber-400" /> ძებნა
@@ -121,10 +121,6 @@ export default function Header({
             ) : (
               <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg transition cursor-pointer">შესვლა</button>
             )}
-
-            <button onClick={() => setActiveTab('admin')} className="px-3.5 py-2 bg-[#121216] text-amber-400 font-bold rounded-2xl text-xs flex items-center gap-1.5 border border-amber-500/30 shadow-sm cursor-pointer">
-              <Shield className="w-4 h-4" /> ადმინ
-            </button>
           </div>
 
           {/* MOBILE QUICK BUTTONS & HAMBURGER */}
@@ -153,7 +149,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* 📱 MOBILE REFINED GRID MENU */}
+        {/* 📱 MOBILE REFINED GRID MENU (მოხსნილია ადმინ პანელის ღილაკი) */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
             
@@ -210,10 +206,6 @@ export default function Header({
                   🔑 შესვლა / რეგისტრაცია
                 </button>
               )}
-
-              <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="w-full p-3.5 bg-[#121216] rounded-2xl text-amber-400 flex items-center gap-2 border border-amber-500/30 text-xs font-bold">
-                <Shield className="w-4 h-4 text-amber-400" /> 🔐 ადმინ პანელი
-              </button>
             </div>
 
           </div>
