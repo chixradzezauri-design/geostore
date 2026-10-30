@@ -1,4 +1,4 @@
-// src/App.jsx - 100% Fully Complete, Database Persisted & Secured with AI Digital Wardrobe Integration
+// src/App.jsx - 100% Fully Complete with Secured Hidden Admin Access (?admin=secret)
 import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -7,7 +7,7 @@ import AiAssistantModal from './components/AiAssistantModal';
 import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
 import ImageSearchModal from './components/ImageSearchModal'; 
-import AIDigitalWardrobe from './components/AIDigitalWardrobe'; // 🌟 AI ციფრული გარდერობის ინტეგრაცია
+import AIDigitalWardrobe from './components/AIDigitalWardrobe';
 import { MessageSquare, Heart, ShoppingBag, User, ShieldCheck, FileText, Bot, Sparkles, Scale, Tag, Check, X, Share2, Copy, Truck, Smartphone, Download, KeyRound, Fingerprint, ShieldAlert } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -115,12 +115,18 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('store'); 
 
+  // 🔒 მკაცრი უსაფრთხოების შემოწმება: ადმინ პანელი იხსნება მხოლოდ URL-ში ?admin=secret არსებობისას
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'secret') {
       setActiveTab('admin');
+    } else {
+      // თუ ჩვეულებრივი მომხმარებელია და ცდილობს admin ტაბზე გადართვას, ავტომატურად ვუბრუნებთ store-ს
+      if (activeTab === 'admin') {
+        setActiveTab('store');
+      }
     }
-  }, []);
+  }, [window.location.search]);
 
   const [selectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
@@ -546,6 +552,7 @@ export default function App() {
           />
         )}
 
+        {/* 🔒 დაცული ადმინ პანელი (იხსნება მხოლოდ ?admin=secret URL პარამეტრით) */}
         {activeTab === 'admin' && (
           <AdminDashboardPro 
             adminLoggedIn={adminLoggedIn}
