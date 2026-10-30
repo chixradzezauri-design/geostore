@@ -43,10 +43,10 @@ export default function Header({
           <span className="truncate">{siteSettings?.topBarText || t.topBarText}</span>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-4">
           {/* LOGO */}
           <div className="flex items-center gap-2 cursor-pointer group shrink-0" onClick={() => { setActiveTab('store'); setMobileMenuOpen(false); }}>
-            <div className="bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-2.5 sm:p-3 rounded-2xl text-slate-950 font-black flex items-center gap-2 shadow-xl shadow-amber-500/20 group-hover:scale-105 transition-all duration-300">
+            <div className="bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-2 sm:p-3 rounded-2xl text-slate-950 font-black flex items-center gap-2 shadow-xl shadow-amber-500/20 group-hover:scale-105 transition-all duration-300">
               <Store className="w-5 h-5" />
               <span className="text-xs sm:text-sm tracking-tight font-black">{siteSettings?.storeName || t.storeName}</span>
             </div>
@@ -91,16 +91,16 @@ export default function Header({
           </div>
 
           {/* DESKTOP ACTIONS */}
-          <div className="hidden lg:flex items-center gap-2.5">
+          <div className="hidden lg:flex items-center gap-2">
             {/* 🌟 LANGUAGE SWITCHER */}
-            <div className="flex items-center bg-[#121216] p-1 rounded-2xl border border-amber-500/20 text-[11px] font-black">
-              <button onClick={() => handleLangChange('ka')} className={`px-2 py-1.5 rounded-xl transition cursor-pointer ${currentLang === 'ka' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>GEO 🇬🇪</button>
-              <button onClick={() => handleLangChange('en')} className={`px-2 py-1.5 rounded-xl transition cursor-pointer ${currentLang === 'en' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>EN 🇬🇧</button>
-              <button onClick={() => handleLangChange('ru')} className={`px-2 py-1.5 rounded-xl transition cursor-pointer ${currentLang === 'ru' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>RU 🇷🇺</button>
+            <div className="flex items-center bg-[#121216] p-1 rounded-2xl border border-amber-500/20 text-[10px] font-black shrink-0">
+              <button onClick={() => handleLangChange('ka')} className={`px-2 py-1 rounded-lg transition cursor-pointer ${currentLang === 'ka' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>GEO</button>
+              <button onClick={() => handleLangChange('en')} className={`px-2 py-1 rounded-lg transition cursor-pointer ${currentLang === 'en' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>EN</button>
+              <button onClick={() => handleLangChange('ru')} className={`px-2 py-1 rounded-lg transition cursor-pointer ${currentLang === 'ru' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>RU</button>
             </div>
 
-            <button onClick={() => setIsTrackerOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-amber-500/25 transition shadow-sm cursor-pointer" title="შეკვეთის ტრეკერი">
-              <PackageCheck className="w-4 h-4 text-amber-400" /> {t.orderTracker}
+            <button onClick={() => setIsTrackerOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2.5 py-2 rounded-2xl font-bold text-[11px] flex items-center gap-1 hover:bg-amber-500/25 transition shadow-sm cursor-pointer whitespace-nowrap" title="შეკვეთის ტრეკერი">
+              <PackageCheck className="w-3.5 h-3.5 text-amber-400" /> {t.orderTracker}
             </button>
 
             {/* 🔔 Notifications Bell Button */}
@@ -113,8 +113,8 @@ export default function Header({
               )}
             </button>
 
-            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 hover:bg-amber-500/25 transition shadow-sm cursor-pointer">
-              <Bot className="w-4 h-4 text-amber-400 animate-pulse" /> {t.aiAssistant}
+            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2.5 py-2 rounded-2xl font-bold text-[11px] flex items-center gap-1 hover:bg-amber-500/25 transition shadow-sm cursor-pointer whitespace-nowrap">
+              <Bot className="w-3.5 h-3.5 text-amber-400 animate-pulse" /> {t.aiAssistant}
             </button>
 
             <button onClick={() => setIsComparisonOpen(true)} className="relative p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400 transition shadow-sm cursor-pointer" title="შედარება">
@@ -133,16 +133,16 @@ export default function Header({
             </button>
 
             {currentUser ? (
-              <button onClick={() => setActiveTab('profile')} className="px-3.5 py-2 bg-[#121216] border border-amber-500/20 text-amber-400 font-bold rounded-2xl text-xs flex items-center gap-1.5 shadow-sm cursor-pointer">
-                <User className="w-4 h-4" /> {currentUser.name}
+              <button onClick={() => setActiveTab('profile')} className="px-3 py-2 bg-[#121216] border border-amber-500/20 text-amber-400 font-bold rounded-2xl text-[11px] flex items-center gap-1 shadow-sm cursor-pointer truncate max-w-[120px]">
+                <User className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{currentUser.name}</span>
               </button>
             ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg transition cursor-pointer">{t.login}</button>
+              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg transition cursor-pointer whitespace-nowrap">{t.login}</button>
             )}
           </div>
 
           {/* MOBILE QUICK BUTTONS & HAMBURGER */}
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-1.5 lg:hidden">
             <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-2.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
@@ -167,7 +167,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* 📱 MOBILE REFINED GRID MENU (გასწორებული ავტორიზაციისა და კალათის სექციით) */}
+        {/* 📱 MOBILE REFINED GRID MENU (ავტორიზაცია, რეგისტრაცია და კალათა თვალსაჩინოდ) */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-5 space-y-4 shadow-2xl animate-in slide-in-from-top duration-300">
             
@@ -200,7 +200,7 @@ export default function Header({
               </button>
             </div>
 
-            {/* 🌟 მთავარი სწრაფი ღილაკები (კალათა და ფავორიტები მობილურისთვის) */}
+            {/* კალათა და ფავორიტები მობილურისთვის */}
             <div className="grid grid-cols-2 gap-2 text-xs font-bold">
               <button onClick={() => { setActiveTab('cart'); setMobileMenuOpen(false); }} className="p-3 bg-amber-400 text-slate-950 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
                 <ShoppingBag className="w-4 h-4" /> {t.cart} ({cartCount})
@@ -219,7 +219,7 @@ export default function Header({
               </button>
             </div>
 
-            {/* 🌟 ამოწეული და მკაფიო ავტორიზაციის / პროფილის ღილაკი მობილურისთვის */}
+            {/* ავტორიზაცია / რეგისტრაცია მობილურისთვის */}
             <div className="space-y-2 pt-2 border-t border-amber-500/20">
               {currentUser ? (
                 <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full p-4 bg-amber-500/20 rounded-2xl text-amber-300 text-left border border-amber-500/40 flex items-center justify-between text-xs font-black">
