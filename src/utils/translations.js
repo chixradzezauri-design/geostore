@@ -1,4 +1,4 @@
-// src/utils/translations.js - Multilingual Dictionary for GEOSTORE (KA, EN, RU)
+// src/utils/translations.js - Full Multilingual Dictionary for GEOSTORE (KA, EN, RU)
 
 export const translations = {
   ka: {
@@ -34,7 +34,20 @@ export const translations = {
     warranty: "საგარანტიო წესები",
     allRightsReserved: "ყველა უფლება დაცულია.",
     supportChat: "კონსულტაცია / ჩათი",
-    sendMessage: "შეტყობინების გაგზავნა"
+    sendMessage: "შეტყობინების გაგზავნა",
+    allCategories: "ყველა",
+    allVendors: "ყველა",
+    discount: "ფასდაკლება",
+    orderHistory: "ჩემი შეკვეთების ისტორია",
+    noOrders: "თქვენ ჯერ არ გაქვთ გაფორმებული შეკვეთები.",
+    emptyWishlist: "სია ცარიელია.",
+    emptyCart: "კალათა ცარიელია.",
+    shareList: "სიის გაზიარება / კოპირება",
+    security: "უსაფრთხოება და სწრაფი შესვლა",
+    logout: "სისტემიდან გასვლა",
+    tbilisiDelivery: "თბილისი / რუსთავი",
+    bigCitiesDelivery: "დიდი ქალაქები - ქუთაისი, ბათუმი",
+    otherDelivery: "სხვა რეგიონები / მთიანი ზონა"
   },
   en: {
     storeName: "GEOSTORE",
@@ -69,7 +82,20 @@ export const translations = {
     warranty: "Warranty Rules",
     allRightsReserved: "All rights reserved.",
     supportChat: "Support / Chat",
-    sendMessage: "Send Message"
+    sendMessage: "Send Message",
+    allCategories: "All",
+    allVendors: "All",
+    discount: "Discount",
+    orderHistory: "My Order History",
+    noOrders: "You have no orders placed yet.",
+    emptyWishlist: "Wishlist is empty.",
+    emptyCart: "Cart is empty.",
+    shareList: "Share / Copy List",
+    security: "Security & Fast Sign In",
+    logout: "Sign Out",
+    tbilisiDelivery: "Tbilisi / Rustavi",
+    bigCitiesDelivery: "Big Cities - Kutaisi, Batumi",
+    otherDelivery: "Other Regions / Mountain Zone"
   },
   ru: {
     storeName: "GEOSTORE",
@@ -104,6 +130,19 @@ export const translations = {
     warranty: "Гарантийные правила",
     allRightsReserved: "Все права защищены.",
     supportChat: "Поддержка / Чат",
-    sendMessage: "Отправить сообщение"
+    sendMessage: "Отправить сообщение",
+    allCategories: "Все",
+    allVendors: "Все",
+    discount: "Скидка",
+    orderHistory: "История моих заказов",
+    noOrders: "У вас пока нет оформленных заказов.",
+    emptyWishlist: "Список избранного пуст.",
+    emptyCart: "Корзина пуста.",
+    shareList: "Поделиться / Скопировать список",
+    security: "Безопасность и быстрый вход",
+    logout: "Выйти из системы",
+    tbilisiDelivery: "Тбилиси / Рустави",
+    bigCitiesDelivery: "Большие города - Кутаиси, Батуми",
+    otherDelivery: "Другие регионы / Горная зона"
   }
 };
