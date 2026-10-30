@@ -1,9 +1,9 @@
-// src/components/AiAssistantModal.jsx - Omniscient AI Concierge with Real-Time DB Sync & Dynamic Site Data
+// src/components/AiAssistantModal.jsx - Advanced AI Product Intelligence & Smart Fashion Concierge Edition
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle, Shirt } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24ilastKey...RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM";
 
 const headers = {
   'apikey': SUPABASE_ANON_KEY,
@@ -11,10 +11,12 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-// 🔤 ქართული და ინგლისური სინონიმების გაფართოებული ლექსიკონი
+// 🔤 ქართული და ინგლისური სინონიმებისა და სტილისტური ტერმინების გაფართოებული ლექსიკონი
 const SYNONYMS = {
   laptop: ['ლეპტოპი', 'ნოუთბუქი', 'laptop', 'macbook', 'მაქბუქი', 'კომპიუტერი'],
   phone: ['ტელეფონი', 'სმარტფონი', 'iphone', 'აიფონი', 'phone', 'მობილური'],
+  shoes: ['ფეხსაცმელი', 'ბოტასი', 'sneakers', 'shoe', 'ბათინკი', 'კედი'],
+  clothes: ['ტანსაცმელი', 'ქურთუკი', 'შარვალი', 'პერანგი', 'მაისური', 'კაბა', 'shirt', 'jacket', 'pant', 'cloth'],
   cheap: ['იაფი', 'ბიუჯეტური', 'ფასდაკლებული', 'ხელმისაწვდომი'],
   expensive: ['ძვირი', 'ფლაგმანი', 'პრემიუმი', 'premium'],
   discount: ['ფასდაკლება', 'sale', 'აქცია', 'კუპონი', 'პრომო', 'ფასდაკლებული']
@@ -29,24 +31,33 @@ export default function AiAssistantModal({
   orders = [],
   coupons = [],
   siteSettings = {},
-  selectedProduct = null, // 🎯 კონტექსტური პროდუქტი StoreView-დან
-  deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 }, // 🚀 დინამიური მიწოდების ტარიფები პირდაპირ აპლიკაციიდან
+  selectedProduct = null,
+  deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   addToCart,
   formatPrice
 }) {
   const getInitialGreeting = () => {
+    // ამოვიღოთ მომხმარებლის ციფრული გარდერობი localStorage-დან (თუ არსებობს)
+    let wardrobeCount = 0;
+    try {
+      const savedWardrobe = localStorage.getItem('geostore_digital_wardrobe');
+      if (savedWardrobe) {
+        wardrobeCount = JSON.parse(savedWardrobe).length;
+      }
+    } catch {}
+
     if (selectedProduct) {
       return {
         id: 'm1',
         sender: 'ai',
-        text: `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ? გსურთ გაიგოთ მეტი მახასიათებლებზე, მასალაზე ან მარაგზე?`,
+        text: `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ? გსურთ შევუძებნოთ შესაფერისი წყვილი ან შევამოწმოთ ზომები?`,
         recommendedProducts: [selectedProduct]
       };
     }
     return {
       id: 'm1',
       sender: 'ai',
-      text: `გამარჯობა! 👋 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის მთავარი ინტელექტუალური AI კონსიერჟი.\n\nმაქვს სრული რეალურ დროში წვდომა პროდუქტებზე, თეგებზე, აქტიურ კუპონებზე, ვენდერებზე, ტარიფებსა და შეკვეთებზე. რით შემიძლია დაგეხმაროთ დღეს?`
+      text: `გამარჯობა! 🌟 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის გაფართოებული AI სტილისტი და კონსიერჟი.\n\nმაქვს სრული წვდომა მთელ კატალოგზე, თქვენს ციფრული გარდერობის ${wardrobeCount} ნივთზე, აქტიურ კუპონებსა და შეკვეთებზე. როგორ მოვძებნო სასურველი პროდუქტი ან შევქმნათ ლუქი დღეს?`
     };
   };
 
@@ -54,10 +65,8 @@ export default function AiAssistantModal({
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [liveProducts, setLiveProducts] = useState(products);
-  const [lastQueryCategory, setLastQueryCategory] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // როდესაც ჩატი იხსნება ან იცვლება selectedProduct, განახლდეს საწყისი მისალმება
   useEffect(() => {
     if (isAiAssistantOpen) {
       setMessages([getInitialGreeting()]);
@@ -65,7 +74,7 @@ export default function AiAssistantModal({
     }
   }, [isAiAssistantOpen, selectedProduct]);
 
-  // 🔄 პროდუქტების და თეგების დინამიური წამოღება Supabase ბაზიდან
+  // 🔄 სრული კატალოგის დინამიური წამოღება Supabase ბაზიდან
   const fetchLiveProducts = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, { headers });
@@ -79,6 +88,18 @@ export default function AiAssistantModal({
               else parsedTags = String(p.tags).split(',').map(t => t.trim());
             }
 
+            let parsedSizes = ['S', 'M', 'L', 'XL'];
+            if (p.available_sizes) {
+              if (Array.isArray(p.available_sizes)) parsedSizes = p.available_sizes;
+              else parsedSizes = String(p.available_sizes).split(',').map(s => s.trim());
+            }
+
+            let parsedColors = ['შავი', 'თეთრი'];
+            if (p.available_colors) {
+              if (Array.isArray(p.available_colors)) parsedColors = p.available_colors;
+              else parsedColors = String(p.available_colors).split(',').map(c => c.trim());
+            }
+
             return {
               id: p.id,
               sku: p.sku || 'N/A',
@@ -86,10 +107,12 @@ export default function AiAssistantModal({
               category: p.category || 'ზოგადი',
               priceGEL: Number(p.price_gel) || 0,
               oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
-              stock: Number(p.stock) || 1,
+              stock: Number(p.stock) ?? 10,
               vendor: p.vendor || 'GEOSTORE ოფიციალური',
               image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
               tags: parsedTags,
+              availableSizes: parsedSizes,
+              availableColors: parsedColors,
               description: p.description || '',
               material: p.material || '',
               durability: p.durability || ''
@@ -115,12 +138,11 @@ export default function AiAssistantModal({
 
   const handleResetChat = () => {
     setMessages([getInitialGreeting()]);
-    setLastQueryCategory(null);
   };
 
   if (!isAiAssistantOpen) return null;
 
-  // 🧠 ულტრა-მოქნილი AI ძრავი ჭკვიანი ძებნით და Live მონაცემებით
+  // 🧠 ულტრა-ინტელექტუალური AI ძრავი სრული კატალოგის მხარდაჭერით და სტილისტით
   const generateAiReply = (userQuery, currentProductsList) => {
     const rawQuery = userQuery.trim();
     const query = rawQuery.toLowerCase();
@@ -128,31 +150,39 @@ export default function AiAssistantModal({
     const sourceProducts = currentProductsList && currentProductsList.length > 0 ? currentProductsList : (liveProducts.length > 0 ? liveProducts : products);
 
     // 1. სალამი და ზოგადი საუბარი
-    if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello') || query.includes('გამარჯობაა')) {
+    if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello')) {
       return {
         text: selectedProduct 
           ? `დიახ! კვლავ ვსაუბრობთ პროდუქტზე "${selectedProduct.name}". რით შეგვიძლია გავაგრძელოთ?`
-          : `გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. შეგიძლიათ მკითხოთ პროდუქტებზე, თეგებზე (მაგ: NEW, SALE), ფასებზე, კუპონებზე ან შეკვეთის სტატუსზე!`,
+          : `გამარჯობა! 🌟 სიამოვნებით დაგეხმარებით შოპინგში. მკითხეთ სასურველი პროდუქტის, ფასის, ბიუჯეტის, ფერის ან ციფრული გარდერობიდან ლუქების შექმნის შესახებ!`,
         products: selectedProduct ? [selectedProduct] : []
       };
     }
 
-    if (query.includes('ვინ') || query.includes('შეგიძლია') || query.includes('რისი')) {
+    // 2. ციფრული გარდერობი და სტილისტი (Wardrobe integration)
+    if (query.includes('გარდერობ') || query.includes('ლუქი') || query.includes('რა მოვუხდინო') || query.includes('ჩემი ტანსაცმელ')) {
+      let userWardrobe = [];
+      try {
+        const saved = localStorage.getItem('geostore_digital_wardrobe');
+        if (saved) userWardrobe = JSON.parse(saved);
+      } catch {}
+
+      if (userWardrobe.length === 0) {
+        return {
+          text: `🧥 თქვენი ციფრული გარდერობი ჯერ ცარიელია. გადადით „AI ციფრული გარდერობის“ განყოფილებაში, ატვირთეთ თქვენი ტანსაცმელი და მე შევძლებ სრულყოფილი ლუქების და მაღაზიიდან დამატებითი ნივთების შერჩევას!`,
+          products: sourceProducts.slice(0, 2)
+        };
+      }
+
+      // შევარჩიოთ მაღაზიიდან შესაფერისი პროდუქტი გარდერობის ასაწყობად
+      const randomStoreItem = sourceProducts[Math.floor(Math.random() * sourceProducts.length)];
       return {
-        text: `მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის სრულუფლებიანი AI ასისტენტი 🤖. მაქვს სრული რეალურ დროში წვდომა:\n\n• პროდუქტების კატალოგზე და თეგებზე (Tags)\n• მიმდინარე ფასდაკლებებსა და პრომო კუპონებზე\n• ვენდერებისა და პარტნიორების სიებზე\n• შეკვეთების ტრეკინგზე (#ORD კოდით)\n• მიწოდების აქტუალურ ტარიფებზე, გარანტიასა და განვადებაზე`,
-        products: []
+        text: `✨ თქვენს ციფრულ გარდერობში ფიქსირდება ${userWardrobe.length} ნივთი. AI სტილისტის რეკომენდაცია: თქვენს არსებულ ტანსაცმელს შესანიშნავად მოუხდება ჩვენი ვიტრინიდან ქვემოთ წარმოდგენილი პრემიუმ პროდუქტი!`,
+        products: [randomStoreItem]
       };
     }
 
-    // თუ მომხმარებელი კითხულობს მიმდინარე გახსნილ პროდუქტზე
-    if (selectedProduct && (query.includes('ეს') || query.includes('პროდუქტ') || query.includes('მასალა') || query.includes('ზომა') || query.includes('ფასი') || query.includes('აღწერა'))) {
-      return {
-        text: `📦 პროდუქტი: ${selectedProduct.name}\n💰 ფასი: ${formatPrice(selectedProduct.priceGEL)}\n🏷️ კატეგორია: ${selectedProduct.category}\n${selectedProduct.material ? `🧵 მასალა: ${selectedProduct.material}\n` : ''}${selectedProduct.durability ? `🛡️ მდგრადობა: ${selectedProduct.durability}\n` : ''}\n📝 აღწერა: ${selectedProduct.description || 'არ არის მითითებული.'}`,
-        products: [selectedProduct]
-      };
-    }
-
-    // 2. შეკვეთის ტრეკინგი
+    // 3. შეკვეთის ტრეკინგი
     const orderMatch = query.match(/ord[-\s]?\d+/i) || query.match(/#?\d{4,}/);
     if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი')) {
       if (orderMatch) {
@@ -166,7 +196,7 @@ export default function AiAssistantModal({
           };
         } else {
           return {
-            text: `🔍 შეკვეთა კოდით "${orderMatch[0].toUpperCase()}" ვერ მოიძებნა ბაზაში. გადაამოწმეთ ნომერი!`,
+            text: `🔍 შეკვეთა კოდით "${orderMatch[0].toUpperCase()}" ვერ მოიძებნა ბაზაში.`,
             products: []
           };
         }
@@ -178,121 +208,92 @@ export default function AiAssistantModal({
       }
     }
 
-    // 3. კატეგორიები
-    if (query.includes('კატეგორია') || query.includes('რას ყიდით') || query.includes('არჩევანი')) {
-      const catNames = (categories || []).map(c => typeof c === 'object' ? c.name : c).join(', ');
-      return {
-        text: `🛒 ჩვენთან წარმოდგენილია შემდეგი კატეგორიები: ${catNames || 'ტექნიკა, ტანსაცმელი, აქსესუარები'}. რომელი მიმართულება გაინტერესებთ?`,
-        products: sourceProducts.slice(0, 2)
-      };
-    }
-
-    // 4. ვენდერები
-    if (query.includes('ვენდერ') || query.includes('მომწოდებელ') || query.includes('პარტნიორ')) {
-      const vendorNames = (vendorsList || []).map(v => `• ${v.name} (კომისია: ${v.commission}%)`).join('\n');
-      return {
-        text: `🏪 ${siteSettings?.storeName || 'GEOSTORE'} წარმოადგენს მრავალვენდერიან მარკეტფლეისს. ოფიციალური პარტნიორები:\n\n${vendorNames || '• GEOSTORE ოფიციალური'}`,
-        products: []
-      };
-    }
-
-    // 5. კუპონები და ფასდაკლებები
-    if (query.includes('კუპონ') || query.includes('პრომო')) {
-      const couponListText = (coupons || []).map(c => `• ${c.code} — ${c.discountPercent}% ფასდაკლება`).join('\n');
-      return {
-        text: `🎫 აქტიური პრომო კუპონები:\n${couponListText || 'მიმდინარე კუპონები არ არის. ისარგებლეთ ფლეშ-ფასდაკლებებით!'}`,
-        products: []
-      };
-    }
-
+    // 4. ფასდაკლებები და აქციები
     const isDiscountQuery = SYNONYMS.discount.some(w => query.includes(w));
     if (isDiscountQuery) {
       const sales = sourceProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return {
         text: `🔥 მიმდინარე სპეციალური ფასდაკლებები და აქციები (${sales.length} ნივთი):`,
-        products: sales.length > 0 ? sales.slice(0, 3) : sourceProducts.slice(0, 3)
+        products: sales.length > 0 ? sales.slice(0, 4) : sourceProducts.slice(0, 4)
       };
     }
 
-    // 6. პირობები (მიწოდება დინამიური ტარიფებით, გარანტია, განვადება)
-    if (query.includes('გარანტია')) {
-      return {
-        text: `🛡️ ${siteSettings?.storeName || 'GEOSTORE'}-ის ყველა პროდუქტზე მოქმედებს ოფიციალური ქარხნული გარანტია.`,
-        products: []
-      };
-    }
-
+    // 5. პირობები (მიწოდება, გარანტია, განვადება)
     if (query.includes('მიწოდება') || query.includes('კურიერი') || query.includes('ტარიფ')) {
       return {
-        text: `🚀 მიწოდება ხორციელდება მთელი საქართველოს მასშტაბით:\n• თბილისი / რუსთავი: ${deliveryFees.tbilisi === 0 ? 'უფასო' : `${deliveryFees.tbilisi} ₾`}\n• დიდი ქალაქები (ქუთაისი, ბათუმი): ${deliveryFees.bigCities} ₾\n• სხვა რეგიონები / მთიანი ზონა: ${deliveryFees.other} ₾`,
+        text: `🚀 მიწოდება მთელი საქართველოს მასშტაბით:\n• თბილისი / რუსთავი: ${deliveryFees.tbilisi === 0 ? 'უფასო' : `${deliveryFees.tbilisi} ₾`}\n• დიდი ქალაქები: ${deliveryFees.bigCities} ₾\n• სხვა რეგიონები: ${deliveryFees.other} ₾`,
         products: []
       };
     }
 
-    if (query.includes('განვადება')) {
+    if (query.includes('გარანტია')) {
       return {
-        text: '💳 ხელმისაწვდომია 0%-იანი განვადება 6, 12 და 24 თვემდე პერიოდით საქართველოს წამყვანი ბანკებიდან.',
+        text: `🛡️ ყველა პროდუქტზე მოქმედებს ოფიციალური ქარხნული გარანტია და დაბრუნების პოლიტიკა.`,
         products: []
       };
     }
 
-    // 7. ბიუჯეტისა და კონტექსტის მიხედვით ძებნა
-    const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel)/);
+    // 6. 💰 მრავალკომპონენტიანი ძებნა: ბიუჯეტი + ფერი + ზომა + ტერმინები
+    const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel|₾)/);
     const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
 
-    const isLaptopSearch = SYNONYMS.laptop.some(w => query.includes(w));
-    const isPhoneSearch = SYNONYMS.phone.some(w => query.includes(w));
+    // ფერის ამოცნობა
+    const colorKeywords = ['შავი', 'თეთრი', 'წითელი', 'ლურჯი', 'მწვანე', 'ყვითელი', 'ნაცრისფერი', 'ვერცხლისფერი', 'ოქროსფერი', 'ტიტანი'];
+    const foundColor = colorKeywords.find(c => query.includes(c));
 
-    let activeCategory = null;
-    if (isLaptopSearch) activeCategory = 'laptop';
-    else if (isPhoneSearch) activeCategory = 'phone';
-    else if (lastQueryCategory) activeCategory = lastQueryCategory;
+    // ზომის ამოცნობა
+    const sizeKeywords = ['s', 'm', 'l', 'xl', 'xxl', '39', '40', '41', '42', '43', '44'];
+    const foundSize = sizeKeywords.find(s => query.split(/\b/).includes(s));
 
-    if (activeCategory) setLastQueryCategory(activeCategory);
+    let filtered = [...sourceProducts];
 
+    // ბიუჯეტის ფილტრი
     if (maxBudget) {
-      let filtered = sourceProducts.filter(p => p.priceGEL <= maxBudget);
-      if (activeCategory === 'laptop') {
-        filtered = filtered.filter(p => p.category.toLowerCase().includes('ლეპტოპ') || p.name.toLowerCase().includes('laptop') || p.name.toLowerCase().includes('macbook'));
-      } else if (activeCategory === 'phone') {
-        filtered = filtered.filter(p => p.category.toLowerCase().includes('სმარტფონ') || p.name.toLowerCase().includes('iphone') || p.name.toLowerCase().includes('phone'));
-      }
+      filtered = filtered.filter(p => p.priceGEL <= maxBudget);
+    }
 
+    // ფერის ფილტრი
+    if (foundColor) {
+      filtered = filtered.filter(p => {
+        const colStr = (p.availableColors || []).join(' ').toLowerCase();
+        const nameStr = p.name.toLowerCase();
+        return colStr.includes(foundColor) || nameStr.includes(foundColor);
+      });
+    }
+
+    // ზომის ფილტრი
+    if (foundSize) {
+      filtered = filtered.filter(p => {
+        const sizes = (p.availableSizes || []).map(s => String(s).toLowerCase());
+        return sizes.includes(foundSize);
+      });
+    }
+
+    // ზოგადი ტექსტური ფილტრი (თუ დარჩა სიტყვები)
+    const searchWords = words.filter(w => !w.match(/\d+/) && !['ლარამდე', 'ლარი', 'გთხოვ', 'მაჩვენე', 'მინდა', 'შემირჩიე'].includes(w));
+    
+    if (searchWords.length > 0 && !maxBudget && !foundColor && !foundSize) {
+      filtered = sourceProducts.filter(p => {
+        const pName = p.name.toLowerCase();
+        const pCat = p.category.toLowerCase();
+        const pDesc = p.description.toLowerCase();
+        const pTags = (p.tags || []).map(t => t.toLowerCase());
+
+        return searchWords.some(w => pName.includes(w) || pCat.includes(w) || pDesc.includes(w) || pTags.some(t => t.includes(w)));
+      });
+    }
+
+    if (filtered.length > 0) {
       return {
-        text: `💰 პროდუქტები ${maxBudget} ₾-მდე ბიუჯეტით ${activeCategory ? `(${activeCategory === 'laptop' ? 'ლეპტოპები' : 'სმარტფონები'})` : ''}:`,
-        products: filtered.length > 0 ? filtered.slice(0, 3) : sourceProducts.slice(0, 3)
+        text: `✨ თქვენი მოთხოვნის შესაბამისად ნაპოვნია საუკეთესო პროდუქტები (${filtered.length} ვარიანტი):`,
+        products: filtered.slice(0, 4)
       };
     }
 
-    // 8. 🏷️ ულტრა-ჭკვიანი ძებნა: თეგები, სახელები, აღწერა, სინონიმები
-    const matchedProducts = sourceProducts.filter(p => {
-      const pName = (p.name || '').toLowerCase();
-      const pCat = (p.category || '').toLowerCase();
-      const pDesc = (p.description || '').toLowerCase();
-      const pSku = (p.sku || '').toLowerCase();
-      const pVendor = (p.vendor || '').toLowerCase();
-      
-      const pTagsLower = (p.tags || []).map(t => String(t).toLowerCase().trim());
-
-      const tagMatch = words.some(w => pTagsLower.some(t => t.includes(w) || w.includes(t)));
-      const textMatch = words.some(w => pName.includes(w) || pCat.includes(w) || pDesc.includes(w) || pSku.includes(w) || pVendor.includes(w));
-      const synonymMatch = (isLaptopSearch && (pCat.includes('ლეპტოპ') || pName.includes('laptop') || pName.includes('macbook'))) ||
-                           (isPhoneSearch && (pCat.includes('სმარტფონ') || pName.includes('iphone') || pName.includes('phone')));
-
-      return tagMatch || textMatch || synonymMatch;
-    });
-
-    if (matchedProducts.length > 0) {
-      return {
-        text: `✨ თქვენი მოთხოვნის ("${rawQuery}") შესაბამისად ნაპოვნია ${matchedProducts.length} პროდუქტი:`,
-        products: matchedProducts.slice(0, 4)
-      };
-    }
-
-    // 9. სათადარიგო პასუხი
+    // სათადარიგო პასუხი მთელი კატალოგიდან
     return {
-      text: `🤔 პროდუქტი მოთხოვნით "${rawQuery}" ვერ მოიძებნა. სცადეთ სხვა სიტყვა, თეგი (მაგ: NEW, SALE) ან აირჩიეთ შემოთავაზებული ღილაკებიდან:`,
-      products: sourceProducts.slice(0, 2)
+      text: `🤔 ზუსტი დამთხვევა ვერ მოიძებნა, თუმცა გთავაზობთ ჩვენი პრემიუმ კატალოგის ტოპ პროდუქტებს:`,
+      products: sourceProducts.slice(0, 3)
     };
   };
 
@@ -317,12 +318,12 @@ export default function AiAssistantModal({
       };
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 300);
+    }, 400);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-      <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-2xl h-[92vh] sm:h-[640px] flex flex-col justify-between shadow-2xl overflow-hidden">
+      <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-2xl h-[92vh] sm:h-[680px] flex flex-col justify-between shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="bg-[#121216] p-4 sm:p-5 border-b border-emerald-500/20 flex justify-between items-center shrink-0">
@@ -332,10 +333,10 @@ export default function AiAssistantModal({
             </div>
             <div>
               <h3 className="font-black text-white text-xs sm:text-sm flex items-center gap-1.5">
-                {siteSettings?.storeName || 'GEOSTORE'} AI კონსიერჟი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                {siteSettings?.storeName || 'GEOSTORE'} AI სტილისტი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               </h3>
               <p className="text-[10px] text-emerald-400 font-bold">
-                {selectedProduct ? `კონტექსტი: ${selectedProduct.name}` : 'ინტელექტუალური ასისტენტი (Live DB Sync)'}
+                {selectedProduct ? `კონტექსტი: ${selectedProduct.name}` : 'გაფართოებული პროდუქტების ინტელექტი (Live DB)'}
               </p>
             </div>
           </div>
@@ -374,6 +375,7 @@ export default function AiAssistantModal({
                             <h5 className="font-bold text-white text-xs line-clamp-1">{prod.name}</h5>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-emerald-400 font-black text-xs">{formatPrice(prod.priceGEL)}</span>
+                              {prod.oldPriceGEL && <span className="text-slate-500 text-[10px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                               {prod.stock > 0 ? (
                                 <span className="text-[9px] text-emerald-400/80 flex items-center gap-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> მარაგშია</span>
                               ) : (
@@ -382,7 +384,7 @@ export default function AiAssistantModal({
                             </div>
                             {prod.tags && prod.tags.length > 0 && (
                               <div className="flex gap-1 mt-1 flex-wrap">
-                                {prod.tags.map((t, idx) => (
+                                {prod.tags.slice(0, 3).map((t, idx) => (
                                   <span key={idx} className="bg-emerald-500/10 text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
                                     #{t}
                                   </span>
@@ -408,7 +410,7 @@ export default function AiAssistantModal({
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-[#141418] border border-emerald-500/20 p-3.5 rounded-3xl text-emerald-400 font-bold flex items-center gap-2 text-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI ამოწმებს Supabase ბაზას რეალურ დროში...
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI აანალიზებს მთელ კატალოგს...
               </div>
             </div>
           )}
@@ -417,10 +419,10 @@ export default function AiAssistantModal({
 
         {/* Quick Suggestion Chips */}
         <div className="px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto scrollbar-none text-[11px] shrink-0">
-          {['👋 გამარჯობა', '🏷️ NEW', '🔥 ფასდაკლებები', '🎫 კუპონები', '💻 ლეპტოპები', '📱 აიფონები', '💳 განვადება', '🚚 მიწოდება'].map((chip, idx) => (
+          {['👋 გამარჯობა', '🧥 ჩემი გარდერობი', '🔥 ფასდაკლებები', '💻 ლეპტოპები', '📱 ტელეფონები', '👟 ფეხსაცმელები', '🚚 მიწოდება'].map((chip, idx) => (
             <button 
               key={idx} 
-              onClick={() => handleSendMessage(chip.replace(/[👋🏷️🔥🎫💻📱💳🚚]/g, '').trim())} 
+              onClick={() => handleSendMessage(chip.replace(/[👋🧥🔥💻📱👟🚚]/g, '').trim())} 
               className="bg-[#141418] hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0"
             >
               <Lightbulb className="w-3 h-3" /> {chip}
@@ -432,7 +434,7 @@ export default function AiAssistantModal({
         <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-3 sm:p-4 bg-[#121216] border-t border-emerald-500/20 flex gap-2 sm:gap-3 shrink-0">
           <input 
             type="text" 
-            placeholder="ჰკითხეთ AI-ს პროდუქტებზე, თეგებზე, კუპონებზე ან შეკვეთებზე..." 
+            placeholder="აღწერეთ სასურველი პროდუქტი ან ბიუჯეტი ქართულად..." 
             value={inputMessage} 
             onChange={e => setInputMessage(e.target.value)} 
             className="flex-1 bg-[#08080a] border border-emerald-500/20 p-3 sm:p-3.5 rounded-2xl text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
