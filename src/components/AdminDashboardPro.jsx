@@ -1,4 +1,4 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Category-Specific Attributes, Dynamic Variants Builder & Full Supabase Sync
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with File Upload & Auto-Sizing for Categories & Products
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
@@ -283,7 +283,7 @@ export default function AdminDashboardPro({
   
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('Shirt');
-  const [newCatImage, setNewCatImage] = useState('');
+  const [newCatImage, setNewCatImage] = useState(''); // ატვირთული ფოტოს Base64
   const [selectedParentId, setSelectedParentId] = useState('');
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
@@ -706,6 +706,23 @@ export default function AdminDashboardPro({
     );
   }
 
+  // 🌟 ახალი დამხმარე ფუნქცია: კატეგორიის ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან (Base64)
+  const handleCategoryFileChange = (e, isEditing = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Result = reader.result;
+      if (isEditing) {
+        setEditCatImage(base64Result);
+      } else {
+        setNewCatImage(base64Result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -717,7 +734,7 @@ export default function AdminDashboardPro({
       name: cleanName, 
       icon: newCatIcon, 
       parentId: selectedParentId || null,
-      image: newCatImage.trim() || ''
+      image: newCatImage.trim() || '' // ატვირთული ფოტოს ბაზა ან ლინკი
     };
 
     const updatedCategories = [...safeCategories, newCatObj];
@@ -730,7 +747,7 @@ export default function AdminDashboardPro({
     setNewCatImage('');
     setSelectedParentId('');
     logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'} ფოტოთი: ${cleanName}`);
-    alert('✅ კატეგორია და მისი ბანერი წარმატებით დაემატა!');
+    alert('✅ კატეგორია და მისი ატვირთული ფოტო წარმატებით დაემატა!');
   };
 
   const handleSaveEditedCategory = (catId) => {
@@ -2048,7 +2065,7 @@ export default function AdminDashboardPro({
                     <div className="flex gap-3 overflow-x-auto pt-3 pb-1">
                       {selectedImages.map((img, idx) => (
                         <div key={idx} className="relative w-20 h-20 bg-slate-900 border border-emerald-500/20 rounded-2xl p-1.5 shrink-0 shadow-lg">
-                          <img src={img} alt="" className="w-full h-full object-contain rounded-xl" />
+                          <img src={img} alt="" className="w-full h-full object-cover rounded-xl" />
                           <button type="button" onClick={() => setSelectedImages(selectedImages.filter((_, i) => i !== idx))} className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-5 h-5 text-[11px] font-black flex items-center justify-center shadow cursor-pointer">×</button>
                         </div>
                       ))}
@@ -2075,7 +2092,7 @@ export default function AdminDashboardPro({
                 {filteredProducts?.map(p => (
                   <div key={p.id} className="bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="flex items-center gap-3.5">
-                      <img src={p.image} alt="" className="w-14 h-14 object-contain bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
+                      <img src={p.image} alt="" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
@@ -2212,12 +2229,12 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 ENHANCED CATEGORIES & SUBCATEGORIES MANAGEMENT TAB WITH BANNER IMAGES */}
+        {/* 🌟 ENHANCED CATEGORIES & SUBCATEGORIES MANAGEMENT TAB WITH FILE UPLOAD & AUTO-SIZING */}
         {adminTab === 'categories' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოთი/ბანერით)
+                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან)
               </h3>
               <form onSubmit={handleAddCategory} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -2238,12 +2255,32 @@ export default function AdminDashboardPro({
                     <option value="Sparkles">✨ სხვა</option>
                   </select>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4 text-emerald-400" /> კატეგორიის ფოტოს / ბანერის URL:
+
+                {/* 🌟 ფაილის ატვირთვის ინპუთი კომპიუტერიდან და მობილურიდან */}
+                <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
+                  <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
+                    <ImageIcon className="w-4 h-4 text-emerald-400" /> ატვირთეთ კატეგორიის ფოტო / ბანერი (ኮምპიუტერიდან / მობილურიდან):
                   </label>
-                  <input type="text" placeholder="მაგ: https://images.unsplash.com/... (სურვილისამებრ)" value={newCatImage} onChange={e => setNewCatImage(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={e => handleCategoryFileChange(e, false)} 
+                    className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" 
+                  />
+                  {newCatImage && (
+                    <div className="relative w-24 h-24 bg-slate-900 border border-emerald-500/30 rounded-2xl p-1.5 mt-3 shadow-lg">
+                      <img src={newCatImage} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                      <button 
+                        type="button" 
+                        onClick={() => setNewCatImage('')} 
+                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full w-6 h-6 text-xs font-black flex items-center justify-center shadow cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
                 </div>
+
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კატეგორიის დამატება 🚀</button>
               </form>
             </div>
@@ -2263,16 +2300,15 @@ export default function AdminDashboardPro({
                         <div className="flex justify-between items-center flex-wrap gap-3">
                           <div className="flex items-center gap-3">
                             {parentCat.image ? (
-                              <img src={parentCat.image} alt="" className="w-12 h-12 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />
+                              <img src={parentCat.image} alt="" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
-                              <div className="w-12 h-12 bg-slate-900 rounded-xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold">📷 No Img</div>
+                              <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">No Img</div>
                             )}
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">📁 მთავარი</span>
                                 <h4 className="font-black text-white text-sm">{parentCat.name}</h4>
                               </div>
-                              {parentCat.image && <p className="text-slate-500 text-[10px] truncate max-w-xs mt-0.5">{parentCat.image}</p>}
                             </div>
                           </div>
 
@@ -2305,16 +2341,20 @@ export default function AdminDashboardPro({
                                 />
                               </div>
                               <div>
-                                <label className="text-slate-400 text-[10px] block mb-1">ფოტოს / ბანერის URL</label>
+                                <label className="text-slate-400 text-[10px] block mb-1">ატვირთეთ ახალი ფოტო კომპიუტერიდან</label>
                                 <input 
-                                  type="text" 
-                                  value={editCatImage} 
-                                  onChange={e => setEditCatImage(e.target.value)} 
-                                  placeholder="https://..."
-                                  className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
+                                  type="file" 
+                                  accept="image/*" 
+                                  onChange={e => handleCategoryFileChange(e, true)} 
+                                  className="w-full text-slate-400 text-[10px] file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                 />
                               </div>
                             </div>
+                            {editCatImage && (
+                              <div className="w-16 h-16 rounded-xl overflow-hidden border border-amber-500/30 mt-2">
+                                <img src={editCatImage} alt="Edit preview" className="w-full h-full object-cover" />
+                              </div>
+                            )}
                             <div className="flex justify-end gap-2 pt-1">
                               <button onClick={() => setEditingCatId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold text-xs">გაუქმება</button>
                               <button onClick={() => handleSaveEditedCategory(parentCat.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">შენახვა</button>
@@ -2331,7 +2371,7 @@ export default function AdminDashboardPro({
                                   <div className="flex justify-between items-center text-xs gap-2">
                                     <div className="flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {sub.image && <img src={sub.image} alt="" className="w-8 h-8 object-cover rounded-lg border border-emerald-500/20 shrink-0" />}
+                                      {sub.image && <img src={sub.image} alt="" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200">{sub.name}</span>
                                     </div>
 
@@ -2360,11 +2400,10 @@ export default function AdminDashboardPro({
                                           className="bg-slate-950 border border-amber-500/20 p-2 rounded-lg text-white text-xs outline-none w-full"
                                         />
                                         <input 
-                                          type="text" 
-                                          value={editCatImage} 
-                                          onChange={e => setEditCatImage(e.target.value)} 
-                                          placeholder="ფოტოს URL"
-                                          className="bg-slate-950 border border-amber-500/20 p-2 rounded-lg text-white text-xs outline-none w-full"
+                                          type="file" 
+                                          accept="image/*" 
+                                          onChange={e => handleCategoryFileChange(e, true)} 
+                                          className="w-full text-slate-400 text-[10px] file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                         />
                                       </div>
                                       <div className="flex justify-end gap-2">
