@@ -47,6 +47,8 @@ export default function AdminDashboardPro({
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
 
   const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); 
   const [adminPinCode, setAdminPinCode] = useState('');
@@ -54,6 +56,7 @@ export default function AdminDashboardPro({
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
+  const [orderAdminNoteInput, setOrderAdminNoteInput] = useState('');
 
   const [newAdminUsername, setNewAdminUsername] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
@@ -154,6 +157,7 @@ export default function AdminDashboardPro({
           setOrders(data.map(o => ({
             id: o.id,
             date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+            time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
             customerName: o.customer_name,
             user_email: o.user_email || '',
             phone: o.phone,
@@ -161,6 +165,7 @@ export default function AdminDashboardPro({
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
             items: o.items || [], // 🌟 შეკვეთილი პროდუქტების სრული მასივი
+            adminNote: o.admin_note || '',
             itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
           })));
         }
@@ -982,12 +987,13 @@ export default function AdminDashboardPro({
     const itemsRows = Array.isArray(order.items) && order.items.length > 0
       ? order.items.map(item => `
           <tr>
-            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name}</td>
+            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name} ${item.selectedSize ? `(ზომა: ${item.selectedSize})` : ''} ${item.selectedColor ? `(ფერი: ${item.selectedColor})` : ''}</td>
             <td>${item.quantity || 1}</td>
             <td>${item.priceGEL || item.price || 0} ₾</td>
+            <td>${(item.priceGEL || item.price || 0) * (item.quantity || 1)} ₾</td>
           </tr>
         `).join('')
-      : `<tr><td>${order.itemSummary || 'პროდუქტები'}</td><td>1</td><td>${order.totalGEL} ₾</td></tr>`;
+      : `<tr><td>${order.itemSummary || 'პროდუქტები'}</td><td>1</td><td>${order.totalGEL} ₾</td><td>${order.totalGEL} ₾</td></tr>`;
 
     const htmlContent = `
       <html>
@@ -997,7 +1003,7 @@ export default function AdminDashboardPro({
             body { font-family: 'Noto Sans Georgian', sans-serif; padding: 30px; color: #111; }
             .header { display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
             .store-name { font-size: 24px; font-weight: 900; color: #059669; }
-            .order-info { margin-bottom: 20px; font-size: 14px; }
+            .order-info { margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
             th { background-color: #f8fafc; }
@@ -1012,12 +1018,13 @@ export default function AdminDashboardPro({
             </div>
             <div style="text-align: right;">
               <h2>შეკვეთა #${order.id}</h2>
-              <p>თარიღი: ${order.date}</p>
+              <p>თარიღი: ${order.date} ${order.time || ''}</p>
             </div>
           </div>
           <div class="order-info">
             <p><b>მყიდველი:</b> ${order.customerName}</p>
             <p><b>ტელეფონი:</b> ${order.phone}</p>
+            <p><b>ელ-ფოსტა:</b> ${order.user_email || 'მითითებული არ არის'}</p>
             <p><b>მიტანის მისამართი:</b> ${order.address}</p>
             <p><b>სტატუსი:</b> ${order.status || 'ახალი'}</p>
           </div>
@@ -1026,7 +1033,8 @@ export default function AdminDashboardPro({
               <tr>
                 <th>პროდუქტი / დეტალები</th>
                 <th>რაოდენობა</th>
-                <th>ფასი</th>
+                <th>ერთ. ფასი</th>
+                <th>ჯამი</th>
               </tr>
             </thead>
             <tbody>
@@ -1200,6 +1208,9 @@ export default function AdminDashboardPro({
         if (typeof setOrders === 'function') {
           setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
         }
+        if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
+          setSelectedOrderForModal(prev => ({ ...prev, status: newStatus }));
+        }
         
         try {
           const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
@@ -1208,11 +1219,31 @@ export default function AdminDashboardPro({
         } catch {}
 
         logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
+        alert(`✅ შეკვეთის #${orderId} სტატუსი წარმატებით განახლდა: ${newStatus}`);
       } else {
         alert('ვერ მოხერხდა ბაზაში სტატუსის განახლება');
       }
     } catch {
       alert('ქსელის შეცდომა სტატუსის შეცვლისას');
+    }
+  };
+
+  const handleSaveOrderAdminNote = async (orderId) => {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ admin_note: orderAdminNoteInput })
+      });
+      if (typeof setOrders === 'function') {
+        setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, adminNote: orderAdminNoteInput } : o));
+      }
+      if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
+        setSelectedOrderForModal(prev => ({ ...prev, adminNote: orderAdminNoteInput }));
+      }
+      alert('✅ ადმინისტრატორის შენიშვნა წარმატებით შეინახა!');
+    } catch {
+      alert('შეცდომა შენიშვნის შენახვისას');
     }
   };
 
@@ -1301,6 +1332,18 @@ export default function AdminDashboardPro({
     p.name?.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
     p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
   );
+
+  const filteredOrders = useMemo(() => {
+    return (orders || []).filter(o => {
+      const matchesSearch = 
+        o.id?.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+        o.customerName?.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+        o.phone?.toLowerCase().includes(orderSearchQuery.toLowerCase());
+      
+      const matchesStatus = orderStatusFilter === 'ყველა' || o.status === orderStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, orderSearchQuery, orderStatusFilter]);
 
   const mainCategories = safeCategories.filter(c => !c.parentId);
 
@@ -1734,13 +1777,16 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Orders Tab with Detailed Modal Trigger */}
+        {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
         {adminTab === 'orders' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <PackageCheck className="w-5 h-5 text-emerald-400" /> შეკვეთების მართვა და სტატუსები
-              </h3>
+          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
+              <div>
+                <h3 className="font-black text-white text-lg flex items-center gap-2.5">
+                  <PackageCheck className="w-6 h-6 text-emerald-400" /> შეკვეთების სრული მართვის სისტემა ({filteredOrders.length})
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">მართეთ, გაფილტრეთ და აკონტროლეთ თითოეული შეკვეთა დეტალურად</p>
+              </div>
               <button 
                 onClick={handleExportOrders}
                 className="bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-emerald-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow"
@@ -1749,56 +1795,89 @@ export default function AdminDashboardPro({
               </button>
             </div>
 
+            {/* ძებნა და სტატუსების ფილტრაცია */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+              <div className="relative w-full sm:w-80">
+                <input 
+                  type="text" 
+                  placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
+                  value={orderSearchQuery} 
+                  onChange={e => setOrderSearchQuery(e.target.value)} 
+                  className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
+                />
+                <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto">
+                {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
+                  <button 
+                    key={st}
+                    onClick={() => setOrderStatusFilter(st)}
+                    className={`px-3 py-2 rounded-xl font-bold text-[11px] cursor-pointer transition whitespace-nowrap ${orderStatusFilter === st ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* შეკვეთების სია */}
             <div className="space-y-4">
-              {(!orders || orders.length === 0) ? (
-                <p className="text-slate-500 text-xs py-6 text-center">შეკვეთები ჯერ არ ფიქსირდება.</p>
+              {filteredOrders.length === 0 ? (
+                <p className="text-slate-500 text-xs py-10 text-center">შეკვეთები ვერ მოიძებნა.</p>
               ) : (
-                orders.map(o => (
-                  <div key={o.id} className="bg-slate-950/60 p-4 sm:p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner">
+                filteredOrders.map(o => (
+                  <div key={o.id} className="bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
-                        <span className="text-slate-400 text-[11px] ml-2">({o.date})</span>
+                        <span className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
                       </div>
                       <div className="text-left sm:text-right">
                         <span className="font-black text-white text-base">{typeof formatPrice === 'function' ? formatPrice(o.totalGEL) : o.totalGEL + ' ₾'}</span>
                       </div>
                     </div>
 
-                    <div className="space-y-1 text-slate-300">
-                      <p>მყიდველი: <b className="text-white">{o.customerName}</b> | 📞 {o.phone}</p>
-                      <p className="text-slate-400 text-[11px]">📍 მისამართი: {o.address}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
+                      <p>მყიდველი: <b className="text-white">{o.customerName}</b></p>
+                      <p>ტელეფონი: <b className="text-emerald-300">📞 {o.phone}</b></p>
+                      <p className="sm:col-span-2 text-slate-400 text-[11px]">📍 მისამართი: {o.address}</p>
+                      {o.adminNote && <p className="sm:col-span-2 text-amber-300 text-[11px] italic">📝 შენიშვნა: "{o.adminNote}"</p>}
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">
+                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-black">
                           {o.status || 'ახალი'}
                         </span>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                        {/* 🌟 შეკვეთის დეტალების ნახვის ღილაკი */}
                         <button 
-                          onClick={() => setSelectedOrderForModal(o)} 
+                          onClick={() => {
+                            setSelectedOrderForModal(o);
+                            setOrderAdminNoteInput(o.adminNote || '');
+                          }} 
                           className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
                         >
-                          <Eye className="w-4 h-4 text-emerald-400" /> დეტალების ნახვა
+                          <Eye className="w-4 h-4 text-emerald-400" /> სრული დეტალები
                         </button>
 
                         <button 
                           onClick={() => handlePrintInvoice(o)} 
                           title="ინვოისის ბეჭდვა"
-                          className="bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-emerald-500/20 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
+                          className="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/20 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
                         >
-                          <Printer className="w-4 h-4" /> ბეჭდვა
+                          <Printer className="w-4 h-4" /> ინვოისი
                         </button>
 
-                        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto max-w-full">
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition whitespace-nowrap ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition whitespace-nowrap ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition whitespace-nowrap ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>დასრულებული</button>
+                        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                          <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაუქმებული' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}>გაუქმება</button>
                         </div>
                       </div>
                     </div>
@@ -1809,10 +1888,10 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 ORDER DETAILS MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
+        {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
           <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
-            <div className="bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-2xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-3xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[92vh] overflow-y-auto">
               
               <div className="flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <div className="flex items-center gap-3">
@@ -1821,7 +1900,7 @@ export default function AdminDashboardPro({
                   </div>
                   <div>
                     <h3 className="font-black text-base text-white">შეკვეთა #{selectedOrderForModal.id}</h3>
-                    <p className="text-[11px] text-slate-400">თარიღი: {selectedOrderForModal.date}</p>
+                    <p className="text-[11px] text-slate-400">თარიღი: {selectedOrderForModal.date} {selectedOrderForModal.time || ''}</p>
                   </div>
                 </div>
                 <button 
@@ -1832,37 +1911,42 @@ export default function AdminDashboardPro({
                 </button>
               </div>
 
-              {/* მყიდველის ინფორმაცია */}
+              {/* 1. მომხმარებლის სრული ინფორმაცია */}
               <div className="bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
-                <h4 className="font-black text-emerald-400 text-sm mb-2">👤 მყიდველის დეტალები</h4>
-                <p>სახელი, გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
-                <p>ტელეფონი: <b className="text-emerald-300">📞 {selectedOrderForModal.phone}</b></p>
-                <p>მიტანის მისამართი: <b className="text-white">📍 {selectedOrderForModal.address}</b></p>
-                <p>სტატუსი: <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold ml-1">{selectedOrderForModal.status || 'ახალი'}</span></p>
+                <h4 className="font-black text-emerald-400 text-sm mb-3">👤 მომხმარებლის სრული ინფორმაცია</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
+                  <p>სახელი და გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
+                  <p>ტელეფონი: <a href={`tel:${selectedOrderForModal.phone}`} className="text-emerald-300 font-black hover:underline">📞 {selectedOrderForModal.phone}</a></p>
+                  <p>ელფოსტა: <b className="text-white">{selectedOrderForModal.user_email || 'მითითებული არ არის'}</b></p>
+                  <p>სტატუსი: <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">{selectedOrderForModal.status || 'ახალი'}</span></p>
+                  <p className="sm:col-span-2 text-slate-300 pt-1">📍 სრული მისამართი: <b className="text-white">{selectedOrderForModal.address}</b></p>
+                </div>
               </div>
 
-              {/* შეკვეთილი პროდუქტების სია სურათებით, ზომებით და ფერებით */}
+              {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
               <div className="space-y-3">
                 <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({Array.isArray(selectedOrderForModal.items) ? selectedOrderForModal.items.length : 1})</h4>
                 
                 <div className="space-y-3">
                   {Array.isArray(selectedOrderForModal.items) && selectedOrderForModal.items.length > 0 ? (
                     selectedOrderForModal.items.map((item, idx) => (
-                      <div key={idx} className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 flex items-center gap-4">
+                      <div key={idx} className="bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         {item.image ? (
-                          <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-xl border border-emerald-500/20 shrink-0" />
+                          <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
-                          <div className="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center text-slate-500 text-[10px]">No Img</div>
+                          <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">No Img</div>
                         )}
                         <div className="flex-1 space-y-1">
                           <h5 className="font-black text-white text-sm">{item.name}</h5>
                           <div className="flex flex-wrap gap-2 text-[11px] text-slate-300">
+                            {item.sku && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SKU: <b>{item.sku}</b></span>}
                             {item.selectedSize && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ზომა: <b>{item.selectedSize}</b></span>}
                             {item.selectedColor && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ფერი: <b>{item.selectedColor}</b></span>}
                             <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-900">
+                          <span className="text-slate-400 text-[10px]">ერთეულის ფასი: {item.priceGEL || item.price || 0} ₾</span>
                           <span className="font-black text-emerald-400 text-sm">{formatPrice ? formatPrice((item.priceGEL || item.price || 0) * (item.quantity || 1)) : ((item.priceGEL || item.price || 0) * (item.quantity || 1)) + ' ₾'}</span>
                         </div>
                       </div>
@@ -1875,18 +1959,44 @@ export default function AdminDashboardPro({
                 </div>
               </div>
 
-              {/* ჯამური თანხა */}
-              <div className="bg-slate-900 p-4 rounded-2xl border border-emerald-500/30 flex justify-between items-center text-sm font-black">
-                <span className="text-slate-300">სულ გადასახდელი:</span>
-                <span className="text-emerald-400 text-lg">{formatPrice ? formatPrice(selectedOrderForModal.totalGEL) : selectedOrderForModal.totalGEL + ' ₾'}</span>
+              {/* 3. შეკვეთის ფინანსური დეტალები */}
+              <div className="bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
+                <h4 className="font-black text-emerald-400 text-sm mb-2">💳 ფინანსური დეტალები</h4>
+                <div className="flex justify-between text-slate-300"><span>გადახდის მეთოდი:</span><b className="text-white">ნაღდი ანგარიშსწორება / ონლაინ</b></div>
+                <div className="flex justify-between text-slate-300"><span>გადახდის სტატუსი:</span><b className="text-emerald-400">მოლოდინში / მიღებულია</b></div>
+                <div className="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800">
+                  <span>საბოლოო გადასახდელი თანხა:</span>
+                  <span className="text-emerald-400 text-lg">{formatPrice ? formatPrice(selectedOrderForModal.totalGEL) : selectedOrderForModal.totalGEL + ' ₾'}</span>
+                </div>
               </div>
 
+              {/* 4. ადმინისტრატორის პირადი შენიშვნა */}
+              <div className="space-y-2">
+                <label className="text-slate-300 font-bold block">📝 ადმინისტრატორის პირადი შენიშვნა შეკვეთაზე:</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
+                    value={orderAdminNoteInput}
+                    onChange={e => setOrderAdminNoteInput(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-emerald-500/20 p-3 rounded-2xl text-white outline-none focus:border-emerald-400"
+                  />
+                  <button 
+                    onClick={() => handleSaveOrderAdminNote(selectedOrderForModal.id)}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-2xl transition cursor-pointer"
+                  >
+                    შენახვა
+                  </button>
+                </div>
+              </div>
+
+              {/* მოდალის ქვედა ღილაკები */}
               <div className="flex gap-3 pt-2">
                 <button 
                   onClick={() => handlePrintInvoice(selectedOrderForModal)} 
                   className="flex-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black py-3.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <Printer className="w-4 h-4" /> ინვოისის ბეჭდვა
+                  <Printer className="w-4 h-4" /> ინვოისის ბეჭდვა / PDF
                 </button>
                 <button 
                   onClick={() => setSelectedOrderForModal(null)} 
