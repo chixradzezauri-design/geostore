@@ -1,9 +1,9 @@
-// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Fixed Category Image Rendering
+// src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, Lock, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Fingerprint, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square, Eye, X 
 } from 'lucide-react';
 
 const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
@@ -52,23 +52,22 @@ export default function AdminDashboardPro({
   const [adminPinCode, setAdminPinCode] = useState('');
   const [adminPinError, setAdminPinError] = useState('');
 
-  // 🌟 უსაფრთხოების მართვის სახელმწიფო (პაროლისა და PIN-ის შეცვლა)
+  // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
+  const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
+
   const [newAdminUsername, setNewAdminUsername] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [newAdminPin, setNewAdminPin] = useState('');
 
-  // 🌟 CRM ედიტირების მენეჯმენტი
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserDiscount, setEditUserDiscount] = useState('');
   const [editUserNotes, setEditUserNotes] = useState('');
 
-  // 🌟 კატეგორიების რედაქტირების სახელმწიფო (ფოტოს მხარდაჭერით)
   const [editingCatId, setEditingCatId] = useState(null);
   const [editCatName, setEditCatName] = useState('');
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
-  // 🌟 თანამშრომლებისა და მენეჯერების როლების მართვის (ACL) გაუმჯობესებული სახელმწიფო
   const [staffList, setStaffList] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_staff_list');
@@ -99,15 +98,11 @@ export default function AdminDashboardPro({
     permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
   });
   
-  // საიტზე არსებული რეგისტრირებული მომხმარებლიდან თანამშრომლად დამატების სახელმწიფო
   const [selectedUserEmailForStaff, setSelectedUserEmailForStaff] = useState('');
-
-  // 🌟 რედაქტირებაში მყოფი თანამშრომლის ID და უფლებები
   const [editingStaffId, setEditingStaffId] = useState(null);
   const [editStaffRole, setEditStaffRole] = useState('');
   const [editStaffPermissions, setEditStaffPermissions] = useState({});
 
-  // 🌟 ფინანსური და ბიზნეს-ინტელექტის სახელმწიფოები
   const [calcForm, setCalcForm] = useState({
     purchaseCost: '45',
     sellingPrice: '99',
@@ -119,7 +114,6 @@ export default function AdminDashboardPro({
     quantity: '1'
   });
 
-  // 🌟 ხარჯების მართვის სახელმწიფო
   const [expenses, setExpenses] = useState([]);
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
 
@@ -129,14 +123,12 @@ export default function AdminDashboardPro({
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
-  // 🌟 თანამშრომლების შენახვა LocalStorage-ში
   useEffect(() => {
     try {
       localStorage.setItem('geostore_staff_list', JSON.stringify(staffList));
     } catch {}
   }, [staffList]);
 
-  // 🌟 ხარჯების წამოღება Supabase ბაზიდან
   const fetchExpenses = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers });
@@ -153,7 +145,6 @@ export default function AdminDashboardPro({
     return () => clearInterval(interval);
   }, []);
 
-  // 🌟 შეკვეთების რეალურ დროში წამოღება Supabase ბაზიდან ადმინ პანელისთვის
   const fetchAdminOrders = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
@@ -169,7 +160,8 @@ export default function AdminDashboardPro({
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
-            itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity})`).join(', ') : 'პროდუქტები'
+            items: o.items || [], // 🌟 შეკვეთილი პროდუქტების სრული მასივი
+            itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
           })));
         }
       }
@@ -182,7 +174,6 @@ export default function AdminDashboardPro({
     return () => clearInterval(interval);
   }, []);
 
-  // 🌟 უზრუნველყოფს კატეგორიების ფოტოების (image და img) ერთგვაროვან წაკითხვას მთავარი გვერდისა და ადმინისთვის
   const safeCategories = React.useMemo(() => {
     try {
       if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
@@ -209,7 +200,6 @@ export default function AdminDashboardPro({
     }
   }, [categoriesList]);
   
-  // 🌟 პროდუქტის ფორმის საწყისი მდგომარეობა
   const productFormInitial = {
     name: '', category: safeCategories[0]?.name || 'ტანსაცმელი', priceGEL: '', oldPriceGEL: '', purchaseCost: '', stock: '', vendor: 'GEOSTORE ოფიციალური', description: '', tags: '',
     material: '',
@@ -229,8 +219,6 @@ export default function AdminDashboardPro({
 
   const [productForm, setProductForm] = useState(productFormInitial);
   const [selectedImages, setSelectedImages] = useState([]);
-
-  // 🌟 ვარიანტების მართვის სახელმწიფო (Variants Builder)
   const [productVariants, setProductVariants] = useState([]);
   const [newVarName, setNewVarName] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
@@ -286,7 +274,7 @@ export default function AdminDashboardPro({
   
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('Shirt');
-  const [newCatImage, setNewCatImage] = useState(''); // ატვირთული ფოტოს Base64
+  const [newCatImage, setNewCatImage] = useState('');
   const [selectedParentId, setSelectedParentId] = useState('');
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
@@ -335,7 +323,6 @@ export default function AdminDashboardPro({
     setActivityLogs(prev => [newLog, ...(prev || [])]);
   };
 
-  // 🌟 თანამშრომლის დამატების ფუნქცია (ხელით შეყვანილი მონაცემებით)
   const handleAddStaff = (e) => {
     e.preventDefault();
     if (!staffForm.name || !staffForm.email) return;
@@ -357,7 +344,6 @@ export default function AdminDashboardPro({
     alert('✅ თანამშრომელი წარმატებით დაემატა სისტემას!');
   };
 
-  // 🌟 არსებული რეგისტრირებული მომხმარებლის მენეჯერად/თანამშრომლად დამატება
   const handleAddExistingUserAsStaff = (e) => {
     e.preventDefault();
     if (!selectedUserEmailForStaff) return;
@@ -388,7 +374,6 @@ export default function AdminDashboardPro({
     alert(`✅ მომხმარებელი (${newStaffMember.name}) წარმატებით დაემატა მენეჯერების სიაში!`);
   };
 
-  // 🌟 თანამშრომლის უფლებებისა და როლის შენახვა ედიტირებისას
   const handleSaveEditedStaff = (staffId) => {
     setStaffList(prev => prev.map(s => {
       if (s.id === staffId) {
@@ -405,7 +390,6 @@ export default function AdminDashboardPro({
     alert('✅ თანამშრომლის უფლებები წარმატებით განახლდა!');
   };
 
-  // 🌟 თანამშრომლის წაშლის ფუნქცია
   const handleDeleteStaff = (staffId, staffName) => {
     if (window.confirm(`ნამდვილად გსურთ თანამშრომლის "${staffName}" წაშლა?`)) {
       setStaffList(prev => prev.filter(s => s.id !== staffId));
@@ -413,7 +397,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // 🌟 კალკულატორის გამოთვლები
   const calculatedSalesMetrics = useMemo(() => {
     const pCost = Number(calcForm.purchaseCost) || 0;
     const sPrice = Number(calcForm.sellingPrice) || 0;
@@ -434,7 +417,6 @@ export default function AdminDashboardPro({
     return { discountedPrice, revenue, grossProfit, netProfit, profitMargin, markup };
   }, [calcForm]);
 
-  // 🌟 ფინანსური მიმოხილვა ანალიტიკისთვის (Supabase ხარჯების გამოყენებით)
   const financialOverview = useMemo(() => {
     const totalSalesRevenue = (orders || []).reduce((acc, o) => acc + (Number(o.totalGEL) || 0), 0);
     const totalExpenses = expenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
@@ -464,7 +446,6 @@ export default function AdminDashboardPro({
     }, 800);
   };
 
-  // 🌟 ხარჯის დამატება Supabase ბაზაში
   const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!expenseForm.amount || !expenseForm.description) return;
@@ -497,7 +478,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // 🌟 ხარჯის წაშლა Supabase ბაზიდან
   const handleDeleteExpense = async (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) {
       try {
@@ -554,7 +534,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // 🌟 უსაფრთხოების განახლების ფუნქცია (პაროლისა და PIN-ის შენახვა)
   const handleSaveSecuritySettings = (e) => {
     e.preventDefault();
     try {
@@ -577,7 +556,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  // 🌟 Face ID / Passkeys რეგისტრაციის ფუნქცია
   const handleRegisterFaceId = async () => {
     if (!window.PublicKeyCredential) {
       alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys/Face ID ტექნოლოგიას.');
@@ -709,7 +687,6 @@ export default function AdminDashboardPro({
     );
   }
 
-  // 🌟 ახალი დამხმარე ფუნქცია: კატეგორიის ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან (Base64)
   const handleCategoryFileChange = (e, isEditing = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -739,7 +716,7 @@ export default function AdminDashboardPro({
       icon: newCatIcon, 
       parentId: selectedParentId || null,
       image: cleanImage, 
-      img: cleanImage // 🌟 უზრუნველყოფს თავსებადობას მთავარ გვერდთან
+      img: cleanImage 
     };
 
     const updatedCategories = [...safeCategories, newCatObj];
@@ -766,7 +743,7 @@ export default function AdminDashboardPro({
           name: editCatName.trim(), 
           icon: editCatIcon, 
           image: cleanImg, 
-          img: cleanImg // 🌟 განახლება ორივე ველით
+          img: cleanImg 
         };
       }
       return c;
@@ -859,7 +836,6 @@ export default function AdminDashboardPro({
     });
   };
 
-  // 🌟 პროდუქტის შენახვა სრული კატეგორიის მახასიათებლებით და ვარიანტებით
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.priceGEL) return;
@@ -1003,6 +979,16 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const itemsRows = Array.isArray(order.items) && order.items.length > 0
+      ? order.items.map(item => `
+          <tr>
+            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name}</td>
+            <td>${item.quantity || 1}</td>
+            <td>${item.priceGEL || item.price || 0} ₾</td>
+          </tr>
+        `).join('')
+      : `<tr><td>${order.itemSummary || 'პროდუქტები'}</td><td>1</td><td>${order.totalGEL} ₾</td></tr>`;
+
     const htmlContent = `
       <html>
         <head>
@@ -1038,17 +1024,13 @@ export default function AdminDashboardPro({
           <table>
             <thead>
               <tr>
-                <th>პროდუქტი / ვარიანტი</th>
+                <th>პროდუქტი / დეტალები</th>
                 <th>რაოდენობა</th>
                 <th>ფასი</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>${order.itemSummary || 'შეკვეთილი პროდუქტები'}</td>
-                <td>1</td>
-                <td>${order.totalGEL} ₾</td>
-              </tr>
+              ${itemsRows}
             </tbody>
           </table>
           <div class="total">
@@ -1206,7 +1188,6 @@ export default function AdminDashboardPro({
     alert('🚀 შეტყობინება წარმატებით გაეგზავნა ყველა მომხმარებელს!');
   };
 
-  // 🌟 განახლებული შეკვეთის სტატუსის მართვის ფუნქცია (ბაზისა და ლოკალის ერთდროული განახლებით)
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
@@ -1257,7 +1238,6 @@ export default function AdminDashboardPro({
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
-  // 🌟 CRM მომხმარებელთა მართვის ფუნქციები:
   const handleToggleVipUser = (userId) => {
     if (typeof setUsersList === 'function') {
       setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
@@ -1402,7 +1382,6 @@ export default function AdminDashboardPro({
       {/* 🖥️ MAIN CONTENT AREA */}
       <div className="flex-1 w-full space-y-6">
 
-        {/* Top Header Card */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
@@ -1414,7 +1393,6 @@ export default function AdminDashboardPro({
           </div>
         </div>
 
-        {/* Analytics Tab */}
         {adminTab === 'analytics' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -1471,7 +1449,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 2. CALCULATOR TAB */}
         {adminTab === 'calculator' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -1512,7 +1489,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 3. EXPENSES TAB (SUPABASE SYNCED) */}
         {adminTab === 'expenses' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
@@ -1560,7 +1536,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 4. AI ANALYST TAB */}
         {adminTab === 'ai_analyst' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -1583,11 +1558,8 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 5. ENHANCED STAFF ROLES & PERMISSIONS TAB (ACL & PROMOTE REGISTERED USERS) */}
         {adminTab === 'staff' && (
           <div className="space-y-6">
-            
-            {/* არსებული რეგისტრირებული მომხმარებლების მენეჯერად დანიშვნა */}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Users className="w-5 h-5 text-emerald-400" /> არსებული რეგისტრირებული მომხმარებლისთვის მენეჯერის უფლებების მინიჭება
@@ -1611,7 +1583,6 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            {/* ახალი თანამშრომლის შექმნა ხელით */}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის ხელით შექმნა & დეტალური უფლებები (ACL)
@@ -1628,7 +1599,6 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
 
-                {/* პერმიშენების მონიშვნა */}
                 <div className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
                   <span className="text-slate-400 font-bold block mb-2">მოდულებზე წვდომის უფლებები:</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1663,7 +1633,6 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            {/* თანამშრომლების სია და ედიტირების შესაძლებლობა */}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
               <div className="space-y-3">
@@ -1703,7 +1672,6 @@ export default function AdminDashboardPro({
                           </div>
                         </div>
 
-                        {/* უფლებების ჩიპები */}
                         {!isEditing && (
                           <div className="flex flex-wrap gap-1.5 pt-1 text-[10px]">
                             {Object.entries(st.permissions || {}).map(([key, val]) => (
@@ -1714,7 +1682,6 @@ export default function AdminDashboardPro({
                           </div>
                         )}
 
-                        {/* ედიტირების ინლაინ ბოქსი */}
                         {isEditing && (
                           <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in text-xs">
                             <div className="space-y-1">
@@ -1767,7 +1734,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Orders Tab */}
+        {/* Orders Tab with Detailed Modal Trigger */}
         {adminTab === 'orders' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
@@ -1812,6 +1779,14 @@ export default function AdminDashboardPro({
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                        {/* 🌟 შეკვეთის დეტალების ნახვის ღილაკი */}
+                        <button 
+                          onClick={() => setSelectedOrderForModal(o)} 
+                          className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
+                        >
+                          <Eye className="w-4 h-4 text-emerald-400" /> დეტალების ნახვა
+                        </button>
+
                         <button 
                           onClick={() => handlePrintInvoice(o)} 
                           title="ინვოისის ბეჭდვა"
@@ -1834,7 +1809,97 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* Support Tab */}
+        {/* 🌟 ORDER DETAILS MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
+        {selectedOrderForModal && (
+          <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+            <div className="bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-2xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[90vh] overflow-y-auto">
+              
+              <div className="flex justify-between items-center border-b border-emerald-500/20 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-emerald-500/20 p-3 rounded-2xl border border-emerald-500/30">
+                    <PackageCheck className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-base text-white">შეკვეთა #{selectedOrderForModal.id}</h3>
+                    <p className="text-[11px] text-slate-400">თარიღი: {selectedOrderForModal.date}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedOrderForModal(null)} 
+                  className="p-2.5 bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 rounded-2xl border border-emerald-500/20 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* მყიდველის ინფორმაცია */}
+              <div className="bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
+                <h4 className="font-black text-emerald-400 text-sm mb-2">👤 მყიდველის დეტალები</h4>
+                <p>სახელი, გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
+                <p>ტელეფონი: <b className="text-emerald-300">📞 {selectedOrderForModal.phone}</b></p>
+                <p>მიტანის მისამართი: <b className="text-white">📍 {selectedOrderForModal.address}</b></p>
+                <p>სტატუსი: <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold ml-1">{selectedOrderForModal.status || 'ახალი'}</span></p>
+              </div>
+
+              {/* შეკვეთილი პროდუქტების სია სურათებით, ზომებით და ფერებით */}
+              <div className="space-y-3">
+                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({Array.isArray(selectedOrderForModal.items) ? selectedOrderForModal.items.length : 1})</h4>
+                
+                <div className="space-y-3">
+                  {Array.isArray(selectedOrderForModal.items) && selectedOrderForModal.items.length > 0 ? (
+                    selectedOrderForModal.items.map((item, idx) => (
+                      <div key={idx} className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 flex items-center gap-4">
+                        {item.image ? (
+                          <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-xl border border-emerald-500/20 shrink-0" />
+                        ) : (
+                          <div className="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center text-slate-500 text-[10px]">No Img</div>
+                        )}
+                        <div className="flex-1 space-y-1">
+                          <h5 className="font-black text-white text-sm">{item.name}</h5>
+                          <div className="flex flex-wrap gap-2 text-[11px] text-slate-300">
+                            {item.selectedSize && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ზომა: <b>{item.selectedSize}</b></span>}
+                            {item.selectedColor && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ფერი: <b>{item.selectedColor}</b></span>}
+                            <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-emerald-400 text-sm">{formatPrice ? formatPrice((item.priceGEL || item.price || 0) * (item.quantity || 1)) : ((item.priceGEL || item.price || 0) * (item.quantity || 1)) + ' ₾'}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 text-slate-300">
+                      <p>{selectedOrderForModal.itemSummary || 'პროდუქტების დეტალური სია არ არის ხელმისაწვდომი.'}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ჯამური თანხა */}
+              <div className="bg-slate-900 p-4 rounded-2xl border border-emerald-500/30 flex justify-between items-center text-sm font-black">
+                <span className="text-slate-300">სულ გადასახდელი:</span>
+                <span className="text-emerald-400 text-lg">{formatPrice ? formatPrice(selectedOrderForModal.totalGEL) : selectedOrderForModal.totalGEL + ' ₾'}</span>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => handlePrintInvoice(selectedOrderForModal)} 
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black py-3.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Printer className="w-4 h-4" /> ინვოისის ბეჭდვა
+                </button>
+                <button 
+                  onClick={() => setSelectedOrderForModal(null)} 
+                  className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl transition cursor-pointer"
+                >
+                  დახურვა
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
         {adminTab === 'support' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -1899,7 +1964,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 🏷️ PRODUCTS & DYNAMIC ATTRIBUTES TAB */}
         {adminTab === 'products' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
@@ -1916,7 +1980,6 @@ export default function AdminDashboardPro({
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
-                {/* ძირითადი ველები */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
                     <label className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
@@ -1955,7 +2018,6 @@ export default function AdminDashboardPro({
                   </div>
                 </div>
 
-                {/* 🌟 კატეგორიის დინამიური მახასიათებლები */}
                 <div className="bg-slate-950 p-5 rounded-3xl border border-emerald-500/30 space-y-4 shadow-inner">
                   <h4 className="font-black text-amber-400 text-sm flex items-center gap-2">
                     <Sparkles className="w-4 h-4" /> 
@@ -2044,7 +2106,6 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                {/* 🌟 ვარიანტების ბილდერი */}
                 <div className="bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
                     <Layers className="w-4 h-4" />
@@ -2242,7 +2303,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 ENHANCED CATEGORIES & SUBCATEGORIES MANAGEMENT TAB WITH FILE UPLOAD & AUTO-SIZING */}
         {adminTab === 'categories' && (
           <div className="space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
@@ -2269,7 +2329,6 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
 
-                {/* 🌟 ფაილის ატვირთვის ინპუთი კომპიუტერიდან და მობილურიდან */}
                 <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 shadow-inner">
                   <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> ატვირთეთ კატეგორიის ფოტო / ბანერი (ኮምპიუტერიდან / მობილურიდან):
@@ -2340,7 +2399,6 @@ export default function AdminDashboardPro({
                           </div>
                         </div>
 
-                        {/* Edit Parent Box */}
                         {isEditingParent && (
                           <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
                             <h5 className="font-black text-amber-400 text-xs">კატეგორიის რედაქტირება: {parentCat.name}</h5>
@@ -2504,7 +2562,6 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 FULL CRM USERS MANAGEMENT TAB */}
         {adminTab === 'users' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
@@ -2583,7 +2640,6 @@ export default function AdminDashboardPro({
                         </div>
                       </div>
 
-                      {/* CRM Edit Box */}
                       {isEditing && (
                         <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in">
                           <h5 className="font-black text-amber-400 text-xs">პერსონალური CRM პარამეტრები კლიენტისთვის: {u.name}</h5>
@@ -2623,10 +2679,8 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {/* 🌟 SETTINGS & ADVANCED ADMIN SECURITY TAB (PASSWORD / PIN & FACE ID) */}
         {adminTab === 'settings' && (
           <div className="space-y-6">
-            {/* 🔒 Security & Password / FaceID Settings */}
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Lock className="w-5 h-5 text-emerald-400" /> ადმინისტრატორის უსაფრთხოება (პაროლი, PIN & Face ID)
