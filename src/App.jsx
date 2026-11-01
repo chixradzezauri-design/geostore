@@ -500,7 +500,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 🌟 Layout-ის ზომების გამოსწორება და კონტეინერის ჰარმონიზაცია */}
       <div className="w-full max-w-full overflow-hidden">
         <Header 
           siteSettings={siteSettings}
@@ -526,7 +525,6 @@ export default function App() {
         />
       </div>
 
-      {/* 🌟 AI გარდერობზე გადასვლის სწრაფი ღილაკი მთავარ მენიუში (ზომების კონტროლით) */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 flex justify-end box-border">
         <button 
           onClick={() => setActiveTab('wardrobe')}
