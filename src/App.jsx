@@ -76,13 +76,14 @@ export default function App() {
   const loadSafeStorage = (key, fallback) => {
     try { 
       const item = localStorage.getItem(key); 
-      if (item !== null) {
+      if (item !== null && item !== "undefined" && item !== "null") {
         const parsed = JSON.parse(item);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        if (!Array.isArray(parsed) && parsed !== null) return parsed;
+        return parsed;
       }
       return fallback; 
     } catch { 
+      // დაზიანებული მეხსიერების ავტომატური გასუფთავება თეთრი ეკრანის თავიდან ასაცილებლად
+      localStorage.removeItem(key);
       return fallback; 
     }
   };
