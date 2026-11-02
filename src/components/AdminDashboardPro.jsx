@@ -1333,17 +1333,18 @@ export default function AdminDashboardPro({
     p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
   );
 
-  const filteredOrders = useMemo(() => {
-    return (orders || []).filter(o => {
-      const matchesSearch = 
-        o.id?.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-        o.customerName?.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-        o.phone?.toLowerCase().includes(orderSearchQuery.toLowerCase());
-      
-      const matchesStatus = orderStatusFilter === 'ყველა' || o.status === orderStatusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [orders, orderSearchQuery, orderStatusFilter]);
+  // Keep this as a derived value, not a hook: the login view returns
+  // before this section, so a useMemo here would change hook order
+  // when adminLoggedIn switches from false to true and crash React.
+  const filteredOrders = (orders || []).filter(o => {
+    const matchesSearch =
+      String(o.id ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+      String(o.customerName ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+      String(o.phone ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase());
+
+    const matchesStatus = orderStatusFilter === 'ყველა' || o.status === orderStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const mainCategories = safeCategories.filter(c => !c.parentId);
 
