@@ -41,13 +41,6 @@ export default function Modals({
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
 
-  const [authSubMode, setAuthSubMode] = useState('standard');
-  const [pinCode, setPinCode] = useState('');
-  const [confirmPinCode, setConfirmPinCode] = useState('');
-  const [isPinSetupMode, setIsPinSetupMode] = useState(false);
-  const [pinError, setPinError] = useState('');
-  const [failedAttempts, setFailedAttempts] = useState(0);
-
   const handleSearchOrder = (e) => {
     e.preventDefault();
     if (!searchOrderId.trim()) return;
@@ -69,94 +62,6 @@ export default function Modals({
     if (s.includes('გზაშია') || s.includes('კურიერთან')) return 75;
     if (s.includes('მზადდება') || s.includes('მუშავდება')) return 40;
     return 15;
-  };
-
-  const handlePinAuthSubmit = (e) => {
-    e.preventDefault();
-    if (failedAttempts >= 3) {
-      setPinError('მცდელობების ლიმიტი ამოწურულია. გთხოვთ გამოიყენოთ პაროლი.');
-      return;
-    }
-    if (pinCode.length < 4) {
-      setPinError('PIN-კოდი უნდა შედგებოდეს მინიმუმ 4 ციფრისგან.');
-      return;
-    }
-
-    if (currentUser) {
-      if (isPinSetupMode) {
-        if (pinCode !== confirmPinCode) {
-          setPinError('PIN-კოდები არ ემთხვევა ერთმანეთს!');
-          return;
-        }
-        const encodedPin = btoa(pinCode);
-        const updatedUser = { ...currentUser, pinHash: encodedPin };
-        setCurrentUser(updatedUser);
-        if (setUsersList) {
-          setUsersList(usersList.map(u => u.email === currentUser.email ? updatedUser : u));
-        }
-        alert('🎉 PIN-კოდი წარმატებით დაყენდა / განახლდა!');
-        setIsPinSetupMode(false);
-        setAuthSubMode('standard');
-        setPinCode('');
-        setConfirmPinCode('');
-        setIsAuthOpen(false);
-      } else {
-        if (currentUser.pinHash && currentUser.pinHash === btoa(pinCode)) {
-          alert('🔓 PIN-კოდი სწორია!');
-          setFailedAttempts(0);
-          setIsAuthOpen(false);
-          setPinCode('');
-        } else {
-          setFailedAttempts(prev => prev + 1);
-          setPinError(`არასწორი PIN-კოდი! დარჩენილი მცდელობა: ${3 - (failedAttempts + 1)}`);
-        }
-      }
-    } else {
-      const matchedUser = usersList.find(u => u.pinHash && u.pinHash === btoa(pinCode));
-      if (matchedUser) {
-        setCurrentUser(matchedUser);
-        alert(`🔓 წარმატებით შეხვედით როგორც ${matchedUser.name}!`);
-        setIsAuthOpen(false);
-        setPinCode('');
-        setFailedAttempts(0);
-      } else {
-        setFailedAttempts(prev => prev + 1);
-        setPinError('ვერ მოიძებნა ანგარიში ამ PIN-კოდით.');
-      }
-    }
-  };
-
-  const handleBiometricLogin = async () => {
-    if (!window.PublicKeyCredential) {
-      alert('თქვენი ბრაუზერი ან მოწყობილობა არ მხარს უჭერს Passkeys / Face ID ავტორიზაციას.');
-      return;
-    }
-    try {
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if (available) {
-        const assertion = await navigator.credentials.get({
-          publicKey: {
-            challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
-            timeout: 60000,
-            userVerification: "required"
-          }
-        });
-        if (assertion) {
-          const passkeyUser = currentUser || usersList.find(u => u.hasPasskey) || usersList[0];
-          if (passkeyUser) {
-            setCurrentUser(passkeyUser);
-            alert(`✅ Face ID / Touch ID ვერიფიკაცია წარმატებულია (${passkeyUser.name})!`);
-          } else {
-            alert('✅ Face ID ვერიფიკაცია წარმატებულია, გთხოვთ გაიაროთ რეგისტრაცია.');
-          }
-          setIsAuthOpen(false);
-        }
-      } else {
-        alert('ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
-      }
-    } catch {
-      alert('Face ID ავტორიზაცია გაუქმდა ან ვერ მოხერხდა.');
-    }
   };
 
   return (
@@ -278,20 +183,6 @@ export default function Modals({
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-xs text-slate-300 pt-1">
-                    <div>
-                      <span className="text-slate-500 text-[10px] block">მიმღები:</span>
-                      <b>{trackedOrder.customerName}</b>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 text-[10px] block">ტელეფონი:</span>
-                      <b>{trackedOrder.phone}</b>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-slate-500 text-[10px] block">მისამართი:</span>
-                      <b className="text-slate-200">{trackedOrder.address}</b>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="space-y-3 bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20">
@@ -319,7 +210,7 @@ export default function Modals({
                 <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-4 sm:p-5 space-y-3 relative overflow-hidden shadow-2xl">
                   <div className="flex justify-between items-center">
                     <h4 className="text-xs font-bold text-white flex items-center gap-2">
-                       კურიერის ლაივ-რუკა
+                       მიწოდების მარშრუტის ვიზუალური დემო
                     </h4>
                     <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1 font-bold">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> GPS აქტიურია
@@ -333,7 +224,7 @@ export default function Modals({
                     <div className="absolute left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 p-3 rounded-full shadow-2xl shadow-amber-500/50 animate-bounce z-20 border-2 border-white"><Truck className="w-5 h-5" /></div>
                     <div className="absolute right-8 bg-emerald-500 text-slate-950 p-2 rounded-full shadow-lg border border-emerald-300 z-10"><MapPin className="w-4 h-4" /></div>
                     <div className="absolute bottom-3 left-3 bg-[#0c0c0e]/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] text-amber-300 font-bold border border-amber-500/30">
-                      📍 კურიერი უახლოვდება დანიშნულების ადგილს
+                      ეს არის ვიზუალური დემო და არა რეალური GPS ტრეკინგი
                     </div>
                   </div>
                 </div>
@@ -412,74 +303,6 @@ export default function Modals({
               </button>
             </div>
 
-            <div className="flex gap-2 bg-[#121216] p-1.5 rounded-2xl border border-amber-500/20 text-[11px] font-bold">
-              <button 
-                type="button" 
-                onClick={() => { setAuthSubMode('standard'); setIsPinSetupMode(false); }}
-                className={`flex-1 py-2 rounded-xl transition cursor-pointer ${authSubMode === 'standard' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                სტანდარტული
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setAuthSubMode('pin')}
-                className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${authSubMode === 'pin' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                <KeyRound className="w-3.5 h-3.5" /> PIN-კოდი
-              </button>
-            </div>
-
-            {authSubMode === 'pin' ? (
-              <form onSubmit={handlePinAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
-                <div className="bg-amber-500/10 p-3.5 rounded-2xl border border-amber-500/20 text-[11px] text-amber-300 space-y-1">
-                  <b>{currentUser ? (isPinSetupMode ? 'შეცვალეთ ან დააყენეთ PIN-კოდი:' : 'მართეთ თქვენი PIN-კოდი:') : (isPinSetupMode ? 'შექმენით პირადი PIN-კოდი:' : 'შეიყვანეთ თქვენი 4-ციფრიანი PIN-კოდი:')}</b>
-                </div>
-
-                {pinError && <p className="text-rose-400 text-[11px] font-bold">{pinError}</p>}
-
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold">PIN-კოდი</label>
-                  <input
-                    type="password"
-                    maxLength="6"
-                    required
-                    placeholder="••••"
-                    value={pinCode}
-                    onChange={e => setPinCode(e.target.value)}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
-                  />
-                </div>
-
-                {(isPinSetupMode || (currentUser && !currentUser.pinHash)) && (
-                  <div className="space-y-1">
-                    <label className="text-slate-300 font-bold">გაიმეორეთ PIN-კოდი</label>
-                    <input
-                      type="password"
-                      maxLength="6"
-                      required
-                      placeholder="••••"
-                      value={confirmPinCode}
-                      onChange={e => setConfirmPinCode(e.target.value)}
-                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
-                    />
-                  </div>
-                )}
-
-                <button type="submit" disabled={failedAttempts >= 3} className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
-                  {isPinSetupMode || (currentUser && !currentUser.pinHash) ? 'PIN-კოდის შენახვა' : 'შესვლა PIN-კოდით'}
-                </button>
-
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsPinSetupMode(!isPinSetupMode)}
-                    className="text-slate-400 hover:text-amber-400 text-[11px] font-bold cursor-pointer underline"
-                  >
-                    {isPinSetupMode ? 'უკვე გაქვთ PIN? შემოწმება' : 'ახალი PIN-კოდის შექმნა / შეცვლა'}
-                  </button>
-                </div>
-              </form>
-            ) : (
               <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
                 {authMode === 'register' && (
                   <>
@@ -535,18 +358,7 @@ export default function Modals({
                 <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
                   {authMode === 'login' ? 'შესვლა სისტემაში' : 'რეგისტრაციის დასრულება'}
                 </button>
-
-                {authMode === 'login' && (
-                  <button 
-                    type="button"
-                    onClick={handleBiometricLogin}
-                    className="w-full bg-[#16161a] hover:bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black py-3 rounded-2xl transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
-                  >
-                    <Fingerprint className="w-4 h-4 text-amber-400" /> Face ID-ით / Passkey-ით შესვლა
-                  </button>
-                )}
-              </form>
-            )}
+</form>
 
             <div className="text-center pt-2 border-t border-amber-500/20">
               <button
