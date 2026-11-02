@@ -680,32 +680,33 @@ export default function AdminDashboardPro({
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
 
     const prodId = `prod-${Date.now()}`;
+    const priceGEL = Number(productForm.priceGEL);
+    const oldPriceGEL = productForm.oldPriceGEL === '' ? null : Number(productForm.oldPriceGEL);
+    const stock = productForm.stock === '' ? 0 : Number(productForm.stock);
+
+    if (!Number.isFinite(priceGEL) || priceGEL <= 0 ||
+        (oldPriceGEL !== null && (!Number.isFinite(oldPriceGEL) || oldPriceGEL < priceGEL)) ||
+        !Number.isInteger(stock) || stock < 0) {
+      alert('გთხოვთ მიუთითოთ სწორი გასაყიდი ფასი, ძველი ფასი და მარაგი.');
+      return;
+    }
+
     const newProdPayload = {
       id: prodId,
-      sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
-      name: productForm.name,
-      category: productForm.category,
-      vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
-      price_gel: Number(productForm.priceGEL),
-      old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
-      purchase_cost: productForm.purchaseCost ? Number(productForm.purchaseCost) : 0,
-      stock: Number(productForm.stock) || 1,
+      sku: `GEO-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`,
+      name: String(productForm.name).trim().slice(0, 200),
+      category: String(productForm.category || '').trim().slice(0, 100),
+      brand: String(productForm.brand || 'GEOSTORE').trim().slice(0, 100),
+      vendor: String(productForm.vendor || 'GEOSTORE ოფიციალური').trim().slice(0, 150),
+      price_gel: priceGEL,
+      old_price_gel: oldPriceGEL,
+      stock,
       image: mainImage,
-      gallery: galleryImages,
-      description: productForm.description || '',
-      available_sizes: productForm.availableSizes || [],
-      available_colors: productForm.availableColors || [],
-      variants: productVariants,
-      material: productForm.material || '',
-      brand: productForm.brand || 'GEOSTORE',
-      model: productForm.model || '',
-      cpu: productForm.cpu || '',
-      ram: productForm.ram || '',
-      storage: productForm.storage || '',
-      gpu: productForm.gpu || '',
-      screen_size: productForm.screenSize || '',
-      os: productForm.os || '',
-      is_featured: productForm.isFeatured || false
+      description: String(productForm.description || '').slice(0, 5000),
+      available_sizes: Array.isArray(productForm.availableSizes) ? productForm.availableSizes : [],
+      available_colors: Array.isArray(productForm.availableColors) ? productForm.availableColors : [],
+      material: String(productForm.material || '').slice(0, 200),
+      durability: String(productForm.durability || '').slice(0, 300)
     };
 
     try {
@@ -724,7 +725,7 @@ export default function AdminDashboardPro({
           vendor: newProdPayload.vendor,
           priceGEL: newProdPayload.price_gel,
           oldPriceGEL: newProdPayload.old_price_gel,
-          purchaseCost: newProdPayload.purchase_cost,
+          purchaseCost: Number(productForm.purchaseCost) || 0,
           stock: newProdPayload.stock,
           image: newProdPayload.image,
           gallery: galleryImages,
@@ -734,14 +735,15 @@ export default function AdminDashboardPro({
           variants: productVariants,
           material: newProdPayload.material,
           brand: newProdPayload.brand,
-          model: newProdPayload.model,
-          cpu: newProdPayload.cpu,
-          ram: newProdPayload.ram,
-          storage: newProdPayload.storage,
-          gpu: newProdPayload.gpu,
-          screenSize: newProdPayload.screen_size,
-          os: newProdPayload.os,
-          tags: tagsArray
+          model: productForm.model || '',
+          cpu: productForm.cpu || '',
+          ram: productForm.ram || '',
+          storage: productForm.storage || '',
+          gpu: productForm.gpu || '',
+          screenSize: productForm.screenSize || '',
+          os: productForm.os || '',
+          tags: tagsArray,
+          durability: newProdPayload.durability
         };
 
         if (typeof setProducts === 'function') {
