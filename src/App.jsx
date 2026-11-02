@@ -38,10 +38,16 @@ const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 // არასოდეს გამოიყენო აქ service_role გასაღები.
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
-const headers = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json'
+const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  return {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${authenticated && session?.access_token ? session.access_token : SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json'
+  };
 };
 
 // Telegram-ის შეტყობინება დროებით გამორთულია.
@@ -430,7 +436,7 @@ export default function App() {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`,
-        { headers }
+        { headers: await getSupabaseHeaders({ authenticated: true }) }
       );
 
       if (res.ok) {
@@ -465,7 +471,7 @@ export default function App() {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`,
-        { headers }
+        { headers: await getSupabaseHeaders() }
       );
 
       if (res.ok) {
@@ -517,16 +523,20 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    if (adminLoggedIn) {
+      fetchOrders();
+    }
     fetchProductsFromDatabase();
 
     const interval = setInterval(() => {
-      fetchOrders();
+      if (adminLoggedIn) {
+        fetchOrders();
+      }
       fetchProductsFromDatabase();
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     try {
@@ -1041,7 +1051,7 @@ export default function App() {
         {
           method: 'POST',
           headers: {
-            ...headers,
+            ...(await getSupabaseHeaders()),
             Prefer: 'return=representation'
           },
           body: JSON.stringify({
@@ -1661,7 +1671,7 @@ export default function App() {
                     {
                       method: 'POST',
                       headers: {
-                        ...headers,
+                        ...(await getSupabaseHeaders()),
                         Prefer: 'return=representation'
                       },
                       body: JSON.stringify({
