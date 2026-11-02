@@ -998,7 +998,7 @@ export default function App() {
     if (
       customerName.length < 2 || customerName.length > 100 ||
       customerPhone.length < 9 || customerPhone.length > 20 ||
-      !/^[+0-9\\s()\\-]+$/.test(customerPhone) ||
+      !/^[+0-9 ()-]+$/.test(customerPhone) ||
       customerAddress.length < 5 || customerAddress.length > 300
     ) {
       showToast('გთხოვთ, სწორად შეავსოთ სახელი, ტელეფონი და მისამართი.');
