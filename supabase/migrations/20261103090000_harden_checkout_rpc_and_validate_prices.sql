@@ -267,7 +267,9 @@ drop policy if exists "Guest and signed-in checkout can create orders" on public
 alter table public.orders
   add column if not exists admin_note text;
 
--- Keep the existing note-editing feature, but prevent direct API calls from
--- changing order status or deleting orders outside the stock-aware RPC.
-revoke update, delete on table public.orders from anon, authenticated;
+-- Expose order reads only to signed-in sessions (RLS still limits rows
+-- to the configured admin), and allow only the existing admin-note column
+-- update through PostgREST. All other writes stay behind the RPCs.
+revoke all on table public.orders from anon, authenticated;
+grant select on table public.orders to authenticated;
 grant update (admin_note) on table public.orders to authenticated;
