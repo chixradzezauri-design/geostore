@@ -2238,6 +2238,23 @@ export default function AdminDashboardPro({
                         />
                       </div>
 
+                      <div className="flex items-center gap-2 bg-slate-900/70 border border-emerald-500/20 rounded-2xl px-2.5 py-1.5">
+                        <span className="text-slate-300 text-[11px] font-bold">მარაგი:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          inputMode="numeric"
+                          aria-label={`მარაგი: ${p.name}`}
+                          value={p.stock ?? 0}
+                          onChange={e => handleQuickUpdateProduct(p.id, 'stock', e.target.value)}
+                          className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400"
+                        />
+                        <span className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                          {Number(p.stock ?? 0) <= 0 ? 'არ არის' : Number(p.stock ?? 0) <= 3 ? 'ცოტაა' : 'მარაგშია'}
+                        </span>
+                      </div>
+
                       <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
