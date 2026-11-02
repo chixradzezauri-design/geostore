@@ -45,14 +45,23 @@ export default function Modals({
     e.preventDefault();
     if (!searchOrderId.trim()) return;
     const cleanId = searchOrderId.trim().toUpperCase().replace('#', '');
-    const found = orders.find(o => o.id?.toUpperCase().replace('#', '') === cleanId);
-    
+    if (!currentUser?.email) {
+      setTrackedOrder(null);
+      setTrackerError('შეკვეთის სტატუსის სანახავად ჯერ შედით თქვენს ანგარიშში.');
+      return;
+    }
+
+    const found = orders.find(o =>
+      o.id?.toUpperCase().replace('#', '') === cleanId &&
+      String(o.user_email || '').toLowerCase() === currentUser.email.toLowerCase()
+    );
+
     if (found) {
       setTrackedOrder(found);
       setTrackerError('');
     } else {
       setTrackedOrder(null);
-      setTrackerError(`შეკვეთა კოდით "#${cleanId}" ვერ მოიძებნა.`);
+      setTrackerError('შეკვეთა ვერ მოიძებნა თქვენს ანგარიშზე. გადაამოწმეთ კოდი.');
     }
   };
 
@@ -85,6 +94,9 @@ export default function Modals({
                 <input
                   type="text"
                   required
+                  minLength={2}
+                  maxLength={100}
+                  autoComplete="name"
                   placeholder="გიორგი გიორგაძე"
                   value={checkoutForm.name}
                   onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
@@ -97,6 +109,10 @@ export default function Modals({
                 <input
                   type="tel"
                   required
+                  minLength={9}
+                  maxLength={20}
+                  pattern="[+0-9\\s()-]{9,20}"
+                  autoComplete="tel"
                   placeholder="599 00 00 00"
                   value={checkoutForm.phone}
                   onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
@@ -122,6 +138,9 @@ export default function Modals({
                 <input
                   type="text"
                   required
+                  minLength={5}
+                  maxLength={300}
+                  autoComplete="street-address"
                   placeholder="ქუჩა, კორპუსი, ბინა..."
                   value={checkoutForm.address}
                   onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
