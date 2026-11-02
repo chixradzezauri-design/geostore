@@ -1065,7 +1065,7 @@ export default function App() {
         {
           method: 'POST',
           headers: {
-            ...(await getSupabaseHeaders()),
+            ...(await getSupabaseHeaders({ authenticated: Boolean(currentUser) })),
             Prefer: 'return=representation'
           },
           body: JSON.stringify({
