@@ -297,6 +297,8 @@ export default function App() {
 
   const [orders, setOrders] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
@@ -990,14 +992,22 @@ export default function App() {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+
+    if (isSubmittingOrder) return;
+
+    setIsSubmittingOrder(true);
+    setCheckoutError('');
     showToast('შეკვეთის გაგზავნა დაიწყო...');
 
-    if (
-      !checkoutForm.name?.trim() ||
-      !checkoutForm.phone?.trim() ||
-      !checkoutForm.address?.trim()
-    ) {
-      showToast('შეავსეთ სახელი, ტელეფონი და მისამართი.');
+    const customerName = checkoutForm.name?.trim() || '';
+    const customerPhone = checkoutForm.phone?.trim() || '';
+    const customerAddress = checkoutForm.address?.trim() || '';
+
+    if (!customerName || !customerPhone || !customerAddress) {
+      const message = 'შეავსეთ სახელი, ტელეფონი და მისამართი.';
+      setCheckoutError(message);
+      showToast(message);
+      setIsSubmittingOrder(false);
       return;
     }
 
@@ -1020,6 +1030,14 @@ export default function App() {
           price: i.priceGEL,
           quantity: i.quantity
         }));
+
+    if (itemsToOrder.length === 0) {
+      const message = 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
+      setCheckoutError(message);
+      showToast(message);
+      setIsSubmittingOrder(false);
+      return;
+    }
 
     const regionText =
       selectedRegion === 'tbilisi'
@@ -1055,9 +1073,9 @@ export default function App() {
           },
           body: JSON.stringify({
             id: orderId,
-            customer_name: checkoutForm.name,
-            phone: checkoutForm.phone,
-            address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+            customer_name: customerName,
+            phone: customerPhone,
+            address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
             user_email: orderUserEmail,
             items: itemsToOrder,
             total_gel: cartTotalGEL,
@@ -1074,19 +1092,21 @@ export default function App() {
       }
     } catch (err) {
       console.error('Order submission failed:', err);
-      showToast(
-        err.message || 'შეკვეთის გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.'
-      );
+      const message =
+        err.message || 'შეკვეთის გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.';
+      setCheckoutError(message);
+      showToast(message);
+      setIsSubmittingOrder(false);
       return;
     }
 
     const newOrderObj = {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
-      customer_name: checkoutForm.name,
-      customerName: checkoutForm.name,
-      phone: checkoutForm.phone,
-      address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+      customer_name: customerName,
+      customerName: customerName,
+      phone: customerPhone,
+      address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
       user_email: orderUserEmail,
       items: itemsToOrder,
       totalGEL: cartTotalGEL,
@@ -1105,6 +1125,8 @@ export default function App() {
     sendTelegramNotification();
 
     setIsCheckoutOpen(false);
+    setCheckoutError('');
+    setIsSubmittingOrder(false);
     setCart([]);
     setAppliedCoupon(null);
 
@@ -1480,7 +1502,10 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => setIsCheckoutOpen(true)}
+                    onClick={() => {
+                      setCheckoutError('');
+                      setIsCheckoutOpen(true);
+                    }}
                     className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
                   >
                     {t.checkout}
@@ -1762,6 +1787,8 @@ export default function App() {
         checkoutForm={checkoutForm}
         setCheckoutForm={setCheckoutForm}
         handlePlaceOrder={handlePlaceOrder}
+        isSubmittingOrder={isSubmittingOrder}
+        checkoutError={checkoutError}
         isAuthOpen={isAuthOpen}
         setIsAuthOpen={setIsAuthOpen}
         authMode={authMode}
