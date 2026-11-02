@@ -6,15 +6,6 @@ import {
   Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
-const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM"; 
-
-const headers = {
-  'apikey': SUPABASE_ANON_KEY,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json'
-};
-
 export default function StoreView({
   siteSettings,
   promoSlots,
@@ -29,44 +20,8 @@ export default function StoreView({
   addToCart,
   formatPrice
 }) {
-  const [dbProducts, setDbProducts] = useState([]);
-
-  const fetchProductsFromSupabase = async () => {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        const formatted = data.map(p => ({
-          id: p.id,
-          sku: p.sku,
-          name: p.name,
-          category: p.category,
-          vendor: p.vendor,
-          priceGEL: p.price_gel,
-          oldPriceGEL: p.old_price_gel,
-          stock: p.stock ?? 10,
-          image: p.image,
-          description: p.description,
-          availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
-          availableColors: p.available_colors || ['შავი', 'თეთრი'],
-          variants: p.variants || [],
-          material: p.material,
-          durability: p.durability,
-          tags: p.tags || [],
-          gallery: p.gallery || [p.image]
-        }));
-        setDbProducts(formatted);
-      }
-    } catch {}
-  };
-
-  useEffect(() => {
-    fetchProductsFromSupabase();
-    const interval = setInterval(fetchProductsFromSupabase, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const activeProducts = dbProducts.length > 0 ? dbProducts : (initialFilteredProducts || []);
+  // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
+  const activeProducts = initialFilteredProducts || [];
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);

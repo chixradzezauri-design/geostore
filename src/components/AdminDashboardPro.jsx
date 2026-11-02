@@ -244,7 +244,7 @@ export default function AdminDashboardPro({
       id: `var-${Date.now()}`,
       name: newVarName.trim(),
       priceGEL: Number(newVarPrice),
-      stock: Number(newVarStock) || 10
+      stock: newVarStock === '' ? 10 : Math.max(0, Math.trunc(Number(newVarStock) || 0))
     };
     setProductVariants(prev => [...prev, varObj]);
     setNewVarName('');
@@ -784,14 +784,16 @@ export default function AdminDashboardPro({
       price_gel: Number(productForm.priceGEL),
       old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
       purchase_cost: productForm.purchaseCost ? Number(productForm.purchaseCost) : 0,
-      stock: Number(productForm.stock) || 1,
+      stock: productForm.stock === '' ? 1 : Math.max(0, Math.trunc(Number(productForm.stock) || 0)),
       image: mainImage,
       gallery: galleryImages,
+      tags: tagsArray,
       description: productForm.description || '',
       available_sizes: productForm.availableSizes || [],
       available_colors: productForm.availableColors || [],
       variants: productVariants,
       material: productForm.material || '',
+      durability: productForm.durability || '',
       brand: productForm.brand || 'GEOSTORE',
       model: productForm.model || '',
       cpu: productForm.cpu || '',
@@ -823,12 +825,15 @@ export default function AdminDashboardPro({
           stock: newProdPayload.stock,
           image: newProdPayload.image,
           gallery: galleryImages,
+          tags: tagsArray,
           description: newProdPayload.description,
           availableSizes: newProdPayload.available_sizes,
           availableColors: newProdPayload.available_colors,
           variants: productVariants,
           material: newProdPayload.material,
+          durability: newProdPayload.durability,
           brand: newProdPayload.brand,
+          isFeatured: newProdPayload.is_featured,
           model: newProdPayload.model,
           cpu: newProdPayload.cpu,
           ram: newProdPayload.ram,
