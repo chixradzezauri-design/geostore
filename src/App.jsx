@@ -1058,7 +1058,7 @@ export default function App() {
 
       if (sessionError) throw sessionError;
 
-      const orderSession = session?.user?.email ? session : null;
+      const orderSession = session?.access_token && session?.user?.email ? session : null;
       orderUserEmail = orderSession?.user?.email || 'guest';
 
       const response = await fetch(
