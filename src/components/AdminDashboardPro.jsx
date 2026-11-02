@@ -728,24 +728,25 @@ export default function AdminDashboardPro({
   const handleQuickUpdateProduct = async (id, field, value) => {
     const val = field === 'priceGEL' || field === 'stock' || field === 'purchaseCost' ? Number(value) : value;
     
-    if (typeof setProducts === 'function') {
-      setProducts(prev => (prev || []).map(p => {
-        if (p.id === id) {
-          return { ...p, [field]: val };
-        }
-        return p;
-      }));
-    }
-
     const dbField = field === 'priceGEL' ? 'price_gel' : field === 'purchaseCost' ? 'purchase_cost' : field;
 
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
         method: 'PATCH',
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({ [dbField]: val })
       });
-    } catch {}
+
+      if (!response.ok) {
+        throw new Error('პროდუქტის განახლება ბაზაში ვერ მოხერხდა.');
+      }
+
+      if (typeof setProducts === 'function') {
+        setProducts(prev => (prev || []).map(p => p.id === id ? { ...p, [field]: val } : p));
+      }
+    } catch (error) {
+      alert(error.message || 'პროდუქტის განახლებისას ქსელის შეცდომა მოხდა.');
+    }
   };
 
   const handleImageChange = (e) => {
@@ -985,11 +986,12 @@ export default function AdminDashboardPro({
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
         method: 'PATCH',
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({ status: newStatus })
       });
+      if (!response.ok) throw new Error('ტიკეტის სტატუსის განახლება ვერ მოხერხდა.');
       fetchTickets();
       logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
     } catch { alert('შეცდომა სტატუსის განახლებისას'); }
@@ -1000,25 +1002,27 @@ export default function AdminDashboardPro({
     if (!replyText || !replyText.trim()) return;
 
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
         method: 'PATCH',
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({ reply: replyText.trim(), status: 'მოგვარებული' })
       });
+      if (!response.ok) throw new Error('ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
       fetchTickets();
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
-      alert('✅ პასუხი წარმატებით გაეგზავნა მომხმარებელს!');
+      alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის ტიკეტში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
     } catch { alert('შეცდომა პასუხის გაგზავნისას'); }
   };
 
   const handleDeleteTicket = async (ticketId) => {
     if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
           method: 'DELETE',
           headers: await getSupabaseHeaders()
         });
+        if (!response.ok) throw new Error('ტიკეტის წაშლა ვერ მოხერხდა.');
         fetchTickets();
         logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
       } catch { alert('შეცდომა ტიგეტის წაშლისას'); }
@@ -1154,11 +1158,12 @@ export default function AdminDashboardPro({
 
   const handleSaveOrderAdminNote = async (orderId) => {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
         method: 'PATCH',
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({ admin_note: orderAdminNoteInput })
       });
+      if (!response.ok) throw new Error('შენიშვნის ბაზაში შენახვა ვერ მოხერხდა.');
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, adminNote: orderAdminNoteInput } : o));
       }
