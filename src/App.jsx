@@ -36,12 +36,18 @@ const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
 // ეს გასაღები მხოლოდ Supabase-ის საჯარო anon/publishable გასაღები უნდა იყოს.
 // არასოდეს გამოიყენო აქ service_role გასაღები.
-const SUPABASE_ANON_KEY = 'ჩასვი_შენი_SUPABASE_PUBLIC_ANON_KEY';
+const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
-const headers = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json'
+const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  return {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${authenticated && session?.access_token ? session.access_token : SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json'
+  };
 };
 
 // Telegram-ის შეტყობინება დროებით გამორთულია.
@@ -118,6 +124,12 @@ const normalizeAuthUser = (user) => {
     phone: user.user_metadata?.phone || ''
   };
 };
+
+// ადმინისტრატორის უფლებას ვიღებთ მხოლოდ Supabase-ის სანდო app_metadata-დან
+// და ვამოწმებთ წინასწარ განსაზღვრულ მთავარ ადმინისტრატორის ელფოსტას.
+const isAuthorizedAdmin = (user) =>
+  user?.app_metadata?.role === 'admin' &&
+  user?.email?.toLowerCase() === 'chixradzezauri@gmail.com';
 
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
@@ -271,18 +283,9 @@ export default function App() {
     password: ''
   });
 
-  const [adminAuth] = useState({
-    username: 'admin',
-    password: 'admin123'
-  });
-
-  const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try {
-      return localStorage.getItem('geostore_admin_remember') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
+  // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -332,20 +335,26 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
 
-      setCurrentUser(normalizeAuthUser(session?.user || null));
+      const authUser = session?.user || null;
+      setCurrentUser(normalizeAuthUser(authUser));
+      setAdminLoggedIn(isAuthorizedAdmin(authUser));
       setAuthLoading(false);
     });
 
     const restoreSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // getUser() ამოწმებს მომხმარებელს Supabase Auth სერვერზე;
+        // მხოლოდ სანდო app_metadata.role='admin' ანიჭებს პანელზე წვდომას.
+        const { data, error } = await supabase.auth.getUser();
 
-        if (error) {
+        if (error && error.name !== 'AuthSessionMissingError') {
           throw error;
         }
 
         if (mounted) {
-          setCurrentUser(normalizeAuthUser(data.session?.user || null));
+          const authUser = data?.user || null;
+          setCurrentUser(normalizeAuthUser(authUser));
+          setAdminLoggedIn(isAuthorizedAdmin(authUser));
         }
       } catch (error) {
         console.error('Supabase session restore error:', error);
@@ -427,7 +436,7 @@ export default function App() {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`,
-        { headers }
+        { headers: await getSupabaseHeaders({ authenticated: true }) }
       );
 
       if (res.ok) {
@@ -462,7 +471,7 @@ export default function App() {
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.desc`,
-        { headers }
+        { headers: await getSupabaseHeaders() }
       );
 
       if (res.ok) {
@@ -514,16 +523,20 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    if (adminLoggedIn) {
+      fetchOrders();
+    }
     fetchProductsFromDatabase();
 
     const interval = setInterval(() => {
-      fetchOrders();
+      if (adminLoggedIn) {
+        fetchOrders();
+      }
       fetchProductsFromDatabase();
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     try {
@@ -953,34 +966,25 @@ export default function App() {
     }
   };
 
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
+    setAdminError('');
 
-    const savedUser =
-      localStorage.getItem('geostore_admin_user') ||
-      adminAuth.username;
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
 
-    const savedPass =
-      localStorage.getItem('geostore_admin_pass') ||
-      adminAuth.password;
-
-    if (
-      adminLoginForm.username === savedUser &&
-      adminLoginForm.password === savedPass
-    ) {
-      setAdminLoggedIn(true);
-      setAdminError('');
-
-      if (adminLoginForm.remember) {
-        localStorage.setItem(
-          'geostore_admin_remember',
-          'true'
-        );
+      if (!isAuthorizedAdmin(data?.user)) {
+        setAdminLoggedIn(false);
+        setAdminError('ამ ანგარიშს ადმინისტრატორის უფლებები არ აქვს.');
+        return;
       }
 
-      showToast('🔓 ადმინ პანელში შესვლა წარმატებულია!');
-    } else {
-      setAdminError('არასწორი მომხმარებელი ან პაროლი!');
+      setAdminLoggedIn(true);
+      showToast('🔓 ადმინისტრატორის წვდომა დადასტურებულია.');
+    } catch (error) {
+      setAdminLoggedIn(false);
+      setAdminError(error.message || 'ვერ მოხერხდა ანგარიშის შემოწმება.');
     }
   };
 
@@ -1047,7 +1051,7 @@ export default function App() {
         {
           method: 'POST',
           headers: {
-            ...headers,
+            ...(await getSupabaseHeaders()),
             Prefer: 'return=representation'
           },
           body: JSON.stringify({
@@ -1066,37 +1070,23 @@ export default function App() {
       );
 
       if (!response.ok) {
-        console.warn(
-          'Database write warning, saving locally.'
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(
+          errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.'
         );
       }
     } catch (err) {
-      console.warn(
-        'Network error, saving locally:',
-        err
+      console.error('Order submission failed:', err);
+      showToast(
+        err.message || 'შეკვეთის გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.'
       );
+      return;
     }
 
     setOrders((prev) => [
       newOrderObj,
       ...(prev || [])
     ]);
-
-    try {
-      const existingLocalOrders = JSON.parse(
-        localStorage.getItem('geostore_local_orders') || '[]'
-      );
-
-      localStorage.setItem(
-        'geostore_local_orders',
-        JSON.stringify([
-          newOrderObj,
-          ...existingLocalOrders
-        ])
-      );
-    } catch {
-      // ადგილობრივი შენახვა ვერ მოხერხდა.
-    }
 
     sendTelegramNotification();
 
@@ -1667,7 +1657,7 @@ export default function App() {
                     {
                       method: 'POST',
                       headers: {
-                        ...headers,
+                        ...(await getSupabaseHeaders()),
                         Prefer: 'return=representation'
                       },
                       body: JSON.stringify({
