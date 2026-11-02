@@ -30,6 +30,7 @@ export default function AdminDashboardPro({
   adminLoginForm,
   setAdminLoginForm,
   handleAdminLogin,
+  handleLogout,
   adminError,
   proAnalytics,
   orders = [],
@@ -1254,7 +1255,7 @@ export default function AdminDashboardPro({
         </div>
 
         <button 
-          onClick={() => { if (typeof setAdminLoggedIn === 'function') setAdminLoggedIn(false); localStorage.removeItem('geostore_admin_remember'); }} 
+          onClick={() => { if (typeof handleLogout === 'function') handleLogout(); }} 
           className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-4"
         >
           <LogOut className="w-4 h-4" /> სისტემიდან გასვლა
