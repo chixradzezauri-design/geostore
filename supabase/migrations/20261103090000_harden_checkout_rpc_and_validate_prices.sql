@@ -108,7 +108,7 @@ begin
     end if;
 
     if v_item.price_variants <> 1
-       or pg_catalog.round(v_item.unit_price, 2) <> pg_catalog.round(v_product_price, 2) then
+       or v_item.unit_price <> v_product_price then
       raise exception 'პროდუქტის ფასი შეიცვალა. განაახლეთ კალათა და სცადეთ თავიდან: %', v_item.product_id;
     end if;
 
