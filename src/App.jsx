@@ -123,7 +123,7 @@ const normalizeAuthUser = (user) => {
 // და ვამოწმებთ წინასწარ განსაზღვრულ მთავარ ადმინისტრატორის ელფოსტას.
 const isAuthorizedAdmin = (user) =>
   user?.app_metadata?.role === 'admin' &&
-  user?.email?.toLowerCase() === 'chixradze@gmail.com';
+  user?.email?.toLowerCase() === 'chixradzezauri@gmail.com';
 
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
