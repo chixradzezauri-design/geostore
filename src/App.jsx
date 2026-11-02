@@ -1070,37 +1070,23 @@ export default function App() {
       );
 
       if (!response.ok) {
-        console.warn(
-          'Database write warning, saving locally.'
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(
+          errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.'
         );
       }
     } catch (err) {
-      console.warn(
-        'Network error, saving locally:',
-        err
+      console.error('Order submission failed:', err);
+      showToast(
+        err.message || 'შეკვეთის გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.'
       );
+      return;
     }
 
     setOrders((prev) => [
       newOrderObj,
       ...(prev || [])
     ]);
-
-    try {
-      const existingLocalOrders = JSON.parse(
-        localStorage.getItem('geostore_local_orders') || '[]'
-      );
-
-      localStorage.setItem(
-        'geostore_local_orders',
-        JSON.stringify([
-          newOrderObj,
-          ...existingLocalOrders
-        ])
-      );
-    } catch {
-      // ადგილობრივი შენახვა ვერ მოხერხდა.
-    }
 
     sendTelegramNotification();
 
