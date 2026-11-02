@@ -119,6 +119,12 @@ const normalizeAuthUser = (user) => {
   };
 };
 
+// ადმინისტრატორის უფლებას ვიღებთ მხოლოდ Supabase-ის სანდო app_metadata-დან
+// და ვამოწმებთ წინასწარ განსაზღვრულ მთავარ ადმინისტრატორის ელფოსტას.
+const isAuthorizedAdmin = (user) =>
+  user?.app_metadata?.role === 'admin' &&
+  user?.email?.toLowerCase() === 'chixradze@gmail.com';
+
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
     try {
@@ -271,18 +277,9 @@ export default function App() {
     password: ''
   });
 
-  const [adminAuth] = useState({
-    username: 'admin',
-    password: 'admin123'
-  });
-
-  const [adminLoggedIn, setAdminLoggedIn] = useState(() => {
-    try {
-      return localStorage.getItem('geostore_admin_remember') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
+  // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -332,20 +329,26 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
 
-      setCurrentUser(normalizeAuthUser(session?.user || null));
+      const authUser = session?.user || null;
+      setCurrentUser(normalizeAuthUser(authUser));
+      setAdminLoggedIn(isAuthorizedAdmin(authUser));
       setAuthLoading(false);
     });
 
     const restoreSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // getUser() ამოწმებს მომხმარებელს Supabase Auth სერვერზე;
+        // მხოლოდ სანდო app_metadata.role='admin' ანიჭებს პანელზე წვდომას.
+        const { data, error } = await supabase.auth.getUser();
 
-        if (error) {
+        if (error && error.name !== 'AuthSessionMissingError') {
           throw error;
         }
 
         if (mounted) {
-          setCurrentUser(normalizeAuthUser(data.session?.user || null));
+          const authUser = data?.user || null;
+          setCurrentUser(normalizeAuthUser(authUser));
+          setAdminLoggedIn(isAuthorizedAdmin(authUser));
         }
       } catch (error) {
         console.error('Supabase session restore error:', error);
@@ -953,34 +956,25 @@ export default function App() {
     }
   };
 
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
+    setAdminError('');
 
-    const savedUser =
-      localStorage.getItem('geostore_admin_user') ||
-      adminAuth.username;
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) throw error;
 
-    const savedPass =
-      localStorage.getItem('geostore_admin_pass') ||
-      adminAuth.password;
-
-    if (
-      adminLoginForm.username === savedUser &&
-      adminLoginForm.password === savedPass
-    ) {
-      setAdminLoggedIn(true);
-      setAdminError('');
-
-      if (adminLoginForm.remember) {
-        localStorage.setItem(
-          'geostore_admin_remember',
-          'true'
-        );
+      if (!isAuthorizedAdmin(data?.user)) {
+        setAdminLoggedIn(false);
+        setAdminError('ამ ანგარიშს ადმინისტრატორის უფლებები არ აქვს.');
+        return;
       }
 
-      showToast('🔓 ადმინ პანელში შესვლა წარმატებულია!');
-    } else {
-      setAdminError('არასწორი მომხმარებელი ან პაროლი!');
+      setAdminLoggedIn(true);
+      showToast('🔓 ადმინისტრატორის წვდომა დადასტურებულია.');
+    } catch (error) {
+      setAdminLoggedIn(false);
+      setAdminError(error.message || 'ვერ მოხერხდა ანგარიშის შემოწმება.');
     }
   };
 
