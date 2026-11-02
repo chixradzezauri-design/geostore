@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
-  Search, PackageCheck, Clock, Navigation, Map, KeyRound, Fingerprint, Bell, Sparkles, Tag 
+  Search, PackageCheck, Clock, Navigation, Map, Bell, Sparkles, Tag 
 } from 'lucide-react';
 
 export default function Modals({
@@ -213,7 +213,7 @@ export default function Modals({
                        მიწოდების მარშრუტის ვიზუალური დემო
                     </h4>
                     <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1 font-bold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> GPS აქტიურია
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> GPS-თან დაკავშირებული არ არის
                     </span>
                   </div>
 
@@ -296,7 +296,7 @@ export default function Modals({
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Lock className="w-5 h-5 text-amber-400" /> 
-                {authSubMode === 'pin' ? 'PIN-კოდით შესვლა' : authMode === 'login' ? 'ავტორიზაცია' : 'რეგისტრაცია'}
+                {authMode === 'login' ? 'ავტორიზაცია' : 'რეგისტრაცია'}
               </h3>
               <button onClick={() => setIsAuthOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
