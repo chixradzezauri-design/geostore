@@ -36,7 +36,7 @@ const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
 // ეს გასაღები მხოლოდ Supabase-ის საჯარო anon/publishable გასაღები უნდა იყოს.
 // არასოდეს გამოიყენო აქ service_role გასაღები.
-const SUPABASE_ANON_KEY = 'ჩასვი_შენი_SUPABASE_PUBLIC_ANON_KEY';
+const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
 const headers = {
   apikey: SUPABASE_ANON_KEY,
