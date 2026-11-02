@@ -11,11 +11,17 @@ import { supabase } from '../supabaseClient';
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
-const headers = {
-  'apikey': SUPABASE_ANON_KEY,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json',
-  'Prefer': 'return=representation'
+const getSupabaseHeaders = async () => {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  return {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json',
+    Prefer: 'return=representation'
+  };
 };
 
 export default function AdminDashboardPro({
@@ -136,7 +142,7 @@ export default function AdminDashboardPro({
 
   const fetchExpenses = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers });
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (res.ok) {
         const data = await res.json();
         setExpenses(data || []);
@@ -152,7 +158,7 @@ export default function AdminDashboardPro({
 
   const fetchAdminOrders = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers });
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (typeof setOrders === 'function') {
@@ -293,7 +299,7 @@ export default function AdminDashboardPro({
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers });
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (res.ok) {
         const data = await res.json();
         setSupportTickets((data || []).map(t => ({
@@ -468,7 +474,7 @@ export default function AdminDashboardPro({
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify(newExp)
       });
 
@@ -490,7 +496,7 @@ export default function AdminDashboardPro({
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${id}`, {
           method: 'DELETE',
-          headers
+          headers: await getSupabaseHeaders()
         });
 
         if (res.ok) {
@@ -702,7 +708,7 @@ export default function AdminDashboardPro({
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
           method: 'DELETE',
-          headers
+          headers: await getSupabaseHeaders()
         });
         if (res.ok) {
           if (typeof setProducts === 'function') {
@@ -736,7 +742,7 @@ export default function AdminDashboardPro({
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
         method: 'PATCH',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify({ [dbField]: val })
       });
     } catch {}
@@ -799,7 +805,7 @@ export default function AdminDashboardPro({
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
         method: 'POST',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify(newProdPayload)
       });
 
@@ -981,7 +987,7 @@ export default function AdminDashboardPro({
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
         method: 'PATCH',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify({ status: newStatus })
       });
       fetchTickets();
@@ -996,7 +1002,7 @@ export default function AdminDashboardPro({
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
         method: 'PATCH',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify({ reply: replyText.trim(), status: 'მოგვარებული' })
       });
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
@@ -1011,7 +1017,7 @@ export default function AdminDashboardPro({
       try {
         await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
           method: 'DELETE',
-          headers
+          headers: await getSupabaseHeaders()
         });
         fetchTickets();
         logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
@@ -1118,7 +1124,7 @@ export default function AdminDashboardPro({
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
         method: 'PATCH',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify({ status: newStatus })
       });
 
@@ -1150,7 +1156,7 @@ export default function AdminDashboardPro({
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
         method: 'PATCH',
-        headers,
+        headers: await getSupabaseHeaders(),
         body: JSON.stringify({ admin_note: orderAdminNoteInput })
       });
       if (typeof setOrders === 'function') {
