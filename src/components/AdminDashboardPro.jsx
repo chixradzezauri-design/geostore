@@ -595,101 +595,17 @@ export default function AdminDashboardPro({
 
   if (!adminLoggedIn) {
     return (
-      <div className="max-w-sm mx-auto bg-slate-900/80 border border-emerald-500/35 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl text-center my-16">
+      <div className="max-w-sm mx-auto bg-slate-900/80 border border-emerald-500/35 rounded-[2.5rem] p-6 sm:p-8 space-y-4 shadow-2xl backdrop-blur-3xl text-center my-16">
         <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-          <Shield className="w-8 h-8 text-emerald-400 animate-pulse" />
+          <Shield className="w-8 h-8 text-emerald-400" />
         </div>
-        
-        <div className="space-y-1.5">
-          <h2 className="text-lg font-black text-white tracking-tight">ადმინისტრატორის პანელი</h2>
-          <p className="text-xs text-slate-400">აირჩიეთ ავტორიზაციის მეთოდი სისტემაში შესასვლელად</p>
-        </div>
-
-        <div className="flex gap-2 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 text-[11px] font-bold">
-          <button 
-            type="button" 
-            onClick={() => setAdminAuthSubMode('standard')}
-            className={`flex-1 py-2 rounded-xl transition cursor-pointer ${adminAuthSubMode === 'standard' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            პაროლით
-          </button>
-          <button 
-            type="button" 
-            onClick={() => setAdminAuthSubMode('pin')}
-            className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${adminAuthSubMode === 'pin' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            <KeyRound className="w-3.5 h-3.5" /> PIN / Face ID
-          </button>
-        </div>
-
-        {adminAuthSubMode === 'pin' ? (
-          <form onSubmit={handleAdminPinSubmit} className="space-y-4 text-xs animate-in fade-in">
-            <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-emerald-300">
-              შეიყვანეთ ადმინისტრატორის PIN-კოდი (ნაგულისხმევია: 1234):
-            </div>
-            {adminPinError && <p className="text-rose-400 font-bold">{adminPinError}</p>}
-            
-            <input 
-              type="password" 
-              maxLength="6"
-              required
-              placeholder="••••" 
-              value={adminPinCode} 
-              onChange={e => setAdminPinCode(e.target.value)} 
-              className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl p-4 text-center text-lg tracking-widest text-emerald-400 font-black outline-none focus:border-emerald-400 shadow-inner" 
-            />
-
-            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all cursor-pointer text-xs">
-              შესვლა PIN-კოდით
-            </button>
-
-            <button 
-              type="button"
-              onClick={handleAdminBiometricLogin}
-              className="w-full bg-slate-950 hover:bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-black py-3 rounded-2xl transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
-            >
-              <Fingerprint className="w-4 h-4 text-emerald-400" /> Face ID-ით / Passkey-ით შესვლა
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleAdminLogin} autoComplete="off" className="space-y-4 text-xs animate-in fade-in">
-            <input 
-              type="text" 
-              name="geo_admin_username_secure"
-              autoComplete="off"
-              placeholder="მომხმარებელი" 
-              value={adminLoginForm?.username || ''} 
-              onChange={e => setAdminLoginForm({...adminLoginForm, username: e.target.value})} 
-              className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl p-4 text-white outline-none focus:border-emerald-400 shadow-inner transition-all" 
-            />
-            <input 
-              type="password" 
-              name="geo_admin_password_secure"
-              autoComplete="new-password"
-              placeholder="პაროლი" 
-              value={adminLoginForm?.password || ''} 
-              onChange={e => setAdminLoginForm({...adminLoginForm, password: e.target.value})} 
-              className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl p-4 text-white outline-none focus:border-emerald-400 shadow-inner transition-all" 
-            />
-
-            <div className="flex items-center gap-2 text-left pt-1 px-1">
-              <input 
-                type="checkbox" 
-                id="remMe" 
-                checked={adminLoginForm?.remember || false} 
-                onChange={e => setAdminLoginForm({...adminLoginForm, remember: e.target.checked})} 
-                className="rounded accent-emerald-400 cursor-pointer w-4 h-4" 
-              />
-              <label htmlFor="remMe" className="cursor-pointer text-xs text-slate-300 font-bold">მომიმახსოვრე სისტემაში</label>
-            </div>
-
-            {adminError && <p className="text-rose-400 text-xs font-bold pt-1">{adminError}</p>}
-
-            <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all cursor-pointer text-xs mt-2">
-              სისტემაში შესვლა
-            </button>
-          </form>
-        )}
+        <h2 className="text-lg font-black text-white tracking-tight">ადმინისტრატორის პანელი</h2>
+        <p className="text-xs text-slate-400">
+          პანელზე წვდომისთვის შედით GEOSTORE-ში იმ ანგარიშით, რომელსაც Supabase-ში მინიჭებული აქვს ადმინისტრატორის როლი.
+        </p>
+        <p className="text-xs text-amber-300">
+          PIN-ით ან ბრაუზერში შენახული პაროლით შესვლა გამორთულია.
+        </p>
       </div>
     );
   }
