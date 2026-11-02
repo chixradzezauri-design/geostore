@@ -1026,32 +1026,29 @@ export default function App() {
           ? t.bigCitiesDelivery
           : t.otherDelivery;
 
-    const newOrderObj = {
-      id: orderId,
-      date: new Date().toLocaleDateString('ka-GE'),
-      customer_name: checkoutForm.name,
-      customerName: checkoutForm.name,
-      phone: checkoutForm.phone,
-      address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
-      user_email: currentUser
-        ? currentUser.email
-        : 'guest',
-      items: itemsToOrder,
-      totalGEL: cartTotalGEL,
-      total_gel: cartTotalGEL,
-      status: 'ახალი',
-      itemSummary: itemsToOrder
-        .map((i) => `${i.name} (x${i.quantity})`)
-        .join(', ')
-    };
+    let orderUserEmail = 'guest';
 
     try {
+      // ერთი და იგივე Supabase სესია განსაზღვრავს მომხმარებლის ელფოსტასაც
+      // და Authorization ტოკენსაც, რათა RLS შემოწმება თანმიმდევრული იყოს.
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      const orderSession = session?.user?.email ? session : null;
+      orderUserEmail = orderSession?.user?.email || 'guest';
+
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/orders`,
         {
           method: 'POST',
           headers: {
-            ...(await getSupabaseHeaders({ authenticated: true })),
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${orderSession?.access_token || SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
             Prefer: 'return=representation'
           },
           body: JSON.stringify({
@@ -1059,9 +1056,7 @@ export default function App() {
             customer_name: checkoutForm.name,
             phone: checkoutForm.phone,
             address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
-            user_email: currentUser
-              ? currentUser.email
-              : 'guest',
+            user_email: orderUserEmail,
             items: itemsToOrder,
             total_gel: cartTotalGEL,
             status: 'ახალი'
@@ -1082,6 +1077,23 @@ export default function App() {
       );
       return;
     }
+
+    const newOrderObj = {
+      id: orderId,
+      date: new Date().toLocaleDateString('ka-GE'),
+      customer_name: checkoutForm.name,
+      customerName: checkoutForm.name,
+      phone: checkoutForm.phone,
+      address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+      user_email: orderUserEmail,
+      items: itemsToOrder,
+      totalGEL: cartTotalGEL,
+      total_gel: cartTotalGEL,
+      status: 'ახალი',
+      itemSummary: itemsToOrder
+        .map((i) => `${i.name} (x${i.quantity})`)
+        .join(', ')
+    };
 
     setOrders((prev) => [
       newOrderObj,
