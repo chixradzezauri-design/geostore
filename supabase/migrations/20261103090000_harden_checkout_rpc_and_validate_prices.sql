@@ -254,3 +254,20 @@ grant execute on function public.create_order_with_stock(jsonb) to anon, authent
 
 revoke all on function public.admin_update_order_status(text, text) from public, anon;
 grant execute on function public.admin_update_order_status(text, text) to authenticated;
+
+
+-- Keep all order creation behind the atomic RPC. The live application uses
+-- create_order_with_stock and does not insert directly into public.orders.
+-- Direct table inserts would bypass stock validation and deduction.
+revoke insert on table public.orders from anon, authenticated;
+drop policy if exists "Guest and signed-in checkout can create orders" on public.orders;
+
+-- The Admin Panel's order-note editor updates this field through PostgREST.
+-- It was missing from the live schema, so add it without touching existing rows.
+alter table public.orders
+  add column if not exists admin_note text;
+
+-- Keep the existing note-editing feature, but prevent direct API calls from
+-- changing order status or deleting orders outside the stock-aware RPC.
+revoke update, delete on table public.orders from anon, authenticated;
+grant update (admin_note) on table public.orders to authenticated;
