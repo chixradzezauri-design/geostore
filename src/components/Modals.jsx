@@ -11,6 +11,8 @@ export default function Modals({
   checkoutForm,
   setCheckoutForm,
   handlePlaceOrder,
+  isSubmittingOrder = false,
+  checkoutError = '',
   isAuthOpen,
   setIsAuthOpen,
   authMode,
@@ -224,8 +226,22 @@ export default function Modals({
                 />
               </div>
 
-              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-3">
-                დადასტურება და შეკვეთა
+              {checkoutError && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-[11px] font-bold leading-relaxed text-rose-300"
+                >
+                  {checkoutError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                onClick={handlePlaceOrder}
+                disabled={isSubmittingOrder}
+                className="w-full bg-amber-400 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-3"
+              >
+                {isSubmittingOrder ? 'იგზავნება...' : 'დადასტურება და შეკვეთა'}
               </button>
             </form>
           </div>
