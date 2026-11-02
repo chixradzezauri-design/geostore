@@ -493,7 +493,7 @@ export default function App() {
             // 0 მარაგი უნდა დარჩეს 0-ად და არ გადაიქცეს 1-ად.
             stock:
               p.stock === null || p.stock === undefined
-                ? 1
+                ? 0
                 : Number(p.stock),
 
             vendor: p.vendor || 'GEOSTORE',
@@ -503,8 +503,22 @@ export default function App() {
               'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
             availableSizes:
               p.available_sizes || ['S', 'M', 'L', 'XL'],
+            availableColors: p.available_colors || ['შავი', 'თეთრი'],
+            gallery: p.gallery || (p.image ? [p.image] : []),
+            variants: p.variants || [],
+            tags: p.tags || [],
+            purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? 0 : Number(p.purchase_cost),
             material: p.material || '',
-            durability: p.durability || ''
+            durability: p.durability || '',
+            brand: p.brand || '',
+            model: p.model || '',
+            cpu: p.cpu || '',
+            ram: p.ram || '',
+            storage: p.storage || '',
+            gpu: p.gpu || '',
+            screenSize: p.screen_size || '',
+            os: p.os || '',
+            isFeatured: Boolean(p.is_featured)
           }));
 
           setProducts(formatted);
