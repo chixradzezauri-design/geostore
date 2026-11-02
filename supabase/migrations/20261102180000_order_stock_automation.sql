@@ -42,7 +42,7 @@ begin
   for v_item in
     select item->>'id' as product_id,
            sum((item->>'quantity')::integer)::integer as quantity
-      from jsonb_array_elements(p_order->'items') as item
+      from jsonb_array_elements(p_order->'items') as e(item)
      group by item->>'id'
      order by item->>'id'
   loop
@@ -103,7 +103,7 @@ begin
     for v_item in
       select item->>'id' as product_id,
              sum((item->>'quantity')::integer)::integer as quantity
-        from jsonb_array_elements(coalesce(v_order.items, '[]'::jsonb)) as item
+        from jsonb_array_elements(coalesce(v_order.items, '[]'::jsonb)) as e(item)
        group by item->>'id'
        order by item->>'id'
     loop
