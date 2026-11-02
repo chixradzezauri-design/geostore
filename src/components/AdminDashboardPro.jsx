@@ -58,17 +58,9 @@ export default function AdminDashboardPro({
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
 
-  const [adminAuthSubMode, setAdminAuthSubMode] = useState('standard'); 
-  const [adminPinCode, setAdminPinCode] = useState('');
-  const [adminPinError, setAdminPinError] = useState('');
-
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
   const [orderAdminNoteInput, setOrderAdminNoteInput] = useState('');
-
-  const [newAdminUsername, setNewAdminUsername] = useState('');
-  const [newAdminPassword, setNewAdminPassword] = useState('');
-  const [newAdminPin, setNewAdminPin] = useState('');
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserDiscount, setEditUserDiscount] = useState('');
@@ -509,93 +501,6 @@ export default function AdminDashboardPro({
       } catch {
         alert('ქსელის შეცდომა');
       }
-    }
-  };
-
-  const handleAdminPinSubmit = (e) => {
-    e.preventDefault();
-    const savedPinHash = localStorage.getItem('geostore_admin_pin') || btoa('1234'); 
-    if (btoa(adminPinCode) === savedPinHash) {
-      if (typeof setAdminLoggedIn === 'function') setAdminLoggedIn(true);
-      setAdminPinError('');
-      logActivity('ადმინისტრატორი შევიდა სისტემაში PIN-კოდით');
-    } else {
-      setAdminPinError('არასწორი PIN-კოდი! (ნაგულისხმევია: 1234)');
-    }
-  };
-
-  const handleAdminBiometricLogin = async () => {
-    if (!window.PublicKeyCredential) {
-      alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys-ს.');
-      return;
-    }
-    try {
-      const assertion = await navigator.credentials.get({
-        publicKey: {
-          challenge: new Uint8Array([9,8,7,6,5,4,3,2]),
-          timeout: 60000,
-          userVerification: "required"
-        }
-      });
-      if (assertion) {
-        if (typeof setAdminLoggedIn === 'function') setAdminLoggedIn(true);
-        logActivity('ადმინისტრატორი შევიდა სისტემაში Face ID / Passkey-ით');
-        alert('✅ Face ID ვერიფიკაცია წარმატებულია!');
-      }
-    } catch {
-      alert('Face ID ავტორიზაცია გაუქმდა.');
-    }
-  };
-
-  const handleSaveSecuritySettings = (e) => {
-    e.preventDefault();
-    try {
-      if (newAdminUsername.trim()) {
-        localStorage.setItem('geostore_admin_username', newAdminUsername.trim());
-      }
-      if (newAdminPassword.trim()) {
-        localStorage.setItem('geostore_admin_password', newAdminPassword.trim());
-      }
-      if (newAdminPin.trim()) {
-        localStorage.setItem('geostore_admin_pin', btoa(newAdminPin.trim()));
-      }
-      logActivity('განახლდა ადმინისტრატორის უსაფრთხოების პარამეტრები (პაროლი / PIN)');
-      alert('✅ ადმინისტრატორის პაროლი და PIN-კოდი წარმატებით განახლდა!');
-      setNewAdminUsername('');
-      setNewAdminPassword('');
-      setNewAdminPin('');
-    } catch {
-      alert('შეცდომა პარამეტრების შენახვისას');
-    }
-  };
-
-  const handleRegisterFaceId = async () => {
-    if (!window.PublicKeyCredential) {
-      alert('თქვენი ბრაუზერი არ უზრუნველყოფს Passkeys/Face ID ტექნოლოგიას.');
-      return;
-    }
-    try {
-      const credential = await navigator.credentials.create({
-        publicKey: {
-          challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
-          rp: { name: "GEOSTORE Admin" },
-          user: {
-            id: new Uint8Array([1]),
-            name: "admin@geostore.ge",
-            displayName: "GeoStore Admin"
-          },
-          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-          timeout: 60000,
-          attestation: "direct"
-        }
-      });
-      if (credential) {
-        localStorage.setItem('geostore_faceid_registered', 'true');
-        logActivity('წარმატებით დარეგისტრირდა Face ID / Passkey უსაფრთხოება');
-        alert('✅ Face ID / Biometric Passkey წარმატებით დაუკავშირდა თქვენს ადმინ პანელს!');
-      }
-    } catch {
-      alert('Face ID-ის რეგისტრაცია გაუქმდა ან ვერ მოხერხდა.');
     }
   };
 
@@ -2721,61 +2626,6 @@ export default function AdminDashboardPro({
 
         {adminTab === 'settings' && (
           <div className="space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Lock className="w-5 h-5 text-emerald-400" /> ადმინისტრატორის უსაფრთხოება (პაროლი, PIN & Face ID)
-              </h3>
-              
-              <form onSubmit={handleSaveSecuritySettings} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <div className="space-y-1">
-                    <label className="text-slate-400 font-bold">ახალი მომხმარებელი</label>
-                    <input 
-                      type="text" 
-                      placeholder="ახალი სახელი" 
-                      value={newAdminUsername} 
-                      onChange={e => setNewAdminUsername(e.target.value)} 
-                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-slate-400 font-bold">ახალი პაროლი</label>
-                    <input 
-                      type="password" 
-                      placeholder="ახალი პაროლი" 
-                      value={newAdminPassword} 
-                      onChange={e => setNewAdminPassword(e.target.value)} 
-                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" 
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-slate-400 font-bold">ახალი 4-ნიშნა PIN</label>
-                    <input 
-                      type="password" 
-                      maxLength="6"
-                      placeholder="PIN (მაგ: 1234)" 
-                      value={newAdminPin} 
-                      onChange={e => setNewAdminPin(e.target.value)} 
-                      className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-black tracking-widest text-center outline-none focus:border-emerald-400 shadow-inner" 
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <button type="submit" className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                    🔒 პაროლისა და PIN-ის განახლება
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleRegisterFaceId}
-                    className="flex-1 bg-slate-950 hover:bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-black py-4 rounded-2xl transition cursor-pointer text-xs flex items-center justify-center gap-2"
-                  >
-                    <Fingerprint className="w-4 h-4 text-emerald-400" /> Face ID / Passkey-ის რეგისტრაცია
-                  </button>
-                </div>
-              </form>
-            </div>
-
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
