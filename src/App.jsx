@@ -1069,7 +1069,7 @@ export default function App() {
             apikey: SUPABASE_ANON_KEY,
             Authorization: `Bearer ${orderSession?.access_token || SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
-            Prefer: 'return=representation'
+            Prefer: 'return=minimal'
           },
           body: JSON.stringify({
             id: orderId,
