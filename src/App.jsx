@@ -1062,24 +1062,24 @@ export default function App() {
       orderUserEmail = orderSession?.user?.email || 'guest';
 
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders`,
+        `${SUPABASE_URL}/rest/v1/rpc/create_order_with_stock`,
         {
           method: 'POST',
           headers: {
             apikey: SUPABASE_ANON_KEY,
             Authorization: `Bearer ${orderSession?.access_token || SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            id: orderId,
-            customer_name: customerName,
-            phone: customerPhone,
-            address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
-            user_email: orderUserEmail,
-            items: itemsToOrder,
-            total_gel: cartTotalGEL,
-            status: 'ახალი'
+            p_order: {
+              id: orderId,
+              customer_name: customerName,
+              phone: customerPhone,
+              address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+              user_email: orderUserEmail,
+              items: itemsToOrder,
+              total_gel: cartTotalGEL
+            }
           })
         }
       );
@@ -1121,6 +1121,9 @@ export default function App() {
       newOrderObj,
       ...(prev || [])
     ]);
+
+    // Sync the storefront stock with the atomic database deduction.
+    await fetchProductsFromDatabase();
 
     sendTelegramNotification();
 

@@ -1126,33 +1126,37 @@ export default function AdminDashboardPro({
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
-        method: 'PATCH',
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_order_status`, {
+        method: 'POST',
         headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({
+          p_order_id: orderId,
+          p_new_status: newStatus
+        })
       });
 
-      if (response.ok) {
-        if (typeof setOrders === 'function') {
-          setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-        }
-        if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
-          setSelectedOrderForModal(prev => ({ ...prev, status: newStatus }));
-        }
-        
-        try {
-          const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-          const updatedLocal = localOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
-          localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
-        } catch {}
-
-        logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
-        alert(`✅ შეკვეთის #${orderId} სტატუსი წარმატებით განახლდა: ${newStatus}`);
-      } else {
-        alert('ვერ მოხერხდა ბაზაში სტატუსის განახლება');
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
-    } catch {
-      alert('ქსელის შეცდომა სტატუსის შეცვლისას');
+
+      if (typeof setOrders === 'function') {
+        setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      }
+      if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
+        setSelectedOrderForModal(prev => ({ ...prev, status: newStatus }));
+      }
+
+      try {
+        const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
+        const updatedLocal = localOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+        localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
+      } catch {}
+
+      logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
+      alert(`✅ შეკვეთის #${orderId} სტატუსი წარმატებით განახლდა: ${newStatus}`);
+    } catch (error) {
+      alert(error.message || 'ქსელის შეცდომა სტატუსის შეცვლისას');
     }
   };
 
