@@ -991,33 +991,47 @@ export default function App() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
+    const customerName = String(checkoutForm.name || '').trim();
+    const customerPhone = String(checkoutForm.phone || '').trim();
+    const customerAddress = String(checkoutForm.address || '').trim();
+
     if (
-      !checkoutForm.name ||
-      !checkoutForm.phone ||
-      !checkoutForm.address
+      customerName.length < 2 || customerName.length > 100 ||
+      customerPhone.length < 9 || customerPhone.length > 20 ||
+      !/^[+0-9\\s()\\-]+$/.test(customerPhone) ||
+      customerAddress.length < 5 || customerAddress.length > 300
     ) {
+      showToast('გთხოვთ, სწორად შეავსოთ სახელი, ტელეფონი და მისამართი.');
       return;
     }
 
-    const orderId = `ORD-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
+    const sourceItems = quickBuyProduct
+      ? [{ ...quickBuyProduct, quantity: 1 }]
+      : cart;
 
-    const itemsToOrder = quickBuyProduct
-      ? [
-          {
-            id: quickBuyProduct.id,
-            name: quickBuyProduct.name,
-            price: quickBuyProduct.priceGEL,
-            quantity: 1
-          }
-        ]
-      : cart.map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.priceGEL,
-          quantity: i.quantity
-        }));
+    if (!sourceItems.length) {
+      showToast('კალათა ცარიელია.');
+      return;
+    }
+
+    const itemsToOrder = sourceItems.map((item) => ({
+      id: String(item.id || ''),
+      name: String(item.name || '').trim().slice(0, 200),
+      price: Number(item.priceGEL),
+      quantity: Number(item.quantity)
+    }));
+
+    if (itemsToOrder.some(item =>
+      !item.id || !item.name ||
+      !Number.isFinite(item.price) || item.price < 0 ||
+      !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99
+    )) {
+      showToast('კალათაში არის არასწორი პროდუქტი ან რაოდენობა. განაახლეთ კალათა.');
+      return;
+    }
+
+    // UUID prevents collisions from the former 4-digit order identifier.
+    const orderId = `ORD-${crypto.randomUUID().replace(/-/g, '').slice(0, 20).toUpperCase()}`;
 
     const regionText =
       selectedRegion === 'tbilisi'
@@ -1029,10 +1043,10 @@ export default function App() {
     const newOrderObj = {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
-      customer_name: checkoutForm.name,
-      customerName: checkoutForm.name,
-      phone: checkoutForm.phone,
-      address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+      customer_name: customerName,
+      customerName,
+      phone: customerPhone,
+      address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
       user_email: currentUser
         ? currentUser.email
         : 'guest',
@@ -1056,9 +1070,9 @@ export default function App() {
           },
           body: JSON.stringify({
             id: orderId,
-            customer_name: checkoutForm.name,
-            phone: checkoutForm.phone,
-            address: `${checkoutForm.address} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+            customer_name: customerName,
+            phone: customerPhone,
+            address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
             user_email: currentUser
               ? currentUser.email
               : 'guest',
