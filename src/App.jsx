@@ -990,12 +990,14 @@ export default function App() {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    showToast('შეკვეთის გაგზავნა დაიწყო...');
 
     if (
-      !checkoutForm.name ||
-      !checkoutForm.phone ||
-      !checkoutForm.address
+      !checkoutForm.name?.trim() ||
+      !checkoutForm.phone?.trim() ||
+      !checkoutForm.address?.trim()
     ) {
+      showToast('შეავსეთ სახელი, ტელეფონი და მისამართი.');
       return;
     }
 
