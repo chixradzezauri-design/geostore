@@ -459,6 +459,7 @@ export default function App() {
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
+            adminNote: o.admin_note || '',
             stock_deducted_at: o.stock_deducted_at || null,
             stock_restored_at: o.stock_restored_at || null,
             itemSummary: Array.isArray(o.items)
@@ -476,68 +477,55 @@ export default function App() {
 
   const fetchProductsFromDatabase = async () => {
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/products?select=${adminLoggedIn ? '*' : 'id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured'}&order=created_at.desc`,
-        { headers: await getSupabaseHeaders({ authenticated: adminLoggedIn }) }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-
-        if (data && data.length > 0) {
-          const formatted = data.map((p) => ({
-            id: p.id,
-            sku: p.sku || `GEO-${p.id}`,
-            name: p.name,
-            category: p.category || 'სმარტფონები',
-            priceGEL: Number(p.price_gel),
-            oldPriceGEL: p.old_price_gel
-              ? Number(p.old_price_gel)
-              : null,
-
-            // 0 მარაგი უნდა დარჩეს 0-ად და არ გადაიქცეს 1-ად.
-            stock:
-              p.stock === null || p.stock === undefined
-                ? 0
-                : Number(p.stock),
-
-            vendor: p.vendor || 'GEOSTORE',
-            description: p.description || '',
-            image:
-              p.image ||
-              'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
-            availableSizes:
-              p.available_sizes || ['S', 'M', 'L', 'XL'],
-            availableColors: p.available_colors || ['შავი', 'თეთრი'],
-            gallery: p.gallery || (p.image ? [p.image] : []),
-            variants: p.variants || [],
-            tags: p.tags || [],
-            purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? 0 : Number(p.purchase_cost),
-            material: p.material || '',
-            durability: p.durability || '',
-            brand: p.brand || '',
-            model: p.model || '',
-            cpu: p.cpu || '',
-            ram: p.ram || '',
-            storage: p.storage || '',
-            gpu: p.gpu || '',
-            screenSize: p.screen_size || '',
-            os: p.os || '',
-            isFeatured: Boolean(p.is_featured)
-          }));
-
-          setProducts(formatted);
-
-          try {
-            localStorage.setItem(
-              'geostore_products',
-              JSON.stringify(formatted)
-            );
-          } catch {
-            // localStorage შეიძლება მიუწვდომელი იყოს.
-          }
-        }
+      let data = [];
+      if (adminLoggedIn) {
+        const { data: adminProducts, error } = await supabase.rpc('admin_list_products');
+        if (error) throw error;
+        data = adminProducts || [];
+      } else {
+        const publicColumns = 'id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?select=${publicColumns}&order=created_at.desc`,
+          { headers: await getSupabaseHeaders({ authenticated: false }) }
+        );
+        if (!res.ok) throw new Error(await res.text());
+        data = await res.json();
       }
+
+      const formatted = (data || []).map((p) => ({
+        id: p.id,
+        sku: p.sku || `GEO-${p.id}`,
+        name: p.name,
+        category: p.category || 'სმარტფონები',
+        priceGEL: Number(p.price_gel),
+        oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
+        stock: p.stock === null || p.stock === undefined ? 0 : Number(p.stock),
+        vendor: p.vendor || 'GEOSTORE',
+        description: p.description || '',
+        image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
+        availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
+        availableColors: p.available_colors || ['შავი', 'თეთრი'],
+        gallery: p.gallery || (p.image ? [p.image] : []),
+        variants: p.variants || [],
+        tags: p.tags || [],
+        purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? 0 : Number(p.purchase_cost),
+        material: p.material || '',
+        durability: p.durability || '',
+        brand: p.brand || '',
+        model: p.model || '',
+        cpu: p.cpu || '',
+        ram: p.ram || '',
+        storage: p.storage || '',
+        gpu: p.gpu || '',
+        screenSize: p.screen_size || '',
+        os: p.os || '',
+        isFeatured: Boolean(p.is_featured)
+      }));
+
+      setProducts(formatted);
+      try {
+        localStorage.setItem('geostore_products', JSON.stringify(formatted));
+      } catch {}
     } catch (error) {
       console.error('Products fetch error:', error);
     }

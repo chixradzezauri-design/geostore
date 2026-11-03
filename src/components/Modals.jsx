@@ -1,5 +1,6 @@
 // src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Real PIN & Passkeys Auth
 import React, { useState } from 'react';
+import { supabase } from '../supabaseClient';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
   Search, PackageCheck, Clock, Navigation, Map, KeyRound, Fingerprint, Bell, Sparkles, Tag 
@@ -42,8 +43,10 @@ export default function Modals({
   setUsersList
 }) {
   const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchOrderPhone, setSearchOrderPhone] = useState('');
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
+  const [isTrackingOrder, setIsTrackingOrder] = useState(false);
 
   const [authSubMode, setAuthSubMode] = useState('standard');
   const [pinCode, setPinCode] = useState('');
@@ -52,18 +55,44 @@ export default function Modals({
   const [pinError, setPinError] = useState('');
   const [failedAttempts, setFailedAttempts] = useState(0);
 
-  const handleSearchOrder = (e) => {
+  const handleSearchOrder = async (e) => {
     e.preventDefault();
-    if (!searchOrderId.trim()) return;
-    const cleanId = searchOrderId.trim().toUpperCase().replace('#', '');
-    const found = orders.find(o => o.id?.toUpperCase().replace('#', '') === cleanId);
-    
-    if (found) {
-      setTrackedOrder(found);
-      setTrackerError('');
-    } else {
+    const cleanId = searchOrderId.trim().toUpperCase().replace(/^#/, '');
+    const cleanPhone = searchOrderPhone.replace(/[^0-9]/g, '');
+    if (!cleanId || cleanPhone.length < 9 || cleanPhone.length > 15) {
       setTrackedOrder(null);
-      setTrackerError(`შეკვეთა კოდით "#${cleanId}" ვერ მოიძებნა.`);
+      setTrackerError('შეიყვანეთ შეკვეთის კოდი და სწორი ტელეფონის ნომერი.');
+      return;
+    }
+    setIsTrackingOrder(true);
+    setTrackedOrder(null);
+    setTrackerError('');
+    try {
+      const { data, error } = await supabase.rpc('lookup_order_for_tracking', {
+        p_order_id: cleanId,
+        p_phone: cleanPhone
+      });
+      if (error) throw error;
+      if (!data) {
+        setTrackerError('შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.');
+        return;
+      }
+      setTrackedOrder({
+        id: data.id,
+        customerName: data.customerName,
+        phone: data.phone,
+        address: data.address,
+        totalGEL: Number(data.totalGEL) || 0,
+        status: data.status || 'ახალი',
+        date: data.date || '',
+        items: Array.isArray(data.items) ? data.items : [],
+        itemSummary: data.itemSummary || 'პროდუქტები'
+      });
+    } catch (error) {
+      console.error('Order tracking error:', error);
+      setTrackerError('შეკვეთის მოძებნა დროებით ვერ მოხერხდა. სცადეთ ხელახლა.');
+    } finally {
+      setIsTrackingOrder(false);
     }
   };
 
@@ -280,20 +309,31 @@ export default function Modals({
               </button>
             </div>
 
-            <form onSubmit={handleSearchOrder} className="flex gap-2">
-              <div className="relative flex-1">
-                <input 
-                  type="text" 
-                  placeholder="შეიყვანეთ შეკვეთის კოდი (მაგ: ORD-1234)..." 
-                  value={searchOrderId}
-                  onChange={e => setSearchOrderId(e.target.value)}
-                  className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner"
+            <form onSubmit={handleSearchOrder} className="space-y-2.5">
+              <input
+                type="text"
+                required
+                autoComplete="off"
+                placeholder="შეკვეთის კოდი (მაგ: ORD-1234)"
+                value={searchOrderId}
+                onChange={e => setSearchOrderId(e.target.value)}
+                className="w-full bg-[#08080a] border border-amber-500/20 px-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  required
+                  autoComplete="tel"
+                  inputMode="tel"
+                  placeholder="შეკვეთისას მითითებული ტელეფონი"
+                  value={searchOrderPhone}
+                  onChange={e => setSearchOrderPhone(e.target.value)}
+                  className="min-w-0 flex-1 bg-[#08080a] border border-amber-500/20 px-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner"
                 />
-                <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
+                <button type="submit" disabled={isTrackingOrder} className="bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-slate-950 font-black px-5 py-3 rounded-2xl text-xs transition cursor-pointer shadow-lg shadow-amber-500/20">
+                  {isTrackingOrder ? 'ძებნა...' : 'ძებნა'}
+                </button>
               </div>
-              <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-5 py-3 rounded-2xl text-xs transition cursor-pointer shadow-lg shadow-amber-500/20">
-                ძებნა
-              </button>
             </form>
 
             {trackerError && (

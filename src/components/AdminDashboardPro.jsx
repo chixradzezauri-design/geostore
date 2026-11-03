@@ -231,6 +231,7 @@ export default function AdminDashboardPro({
   };
 
   const [productForm, setProductForm] = useState(productFormInitial);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
   const [newVarName, setNewVarName] = useState('');
@@ -708,7 +709,7 @@ export default function AdminDashboardPro({
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
           method: 'DELETE',
-          headers: await getSupabaseHeaders()
+          headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' }
         });
         if (res.ok) {
           if (typeof setProducts === 'function') {
@@ -733,7 +734,7 @@ export default function AdminDashboardPro({
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
         method: 'PATCH',
-        headers: await getSupabaseHeaders(),
+        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
         body: JSON.stringify({ [dbField]: val })
       });
 
@@ -766,19 +767,57 @@ export default function AdminDashboardPro({
     });
   };
 
+  const handleEditProduct = (product) => {
+    setEditingProductId(product.id);
+    setProductForm({
+      ...productFormInitial,
+      name: product.name || '',
+      category: product.category || productFormInitial.category,
+      priceGEL: String(product.priceGEL ?? ''),
+      oldPriceGEL: String(product.oldPriceGEL ?? ''),
+      purchaseCost: String(product.purchaseCost ?? product.purchase_cost ?? ''),
+      stock: String(product.stock ?? 0),
+      vendor: product.vendor || 'GEOSTORE ოფიციალური',
+      description: product.description || '',
+      tags: Array.isArray(product.tags) ? product.tags.join(', ') : '',
+      material: product.material || '',
+      durability: product.durability || '',
+      brand: product.brand || '',
+      model: product.model || '',
+      cpu: product.cpu || '',
+      ram: product.ram || '',
+      storage: product.storage || '',
+      gpu: product.gpu || '',
+      screenSize: product.screenSize || product.screen_size || '',
+      os: product.os || '',
+      availableSizes: Array.isArray(product.availableSizes) ? product.availableSizes : [],
+      availableColors: Array.isArray(product.availableColors) ? product.availableColors : [],
+      isFeatured: Boolean(product.isFeatured ?? product.is_featured)
+    });
+    setProductVariants(Array.isArray(product.variants) ? product.variants : []);
+    setSelectedImages([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEditProduct = () => {
+    setEditingProductId(null);
+    setProductForm(productFormInitial);
+    setSelectedImages([]);
+    setProductVariants([]);
+  };
+
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.priceGEL) return;
-
-    const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
-    const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
+    if (!productForm.name.trim() || !productForm.priceGEL || Number(productForm.priceGEL) <= 0) return;
+    const existingProduct = editingProductId ? (products || []).find(p => p.id === editingProductId) : null;
+    const mainImage = selectedImages.length > 0 ? selectedImages[0] : (existingProduct?.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800');
+    const galleryImages = selectedImages.length > 0 ? selectedImages : (existingProduct?.gallery || (existingProduct?.image ? [existingProduct.image] : [mainImage]));
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-
-    const prodId = `prod-${Date.now()}`;
+    const prodId = editingProductId || `prod-${Date.now()}`;
     const newProdPayload = {
       id: prodId,
-      sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
-      name: productForm.name,
+      sku: existingProduct?.sku || `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: productForm.name.trim(),
       category: productForm.category,
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
       price_gel: Number(productForm.priceGEL),
@@ -804,60 +843,47 @@ export default function AdminDashboardPro({
       os: productForm.os || '',
       is_featured: productForm.isFeatured || false
     };
-
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
-        method: 'POST',
-        headers: await getSupabaseHeaders(),
+      const isEditing = Boolean(editingProductId);
+      const endpoint = isEditing
+        ? `${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(editingProductId)}`
+        : `${SUPABASE_URL}/rest/v1/products`;
+      const res = await fetch(endpoint, {
+        method: isEditing ? 'PATCH' : 'POST',
+        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
         body: JSON.stringify(newProdPayload)
       });
-
-      if (res.ok) {
-        const localProdObject = {
-          id: prodId,
-          sku: newProdPayload.sku,
-          name: newProdPayload.name,
-          category: newProdPayload.category,
-          vendor: newProdPayload.vendor,
-          priceGEL: newProdPayload.price_gel,
-          oldPriceGEL: newProdPayload.old_price_gel,
-          purchaseCost: newProdPayload.purchase_cost,
-          stock: newProdPayload.stock,
-          image: newProdPayload.image,
-          gallery: galleryImages,
-          tags: tagsArray,
-          description: newProdPayload.description,
-          availableSizes: newProdPayload.available_sizes,
-          availableColors: newProdPayload.available_colors,
-          variants: productVariants,
-          material: newProdPayload.material,
-          durability: newProdPayload.durability,
-          brand: newProdPayload.brand,
-          isFeatured: newProdPayload.is_featured,
-          model: newProdPayload.model,
-          cpu: newProdPayload.cpu,
-          ram: newProdPayload.ram,
-          storage: newProdPayload.storage,
-          gpu: newProdPayload.gpu,
-          screenSize: newProdPayload.screen_size,
-          os: newProdPayload.os,
-          tags: tagsArray
-        };
-
-        if (typeof setProducts === 'function') {
-          setProducts(prev => [localProdObject, ...(prev || [])]);
-        }
-        setProductForm(productFormInitial);
-        setSelectedImages([]);
-        setProductVariants([]);
-        logActivity(`დაემატა ახალი პროდუქტი მახასიათებლებით: ${newProdPayload.name}`);
-        alert('✅ პროდუქტი და მისი მახასიათებლები წარმატებით შეინახა ბაზაში!');
-      } else {
+      if (!res.ok) {
         const err = await res.text();
-        alert('შეცდომა ბაზაში შენახვისას: ' + err);
+        throw new Error(err || 'პროდუქტის შენახვა ვერ მოხერხდა.');
       }
-    } catch {
-      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+      const localProdObject = {
+        id: prodId, sku: newProdPayload.sku, name: newProdPayload.name,
+        category: newProdPayload.category, vendor: newProdPayload.vendor,
+        priceGEL: newProdPayload.price_gel, oldPriceGEL: newProdPayload.old_price_gel,
+        purchaseCost: newProdPayload.purchase_cost, stock: newProdPayload.stock,
+        image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
+        description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
+        availableColors: newProdPayload.available_colors, variants: productVariants,
+        material: newProdPayload.material, durability: newProdPayload.durability,
+        brand: newProdPayload.brand, isFeatured: newProdPayload.is_featured,
+        model: newProdPayload.model, cpu: newProdPayload.cpu, ram: newProdPayload.ram,
+        storage: newProdPayload.storage, gpu: newProdPayload.gpu,
+        screenSize: newProdPayload.screen_size, os: newProdPayload.os
+      };
+      if (typeof setProducts === 'function') {
+        setProducts(prev => isEditing
+          ? (prev || []).map(p => p.id === prodId ? { ...p, ...localProdObject } : p)
+          : [localProdObject, ...(prev || [])]);
+      }
+      setProductForm(productFormInitial);
+      setSelectedImages([]);
+      setProductVariants([]);
+      setEditingProductId(null);
+      logActivity(`${isEditing ? 'განახლდა' : 'დაემატა'} პროდუქტი: ${newProdPayload.name}`);
+      alert(isEditing ? '✅ პროდუქტი წარმატებით განახლდა!' : '✅ პროდუქტი წარმატებით დაემატა ბაზაში!');
+    } catch (error) {
+      alert('პროდუქტის შენახვის შეცდომა: ' + (error.message || 'ქსელის შეცდომა'));
     }
   };
 
@@ -2024,7 +2050,7 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> პროდუქტის დამატება (კატეგორიის მახასიათებრებით & ვარიანტებით)
+                  <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის რედაქტირება' : 'პროდუქტის დამატება (კატეგორიის მახასიათებრებით & ვარიანტებით)'}
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -2202,9 +2228,12 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  პროდუქტის ბაზაში შენახვა 🚀
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button type="submit" className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
+                    {editingProductId ? 'ცვლილებების შენახვა' : 'პროდუქტის ბაზაში შენახვა 🚀'}
+                  </button>
+                  {editingProductId && <button type="button" onClick={handleCancelEditProduct} className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-4 rounded-2xl text-xs">გაუქმება</button>}
+                </div>
               </form>
             </div>
 
@@ -2266,7 +2295,8 @@ export default function AdminDashboardPro({
                         </span>
                       </div>
 
-                      <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleEditProduct(p)} className="text-emerald-400 hover:text-emerald-300 p-2.5 bg-emerald-500/10 rounded-2xl cursor-pointer transition" aria-label={`რედაქტირება: ${p.name}`}><Edit3 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition" aria-label={`წაშლა: ${p.name}`}><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
