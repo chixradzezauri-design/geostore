@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import './index.css'
 
 // ავტომატური ვერსიის კონტროლი, რათა განახლებისას ბრაუზერმა მყისიერად ჩატვირთოს ახალი ვერსია
 const APP_VERSION = "2.6.0-" + Date.now();
