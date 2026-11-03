@@ -1034,27 +1034,105 @@ export default function AdminDashboardPro({
     }
   };
 
-  const handleCreateCoupon = (e) => {
+  const handleCreateCoupon = async (e) => {
     e.preventDefault();
-    if (!couponForm.code || !couponForm.discountPercent) return;
+    const code = couponForm.code.trim().toUpperCase();
+    const discountPercent = Number(couponForm.discountPercent);
+    const minOrderGEL = Number(couponForm.minOrderGEL) || 0;
+
+    if (!code || !Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100 || !Number.isFinite(minOrderGEL) || minOrderGEL < 0) {
+      alert('შეამოწმეთ კუპონის კოდი, ფასდაკლება (1-100%) და მინიმალური შეკვეთა.');
+      return;
+    }
+
     const newC = {
       id: `c-${Date.now()}`,
-      code: couponForm.code.toUpperCase(),
-      discountPercent: Number(couponForm.discountPercent),
-      minOrderGEL: Number(couponForm.minOrderGEL) || 0
+      code,
+      discountPercent,
+      minOrderGEL,
+      status: 'აქტიური'
     };
-    if (typeof setCoupons === 'function') {
-      setCoupons(prev => [newC, ...(prev || [])]);
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/store_coupons`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          id: newC.id,
+          code: newC.code,
+          discount_percent: newC.discountPercent,
+          min_order_gel: newC.minOrderGEL,
+          active: true
+        })
+      });
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'კუპონის ბაზაში შენახვა ვერ მოხერხდა.');
+      }
+
+      if (typeof setCoupons === 'function') {
+        setCoupons(prev => [newC, ...(prev || []).filter(c => c.code !== newC.code)]);
+      }
+      setCouponForm({ code: '', discountPercent: '', minOrderGEL: '' });
+      logActivity(`შეიქმნა ახალი კუპონი: ${newC.code}`);
+      alert('კუპონი წარმატებით შეინახა ბაზაში.');
+    } catch (error) {
+      console.error('Coupon creation error:', error);
+      alert(error.message || 'კუპონის შექმნა ვერ მოხერხდა.');
     }
-    setCouponForm({ code: '', discountPercent: '', minOrderGEL: '' });
-    logActivity(`შეიქმნა ახალი კუპონი: ${newC.code}`);
   };
 
-  const handleDeleteCoupon = (id) => {
-    if (typeof setCoupons === 'function') {
-      setCoupons(prev => (prev || []).filter(c => c.id !== id));
+  const handleDeleteCoupon = async (id) => {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/store_coupons?id=eq.${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: await getSupabaseHeaders()
+      });
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'კუპონის წაშლა ვერ მოხერხდა.');
+      }
+      if (typeof setCoupons === 'function') {
+        setCoupons(prev => (prev || []).filter(c => c.id !== id));
+      }
+      logActivity(`წაიშალა კუპონი (ID: ${id})`);
+    } catch (error) {
+      console.error('Coupon deletion error:', error);
+      alert(error.message || 'კუპონის წაშლა ვერ მოხერხდა.');
     }
-    logActivity(`წაიშალა კუპონი (ID: ${id})`);
+  };
+
+  const handleSaveDeliveryFees = async () => {
+    const rows = [
+      { region: 'tbilisi', fee_gel: Number(deliveryFees?.tbilisi) },
+      { region: 'bigCities', fee_gel: Number(deliveryFees?.bigCities) },
+      { region: 'other', fee_gel: Number(deliveryFees?.other) }
+    ];
+
+    if (rows.some(row => !Number.isFinite(row.fee_gel) || row.fee_gel < 0)) {
+      alert('მიწოდების საფასური უნდა იყოს 0 ან მეტი.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/store_delivery_fees?on_conflict=region`, {
+        method: 'POST',
+        headers: {
+          ...(await getSupabaseHeaders()),
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify(rows.map(row => ({ ...row, updated_at: new Date().toISOString() })))
+      });
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'მიწოდების ტარიფების ბაზაში შენახვა ვერ მოხერხდა.');
+      }
+      logActivity('განახლდა მიწოდების ტარიფები');
+      alert('მიწოდების ტარიფები წარმატებით შეინახა ბაზაში.');
+    } catch (error) {
+      console.error('Delivery fee save error:', error);
+      alert(error.message || 'მიწოდების ტარიფების შენახვა ვერ მოხერხდა.');
+    }
   };
 
   const handleAddVendor = (e) => {
@@ -2826,7 +2904,7 @@ export default function AdminDashboardPro({
                   <input type="number" value={deliveryFees?.other ?? 15} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, other: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
               </div>
-              <button onClick={() => alert('✅ მიწოდების ტარიფები წარმატებით შენახდა!')} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
+              <button onClick={handleSaveDeliveryFees} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
                 ტარიფების შენახვა
               </button>
             </div>

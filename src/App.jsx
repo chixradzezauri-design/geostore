@@ -558,6 +558,50 @@ export default function App() {
     return response.json();
   };
 
+  const fetchStorePricingSettings = async () => {
+    try {
+      const headers = await getSupabaseHeaders();
+      const [couponResponse, deliveryResponse] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/store_coupons?select=id,code,discount_percent,min_order_gel,active&active=eq.true&order=code.asc`, { headers }),
+        fetch(`${SUPABASE_URL}/rest/v1/store_delivery_fees?select=region,fee_gel`, { headers })
+      ]);
+
+      if (couponResponse.ok) {
+        const rows = await couponResponse.json();
+        if (Array.isArray(rows)) {
+          setCoupons(rows.map((row) => ({
+            id: row.id,
+            code: row.code,
+            discountPercent: Number(row.discount_percent),
+            minOrderGEL: Number(row.min_order_gel) || 0,
+            status: row.active ? 'აქტიური' : 'გამორთული'
+          })));
+        }
+      }
+
+      if (deliveryResponse.ok) {
+        const rows = await deliveryResponse.json();
+        if (Array.isArray(rows)) {
+          setDeliveryFees((current) => {
+            const next = { ...current };
+            rows.forEach((row) => {
+              if (Object.prototype.hasOwnProperty.call(next, row.region)) {
+                next[row.region] = Number(row.fee_gel);
+              }
+            });
+            return next;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Store pricing settings fetch error:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStorePricingSettings();
+  }, []);
+
   useEffect(() => {
     if (adminLoggedIn) {
       fetchOrders();
