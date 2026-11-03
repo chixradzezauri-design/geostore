@@ -144,10 +144,12 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    if (!adminLoggedIn) return undefined;
+
     fetchExpenses();
-    const interval = setInterval(fetchExpenses, 5000);
+    const interval = setInterval(fetchExpenses, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   const fetchAdminOrders = async () => {
     try {
@@ -177,10 +179,13 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    if (!adminLoggedIn) return undefined;
+
+    // App.jsx already refreshes authenticated admin orders centrally.
+    // Fetch once when this panel opens; refresh again after an admin action.
     fetchAdminOrders();
-    const interval = setInterval(fetchAdminOrders, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    return undefined;
+  }, [adminLoggedIn]);
 
   const safeCategories = React.useMemo(() => {
     try {
