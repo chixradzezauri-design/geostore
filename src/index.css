@@ -315,12 +315,12 @@ html,body,#root{width:100%;min-width:0;max-width:100%;margin:0}
   isolation:isolate!important
 }
 .geostore-fashion-store .geostore-storefront .gs-category-card:after{
-  content:"";position:absolute;inset:0;z-index:0;
+  content:"";position:absolute;inset:0;z-index:1;
   background:linear-gradient(180deg,rgba(24,20,17,.02) 15%,rgba(24,20,17,.12) 48%,rgba(24,20,17,.78) 100%);
   pointer-events:none;transition:opacity .3s ease
 }
 .geostore-fashion-store .geostore-storefront .gs-category-card .gs-category-photo{
-  position:absolute!important;inset:0!important;z-index:-1!important;opacity:1!important;
+  position:absolute!important;inset:0!important;z-index:0!important;opacity:1!important;
   background-size:cover!important;background-position:center!important;
   transform:scale(1.001)!important;transition:transform .65s cubic-bezier(.2,.7,.2,1)!important
 }
