@@ -260,40 +260,21 @@ export default function StoreView({
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
-      {/* 🌟 HERO BANNER */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[2rem] p-5 sm:p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 group">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-        <div className="space-y-3 max-w-2xl text-center lg:text-left z-10">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase shadow-inner">
-            <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
-          </div>
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
-            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და ფეხსაცმელების ბუტიკი'}
-          </h1>
-          <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
-            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ ელიტარული ტანსაცმელი, ფეხსაცმელები და აქსესუარები.'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ადგილზე მორგება</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> VIP მიწოდება</span>
+      {/* GEOSTORE FASHION EDITORIAL HERO */}
+      <section className="gs-fashion-hero" aria-label="GEOSTORE fashion collection">
+        <div className="gs-fashion-hero__image" role="img" aria-label="Fashion editorial collection" />
+        <div className="gs-fashion-hero__content">
+          <span className="gs-fashion-eyebrow">GEOSTORE / NEW SEASON</span>
+          <p className="gs-fashion-kicker">შეარჩიე შენი სტილი</p>
+          <h1>{siteSettings?.heroTitle || 'სტილი, რომელიც შენზეა მორგებული.'}</h1>
+          <p className="gs-fashion-hero__description">{siteSettings?.heroSubtitle || 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების ახალი კოლექცია — გამორჩეული არჩევანი ყოველდღე.'}</p>
+          <div className="gs-fashion-hero__actions">
+            <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">კოლექციის ნახვა <span aria-hidden="true">↗</span></button>
+            <span className="gs-fashion-hero__note">CLOTHING · SHOES · ACCESSORIES</span>
           </div>
         </div>
-
-        <div className="hidden lg:flex flex-col gap-3 shrink-0 z-10 w-72">
-          {(promoSlots || []).slice(0, 2).map((slot) => (
-            <div key={slot.id} className="bg-[#121216] border border-amber-500/30 p-4 rounded-2xl shadow-xl flex items-center justify-between group/card hover:border-amber-400 transition-all duration-300">
-              <div>
-                <span className="text-[10px] font-black text-amber-400 tracking-widest uppercase flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> {slot.tag}</span>
-                <h4 className="text-xs font-bold text-white mt-0.5">{slot.title}</h4>
-              </div>
-              <div className="bg-[#1a1a20] p-2.5 rounded-xl border border-amber-500/20">
-                <ArrowUpRight className="w-4 h-4 text-amber-400" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <div className="gs-fashion-hero__stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
+      </section>
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
@@ -443,11 +424,7 @@ export default function StoreView({
                 }`}
               >
                 {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
-                {catImage && (
-                  <div className="absolute inset-0 opacity-25 group-hover:opacity-40 transition-opacity pointer-events-none">
-                    <img src={catImage} alt={catName} className="w-full h-full object-cover" />
-                  </div>
-                )}
+                <div className="gs-category-photo" style={{ backgroundImage: `linear-gradient(180deg, rgba(20,18,16,.04) 10%, rgba(20,18,16,.76) 100%), url("${catImage || ((/shoe|ფეხსაცმ|sneaker/i.test(catName)) ? 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85' : (/აქსესუარ|accessor|bag|ჩანთა/i.test(catName)) ? 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=85' : (/კაც|men|male/i.test(catName)) ? 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=85' : 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85')}"` }} />
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
                   <div className="bg-[#1a1a22] border border-amber-500/30 w-10 h-10 rounded-2xl overflow-hidden text-amber-400 shadow-md flex items-center justify-center shrink-0">
