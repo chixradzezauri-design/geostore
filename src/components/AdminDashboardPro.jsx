@@ -1256,7 +1256,7 @@ export default function AdminDashboardPro({
         !reauthSession?.access_token ||
         reauthData?.user?.id !== userData.user.id ||
         reauthData?.user?.app_metadata?.role !== 'admin' ||
-        reauthData?.user?.email?.toLowerCase() !== 'chixradzezauri@gmail.com'
+        reauthData?.user?.id !== '1060de3d-d28a-45f8-9a64-5e0368cffc4b'
       ) {
         throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
       }
