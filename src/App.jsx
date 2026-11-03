@@ -1042,8 +1042,6 @@ export default function App() {
       return;
     }
 
-    const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
-
     const itemsToOrder = quickBuyProduct
       ? [
           {
@@ -1079,6 +1077,11 @@ export default function App() {
     let orderUserEmail = 'guest';
 
     try {
+      // 128-bit random ID prevents predictable order references; legacy IDs remain valid.
+      const randomOrderIdBytes = new Uint8Array(16);
+      window.crypto.getRandomValues(randomOrderIdBytes);
+      const orderId = `ORD-${Array.from(randomOrderIdBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+
       // ერთი და იგივე Supabase სესია განსაზღვრავს მომხმარებლის ელფოსტასაც
       // და Authorization ტოკენსაც, რათა RLS შემოწმება თანმიმდევრული იყოს.
       const {
