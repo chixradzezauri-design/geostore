@@ -33,6 +33,7 @@ export default function Modals({
   notifications = [],
   markAllNotificationsAsRead,
   orders = [],
+  lookupOrderForTracking,
   selectedRegion,
   setSelectedRegion,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
@@ -42,6 +43,8 @@ export default function Modals({
   setUsersList
 }) {
   const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchOrderPhone, setSearchOrderPhone] = useState('');
+  const [isSearchingOrder, setIsSearchingOrder] = useState(false);
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
 
@@ -52,18 +55,33 @@ export default function Modals({
   const [pinError, setPinError] = useState('');
   const [failedAttempts, setFailedAttempts] = useState(0);
 
-  const handleSearchOrder = (e) => {
+  const handleSearchOrder = async (e) => {
     e.preventDefault();
-    if (!searchOrderId.trim()) return;
     const cleanId = searchOrderId.trim().toUpperCase().replace('#', '');
-    const found = orders.find(o => o.id?.toUpperCase().replace('#', '') === cleanId);
-    
-    if (found) {
-      setTrackedOrder(found);
-      setTrackerError('');
-    } else {
+    const cleanPhone = searchOrderPhone.trim();
+
+    if (!cleanId || !cleanPhone) {
       setTrackedOrder(null);
-      setTrackerError(`შეკვეთა კოდით "#${cleanId}" ვერ მოიძებნა.`);
+      setTrackerError('შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.');
+      return;
+    }
+    if (typeof lookupOrderForTracking !== 'function' || isSearchingOrder) return;
+
+    setIsSearchingOrder(true);
+    setTrackedOrder(null);
+    setTrackerError('');
+    try {
+      const found = await lookupOrderForTracking(cleanId, cleanPhone);
+      if (!found) {
+        setTrackerError('შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.');
+        return;
+      }
+      setTrackedOrder(found);
+    } catch (error) {
+      console.error('Secure order tracking failed:', error);
+      setTrackerError('შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.');
+    } finally {
+      setIsSearchingOrder(false);
     }
   };
 
@@ -280,19 +298,20 @@ export default function Modals({
               </button>
             </div>
 
-            <form onSubmit={handleSearchOrder} className="flex gap-2">
-              <div className="relative flex-1">
-                <input 
-                  type="text" 
-                  placeholder="შეიყვანეთ შეკვეთის კოდი (მაგ: ORD-1234)..." 
-                  value={searchOrderId}
-                  onChange={e => setSearchOrderId(e.target.value)}
-                  className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner"
-                />
+            <form onSubmit={handleSearchOrder} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+              <div className="relative">
+                <input type="text" placeholder="შეკვეთის კოდი (ORD-...)" value={searchOrderId}
+                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" required
+                  className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
                 <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
               </div>
-              <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-5 py-3 rounded-2xl text-xs transition cursor-pointer shadow-lg shadow-amber-500/20">
-                ძებნა
+              <input type="tel" inputMode="tel" autoComplete="tel"
+                placeholder="შეკვეთაზე მითითებული ტელეფონი" value={searchOrderPhone}
+                onChange={e => setSearchOrderPhone(e.target.value)} required
+                className="w-full bg-[#08080a] border border-amber-500/20 px-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
+              <button type="submit" disabled={isSearchingOrder}
+                className="bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-slate-950 font-black px-5 py-3 rounded-2xl text-xs transition cursor-pointer shadow-lg shadow-amber-500/20">
+                {isSearchingOrder ? 'მოწმდება...' : 'ძებნა'}
               </button>
             </form>
 
