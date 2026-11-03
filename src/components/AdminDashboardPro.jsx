@@ -466,7 +466,7 @@ export default function AdminDashboardPro({
     const parseDate = value => {
       if (!value) return null;
       const raw = String(value).trim();
-      const localDate = raw.match(/^(\\d{1,2})[./-](\\d{1,2})[./-](\\d{4})$/);
+      const localDate = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
       if (localDate) return new Date(Number(localDate[3]), Number(localDate[2]) - 1, Number(localDate[1]));
       const parsed = new Date(raw);
       return Number.isNaN(parsed.getTime()) ? null : parsed;
@@ -503,7 +503,7 @@ export default function AdminDashboardPro({
       totalSalesRevenue += orderTotal;
       const items = Array.isArray(order.items) ? order.items : [];
       const lineGross = items.reduce((sum, item) => sum + (Math.max(0, Number(item.priceGEL ?? item.price) || 0) * Math.max(1, Number(item.quantity) || 1)), 0);
-      const deliveryMatch = String(order.address || '').match(/მიწოდება:\\s*([\\d.,]+)\\s*₾/i);
+      const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
       const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
       const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
       totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
@@ -1642,7 +1642,7 @@ export default function AdminDashboardPro({
                 <option value="365">ბოლო 12 თვე</option>
               </select>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-5">
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
                 <p className="text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue.toFixed(2)} ₾</p>
