@@ -1101,10 +1101,11 @@ export default function App() {
 
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
-        throw new Error(
-          errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.'
-        );
+        throw new Error(errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.');
       }
+      const checkoutResult = await response.json();
+      if (!checkoutResult?.order_id || !Number.isFinite(Number(checkoutResult.total_gel))) throw new Error('სერვერის შეკვეთის პასუხი არასწორია.');
+      var serverOrderResult = checkoutResult;
     } catch (err) {
       console.error('Order submission failed:', err);
       const message =
