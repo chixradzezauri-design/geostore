@@ -1197,7 +1197,7 @@ export default function AdminDashboardPro({
         throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა. ხელახლა შედით სისტემაში.');
       }
 
-      const { error: passwordError } = await supabase.auth.signInWithPassword({
+      const { data: reauthData, error: passwordError } = await supabase.auth.signInWithPassword({
         email: userData.user.email,
         password: reactivationPassword
       });
@@ -1205,9 +1205,26 @@ export default function AdminDashboardPro({
         throw new Error('პაროლი არასწორია. შეკვეთა არ გააქტიურებულა.');
       }
 
+      // Use the exact session returned by the fresh password check.
+      // Do not re-read a possibly stale session from storage for this sensitive RPC.
+      const reauthSession = reauthData?.session;
+      if (
+        !reauthSession?.access_token ||
+        reauthData?.user?.id !== userData.user.id ||
+        reauthData?.user?.app_metadata?.role !== 'admin' ||
+        reauthData?.user?.email?.toLowerCase() !== 'chixradzezauri@gmail.com'
+      ) {
+        throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
+      }
+
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reactivate_cancelled_order`, {
         method: 'POST',
-        headers: await getSupabaseHeaders(),
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${reauthSession.access_token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
         body: JSON.stringify({ p_order_id: reactivationOrder.id })
       });
 
