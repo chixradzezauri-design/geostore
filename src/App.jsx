@@ -469,6 +469,30 @@ export default function App() {
     }
   };
 
+  const lookupOrderForTracking = async (orderId, phone) => {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/rpc/lookup_order_for_tracking`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          p_order_id: orderId,
+          p_phone: phone
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('შეკვეთის მოძებნა დროებით ვერ მოხერხდა. სცადეთ ხელახლა.');
+    }
+
+    return response.json();
+  };
+
   const fetchProductsFromDatabase = async () => {
     try {
       const res = await fetch(
@@ -539,20 +563,25 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (adminLoggedIn) {
+    // Administrators can read all orders; signed-in customers can read
+    // only their own orders through the orders table RLS policy.
+    if (adminLoggedIn || currentUser?.email) {
       fetchOrders();
+    } else {
+      setOrders([]);
     }
+
     fetchProductsFromDatabase();
 
     const interval = setInterval(() => {
-      if (adminLoggedIn) {
+      if (adminLoggedIn || currentUser?.email) {
         fetchOrders();
       }
       fetchProductsFromDatabase();
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [adminLoggedIn]);
+  }, [adminLoggedIn, currentUser?.email]);
 
   useEffect(() => {
     try {
@@ -1824,6 +1853,7 @@ export default function App() {
         notifications={notifications}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
         orders={orders}
+        lookupOrderForTracking={lookupOrderForTracking}
         selectedRegion={selectedRegion}
         setSelectedRegion={setSelectedRegion}
         deliveryFees={deliveryFees}
