@@ -2,7 +2,7 @@
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
@@ -27,7 +27,9 @@ import {
   X,
   Share2,
   Truck,
-  Smartphone
+  Smartphone,
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
@@ -298,11 +300,20 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const orderSubmissionLock = useRef(false);
   const [checkoutError, setCheckoutError] = useState('');
+  const [successfulOrder, setSuccessfulOrder] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem('geostore_last_successful_order') || 'null');
+    } catch {
+      return null;
+    }
+  });
 
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
     phone: '',
+    email: '',
     address: ''
   });
 
@@ -1007,8 +1018,9 @@ export default function App() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
-    if (isSubmittingOrder) return;
-
+    // Ref lock blocks rapid double taps before React can render the disabled button.
+    if (orderSubmissionLock.current || isSubmittingOrder) return;
+    orderSubmissionLock.current = true;
     setIsSubmittingOrder(true);
     setCheckoutError('');
     showToast('შეკვეთის გაგზავნა დაიწყო...');
@@ -1016,11 +1028,22 @@ export default function App() {
     const customerName = checkoutForm.name?.trim() || '';
     const customerPhone = checkoutForm.phone?.trim() || '';
     const customerAddress = checkoutForm.address?.trim() || '';
+    const customerEmail = checkoutForm.email?.trim().toLowerCase() || '';
+
+    if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      const message = 'გთხოვთ, შეიყვანოთ ელფოსტის სწორი მისამართი.';
+      setCheckoutError(message);
+      showToast(message);
+      orderSubmissionLock.current = false;
+      setIsSubmittingOrder(false);
+      return;
+    }
 
     if (!customerName || !customerPhone || !customerAddress) {
       const message = 'შეავსეთ სახელი, ტელეფონი და მისამართი.';
       setCheckoutError(message);
       showToast(message);
+      orderSubmissionLock.current = false;
       setIsSubmittingOrder(false);
       return;
     }
@@ -1049,6 +1072,7 @@ export default function App() {
       const message = 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
       setCheckoutError(message);
       showToast(message);
+      orderSubmissionLock.current = false;
       setIsSubmittingOrder(false);
       return;
     }
@@ -1091,6 +1115,7 @@ export default function App() {
               phone: customerPhone,
               address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
               user_email: orderUserEmail,
+              customer_email: orderSession?.user?.email || customerEmail || null,
               items: itemsToOrder,
               total_gel: cartTotalGEL
             }
@@ -1110,10 +1135,12 @@ export default function App() {
         err.message || 'შეკვეთის გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.';
       setCheckoutError(message);
       showToast(message);
+      orderSubmissionLock.current = false;
       setIsSubmittingOrder(false);
       return;
     }
 
+    const orderCustomerEmail = orderUserEmail === 'guest' ? customerEmail : orderUserEmail;
     const newOrderObj = {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
@@ -1122,6 +1149,7 @@ export default function App() {
       phone: customerPhone,
       address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
       user_email: orderUserEmail,
+      customer_email: orderCustomerEmail || null,
       items: itemsToOrder,
       totalGEL: cartTotalGEL,
       total_gel: cartTotalGEL,
@@ -1144,12 +1172,18 @@ export default function App() {
     setIsCheckoutOpen(false);
     setCheckoutError('');
     setIsSubmittingOrder(false);
+    orderSubmissionLock.current = false;
     setCart([]);
     setAppliedCoupon(null);
 
-    showToast(
-      `✅ შეკვეთა #${orderId} წარმატებით გაფორმდა!`
-    );
+    const successDetails = { id: orderId, email: orderCustomerEmail || '' };
+    setSuccessfulOrder(successDetails);
+    try {
+      sessionStorage.setItem('geostore_last_successful_order', JSON.stringify(successDetails));
+    } catch {
+      // Success modal still remains visible for the current page session.
+    }
+    showToast(`✅ შეკვეთა #${orderId} წარმატებით გაფორმდა!`);
   };
 
   const filteredProducts = useMemo(() => {
@@ -1190,6 +1224,60 @@ export default function App() {
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
+        </div>
+      )}
+
+      {successfulOrder && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="order-success-title" className="w-full max-w-md rounded-[2rem] border border-emerald-400/30 bg-[#0d0d10] p-7 text-center text-white shadow-2xl space-y-5">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-400/30">
+              <CheckCircle2 className="h-9 w-9 text-emerald-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 id="order-success-title" className="text-xl font-black">შეკვეთა წარმატებით გაფორმდა!</h2>
+              <p className="text-sm text-slate-400">შეინახეთ შეკვეთის კოდი — მისი გამოყენებით შეძლებთ შეკვეთის მოძებნას.</p>
+            </div>
+            <div className="rounded-2xl border border-emerald-400/25 bg-slate-950/70 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">შეკვეთის კოდი</p>
+              <p className="mt-1 text-2xl font-black tracking-wider text-emerald-400">{successfulOrder.id}</p>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(successfulOrder.id);
+                  } else {
+                    const field = document.createElement('textarea');
+                    field.value = successfulOrder.id;
+                    field.setAttribute('readonly', '');
+                    field.style.position = 'fixed';
+                    field.style.opacity = '0';
+                    document.body.appendChild(field);
+                    field.select();
+                    document.execCommand('copy');
+                    field.remove();
+                  }
+                  showToast('შეკვეთის კოდი დაკოპირდა.');
+                } catch {
+                  showToast('კოდის კოპირება ვერ მოხერხდა — გთხოვთ, ხელით შეინახოთ.');
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-sm font-black text-slate-950 transition hover:bg-emerald-400"
+            >
+              <Copy className="h-4 w-4" /> კოდის კოპირება
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSuccessfulOrder(null);
+                try { sessionStorage.removeItem('geostore_last_successful_order'); } catch { /* storage unavailable */ }
+              }}
+              className="w-full rounded-2xl border border-slate-700 px-4 py-3 text-sm font-bold text-slate-300 transition hover:bg-slate-800"
+            >
+              დახურვა
+            </button>
+          </div>
         </div>
       )}
 
