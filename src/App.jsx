@@ -1091,8 +1091,9 @@ export default function App() {
               phone: customerPhone,
               address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
               user_email: orderUserEmail,
-              items: itemsToOrder,
-              total_gel: cartTotalGEL
+              items: itemsToOrder.map((item) => ({ id: item.id, quantity: Number(item.quantity) || 1 })),
+              coupon_code: appliedCoupon?.code || '',
+              delivery_region: selectedRegion
             }
           })
         }
