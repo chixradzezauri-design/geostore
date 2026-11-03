@@ -302,7 +302,11 @@ export default function StoreView({
                 {banner.tag && <span className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-300">{banner.tag}</span>}
                 {banner.title && <h2 className="text-xl font-black sm:text-2xl">{banner.title}</h2>}
                 {banner.subtitle && <p className="text-sm text-white/85">{banner.subtitle}</p>}
-                {banner.ctaText && <a href={banner.ctaUrl || '#'} className="mt-2 inline-flex rounded-full bg-white px-4 py-2 text-xs font-bold text-stone-900">{banner.ctaText}</a>}
+                {banner.ctaText && (() => {
+                  const rawUrl = String(banner.ctaUrl || '').trim();
+                  const safeUrl = /^(https?:\/\/|\/|#)/i.test(rawUrl) && !/^\/\//.test(rawUrl) ? rawUrl : '#';
+                  return <a href={safeUrl} rel={/^https?:\/\//i.test(safeUrl) ? 'noopener noreferrer' : undefined} target={/^https?:\/\//i.test(safeUrl) ? '_blank' : undefined} className="mt-2 inline-flex rounded-full bg-white px-4 py-2 text-xs font-bold text-stone-900">{banner.ctaText}</a>;
+                })()}
               </div>
             </article>
           ))}
