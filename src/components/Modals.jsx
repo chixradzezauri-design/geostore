@@ -334,16 +334,16 @@ export default function Modals({
 
                   <div className="grid grid-cols-2 gap-3 text-xs text-slate-300 pt-1">
                     <div>
-                      <span className="text-slate-500 text-[10px] block">მიმღები:</span>
-                      <b>{trackedOrder.customerName}</b>
+                      <span className="text-slate-500 text-[10px] block">შეკვეთის თარიღი:</span>
+                      <b>{trackedOrder.date || '—'}</b>
                     </div>
                     <div>
-                      <span className="text-slate-500 text-[10px] block">ტელეფონი:</span>
-                      <b>{trackedOrder.phone}</b>
+                      <span className="text-slate-500 text-[10px] block">ჯამური თანხა:</span>
+                      <b className="text-amber-300">{Number(trackedOrder.totalGEL || 0).toFixed(2)} ₾</b>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-slate-500 text-[10px] block">მისამართი:</span>
-                      <b className="text-slate-200">{trackedOrder.address}</b>
+                      <span className="text-slate-500 text-[10px] block">შეკვეთის შემადგენლობა:</span>
+                      <b className="text-slate-200">{trackedOrder.itemSummary || 'პროდუქტები'}</b>
                     </div>
                   </div>
                 </div>
