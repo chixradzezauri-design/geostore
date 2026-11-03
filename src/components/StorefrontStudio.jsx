@@ -118,7 +118,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
         created_by: authData?.user?.id || null
       });
       if (versionError) throw versionError;
-      setConfigExists(true); setIsDirty(false); setMessage('ვერსია გამოქვეყნდა მონაცემთა ბაზაში. storefront-ზე ავტომატური გადართვა შემდეგ ინტეგრაციის ეტაპზე ჩაირთვება.');
+      setConfigExists(true); setIsDirty(false); setMessage('ვერსია გამოქვეყნდა. საჯარო გვერდი ახალ კონფიგურაციას ჩატვირთავს განახლებისას.');
       await load();
     } catch (e) { setError(e?.message || 'გამოქვეყნება ვერ მოხერხდა.'); }
     finally { setPublishing(false); }
@@ -189,6 +189,10 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
               <input value={banner.title||''} placeholder="სათაური" onChange={e=>update('banners',config.banners.map((b,i)=>i===index?{...b,title:e.target.value}:b))} className="rounded-lg border border-stone-200 p-3"/>
               <input value={banner.subtitle||''} placeholder="ქვესათაური" onChange={e=>update('banners',config.banners.map((b,i)=>i===index?{...b,subtitle:e.target.value}:b))} className="rounded-lg border border-stone-200 p-3"/>
               <input value={banner.image||''} placeholder="სურათის URL" onChange={e=>update('banners',config.banners.map((b,i)=>i===index?{...b,image:e.target.value}:b))} className="rounded-lg border border-stone-200 p-3 sm:col-span-2"/>
+              <input value={banner.ctaText||''} placeholder="ღილაკის ტექსტი" onChange={e=>update('banners',config.banners.map((b,i)=>i===index?{...b,ctaText:e.target.value}:b))} className="rounded-lg border border-stone-200 p-3"/>
+              <input value={banner.ctaUrl||''} placeholder="ღილაკის ბმული" onChange={e=>update('banners',config.banners.map((b,i)=>i===index?{...b,ctaUrl:e.target.value}:b))} className="rounded-lg border border-stone-200 p-3"/>
+              <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={banner.visible!==false} onChange={e=>update('banners',config.banners.map((b,i)=>i===index?{...b,visible:e.target.checked}:b))}/> გამოჩენა</label>
+              <div className="flex gap-2"><button onClick={()=>{const next=[...config.banners];if(index>0){[next[index-1],next[index]]=[next[index],next[index-1]];update('banners',next);}}} className="rounded-lg bg-stone-100 px-3 py-2 text-xs">↑</button><button onClick={()=>{const next=[...config.banners];if(index<next.length-1){[next[index+1],next[index]]=[next[index],next[index+1]];update('banners',next);}}} className="rounded-lg bg-stone-100 px-3 py-2 text-xs">↓</button></div>
               <button onClick={()=>update('banners',config.banners.filter((_,i)=>i!==index))} className="justify-self-start rounded-lg bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">ბანერის წაშლა</button>
             </div>)}
             <button onClick={()=>update('banners',[...(config.banners||[]),{id:'banner-'+Date.now(),title:'ახალი ბანერი',subtitle:'',image:''}])} className="rounded-xl bg-stone-900 px-4 py-3 text-sm font-bold text-white flex items-center gap-2"><Plus size={16}/> ბანერის დამატება</button>
