@@ -1321,10 +1321,20 @@ export default function App() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      const selectedCategoryConfig = (storefrontCategories || []).find(
+        category => (typeof category === 'object' ? category.name : category) === selectedCategory
+      );
+      const selectedCategoryId = selectedCategoryConfig?.id || selectedCategoryConfig?.name;
+      const selectedSubcategoryNames = selectedCategoryId
+        ? (storefrontCategories || [])
+            .filter(category => typeof category === 'object' && category.parentId === selectedCategoryId)
+            .map(category => category.name)
+        : [];
       const matchesCategory =
         selectedCategory === t.allCategories ||
         selectedCategory === 'ყველა' ||
-        p.category === selectedCategory;
+        p.category === selectedCategory ||
+        selectedSubcategoryNames.includes(p.category);
 
       const matchesVendor =
         selectedVendorFilter === t.allVendors ||
@@ -1346,6 +1356,7 @@ export default function App() {
     selectedCategory,
     selectedVendorFilter,
     searchQuery,
+    storefrontCategories,
     t
   ]);
 
