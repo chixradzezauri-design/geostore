@@ -584,7 +584,9 @@ export default function AdminDashboardPro({
     const salesTrend = Array.from(trendBuckets.values()).sort((a, b) => a.key.localeCompare(b.key)).slice(useDailyTrend ? -90 : -24);
     const bestSellingProducts = Array.from(productProfitTotals.values())
       .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
-    const lowStockProducts = (products || []).map(product => ({
+    const lowStockProducts = (products || []).filter(product =>
+      product.stock !== null && product.stock !== undefined && String(product.stock).trim() !== ''
+    ).map(product => ({
       ...product,
       _stockValue: Number(product.stock)
     })).filter(product => Number.isFinite(product._stockValue) && product._stockValue >= 0 && product._stockValue <= 5)
@@ -1810,7 +1812,7 @@ export default function AdminDashboardPro({
                   <span className="text-[10px] text-slate-400">ზღვარი: 5 ცალი</span>
                 </div>
                 {financialOverview.lowStockProducts.length === 0 ? <p className="text-emerald-300 text-xs py-6">ყველა პროდუქტს საკმარისი მარაგი აქვს ან მარაგი მითითებული არ არის.</p> : financialOverview.lowStockProducts.map(product => (
-                  <div key={product.id} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                  <div key={product.id || product.sku || product.name} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
                     <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}</span></div>
                     <span className={product._stockValue === 0 ? 'text-rose-300 font-black whitespace-nowrap' : 'text-amber-300 font-black whitespace-nowrap'}>{product._stockValue === 0 ? 'არ არის მარაგში' : `${product._stockValue} ცალი დარჩა`}</span>
                   </div>
