@@ -606,7 +606,7 @@ export default function AdminDashboardPro({
   const exportCsv = (filename, headers, rows) => {
     const escapeCell = value => {
       const raw = value === null || value === undefined ? '' : String(value);
-      const safe = /^[=+@\\-\\t\\r]/.test(raw) ? "'" + raw : raw;
+      const safe = /^[=+@\\-]/.test(raw) ? "'" + raw : raw;
       return '"' + safe.replace(/"/g, '""') + '"';
     };
     const csv = [headers, ...rows].map(row => row.map(escapeCell).join(';')).join('\\r\\n');
@@ -618,7 +618,7 @@ export default function AdminDashboardPro({
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const handleExportAnalytics = () => {
