@@ -694,32 +694,29 @@ export default function App() {
     return Math.max(0, sub) + currentDeliveryCost;
   }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
 
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
-
     const cleanCode = promoInput.trim().toUpperCase();
-
     if (!cleanCode) return;
-
-    const found = coupons.find(
-      (c) =>
-        c.code.toUpperCase() === cleanCode &&
-        (c.status === 'აქტიური' || !c.status)
-    );
-
-    if (found) {
-      setAppliedCoupon(found);
-
-      showToast(
-        `🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/store_coupons?code=eq.${encodeURIComponent(cleanCode)}&active=eq.true&select=code,discount_percent,min_order_gel`,
+        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
       );
-
+      if (!response.ok) throw new Error('კუპონის შემოწმება ვერ მოხერხდა.');
+      const rows = await response.json();
+      const row = rows?.[0];
+      if (!row) throw new Error('არასწორი ან გაუქმებული პრომო-კოდი!');
+      const found = { code: row.code, discountPercent: Number(row.discount_percent), minOrderGEL: Number(row.min_order_gel) || 0, status: 'აქტიური' };
+      if (cartSubtotalGEL < found.minOrderGEL) throw new Error(`კუპონის მინიმალური შეკვეთა: ${found.minOrderGEL} ₾`);
+      setAppliedCoupon(found);
+      showToast(`🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`);
       setPromoInput('');
-    } else {
-      alert('არასწორი ან გაუქმებული პრომო-კოდი!');
+    } catch (error) {
+      setAppliedCoupon(null);
+      alert(error.message || 'კუპონის შემოწმება ვერ მოხერხდა.');
     }
   };
-
   const proAnalytics = useMemo(() => {
     const totalRevenueGEL = orders.reduce(
       (acc, o) => acc + (Number(o.totalGEL) || 0),
