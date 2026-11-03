@@ -340,9 +340,9 @@ export default function StoreView({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-amber-400" /> ელიტარული კატეგორიები & სუბკატეგორიები
+              <FolderTree className="w-4 h-4 text-amber-400" /> აღმოაჩინე კოლექციები
             </h3>
-            <p className="text-slate-400 text-xs mt-0.5">აირჩიეთ კატეგორია ან სუბკატეგორია ზუსტი ძიებისთვის</p>
+            <p className="text-slate-400 text-xs mt-0.5">შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი</p>
           </div>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
             {processedProducts?.length || 0} პროდუქტი ვიტრინაზე
@@ -379,7 +379,7 @@ export default function StoreView({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div 
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
-            className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+            className={`gs-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
                 ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                 : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
@@ -417,7 +417,7 @@ export default function StoreView({
                   setSelectedSubCategory(null);
                   setOpenParentCatId(isOpen ? null : catId);
                 }}
-                className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+                className={`gs-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
                   isSelected 
                     ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                     : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
