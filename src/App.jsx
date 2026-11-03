@@ -1122,11 +1122,14 @@ export default function App() {
       customer_name: customerName,
       customerName: customerName,
       phone: customerPhone,
-      address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+      address: customerAddress,
       user_email: orderUserEmail,
-      items: itemsToOrder,
-      totalGEL: cartTotalGEL,
-      total_gel: cartTotalGEL,
+      items: serverOrderResult.items || itemsToOrder,
+      subtotalGEL: Number(serverOrderResult.subtotal_gel) || 0,
+      discountGEL: Number(serverOrderResult.discount_gel) || 0,
+      deliveryGEL: Number(serverOrderResult.delivery_gel) || 0,
+      totalGEL: Number(serverOrderResult.total_gel),
+      total_gel: Number(serverOrderResult.total_gel),
       status: 'ახალი',
       itemSummary: itemsToOrder
         .map((i) => `${i.name} (x${i.quantity})`)
