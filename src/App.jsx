@@ -1093,7 +1093,7 @@ export default function App() {
       const orderSession = session?.access_token && session?.user?.email ? session : null;
       orderUserEmail = orderSession?.user?.email || 'guest';
 
-      const checkoutFingerprint = JSON.stringify({
+      const checkoutFingerprintSource = JSON.stringify({
         customerName,
         customerPhone,
         customerAddress,
@@ -1105,6 +1105,15 @@ export default function App() {
         couponCode: eligibleCoupon?.code || '',
         deliveryRegion: selectedRegion
       });
+      // Persist only a one-way digest, never raw name, phone, address or email.
+      if (!globalThis.crypto?.subtle) {
+        throw new Error('უსაფრთხო შეკვეთის განმეორებითი შემოწმება ამ ბრაუზერში მიუწვდომელია. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
+      }
+      const fingerprintBytes = new TextEncoder().encode(checkoutFingerprintSource);
+      const fingerprintDigest = await globalThis.crypto.subtle.digest('SHA-256', fingerprintBytes);
+      const checkoutFingerprint = Array.from(new Uint8Array(fingerprintDigest), (byte) =>
+        byte.toString(16).padStart(2, '0')
+      ).join('');
       const pendingStorageKey = 'geostore_pending_checkout_v1';
       let savedPendingCheckout = pendingCheckoutRef.current;
 
@@ -1116,11 +1125,14 @@ export default function App() {
         }
       }
 
+      // Accept a matching legacy plaintext fingerprint once, then immediately replace it with the digest.
       if (
-        savedPendingCheckout?.fingerprint === checkoutFingerprint &&
-        savedPendingCheckout?.id
+        savedPendingCheckout?.id &&
+        (savedPendingCheckout.fingerprint === checkoutFingerprint ||
+          savedPendingCheckout.fingerprint === checkoutFingerprintSource)
       ) {
         orderId = savedPendingCheckout.id;
+        savedPendingCheckout = { id: orderId, fingerprint: checkoutFingerprint };
       } else {
         const generatedId =
           typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
