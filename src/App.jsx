@@ -365,8 +365,14 @@ export default function App() {
       if (!mounted) return;
 
       const authUser = session?.user || null;
+      const authorizedAdmin = isAuthorizedAdmin(authUser);
       setCurrentUser(normalizeAuthUser(authUser));
-      setAdminLoggedIn(isAuthorizedAdmin(authUser));
+      setAdminLoggedIn(authorizedAdmin);
+      // Route verified administrator accounts directly to the dashboard.
+      // Ordinary users remain in the storefront; URL flags never grant access.
+      setActiveTab((current) =>
+        authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
+      );
       setAuthLoading(false);
     });
 
@@ -382,8 +388,12 @@ export default function App() {
 
         if (mounted) {
           const authUser = data?.user || null;
+          const authorizedAdmin = isAuthorizedAdmin(authUser);
           setCurrentUser(normalizeAuthUser(authUser));
-          setAdminLoggedIn(isAuthorizedAdmin(authUser));
+          setAdminLoggedIn(authorizedAdmin);
+          setActiveTab((current) =>
+            authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
+          );
         }
       } catch (error) {
         console.error('Supabase session restore error:', error);
