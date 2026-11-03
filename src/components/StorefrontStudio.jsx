@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Save, Eye, Globe, History, RotateCcw, Plus, Trash2, ChevronUp, ChevronDown, Monitor, Smartphone, Tablet, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
@@ -31,6 +31,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
   const [previewDevice, setPreviewDevice] = useState('desktop');
   const [activePanel, setActivePanel] = useState('home');
   const [isDirty, setIsDirty] = useState(false);
+  const [configExists, setConfigExists] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,6 +43,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
         .eq('config_key', CONFIG_KEY)
         .maybeSingle();
       if (readError) throw readError;
+      setConfigExists(!!data);
       if (data?.draft_config) setConfig(data.draft_config);
       const { data: history, error: historyError } = await supabase
         .from('storefront_versions')
@@ -79,20 +81,21 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       const payload = {
-        config_key: CONFIG_KEY,
         draft_config: config,
-        is_published: false,
         draft_updated_at: new Date().toISOString(),
         updated_by: authData?.user?.id || null
       };
-      const { error: saveError } = await supabase.from('storefront_config').upsert(payload, { onConflict: 'config_key' });
+      const saveQuery = configExists
+        ? supabase.from('storefront_config').update(payload).eq('config_key', CONFIG_KEY)
+        : supabase.from('storefront_config').insert({ ...payload, config_key: CONFIG_KEY });
+      const { error: saveError } = await saveQuery;
       if (saveError) throw saveError;
       const { error: versionError } = await supabase.from('storefront_versions').insert({
         config_key: CONFIG_KEY, snapshot: config, version_label: 'Draft-ის შენახვა',
         created_by: authData?.user?.id || null
       });
       if (versionError) throw versionError;
-      setIsDirty(false); setMessage('Draft წარმატებით შეინახა.');
+      setConfigExists(true); setIsDirty(false); setMessage('Draft წარმატებით შეინახა.');
       await load();
     } catch (e) { setError(e?.message || 'Draft-ის შენახვა ვერ მოხერხდა.'); }
     finally { setSaving(false); }
@@ -115,7 +118,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
         created_by: authData?.user?.id || null
       });
       if (versionError) throw versionError;
-      setIsDirty(false); setMessage('ვერსია გამოქვეყნდა მონაცემთა ბაზაში. storefront-ზე ავტომატური გადართვა შემდეგ ინტეგრაციის ეტაპზე ჩაირთვება.');
+      setConfigExists(true); setIsDirty(false); setMessage('ვერსია გამოქვეყნდა მონაცემთა ბაზაში. storefront-ზე ავტომატური გადართვა შემდეგ ინტეგრაციის ეტაპზე ჩაირთვება.');
       await load();
     } catch (e) { setError(e?.message || 'გამოქვეყნება ვერ მოხერხდა.'); }
     finally { setPublishing(false); }
