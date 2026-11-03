@@ -459,6 +459,8 @@ export default function App() {
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
+            adminNote: o.admin_note || '',
+            items: Array.isArray(o.items) ? o.items : [],
             stock_deducted_at: o.stock_deducted_at || null,
             stock_restored_at: o.stock_restored_at || null,
             itemSummary: Array.isArray(o.items)
@@ -476,71 +478,84 @@ export default function App() {
 
   const fetchProductsFromDatabase = async () => {
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/products?select=${adminLoggedIn ? '*' : 'id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured'}&order=created_at.desc`,
-        { headers: await getSupabaseHeaders({ authenticated: adminLoggedIn }) }
-      );
+      const headers = await getSupabaseHeaders({ authenticated: adminLoggedIn });
+      const res = adminLoggedIn
+        ? await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_products`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({})
+          })
+        : await fetch(
+            `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc`,
+            { headers }
+          );
 
-      if (res.ok) {
-        const data = await res.json();
+      if (!res.ok) {
+        const errorBody = await res.text().catch(() => '');
+        throw new Error(errorBody || 'პროდუქტების ჩატვირთვა ვერ მოხერხდა.');
+      }
 
-        if (data && data.length > 0) {
-          const formatted = data.map((p) => ({
-            id: p.id,
-            sku: p.sku || `GEO-${p.id}`,
-            name: p.name,
-            category: p.category || 'სმარტფონები',
-            priceGEL: Number(p.price_gel),
-            oldPriceGEL: p.old_price_gel
-              ? Number(p.old_price_gel)
-              : null,
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const formatted = data.map((p) => ({
+          id: p.id,
+          sku: p.sku || `GEO-${p.id}`,
+          name: p.name,
+          category: p.category || 'სმარტფონები',
+          priceGEL: Number(p.price_gel),
+          oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
+          stock: p.stock === null || p.stock === undefined ? 0 : Number(p.stock),
+          vendor: p.vendor || 'GEOSTORE',
+          description: p.description || '',
+          image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
+          availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
+          availableColors: p.available_colors || ['შავი', 'თეთრი'],
+          gallery: p.gallery || (p.image ? [p.image] : []),
+          variants: p.variants || [],
+          tags: p.tags || [],
+          // purchase_cost is returned only by the admin-only RPC.
+          purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? 0 : Number(p.purchase_cost),
+          material: p.material || '',
+          durability: p.durability || '',
+          brand: p.brand || '',
+          model: p.model || '',
+          cpu: p.cpu || '',
+          ram: p.ram || '',
+          storage: p.storage || '',
+          gpu: p.gpu || '',
+          screenSize: p.screen_size || '',
+          os: p.os || '',
+          isFeatured: Boolean(p.is_featured)
+        }));
 
-            // 0 მარაგი უნდა დარჩეს 0-ად და არ გადაიქცეს 1-ად.
-            stock:
-              p.stock === null || p.stock === undefined
-                ? 0
-                : Number(p.stock),
-
-            vendor: p.vendor || 'GEOSTORE',
-            description: p.description || '',
-            image:
-              p.image ||
-              'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
-            availableSizes:
-              p.available_sizes || ['S', 'M', 'L', 'XL'],
-            availableColors: p.available_colors || ['შავი', 'თეთრი'],
-            gallery: p.gallery || (p.image ? [p.image] : []),
-            variants: p.variants || [],
-            tags: p.tags || [],
-            purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? 0 : Number(p.purchase_cost),
-            material: p.material || '',
-            durability: p.durability || '',
-            brand: p.brand || '',
-            model: p.model || '',
-            cpu: p.cpu || '',
-            ram: p.ram || '',
-            storage: p.storage || '',
-            gpu: p.gpu || '',
-            screenSize: p.screen_size || '',
-            os: p.os || '',
-            isFeatured: Boolean(p.is_featured)
-          }));
-
-          setProducts(formatted);
-
-          try {
-            localStorage.setItem(
-              'geostore_products',
-              JSON.stringify(formatted)
-            );
-          } catch {
-            // localStorage შეიძლება მიუწვდომელი იყოს.
-          }
+        setProducts(formatted);
+        try {
+          localStorage.setItem('geostore_products', JSON.stringify(formatted));
+        } catch {
+          // localStorage შეიძლება მიუწვდომელი იყოს.
         }
       }
     } catch (error) {
       console.error('Products fetch error:', error);
     }
+  };
+
+  const lookupOrderForTracking = async (orderId, phone) => {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/rpc/lookup_order_for_tracking`,
+      {
+        method: 'POST',
+        headers: await getSupabaseHeaders({ authenticated: true }),
+        body: JSON.stringify({ p_order_id: orderId, p_phone: phone })
+      }
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '');
+      throw new Error(errorBody || 'შეკვეთის მოძებნა ვერ მოხერხდა.');
+    }
+
+    return response.json();
   };
 
   useEffect(() => {
@@ -1075,6 +1090,7 @@ export default function App() {
           : t.otherDelivery;
 
     let orderUserEmail = 'guest';
+    let serverOrderResult = null;
 
     try {
       // 128-bit random ID prevents predictable order references; legacy IDs remain valid.
@@ -1117,6 +1133,8 @@ export default function App() {
               user_email: orderSession?.user?.email || 'guest',
               customer_email: orderUserEmail,
               items: itemsToOrder,
+              coupon_code: appliedCoupon?.code || '',
+              delivery_region: selectedRegion,
               total_gel: cartTotalGEL
             }
           })
@@ -1128,6 +1146,11 @@ export default function App() {
         throw new Error(
           errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.'
         );
+      }
+
+      serverOrderResult = await response.json();
+      if (!serverOrderResult?.order_id || serverOrderResult.order_id !== orderId) {
+        throw new Error('სერვერისგან შეკვეთის დადასტურება ვერ მივიღეთ.');
       }
     } catch (err) {
       console.error('Order submission failed:', err);
@@ -1146,13 +1169,13 @@ export default function App() {
       customer_name: customerName,
       customerName: customerName,
       phone: customerPhone,
-      address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+      address: `${customerAddress} (${regionText}, მიწოდება: ${Number(serverOrderResult.delivery_gel) || 0} ₾)`,
       user_email: orderUserEmail,
-      items: itemsToOrder,
-      totalGEL: cartTotalGEL,
-      total_gel: cartTotalGEL,
+      items: Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder,
+      totalGEL: Number(serverOrderResult.total_gel),
+      total_gel: Number(serverOrderResult.total_gel),
       status: 'ახალი',
-      itemSummary: itemsToOrder
+      itemSummary: (Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder)
         .map((i) => `${i.name} (x${i.quantity})`)
         .join(', ')
     };
@@ -1171,7 +1194,7 @@ export default function App() {
     setCheckoutError('');
     setIsSubmittingOrder(false);
     orderSubmitLock.current = false;
-    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: cartTotalGEL });
+    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: Number(serverOrderResult.total_gel) });
     setCart([]);
     setAppliedCoupon(null);
 
@@ -1854,6 +1877,7 @@ export default function App() {
         notifications={notifications}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
         orders={orders}
+        lookupOrderForTracking={lookupOrderForTracking}
         selectedRegion={selectedRegion}
         setSelectedRegion={setSelectedRegion}
         deliveryFees={deliveryFees}
