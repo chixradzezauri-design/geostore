@@ -147,3 +147,67 @@ input, select, textarea, button {
  .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group h3{font-size:12px!important}
  .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group button:last-child{width:calc(100% - 20px)!important;margin:0 10px 10px!important;padding:12px 6px!important;font-size:9px!important}
 }
+
+
+/* GEOSTORE fashion refinement — layout, hierarchy and responsive sizing */
+html,body,#root{width:100%;min-width:0;max-width:100%;margin:0}
+.geostore-fashion-store{width:100%!important;min-width:0!important;max-width:100%!important;overflow-x:clip!important}
+.geostore-fashion-store>div{min-width:0}
+.geostore-fashion-store>main{width:100%!important;max-width:1440px!important;min-width:0!important;padding-left:clamp(14px,3vw,42px)!important;padding-right:clamp(14px,3vw,42px)!important}
+.geostore-fashion-store .geostore-storefront{width:100%!important;max-width:1440px!important;min-width:0!important;margin-inline:auto!important;padding:0 0 72px!important;gap:clamp(26px,4vw,54px)!important}
+.geostore-fashion-store header{width:100%!important;max-width:none!important}
+.geostore-fashion-store header .max-w-7xl{width:100%!important;max-width:1440px!important;padding-inline:clamp(14px,3vw,42px)!important}
+.geostore-fashion-store header>div:first-child{min-height:26px!important;padding-block:6px!important}
+.geostore-fashion-store .geostore-storefront .gs-fashion-hero{width:100%!important;min-height:clamp(390px,43vw,610px)!important}
+.geostore-fashion-store .geostore-storefront .gs-fashion-hero__content{width:min(690px,68%)!important}
+.geostore-fashion-store .geostore-storefront .gs-fashion-hero h1{max-width:660px!important;font-size:clamp(38px,5.4vw,76px)!important}
+.geostore-fashion-store .geostore-storefront>div.space-y-6{background:transparent!important;padding:0!important}
+.geostore-fashion-store .geostore-storefront .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+.geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo),
+.geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:first-child:not(:has(.gs-category-photo)){height:clamp(128px,15vw,190px)!important;min-height:0!important;padding:12px!important}
+.geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo) h4{font-size:clamp(13px,1.35vw,18px)!important}
+.geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo) p{font-size:9px!important}
+.geostore-fashion-store .geostore-storefront .grid:has(>div.group){grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:clamp(10px,1.8vw,22px)!important}
+.geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group>div:first-child{height:clamp(190px,23vw,310px)!important}
+.geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group>div:nth-child(2){padding:14px 14px 10px!important}
+.geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group button:last-child{min-height:40px!important}
+.geostore-fashion-store .geostore-storefront h3{font-size:clamp(20px,2vw,27px)!important}
+.geostore-fashion-store .geostore-storefront footer{background:#25211e!important;color:#eee!important;border:0!important}
+.geostore-fashion-store .geostore-storefront footer *{color:#eee!important}
+.geostore-fashion-store .geostore-storefront [class*="bg-[#0e0e12]"],.geostore-fashion-store .geostore-storefront [class*="bg-[#0c0c0e]"]{background:#fff!important;border-color:#e9e1d9!important}
+@media(max-width:1024px){
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-5{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:700px){
+ .geostore-fashion-store>main{padding:14px 14px 0!important}
+ .geostore-fashion-store .geostore-storefront{padding:0 0 48px!important;gap:26px!important}
+ .geostore-fashion-store header .max-w-7xl{min-height:60px!important;padding:9px 14px!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero{min-height:440px!important;align-items:flex-end!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero__image{background-position:58% 35%!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero:after{background:linear-gradient(0deg,rgba(247,243,237,.98) 0%,rgba(247,243,237,.91) 48%,rgba(247,243,237,.12) 100%)!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero__content{width:100%!important;padding:24px 20px 26px!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero h1{font-size:clamp(34px,9vw,48px)!important;line-height:1.08!important;max-width:100%!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero__description{font-size:13px!important;line-height:1.65!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero__actions{margin-top:18px!important;gap:12px!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-primary{padding:13px 16px!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero__stamp{top:16px!important;right:14px!important}
+ .geostore-fashion-store .geostore-storefront .gs-fashion-hero__stamp strong{font-size:16px!important}
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2.sm\\:grid-cols-3.lg\\:grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo),
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:first-child:not(:has(.gs-category-photo)){height:124px!important;min-height:124px!important;padding:10px!important}
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo) h4{font-size:14px!important;line-height:1.25!important}
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo) p{font-size:8px!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group){grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group>div:first-child{height:clamp(155px,53vw,225px)!important;padding:8px!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group>div:nth-child(2){padding:10px 9px 7px!important;gap:6px!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group h3{font-size:11px!important;line-height:1.4!important;min-height:31px!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group button:last-child{width:calc(100% - 18px)!important;margin:0 9px 9px!important;padding:10px 5px!important;font-size:9px!important}
+ .geostore-fashion-store .geostore-storefront>div:nth-child(2):has(.grid){padding:16px!important}
+ .geostore-fashion-store .geostore-storefront h3{font-size:20px!important}
+}
+@media(max-width:380px){
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:has(.gs-category-photo),
+ .geostore-fashion-store .geostore-storefront .grid.grid-cols-2>div:first-child:not(:has(.gs-category-photo)){height:112px!important;min-height:112px!important}
+ .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group>div:first-child{height:155px!important}
+}
