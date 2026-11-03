@@ -709,7 +709,7 @@ export default function AdminDashboardPro({
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
           method: 'DELETE',
-          headers: await getSupabaseHeaders()
+          headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' }
         });
         if (res.ok) {
           if (typeof setProducts === 'function') {
@@ -734,7 +734,7 @@ export default function AdminDashboardPro({
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
         method: 'PATCH',
-        headers: await getSupabaseHeaders(),
+        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
         body: JSON.stringify({ [dbField]: val })
       });
 
@@ -850,7 +850,7 @@ export default function AdminDashboardPro({
         : `${SUPABASE_URL}/rest/v1/products`;
       const res = await fetch(endpoint, {
         method: isEditing ? 'PATCH' : 'POST',
-        headers: await getSupabaseHeaders(),
+        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
         body: JSON.stringify(newProdPayload)
       });
       if (!res.ok) {
