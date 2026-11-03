@@ -83,6 +83,8 @@ export default function AdminDashboardPro({
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
+  const [orderPageByStatus, setOrderPageByStatus] = useState({});
+  const ORDERS_PER_PAGE = 5;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
@@ -186,6 +188,7 @@ export default function AdminDashboardPro({
         if (typeof setOrders === 'function') {
           setOrders(data.map(o => ({
             id: o.id,
+            created_at: o.created_at || null,
             date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
             time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
             customerName: o.customer_name,
@@ -198,6 +201,7 @@ export default function AdminDashboardPro({
             adminNote: o.admin_note || '',
             stock_deducted_at: o.stock_deducted_at || null,
             stock_restored_at: o.stock_restored_at || null,
+            status_changed_at: o.status_changed_at || null,
             itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
           })));
         }
@@ -1382,7 +1386,18 @@ export default function AdminDashboardPro({
 
     const matchesStatus = orderStatusFilter === 'ყველა' || o.status === orderStatusFilter;
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    const aTime = Date.parse(a.status_changed_at || '') || Date.parse(a.created_at || '') || 0;
+    const bTime = Date.parse(b.status_changed_at || '') || Date.parse(b.created_at || '') || 0;
+    if (bTime !== aTime) return bTime - aTime;
+    return String(b.id).localeCompare(String(a.id));
   });
+
+  const currentOrderPage = Math.max(1, orderPageByStatus[orderStatusFilter] || 1);
+  const totalOrderPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE));
+  const safeOrderPage = Math.min(currentOrderPage, totalOrderPages);
+  const paginatedOrders = filteredOrders.slice((safeOrderPage - 1) * ORDERS_PER_PAGE, safeOrderPage * ORDERS_PER_PAGE);
+  const setCurrentOrderPage = (page) => setOrderPageByStatus(prev => ({ ...prev, [orderStatusFilter]: page }));
 
   const mainCategories = safeCategories.filter(c => !c.parentId);
 
@@ -1841,7 +1856,7 @@ export default function AdminDashboardPro({
                   type="text" 
                   placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
                   value={orderSearchQuery} 
-                  onChange={e => setOrderSearchQuery(e.target.value)} 
+                  onChange={e => { setOrderSearchQuery(e.target.value); setCurrentOrderPage(1); }} 
                   className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
                 />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
@@ -1865,7 +1880,7 @@ export default function AdminDashboardPro({
               {filteredOrders.length === 0 ? (
                 <p className="text-slate-500 text-xs py-10 text-center">შეკვეთები ვერ მოიძებნა.</p>
               ) : (
-                filteredOrders.map(o => (
+                paginatedOrders.map(o => (
                   <div key={o.id} className="bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
@@ -1937,6 +1952,18 @@ export default function AdminDashboardPro({
                     </div>
                   </div>
                 ))
+              )}
+              {filteredOrders.length > ORDERS_PER_PAGE && (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                  <p className="text-[11px] text-slate-400">ნაჩვენებია {(safeOrderPage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(safeOrderPage * ORDERS_PER_PAGE, filteredOrders.length)} / {filteredOrders.length}</p>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    <button type="button" onClick={() => setCurrentOrderPage(Math.max(1, safeOrderPage - 1))} disabled={safeOrderPage === 1} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">წინა</button>
+                    {Array.from({ length: totalOrderPages }, (_, index) => index + 1).map(page => (
+                      <button key={page} type="button" onClick={() => setCurrentOrderPage(page)} aria-current={safeOrderPage === page ? 'page' : undefined} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-black transition ${safeOrderPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
+                    ))}
+                    <button type="button" onClick={() => setCurrentOrderPage(Math.min(totalOrderPages, safeOrderPage + 1))} disabled={safeOrderPage === totalOrderPages} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">შემდეგი</button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
