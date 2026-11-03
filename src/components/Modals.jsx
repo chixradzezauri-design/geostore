@@ -370,26 +370,13 @@ export default function Modals({
                   </div>
                 </div>
 
-                <div className="bg-[#08080a] border border-amber-500/30 rounded-3xl p-4 sm:p-5 space-y-3 relative overflow-hidden shadow-2xl">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-bold text-white flex items-center gap-2">
-                       კურიერის ლაივ-რუკა
-                    </h4>
-                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1 font-bold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> GPS აქტიურია
-                    </span>
-                  </div>
-
-                  <div className="h-40 sm:h-44 bg-slate-900 rounded-2xl relative overflow-hidden flex items-center justify-center border border-amber-500/20 group">
-                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                    <div className="absolute w-3/4 h-1 bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full animate-pulse"></div>
-                    <div className="absolute left-8 bg-amber-500 text-slate-950 p-2 rounded-full shadow-lg border border-amber-300 z-10"><Navigation className="w-4 h-4" /></div>
-                    <div className="absolute left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 p-3 rounded-full shadow-2xl shadow-amber-500/50 animate-bounce z-20 border-2 border-white"><Truck className="w-5 h-5" /></div>
-                    <div className="absolute right-8 bg-emerald-500 text-slate-950 p-2 rounded-full shadow-lg border border-emerald-300 z-10"><MapPin className="w-4 h-4" /></div>
-                    <div className="absolute bottom-3 left-3 bg-[#0c0c0e]/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-[10px] text-amber-300 font-bold border border-amber-500/30">
-                      📍 კურიერი უახლოვდება დანიშნულების ადგილს
-                    </div>
-                  </div>
+                <div className="bg-[#121216] border border-amber-500/20 rounded-3xl p-4 sm:p-5 space-y-2">
+                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                    <Truck className="w-4 h-4" /> ინფორმაცია მიწოდებაზე
+                  </h4>
+                  <p className="text-xs leading-6 text-slate-300">
+                    შეკვეთის სტატუსი ახლდება ადმინპანელიდან. კურიერის GPS მდებარეობა ამჟამად საიტთან დაკავშირებული არ არის, ამიტომ რუკაზე ცოცხალი მდებარეობა არ აისახება.
+                  </p>
                 </div>
               </div>
             ) : (
