@@ -259,6 +259,7 @@ export default function AdminDashboardPro({
   };
 
   const [productForm, setProductForm] = useState(productFormInitial);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
   const [newVarName, setNewVarName] = useState('');
@@ -645,49 +646,51 @@ export default function AdminDashboardPro({
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-          method: 'DELETE',
-          headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' }
-        });
-        if (res.ok) {
-          if (typeof setProducts === 'function') {
-            setProducts(prev => (prev || []).filter(p => p.id !== id));
-          }
-          logActivity(`წაიშალა პროდუქტი ბაზიდან (ID: ${id})`);
-          alert('✅ პროდუქტი წარმატებით წაიშალა!');
-        } else {
-          alert('შეცდომა ბაზიდან წაშლისას');
-        }
-      } catch {
-        alert('ქსელის შეცდომა');
-      }
-    }
+    if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product', {
+        method: 'POST', headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_product_id: String(id) })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      if (await res.json() !== true) throw new Error('პროდუქტი ვერ წაიშალა ან აღარ არსებობს.');
+      if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => p.id !== id));
+      logActivity('წაიშალა პროდუქტი ბაზიდან (ID: ' + id + ')');
+      alert('✅ პროდუქტი წარმატებით წაიშალა!');
+    } catch (error) { alert('წაშლა ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
   const handleQuickUpdateProduct = async (id, field, value) => {
-    const val = field === 'priceGEL' || field === 'stock' || field === 'purchaseCost' ? Number(value) : value;
-    
-    const dbField = field === 'priceGEL' ? 'price_gel' : field === 'purchaseCost' ? 'purchase_cost' : field;
-
+    const current = (products || []).find(p => String(p.id) === String(id));
+    if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+    const numericFields = ['priceGEL', 'oldPriceGEL', 'purchaseCost', 'stock'];
+    const val = numericFields.includes(field) ? Number(value) : value;
+    if (numericFields.includes(field) && (!Number.isFinite(val) || val < 0)) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
+    const updated = { ...current, [field]: val };
+    const payload = {
+      id: String(updated.id), sku: updated.sku || null, name: updated.name,
+      category: updated.category || null, brand: updated.brand || null, vendor: updated.vendor || null,
+      price_gel: Number(updated.priceGEL ?? updated.price_gel ?? 0),
+      old_price_gel: updated.oldPriceGEL ?? updated.old_price_gel ?? null,
+      purchase_cost: Number(updated.purchaseCost ?? updated.purchase_cost ?? 0),
+      stock: Math.trunc(Number(updated.stock ?? 0)), image: updated.image || null,
+      description: updated.description || '', gallery: updated.gallery || [], tags: updated.tags || [],
+      available_sizes: updated.availableSizes || updated.available_sizes || [],
+      available_colors: updated.availableColors || updated.available_colors || [],
+      variants: updated.variants || [], material: updated.material || null, durability: updated.durability || null,
+      model: updated.model || null, cpu: updated.cpu || null, ram: updated.ram || null,
+      storage: updated.storage || null, gpu: updated.gpu || null,
+      screen_size: updated.screenSize || updated.screen_size || null, os: updated.os || null,
+      is_featured: Boolean(updated.isFeatured ?? updated.is_featured)
+    };
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
-        body: JSON.stringify({ [dbField]: val })
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
+        method: 'POST', headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_product: payload })
       });
-
-      if (!response.ok) {
-        throw new Error('პროდუქტის განახლება ბაზაში ვერ მოხერხდა.');
-      }
-
-      if (typeof setProducts === 'function') {
-        setProducts(prev => (prev || []).map(p => p.id === id ? { ...p, [field]: val } : p));
-      }
-    } catch (error) {
-      alert(error.message || 'პროდუქტის განახლებისას ქსელის შეცდომა მოხდა.');
-    }
+      if (!response.ok) throw new Error(await response.text());
+      if (typeof setProducts === 'function') setProducts(prev => (prev || []).map(p => String(p.id) === String(id) ? updated : p));
+    } catch (error) { alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
   const handleImageChange = (e) => {
@@ -707,18 +710,46 @@ export default function AdminDashboardPro({
     });
   };
 
+  const handleEditProduct = (p) => {
+    setEditingProductId(String(p.id));
+    setProductForm({
+      ...productFormInitial, name: p.name || '', category: p.category || productFormInitial.category,
+      priceGEL: String(p.priceGEL ?? p.price_gel ?? ''), oldPriceGEL: String(p.oldPriceGEL ?? p.old_price_gel ?? ''),
+      purchaseCost: String(p.purchaseCost ?? p.purchase_cost ?? ''), stock: String(p.stock ?? 0),
+      vendor: p.vendor || '', description: p.description || '', tags: Array.isArray(p.tags) ? p.tags.join(', ') : '',
+      material: p.material || '', durability: p.durability || '', brand: p.brand || '',
+      model: p.model || '', cpu: p.cpu || '', ram: p.ram || '', storage: p.storage || '',
+      gpu: p.gpu || '', screenSize: p.screenSize || p.screen_size || '', os: p.os || '',
+      availableSizes: p.availableSizes || p.available_sizes || [],
+      availableColors: p.availableColors || p.available_colors || [],
+      isFeatured: Boolean(p.isFeatured ?? p.is_featured)
+    });
+    setSelectedImages(p.gallery?.length ? p.gallery : (p.image ? [p.image] : []));
+    setProductVariants(Array.isArray(p.variants) ? p.variants : []);
+    document.getElementById('geostore-product-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const resetProductEditor = () => {
+    setEditingProductId(null);
+    setProductForm(productFormInitial);
+    setSelectedImages([]);
+    setProductVariants([]);
+  };
+
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.priceGEL) return;
+    if (!productForm.name.trim() || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
+    if (!Number.isFinite(Number(productForm.priceGEL)) || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    if (productForm.stock !== '' && (!Number.isInteger(Number(productForm.stock)) || Number(productForm.stock) < 0)) return alert('მარაგი უნდა იყოს მთელი, ნულზე არანაკლები რიცხვი.');
 
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-    const prodId = `prod-${Date.now()}`;
+    const prodId = editingProductId || `prod-${Date.now()}`;
     const newProdPayload = {
       id: prodId,
-      sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       name: productForm.name,
       category: productForm.category,
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
@@ -747,10 +778,10 @@ export default function AdminDashboardPro({
     };
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
         method: 'POST',
-        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
-        body: JSON.stringify(newProdPayload)
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_product: newProdPayload })
       });
 
       if (res.ok) {
@@ -786,13 +817,12 @@ export default function AdminDashboardPro({
         };
 
         if (typeof setProducts === 'function') {
-          setProducts(prev => [localProdObject, ...(prev || [])]);
+          setProducts(prev => editingProductId ? (prev || []).map(p => String(p.id) === String(editingProductId) ? localProdObject : p) : [localProdObject, ...(prev || [])]);
         }
-        setProductForm(productFormInitial);
-        setSelectedImages([]);
-        setProductVariants([]);
-        logActivity(`დაემატა ახალი პროდუქტი მახასიათებლებით: ${newProdPayload.name}`);
-        alert('✅ პროდუქტი და მისი მახასიათებლები წარმატებით შეინახა ბაზაში!');
+        const wasEditing = Boolean(editingProductId);
+        resetProductEditor();
+        logActivity(`${wasEditing ? 'განახლდა' : 'დაემატა'} პროდუქტი: ${newProdPayload.name}`);
+        alert(wasEditing ? '✅ პროდუქტი სრულად განახლდა!' : '✅ პროდუქტი წარმატებით დაემატა!');
       } else {
         const err = await res.text();
         alert('შეცდომა ბაზაში შენახვისას: ' + err);
@@ -2160,7 +2190,7 @@ export default function AdminDashboardPro({
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <Plus className="w-5 h-5 text-emerald-400" /> პროდუქტის დამატება (კატეგორიის მახასიათებრებით & ვარიანტებით)
+                  <Plus className="w-5 h-5 text-emerald-400" /> {editingProductId ? 'პროდუქტის სრული რედაქტირება' : 'პროდუქტის დამატება (კატეგორიის მახასიათებლებით & ვარიანტებით)'}
                 </h3>
                 <button 
                   onClick={handleExportProducts}
@@ -2170,7 +2200,7 @@ export default function AdminDashboardPro({
                 </button>
               </div>
 
-              <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
+              <form id="geostore-product-form" onSubmit={handleSaveProduct} className="space-y-5 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
                     <label className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
@@ -2338,8 +2368,9 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
+                {editingProductId && <button type="button" onClick={resetProductEditor} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold p-3 rounded-2xl">რედაქტირების გაუქმება</button>}
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
-                  პროდუქტის ბაზაში შენახვა 🚀
+                  {editingProductId ? 'ცვლილებების შენახვა' : 'პროდუქტის ბაზაში შენახვა'} 🚀
                 </button>
               </form>
             </div>
@@ -2402,7 +2433,8 @@ export default function AdminDashboardPro({
                         </span>
                       </div>
 
-                      <button onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleEditProduct(p)} className="text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
