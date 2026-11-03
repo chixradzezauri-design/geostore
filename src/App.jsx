@@ -226,6 +226,33 @@ export default function App() {
     loadSafeStorage('geostore_banners', [])
   );
 
+  // Published visual configuration is read-only on the public storefront.
+  const [publishedStorefrontConfig, setPublishedStorefrontConfig] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadPublishedStorefront = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('storefront_config')
+          .select('published_config,is_published')
+          .eq('config_key', 'geostore-homepage')
+          .eq('is_published', true)
+          .maybeSingle();
+        if (error) throw error;
+        if (isMounted) setPublishedStorefrontConfig(data?.published_config || null);
+      } catch (error) {
+        // Keep the existing local configuration if public config is unavailable.
+        console.warn('Published storefront config unavailable; using existing settings.', error?.message || error);
+      }
+    };
+    loadPublishedStorefront();
+    return () => { isMounted = false; };
+  }, []);
+
+  const storefrontSiteSettings = publishedStorefrontConfig?.siteSettings || siteSettings;
+
+
   const [notifications, setNotifications] = useState(() =>
     loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS)
   );
@@ -1371,7 +1398,7 @@ export default function App() {
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
           <StoreView
-            siteSettings={siteSettings}
+            siteSettings={storefrontSiteSettings}
             promoSlots={promoSlots}
             categories={categories}
             selectedCategory={selectedCategory}
