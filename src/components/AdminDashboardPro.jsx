@@ -188,6 +188,7 @@ export default function AdminDashboardPro({
         if (typeof setOrders === 'function') {
           setOrders(data.map(o => ({
             id: o.id,
+            created_at: o.created_at || null,
             date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
             time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
             customerName: o.customer_name,
@@ -1855,7 +1856,7 @@ export default function AdminDashboardPro({
                   type="text" 
                   placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
                   value={orderSearchQuery} 
-                  onChange={e => setOrderSearchQuery(e.target.value)} 
+                  onChange={e => { setOrderSearchQuery(e.target.value); setCurrentOrderPage(1); }} 
                   className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
                 />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
@@ -1865,7 +1866,7 @@ export default function AdminDashboardPro({
                 {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
                   <button 
                     key={st}
-                    onClick={() => setOrderStatusFilter(st)}
+                    onClick={() => { setOrderStatusFilter(st); setOrderPageByStatus(prev => ({ ...prev, [st]: 1 })); }}
                     className={`px-3 py-2 rounded-xl font-bold text-[11px] cursor-pointer transition whitespace-nowrap ${orderStatusFilter === st ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
                   >
                     {st}
