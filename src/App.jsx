@@ -539,20 +539,25 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (adminLoggedIn) {
+    // Administrators can read all orders; signed-in customers can read
+    // only their own orders through the orders table RLS policy.
+    if (adminLoggedIn || currentUser?.email) {
       fetchOrders();
+    } else {
+      setOrders([]);
     }
+
     fetchProductsFromDatabase();
 
     const interval = setInterval(() => {
-      if (adminLoggedIn) {
+      if (adminLoggedIn || currentUser?.email) {
         fetchOrders();
       }
       fetchProductsFromDatabase();
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [adminLoggedIn]);
+  }, [adminLoggedIn, currentUser?.email]);
 
   useEffect(() => {
     try {
