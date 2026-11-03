@@ -46,9 +46,12 @@ export default function Header({
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
           {/* LOGO */}
           <div className="flex items-center gap-2 cursor-pointer group shrink-0" onClick={() => { setActiveTab('store'); setMobileMenuOpen(false); }}>
-            <div className="bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-2 sm:p-2.5 rounded-2xl text-slate-950 font-black flex items-center gap-1.5 shadow-xl shadow-amber-500/20 group-hover:scale-105 transition-all duration-300">
-              <Store className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm tracking-tight font-black">{siteSettings?.storeName || t.storeName}</span>
+            <div className="gs-brand-lockup" aria-label={siteSettings?.storeName || t.storeName}>
+              <span className="gs-brand-monogram" aria-hidden="true">G</span>
+              <span className="gs-brand-wordmark">
+                <span className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
+                <span className="gs-brand-caption">THE FASHION EDIT</span>
+              </span>
             </div>
           </div>
 
