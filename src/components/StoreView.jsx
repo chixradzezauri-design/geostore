@@ -266,8 +266,8 @@ export default function StoreView({
         <div className="gs-fashion-hero__content">
           <span className="gs-fashion-eyebrow">GEOSTORE / NEW SEASON</span>
           <p className="gs-fashion-kicker">შეარჩიე შენი სტილი</p>
-          <h1>{siteSettings?.heroTitle || 'სტილი, რომელიც შენზეა მორგებული.'}</h1>
-          <p className="gs-fashion-hero__description">{siteSettings?.heroSubtitle || 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების ახალი კოლექცია — გამორჩეული არჩევანი ყოველდღე.'}</p>
+          <h1>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? 'შენი სტილი. შენი არჩევანი.' : (siteSettings?.heroTitle || 'შენი სტილი. შენი არჩევანი.')}</h1>
+          <p className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.' : (siteSettings?.heroSubtitle || 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.')}</p>
           <div className="gs-fashion-hero__actions">
             <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">კოლექციის ნახვა <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">CLOTHING · SHOES · ACCESSORIES</span>
