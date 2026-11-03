@@ -180,6 +180,9 @@ export default function App() {
     })
   );
 
+  // სერვერზე შენახული მიწოდების ტარიფები UI-სთვის; ადგილობრივი პარამეტრები fallback-ად რჩება.
+  const [serverDeliveryFees, setServerDeliveryFees] = useState(null);
+
   const [selectedRegion, setSelectedRegion] = useState('tbilisi');
 
   const [categories, setCategoriesList] = useState(() =>
@@ -469,6 +472,33 @@ export default function App() {
     }
   };
 
+  // სერვერის ტარიფები checkout-ის UI-ში; DB მიუწვდომლობისას ინარჩუნებს localStorage fallback-ს.
+  useEffect(() => {
+    let mounted = true;
+    const fetchServerDeliveryFees = async () => {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/store_delivery_fees?select=region,fee_gel`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        if (!response.ok) return;
+        const rows = await response.json();
+        const fees = {};
+        rows.forEach((row) => {
+          if (['tbilisi', 'bigCities', 'other'].includes(row.region)) fees[row.region] = Number(row.fee_gel) || 0;
+        });
+        if (mounted && ['tbilisi', 'bigCities', 'other'].every((region) => Number.isFinite(fees[region]))) {
+          setServerDeliveryFees(fees);
+        }
+      } catch (error) {
+        console.warn('Server delivery fees unavailable; using saved local fees.', error);
+      }
+    };
+    fetchServerDeliveryFees();
+    const interval = setInterval(fetchServerDeliveryFees, 30000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
+
   const fetchProductsFromDatabase = async () => {
     try {
       const res = await fetch(
@@ -666,24 +696,21 @@ export default function App() {
       ? [quickBuyProduct]
       : cart;
 
-    return itemsToCalc.reduce(
-      (acc, item) =>
-        acc + item.priceGEL * (item.quantity || 1),
-      0
-    );
-  }, [cart, quickBuyProduct]);
+    return itemsToCalc.reduce((acc, item) => {
+      // კალათაში ძველი snapshot-ის ნაცვლად ვიყენებთ ბოლო Supabase-დან წამოღებულ ფასს.
+      const currentProduct = products.find((product) => String(product.id) === String(item.id));
+      const price = Number(currentProduct?.priceGEL ?? item.priceGEL) || 0;
+      const quantity = Math.max(0, Number(item.quantity) || 1);
+      return acc + price * quantity;
+    }, 0);
+  }, [cart, quickBuyProduct, products]);
 
   const currentDeliveryCost = useMemo(() => {
-    if (selectedRegion === 'tbilisi') {
-      return deliveryFees.tbilisi;
-    }
-
-    if (selectedRegion === 'bigCities') {
-      return deliveryFees.bigCities;
-    }
-
-    return deliveryFees.other;
-  }, [selectedRegion, deliveryFees]);
+    const fees = serverDeliveryFees || deliveryFees;
+    if (selectedRegion === 'tbilisi') return Number(fees.tbilisi) || 0;
+    if (selectedRegion === 'bigCities') return Number(fees.bigCities) || 0;
+    return Number(fees.other) || 0;
+  }, [selectedRegion, deliveryFees, serverDeliveryFees]);
 
   const cartTotalGEL = useMemo(() => {
     const sub = appliedCoupon
