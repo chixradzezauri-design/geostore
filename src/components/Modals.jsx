@@ -13,6 +13,8 @@ export default function Modals({
   handlePlaceOrder,
   isSubmittingOrder = false,
   checkoutError = '',
+  orderConfirmation = null,
+  setOrderConfirmation,
   isAuthOpen,
   setIsAuthOpen,
   authMode,
@@ -190,6 +192,12 @@ export default function Modals({
               </div>
 
               <div className="space-y-1.5">
+                <label className="text-slate-300 font-bold">ელ-ფოსტა {!currentUser?.email && '*'}</label>
+                <input type="email" required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''} onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })} className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all read-only:opacity-70" />
+                <p className="text-[10px] text-slate-500">შეკვეთის მონაცემები ამ ელ-ფოსტასთან იქნება დაკავშირებული.</p>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-slate-300 font-bold flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-amber-400" /> ტელეფონის ნომერი *</label>
                 <input
                   type="tel"
@@ -237,13 +245,24 @@ export default function Modals({
 
               <button
                 type="submit"
-                onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder}
                 className="w-full bg-amber-400 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-3"
               >
                 {isSubmittingOrder ? 'იგზავნება...' : 'დადასტურება და შეკვეთა'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {orderConfirmation && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0d0d10] border border-emerald-500/30 rounded-[2rem] max-w-sm w-full p-6 sm:p-8 space-y-5 text-center shadow-2xl">
+            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center"><PackageCheck className="w-8 h-8 text-emerald-400" /></div>
+            <div className="space-y-2"><h3 className="text-white text-lg font-black">შეკვეთა მიღებულია!</h3><p className="text-slate-400 text-xs">შეინახეთ შეკვეთის კოდი სტატუსის შესამოწმებლად.</p></div>
+            <div className="bg-[#08080a] border border-amber-500/20 rounded-2xl p-4 space-y-2"><span className="text-slate-500 text-[10px] font-bold">შეკვეთის კოდი</span><div className="text-amber-400 text-xl font-black tracking-wider">#{orderConfirmation.id}</div><button type="button" onClick={() => { if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(orderConfirmation.id).then(() => alert('შეკვეთის კოდი დაკოპირდა.')).catch(() => alert('შეკვეთის კოდი: ' + orderConfirmation.id)); } else { alert('შეკვეთის კოდი: ' + orderConfirmation.id); } }} className="text-xs font-bold text-emerald-400 underline">კოდის კოპირება</button></div>
+            <p className="text-slate-500 text-[10px] break-all">ელ-ფოსტა: {orderConfirmation.email}</p>
+            <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs">გასაგებია</button>
           </div>
         </div>
       )}

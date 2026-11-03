@@ -2,7 +2,7 @@
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
@@ -298,11 +298,14 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const orderSubmitLock = useRef(false);
   const [checkoutError, setCheckoutError] = useState('');
+  const [orderConfirmation, setOrderConfirmation] = useState(null);
 
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
     phone: '',
+    email: '',
     address: ''
   });
 
@@ -451,7 +454,7 @@ export default function App() {
               ? new Date(o.created_at).toLocaleDateString('ka-GE')
               : 'დღეს',
             customerName: o.customer_name,
-            user_email: o.user_email || '',
+            user_email: o.customer_email || o.user_email || '',
             phone: o.phone,
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
@@ -1007,14 +1010,16 @@ export default function App() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
-    if (isSubmittingOrder) return;
-
+    // Synchronous lock prevents rapid double taps before React rerenders.
+    if (orderSubmitLock.current) return;
+    orderSubmitLock.current = true;
     setIsSubmittingOrder(true);
     setCheckoutError('');
     showToast('შეკვეთის გაგზავნა დაიწყო...');
 
     const customerName = checkoutForm.name?.trim() || '';
     const customerPhone = checkoutForm.phone?.trim() || '';
+    const customerEmail = checkoutForm.email?.trim().toLowerCase() || '';
     const customerAddress = checkoutForm.address?.trim() || '';
 
     if (!customerName || !customerPhone || !customerAddress) {
@@ -1022,12 +1027,20 @@ export default function App() {
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
       return;
     }
 
-    const orderId = `ORD-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
+    if (!currentUser?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      const message = 'სტუმრის შეკვეთისთვის მიუთითეთ სწორი ელ-ფოსტა.';
+      setCheckoutError(message);
+      showToast(message);
+      setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
+      return;
+    }
+
+    const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
 
     const itemsToOrder = quickBuyProduct
       ? [
@@ -1050,6 +1063,7 @@ export default function App() {
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
       return;
     }
 
@@ -1073,7 +1087,10 @@ export default function App() {
       if (sessionError) throw sessionError;
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
-      orderUserEmail = orderSession?.user?.email || 'guest';
+      orderUserEmail = orderSession?.user?.email || customerEmail;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderUserEmail)) {
+        throw new Error('შეკვეთისთვის საჭიროა სწორი ელ-ფოსტა.');
+      }
 
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/create_order_with_stock`,
@@ -1090,7 +1107,10 @@ export default function App() {
               customer_name: customerName,
               phone: customerPhone,
               address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
-              user_email: orderUserEmail,
+              // სტუმრის იდენტობა ბაზის ფუნქციას ცალკე sentinel-ით გადაეცემა;
+              // საკონტაქტო ელფოსტა ინახება customer_email ველში.
+              user_email: orderSession?.user?.email || 'guest',
+              customer_email: orderUserEmail,
               items: itemsToOrder,
               total_gel: cartTotalGEL
             }
@@ -1111,6 +1131,7 @@ export default function App() {
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
       return;
     }
 
@@ -1144,6 +1165,8 @@ export default function App() {
     setIsCheckoutOpen(false);
     setCheckoutError('');
     setIsSubmittingOrder(false);
+    orderSubmitLock.current = false;
+    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: cartTotalGEL });
     setCart([]);
     setAppliedCoupon(null);
 
@@ -1805,6 +1828,8 @@ export default function App() {
         setCheckoutForm={setCheckoutForm}
         handlePlaceOrder={handlePlaceOrder}
         isSubmittingOrder={isSubmittingOrder}
+        orderConfirmation={orderConfirmation}
+        setOrderConfirmation={setOrderConfirmation}
         checkoutError={checkoutError}
         isAuthOpen={isAuthOpen}
         setIsAuthOpen={setIsAuthOpen}
