@@ -1135,21 +1135,26 @@ export default function App() {
       return;
     }
 
+    const buildOrderItemSnapshot = (item, quantity) => {
+      const catalogProduct = (products || []).find(product => String(product.id) === String(item.id));
+      const rawPurchaseCost = catalogProduct?.purchaseCost ?? catalogProduct?.purchase_cost;
+      const purchaseCost = rawPurchaseCost === null || rawPurchaseCost === undefined || rawPurchaseCost === ''
+        ? null
+        : (Number.isFinite(Number(rawPurchaseCost)) && Number(rawPurchaseCost) >= 0 ? Number(rawPurchaseCost) : null);
+      return {
+        id: item.id,
+        name: item.name,
+        price: Number(item.priceGEL ?? item.price) || 0,
+        quantity: Math.max(1, Number(quantity) || 1),
+        purchase_cost: purchaseCost,
+        category: catalogProduct?.category || item.category || '',
+        vendor: catalogProduct?.vendor || item.vendor || ''
+      };
+    };
+
     const itemsToOrder = quickBuyProduct
-      ? [
-          {
-            id: quickBuyProduct.id,
-            name: quickBuyProduct.name,
-            price: quickBuyProduct.priceGEL,
-            quantity: 1
-          }
-        ]
-      : cart.map((i) => ({
-          id: i.id,
-          name: i.name,
-          price: i.priceGEL,
-          quantity: i.quantity
-        }));
+      ? [buildOrderItemSnapshot(quickBuyProduct, 1)]
+      : cart.map(item => buildOrderItemSnapshot(item, item.quantity));
 
     if (itemsToOrder.length === 0) {
       const message = 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
