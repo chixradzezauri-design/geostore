@@ -1350,14 +1350,20 @@ export default function App() {
         />
       </div>
 
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 flex justify-end box-border">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 flex justify-end gap-2 box-border flex-wrap">
+        {adminLoggedIn && !authLoading && (
+          <button
+            onClick={() => setActiveTab('admin')}
+            aria-label="ადმინ პანელის გახსნა"
+            className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-slate-900/80 text-amber-400 border-amber-500/30 hover:bg-slate-900'}`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            ადმინ პანელი
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('wardrobe')}
-          className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${
-            activeTab === 'wardrobe'
-              ? 'bg-emerald-400 text-slate-950 border-emerald-400'
-              : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30 hover:bg-slate-900'
-          }`}
+          className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${activeTab === 'wardrobe' ? 'bg-emerald-400 text-slate-950 border-emerald-400' : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30 hover:bg-slate-900'}`}
         >
           <Sparkles className="w-4 h-4" />
           {t.wardrobe}
