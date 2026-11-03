@@ -84,6 +84,7 @@ export default function AdminDashboardPro({
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
   const ORDERS_PER_PAGE = 5;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
@@ -459,80 +460,111 @@ export default function AdminDashboardPro({
     return { discountedPrice, revenue, grossProfit, netProfit, profitMargin, markup };
   }, [calcForm]);
 
-  const financialOverview = useMemo(() => {
-    const activeOrders = (orders || []).filter(order =>
-      !['გაუქმებული', 'cancelled'].includes(String(order.status || '').trim().toLowerCase())
-    );
-    const totalSalesRevenue = activeOrders.reduce((acc, order) => acc + (Number(order.totalGEL) || 0), 0);
-    const totalExpenses = (expenses || []).reduce((acc, expense) => acc + (Number(expense.amount) || 0), 0);
+  const analyticsData = useMemo(() => {
+    const isCancelled = order => ['გაუქმებული', 'cancelled'].includes(String(order?.status || '').trim().toLowerCase());
+    const isDelivered = order => ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed'].includes(String(order?.status || '').trim().toLowerCase());
+    const parseDate = value => {
+      if (!value) return null;
+      const raw = String(value).trim();
+      const localDate = raw.match(/^(\\d{1,2})[./-](\\d{1,2})[./-](\\d{4})$/);
+      if (localDate) return new Date(Number(localDate[3]), Number(localDate[2]) - 1, Number(localDate[1]));
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+    const inPeriod = value => {
+      if (analyticsPeriod === 'all') return true;
+      const date = parseDate(value);
+      if (!date) return false;
+      const days = Number(analyticsPeriod);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      const from = new Date();
+      from.setHours(0, 0, 0, 0);
+      from.setDate(from.getDate() - days + 1);
+      return date >= from && date <= today;
+    };
+
+    const periodOrders = (orders || []).filter(order => inPeriod(order.created_at || order.createdAt || order.date));
+    const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
+    const pipelineOrders = periodOrders.filter(order => !isCancelled(order) && !isDelivered(order));
+    const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
     const productById = new Map((products || []).map(product => [String(product.id), product]));
+
+    let totalSalesRevenue = 0;
+    let totalDeliveryRevenue = 0;
+    let totalProductRevenue = 0;
     let totalCogs = 0;
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
+    const incomeTotals = new Map();
 
-    activeOrders.forEach(order => {
-      if (!Array.isArray(order.items) || order.items.length === 0) {
+    deliveredOrders.forEach(order => {
+      const orderTotal = Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
+      totalSalesRevenue += orderTotal;
+      const items = Array.isArray(order.items) ? order.items : [];
+      const lineGross = items.reduce((sum, item) => sum + (Math.max(0, Number(item.priceGEL ?? item.price) || 0) * Math.max(1, Number(item.quantity) || 1)), 0);
+      const deliveryMatch = String(order.address || '').match(/მიწოდება:\\s*([\\d.,]+)\\s*₾/i);
+      const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
+      const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
+      totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
+      totalProductRevenue += productNetRevenue;
+
+      if (!items.length) {
+        const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
+        incomeTotals.set(label, (incomeTotals.get(label) || 0) + orderTotal);
         unknownCogsItems += 1;
         return;
       }
-      order.items.forEach(item => {
+
+      items.forEach(item => {
         const product = productById.get(String(item.id));
-        const snapshotCost = item.purchase_cost ?? item.purchaseCost;
-        const currentCost = product?.purchaseCost ?? product?.purchase_cost;
-        const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) > 0;
-        const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) > 0;
         const quantity = Math.max(1, Number(item.quantity) || 1);
-
-        if (hasSnapshotCost) {
-          totalCogs += Number(snapshotCost) * quantity;
-        } else if (hasCurrentCost) {
-          totalCogs += Number(currentCost) * quantity;
-          estimatedCogsItems += 1;
-        } else {
-          unknownCogsItems += 1;
-        }
-      });
-    });
-
-    const grossProfit = unknownCogsItems === 0 ? totalSalesRevenue - totalCogs : null;
-    const netProfit = grossProfit === null ? null : grossProfit - totalExpenses;
-    return { totalSalesRevenue, totalExpenses, totalCogs, grossProfit, netProfit, estimatedCogsItems, unknownCogsItems };
-  }, [orders, expenses, products]);
-
-  const incomeSources = useMemo(() => {
-    const productById = new Map((products || []).map(product => [String(product.id), product]));
-    const totals = new Map();
-    (orders || []).filter(order =>
-      !['გაუქმებული', 'cancelled'].includes(String(order.status || '').trim().toLowerCase())
-    ).forEach(order => {
-      if (!Array.isArray(order.items) || order.items.length === 0) {
-        const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
-        totals.set(label, (totals.get(label) || 0) + (Number(order.totalGEL) || 0));
-        return;
-      }
-      order.items.forEach(item => {
-        const product = productById.get(String(item.id));
+        const itemGross = Math.max(0, Number(item.priceGEL ?? item.price) || 0) * quantity;
+        const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
         const label = `${vendor} · ${category}`;
-        const itemRevenue = (Number(item.priceGEL ?? item.price) || 0) * (Number(item.quantity) || 0);
-        totals.set(label, (totals.get(label) || 0) + itemRevenue);
-      });
-    });
-    return Array.from(totals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount);
-  }, [orders, products]);
+        incomeTotals.set(label, (incomeTotals.get(label) || 0) + allocatedRevenue);
 
-  const expenseBreakdown = useMemo(() => {
-    const totals = new Map();
-    (expenses || []).forEach(expense => {
+        const snapshotCost = item.purchase_cost ?? item.purchaseCost;
+        const currentCost = product?.purchaseCost ?? product?.purchase_cost;
+        const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) >= 0;
+        const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) >= 0;
+        if (hasSnapshotCost) totalCogs += Number(snapshotCost) * quantity;
+        else if (hasCurrentCost) {
+          totalCogs += Number(currentCost) * quantity;
+          estimatedCogsItems += 1;
+        } else unknownCogsItems += 1;
+      });
+      if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
+    });
+
+    const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+    const grossProfit = unknownCogsItems === 0 ? totalSalesRevenue - totalCogs : null;
+    const netProfit = grossProfit === null ? null : grossProfit - totalExpenses;
+    const expenseTotals = new Map();
+    periodExpenses.forEach(expense => {
       const label = expense.category || 'კატეგორია მითითებული არ არის';
-      const current = totals.get(label) || { label, amount: 0, count: 0 };
+      const current = expenseTotals.get(label) || { label, amount: 0, count: 0 };
       current.amount += Number(expense.amount) || 0;
       current.count += 1;
-      totals.set(label, current);
+      expenseTotals.set(label, current);
     });
-    return Array.from(totals.values()).sort((x, y) => y.amount - x.amount);
-  }, [expenses]);
+
+    return {
+      periodOrders, deliveredOrders, pipelineOrders, periodExpenses,
+      totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
+      totalExpenses, totalCogs, grossProfit, netProfit,
+      estimatedCogsItems, unknownCogsItems,
+      averageOrderValue: deliveredOrders.length ? totalSalesRevenue / deliveredOrders.length : 0,
+      incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
+      expenseBreakdown: Array.from(expenseTotals.values()).sort((x, y) => y.amount - x.amount)
+    };
+  }, [orders, expenses, products, analyticsPeriod]);
+
+  const financialOverview = analyticsData;
+  const incomeSources = analyticsData.incomeSources;
+  const expenseBreakdown = analyticsData.expenseBreakdown;
 
   const handleAiAsk = async (e) => {
     e.preventDefault();
@@ -543,11 +575,11 @@ export default function AdminDashboardPro({
     setIsAiThinking(true);
 
     setTimeout(() => {
-      let answer = `🤖 ანალიზით: მაღაზიის ჯამური ბრუნვა არის ${financialOverview.totalSalesRevenue} ₾, ხოლო სუფთა მოგება დაახლოებით ${financialOverview.netProfit.toFixed(1)} ₾.`;
+      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
-      if (qLower.includes('შემოსავალი')) answer = `📊 ჯამური შემოსავალი შეადგენს ${financialOverview.totalSalesRevenue} ₾-ს.`;
-      else if (qLower.includes('მოგება')) answer = `💰 სუფთა მოგება არის ${financialOverview.netProfit.toFixed(1)} ₾.`;
-      else if (qLower.includes('ხარჯი')) answer = `📉 ოპერაციული ხარჯების ჯამი შეადგენს ${financialOverview.totalExpenses} ₾-ს.`;
+      if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
+      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
+      else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
       setIsAiThinking(false);
@@ -1598,11 +1630,23 @@ export default function AdminDashboardPro({
 
         {adminTab === 'analytics' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
+              <div>
+                <h3 className="text-white font-black text-sm">ფინანსური პერიოდი</h3>
+                <p className="text-slate-400 text-[10px] mt-1">მოგებაში ითვლება მხოლოდ ჩაბარებული/დასრულებული შეკვეთები</p>
+              </div>
+              <select value={analyticsPeriod} onChange={e => setAnalyticsPeriod(e.target.value)} className="bg-slate-950 border border-emerald-500/30 text-white rounded-xl px-4 py-3 text-xs font-bold">
+                <option value="all">მთელი პერიოდი</option>
+                <option value="30">ბოლო 30 დღე</option>
+                <option value="90">ბოლო 90 დღე</option>
+                <option value="365">ბოლო 12 თვე</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue} ₾</p>
-                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">გაუქმებული შეკვეთების გარეშე · არა გადახდის დადასტურება</span>
+                <p className="text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue.toFixed(2)} ₾</p>
+                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">მხოლოდ ჩაბარებული შეკვეთები</span>
               </div>
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> მთლიანი მოგება</p>
@@ -1611,8 +1655,18 @@ export default function AdminDashboardPro({
               </div>
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-400" /> სულ ხარჯები</p>
-                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.totalExpenses} ₾</p>
+                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.totalExpenses.toFixed(2)} ₾</p>
                 <span className="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
+              </div>
+              <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-blue-400" /> ჩაბარებული შეკვეთები</p>
+                <p className="text-2xl sm:text-3xl font-black text-blue-400">{financialOverview.deliveredOrders.length}</p>
+                <span className="text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
+              </div>
+              <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> საშუალო შეკვეთა</p>
+                <p className="text-2xl sm:text-3xl font-black text-indigo-400">{financialOverview.averageOrderValue.toFixed(2)} ₾</p>
+                <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
               </div>
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
@@ -1625,7 +1679,7 @@ export default function AdminDashboardPro({
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">შემოსავლის წყაროები</h3>
-                  <span className="text-[10px] text-slate-400">პროდუქტის წყარო · მიწოდების საფასურის გარეშე</span>
+                  <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთები · პროდუქტი და მიწოდება</span>
                 </div>
                 {incomeSources.length === 0 ? <p className="text-slate-500 text-xs py-4">შემოსავლის წყარო ჯერ არ არის.</p> : incomeSources.map(source => (
                   <div key={source.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
@@ -1641,12 +1695,21 @@ export default function AdminDashboardPro({
                   <h3 className="font-black text-white text-sm">გასავლები — კატეგორიების მიხედვით</h3>
                   <span className="text-[10px] text-slate-400">ჩანაწერები: {expenses.length}</span>
                 </div>
-                {expenseBreakdown.length === 0 ? <p className="text-slate-500 text-xs py-4">ხარჯები ჯერ არ არის.</p> : expenseBreakdown.map(expense => (
+                {expenseBreakdown.length === 0 ? <p className="text-slate-500 text-xs py-4">არჩეულ პერიოდში ხარჯები არ არის.</p> : expenseBreakdown.map(expense => (
                   <div key={expense.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
-                    <span className="text-slate-300">{expense.label} <span className="text-slate-500">({expense.count})</span></span>
+                    <span className="text-slate-300">{expense.label} <span className="text-slate-500">({expense.count} ჩანაწერი)</span></span>
                     <b className="text-rose-400 whitespace-nowrap">{expense.amount.toFixed(2)} ₾</b>
                   </div>
                 ))}
+                <div className="border-t border-rose-500/20 pt-3 space-y-2">
+                  <p className="text-[10px] font-black text-slate-300">ბოლო ხარჯების ჩანაწერები</p>
+                  {financialOverview.periodExpenses.slice(0,5).map(expense => (
+                    <div key={expense.id} className="flex justify-between gap-3 text-[10px]">
+                      <span className="text-slate-400">{expense.date || 'თარიღი უცნობია'} · {expense.description || expense.category}</span>
+                      <b className="text-rose-300 whitespace-nowrap">-{(Number(expense.amount)||0).toFixed(2)} ₾</b>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
