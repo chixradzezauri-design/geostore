@@ -812,8 +812,7 @@ export default function AdminDashboardPro({
           storage: newProdPayload.storage,
           gpu: newProdPayload.gpu,
           screenSize: newProdPayload.screen_size,
-          os: newProdPayload.os,
-          tags: tagsArray
+          os: newProdPayload.os
         };
 
         if (typeof setProducts === 'function') {
