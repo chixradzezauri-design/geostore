@@ -8,6 +8,7 @@ import {
 
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
+import StorefrontStudio from './StorefrontStudio';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
@@ -1669,6 +1670,7 @@ export default function AdminDashboardPro({
         <div className="space-y-1.5">
           {[
             { id: 'analytics', label: '📊 ანალიტიკა & ფინანსები', icon: BarChart3 },
+            { id: 'storefront_studio', label: '✨ Storefront Studio', icon: Layers },
             { id: 'calculator', label: '🧮 მოგების კალკულატორი', icon: Calculator },
             { id: 'expenses', label: '💸 ხარჯების მართვა', count: expenses.length, icon: Wallet },
             { id: 'ai_analyst', label: '🤖 AI ბიზნეს ასისტენტი', icon: Sparkles },
@@ -1733,6 +1735,14 @@ export default function AdminDashboardPro({
             <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
           </div>
         </div>
+
+        {adminTab === 'storefront_studio' && (
+          <StorefrontStudio
+            siteSettings={siteSettings}
+            bannersList={bannersList || []}
+            categoriesList={categoriesList || []}
+          />
+        )}
 
         {adminTab === 'analytics' && (
           <div className="space-y-6">
