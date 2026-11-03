@@ -2,7 +2,7 @@
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
@@ -132,6 +132,7 @@ const isAuthorizedAdmin = (user) =>
   user?.email?.toLowerCase() === 'chixradzezauri@gmail.com';
 
 export default function App() {
+  const pendingCheckoutRef = useRef(null);
   const loadSafeStorage = (key, fallback) => {
     try {
       const item = localStorage.getItem(key);
@@ -1051,9 +1052,7 @@ export default function App() {
       return;
     }
 
-    const orderId = `ORD-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
+    let orderId = null;
 
     const itemsToOrder = quickBuyProduct
       ? [
@@ -1094,6 +1093,50 @@ export default function App() {
       const orderSession = session?.access_token && session?.user?.email ? session : null;
       orderUserEmail = orderSession?.user?.email || 'guest';
 
+      const checkoutFingerprint = JSON.stringify({
+        customerName,
+        customerPhone,
+        customerAddress,
+        userEmail: orderUserEmail,
+        items: itemsToOrder.map((item) => ({
+          id: item.id,
+          quantity: Number(item.quantity) || 1
+        })),
+        couponCode: eligibleCoupon?.code || '',
+        deliveryRegion: selectedRegion
+      });
+      const pendingStorageKey = 'geostore_pending_checkout_v1';
+      let savedPendingCheckout = pendingCheckoutRef.current;
+
+      if (!savedPendingCheckout) {
+        try {
+          savedPendingCheckout = JSON.parse(localStorage.getItem(pendingStorageKey) || 'null');
+        } catch {
+          savedPendingCheckout = null;
+        }
+      }
+
+      if (
+        savedPendingCheckout?.fingerprint === checkoutFingerprint &&
+        savedPendingCheckout?.id
+      ) {
+        orderId = savedPendingCheckout.id;
+      } else {
+        const generatedId =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? `ORD-${crypto.randomUUID()}`
+            : `ORD-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+        orderId = generatedId;
+        savedPendingCheckout = { id: orderId, fingerprint: checkoutFingerprint };
+      }
+
+      pendingCheckoutRef.current = savedPendingCheckout;
+      try {
+        localStorage.setItem(pendingStorageKey, JSON.stringify(savedPendingCheckout));
+      } catch {
+        // In-memory ref still protects retries during this app session.
+      }
+
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/create_order_with_stock`,
         {
@@ -1125,6 +1168,14 @@ export default function App() {
       const checkoutResult = await response.json();
       if (!checkoutResult?.order_id || !Number.isFinite(Number(checkoutResult.total_gel))) throw new Error('სერვერის შეკვეთის პასუხი არასწორია.');
       var serverOrderResult = checkoutResult;
+
+      // Server confirmed the order; a future, different checkout must get a new key.
+      pendingCheckoutRef.current = null;
+      try {
+        localStorage.removeItem('geostore_pending_checkout_v1');
+      } catch {
+        // Ignore unavailable browser storage after server confirmation.
+      }
     } catch (err) {
       console.error('Order submission failed:', err);
       const message =
