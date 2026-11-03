@@ -1031,7 +1031,7 @@ export default function App() {
       return;
     }
 
-    if (!currentUser?.email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(customerEmail)) {
+    if (!currentUser?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       const message = 'სტუმრის შეკვეთისთვის მიუთითეთ სწორი ელ-ფოსტა.';
       setCheckoutError(message);
       showToast(message);
@@ -1063,6 +1063,7 @@ export default function App() {
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
       return;
     }
 
@@ -1087,7 +1088,7 @@ export default function App() {
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
       orderUserEmail = orderSession?.user?.email || customerEmail;
-      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(orderUserEmail)) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderUserEmail)) {
         throw new Error('შეკვეთისთვის საჭიროა სწორი ელ-ფოსტა.');
       }
 
