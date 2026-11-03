@@ -548,7 +548,7 @@ export default function App() {
           variants: p.variants || [],
           tags: p.tags || [],
           // purchase_cost is returned only by the admin-only RPC.
-          purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? 0 : Number(p.purchase_cost),
+          purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? null : Number(p.purchase_cost),
           material: p.material || '',
           durability: p.durability || '',
           brand: p.brand || '',
