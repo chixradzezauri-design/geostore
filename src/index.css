@@ -49,3 +49,118 @@ input, select, textarea, button {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(245, 158, 11, 0.6);
 }
+
+
+/* GEOSTORE premium fashion storefront — presentation-only layer.
+   Storefront-only scope: admin, auth, checkout and data workflows remain untouched. */
+.geostore-fashion-store {
+  --fashion-ink: #171513;
+  --fashion-muted: #77716c;
+  --fashion-paper: #fbf8f5;
+  --fashion-card: #fff;
+  --fashion-sand: #eadfd5;
+  background: var(--fashion-paper) !important;
+  color: var(--fashion-ink) !important;
+}
+.geostore-fashion-store > div:first-of-type { background: transparent; }
+.geostore-fashion-store header {
+  background: rgba(255,255,255,.96) !important;
+  color: var(--fashion-ink) !important;
+  border-color: #eee7e1 !important;
+  box-shadow: 0 5px 24px rgba(34,25,18,.055);
+  backdrop-filter: blur(18px);
+}
+.geostore-fashion-store header [class*="bg-[#121216]"],
+.geostore-fashion-store header [class*="bg-[#0c0c0e]"],
+.geostore-fashion-store header [class*="bg-amber-500/10"] {
+  background: #f6f1ed !important;
+  color: var(--fashion-ink) !important;
+  border-color: #e8ddd4 !important;
+}
+.geostore-fashion-store header [class*="text-white"],
+.geostore-fashion-store header [class*="text-slate-200"],
+.geostore-fashion-store header [class*="text-slate-300"],
+.geostore-fashion-store header [class*="text-slate-400"] { color: var(--fashion-ink) !important; }
+.geostore-fashion-store header [class*="text-amber-"] { color: #6e5140 !important; }
+.geostore-fashion-store header button[class*="bg-amber-400"] {
+  background: #171513 !important; color: #fff !important;
+}
+.geostore-fashion-store main { color: var(--fashion-ink) !important; }
+.geostore-fashion-store main > div:first-child { gap: 1.5rem !important; }
+.geostore-fashion-store main > div:first-child > div:first-child {
+  min-height: 330px;
+  padding: clamp(1.5rem,4vw,3.5rem) !important;
+  border: 0 !important;
+  border-radius: 26px !important;
+  background:
+    linear-gradient(90deg,rgba(250,246,242,.98) 0%,rgba(250,246,242,.91) 42%,rgba(250,246,242,.05) 72%),
+    url('https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1800&q=85') center 35%/cover,
+    #e9ded5 !important;
+  box-shadow: 0 12px 34px rgba(52,39,28,.09) !important;
+  align-items: center;
+}
+.geostore-fashion-store main > div:first-child > div:first-child h1 {
+  color: #171513 !important;
+  font-size: clamp(1.8rem,4vw,3.4rem) !important;
+  line-height: 1.16 !important;
+  max-width: 620px;
+}
+.geostore-fashion-store main > div:first-child > div:first-child p { color: #625951 !important; }
+.geostore-fashion-store main > div:first-child > div:first-child span {
+  background: rgba(255,255,255,.78) !important;
+  border-color: #e6d8cc !important;
+  color: #55463c !important;
+}
+.geostore-fashion-store main > div:first-child > div:first-child button,
+.geostore-fashion-store main button[class*="bg-emerald-500"],
+.geostore-fashion-store main button[class*="bg-amber-500"] {
+  background: #171513 !important;
+  color: #fff !important;
+  border-color: #171513 !important;
+  box-shadow: none !important;
+}
+.geostore-fashion-store main [class*="bg-gradient-to-r"][class*="amber-950"],
+.geostore-fashion-store main [class*="bg-gradient-to-b"][class*="#0e0e12"] {
+  background: #f2e9e2 !important;
+  border: 1px solid #eadfd6 !important;
+  color: #211d1a !important;
+  box-shadow: 0 8px 24px rgba(40,30,20,.045) !important;
+}
+.geostore-fashion-store main [class*="text-white"],
+.geostore-fashion-store main [class*="text-slate-100"],
+.geostore-fashion-store main [class*="text-slate-200"],
+.geostore-fashion-store main [class*="text-slate-300"],
+.geostore-fashion-store main [class*="text-slate-400"] { color: #27221e !important; }
+.geostore-fashion-store main [class*="text-amber-"] { color: #725744 !important; }
+.geostore-fashion-store main [class*="border-amber-"] { border-color: #e5d7cb !important; }
+.geostore-fashion-store main [class*="bg-[#121216]"],
+.geostore-fashion-store main [class*="bg-[#0d0d10]"],
+.geostore-fashion-store main [class*="bg-[#060608]"],
+.geostore-fashion-store main [class*="bg-slate-950"],
+.geostore-fashion-store main [class*="bg-slate-900"] {
+  background-color: #f5eee8 !important;
+  color: #211d1a !important;
+  border-color: #e9ddd3 !important;
+}
+.geostore-fashion-store main [class*="rounded-[2.5rem]"],
+.geostore-fashion-store main [class*="rounded-3xl"] { border-radius: 20px !important; }
+.geostore-fashion-store main img { border-radius: 14px; }
+.geostore-fashion-store input,
+.geostore-fashion-store select,
+.geostore-fashion-store textarea {
+  background: #fff !important;
+  color: #171513 !important;
+  border-color: #e4d8cf !important;
+}
+.geostore-fashion-store input::placeholder { color: #95877d !important; }
+.geostore-fashion-store footer { color: #514940; }
+@media (max-width: 767px) {
+  .geostore-fashion-store main { padding-left: 12px !important; padding-right: 12px !important; }
+  .geostore-fashion-store main > div:first-child > div:first-child {
+    min-height: 280px;
+    background:
+      linear-gradient(90deg,rgba(250,246,242,.96),rgba(250,246,242,.68)),
+      url('https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=80') center/cover !important;
+  }
+  .geostore-fashion-store main > div:first-child > div:first-child h1 { font-size: 1.75rem !important; }
+}
