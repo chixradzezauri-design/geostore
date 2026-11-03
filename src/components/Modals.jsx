@@ -237,7 +237,6 @@ export default function Modals({
 
               <button
                 type="submit"
-                onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder}
                 className="w-full bg-amber-400 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-3"
               >

@@ -2,7 +2,7 @@
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
@@ -132,6 +132,7 @@ const isAuthorizedAdmin = (user) =>
   user?.email?.toLowerCase() === 'chixradzezauri@gmail.com';
 
 export default function App() {
+  const pendingCheckoutRef = useRef(null);
   const loadSafeStorage = (key, fallback) => {
     try {
       const item = localStorage.getItem(key);
@@ -179,6 +180,9 @@ export default function App() {
       other: 15
     })
   );
+
+  // სერვერზე შენახული მიწოდების ტარიფები UI-სთვის; ადგილობრივი პარამეტრები fallback-ად რჩება.
+  const [serverDeliveryFees, setServerDeliveryFees] = useState(null);
 
   const [selectedRegion, setSelectedRegion] = useState('tbilisi');
 
@@ -469,6 +473,33 @@ export default function App() {
     }
   };
 
+  // სერვერის ტარიფები checkout-ის UI-ში; DB მიუწვდომლობისას ინარჩუნებს localStorage fallback-ს.
+  useEffect(() => {
+    let mounted = true;
+    const fetchServerDeliveryFees = async () => {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/store_delivery_fees?select=region,fee_gel`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        if (!response.ok) return;
+        const rows = await response.json();
+        const fees = {};
+        rows.forEach((row) => {
+          if (['tbilisi', 'bigCities', 'other'].includes(row.region)) fees[row.region] = Number(row.fee_gel) || 0;
+        });
+        if (mounted && ['tbilisi', 'bigCities', 'other'].every((region) => Number.isFinite(fees[region]))) {
+          setServerDeliveryFees(fees);
+        }
+      } catch (error) {
+        console.warn('Server delivery fees unavailable; using saved local fees.', error);
+      }
+    };
+    fetchServerDeliveryFees();
+    const interval = setInterval(fetchServerDeliveryFees, 30000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
+
   const fetchProductsFromDatabase = async () => {
     try {
       const res = await fetch(
@@ -666,60 +697,56 @@ export default function App() {
       ? [quickBuyProduct]
       : cart;
 
-    return itemsToCalc.reduce(
-      (acc, item) =>
-        acc + item.priceGEL * (item.quantity || 1),
-      0
-    );
-  }, [cart, quickBuyProduct]);
+    return itemsToCalc.reduce((acc, item) => {
+      // კალათაში ძველი snapshot-ის ნაცვლად ვიყენებთ ბოლო Supabase-დან წამოღებულ ფასს.
+      const currentProduct = products.find((product) => String(product.id) === String(item.id));
+      const price = Number(currentProduct?.priceGEL ?? item.priceGEL) || 0;
+      const quantity = Math.max(0, Number(item.quantity) || 1);
+      return acc + price * quantity;
+    }, 0);
+  }, [cart, quickBuyProduct, products]);
 
   const currentDeliveryCost = useMemo(() => {
-    if (selectedRegion === 'tbilisi') {
-      return deliveryFees.tbilisi;
-    }
+    const fees = serverDeliveryFees || deliveryFees;
+    if (selectedRegion === 'tbilisi') return Number(fees.tbilisi) || 0;
+    if (selectedRegion === 'bigCities') return Number(fees.bigCities) || 0;
+    return Number(fees.other) || 0;
+  }, [selectedRegion, deliveryFees, serverDeliveryFees]);
 
-    if (selectedRegion === 'bigCities') {
-      return deliveryFees.bigCities;
-    }
-
-    return deliveryFees.other;
-  }, [selectedRegion, deliveryFees]);
-
+  // ფასდაკლება ემთხვევა SQL round(..., 2)-ს; მინიმალური შეკვეთის დარღვევისას კუპონი აღარ ითვლება.
+  const eligibleCoupon = appliedCoupon && cartSubtotalGEL >= Number(appliedCoupon.minOrderGEL || 0)
+    ? appliedCoupon
+    : null;
+  const cartDiscountGEL = eligibleCoupon
+    ? Math.round((cartSubtotalGEL * eligibleCoupon.discountPercent / 100 + Number.EPSILON) * 100) / 100
+    : 0;
   const cartTotalGEL = useMemo(() => {
-    const sub = appliedCoupon
-      ? cartSubtotalGEL -
-        (cartSubtotalGEL * appliedCoupon.discountPercent) / 100
-      : cartSubtotalGEL;
+    return Math.max(0, cartSubtotalGEL - cartDiscountGEL) + currentDeliveryCost;
+  }, [cartSubtotalGEL, cartDiscountGEL, currentDeliveryCost]);
 
-    return Math.max(0, sub) + currentDeliveryCost;
-  }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
-
-  const handleApplyCoupon = (e) => {
+  const handleApplyCoupon = async (e) => {
     e.preventDefault();
-
     const cleanCode = promoInput.trim().toUpperCase();
-
     if (!cleanCode) return;
-
-    const found = coupons.find(
-      (c) =>
-        c.code.toUpperCase() === cleanCode &&
-        (c.status === 'აქტიური' || !c.status)
-    );
-
-    if (found) {
-      setAppliedCoupon(found);
-
-      showToast(
-        `🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/store_coupons?code=eq.${encodeURIComponent(cleanCode)}&active=eq.true&select=code,discount_percent,min_order_gel`,
+        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
       );
-
+      if (!response.ok) throw new Error('კუპონის შემოწმება ვერ მოხერხდა.');
+      const rows = await response.json();
+      const row = rows?.[0];
+      if (!row) throw new Error('არასწორი ან გაუქმებული პრომო-კოდი!');
+      const found = { code: row.code, discountPercent: Number(row.discount_percent), minOrderGEL: Number(row.min_order_gel) || 0, status: 'აქტიური' };
+      if (cartSubtotalGEL < found.minOrderGEL) throw new Error(`კუპონის მინიმალური შეკვეთა: ${found.minOrderGEL} ₾`);
+      setAppliedCoupon(found);
+      showToast(`🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`);
       setPromoInput('');
-    } else {
-      alert('არასწორი ან გაუქმებული პრომო-კოდი!');
+    } catch (error) {
+      setAppliedCoupon(null);
+      alert(error.message || 'კუპონის შემოწმება ვერ მოხერხდა.');
     }
   };
-
   const proAnalytics = useMemo(() => {
     const totalRevenueGEL = orders.reduce(
       (acc, o) => acc + (Number(o.totalGEL) || 0),
@@ -1025,9 +1052,7 @@ export default function App() {
       return;
     }
 
-    const orderId = `ORD-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
+    let orderId = null;
 
     const itemsToOrder = quickBuyProduct
       ? [
@@ -1053,13 +1078,6 @@ export default function App() {
       return;
     }
 
-    const regionText =
-      selectedRegion === 'tbilisi'
-        ? t.tbilisiDelivery
-        : selectedRegion === 'bigCities'
-          ? t.bigCitiesDelivery
-          : t.otherDelivery;
-
     let orderUserEmail = 'guest';
 
     try {
@@ -1075,6 +1093,62 @@ export default function App() {
       const orderSession = session?.access_token && session?.user?.email ? session : null;
       orderUserEmail = orderSession?.user?.email || 'guest';
 
+      const checkoutFingerprintSource = JSON.stringify({
+        customerName,
+        customerPhone,
+        customerAddress,
+        userEmail: orderUserEmail,
+        items: itemsToOrder.map((item) => ({
+          id: item.id,
+          quantity: Number(item.quantity) || 1
+        })),
+        couponCode: eligibleCoupon?.code || '',
+        deliveryRegion: selectedRegion
+      });
+      // Persist only a one-way digest, never raw name, phone, address or email.
+      if (!globalThis.crypto?.subtle) {
+        throw new Error('უსაფრთხო შეკვეთის განმეორებითი შემოწმება ამ ბრაუზერში მიუწვდომელია. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
+      }
+      const fingerprintBytes = new TextEncoder().encode(checkoutFingerprintSource);
+      const fingerprintDigest = await globalThis.crypto.subtle.digest('SHA-256', fingerprintBytes);
+      const checkoutFingerprint = Array.from(new Uint8Array(fingerprintDigest), (byte) =>
+        byte.toString(16).padStart(2, '0')
+      ).join('');
+      const pendingStorageKey = 'geostore_pending_checkout_v1';
+      let savedPendingCheckout = pendingCheckoutRef.current;
+
+      if (!savedPendingCheckout) {
+        try {
+          savedPendingCheckout = JSON.parse(localStorage.getItem(pendingStorageKey) || 'null');
+        } catch {
+          savedPendingCheckout = null;
+        }
+      }
+
+      // Accept a matching legacy plaintext fingerprint once, then immediately replace it with the digest.
+      if (
+        savedPendingCheckout?.id &&
+        (savedPendingCheckout.fingerprint === checkoutFingerprint ||
+          savedPendingCheckout.fingerprint === checkoutFingerprintSource)
+      ) {
+        orderId = savedPendingCheckout.id;
+        savedPendingCheckout = { id: orderId, fingerprint: checkoutFingerprint };
+      } else {
+        const generatedId =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? `ORD-${crypto.randomUUID()}`
+            : `ORD-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+        orderId = generatedId;
+        savedPendingCheckout = { id: orderId, fingerprint: checkoutFingerprint };
+      }
+
+      pendingCheckoutRef.current = savedPendingCheckout;
+      try {
+        localStorage.setItem(pendingStorageKey, JSON.stringify(savedPendingCheckout));
+      } catch {
+        // In-memory ref still protects retries during this app session.
+      }
+
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/create_order_with_stock`,
         {
@@ -1089,10 +1163,11 @@ export default function App() {
               id: orderId,
               customer_name: customerName,
               phone: customerPhone,
-              address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+              address: customerAddress,
               user_email: orderUserEmail,
-              items: itemsToOrder,
-              total_gel: cartTotalGEL
+              items: itemsToOrder.map((item) => ({ id: item.id, quantity: Number(item.quantity) || 1 })),
+              coupon_code: eligibleCoupon?.code || '',
+              delivery_region: selectedRegion
             }
           })
         }
@@ -1100,9 +1175,18 @@ export default function App() {
 
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
-        throw new Error(
-          errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.'
-        );
+        throw new Error(errorBody || 'შეკვეთა ბაზაში ვერ შეინახა. გთხოვთ, სცადოთ თავიდან.');
+      }
+      const checkoutResult = await response.json();
+      if (!checkoutResult?.order_id || !Number.isFinite(Number(checkoutResult.total_gel))) throw new Error('სერვერის შეკვეთის პასუხი არასწორია.');
+      var serverOrderResult = checkoutResult;
+
+      // Server confirmed the order; a future, different checkout must get a new key.
+      pendingCheckoutRef.current = null;
+      try {
+        localStorage.removeItem('geostore_pending_checkout_v1');
+      } catch {
+        // Ignore unavailable browser storage after server confirmation.
       }
     } catch (err) {
       console.error('Order submission failed:', err);
@@ -1120,11 +1204,14 @@ export default function App() {
       customer_name: customerName,
       customerName: customerName,
       phone: customerPhone,
-      address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+      address: customerAddress,
       user_email: orderUserEmail,
-      items: itemsToOrder,
-      totalGEL: cartTotalGEL,
-      total_gel: cartTotalGEL,
+      items: serverOrderResult.items || itemsToOrder,
+      subtotalGEL: Number(serverOrderResult.subtotal_gel) || 0,
+      discountGEL: Number(serverOrderResult.discount_gel) || 0,
+      deliveryGEL: Number(serverOrderResult.delivery_gel) || 0,
+      totalGEL: Number(serverOrderResult.total_gel),
+      total_gel: Number(serverOrderResult.total_gel),
       status: 'ახალი',
       itemSummary: itemsToOrder
         .map((i) => `${i.name} (x${i.quantity})`)
@@ -1440,11 +1527,11 @@ export default function App() {
                       <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
                         <div>
                           <b className="text-amber-300 uppercase">
-                            {appliedCoupon.code}
+                            {eligibleCoupon.code}
                           </b>
 
                           <span className="text-emerald-400 block text-[10px]">
-                            (-{appliedCoupon.discountPercent}% {t.discount})
+                            (-{eligibleCoupon.discountPercent}% {t.discount})
                           </span>
                         </div>
 
@@ -1486,17 +1573,15 @@ export default function App() {
                       <span>{formatPrice(cartSubtotalGEL)}</span>
                     </div>
 
-                    {appliedCoupon && (
+                    {eligibleCoupon && (
                       <div className="flex justify-between text-emerald-400">
                         <span>
-                          {t.discount} (-{appliedCoupon.discountPercent}%):
+                          {t.discount} (-{eligibleCoupon.discountPercent}%):
                         </span>
 
                         <span>
                           -{formatPrice(
-                            (cartSubtotalGEL *
-                              appliedCoupon.discountPercent) /
-                              100
+                            cartDiscountGEL
                           )}
                         </span>
                       </div>
