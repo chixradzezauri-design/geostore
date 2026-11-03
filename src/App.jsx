@@ -712,14 +712,16 @@ export default function App() {
     return Number(fees.other) || 0;
   }, [selectedRegion, deliveryFees, serverDeliveryFees]);
 
+  // ფასდაკლება ემთხვევა SQL round(..., 2)-ს; მინიმალური შეკვეთის დარღვევისას კუპონი აღარ ითვლება.
+  const eligibleCoupon = appliedCoupon && cartSubtotalGEL >= Number(appliedCoupon.minOrderGEL || 0)
+    ? appliedCoupon
+    : null;
+  const cartDiscountGEL = eligibleCoupon
+    ? Math.round((cartSubtotalGEL * eligibleCoupon.discountPercent / 100 + Number.EPSILON) * 100) / 100
+    : 0;
   const cartTotalGEL = useMemo(() => {
-    const sub = appliedCoupon
-      ? cartSubtotalGEL -
-        (cartSubtotalGEL * appliedCoupon.discountPercent) / 100
-      : cartSubtotalGEL;
-
-    return Math.max(0, sub) + currentDeliveryCost;
-  }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
+    return Math.max(0, cartSubtotalGEL - cartDiscountGEL) + currentDeliveryCost;
+  }, [cartSubtotalGEL, cartDiscountGEL, currentDeliveryCost]);
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
@@ -1109,7 +1111,7 @@ export default function App() {
               address: customerAddress,
               user_email: orderUserEmail,
               items: itemsToOrder.map((item) => ({ id: item.id, quantity: Number(item.quantity) || 1 })),
-              coupon_code: appliedCoupon?.code || '',
+              coupon_code: eligibleCoupon?.code || '',
               delivery_region: selectedRegion
             }
           })
@@ -1462,11 +1464,11 @@ export default function App() {
                       <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
                         <div>
                           <b className="text-amber-300 uppercase">
-                            {appliedCoupon.code}
+                            {eligibleCoupon.code}
                           </b>
 
                           <span className="text-emerald-400 block text-[10px]">
-                            (-{appliedCoupon.discountPercent}% {t.discount})
+                            (-{eligibleCoupon.discountPercent}% {t.discount})
                           </span>
                         </div>
 
@@ -1508,17 +1510,15 @@ export default function App() {
                       <span>{formatPrice(cartSubtotalGEL)}</span>
                     </div>
 
-                    {appliedCoupon && (
+                    {eligibleCoupon && (
                       <div className="flex justify-between text-emerald-400">
                         <span>
-                          {t.discount} (-{appliedCoupon.discountPercent}%):
+                          {t.discount} (-{eligibleCoupon.discountPercent}%):
                         </span>
 
                         <span>
                           -{formatPrice(
-                            (cartSubtotalGEL *
-                              appliedCoupon.discountPercent) /
-                              100
+                            cartDiscountGEL
                           )}
                         </span>
                       </div>
