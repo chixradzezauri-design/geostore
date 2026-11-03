@@ -1369,6 +1369,7 @@ export default function App() {
             }
             setAdminLoginForm={setAdminLoginForm}
             handleAdminLogin={handleAdminLogin}
+            handleLogout={handleLogout}
             adminError={adminError}
             proAnalytics={proAnalytics}
             orders={orders || []}
