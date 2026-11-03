@@ -565,6 +565,30 @@ export default function AdminDashboardPro({
       if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
     });
 
+    const trendBuckets = new Map();
+    const useDailyTrend = analyticsPeriod === '30' || analyticsPeriod === '90';
+    deliveredOrders.forEach(order => {
+      const date = parseDate(order.created_at || order.createdAt || order.date);
+      if (!date) return;
+      const key = useDailyTrend
+        ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+        : `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+      const label = useDailyTrend
+        ? date.toLocaleDateString('ka-GE', { day: '2-digit', month: 'short' })
+        : date.toLocaleDateString('ka-GE', { month: 'short', year: '2-digit' });
+      const current = trendBuckets.get(key) || { key, label, revenue: 0, orders: 0 };
+      current.revenue += Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
+      current.orders += 1;
+      trendBuckets.set(key, current);
+    });
+    const salesTrend = Array.from(trendBuckets.values()).sort((a, b) => a.key.localeCompare(b.key)).slice(useDailyTrend ? -90 : -24);
+    const bestSellingProducts = Array.from(productProfitTotals.values())
+      .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
+    const lowStockProducts = (products || []).map(product => ({
+      ...product,
+      _stockValue: Number(product.stock)
+    })).filter(product => Number.isFinite(product._stockValue) && product._stockValue >= 0 && product._stockValue <= 5)
+      .sort((a, b) => a._stockValue - b._stockValue);
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     const grossProfit = unknownCogsItems === 0 ? totalSalesRevenue - totalCogs : null;
     const netProfit = grossProfit === null ? null : grossProfit - totalExpenses;
@@ -578,7 +602,7 @@ export default function AdminDashboardPro({
     });
 
     return {
-      periodOrders, deliveredOrders, pipelineOrders, periodExpenses,
+      periodOrders, deliveredOrders, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
@@ -1758,6 +1782,63 @@ export default function AdminDashboardPro({
               </div>
             </div>
 
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              <div className="bg-slate-900/80 border border-cyan-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-cyan-500/20 pb-3">
+                  <h3 className="font-black text-white text-sm">გაყიდვების დინამიკა</h3>
+                  <span className="text-[10px] text-slate-400">{analyticsPeriod === '30' || analyticsPeriod === '90' ? 'დღეების მიხედვით' : 'თვეების მიხედვით'}</span>
+                </div>
+                {financialOverview.salesTrend.length === 0 ? <p className="text-slate-500 text-xs py-6">არჩეულ პერიოდში ჩაბარებული გაყიდვები არ არის.</p> : (
+                  <div className="flex items-end gap-1.5 h-44 pt-3">
+                    {financialOverview.salesTrend.map(point => {
+                      const maxRevenue = Math.max(1, ...financialOverview.salesTrend.map(item => item.revenue));
+                      const height = Math.max(4, (point.revenue / maxRevenue) * 100);
+                      return (
+                        <div key={point.key} className="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1" title={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`}>
+                          <div className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
+                          <span className="text-[8px] text-slate-500 whitespace-nowrap">{point.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="text-[10px] text-slate-400">ჯამური ბრუნვა: <b className="text-cyan-300">{financialOverview.salesTrend.reduce((sum, point) => sum + point.revenue, 0).toFixed(2)} ₾</b> · ჩაბარებული შეკვეთები: {financialOverview.salesTrend.reduce((sum, point) => sum + point.orders, 0)}</p>
+              </div>
+              <div className="bg-slate-900/80 border border-amber-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-amber-500/20 pb-3">
+                  <h3 className="font-black text-white text-sm">მარაგის გაფრთხილებები</h3>
+                  <span className="text-[10px] text-slate-400">ზღვარი: 5 ცალი</span>
+                </div>
+                {financialOverview.lowStockProducts.length === 0 ? <p className="text-emerald-300 text-xs py-6">ყველა პროდუქტს საკმარისი მარაგი აქვს ან მარაგი მითითებული არ არის.</p> : financialOverview.lowStockProducts.map(product => (
+                  <div key={product.id} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                    <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}</span></div>
+                    <span className={product._stockValue === 0 ? 'text-rose-300 font-black whitespace-nowrap' : 'text-amber-300 font-black whitespace-nowrap'}>{product._stockValue === 0 ? 'არ არის მარაგში' : `${product._stockValue} ცალი დარჩა`}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              <div className="bg-slate-900/80 border border-indigo-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-indigo-500/20 pb-3">
+                  <h3 className="font-black text-white text-sm">ყველაზე გაყიდვადი პროდუქტები</h3>
+                  <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთები</span>
+                </div>
+                {financialOverview.bestSellingProducts.length === 0 ? <p className="text-slate-500 text-xs py-4">გაყიდვები ჯერ არ არის.</p> : financialOverview.bestSellingProducts.map((item, index) => (
+                  <div key={item.key} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                    <div className="min-w-0"><b className="text-white block truncate">{index + 1}. {item.name}</b><span className="text-slate-500">{item.vendor} · {item.revenue.toFixed(2)} ₾</span></div>
+                    <b className="text-indigo-300 whitespace-nowrap">{item.quantity} ც.</b>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+                <h3 className="font-black text-white text-sm">მარაგის სტატისტიკა</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">პროდუქტები დაბალი მარაგით</p><b className="text-2xl text-amber-300">{financialOverview.lowStockProducts.length}</b></div>
+                  <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">ნულოვანი მარაგი</p><b className="text-2xl text-rose-300">{financialOverview.lowStockProducts.filter(product => product._stockValue === 0).length}</b></div>
+                </div>
+                <p className="text-[10px] text-slate-500">მონაცემები იკითხება არსებული პროდუქტის stock ველიდან. მარაგი ავტომატურად არ იცვლება.</p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
