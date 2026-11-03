@@ -497,6 +497,8 @@ export default function AdminDashboardPro({
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
     const incomeTotals = new Map();
+    const productProfitTotals = new Map();
+    const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
       const orderTotal = Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
@@ -530,11 +532,35 @@ export default function AdminDashboardPro({
         const currentCost = product?.purchaseCost ?? product?.purchase_cost;
         const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) >= 0;
         const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) >= 0;
-        if (hasSnapshotCost) totalCogs += Number(snapshotCost) * quantity;
+        let itemCost = null;
+        if (hasSnapshotCost) itemCost = Number(snapshotCost);
         else if (hasCurrentCost) {
-          totalCogs += Number(currentCost) * quantity;
+          itemCost = Number(currentCost);
           estimatedCogsItems += 1;
         } else unknownCogsItems += 1;
+        if (itemCost !== null) totalCogs += itemCost * quantity;
+
+        const productKey = String(item.id || item.product_id || item.name || 'unknown-product');
+        const productLabel = item.name || product?.name || `პროდუქტი ${productKey}`;
+        const productEntry = productProfitTotals.get(productKey) || {
+          key: productKey, name: productLabel, vendor, category,
+          quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0
+        };
+        productEntry.quantity += quantity;
+        productEntry.revenue += allocatedRevenue;
+        if (itemCost === null) productEntry.unknownCostItems += quantity;
+        else productEntry.cogs += itemCost * quantity;
+        productProfitTotals.set(productKey, productEntry);
+
+        const vendorEntry = vendorProfitTotals.get(vendor) || {
+          name: vendor, quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, productCount: new Set()
+        };
+        vendorEntry.quantity += quantity;
+        vendorEntry.revenue += allocatedRevenue;
+        vendorEntry.productCount.add(productKey);
+        if (itemCost === null) vendorEntry.unknownCostItems += quantity;
+        else vendorEntry.cogs += itemCost * quantity;
+        vendorProfitTotals.set(vendor, vendorEntry);
       });
       if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
     });
@@ -558,6 +584,17 @@ export default function AdminDashboardPro({
       estimatedCogsItems, unknownCogsItems,
       averageOrderValue: deliveredOrders.length ? totalSalesRevenue / deliveredOrders.length : 0,
       incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
+      productProfitability: Array.from(productProfitTotals.values()).map(item => ({
+        ...item,
+        grossProfit: item.unknownCostItems > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+      })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
+      vendorProfitability: Array.from(vendorProfitTotals.values()).map(item => ({
+        ...item,
+        productCount: item.productCount.size,
+        grossProfit: item.unknownCostItems > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+      })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       expenseBreakdown: Array.from(expenseTotals.values()).sort((x, y) => y.amount - x.amount)
     };
   }, [orders, expenses, products, analyticsPeriod]);
@@ -1710,6 +1747,38 @@ export default function AdminDashboardPro({
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+              <div className="bg-slate-900/80 border border-cyan-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-cyan-500/20 pb-3">
+                  <h3 className="font-black text-white text-sm">პროდუქტების მომგებიანობა</h3>
+                  <span className="text-[10px] text-slate-400">არჩეული პერიოდი</span>
+                </div>
+                {financialOverview.productProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">პროდუქტის გაყიდვები არ არის.</p> : financialOverview.productProfitability.map(item => (
+                  <div key={item.key} className="border-b border-slate-800 pb-3 space-y-1.5">
+                    <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
+                    <p className="text-[10px] text-slate-400">{item.vendor} · {item.category}</p>
+                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
+                    {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
+                  </div>
+                ))}
+              </div>
+              <div className="bg-slate-900/80 border border-indigo-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-indigo-500/20 pb-3">
+                  <h3 className="font-black text-white text-sm">მომწოდებლების მომგებიანობა</h3>
+                  <span className="text-[10px] text-slate-400">პროდუქტები და გაყიდვები</span>
+                </div>
+                {financialOverview.vendorProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">მომწოდებლის გაყიდვები არ არის.</p> : financialOverview.vendorProfitability.map(item => (
+                  <div key={item.name} className="border-b border-slate-800 pb-3 space-y-1.5">
+                    <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
+                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
+                    {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
+                  </div>
+                ))}
               </div>
             </div>
 
