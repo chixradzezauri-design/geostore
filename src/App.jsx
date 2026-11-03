@@ -459,6 +459,8 @@ export default function App() {
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
+            stock_deducted_at: o.stock_deducted_at || null,
+            stock_restored_at: o.stock_restored_at || null,
             itemSummary: Array.isArray(o.items)
               ? o.items
                   .map((i) => `${i.name} (x${i.quantity})`)
