@@ -1077,13 +1077,6 @@ export default function App() {
       return;
     }
 
-    const regionText =
-      selectedRegion === 'tbilisi'
-        ? t.tbilisiDelivery
-        : selectedRegion === 'bigCities'
-          ? t.bigCitiesDelivery
-          : t.otherDelivery;
-
     let orderUserEmail = 'guest';
 
     try {
@@ -1113,7 +1106,7 @@ export default function App() {
               id: orderId,
               customer_name: customerName,
               phone: customerPhone,
-              address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+              address: customerAddress,
               user_email: orderUserEmail,
               items: itemsToOrder.map((item) => ({ id: item.id, quantity: Number(item.quantity) || 1 })),
               coupon_code: appliedCoupon?.code || '',
