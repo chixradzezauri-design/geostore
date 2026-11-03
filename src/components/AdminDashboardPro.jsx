@@ -6,6 +6,7 @@ import {
   Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square, Eye, X 
 } from 'lucide-react';
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -1197,7 +1198,16 @@ export default function AdminDashboardPro({
         throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა. ხელახლა შედით სისტემაში.');
       }
 
-      const { data: reauthData, error: passwordError } = await supabase.auth.signInWithPassword({
+      // Use an isolated auth client so password reauthentication always creates
+      // a fresh session/auth_time without mutating the admin dashboard's main session.
+      const reauthClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      });
+      const { data: reauthData, error: passwordError } = await reauthClient.auth.signInWithPassword({
         email: userData.user.email,
         password: reactivationPassword
       });
