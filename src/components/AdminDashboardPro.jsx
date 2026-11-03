@@ -479,9 +479,9 @@ export default function AdminDashboardPro({
         const product = productById.get(String(item.id));
         const snapshotCost = item.purchase_cost ?? item.purchaseCost;
         const currentCost = product?.purchaseCost ?? product?.purchase_cost;
-        const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) >= 0;
-        const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) >= 0;
-        const quantity = Math.max(0, Number(item.quantity) || 0);
+        const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) > 0;
+        const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) > 0;
+        const quantity = Math.max(1, Number(item.quantity) || 1);
 
         if (hasSnapshotCost) {
           totalCogs += Number(snapshotCost) * quantity;
@@ -557,7 +557,11 @@ export default function AdminDashboardPro({
   const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!expenseForm.amount || !expenseForm.description) return;
-    
+    if (!Number.isFinite(Number(expenseForm.amount)) || Number(expenseForm.amount) <= 0) {
+      alert('ხარჯის თანხა უნდა იყოს ნულზე მეტი.');
+      return;
+    }
+
     const newExp = {
       id: `exp-${Date.now()}`,
       category: expenseForm.category,
@@ -1596,9 +1600,9 @@ export default function AdminDashboardPro({
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
-                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> სრული შემოსავალი</p>
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
                 <p className="text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue} ₾</p>
-                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">რეალური ბაზიდან</span>
+                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">გაუქმებული შეკვეთების გარეშე · არა გადახდის დადასტურება</span>
               </div>
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> მთლიანი მოგება</p>
@@ -1621,7 +1625,7 @@ export default function AdminDashboardPro({
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">შემოსავლის წყაროები</h3>
-                  <span className="text-[10px] text-slate-400">ვენდორი · კატეგორია</span>
+                  <span className="text-[10px] text-slate-400">პროდუქტის წყარო · მიწოდების საფასურის გარეშე</span>
                 </div>
                 {incomeSources.length === 0 ? <p className="text-slate-500 text-xs py-4">შემოსავლის წყარო ჯერ არ არის.</p> : incomeSources.map(source => (
                   <div key={source.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
