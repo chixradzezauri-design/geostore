@@ -749,7 +749,7 @@ export default function AdminDashboardPro({
     const prodId = editingProductId || `prod-${Date.now()}`;
     const newProdPayload = {
       id: prodId,
-      sku: `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       name: productForm.name,
       category: productForm.category,
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
@@ -2368,6 +2368,7 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
+                {editingProductId && <button type="button" onClick={resetProductEditor} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold p-3 rounded-2xl">რედაქტირების გაუქმება</button>}
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs">
                   {editingProductId ? 'ცვლილებების შენახვა' : 'პროდუქტის ბაზაში შენახვა'} 🚀
                 </button>
@@ -2432,7 +2433,7 @@ export default function AdminDashboardPro({
                         </span>
                       </div>
 
-                      <button type="button" onClick={() => handleEditProduct(p)} className="text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Pencil className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleEditProduct(p)} className="text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4" /></button>
                       <button type="button" onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
