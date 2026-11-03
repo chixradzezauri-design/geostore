@@ -9,6 +9,7 @@ import {
 export default function StoreView({
   siteSettings,
   promoSlots,
+  banners = [],
   categories = [],
   selectedCategory,
   setSelectedCategory,
@@ -290,6 +291,23 @@ export default function StoreView({
         </div>
         <div className="gs-fashion-hero__stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
       </section>
+
+      {Array.isArray(banners) && banners.length > 0 && (
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="გამოქვეყნებული ბანერები">
+          {banners.map((banner, index) => (
+            <article key={banner.id || `published-banner-${index}`} className="relative min-h-40 overflow-hidden rounded-3xl border border-stone-200 bg-stone-900 text-white">
+              {banner.image && <img src={banner.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-45" />}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+              <div className="relative z-10 flex min-h-40 max-w-xl flex-col items-start justify-center gap-2 p-6">
+                {banner.tag && <span className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-300">{banner.tag}</span>}
+                {banner.title && <h2 className="text-xl font-black sm:text-2xl">{banner.title}</h2>}
+                {banner.subtitle && <p className="text-sm text-white/85">{banner.subtitle}</p>}
+                {banner.ctaText && <a href={banner.ctaUrl || '#'} className="mt-2 inline-flex rounded-full bg-white px-4 py-2 text-xs font-bold text-stone-900">{banner.ctaText}</a>}
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
