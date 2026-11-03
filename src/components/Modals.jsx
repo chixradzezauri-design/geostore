@@ -1,7 +1,7 @@
 // src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Real PIN & Passkeys Auth
 import React, { useState } from 'react';
 import { 
-  X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
+  X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, Mail, MapPin, Truck, 
   Search, PackageCheck, Clock, Navigation, Map, KeyRound, Fingerprint, Bell, Sparkles, Tag 
 } from 'lucide-react';
 
@@ -202,6 +202,19 @@ export default function Modals({
               </div>
 
               <div className="space-y-1.5">
+                <label className="text-slate-300 font-bold flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-amber-400" /> ელფოსტა (არასავალდებულო)</label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="მაგ: example@email.com"
+                  value={checkoutForm.email || ''}
+                  onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
+                />
+                <p className="text-[10px] text-slate-500">სტუმრის შეკვეთისთვის საკონტაქტო ელფოსტა</p>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-slate-300 font-bold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-amber-400" /> მიწოდების რეგიონი *</label>
                 <select
                   value={selectedRegion || 'tbilisi'}
@@ -237,7 +250,6 @@ export default function Modals({
 
               <button
                 type="submit"
-                onClick={handlePlaceOrder}
                 disabled={isSubmittingOrder}
                 className="w-full bg-amber-400 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-3"
               >
