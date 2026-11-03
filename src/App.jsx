@@ -1107,7 +1107,10 @@ export default function App() {
               customer_name: customerName,
               phone: customerPhone,
               address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
-              user_email: orderUserEmail,
+              // სტუმრის იდენტობა ბაზის ფუნქციას ცალკე sentinel-ით გადაეცემა;
+              // საკონტაქტო ელფოსტა ინახება customer_email ველში.
+              user_email: orderSession?.user?.email || 'guest',
+              customer_email: orderUserEmail,
               items: itemsToOrder,
               total_gel: cartTotalGEL
             }
