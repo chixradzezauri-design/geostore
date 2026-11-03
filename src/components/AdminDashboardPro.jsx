@@ -603,6 +603,49 @@ export default function AdminDashboardPro({
   const incomeSources = analyticsData.incomeSources;
   const expenseBreakdown = analyticsData.expenseBreakdown;
 
+  const exportCsv = (filename, headers, rows) => {
+    const escapeCell = value => {
+      const raw = value === null || value === undefined ? '' : String(value);
+      const safe = /^[=+@\\-]/.test(raw) ? "'" + raw : raw;
+      return '"' + safe.replace(/"/g, '""') + '"';
+    };
+    const csv = [headers, ...rows].map(row => row.map(escapeCell).join(';')).join('\\r\\n');
+    const blob = new Blob(['\\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const handleExportAnalytics = () => {
+    const periodLabel = analyticsPeriod === 'all' ? 'all-period' : 'last-' + analyticsPeriod + '-days';
+    exportCsv(`geostore-financial-summary-${periodLabel}.csv`,
+      ['მაჩვენებელი', 'თანხა (GEL)'],
+      [
+        ['ჩაბარებული შეკვეთები', financialOverview.deliveredOrders.length],
+        ['ბრუნვა', financialOverview.totalSalesRevenue.toFixed(2)],
+        ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
+        ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
+        ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.totalCogs.toFixed(2)],
+        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება' : financialOverview.grossProfit.toFixed(2)],
+        ['ოპერაციული ხარჯები', financialOverview.totalExpenses.toFixed(2)],
+        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება' : financialOverview.netProfit.toFixed(2)]
+      ]);
+    exportCsv(`geostore-product-profitability-${periodLabel}.csv`,
+      ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები'],
+      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems]));
+    exportCsv(`geostore-vendor-profitability-${periodLabel}.csv`,
+      ['მომწოდებელი', 'პროდუქტების რაოდენობა', 'გაყიდული ერთეულები', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები'],
+      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems]));
+    exportCsv(`geostore-expenses-${periodLabel}.csv`,
+      ['თარიღი', 'კატეგორია', 'აღწერა', 'თანხა (GEL)'],
+      financialOverview.periodExpenses.map(item => [item.date || item.created_at || '', item.category || '', item.description || '', Number(item.amount || 0).toFixed(2)]));
+  };
+
   const handleAiAsk = async (e) => {
     e.preventDefault();
     if (!aiQuery.trim() || isAiThinking) return;
@@ -1678,6 +1721,9 @@ export default function AdminDashboardPro({
                 <option value="90">ბოლო 90 დღე</option>
                 <option value="365">ბოლო 12 თვე</option>
               </select>
+              <button type="button" onClick={handleExportAnalytics} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
+              </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-5">
               <div className="bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
