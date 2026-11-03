@@ -167,7 +167,7 @@ export default function AdminDashboardPro({
             date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
             time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
             customerName: o.customer_name,
-            user_email: o.user_email || '',
+            user_email: o.customer_email || o.user_email || '',
             phone: o.phone,
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
