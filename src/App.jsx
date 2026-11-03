@@ -125,11 +125,11 @@ const normalizeAuthUser = (user) => {
   };
 };
 
-// ადმინისტრატორის უფლებას ვიღებთ მხოლოდ Supabase-ის სანდო app_metadata-დან
-// და ვამოწმებთ წინასწარ განსაზღვრულ მთავარ ადმინისტრატორის ელფოსტას.
+// ადმინისტრატორს ვამოწმებთ Supabase-ის სანდო app_metadata.role-ით
+// და უცვლელი Auth user ID-ით — ელფოსტის ცვლილება/შეცდომა წვდომას აღარ არღვევს.
 const isAuthorizedAdmin = (user) =>
   user?.app_metadata?.role === 'admin' &&
-  user?.email?.toLowerCase() === 'chixradzezauri@gmail.com';
+  user?.id === '1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 
 const getOrderStatusClasses = (status) => {
   switch (String(status || '').trim().toLowerCase()) {
