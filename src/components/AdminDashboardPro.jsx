@@ -174,6 +174,8 @@ export default function AdminDashboardPro({
             status: o.status || 'ახალი',
             items: o.items || [], // 🌟 შეკვეთილი პროდუქტების სრული მასივი
             adminNote: o.admin_note || '',
+            stock_deducted_at: o.stock_deducted_at || null,
+            stock_restored_at: o.stock_restored_at || null,
             itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
           })));
         }
@@ -1223,9 +1225,7 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
-      if (typeof setOrders === 'function') {
-        setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-      }
+      await fetchAdminOrders();
       if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
         setSelectedOrderForModal(prev => ({ ...prev, status: newStatus }));
       }
