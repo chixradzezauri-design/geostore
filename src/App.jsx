@@ -131,6 +131,30 @@ const isAuthorizedAdmin = (user) =>
   user?.app_metadata?.role === 'admin' &&
   user?.email?.toLowerCase() === 'chixradzezauri@gmail.com';
 
+const getOrderStatusClasses = (status) => {
+  switch (String(status || '').trim().toLowerCase()) {
+    case 'ახალი':
+    case 'new':
+      return 'bg-blue-500/10 text-blue-300 border border-blue-500/40';
+    case 'მუშავდება':
+    case 'processing':
+      return 'bg-amber-500/10 text-amber-300 border border-amber-500/40';
+    case 'გაგზავნილი':
+    case 'გზაშია':
+    case 'shipped':
+      return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/40';
+    case 'დასრულებული':
+    case 'ჩაბარებულია':
+    case 'delivered':
+      return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
+    case 'გაუქმებული':
+    case 'cancelled':
+      return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
+    default:
+      return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
+  }
+};
+
 export default function App() {
   const loadSafeStorage = (key, fallback) => {
     try {
@@ -1742,7 +1766,7 @@ export default function App() {
                             {formatPrice(order.totalGEL)}
                           </span>
 
-                          <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold mt-1">
+                          <span className={`${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
                             {order.status || 'New'}
                           </span>
                         </div>

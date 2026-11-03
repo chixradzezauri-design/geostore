@@ -24,6 +24,30 @@ const getSupabaseHeaders = async () => {
   };
 };
 
+const getOrderStatusClasses = (status) => {
+  switch (String(status || '').trim().toLowerCase()) {
+    case 'ახალი':
+    case 'new':
+      return 'bg-blue-500/10 text-blue-300 border border-blue-500/40';
+    case 'მუშავდება':
+    case 'processing':
+      return 'bg-amber-500/10 text-amber-300 border border-amber-500/40';
+    case 'გაგზავნილი':
+    case 'გზაშია':
+    case 'shipped':
+      return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/40';
+    case 'დასრულებული':
+    case 'ჩაბარებულია':
+    case 'delivered':
+      return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
+    case 'გაუქმებული':
+    case 'cancelled':
+      return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
+    default:
+      return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
+  }
+};
+
 export default function AdminDashboardPro({
   adminLoggedIn,
   setAdminLoggedIn,
@@ -62,6 +86,10 @@ export default function AdminDashboardPro({
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
   const [orderAdminNoteInput, setOrderAdminNoteInput] = useState('');
+  const [reactivationOrder, setReactivationOrder] = useState(null);
+  const [reactivationPassword, setReactivationPassword] = useState('');
+  const [reactivationError, setReactivationError] = useState('');
+  const [isReactivatingOrder, setIsReactivatingOrder] = useState(false);
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserDiscount, setEditUserDiscount] = useState('');
@@ -1116,6 +1144,14 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    const existingOrder = (orders || []).find(order => order.id === orderId);
+    if (existingOrder?.status === 'გაუქმებული' && newStatus !== 'გაუქმებული') {
+      setReactivationOrder(existingOrder);
+      setReactivationPassword('');
+      setReactivationError('');
+      return;
+    }
+
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_order_status`, {
         method: 'POST',
@@ -1146,6 +1182,59 @@ export default function AdminDashboardPro({
       alert(`✅ შეკვეთის #${orderId} სტატუსი წარმატებით განახლდა: ${newStatus}`);
     } catch (error) {
       alert(error.message || 'ქსელის შეცდომა სტატუსის შეცვლისას');
+    }
+  };
+
+  const handleConfirmOrderReactivation = async (event) => {
+    event.preventDefault();
+    if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
+
+    setIsReactivatingOrder(true);
+    setReactivationError('');
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user?.email) {
+        throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა. ხელახლა შედით სისტემაში.');
+      }
+
+      const { error: passwordError } = await supabase.auth.signInWithPassword({
+        email: userData.user.email,
+        password: reactivationPassword
+      });
+      if (passwordError) {
+        throw new Error('პაროლი არასწორია. შეკვეთა არ გააქტიურებულა.');
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reactivate_cancelled_order`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_order_id: reactivationOrder.id })
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
+      }
+
+      await fetchAdminOrders();
+      if (selectedOrderForModal?.id === reactivationOrder.id) {
+        setSelectedOrderForModal(prev => ({ ...prev, status: 'ახალი' }));
+      }
+      try {
+        const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
+        localStorage.setItem('geostore_local_orders', JSON.stringify(
+          localOrders.map(order => order.id === reactivationOrder.id ? { ...order, status: 'ახალი' } : order)
+        ));
+      } catch {}
+
+      logActivity(`გაუქმებული შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
+      setReactivationOrder(null);
+      setReactivationPassword('');
+      alert(`✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი ხელახლა ჩამოიჭრა.`);
+    } catch (error) {
+      setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
+    } finally {
+      setIsReactivatingOrder(false);
     }
   };
 
@@ -1405,7 +1494,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                         <span className="font-black text-white">{typeof formatPrice === 'function' ? formatPrice(o.totalGEL) : o.totalGEL + ' ₾'}</span>
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-bold">{o.status || 'ახალი'}</span>
+                        <span className={`${getOrderStatusClasses(o.status || 'ახალი')} px-3 py-1 rounded-xl text-[10px] font-bold`}>{o.status || 'ახალი'}</span>
                       </div>
                     </div>
                   ))
@@ -1777,7 +1866,7 @@ export default function AdminDashboardPro({
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-xl text-[10px] font-black">
+                        <span className={`${getOrderStatusClasses(o.status || 'ახალი')} px-3 py-1 rounded-xl text-[10px] font-black`}>
                           {o.status || 'ახალი'}
                         </span>
                       </div>
@@ -1801,13 +1890,22 @@ export default function AdminDashboardPro({
                           <Printer className="w-4 h-4" /> ინვოისი
                         </button>
 
-                        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
-                          <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={['გაგზავნილი', 'დასრულებული', 'გაუქმებული'].includes(o.status)} title={['გაგზავნილი', 'დასრულებული'].includes(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'გაუქმებული' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}>გაუქმება</button>
-                        </div>
+                        {o.status === 'გაუქმებული' ? (
+                          <button
+                            onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                            className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
+                          >
+                            <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={['გაგზავნილი', 'დასრულებული'].includes(o.status)} title={['გაგზავნილი', 'დასრულებული'].includes(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2793,6 +2891,43 @@ export default function AdminDashboardPro({
           </div>
         )}
 
+      {reactivationOrder && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
+          <form onSubmit={handleConfirmOrderReactivation} className="w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                <KeyRound className="w-5 h-5 text-amber-300" />
+              </div>
+              <div>
+                <h3 id="reactivation-title" className="text-white font-black">შეკვეთის ხელახლა გააქტიურება</h3>
+                <p className="text-slate-400 text-xs">შეკვეთა #{reactivationOrder.id}</p>
+              </div>
+            </div>
+            <p className="text-slate-300 text-xs leading-5">
+              უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი. დადასტურების შემდეგ სისტემა შეამოწმებს მარაგს და ხელახლა ჩამოჭრის შეკვეთის რაოდენობას.
+            </p>
+            <label className="block text-xs font-bold text-slate-300" htmlFor="reactivation-password">ადმინისტრატორის პაროლი</label>
+            <input
+              id="reactivation-password"
+              type="password"
+              autoComplete="current-password"
+              value={reactivationPassword}
+              onChange={event => setReactivationPassword(event.target.value)}
+              required
+              autoFocus
+              className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 p-3.5 rounded-xl text-white outline-none"
+              placeholder="შეიყვანეთ პაროლი"
+            />
+            {reactivationError && <p role="alert" className="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/30 rounded-xl p-3">{reactivationError}</p>}
+            <div className="flex justify-end gap-2">
+              <button type="button" disabled={isReactivatingOrder} onClick={() => { setReactivationOrder(null); setReactivationPassword(''); setReactivationError(''); }} className="px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold disabled:opacity-50">გაუქმება</button>
+              <button type="submit" disabled={isReactivatingOrder || !reactivationPassword} className="px-4 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-50">
+                {isReactivatingOrder ? 'მოწმდება...' : 'დადასტურება და გააქტიურება'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
       </div>
     </div>
   );
