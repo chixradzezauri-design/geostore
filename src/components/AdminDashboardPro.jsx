@@ -645,49 +645,51 @@ export default function AdminDashboardPro({
   };
 
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-          method: 'DELETE',
-          headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' }
-        });
-        if (res.ok) {
-          if (typeof setProducts === 'function') {
-            setProducts(prev => (prev || []).filter(p => p.id !== id));
-          }
-          logActivity(`წაიშალა პროდუქტი ბაზიდან (ID: ${id})`);
-          alert('✅ პროდუქტი წარმატებით წაიშალა!');
-        } else {
-          alert('შეცდომა ბაზიდან წაშლისას');
-        }
-      } catch {
-        alert('ქსელის შეცდომა');
-      }
-    }
+    if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product', {
+        method: 'POST', headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_product_id: String(id) })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      if (await res.json() !== true) throw new Error('პროდუქტი ვერ წაიშალა ან აღარ არსებობს.');
+      if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => p.id !== id));
+      logActivity('წაიშალა პროდუქტი ბაზიდან (ID: ' + id + ')');
+      alert('✅ პროდუქტი წარმატებით წაიშალა!');
+    } catch (error) { alert('წაშლა ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
   const handleQuickUpdateProduct = async (id, field, value) => {
-    const val = field === 'priceGEL' || field === 'stock' || field === 'purchaseCost' ? Number(value) : value;
-    
-    const dbField = field === 'priceGEL' ? 'price_gel' : field === 'purchaseCost' ? 'purchase_cost' : field;
-
+    const current = (products || []).find(p => String(p.id) === String(id));
+    if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+    const numericFields = ['priceGEL', 'oldPriceGEL', 'purchaseCost', 'stock'];
+    const val = numericFields.includes(field) ? Number(value) : value;
+    if (numericFields.includes(field) && (!Number.isFinite(val) || val < 0)) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
+    const updated = { ...current, [field]: val };
+    const payload = {
+      id: String(updated.id), sku: updated.sku || null, name: updated.name,
+      category: updated.category || null, brand: updated.brand || null, vendor: updated.vendor || null,
+      price_gel: Number(updated.priceGEL ?? updated.price_gel ?? 0),
+      old_price_gel: updated.oldPriceGEL ?? updated.old_price_gel ?? null,
+      purchase_cost: Number(updated.purchaseCost ?? updated.purchase_cost ?? 0),
+      stock: Math.trunc(Number(updated.stock ?? 0)), image: updated.image || null,
+      description: updated.description || '', gallery: updated.gallery || [], tags: updated.tags || [],
+      available_sizes: updated.availableSizes || updated.available_sizes || [],
+      available_colors: updated.availableColors || updated.available_colors || [],
+      variants: updated.variants || [], material: updated.material || null, durability: updated.durability || null,
+      model: updated.model || null, cpu: updated.cpu || null, ram: updated.ram || null,
+      storage: updated.storage || null, gpu: updated.gpu || null,
+      screen_size: updated.screenSize || updated.screen_size || null, os: updated.os || null,
+      is_featured: Boolean(updated.isFeatured ?? updated.is_featured)
+    };
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
-        body: JSON.stringify({ [dbField]: val })
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
+        method: 'POST', headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_product: payload })
       });
-
-      if (!response.ok) {
-        throw new Error('პროდუქტის განახლება ბაზაში ვერ მოხერხდა.');
-      }
-
-      if (typeof setProducts === 'function') {
-        setProducts(prev => (prev || []).map(p => p.id === id ? { ...p, [field]: val } : p));
-      }
-    } catch (error) {
-      alert(error.message || 'პროდუქტის განახლებისას ქსელის შეცდომა მოხდა.');
-    }
+      if (!response.ok) throw new Error(await response.text());
+      if (typeof setProducts === 'function') setProducts(prev => (prev || []).map(p => String(p.id) === String(id) ? updated : p));
+    } catch (error) { alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
   const handleImageChange = (e) => {
@@ -709,7 +711,9 @@ export default function AdminDashboardPro({
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.priceGEL) return;
+    if (!productForm.name.trim() || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
+    if (!Number.isFinite(Number(productForm.priceGEL)) || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    if (productForm.stock !== '' && (!Number.isInteger(Number(productForm.stock)) || Number(productForm.stock) < 0)) return alert('მარაგი უნდა იყოს მთელი, ნულზე არანაკლები რიცხვი.');
 
     const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
     const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
@@ -747,10 +751,10 @@ export default function AdminDashboardPro({
     };
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
         method: 'POST',
-        headers: { ...(await getSupabaseHeaders()), Prefer: 'return=minimal' },
-        body: JSON.stringify(newProdPayload)
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_product: newProdPayload })
       });
 
       if (res.ok) {
