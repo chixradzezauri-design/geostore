@@ -251,6 +251,12 @@ export default function App() {
   }, []);
 
   const storefrontSiteSettings = publishedStorefrontConfig?.siteSettings || siteSettings;
+  const storefrontCategories = Array.isArray(publishedStorefrontConfig?.categories)
+    ? publishedStorefrontConfig.categories.filter(category => category.visible !== false)
+    : categories;
+  const storefrontBanners = Array.isArray(publishedStorefrontConfig?.banners)
+    ? publishedStorefrontConfig.banners.filter(banner => banner.visible !== false)
+    : bannersList;
 
 
   const [notifications, setNotifications] = useState(() =>
@@ -1400,7 +1406,8 @@ export default function App() {
           <StoreView
             siteSettings={storefrontSiteSettings}
             promoSlots={promoSlots}
-            categories={categories}
+            categories={storefrontCategories}
+            banners={storefrontBanners}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
@@ -1451,6 +1458,8 @@ export default function App() {
             setCategoriesList={setCategoriesList}
             bannersList={bannersList || []}
             setBannersList={setBannersList}
+            categoriesList={categories}
+            setCategoriesList={setCategoriesList}
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
