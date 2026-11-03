@@ -1866,7 +1866,7 @@ export default function AdminDashboardPro({
                 {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
                   <button 
                     key={st}
-                    onClick={() => { setOrderStatusFilter(st); setOrderPageByStatus(prev => ({ ...prev, [st]: 1 })); }}
+                    onClick={() => setOrderStatusFilter(st)}
                     className={`px-3 py-2 rounded-xl font-bold text-[11px] cursor-pointer transition whitespace-nowrap ${orderStatusFilter === st ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
                   >
                     {st}
