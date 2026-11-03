@@ -1301,12 +1301,18 @@ export default function AdminDashboardPro({
 
   const handleSaveOrderAdminNote = async (orderId) => {
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
-        method: 'PATCH',
-        headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ admin_note: orderAdminNoteInput })
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_order_note`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders({ authenticated: true }),
+        body: JSON.stringify({
+          p_order_id: String(orderId),
+          p_admin_note: String(orderAdminNoteInput ?? '')
+        })
       });
-      if (!response.ok) throw new Error('შენიშვნის ბაზაში შენახვა ვერ მოხერხდა.');
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'შენიშვნის ბაზაში შენახვა ვერ მოხერხდა.');
+      }
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, adminNote: orderAdminNoteInput } : o));
       }
@@ -1314,8 +1320,9 @@ export default function AdminDashboardPro({
         setSelectedOrderForModal(prev => ({ ...prev, adminNote: orderAdminNoteInput }));
       }
       alert('✅ ადმინისტრატორის შენიშვნა წარმატებით შეინახა!');
-    } catch {
-      alert('შეცდომა შენიშვნის შენახვისას');
+    } catch (error) {
+      console.error('Admin order note save failed:', error);
+      alert(error?.message || 'შეცდომა შენიშვნის შენახვისას');
     }
   };
 
