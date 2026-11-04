@@ -106,10 +106,14 @@ export default function StorefrontMediaLibrary() {
     setError(''); setMessage('');
     try {
       const { error: storageError } = await supabase.storage.from(BUCKET).remove([item.storage_path]);
-      if (storageError) throw storageError;
+      if (storageError) throw new Error(`Storage-ში წაშლა ვერ დასრულდა; ჩანაწერი შენარჩუნებულია და ხელახლა ცდა შეგიძლიათ. ${storageError.message || ''}`);
       const { error: rowError } = await supabase.from('storefront_media').delete().eq('id', item.id);
-      if (rowError) throw rowError;
-      setMessage('სურათი წაიშალა.');
+      if (rowError) {
+        setError(`ფაილი Storage-იდან წაიშალა, მაგრამ მედიაბიბლიოთეკის ჩანაწერი ვერ წაიშალა. განაახლეთ სია და გადაამოწმეთ ჩანაწერი. ${rowError.message || ''}`);
+        await loadMedia();
+        return;
+      }
+      setMessage('სურათი და მედიაბიბლიოთეკის ჩანაწერი წაიშალა.');
       await loadMedia();
     } catch (e) {
       setError(e?.message || 'სურათის წაშლა ვერ მოხერხდა. გადაამოწმეთ Storage-ის წვდომის წესები.');
