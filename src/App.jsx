@@ -1325,15 +1325,19 @@ export default function App() {
         category => (typeof category === 'object' ? category.name : category) === selectedCategory
       );
       const selectedCategoryId = selectedCategoryConfig?.id || selectedCategoryConfig?.name;
+      const selectedCategoryNames = selectedCategoryConfig && typeof selectedCategoryConfig === 'object'
+        ? [selectedCategoryConfig.name, ...(Array.isArray(selectedCategoryConfig.aliases) ? selectedCategoryConfig.aliases : [])].filter(Boolean)
+        : [selectedCategory];
       const selectedSubcategoryNames = selectedCategoryId
         ? (storefrontCategories || [])
             .filter(category => typeof category === 'object' && category.parentId === selectedCategoryId)
-            .map(category => category.name)
+            .flatMap(category => [category.name, ...(Array.isArray(category.aliases) ? category.aliases : [])])
+            .filter(Boolean)
         : [];
       const matchesCategory =
         selectedCategory === t.allCategories ||
         selectedCategory === 'ყველა' ||
-        p.category === selectedCategory ||
+        selectedCategoryNames.includes(p.category) ||
         selectedSubcategoryNames.includes(p.category);
 
       const matchesVendor =
