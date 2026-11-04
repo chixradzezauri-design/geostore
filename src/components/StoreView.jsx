@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
+  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -244,15 +244,30 @@ export default function StoreView({
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
-    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return <Footprints className="w-4 h-4 text-amber-400" />;
-    if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ლაპტოპ') || name.includes('computer') || name.includes('კომპიუტერ') || name.includes('notebook')) return <Laptop className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-4 h-4 text-amber-400" />;
-    if (name.includes('საათ') || name.includes('watch')) return <Watch className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ფოტო') || name.includes('camera') || name.includes('ვიდეო')) return <CameraIcon className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ტელევიზორ') || name.includes('tv')) return <Tv className="w-4 h-4 text-amber-400" />;
-    if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-4 h-4 text-amber-400" />;
-    return <Sparkles className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return <Footprints className="w-5 h-5" />;
+    if (name.includes('აქსესუარ') || name.includes('accessor') || name.includes('ჩანთა') || name.includes('bag')) return <Briefcase className="w-5 h-5" />;
+    if (name.includes('სამკაულ') || name.includes('jewel') || name.includes('ბეჭედ') || name.includes('ყელსაბამ')) return <Gem className="w-5 h-5" />;
+    if (name.includes('კაც') || name.includes('men') || name.includes('male')) return <UserRound className="w-5 h-5" />;
+    if (name.includes('ქალ') || name.includes('women') || name.includes('female') || name.includes('ტანსაცმ') || name.includes('clothing') || name.includes('apparel')) return <Shirt className="w-5 h-5" />;
+    if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-5 h-5" />;
+    if (name.includes('ლაპტოპ') || name.includes('computer') || name.includes('კომპიუტერ') || name.includes('notebook')) return <Laptop className="w-5 h-5" />;
+    if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-5 h-5" />;
+    if (name.includes('საათ') || name.includes('watch')) return <Watch className="w-5 h-5" />;
+    if (name.includes('ფოტო') || name.includes('camera') || name.includes('ვიდეო')) return <CameraIcon className="w-5 h-5" />;
+    if (name.includes('ტელევიზორ') || name.includes('tv')) return <Tv className="w-5 h-5" />;
+    if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-5 h-5" />;
+    return <Sparkles className="w-5 h-5" />;
+  };
+
+  const getCategoryImage = (catName) => {
+    const name = (catName || '').toLowerCase();
+    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('აქსესუარ') || name.includes('accessor') || name.includes('bag') || name.includes('ჩანთა')) return 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('კაც') || name.includes('men') || name.includes('male')) return 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('ქალ') || name.includes('women') || name.includes('female')) return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('ტანსაცმ') || name.includes('clothing') || name.includes('apparel')) return 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('სამკაულ') || name.includes('jewel')) return 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=88';
+    return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
   };
 
   const currentBasePrice = selectedCustomVariant ? selectedCustomVariant.priceGEL : (selectedProduct?.priceGEL || 0);
@@ -260,40 +275,21 @@ export default function StoreView({
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
-      {/* 🌟 HERO BANNER */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[2rem] p-5 sm:p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 group">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-        <div className="space-y-3 max-w-2xl text-center lg:text-left z-10">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase shadow-inner">
-            <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
-          </div>
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
-            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და ფეხსაცმელების ბუტიკი'}
-          </h1>
-          <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
-            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ ელიტარული ტანსაცმელი, ფეხსაცმელები და აქსესუარები.'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ადგილზე მორგება</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> VIP მიწოდება</span>
+      {/* GEOSTORE FASHION EDITORIAL HERO */}
+      <section className="gs-fashion-hero" aria-label="GEOSTORE fashion collection">
+        <div className="gs-fashion-hero__image" role="img" aria-label="Fashion editorial collection" />
+        <div className="gs-fashion-hero__content">
+          <span className="gs-fashion-eyebrow">GEOSTORE / NEW SEASON</span>
+          <p className="gs-fashion-kicker">შეარჩიე შენი სტილი</p>
+          <h1>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? 'შენი სტილი. შენი არჩევანი.' : (siteSettings?.heroTitle || 'შენი სტილი. შენი არჩევანი.')}</h1>
+          <p className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.' : (siteSettings?.heroSubtitle || 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.')}</p>
+          <div className="gs-fashion-hero__actions">
+            <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">კოლექციის ნახვა <span aria-hidden="true">↗</span></button>
+            <span className="gs-fashion-hero__note">CLOTHING · SHOES · ACCESSORIES</span>
           </div>
         </div>
-
-        <div className="hidden lg:flex flex-col gap-3 shrink-0 z-10 w-72">
-          {(promoSlots || []).slice(0, 2).map((slot) => (
-            <div key={slot.id} className="bg-[#121216] border border-amber-500/30 p-4 rounded-2xl shadow-xl flex items-center justify-between group/card hover:border-amber-400 transition-all duration-300">
-              <div>
-                <span className="text-[10px] font-black text-amber-400 tracking-widest uppercase flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> {slot.tag}</span>
-                <h4 className="text-xs font-bold text-white mt-0.5">{slot.title}</h4>
-              </div>
-              <div className="bg-[#1a1a20] p-2.5 rounded-xl border border-amber-500/20">
-                <ArrowUpRight className="w-4 h-4 text-amber-400" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <div className="gs-fashion-hero__stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
+      </section>
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
@@ -359,9 +355,9 @@ export default function StoreView({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-amber-400" /> ელიტარული კატეგორიები & სუბკატეგორიები
+              <FolderTree className="w-4 h-4 text-amber-400" /> აღმოაჩინე კოლექციები
             </h3>
-            <p className="text-slate-400 text-xs mt-0.5">აირჩიეთ კატეგორია ან სუბკატეგორია ზუსტი ძიებისთვის</p>
+            <p className="text-slate-400 text-xs mt-0.5">შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი</p>
           </div>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
             {processedProducts?.length || 0} პროდუქტი ვიტრინაზე
@@ -395,20 +391,18 @@ export default function StoreView({
         )}
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="gs-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div 
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
-            className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+            className={`gs-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
                 ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                 : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
             }`}
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+            <div className="gs-category-photo" style={{ backgroundImage: 'linear-gradient(180deg, rgba(20,18,16,.02) 10%, rgba(20,18,16,.78) 100%), url("https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88")' }} />
             <div className="flex justify-between items-start z-10">
-              <div className="bg-amber-400 p-2.5 rounded-2xl text-slate-950 shadow-md">
-                <Sparkles className="w-4 h-4" />
-              </div>
+              <div className="gs-category-icon gs-category-icon--all"><Sparkles className="w-5 h-5" /></div>
               <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
                 {activeProducts.length}
               </span>
@@ -422,7 +416,7 @@ export default function StoreView({
           {(mainCategories.length > 0 ? mainCategories : (categories || []).map(c => typeof c === 'object' ? c : { id: c, name: c })).map(cat => {
             const catName = cat.name;
             const catId = cat.id || catName;
-            const catImage = cat.image || cat.img; // 🌟 ადმინ პანელიდან ატვირთული ფოტო
+            const catImage = cat.image || cat.img || getCategoryImage(catName); // Admin-uploaded image takes priority
             const subCats = getSubCategories(catId);
             const isSelected = selectedCategory === catName;
             const isOpen = openParentCatId === catId;
@@ -436,27 +430,17 @@ export default function StoreView({
                   setSelectedSubCategory(null);
                   setOpenParentCatId(isOpen ? null : catId);
                 }}
-                className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+                className={`gs-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
                   isSelected 
                     ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                     : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
                 }`}
               >
                 {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
-                {catImage && (
-                  <div className="absolute inset-0 opacity-25 group-hover:opacity-40 transition-opacity pointer-events-none">
-                    <img src={catImage} alt={catName} className="w-full h-full object-cover" />
-                  </div>
-                )}
+                <div className="gs-category-photo" style={{ backgroundImage: `linear-gradient(180deg, rgba(20,18,16,.04) 10%, rgba(20,18,16,.76) 100%), url("${catImage}"` }} />
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
-                  <div className="bg-[#1a1a22] border border-amber-500/30 w-10 h-10 rounded-2xl overflow-hidden text-amber-400 shadow-md flex items-center justify-center shrink-0">
-                    {catImage ? (
-                      <img src={catImage} alt={catName} className="w-full h-full object-cover" />
-                    ) : (
-                      getCategoryIcon(catName)
-                    )}
-                  </div>
+                  <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>
                   <div className="flex items-center gap-1 z-10">
                     {subCats.length > 0 && <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700">{subCats.length} სუბ</span>}
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
