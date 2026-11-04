@@ -566,6 +566,7 @@ export default function App() {
       if (Array.isArray(data)) {
         const formatted = data.map((p) => ({
           id: p.id,
+          createdAt: p.created_at || null,
           sku: p.sku || `GEO-${p.id}`,
           name: p.name,
           category: p.category || 'სმარტფონები',
@@ -595,9 +596,20 @@ export default function App() {
           isFeatured: Boolean(p.is_featured)
         }));
 
-        setProducts(formatted);
+        // Admin RPC may return rows in an unspecified order. Keep the dashboard
+        // stable across polling refreshes without changing product data.
+        const stableProducts = adminLoggedIn
+          ? [...formatted].sort((a, b) => {
+              const dateA = a.createdAt ? Date.parse(a.createdAt) : 0;
+              const dateB = b.createdAt ? Date.parse(b.createdAt) : 0;
+              if (dateA !== dateB) return dateB - dateA;
+              return String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
+            })
+          : formatted;
+
+        setProducts(stableProducts);
         try {
-          localStorage.setItem('geostore_products', JSON.stringify(formatted));
+          localStorage.setItem('geostore_products', JSON.stringify(stableProducts));
         } catch {
           // localStorage შეიძლება მიუწვდომელი იყოს.
         }
