@@ -21,6 +21,31 @@ const buildLegacyConfig = ({ siteSettings, bannersList, categoriesList }) => ({
   popup: { enabled: false, title: '', message: '', image: '', ctaText: '', ctaUrl: '' }
 });
 
+const validateCategoryConfig = (categories = []) => {
+  const names = new Map();
+  const ids = new Map();
+  for (const [index, category] of categories.entries()) {
+    const item = typeof category === 'string' ? { name: category } : category || {};
+    const name = String(item.name || '').trim();
+    if (!name) return `კატეგორია #${index + 1}: სახელი ცარიელია.`;
+    const normalized = name.toLocaleLowerCase();
+    if (names.has(normalized)) return `კატეგორიის სახელი დუბლირებულია: "${name}". სახელები უნიკალური უნდა იყოს.`;
+    names.set(normalized, true);
+    if (item.id) {
+      if (ids.has(item.id)) return `კატეგორიის ID დუბლირებულია: ${item.id}.`;
+      ids.set(item.id, item);
+    }
+  }
+  for (const [index, category] of categories.entries()) {
+    if (!category || typeof category !== 'object' || !category.parentId) continue;
+    const parent = ids.get(category.parentId);
+    if (!parent) return `ქვეკატეგორია #${index + 1}: მთავარი კატეგორია ვერ მოიძებნა.`;
+    if (parent.id === category.id) return 'კატეგორია საკუთარ თავზე ვერ იქნება მიბმული.';
+    if (parent.parentId) return 'ქვეკატეგორიების ჩაშენება მეორე დონეზე არ არის მხარდაჭერილი. აირჩიეთ მთავარი კატეგორია.';
+  }
+  return '';
+};
+
 export default function StorefrontStudio({ siteSettings, bannersList, categoriesList }) {
   const [config, setConfig] = useState(() => buildLegacyConfig({ siteSettings, bannersList, categoriesList }));
   const [versions, setVersions] = useState([]);
@@ -77,6 +102,8 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
   };
 
   const saveDraft = async () => {
+    const categoryError = validateCategoryConfig(config.categories || []);
+    if (categoryError) { setError(categoryError); setMessage(''); return; }
     setSaving(true); setError(''); setMessage('');
     let draftSaved = false;
     try {
@@ -108,6 +135,8 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
   };
 
   const publish = async () => {
+    const categoryError = validateCategoryConfig(config.categories || []);
+    if (categoryError) { setError(categoryError); setMessage(''); return; }
     if (!window.confirm('გამოქვეყნდეს ეს ვერსია საიტის ვიზუალურ კონფიგურაციად?')) return;
     setPublishing(true); setError(''); setMessage('');
     let published = false;
