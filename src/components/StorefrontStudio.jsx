@@ -78,6 +78,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
 
   const saveDraft = async () => {
     setSaving(true); setError(''); setMessage('');
+    let draftSaved = false;
     try {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
@@ -91,6 +92,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
         : supabase.from('storefront_config').insert({ ...payload, config_key: CONFIG_KEY });
       const { error: saveError } = await saveQuery;
       if (saveError) throw saveError;
+      draftSaved = true;
       const { error: versionError } = await supabase.from('storefront_versions').insert({
         config_key: CONFIG_KEY, snapshot: config, version_label: 'Draft-ის შენახვა',
         created_by: authData?.user?.id || null
@@ -98,13 +100,17 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
       if (versionError) throw versionError;
       setConfigExists(true); setIsDirty(false); setMessage('Draft წარმატებით შეინახა.');
       await load();
-    } catch (e) { setError(e?.message || 'Draft-ის შენახვა ვერ მოხერხდა.'); }
+    } catch (e) {
+      if (draftSaved) { setConfigExists(true); setIsDirty(false); setError('Draft შენახულია, მაგრამ Version History ჩანაწერი ვერ დაემატა. ხელახლა სცადეთ შენახვა. ' + (e?.message || '')); }
+      else setError(e?.message || 'Draft-ის შენახვა ვერ მოხერხდა.');
+    }
     finally { setSaving(false); }
   };
 
   const publish = async () => {
     if (!window.confirm('გამოქვეყნდეს ეს ვერსია საიტის ვიზუალურ კონფიგურაციად?')) return;
     setPublishing(true); setError(''); setMessage('');
+    let published = false;
     try {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
@@ -114,6 +120,7 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
         published_at: new Date().toISOString(), updated_by: authData?.user?.id || null
       }, { onConflict: 'config_key' });
       if (saveError) throw saveError;
+      published = true;
       const { error: versionError } = await supabase.from('storefront_versions').insert({
         config_key: CONFIG_KEY, snapshot: config, version_label: 'გამოქვეყნებული ვერსია',
         created_by: authData?.user?.id || null
@@ -121,7 +128,10 @@ export default function StorefrontStudio({ siteSettings, bannersList, categories
       if (versionError) throw versionError;
       setConfigExists(true); setIsDirty(false); setMessage('ვერსია გამოქვეყნდა. საჯარო გვერდი ახალ კონფიგურაციას ჩატვირთავს განახლებისას.');
       await load();
-    } catch (e) { setError(e?.message || 'გამოქვეყნება ვერ მოხერხდა.'); }
+    } catch (e) {
+      if (published) { setConfigExists(true); setIsDirty(false); setError('კონფიგურაცია გამოქვეყნებულია, მაგრამ Version History ჩანაწერი ვერ დაემატა. ' + (e?.message || '')); }
+      else setError(e?.message || 'გამოქვეყნება ვერ მოხერხდა.');
+    }
     finally { setPublishing(false); }
   };
 
