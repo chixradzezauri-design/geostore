@@ -36,7 +36,7 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-[#0b0b0e]/95 border-b border-amber-500/30 w-full shadow-2xl backdrop-blur-2xl sticky top-0 z-40 overflow-hidden">
+      <header className="bg-[#0b0b0e]/95 border-b border-amber-500/30 w-full shadow-2xl backdrop-blur-2xl sticky top-0 z-40 overflow-visible">
         {/* Top Announcement Bar */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-3 font-black text-center flex items-center justify-center gap-2 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 shrink-0" /> 
