@@ -3155,3 +3155,188 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .gs-commerce-dialog--tracker [class*="grid-cols-4"]{gap:3px!important;font-size:8px!important;line-height:1.35!important}
 }
 
+
+
+/* GEOSTORE — commerce dialog refinement: consistent premium geometry and mobile usability */
+.gs-commerce-dialog{
+  border-radius:24px!important;
+  color:#29241f!important;
+}
+.gs-commerce-dialog--checkout,
+.gs-commerce-dialog--success,
+.gs-commerce-dialog--tracker,
+.gs-commerce-dialog--notifications,
+.gs-commerce-dialog--account{
+  border-radius:24px!important;
+}
+.gs-commerce-dialog--tracker,
+.gs-commerce-dialog--notifications,
+.gs-commerce-dialog--account{
+  padding:clamp(18px,3vw,28px)!important;
+  gap:20px!important;
+}
+.gs-commerce-dialog--tracker>div:first-child,
+.gs-commerce-dialog--notifications>div:first-child,
+.gs-commerce-dialog--account>div:first-child{
+  padding-bottom:16px!important;
+  border-bottom:1px solid #e9e1d8!important;
+}
+.gs-commerce-dialog--tracker input,
+.gs-commerce-dialog--notifications input,
+.gs-commerce-dialog--account input,
+.gs-commerce-dialog--tracker select,
+.gs-commerce-dialog--account select,
+.gs-commerce-dialog--tracker textarea,
+.gs-commerce-dialog--account textarea{
+  min-height:48px!important;
+  padding:12px 14px!important;
+  border-radius:12px!important;
+  background:#faf7f2!important;
+  color:#29241f!important;
+  font-size:16px!important;
+  line-height:1.45!important;
+}
+.gs-commerce-dialog--tracker input:focus,
+.gs-commerce-dialog--notifications input:focus,
+.gs-commerce-dialog--account input:focus{
+  border-color:#8d7965!important;
+  outline:3px solid rgba(141,121,101,.14)!important;
+}
+.gs-commerce-dialog--tracker button,
+.gs-commerce-dialog--notifications button,
+.gs-commerce-dialog--account button{
+  min-height:42px;
+  border-radius:12px!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+}
+.gs-commerce-dialog--tracker button[class*="bg-amber-400"],
+.gs-commerce-dialog--notifications button[class*="bg-amber-400"],
+.gs-commerce-dialog--account button[class*="bg-amber-400"]{
+  background:#302a24!important;
+  border-color:#302a24!important;
+  color:#fffdfa!important;
+  box-shadow:none!important;
+}
+.gs-commerce-dialog--tracker button[class*="bg-amber-400"]:hover,
+.gs-commerce-dialog--notifications button[class*="bg-amber-400"]:hover,
+.gs-commerce-dialog--account button[class*="bg-amber-400"]:hover{
+  background:#65513f!important;
+  border-color:#65513f!important;
+}
+.gs-commerce-dialog--tracker [class*="bg-[#121216]"],
+.gs-commerce-dialog--notifications [class*="bg-[#121216]"],
+.gs-commerce-dialog--account [class*="bg-[#121216]"]{
+  border:1px solid #e8dfd5!important;
+  border-radius:17px!important;
+  background:#f7f3ed!important;
+  box-shadow:none!important;
+}
+.gs-commerce-dialog--tracker [class*="bg-[#08080a]"]{
+  background:#fffdfa!important;
+}
+.gs-commerce-dialog--tracker [class*="text-amber-"]{
+  color:#806b56!important;
+}
+.gs-commerce-dialog--tracker [class*="border-amber-"]{
+  border-color:#e6ddd3!important;
+}
+.gs-commerce-dialog--tracker [class*="grid-cols-4"]{
+  gap:8px!important;
+  font-size:10px!important;
+  line-height:1.45!important;
+}
+.gs-commerce-dialog--notifications{
+  max-height:min(84dvh,720px)!important;
+}
+.gs-commerce-dialog--notifications>div:nth-child(2){
+  align-items:center!important;
+  padding:10px 12px!important;
+  border-radius:12px!important;
+  background:#f7f3ed!important;
+}
+.gs-commerce-dialog--notifications>div:nth-child(3)>div{
+  border:1px solid #e8dfd5!important;
+  border-radius:15px!important;
+  background:#fffdfa!important;
+  padding:15px!important;
+  box-shadow:none!important;
+}
+.gs-commerce-dialog--notifications>div:nth-child(3)>div:hover{
+  border-color:#b9a58f!important;
+}
+.gs-commerce-dialog--account{
+  max-width:440px!important;
+  max-height:min(90dvh,780px)!important;
+  overflow-y:auto!important;
+}
+.gs-commerce-dialog--account form{
+  gap:16px!important;
+}
+.gs-commerce-dialog--account label{
+  display:block!important;
+  margin-bottom:7px!important;
+  color:#554a40!important;
+  font-size:12px!important;
+  font-weight:650!important;
+}
+.gs-commerce-dialog--account input{
+  width:100%!important;
+}
+.gs-commerce-dialog--account [class*="text-amber-"]{
+  color:#806b56!important;
+}
+.gs-commerce-dialog--account [class*="border-amber-"]{
+  border-color:#e6ddd3!important;
+}
+.gs-commerce-dialog--account [class*="bg-amber-500/10"]{
+  background:#f7f3ed!important;
+}
+.gs-commerce-dialog--account button:focus-visible,
+.gs-commerce-dialog--tracker button:focus-visible,
+.gs-commerce-dialog--notifications button:focus-visible{
+  outline:3px solid rgba(141,121,101,.35)!important;
+  outline-offset:2px!important;
+}
+.gs-commerce-dialog--checkout input,
+.gs-commerce-dialog--checkout select{
+  min-height:48px!important;
+  border-radius:12px!important;
+  font-size:16px!important;
+}
+.gs-commerce-dialog--checkout button,
+.gs-commerce-dialog--success button{
+  border-radius:13px!important;
+}
+.gs-commerce-dialog--success{
+  border-radius:25px!important;
+}
+@media(max-width:600px){
+  .gs-commerce-overlay:not(.gs-commerce-overlay--success){
+    align-items:flex-end!important;
+    padding:8px 8px max(8px,env(safe-area-inset-bottom))!important;
+  }
+  .gs-commerce-dialog--tracker,
+  .gs-commerce-dialog--notifications,
+  .gs-commerce-dialog--account,
+  .gs-commerce-dialog--checkout{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:calc(100dvh - 16px - env(safe-area-inset-bottom))!important;
+    border-radius:22px!important;
+    padding:18px!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+  }
+  .gs-commerce-dialog--tracker form{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .gs-commerce-dialog--tracker [class*="grid-cols-4"]{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+    text-align:left!important;
+  }
+  .gs-commerce-dialog--notifications{
+    max-height:calc(100dvh - 16px - env(safe-area-inset-bottom))!important;
+  }
+}
