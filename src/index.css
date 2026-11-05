@@ -3495,3 +3495,105 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
    line-height:1.5!important;
  }
 }
+
+
+/* GEOSTORE header refinement — warm editorial identity */
+.geostore-fashion-store .gs-site-header{
+  background:rgba(250,248,245,.97)!important;
+  border-bottom:1px solid #e8dfd5!important;
+  box-shadow:0 5px 24px rgba(47,37,27,.055)!important;
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+}
+.geostore-fashion-store .gs-site-announcement{
+  min-height:25px!important;
+  padding:5px 12px!important;
+  background:#eee7de!important;
+  color:#6f5c49!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  letter-spacing:.12em!important;
+}
+.geostore-fashion-store .gs-site-announcement svg{color:#9a7c5d!important;width:12px!important;height:12px!important}
+.geostore-fashion-store .gs-site-header-inner{min-height:74px!important}
+.geostore-fashion-store .gs-brand-button{max-width:calc(100% - 60px)!important}
+.geostore-fashion-store .gs-brand-lockup{gap:13px!important}
+.geostore-fashion-store .gs-brand-monogram{
+  width:43px!important;height:43px!important;flex-basis:43px!important;
+  border:1px solid #9b8065!important;outline:1px solid rgba(155,128,101,.28)!important;
+  outline-offset:3px!important;border-radius:7px!important;
+  background:linear-gradient(145deg,#3a3028,#211c18)!important;
+  box-shadow:0 3px 10px rgba(39,30,22,.12)!important;
+  font-size:27px!important;letter-spacing:-.1em!important
+}
+.geostore-fashion-store .gs-brand-name{font-size:clamp(18px,2vw,24px)!important;letter-spacing:.16em!important}
+.geostore-fashion-store .gs-brand-caption{font-size:8px!important;letter-spacing:.25em!important;color:#8b745e!important}
+.geostore-fashion-store .gs-menu-toggle{
+  width:42px!important;height:42px!important;min-height:42px!important;flex-basis:42px!important;
+  border:1px solid #d9cabb!important;border-radius:5px!important;
+  background:#f4f0eb!important;color:#594a3c!important;
+  transition:background .2s ease,border-color .2s ease!important
+}
+.geostore-fashion-store .gs-menu-toggle:hover{background:#eae2d8!important;border-color:#bda88f!important}
+.geostore-fashion-store .gs-main-menu{
+  border:1px solid #e5dbd0!important;border-radius:7px!important;
+  background:#fbf9f6!important;color:#302921!important;
+  box-shadow:0 22px 60px rgba(39,30,22,.16)!important
+}
+.geostore-fashion-store .gs-menu-heading{border-color:#e9e0d7!important}
+.geostore-fashion-store .gs-menu-brand strong{color:#302921!important}
+.geostore-fashion-store .gs-menu-brand span{color:#8b7b6c!important}
+.geostore-fashion-store .gs-menu-auth button.gs-menu-login{background:#29241f!important;color:#fff!important}
+.geostore-fashion-store .gs-menu-auth button.gs-menu-register{border-color:#cdbda9!important;color:#665441!important}
+.geostore-fashion-store .gs-menu-account{background:#f0eae2!important;color:#5d4c3b!important}
+.geostore-fashion-store .gs-menu-search{border-color:#e5dbd0!important;background:#f6f2ed!important}
+.geostore-fashion-store .gs-menu-search input{color:#302921!important}
+.geostore-fashion-store .gs-menu-search input::placeholder{color:#9a8d80!important}
+.geostore-fashion-store .gs-menu-icon-action{border-color:#e5dbd0!important;background:#f6f2ed!important;color:#725b43!important}
+.geostore-fashion-store .gs-menu-section-title{color:#927c66!important}
+.geostore-fashion-store .gs-menu-link{color:#40372f!important}
+.geostore-fashion-store .gs-menu-link>svg{color:#927657!important}
+.geostore-fashion-store .gs-menu-link:hover,.geostore-fashion-store .gs-menu-link.is-active{
+  border-color:#e6dbcf!important;background:#f1ebe4!important;color:#29241f!important
+}
+.geostore-fashion-store .gs-menu-count{background:#eee6dc!important;color:#6c5946!important}
+.geostore-fashion-store .gs-menu-count.is-highlight{background:#302921!important;color:#fff!important}
+.geostore-fashion-store .gs-menu-footer{border-color:#e9e0d7!important}
+.geostore-fashion-store .gs-menu-footer>span{color:#857666!important}
+.geostore-fashion-store .gs-menu-languages{border-color:#e5dbd0!important;background:#f5f1ec!important}
+.geostore-fashion-store .gs-menu-languages button{color:#766656!important}
+.geostore-fashion-store .gs-menu-languages button.is-selected{background:#302921!important;color:#fff!important}
+.geostore-fashion-store .gs-main-menu button:focus-visible,.geostore-fashion-store .gs-menu-toggle:focus-visible,.geostore-fashion-store .gs-brand-button:focus-visible{
+  outline:2px solid #9b8065!important;outline-offset:3px!important
+}
+
+/* Product catalogue responsive rhythm */
+@media(max-width:1100px){
+ .geostore-fashion-store .gs-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:17px!important}
+ .geostore-fashion-store .gs-product-media{height:clamp(210px,28vw,300px)!important}
+}
+@media(max-width:760px){
+ .geostore-fashion-store .gs-site-header-inner{min-height:64px!important;padding:9px 14px!important}
+ .geostore-fashion-store .gs-brand-monogram{width:37px!important;height:37px!important;flex-basis:37px!important;font-size:23px!important}
+ .geostore-fashion-store .gs-brand-name{font-size:16px!important;letter-spacing:.13em!important}
+ .geostore-fashion-store .gs-brand-caption{font-size:7px!important;letter-spacing:.2em!important}
+ .geostore-fashion-store .gs-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important}
+ .geostore-fashion-store .gs-product-media{height:auto!important;aspect-ratio:4/5!important;padding:9px!important}
+ .geostore-fashion-store .gs-product-info{gap:7px!important;padding:10px 10px 8px!important}
+ .geostore-fashion-store .gs-product-title{min-height:34px!important;font-size:12px!important;line-height:1.4!important}
+ .geostore-fashion-store .gs-product-price p:first-child{font-size:16px!important}
+ .geostore-fashion-store .gs-product-card>button.gs-product-action{width:calc(100% - 20px)!important;min-height:39px!important;margin:0 10px 10px!important;padding:9px 5px!important;font-size:9px!important}
+ .geostore-fashion-store .gs-product-card button[title="სურვილების სიაში დამატება"],.geostore-fashion-store .gs-product-card button[title="შედარებაში დამატება"]{width:32px!important;height:32px!important;padding:7px!important}
+}
+@media(max-width:390px){
+ .geostore-fashion-store .gs-product-grid{gap:8px!important}
+ .geostore-fashion-store .gs-product-info>div:first-child>span{max-width:52%;font-size:8px!important}
+ .geostore-fashion-store .gs-product-info>div:first-child>div{font-size:9px!important;padding:4px 5px!important}
+ .geostore-fashion-store .gs-product-title{font-size:11px!important}
+ .geostore-fashion-store .gs-product-card>button.gs-product-action{font-size:8px!important}
+}
+@media(hover:none){
+ .geostore-fashion-store .gs-product-card:hover{transform:none!important}
+ .geostore-fashion-store .gs-product-media img{transform:none!important}
+ .geostore-fashion-store .gs-product-media>div:last-child{display:none!important}
+}
