@@ -362,7 +362,7 @@ export default function AiAssistantModal({
             </span>
           </div>
           <div className="gs-ai-header-actions">
-            <span className="gs-ai-status"><i aria-hidden="true" /> ონლაინ</span>
+            <span className="gs-ai-status"><i aria-hidden="true" /> მზადაა</span>
             <button
               type="button"
               onClick={handleResetChat}
