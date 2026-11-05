@@ -1,5 +1,6 @@
 // src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Real PIN & Passkeys Auth
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
   Search, PackageCheck, Clock, Navigation, Map, KeyRound, Fingerprint, Bell, Sparkles, Tag 
@@ -184,105 +185,146 @@ export default function Modals({
   return (
     <>
       {/* 1. შეკვეთის გაფორმების მოდალი */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto scrollbar-thin">
-            <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <ShoppingBag className="w-5 h-5 text-amber-400" /> შეკვეთის გაფორმება
-              </h3>
-              <button onClick={() => setIsCheckoutOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
-                <X className="w-4 h-4" />
+      {isCheckoutOpen && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm sm:p-6">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="geostore-checkout-title"
+            className="relative flex max-h-[min(92dvh,860px)] w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-black/10 bg-white text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.35)]"
+          >
+            <header className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4 sm:px-7 sm:py-5">
+              <div>
+                <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-neutral-500">GEOSTORE · CHECKOUT</p>
+                <h3 id="geostore-checkout-title" className="text-lg font-semibold tracking-tight sm:text-xl">შეკვეთის გაფორმება</h3>
+                <p className="mt-1 text-[11px] text-neutral-500">შეავსეთ მიწოდებისთვის საჭირო ინფორმაცია</p>
+              </div>
+              <button
+                type="button"
+                aria-label="დახურვა"
+                onClick={() => setIsCheckoutOpen(false)}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:bg-neutral-100 hover:text-black"
+              >
+                <X className="h-4 w-4" />
               </button>
-            </div>
+            </header>
 
-            <form onSubmit={handlePlaceOrder} className="space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-amber-400" /> სრული სახელი *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="გიორგი გიორგაძე"
-                  value={checkoutForm.name}
-                  onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
-                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                />
+            <form onSubmit={handlePlaceOrder} className="min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className="block space-y-1.5">
+                  <span className="text-[11px] font-semibold text-neutral-700">სრული სახელი <span className="text-neutral-400">*</span></span>
+                  <span className="relative block">
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                    <input type="text" required autoComplete="name" placeholder="გიორგი გიორგაძე" value={checkoutForm.name}
+                      onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
+                  </span>
+                </label>
+
+                <label className="block space-y-1.5">
+                  <span className="text-[11px] font-semibold text-neutral-700">ტელეფონის ნომერი <span className="text-neutral-400">*</span></span>
+                  <span className="relative block">
+                    <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                    <input type="tel" required autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
+                      onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
+                  </span>
+                </label>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold">ელ-ფოსტა {!currentUser?.email && '*'}</label>
-                <input type="email" required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''} onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })} className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all read-only:opacity-70" />
-                <p className="text-[10px] text-slate-500">შეკვეთის მონაცემები ამ ელ-ფოსტასთან იქნება დაკავშირებული.</p>
-              </div>
+              <label className="block space-y-1.5">
+                <span className="text-[11px] font-semibold text-neutral-700">ელ-ფოსტა {!currentUser?.email && <span className="text-neutral-400">*</span>}</span>
+                <input type="email" required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
+                  placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''}
+                  onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white read-only:cursor-not-allowed read-only:opacity-65" />
+                <span className="block text-[10px] text-neutral-500">შეკვეთის დეტალები ამ ელ-ფოსტასთან იქნება დაკავშირებული.</span>
+              </label>
 
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-amber-400" /> ტელეფონის ნომერი *</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="599 00 00 00"
-                  value={checkoutForm.phone}
-                  onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
-                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                />
-              </div>
+              <label className="block space-y-1.5">
+                <span className="text-[11px] font-semibold text-neutral-700">მიწოდების რეგიონი <span className="text-neutral-400">*</span></span>
+                <span className="relative block">
+                  <Truck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <select value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:bg-white">
+                    <option value="tbilisi">თბილისი / რუსთავი ({deliveryFees.tbilisi} ₾)</option>
+                    <option value="bigCities">დიდი ქალაქები - ქუთაისი, ბათუმი ({deliveryFees.bigCities} ₾)</option>
+                    <option value="other">სხვა რეგიონები / მთიანი ზონა ({deliveryFees.other} ₾)</option>
+                  </select>
+                </span>
+              </label>
 
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-amber-400" /> მიწოდების რეგიონი *</label>
-                <select
-                  value={selectedRegion || 'tbilisi'}
-                  onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
-                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-amber-400 font-bold outline-none focus:border-amber-400 shadow-inner cursor-pointer"
-                >
-                  <option value="tbilisi">თბილისი / რუსთავი ({deliveryFees.tbilisi} ₾)</option>
-                  <option value="bigCities">დიდი ქალაქები - ქუთაისი, ბათუმი ({deliveryFees.bigCities} ₾)</option>
-                  <option value="other">სხვა რეგიონები / მთიანი ზონა ({deliveryFees.other} ₾)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-slate-300 font-bold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-amber-400" /> მიწოდების მისამართი *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ქუჩა, კორპუსი, ბინა..."
-                  value={checkoutForm.address}
-                  onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
-                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                />
-              </div>
+              <label className="block space-y-1.5">
+                <span className="text-[11px] font-semibold text-neutral-700">მიწოდების მისამართი <span className="text-neutral-400">*</span></span>
+                <span className="relative block">
+                  <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                  <input type="text" required autoComplete="street-address" placeholder="ქუჩა, კორპუსი, ბინა..." value={checkoutForm.address}
+                    onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
+                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
+                </span>
+              </label>
 
               {checkoutError && (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-[11px] font-bold leading-relaxed text-rose-300"
-                >
+                <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
                   {checkoutError}
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={isSubmittingOrder}
-                className="w-full bg-amber-400 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-3"
-              >
-                {isSubmittingOrder ? 'იგზავნება...' : 'დადასტურება და შეკვეთა'}
-              </button>
+              <div className="border-t border-neutral-200 pt-4">
+                <button type="submit" disabled={isSubmittingOrder}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-55">
+                  {isSubmittingOrder ? 'იგზავნება...' : 'შეკვეთის დადასტურება'}
+                </button>
+                <p className="mt-3 text-center text-[10px] text-neutral-500">თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში</p>
+              </div>
             </form>
-          </div>
-        </div>
+          </section>
+        </div>,
+        document.body
       )}
 
-      {orderConfirmation && (
-        <div className="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-emerald-500/30 rounded-[2rem] max-w-sm w-full p-6 sm:p-8 space-y-5 text-center shadow-2xl">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center"><PackageCheck className="w-8 h-8 text-emerald-400" /></div>
-            <div className="space-y-2"><h3 className="text-white text-lg font-black">შეკვეთა მიღებულია!</h3><p className="text-slate-400 text-xs">შეინახეთ შეკვეთის კოდი სტატუსის შესამოწმებლად.</p></div>
-            <div className="bg-[#08080a] border border-amber-500/20 rounded-2xl p-4 space-y-2"><span className="text-slate-500 text-[10px] font-bold">შეკვეთის კოდი</span><div className="text-amber-400 text-xl font-black tracking-wider">#{orderConfirmation.id}</div><button type="button" onClick={() => { if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(orderConfirmation.id).then(() => alert('შეკვეთის კოდი დაკოპირდა.')).catch(() => alert('შეკვეთის კოდი: ' + orderConfirmation.id)); } else { alert('შეკვეთის კოდი: ' + orderConfirmation.id); } }} className="text-xs font-bold text-emerald-400 underline">კოდის კოპირება</button></div>
-            <p className="text-slate-500 text-[10px] break-all">ელ-ფოსტა: {orderConfirmation.email}</p>
-            <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs">გასაგებია</button>
-          </div>
-        </div>
+      {orderConfirmation && createPortal(
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-black/70 p-4 py-8 backdrop-blur-sm">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="geostore-order-success-title"
+            className="my-auto w-full max-w-md overflow-hidden rounded-[28px] border border-white/15 bg-white text-center text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
+          >
+            <div className="px-6 pb-6 pt-8 sm:px-8 sm:pt-9">
+              <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-neutral-950 text-white">
+                <PackageCheck className="h-7 w-7" />
+              </div>
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-neutral-500">GEOSTORE · ORDER CONFIRMED</p>
+              <h3 id="geostore-order-success-title" className="text-xl font-semibold tracking-tight sm:text-2xl">შეკვეთა მიღებულია</h3>
+              <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.</p>
+              <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+                <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">შეკვეთის კოდი</span>
+                <strong className="mt-2 block break-all text-lg font-semibold tracking-[0.08em] text-neutral-950 sm:text-xl">#{orderConfirmation.id}</strong>
+                <button type="button"
+                  onClick={() => {
+                    if (navigator.clipboard?.writeText) {
+                      navigator.clipboard.writeText(orderConfirmation.id)
+                        .then(() => alert('შეკვეთის კოდი დაკოპირდა.'))
+                        .catch(() => alert('შეკვეთის კოდი: ' + orderConfirmation.id));
+                    } else {
+                      alert('შეკვეთის კოდი: ' + orderConfirmation.id);
+                    }
+                  }}
+                  className="mt-3 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white"
+                >კოდის კოპირება</button>
+              </div>
+              {orderConfirmation.email && (
+                <p className="mt-4 break-all text-[10px] text-neutral-500">დადასტურება: {orderConfirmation.email}</p>
+              )}
+              <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)}
+                className="mt-6 w-full rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800">
+                გასაგებია
+              </button>
+            </div>
+          </section>
+        </div>,
+        document.body
       )}
 
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}

@@ -1174,12 +1174,14 @@ export default function App() {
 
     let orderUserEmail = 'guest';
     let serverOrderResult = null;
+    // Keep the order ID in the outer scope: it is needed after the RPC succeeds.
+    let orderId = '';
 
     try {
       // 128-bit random ID prevents predictable order references; legacy IDs remain valid.
       const randomOrderIdBytes = new Uint8Array(16);
       window.crypto.getRandomValues(randomOrderIdBytes);
-      const orderId = `ORD-${Array.from(randomOrderIdBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+      orderId = `ORD-${Array.from(randomOrderIdBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
 
       // ერთი და იგივე Supabase სესია განსაზღვრავს მომხმარებლის ელფოსტასაც
       // და Authorization ტოკენსაც, რათა RLS შემოწმება თანმიმდევრული იყოს.
