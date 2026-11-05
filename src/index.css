@@ -3142,7 +3142,8 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   background:#302a24!important;
 }
 @media(max-width:600px){
-  .gs-commerce-overlay{align-items:flex-end!important;padding:8px!important}
+  .gs-commerce-overlay:not(.gs-commerce-overlay--success){align-items:flex-end!important;padding:8px!important}
+  .gs-commerce-overlay--success{align-items:center!important;padding:12px!important}
   .gs-commerce-dialog--checkout,.gs-commerce-dialog--tracker,
   .gs-commerce-dialog--notifications,.gs-commerce-dialog--account{
     width:100%!important;max-width:100%!important;max-height:calc(100dvh - 16px)!important;
