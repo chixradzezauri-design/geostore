@@ -2935,3 +2935,78 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .geostore-storefront .gs-category-card h4{font-size:11px!important}
   .geostore-fashion-store .geostore-storefront .gs-category-card span{padding:2px 5px!important;font-size:7px!important}
 }
+
+
+/* GEOSTORE — category navigation, subcategory chips and empty-result state */
+.geostore-fashion-store .gs-category-breadcrumb{
+  min-width:0!important;flex-wrap:wrap!important;gap:8px!important;
+  padding:10px 12px!important;border:1px solid #e6ddd3!important;border-radius:3px!important;
+  background:#f1ece6!important;color:#67594d!important;box-shadow:none!important;
+}
+.geostore-fashion-store .gs-category-breadcrumb>span{
+  min-width:0!important;font-size:10px!important;line-height:1.4!important;
+}
+.geostore-fashion-store .gs-category-breadcrumb button{
+  color:#806b56!important;font-size:10px!important;font-weight:650!important;
+}
+.geostore-fashion-store .gs-category-breadcrumb button:last-child{
+  margin-left:auto!important;padding:5px 7px!important;border:1px solid #e2d7ca!important;
+  border-radius:2px!important;background:#faf7f2!important;text-decoration:none!important;
+}
+.geostore-fashion-store .gs-subcategory-panel{
+  display:flex!important;flex-direction:column!important;gap:13px!important;
+  padding:15px!important;border:1px solid #e6ddd3!important;border-radius:3px!important;
+  background:#f4f0ea!important;box-shadow:0 4px 14px rgba(43,32,23,.04)!important;
+}
+.geostore-fashion-store .gs-subcategory-panel>div:first-child{
+  align-items:center!important;gap:10px!important;padding-bottom:10px!important;
+  border-bottom:1px solid #e5dbd0!important;
+}
+.geostore-fashion-store .gs-subcategory-panel>div:first-child>span{
+  min-width:0!important;color:#806b56!important;font-size:11px!important;line-height:1.5!important;
+}
+.geostore-fashion-store .gs-subcategory-panel>div:first-child>span b{
+  color:#302a24!important;
+}
+.geostore-fashion-store .gs-subcategory-panel>div:first-child button{
+  flex:0 0 auto!important;padding:6px 8px!important;border:1px solid #e1d6ca!important;
+  border-radius:2px!important;background:#fffdfa!important;color:#776655!important;font-size:10px!important;
+}
+.geostore-fashion-store .gs-subcategory-panel>div:last-child{
+  gap:7px!important;padding-top:0!important;
+}
+.geostore-fashion-store .gs-subcategory-chip{
+  min-height:34px!important;padding:7px 10px!important;border:1px solid #ded3c7!important;
+  border-radius:2px!important;background:#fffdfa!important;color:#5f5145!important;
+  box-shadow:none!important;font-size:10px!important;font-weight:650!important;
+}
+.geostore-fashion-store .gs-subcategory-chip[class*="bg-amber-400"]{
+  border-color:#302a24!important;background:#302a24!important;color:#fffdfa!important;
+}
+.geostore-fashion-store .gs-subcategory-chip>span:last-child{
+  min-width:19px!important;padding:2px 5px!important;border-radius:2px!important;
+  background:#eee7de!important;color:#806b56!important;font-size:9px!important;
+}
+.geostore-fashion-store .gs-subcategory-chip[class*="bg-amber-400"]>span:last-child{
+  background:#fffdfa!important;color:#554536!important;
+}
+.geostore-fashion-store .gs-empty-products{
+  display:flex!important;min-height:190px!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;gap:10px!important;
+  padding:30px 18px!important;border:1px dashed #d8cbbd!important;border-radius:3px!important;
+  background:#f4f0ea!important;box-shadow:none!important;
+}
+.geostore-fashion-store .gs-empty-products p{
+  max-width:380px!important;color:#77695d!important;font-size:12px!important;
+  font-weight:500!important;line-height:1.65!important;
+}
+@media(max-width:700px){
+  .geostore-fashion-store .gs-category-breadcrumb{gap:6px!important;padding:9px!important}
+  .geostore-fashion-store .gs-category-breadcrumb>span{font-size:9px!important}
+  .geostore-fashion-store .gs-category-breadcrumb button:last-child{margin-left:0!important}
+  .geostore-fashion-store .gs-subcategory-panel{padding:11px!important;gap:10px!important}
+  .geostore-fashion-store .gs-subcategory-panel>div:first-child>span{font-size:10px!important}
+  .geostore-fashion-store .gs-subcategory-panel>div:last-child{gap:6px!important}
+  .geostore-fashion-store .gs-subcategory-chip{min-height:32px!important;padding:6px 8px!important;font-size:9px!important}
+  .geostore-fashion-store .gs-empty-products{min-height:150px!important;padding:22px 14px!important}
+}
