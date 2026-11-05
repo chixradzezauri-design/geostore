@@ -1503,8 +1503,8 @@ export default function App() {
         )}
 
         {activeTab === 'cart' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+          <div className="gs-cart-page space-y-6">
+            <h2 className="gs-cart-title text-xl font-black text-white tracking-tight flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-400" />
               {t.cart}
             </h2>
@@ -1519,14 +1519,14 @@ export default function App() {
                   {cart.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
+                      className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
-                        <h4 className="font-bold text-xs text-white">
+                        <h4 className="gs-cart-item-title font-bold text-xs text-white">
                           {item.name}
                         </h4>
 
-                        <p className="text-emerald-400 font-bold">
+                        <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} x {item.quantity}
                         </p>
                       </div>
@@ -1537,7 +1537,7 @@ export default function App() {
                             prev.filter((c) => c.id !== item.id)
                           )
                         }
-                        className="text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
+                        className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                       >
                         {t.remove}
                       </button>
@@ -1545,7 +1545,7 @@ export default function App() {
                   ))}
                 </div>
 
-                <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
+                <div className="gs-cart-summary bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs">
                       <Truck className="w-3.5 h-3.5" />
@@ -1666,7 +1666,7 @@ export default function App() {
                       setCheckoutError('');
                       setIsCheckoutOpen(true);
                     }}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
+                    className="gs-cart-checkout w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
                   >
                     {t.checkout}
                   </button>
