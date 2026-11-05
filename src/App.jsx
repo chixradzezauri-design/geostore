@@ -1895,7 +1895,7 @@ export default function App() {
               <input
                 type="text"
                 name="cname"
-                placeholder="Your Name *"
+                placeholder={currentLang === 'en' ? 'Your name *' : currentLang === 'ru' ? 'Ваше имя *' : 'თქვენი სახელი *'}
                 required
                 className="gs-support-field"
               />
@@ -1903,21 +1903,21 @@ export default function App() {
               <input
                 type="email"
                 name="cemail"
-                placeholder="Email"
+                placeholder={currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელფოსტა'}
                 className="gs-support-field"
               />
 
               <input
                 type="text"
                 name="csubject"
-                placeholder="Subject"
+                placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 className="gs-support-field"
               />
 
               <textarea
                 name="cmessage"
                 rows="3"
-                placeholder="Write your message..."
+                placeholder={currentLang === 'en' ? 'Write your message...' : currentLang === 'ru' ? 'Напишите сообщение...' : 'დაწერე შეტყობინება...'}
                 required
                 className="gs-support-field"
               />
