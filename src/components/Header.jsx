@@ -55,7 +55,7 @@ export default function Header({
     `flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${activeTab === tab ? 'bg-amber-400/15 text-amber-300' : 'text-slate-200 hover:bg-white/5 hover:text-amber-300'}`;
 
   return (
-    <header className="relative z-40 w-full overflow-visible border-b border-amber-500/20 bg-[#0b0b0e]/95 shadow-lg backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full overflow-visible border-b border-amber-500/20 bg-[#0b0b0e]/95 shadow-lg backdrop-blur-xl">
       <div className="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-700 px-3 py-1.5 text-center text-[10px] font-semibold tracking-wide text-slate-950 sm:text-[11px]">
         <span className="inline-flex max-w-full items-center justify-center gap-2">
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
