@@ -224,6 +224,31 @@ export default function Modals({
     };
     return messages[message] || message;
   };
+  const getNotificationCopy = (notification) => {
+    const defaults = {
+      n1: {
+        ka: ['მოგესალმებით GEOSTORE-ში!', 'ისარგებლეთ 10% ფასდაკლებით პრომო-კოდით: GEOSTORE2026'],
+        en: ['Welcome to GEOSTORE!', 'Enjoy 10% off with promo code: GEOSTORE2026'],
+        ru: ['Добро пожаловать в GEOSTORE!', 'Получите скидку 10% с промокодом: GEOSTORE2026']
+      },
+      n2: {
+        ka: ['უფასო მიწოდება', 'მიწოდება თბილისის მასშტაბით სრულიად უფასოა!'],
+        en: ['Free delivery', 'Delivery across Tbilisi is completely free!'],
+        ru: ['Бесплатная доставка', 'Доставка по Тбилиси совершенно бесплатна!']
+      }
+    };
+    const localized = defaults[notification.id]?.[currentLang];
+    const original = defaults[notification.id]?.ka;
+    if (localized && original && notification.title === original[0] && notification.message === original[1]) {
+      return { title: localized[0], message: localized[1] };
+    }
+    return { title: notification.title, message: notification.message };
+  };
+  const localizedNotificationDate = (date) => {
+    if (date === 'დღეს') return currentLang === 'en' ? 'Today' : currentLang === 'ru' ? 'Сегодня' : date;
+    if (date === 'გუშინ') return currentLang === 'en' ? 'Yesterday' : currentLang === 'ru' ? 'Вчера' : date;
+    return date;
+  };
   const localizedStatus = (status) => {
     const statuses = {
       'ახალი': currentLang === 'en' ? 'New' : currentLang === 'ru' ? 'Новый' : 'ახალი',
@@ -658,11 +683,11 @@ export default function Modals({
                   <div key={n.id} className="bg-[#121216] border border-amber-500/20 p-4 rounded-2xl space-y-1.5 shadow-inner hover:border-amber-400/50 transition">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-black text-amber-300 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {n.title}
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {getNotificationCopy(n).title}
                       </span>
-                      <span className="text-[10px] text-slate-500">{n.date || (currentLang === 'en' ? 'New' : currentLang === 'ru' ? 'Новое' : 'ახალი')}</span>
+                      <span className="text-[10px] text-slate-500">{localizedNotificationDate(n.date) || (currentLang === 'en' ? 'New' : currentLang === 'ru' ? 'Новое' : 'ახალი')}</span>
                     </div>
-                    <p className="text-slate-300 text-xs leading-relaxed">{n.message}</p>
+                    <p className="text-slate-300 text-xs leading-relaxed">{getNotificationCopy(n).message}</p>
                   </div>
                 ))
               )}
