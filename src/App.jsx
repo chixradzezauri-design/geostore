@@ -1879,14 +1879,22 @@ export default function App() {
                     );
                   }
 
-                  alert('✅ Support ticket sent successfully!');
+                  alert(currentLang === 'en'
+                    ? 'Support request sent successfully.'
+                    : currentLang === 'ru'
+                      ? 'Обращение в поддержку успешно отправлено.'
+                      : 'მხარდაჭერის მოთხოვნა წარმატებით გაიგზავნა.');
 
                   e.target.reset();
                   setSupportOpen(false);
                 } catch (error) {
                   console.error('Support ticket error:', error);
                   alert(
-                    error.message || 'Error sending message.'
+                    error.message || (currentLang === 'en'
+                      ? 'Could not send the support request.'
+                      : currentLang === 'ru'
+                        ? 'Не удалось отправить обращение в поддержку.'
+                        : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.')
                   );
                 }
               }}
