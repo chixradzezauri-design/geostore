@@ -2815,3 +2815,54 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-filter-panel>div>div:first-child{font-size:9px!important}
   .geostore-fashion-store .gs-filter-panel input{max-width:94px!important;padding:6px!important;font-size:10px!important}
 }
+
+
+/* GEOSTORE — warranty information modal aligned with the storefront design */
+.gs-warranty-overlay{
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+    max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;
+  background:rgba(28,23,18,.68)!important;
+}
+.gs-warranty-dialog{
+  width:min(560px,100%)!important;max-height:min(86dvh,760px)!important;
+  padding:22px!important;gap:17px!important;border:1px solid #e5dbd0!important;
+  border-radius:6px!important;background:#fffdfa!important;color:#302a24!important;
+  box-shadow:0 26px 80px rgba(15,12,9,.28)!important;
+}
+.gs-warranty-dialog>div:first-child{
+  align-items:center!important;gap:12px!important;padding-bottom:13px!important;
+  border-bottom:1px solid #e9e1d8!important;
+}
+.gs-warranty-dialog>div:first-child h3{
+  color:#302a24!important;font:500 clamp(18px,3vw,23px)/1.25 Georgia,serif!important;
+}
+.gs-warranty-dialog>div:first-child h3 svg{color:#92785f!important}
+.gs-warranty-dialog>div:first-child button{
+  width:35px!important;height:35px!important;padding:8px!important;border-radius:3px!important;
+  background:#f3eee8!important;color:#655342!important;border:1px solid #e5dbd0!important;
+}
+.gs-warranty-dialog>div:nth-child(2){
+  min-height:0!important;padding-right:5px!important;color:#65594f!important;
+  font-size:12px!important;line-height:1.75!important;
+}
+.gs-warranty-dialog>div:nth-child(2)>div{
+  padding:15px!important;border:1px solid #e8ded2!important;border-radius:4px!important;
+  background:#f7f3ed!important;
+}
+.gs-warranty-dialog>div:nth-child(2)>div h4{
+  color:#806b56!important;font-size:13px!important;font-weight:700!important;
+}
+.gs-warranty-dialog>div:nth-child(2)>div p{color:#65594f!important;font-size:12px!important;line-height:1.75!important}
+.gs-warranty-dialog>button:last-child{
+  min-height:42px!important;padding:10px 16px!important;border:1px solid #302a24!important;
+  border-radius:3px!important;background:#302a24!important;color:#fffdfa!important;
+  box-shadow:none!important;font-size:11px!important;font-weight:650!important;
+}
+.gs-warranty-dialog>button:last-child:hover{background:#6e5b48!important;border-color:#6e5b48!important}
+@media(max-width:600px){
+  .gs-warranty-dialog{padding:16px!important;gap:13px!important;max-height:calc(100dvh - 24px)!important}
+  .gs-warranty-dialog>div:nth-child(2){font-size:11px!important}
+}
+@media(max-width:380px){
+  .gs-warranty-dialog{padding:13px!important}
+}
