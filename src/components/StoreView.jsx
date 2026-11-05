@@ -940,8 +940,8 @@ export default function StoreView({
 
       {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <form onSubmit={handleCalculateSmartSize} className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+        <div className="gs-size-modal fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in">
+          <form onSubmit={handleCalculateSmartSize} className="gs-size-modal-panel p-6 sm:p-7 max-w-md w-full space-y-5 text-xs relative">
             <button type="button" onClick={() => setIsSmartSizeModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
             
             <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
@@ -991,8 +991,8 @@ export default function StoreView({
 
       {/* 📏 ზომების გიდის მოდალი */}
       {isSizeGuideOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+        <div className="gs-size-modal fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="gs-size-modal-panel p-6 sm:p-7 max-w-md w-full space-y-5 text-xs relative">
             <button onClick={() => setIsSizeGuideOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
             
             <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
