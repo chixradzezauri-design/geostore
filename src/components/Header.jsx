@@ -1,20 +1,23 @@
-// src/components/Header.jsx - Elite Gold Luxury Boutique Edition with Language Switcher & Hidden Admin Entry
+// src/components/Header.jsx - Unified responsive navigation
 import React, { useState } from 'react';
-import { ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera, Sparkles, Scale, PackageCheck, Bell, Shirt, Globe } from 'lucide-react';
+import {
+  ShoppingBag, Heart, Search, Store, Bot, Menu, X, User, Camera,
+  Sparkles, Scale, PackageCheck, Bell, Shirt, Globe
+} from 'lucide-react';
 import { translations } from '../utils/translations';
 
-export default function Header({ 
-  siteSettings, 
-  setActiveTab, 
+export default function Header({
+  siteSettings,
+  setActiveTab,
   activeTab,
-  wishlistCount, 
-  cartCount, 
+  wishlistCount,
+  cartCount,
   comparisonCount = 0,
-  currentUser, 
-  setIsAuthOpen, 
-  setAuthMode, 
-  setIsAiAssistantOpen, 
-  setIsImageSearchOpen, 
+  currentUser,
+  setIsAuthOpen,
+  setAuthMode,
+  setIsAiAssistantOpen,
+  setIsImageSearchOpen,
   setIsComparisonOpen,
   setIsTrackerOpen,
   setIsNotificationsOpen,
@@ -24,9 +27,23 @@ export default function Header({
   currentLang = 'ka',
   setCurrLang
 }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const t = translations[currentLang] || translations.ka;
 
+  const closeMenu = () => setMenuOpen(false);
+  const goTo = (tab) => {
+    setActiveTab(tab);
+    closeMenu();
+  };
+  const openAuth = (mode) => {
+    if (typeof setAuthMode === 'function') setAuthMode(mode);
+    if (typeof setIsAuthOpen === 'function') setIsAuthOpen(true);
+    closeMenu();
+  };
+  const runAction = (action) => {
+    if (typeof action === 'function') action(true);
+    closeMenu();
+  };
   const handleLangChange = (lang) => {
     if (typeof setCurrLang === 'function') {
       setCurrLang(lang);
@@ -34,214 +51,155 @@ export default function Header({
     }
   };
 
+  const itemClass = (tab) =>
+    `flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors ${activeTab === tab ? 'bg-amber-400/15 text-amber-300' : 'text-slate-200 hover:bg-white/5 hover:text-amber-300'}`;
+
   return (
-    <>
-      <header className="bg-[#0b0b0e]/95 border-b border-amber-500/30 w-full shadow-2xl backdrop-blur-2xl sticky top-0 z-40 overflow-visible">
-        {/* Top Announcement Bar */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 text-slate-950 text-[11px] py-2 px-3 font-black text-center flex items-center justify-center gap-2 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 shrink-0" /> 
+    <header className="sticky top-0 z-40 w-full overflow-visible border-b border-amber-500/20 bg-[#0b0b0e]/95 shadow-lg backdrop-blur-xl">
+      <div className="bg-gradient-to-r from-amber-700 via-amber-500 to-amber-700 px-3 py-1.5 text-center text-[10px] font-semibold tracking-wide text-slate-950 sm:text-[11px]">
+        <span className="inline-flex max-w-full items-center justify-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{siteSettings?.topBarText || t.topBarText}</span>
-        </div>
+        </span>
+      </div>
 
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between gap-2">
-          {/* LOGO */}
-          <div className="flex items-center gap-2 cursor-pointer group shrink-0" onClick={() => { setActiveTab('store'); setMobileMenuOpen(false); }}>
-            <div className="gs-brand-lockup" aria-label={siteSettings?.storeName || t.storeName}>
-              <span className="gs-brand-monogram" aria-hidden="true">G</span>
-              <span className="gs-brand-wordmark">
-                <span className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
-                <span className="gs-brand-caption">CURATED FOR YOU</span>
-              </span>
-            </div>
-          </div>
+      <div className="mx-auto flex min-h-[66px] w-full max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:px-6">
+        <button
+          type="button"
+          className="group flex min-w-0 shrink items-center text-left"
+          onClick={() => goTo('store')}
+          aria-label={siteSettings?.storeName || t.storeName}
+        >
+          <span className="gs-brand-lockup">
+            <span className="gs-brand-monogram" aria-hidden="true">G</span>
+            <span className="gs-brand-wordmark">
+              <span className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
+              <span className="gs-brand-caption">CURATED FOR YOU</span>
+            </span>
+          </span>
+        </button>
 
-          {/* QUICK WARDROBE NAV (Desktop) */}
-          <div className="hidden xl:flex items-center gap-1.5 bg-[#121216] p-1.5 rounded-2xl border border-amber-500/20 text-xs font-bold">
-            <button onClick={() => setActiveTab('wardrobe')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'wardrobe' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Shirt className="w-3.5 h-3.5" /> {t.wardrobe}
-            </button>
-            <button onClick={() => setActiveTab('ai-stylist')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'ai-stylist' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Bot className="w-3.5 h-3.5" /> {t.aiStylist}
-            </button>
-            <button onClick={() => setActiveTab('my-outfits')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'my-outfits' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Sparkles className="w-3.5 h-3.5" /> {t.myOutfits}
-            </button>
-            <button onClick={() => setActiveTab('style-recommendations')} className={`px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'style-recommendations' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-300 hover:text-amber-400'}`}>
-              <Store className="w-3.5 h-3.5" /> {t.recommendations}
-            </button>
-          </div>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label={menuOpen ? 'მენიუს დახურვა' : 'მთავარი მენიუს გახსნა'}
+          aria-expanded={menuOpen}
+          aria-controls="geostore-main-menu"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-[#171511] text-amber-300 shadow-sm transition hover:border-amber-400 hover:bg-[#211c16] focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
 
-          {/* SEARCH BAR & IMAGE SEARCH BUTTON (Desktop) */}
-          <div className="flex-1 max-w-xs md:max-w-sm relative hidden md:flex items-center gap-2">
-            <div className="relative flex-1 group">
-              <input
-                type="text"
-                placeholder={t.searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#121216] border border-amber-500/20 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 shadow-inner transition-all"
-              />
-              <Search className="w-3.5 h-3.5 text-amber-400 absolute left-3 top-2.5" />
-            </div>
-            
-            <button
-              onClick={() => setIsImageSearchOpen(true)}
-              title="პროდუქტის ფოტოთი ძიება"
-              className="p-2 bg-[#121216] hover:bg-[#1a1a20] border border-amber-500/20 rounded-2xl text-amber-400 transition-all cursor-pointer flex items-center justify-center shadow-inner"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* DESKTOP ACTIONS */}
-          <div className="hidden lg:flex items-center gap-1.5">
-            {/* 🌟 LANGUAGE SWITCHER */}
-            <div className="flex items-center bg-[#121216] p-1 rounded-2xl border border-amber-500/20 text-[10px] font-black shrink-0">
-              <button onClick={() => handleLangChange('ka')} className={`px-1.5 py-1 rounded-lg transition cursor-pointer ${currentLang === 'ka' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>GEO</button>
-              <button onClick={() => handleLangChange('en')} className={`px-1.5 py-1 rounded-lg transition cursor-pointer ${currentLang === 'en' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>EN</button>
-              <button onClick={() => handleLangChange('ru')} className={`px-1.5 py-1 rounded-lg transition cursor-pointer ${currentLang === 'ru' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>RU</button>
-            </div>
-
-            <button onClick={() => setIsTrackerOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-2 rounded-2xl font-bold text-[10px] flex items-center gap-1 hover:bg-amber-500/25 transition shadow-sm cursor-pointer whitespace-nowrap" title="შეკვეთის ტრეკერი">
-              <PackageCheck className="w-3.5 h-3.5 text-amber-400" /> {t.orderTracker}
-            </button>
-
-            {/* 🔔 Notifications Bell Button */}
-            <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400 transition shadow-sm cursor-pointer" title="შეტყობინებები">
-              <Bell className="w-4 h-4 text-amber-400" />
-              {unreadNotificationsCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[9px] font-black flex items-center justify-center shadow animate-bounce">
-                  {unreadNotificationsCount}
-                </span>
-              )}
-            </button>
-
-            <button onClick={() => setIsAiAssistantOpen(true)} className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-2 rounded-2xl font-bold text-[10px] flex items-center gap-1 hover:bg-amber-500/25 transition shadow-sm cursor-pointer whitespace-nowrap">
-              <Bot className="w-3.5 h-3.5 text-amber-400 animate-pulse" /> {t.aiAssistant}
-            </button>
-
-            <button onClick={() => setIsComparisonOpen(true)} className="relative p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400 transition shadow-sm cursor-pointer" title="შედარება">
-              <Scale className="w-4 h-4 text-amber-400" />
-              {comparisonCount > 0 && <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[9px] font-black flex items-center justify-center">{comparisonCount}</span>}
-            </button>
-
-            <button onClick={() => setActiveTab('wishlist')} className="relative p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400 transition shadow-sm cursor-pointer" title="ფავორიტები">
-              <Heart className="w-4 h-4 text-rose-500" />
-              {wishlistCount > 0 && <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-4 h-4 text-[9px] font-black flex items-center justify-center">{wishlistCount}</span>}
-            </button>
-
-            <button onClick={() => setActiveTab('cart')} className="relative p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 hover:border-amber-400 transition shadow-sm cursor-pointer" title="კალათა">
-              <ShoppingBag className="w-4 h-4 text-amber-400" />
-              {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[9px] font-black flex items-center justify-center">{cartCount}</span>}
-            </button>
-
-            {currentUser ? (
-              <button onClick={() => setActiveTab('profile')} className="px-2.5 py-1.5 bg-[#121216] border border-amber-500/20 text-amber-400 font-bold rounded-2xl text-[10px] flex items-center gap-1 shadow-sm cursor-pointer truncate max-w-[100px]">
-                <User className="w-3 h-3 shrink-0" /> <span className="truncate">{currentUser.name}</span>
-              </button>
-            ) : (
-              <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); }} className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg transition cursor-pointer whitespace-nowrap">{t.login}</button>
-            )}
-          </div>
-
-          {/* MOBILE QUICK BUTTONS & HAMBURGER */}
-          <div className="flex items-center gap-1.5 lg:hidden">
-            <button onClick={() => setIsNotificationsOpen && setIsNotificationsOpen(true)} className="relative p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
-              <Bell className="w-4 h-4" />
-              {unreadNotificationsCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[9px] font-black flex items-center justify-center">
-                  {unreadNotificationsCount}
-                </span>
-              )}
-            </button>
-
-            <button onClick={() => setIsImageSearchOpen(true)} className="p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-amber-400 shadow-sm">
-              <Camera className="w-4 h-4" />
-            </button>
-
-            <button onClick={() => setActiveTab('cart')} className="relative p-2 bg-[#121216] border border-amber-500/20 rounded-2xl text-slate-200 shadow-sm">
-              <ShoppingBag className="w-4 h-4 text-amber-400" />
-              {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 rounded-full w-4 h-4 text-[9px] font-black flex items-center justify-center">{cartCount}</span>}
-            </button>
-            
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-amber-400 text-slate-950 rounded-2xl font-black shadow-lg cursor-pointer">
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* 📱 MOBILE REFINED GRID MENU */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-[#0c0c0e]/98 backdrop-blur-3xl border-t border-amber-500/30 p-4 space-y-3 shadow-2xl animate-in slide-in-from-top duration-300">
-            
-            {/* Mobile Language Switcher */}
-            <div className="flex items-center justify-between bg-[#121216] p-2 rounded-2xl border border-amber-500/20 text-xs font-black">
-              <span className="text-slate-400 flex items-center gap-1.5 pl-1"><Globe className="w-3.5 h-3.5 text-amber-400" /> ენა:</span>
-              <div className="flex gap-1">
-                <button onClick={() => handleLangChange('ka')} className={`px-2 py-1 rounded-xl transition ${currentLang === 'ka' ? 'bg-amber-400 text-slate-950' : 'text-slate-400'}`}>GEO</button>
-                <button onClick={() => handleLangChange('en')} className={`px-2 py-1 rounded-xl transition ${currentLang === 'en' ? 'bg-amber-400 text-slate-950' : 'text-slate-400'}`}>EN</button>
-                <button onClick={() => handleLangChange('ru')} className={`px-2 py-1 rounded-xl transition ${currentLang === 'ru' ? 'bg-amber-400 text-slate-950' : 'text-slate-400'}`}>RU</button>
+      {menuOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="მენიუს დახურვა"
+            onClick={closeMenu}
+            className="fixed inset-0 z-40 cursor-default bg-black/35"
+          />
+          <nav
+            id="geostore-main-menu"
+            aria-label="მთავარი ნავიგაცია"
+            className="absolute right-3 top-full z-50 max-h-[min(78vh,720px)] w-[min(94vw,440px)] overflow-y-auto rounded-xl border border-amber-500/20 bg-[#101012] p-3 text-slate-100 shadow-2xl sm:right-6 sm:p-4"
+          >
+            <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
+              <div>
+                <p className="text-sm font-bold tracking-wide text-white">GEOSTORE</p>
+                <p className="mt-0.5 text-[10px] text-slate-400">მთავარი მენიუ</p>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#121216] border border-amber-500/25 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 outline-none"
-                />
-                <Search className="w-3.5 h-3.5 text-amber-400 absolute left-3 top-2.5" />
-              </div>
-              <button 
-                onClick={() => { setIsImageSearchOpen(true); setMobileMenuOpen(false); }}
-                className="p-2 bg-[#121216] border border-amber-500/25 rounded-2xl text-amber-400 flex items-center justify-center"
-              >
-                <Camera className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-              <button onClick={() => { setActiveTab('cart'); setMobileMenuOpen(false); }} className="p-2.5 bg-amber-400 text-slate-950 rounded-2xl flex items-center justify-center gap-2 shadow-lg">
-                <ShoppingBag className="w-4 h-4" /> {t.cart} ({cartCount})
-              </button>
-              <button onClick={() => { setActiveTab('wishlist'); setMobileMenuOpen(false); }} className="p-2.5 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center justify-center gap-2">
-                <Heart className="w-4 h-4 text-rose-500" /> {t.wishlist} ({wishlistCount})
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-              <button onClick={() => { setActiveTab('wardrobe'); setMobileMenuOpen(false); }} className="p-2.5 bg-amber-500/10 text-amber-300 rounded-2xl border border-amber-500/30 flex items-center gap-2">
-                <Shirt className="w-4 h-4 text-amber-400" /> {t.wardrobe}
-              </button>
-              <button onClick={() => { setIsTrackerOpen(true); setMobileMenuOpen(false); }} className="bg-amber-500/10 text-amber-300 p-2.5 rounded-2xl flex items-center justify-center gap-2 border border-amber-500/30">
-                <PackageCheck className="w-4 h-4 text-amber-400" /> {t.orderTracker}
-              </button>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-amber-500/20">
               {currentUser ? (
-                <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full p-3 bg-amber-500/20 rounded-2xl text-amber-300 text-left border border-amber-500/40 flex items-center justify-between text-xs font-black">
-                  <span className="flex items-center gap-2"><User className="w-4 h-4 text-amber-400" /> {t.profile}: {currentUser.name}</span>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">აქტიური</span>
+                <button type="button" onClick={() => goTo('profile')} className="flex min-w-0 max-w-[58%] items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200">
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{currentUser.name || t.profile}</span>
                 </button>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => { setAuthMode('login'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-3 bg-amber-400 text-slate-950 font-black rounded-2xl text-center text-xs shadow-lg">
-                    🔑 {t.login}
+                <div className="flex shrink-0 gap-2">
+                  <button type="button" onClick={() => openAuth('login')} className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-slate-950 hover:bg-amber-300">
+                    {t.login || 'შესვლა'}
                   </button>
-                  <button onClick={() => { setAuthMode('register'); setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-3 bg-[#16161a] text-amber-400 border border-amber-500/40 font-black rounded-2xl text-center text-xs">
-                    ✨ რეგისტრაცია
+                  <button type="button" onClick={() => openAuth('register')} className="rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-semibold text-amber-200 hover:bg-amber-500/10">
+                    რეგისტრაცია
                   </button>
                 </div>
               )}
             </div>
 
-          </div>
-        )}
-      </header>
-    </>
+            <div className="relative mb-3 flex items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-400" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={t.searchPlaceholder}
+                  className="h-10 w-full min-w-0 rounded-lg border border-white/10 bg-[#1a1a1d] pl-9 pr-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-amber-400"
+                />
+              </div>
+              <button type="button" onClick={() => runAction(setIsImageSearchOpen)} title="პროდუქტის ფოტოთი ძიება" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#1a1a1d] text-amber-300 hover:border-amber-400">
+                <Camera className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => goTo('store')} className={itemClass('store')}>
+                <Store className="h-4 w-4 shrink-0" /> მაღაზია
+              </button>
+              <button type="button" onClick={() => goTo('cart')} className={itemClass('cart')}>
+                <ShoppingBag className="h-4 w-4 shrink-0" /> <span className="min-w-0 flex-1">კალათა</span>
+                <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">{cartCount || 0}</span>
+              </button>
+              <button type="button" onClick={() => goTo('wishlist')} className={itemClass('wishlist')}>
+                <Heart className="h-4 w-4 shrink-0" /> <span className="min-w-0 flex-1">{t.wishlist || 'ფავორიტები'}</span>
+                <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] text-rose-300">{wishlistCount || 0}</span>
+              </button>
+              <button type="button" onClick={() => runAction(setIsTrackerOpen)} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-amber-300">
+                <PackageCheck className="h-4 w-4 shrink-0" /> <span className="min-w-0">{t.orderTracker || 'შეკვეთის თვალყურის დევნება'}</span>
+              </button>
+              <button type="button" onClick={() => runAction(setIsComparisonOpen)} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-amber-300">
+                <Scale className="h-4 w-4 shrink-0" /> შედარება <span className="ml-auto rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] text-amber-200">{comparisonCount || 0}</span>
+              </button>
+              <button type="button" onClick={() => runAction(setIsNotificationsOpen)} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-amber-300">
+                <Bell className="h-4 w-4 shrink-0" /> შეტყობინებები
+                {unreadNotificationsCount > 0 && <span className="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">{unreadNotificationsCount}</span>}
+              </button>
+              <button type="button" onClick={() => runAction(setIsAiAssistantOpen)} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-amber-300">
+                <Bot className="h-4 w-4 shrink-0" /> {t.aiAssistant || 'AI ასისტენტი'}
+              </button>
+            </div>
+
+            <div className="mb-3 border-t border-white/10 pt-3">
+              <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">სტილი და რეკომენდაციები</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => goTo('wardrobe')} className={itemClass('wardrobe')}>
+                  <Shirt className="h-4 w-4 shrink-0" /> <span>{t.wardrobe || 'ციფრული გარდერობი'}</span>
+                </button>
+                <button type="button" onClick={() => goTo('ai-stylist')} className={itemClass('ai-stylist')}>
+                  <Bot className="h-4 w-4 shrink-0" /> <span>{t.aiStylist || 'AI სტილისტი'}</span>
+                </button>
+                <button type="button" onClick={() => goTo('my-outfits')} className={itemClass('my-outfits')}>
+                  <Sparkles className="h-4 w-4 shrink-0" /> <span>{t.myOutfits || 'ჩემი სტილები'}</span>
+                </button>
+                <button type="button" onClick={() => goTo('style-recommendations')} className={itemClass('style-recommendations')}>
+                  <Store className="h-4 w-4 shrink-0" /> <span>{t.recommendations || 'რეკომენდაციები'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+              <span className="flex items-center gap-2 text-xs font-semibold text-slate-400"><Globe className="h-4 w-4 text-amber-400" /> ენა</span>
+              <div className="flex gap-1 rounded-lg border border-white/10 bg-[#1a1a1d] p-1">
+                {['ka', 'en', 'ru'].map((lang) => (
+                  <button key={lang} type="button" onClick={() => handleLangChange(lang)} className={`rounded-md px-3 py-1.5 text-[11px] font-bold transition ${currentLang === lang ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'}`}>
+                    {lang === 'ka' ? 'GEO' : lang.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </nav>
+        </>
+      )}
+    </header>
   );
 }
