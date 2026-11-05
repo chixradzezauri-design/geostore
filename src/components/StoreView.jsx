@@ -652,14 +652,14 @@ export default function StoreView({
                 
                 <div className="space-y-4">
                   <div className="gs-product-detail-image flex items-center justify-center h-60 sm:h-80">
-                    <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
+                    <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
                     <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
                       {selectedProduct.gallery.map((img, idx) => (
                         <button key={idx} onClick={() => setActiveImage(img)} className={`w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
-                          <img src={img} alt="" className="w-full h-full object-contain rounded-xl" />
+                          <img src={img} alt={`${selectedProduct.name || storeText.productDetails} ${idx + 1}`} className="w-full h-full object-contain rounded-xl" />
                         </button>
                       ))}
                     </div>
@@ -676,7 +676,7 @@ export default function StoreView({
                     <p className="text-slate-400 text-xs">{storeText.vendor} <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                   </div>
 
-                  <div className="bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
+                  <div className="gs-product-price-panel bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
                     <span className="text-xl sm:text-3xl font-black text-amber-400">
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
@@ -696,7 +696,7 @@ export default function StoreView({
                               key={v.id}
                               type="button"
                               onClick={() => setSelectedCustomVariant(v)}
-                              className={`p-3 rounded-2xl text-left transition cursor-pointer border flex justify-between items-center ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
+                              className={`gs-product-variant-option p-3 rounded-2xl text-left transition cursor-pointer border flex justify-between items-center ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
                             >
                               <span>{v.name}</span>
                               <span className="font-black">{v.priceGEL} ₾</span>
