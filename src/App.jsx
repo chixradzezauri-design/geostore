@@ -1268,8 +1268,10 @@ export default function App() {
       ...(prev || [])
     ]);
 
-    // Sync the storefront stock with the atomic database deduction.
-    await fetchProductsFromDatabase();
+    // The order is already committed by the server. Never block the
+    // customer confirmation on a separate product/stock refresh request.
+    // Refresh the storefront in the background after acknowledging the order.
+    void fetchProductsFromDatabase();
 
     sendTelegramNotification();
 
