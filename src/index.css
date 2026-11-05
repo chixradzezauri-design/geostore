@@ -2695,3 +2695,123 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-size-selector>div:first-child{align-items:flex-start!important}
   .geostore-fashion-store .gs-size-selector>div:first-child>div{flex-wrap:wrap!important}
 }
+
+
+/* GEOSTORE — header identity, navigation and catalogue filter polish */
+.geostore-fashion-store .gs-brand-lockup{gap:14px!important}
+.geostore-fashion-store .gs-brand-monogram{
+  width:43px!important;height:43px!important;flex-basis:43px!important;
+  border-radius:2px!important;border:1px solid #9a8066!important;
+  outline:1px solid rgba(154,128,102,.28)!important;outline-offset:3px!important;
+  background:linear-gradient(145deg,#40352b,#211c18)!important;
+  color:#f8f2e9!important;font-size:27px!important;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.06)!important;
+}
+.geostore-fashion-store .gs-brand-name{
+  font-size:clamp(17px,2.1vw,24px)!important;letter-spacing:.16em!important;
+  font-weight:600!important;color:#29241f!important;
+}
+.geostore-fashion-store .gs-brand-caption{
+  color:#8c755d!important;font-size:7px!important;letter-spacing:.27em!important;
+}
+.geostore-fashion-store .gs-menu-toggle{
+  width:42px!important;height:42px!important;min-height:42px!important;flex-basis:42px!important;
+  border-radius:3px!important;background:#302a24!important;color:#fffdfa!important;border-color:#302a24!important;
+}
+.geostore-fashion-store .gs-main-menu{
+  width:min(390px,calc(100vw - 24px))!important;max-height:min(82dvh,760px)!important;
+  gap:13px!important;padding:15px!important;border-radius:5px!important;
+  border:1px solid #e4d9cd!important;background:#fffdfa!important;
+  box-shadow:0 22px 64px rgba(38,29,21,.18)!important;
+}
+.geostore-fashion-store .gs-menu-heading{
+  padding:4px 2px 12px!important;border-bottom:1px solid #eee6dc!important;
+}
+.geostore-fashion-store .gs-menu-brand strong{
+  color:#302a24!important;font:600 17px/1.1 Georgia,serif!important;letter-spacing:.15em!important;
+}
+.geostore-fashion-store .gs-menu-brand span{font-size:10px!important;color:#8b7d6e!important}
+.geostore-fashion-store .gs-menu-section{gap:3px!important}
+.geostore-fashion-store .gs-menu-section-title{
+  margin:0 0 4px!important;padding:0 8px 6px!important;color:#9a8773!important;
+  font-size:9px!important;letter-spacing:.13em!important;border-bottom:1px solid #f0e9e1!important;
+}
+.geostore-fashion-store .gs-menu-link{
+  min-height:40px!important;padding:8px 9px!important;gap:10px!important;
+  border-radius:3px!important;color:#40372f!important;font-size:11px!important;font-weight:600!important;
+}
+.geostore-fashion-store .gs-menu-link>svg{width:16px!important;height:16px!important;color:#8e755b!important}
+.geostore-fashion-store .gs-menu-link:hover,
+.geostore-fashion-store .gs-menu-link.is-active{
+  background:#f3eee8!important;border-color:#e9dfd3!important;color:#29241f!important;
+}
+.geostore-fashion-store .gs-menu-count{
+  min-width:21px!important;height:21px!important;padding:0 6px!important;border-radius:3px!important;
+  background:#eee7de!important;color:#655342!important;font-size:9px!important;
+}
+.geostore-fashion-store .gs-menu-search{
+  min-height:40px!important;border-radius:3px!important;background:#f7f3ed!important;border-color:#e7ddd1!important;
+}
+.geostore-fashion-store .gs-menu-search input{font-size:11px!important;color:#302a24!important}
+.geostore-fashion-store .gs-menu-icon-action{
+  width:40px!important;min-height:40px!important;border-radius:3px!important;
+  background:#302a24!important;color:#fffdfa!important;
+}
+.geostore-fashion-store .gs-menu-footer{
+  padding-top:11px!important;border-top:1px solid #eee6dc!important;
+}
+.geostore-fashion-store .gs-menu-languages button{
+  min-width:42px!important;min-height:30px!important;border-radius:3px!important;
+  background:#f5f0e9!important;border:1px solid #e7ddd1!important;color:#655342!important;
+  font-size:9px!important;font-weight:700!important;
+}
+.geostore-fashion-store .gs-menu-languages button.is-selected{
+  background:#302a24!important;border-color:#302a24!important;color:#fffdfa!important;
+}
+.geostore-fashion-store .gs-filter-panel{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  align-items:center!important;gap:12px 22px!important;padding:13px 15px!important;
+  border:1px solid #e7ded4!important;border-radius:4px!important;
+  background:#fffdfa!important;box-shadow:0 4px 16px rgba(43,32,23,.035)!important;
+  color:#65594d!important;
+}
+.geostore-fashion-store .gs-filter-panel>div{min-width:0!important;gap:9px!important}
+.geostore-fashion-store .gs-filter-panel>div>div:first-child{
+  color:#776958!important;font-size:10px!important;font-weight:700!important;letter-spacing:.02em!important;
+}
+.geostore-fashion-store .gs-filter-panel input,
+.geostore-fashion-store .gs-filter-panel select{
+  min-width:0!important;min-height:38px!important;height:38px!important;padding:7px 10px!important;
+  border:1px solid #e3d9ce!important;border-radius:3px!important;
+  background:#faf7f2!important;color:#302a24!important;box-shadow:none!important;
+  font-size:11px!important;font-weight:500!important;
+}
+.geostore-fashion-store .gs-filter-panel input::placeholder{color:#a09283!important}
+.geostore-fashion-store .gs-filter-panel input:focus,
+.geostore-fashion-store .gs-filter-panel select:focus{
+  border-color:#a99178!important;outline:2px solid rgba(169,145,120,.15)!important;
+}
+.geostore-fashion-store .gs-filter-panel select{max-width:100%!important}
+.geostore-fashion-store .gs-filter-panel button{
+  color:#806b56!important;font-size:10px!important;font-weight:650!important;
+}
+@media(max-width:700px){
+  .geostore-fashion-store .gs-brand-lockup{gap:11px!important}
+  .geostore-fashion-store .gs-brand-monogram{width:37px!important;height:37px!important;flex-basis:37px!important;font-size:23px!important}
+  .geostore-fashion-store .gs-brand-name{font-size:17px!important;letter-spacing:.13em!important}
+  .geostore-fashion-store .gs-brand-caption{font-size:6px!important;letter-spacing:.22em!important}
+  .geostore-fashion-store .gs-main-menu{max-height:calc(100dvh - 86px)!important;padding:12px!important;gap:10px!important}
+  .geostore-fashion-store .gs-menu-link{min-height:38px!important;padding:7px 8px!important}
+  .geostore-fashion-store .gs-filter-panel{grid-template-columns:minmax(0,1fr)!important;gap:10px!important;padding:11px!important}
+  .geostore-fashion-store .gs-filter-panel>div{width:100%!important;justify-content:flex-start!important}
+  .geostore-fashion-store .gs-filter-panel>div:last-child{justify-content:space-between!important}
+  .geostore-fashion-store .gs-filter-panel input{width:100%!important;max-width:112px!important}
+  .geostore-fashion-store .gs-filter-panel select{flex:1 1 auto!important;width:1%!important}
+}
+@media(max-width:380px){
+  .geostore-fashion-store .gs-brand-name{font-size:15px!important}
+  .geostore-fashion-store .gs-brand-caption{font-size:5.5px!important}
+  .geostore-fashion-store .gs-filter-panel{padding:9px!important}
+  .geostore-fashion-store .gs-filter-panel>div>div:first-child{font-size:9px!important}
+  .geostore-fashion-store .gs-filter-panel input{max-width:94px!important;padding:6px!important;font-size:10px!important}
+}
