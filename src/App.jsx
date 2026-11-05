@@ -1807,7 +1807,7 @@ export default function App() {
           type="button"
           onClick={() => setIsAiAssistantOpen(true)}
           className="gs-floating-action gs-floating-action--ai"
-          aria-label="AI ასისტენტის გახსნა"
+          aria-label={currentLang === 'en' ? 'Open AI assistant' : currentLang === 'ru' ? 'Открыть AI-помощника' : 'AI ასისტენტის გახსნა'}
         >
           <span className="gs-floating-action-icon">
             <Bot aria-hidden="true" />
@@ -1834,7 +1834,7 @@ export default function App() {
                 type="button"
                 onClick={() => setSupportOpen(false)}
                 className="gs-support-close"
-                aria-label="დახურვა"
+                aria-label={currentLang === 'en' ? 'Close' : currentLang === 'ru' ? 'Закрыть' : 'დახურვა'}
               >
                 <X aria-hidden="true" />
               </button>
@@ -1944,14 +1944,14 @@ export default function App() {
             type="button"
             onClick={() => setSupportOpen(true)}
             className="gs-floating-action gs-floating-action--support"
-            aria-label="მხარდაჭერის ჩატის გახსნა"
+            aria-label={currentLang === 'en' ? 'Open support chat' : currentLang === 'ru' ? 'Открыть чат поддержки' : 'მხარდაჭერის ჩატის გახსნა'}
           >
             <span className="gs-floating-action-icon"><MessageSquare aria-hidden="true" /></span>
             <span className="gs-floating-action-copy">
               <strong>{currentLang === 'en' ? 'Support' : currentLang === 'ru' ? 'Поддержка' : 'დახმარება'}</strong>
               <small>{currentLang === 'en' ? 'We are here to help' : currentLang === 'ru' ? 'Мы готовы помочь' : 'მოგვწერე ნებისმიერ დროს'}</small>
             </span>
-            <span className="gs-support-online-dot" aria-label="ონლაინ" />
+            <span className="gs-support-online-dot" aria-label={currentLang === 'en' ? 'Online' : currentLang === 'ru' ? 'В сети' : 'ონლაინ'} />
           </button>
         )}
       </div>
