@@ -645,26 +645,44 @@ export default function Modals({
 
       {/* 5. წესები და პირობები */}
       {isTermsOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <FileText className="w-5 h-5 text-amber-400" /> წესები და პირობები
-              </h3>
-              <button onClick={() => setIsTermsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-thin">
-              <div className="space-y-2 bg-[#121216] p-4 rounded-2xl border border-amber-500/20">
-                <h4 className="font-black text-amber-300 text-sm">1. ზოგადი დებულებები</h4>
-                <p>GEOSTORE მარკეტფლეისზე შეკვეთის გაფორმებით მომხმარებელი ეთანხმება წინამდებარე წესებსა და პირობებს.</p>
+        <div className="gs-terms-overlay">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gs-terms-title"
+            className="gs-terms-dialog"
+          >
+            <header className="gs-terms-header">
+              <span className="gs-terms-header-icon"><FileText aria-hidden="true" /></span>
+              <div className="gs-terms-heading-copy">
+                <span className="gs-terms-eyebrow">GEOSTORE · CUSTOMER INFORMATION</span>
+                <h3 id="gs-terms-title">წესები და პირობები</h3>
+                <p>მნიშვნელოვანი ინფორმაცია შეკვეთის განთავსებამდე</p>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsTermsOpen(false)}
+                className="gs-terms-close"
+                aria-label="დახურვა"
+              >
+                <X aria-hidden="true" />
+              </button>
+            </header>
+            <div className="gs-terms-content">
+              <article className="gs-terms-section">
+                <div className="gs-terms-section-number">01</div>
+                <div className="gs-terms-section-copy">
+                  <span className="gs-terms-section-label">TERMS & CONDITIONS</span>
+                  <h4>ზოგადი დებულებები</h4>
+                  <p>GEOSTORE მარკეტფლეისზე შეკვეთის გაფორმებით მომხმარებელი ეთანხმება წინამდებარე წესებსა და პირობებს.</p>
+                </div>
+              </article>
             </div>
-            <button onClick={() => setIsTermsOpen(false)} className="w-full bg-[#16161a] hover:bg-[#1e1e24] text-white font-black py-4 rounded-2xl transition cursor-pointer text-xs border border-amber-500/30">
-              გაგებულია
-            </button>
-          </div>
+            <footer className="gs-terms-footer">
+              <span>GEOSTORE</span>
+              <button type="button" onClick={() => setIsTermsOpen(false)}>გასაგებია</button>
+            </footer>
+          </section>
         </div>
       )}
 
