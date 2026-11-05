@@ -41,8 +41,43 @@ export default function Modals({
   currentUser,
   setCurrentUser,
   usersList = [],
-  setUsersList
+  setUsersList,
+  currentLang = 'ka'
 }) {
+  const termsCopy = ({
+    ka: {
+      title: 'წესები და პირობები',
+      subtitle: 'მნიშვნელოვანი ინფორმაცია შეკვეთის განთავსებამდე',
+      label: 'TERMS & CONDITIONS',
+      heading: 'ზოგადი დებულებები',
+      body: 'GEOSTORE მარკეტფლეისზე შეკვეთის გაფორმებით მომხმარებელი ეთანხმება წინამდებარე წესებსა და პირობებს.',
+      close: 'გასაგებია'
+    },
+    en: {
+      title: 'Terms & Conditions',
+      subtitle: 'Important information before placing an order',
+      label: 'TERMS & CONDITIONS',
+      heading: 'General provisions',
+      body: 'By placing an order on the GEOSTORE marketplace, the customer agrees to these terms and conditions.',
+      close: 'Understood'
+    },
+    ru: {
+      title: 'Условия и положения',
+      subtitle: 'Важная информация перед оформлением заказа',
+      label: 'УСЛОВИЯ И ПОЛОЖЕНИЯ',
+      heading: 'Общие положения',
+      body: 'Оформляя заказ на площадке GEOSTORE, покупатель принимает настоящие условия и положения.',
+      close: 'Понятно'
+    }
+  })[currentLang] || {
+    title: 'წესები და პირობები',
+    subtitle: 'მნიშვნელოვანი ინფორმაცია შეკვეთის განთავსებამდე',
+    label: 'TERMS & CONDITIONS',
+    heading: 'ზოგადი დებულებები',
+    body: 'GEOSTORE მარკეტფლეისზე შეკვეთის გაფორმებით მომხმარებელი ეთანხმება წინამდებარე წესებსა და პირობებს.',
+    close: 'გასაგებია'
+  };
+
   const [searchOrderId, setSearchOrderId] = useState('');
   const [searchOrderPhone, setSearchOrderPhone] = useState('');
   const [isSearchingOrder, setIsSearchingOrder] = useState(false);
@@ -656,8 +691,8 @@ export default function Modals({
               <span className="gs-terms-header-icon"><FileText aria-hidden="true" /></span>
               <div className="gs-terms-heading-copy">
                 <span className="gs-terms-eyebrow">GEOSTORE · CUSTOMER INFORMATION</span>
-                <h3 id="gs-terms-title">წესები და პირობები</h3>
-                <p>მნიშვნელოვანი ინფორმაცია შეკვეთის განთავსებამდე</p>
+                <h3 id="gs-terms-title">{termsCopy.title}</h3>
+                <p>{termsCopy.subtitle}</p>
               </div>
               <button
                 type="button"
@@ -672,15 +707,15 @@ export default function Modals({
               <article className="gs-terms-section">
                 <div className="gs-terms-section-number">01</div>
                 <div className="gs-terms-section-copy">
-                  <span className="gs-terms-section-label">TERMS & CONDITIONS</span>
-                  <h4>ზოგადი დებულებები</h4>
-                  <p>GEOSTORE მარკეტფლეისზე შეკვეთის გაფორმებით მომხმარებელი ეთანხმება წინამდებარე წესებსა და პირობებს.</p>
+                  <span className="gs-terms-section-label">{termsCopy.label}</span>
+                  <h4>{termsCopy.heading}</h4>
+                  <p>{termsCopy.body}</p>
                 </div>
               </article>
             </div>
             <footer className="gs-terms-footer">
               <span>GEOSTORE</span>
-              <button type="button" onClick={() => setIsTermsOpen(false)}>გასაგებია</button>
+              <button type="button" onClick={() => setIsTermsOpen(false)}>{termsCopy.close}</button>
             </footer>
           </section>
         </div>
