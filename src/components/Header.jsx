@@ -50,7 +50,7 @@ export default function Header({
               <span className="gs-brand-monogram" aria-hidden="true">G</span>
               <span className="gs-brand-wordmark">
                 <span className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
-                <span className="gs-brand-caption">THE FASHION EDIT</span>
+                <span className="gs-brand-caption">CURATED FOR YOU</span>
               </span>
             </div>
           </div>
