@@ -293,7 +293,7 @@ export default function StoreView({
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6">
+        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
@@ -308,17 +308,17 @@ export default function StoreView({
             </div>
 
             <div className="flex items-center gap-2 text-xs font-black">
-              <div className="bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">საათი</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
-              <div className="bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">წუთი</span>
               </div>
               <span className="text-amber-400 text-base">:</span>
-              <div className="bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
+              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">წამი</span>
               </div>
@@ -328,8 +328,8 @@ export default function StoreView({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {flashSaleProducts.map(prod => {
               return (
-                <div key={`flash-${prod.id}`} className="group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
-                  <div onClick={() => handleOpenProduct(prod)} className="relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
+                <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
+                  <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
                     <img src={prod.image} alt="" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" />
                     <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
                   </div>

@@ -1350,6 +1350,10 @@ export default function App() {
           setIsComparisonOpen={setIsComparisonOpen}
           setIsTrackerOpen={setIsTrackerOpen}
           setIsNotificationsOpen={setIsNotificationsOpen}
+          setSupportOpen={setSupportOpen}
+          setIsTermsOpen={setIsTermsOpen}
+          setIsWarrantyOpen={setIsWarrantyOpen}
+          adminLoggedIn={adminLoggedIn}
           unreadNotificationsCount={unreadNotificationsCount}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -1372,17 +1376,6 @@ export default function App() {
         </div>
       )}
 
-      <div className="geostore-wardrobe-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-2 flex justify-end box-border">
-        <button
-          onClick={() => setActiveTab('wardrobe')}
-          aria-label={t.wardrobe}
-          className="px-4 py-2 rounded-xl font-semibold text-xs transition flex items-center gap-2 cursor-pointer border border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
-        >
-          <Sparkles className="w-4 h-4" />
-          {t.wardrobe}
-        </button>
-      </div>
-
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
           <StoreView
@@ -1402,17 +1395,14 @@ export default function App() {
         )}
 
         {activeTab === 'wardrobe' && (
-          <div className="geostore-wardrobe-premium">
-            <AIDigitalWardrobe
-              products={products}
-              addToCart={addToCart}
-              formatPrice={formatPrice}
-            />
-          </div>
+          <AIDigitalWardrobe
+            products={products}
+            addToCart={addToCart}
+            formatPrice={formatPrice}
+          />
         )}
 
         {activeTab === 'admin' && (
-          <div className="geostore-admin-premium">
           <AdminDashboardPro
             adminLoggedIn={adminLoggedIn}
             setAdminLoggedIn={setAdminLoggedIn}
@@ -1448,7 +1438,6 @@ export default function App() {
             deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
           />
-          </div>
         )}
 
         {activeTab === 'wishlist' && (
