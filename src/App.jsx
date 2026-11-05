@@ -1350,6 +1350,10 @@ export default function App() {
           setIsComparisonOpen={setIsComparisonOpen}
           setIsTrackerOpen={setIsTrackerOpen}
           setIsNotificationsOpen={setIsNotificationsOpen}
+          setSupportOpen={setSupportOpen}
+          setIsTermsOpen={setIsTermsOpen}
+          setIsWarrantyOpen={setIsWarrantyOpen}
+          adminLoggedIn={adminLoggedIn}
           unreadNotificationsCount={unreadNotificationsCount}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
