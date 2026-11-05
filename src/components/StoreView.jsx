@@ -365,7 +365,7 @@ export default function StoreView({
         </div>
         
         {(selectedCategory !== 'ყველა' || selectedSubCategory) && (
-          <div className="flex items-center gap-2 text-xs bg-[#121216] px-4 py-3 rounded-2xl border border-amber-500/30 shadow">
+          <div className="gs-category-breadcrumb flex items-center gap-2 text-xs bg-[#121216] px-4 py-3 rounded-2xl border border-amber-500/30 shadow">
             <span className="text-slate-400 font-bold">ნავიგაცია:</span>
             <button 
               onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
@@ -464,7 +464,7 @@ export default function StoreView({
         </div>
 
         {openParentCatId && getSubCategories(openParentCatId).length > 0 && (
-          <div className="bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
+          <div className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
                 <CornerDownRight className="w-4 h-4" /> სუბკატეგორიები კატეგორიისთვის: <b className="text-white underline">{selectedCategory}</b>
@@ -475,7 +475,7 @@ export default function StoreView({
             <div className="flex flex-wrap gap-2.5 pt-1">
               <button
                 onClick={() => setSelectedSubCategory(null)}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border ${!selectedSubCategory ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
               >
                 ყველა ({selectedCategory})
               </button>
@@ -486,7 +486,7 @@ export default function StoreView({
                   <button
                     key={sub.id || sub.name}
                     onClick={() => setSelectedSubCategory(sub.name)}
-                    className={`px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                    className={`gs-subcategory-chip px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer border flex items-center gap-2 ${isSubSel ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-lg' : 'bg-[#141418] text-slate-300 border-amber-500/20 hover:text-white'}`}
                   >
                     <span>{sub.name}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-lg ${isSubSel ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-amber-400'}`}>{subCount}</span>
@@ -543,7 +543,7 @@ export default function StoreView({
 
       {/* Products Grid */}
       {processedProducts.length === 0 ? (
-        <div className="text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
+        <div className="gs-empty-products text-center py-16 bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem]">
           <p className="text-slate-400 text-sm font-bold">მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.</p>
         </div>
       ) : (
