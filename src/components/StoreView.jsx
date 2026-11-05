@@ -730,10 +730,10 @@ export default function StoreView({
                         <span className="text-slate-300 font-bold">{storeText.sizePrompt} <b className="text-amber-400">{selectedSize}</b></span>
                         <div className="flex items-center gap-2">
                           <button onClick={() => setIsSmartSizeModalOpen(true)} className="text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-amber-500/20 transition shadow">
-                            <Calculator className="w-3.5 h-3.5 text-amber-400" /> ჭკვიანი ზომის შერჩევა
+                            <Calculator className="w-3.5 h-3.5 text-amber-400" /> {storeText.smartSize}
                           </button>
                           <button onClick={() => setIsSizeGuideOpen(true)} className="text-slate-400 hover:text-white font-bold flex items-center gap-1 text-[11px] underline cursor-pointer">
-                            <Ruler className="w-3.5 h-3.5" /> გიდი
+                            <Ruler className="w-3.5 h-3.5" /> {storeText.sizeGuide}
                           </button>
                         </div>
                       </div>
