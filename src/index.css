@@ -576,7 +576,6 @@ html{scroll-behavior:smooth}
    Visual-only layer: preserves existing React and commerce logic.
    ========================================================= */
 :root {
-  color-scheme: light;
   --gs-canvas: #f7f4ef;
   --gs-surface: #fffdfa;
   --gs-surface-soft: #f0ebe4;
@@ -588,6 +587,7 @@ html{scroll-behavior:smooth}
   --gs-shadow-soft: 0 8px 28px rgba(43, 32, 23, .065);
 }
 .geostore-fashion-store {
+  color-scheme: light;
   background: var(--gs-canvas) !important;
   color: var(--gs-ink) !important;
   font-family: 'Manrope', 'Noto Sans Georgian', sans-serif !important;
