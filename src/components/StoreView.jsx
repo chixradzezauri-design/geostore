@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 export default function StoreView({
+  currentLang = 'ka',
   siteSettings,
   promoSlots,
   categories = [],
@@ -22,6 +23,12 @@ export default function StoreView({
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
+
+  const storeText = ({
+    ka: { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება' },
+    en: { allCategories: 'All categories', fullCollection: 'Full collection', subcategories: 'Subcategories for:', close: 'Close', allItems: 'All', sort: 'Sort:', defaultSort: 'Default', priceLow: 'Price: low to high ⬆', priceHigh: 'Price: high to low ⬇', nameSort: 'Name (A-Z)', chooseSize: 'Choose size', viewAdd: 'View & add', addToCart: 'Add to cart' },
+    ru: { allCategories: 'Все категории', fullCollection: 'Полная коллекция', subcategories: 'Подкатегории:', close: 'Закрыть', allItems: 'Все', sort: 'Сортировка:', defaultSort: 'По умолчанию', priceLow: 'Цена: по возрастанию ⬆', priceHigh: 'Цена: по убыванию ⬇', nameSort: 'Название (А-Я)', chooseSize: 'Выбрать размер', viewAdd: 'Посмотреть и добавить', addToCart: 'Добавить в корзину' }
+  })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება' };
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
@@ -412,8 +419,8 @@ export default function StoreView({
               </span>
             </div>
             <div className="relative z-10">
-              <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">ყველა კატეგორია</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">სრული კოლექცია</p>
+              <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
             </div>
           </div>
 
@@ -467,9 +474,9 @@ export default function StoreView({
           <div className="gs-subcategory-panel bg-[#0e0e12] border border-amber-500/40 p-5 rounded-3xl space-y-3 animate-in fade-in duration-300 shadow-2xl">
             <div className="flex items-center justify-between">
               <span className="text-xs text-amber-400 font-bold flex items-center gap-2">
-                <CornerDownRight className="w-4 h-4" /> სუბკატეგორიები კატეგორიისთვის: <b className="text-white underline">{selectedCategory}</b>
+                <CornerDownRight className="w-4 h-4" /> {storeText.subcategories} <b className="text-white underline">{selectedCategory}</b>
               </span>
-              <button onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">დახურვა ✕</button>
+              <button onClick={() => setOpenParentCatId(null)} className="text-slate-400 hover:text-white text-xs cursor-pointer">{storeText.close} ✕</button>
             </div>
             
             <div className="flex flex-wrap gap-2.5 pt-1">
@@ -526,17 +533,17 @@ export default function StoreView({
 
         <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
           <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
-            <ArrowUpDown className="w-4 h-4 text-amber-400" /> დალაგება:
+            <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
           <select 
             value={sortBy} 
             onChange={e => setSortBy(e.target.value)}
             className="bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
-            <option value="default">ნაგულისხმევი</option>
-            <option value="price-asc">ფასით: დაბლიდან მაღლა ⬆</option>
-            <option value="price-desc">ფასით: მაღლიდან დაბლა ⬇</option>
-            <option value="name-asc">დასახელებით (A-Z)</option>
+            <option value="default">{storeText.defaultSort}</option>
+            <option value="price-asc">{storeText.priceLow}</option>
+            <option value="price-desc">{storeText.priceHigh}</option>
+            <option value="name-asc">{storeText.nameSort}</option>
           </select>
         </div>
       </div>
@@ -614,7 +621,7 @@ export default function StoreView({
                   onClick={() => handleOpenProduct(prod)} 
                   className="gs-product-action gs-product-card-action w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა' : 'ნახვა და დამატება'}
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd}
                 </button>
               </article>
             );
@@ -931,7 +938,7 @@ export default function StoreView({
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="gs-modal-add-label">კალათაში დამატება{isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}</span>
+                <span className="gs-modal-add-label">{storeText.addToCart}{isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}</span>
                 <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>
