@@ -1744,7 +1744,7 @@ export default function App() {
                 {t.orderHistory}
               </h3>
 
-              <div className="space-y-3">
+              <div className="gs-support-form">
                 {orders.filter(
                   (o) =>
                     o.user_email === currentUser.email
@@ -1801,34 +1801,51 @@ export default function App() {
         )}
       </main>
 
-      <div className="fixed bottom-6 left-6 z-50">
+      <div className="gs-floating-ai">
         <button
+          type="button"
           onClick={() => setIsAiAssistantOpen(true)}
-          className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black p-4 rounded-full shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer border border-emerald-300/40"
+          className="gs-floating-action gs-floating-action--ai"
+          aria-label="AI ასისტენტის გახსნა"
         >
-          <div className="relative">
-            <Bot className="w-6 h-6 animate-pulse" />
-            <Sparkles className="w-3.5 h-3.5 text-slate-950 absolute -top-1 -right-1" />
-          </div>
-
-          <span className="hidden group-hover:inline text-xs font-black pr-1 tracking-tight">
-            AI Assistant
+          <span className="gs-floating-action-icon">
+            <Bot aria-hidden="true" />
+            <Sparkles className="gs-floating-sparkle" aria-hidden="true" />
           </span>
+          <span className="gs-floating-action-copy">
+            <strong>AI ასისტენტი</strong>
+            <small>რჩევები და შერჩევა</small>
+          </span>
+          <span className="gs-floating-action-arrow" aria-hidden="true">↗</span>
         </button>
       </div>
 
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="gs-floating-support">
         {supportOpen ? (
-          <div className="w-80 bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] shadow-2xl p-5 space-y-4 text-xs text-white backdrop-blur-3xl animate-in fade-in duration-300">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h4 className="font-black flex items-center gap-2 text-emerald-400">
+          <div className="gs-support-panel">
+            <div className="gs-support-panel-heading">
+              <span className="gs-support-heading-icon"><MessageSquare aria-hidden="true" /></span>
+              <span className="gs-support-heading-copy">
+                <strong>{t.supportChat}</strong>
+                <small>GEOSTORE · მომხმარებელთა დახმარება</small>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSupportOpen(false)}
+                className="gs-support-close"
+                aria-label="დახურვა"
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+              <h4 className="gs-support-panel-title">
                 <MessageSquare className="w-4 h-4" />
                 {t.supportChat}
               </h4>
 
               <button
                 onClick={() => setSupportOpen(false)}
-                className="text-slate-400 hover:text-white font-black text-sm cursor-pointer p-1"
+                className="gs-support-close"
               >
                 ✕
               </button>
@@ -1893,7 +1910,7 @@ export default function App() {
                 name="cname"
                 placeholder="Your Name *"
                 required
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner"
+                className="gs-support-field"
               />
 
               <input
@@ -1920,7 +1937,7 @@ export default function App() {
 
               <button
                 type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer"
+                className="gs-support-submit"
               >
                 {t.sendMessage}
               </button>
@@ -1928,14 +1945,17 @@ export default function App() {
           </div>
         ) : (
           <button
+            type="button"
             onClick={() => setSupportOpen(true)}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-full shadow-2xl transition flex items-center gap-2 group cursor-pointer"
+            className="gs-floating-action gs-floating-action--support"
+            aria-label="მხარდაჭერის ჩატის გახსნა"
           >
-            <MessageSquare className="w-6 h-6" />
-
-            <span className="hidden group-hover:inline text-xs pr-1">
-              Support
+            <span className="gs-floating-action-icon"><MessageSquare aria-hidden="true" /></span>
+            <span className="gs-floating-action-copy">
+              <strong>დახმარება</strong>
+              <small>მოგვწერე ნებისმიერ დროს</small>
             </span>
+            <span className="gs-support-online-dot" aria-label="ონლაინ" />
           </button>
         )}
       </div>
