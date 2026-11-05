@@ -1327,7 +1327,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="w-full max-w-full overflow-hidden">
+      <div className="w-full max-w-full overflow-visible">
         <Header
           siteSettings={siteSettings}
           setActiveTab={setActiveTab}
@@ -1355,27 +1355,31 @@ export default function App() {
         />
       </div>
 
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 pt-4 flex justify-end gap-2 box-border flex-wrap">
-        {adminLoggedIn && !authLoading && (
+      {adminLoggedIn && !authLoading && (
+        <div className="geostore-admin-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 flex justify-end box-border">
           <button
             onClick={() => setActiveTab('admin')}
             aria-label="ადმინ პანელის გახსნა"
-            className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-slate-900/80 text-amber-400 border-amber-500/30 hover:bg-slate-900'}`}
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 cursor-pointer border ${activeTab === 'admin' ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'}`}
           >
             <ShieldCheck className="w-4 h-4" />
             ადმინ პანელი
           </button>
-        )}
+        </div>
+      )}
+
+      <div className="geostore-wardrobe-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-2 flex justify-end box-border">
         <button
           onClick={() => setActiveTab('wardrobe')}
-          className={`px-4 py-2.5 rounded-2xl font-black text-xs transition flex items-center gap-2 shadow-lg cursor-pointer border ${activeTab === 'wardrobe' ? 'bg-emerald-400 text-slate-950 border-emerald-400' : 'bg-slate-900/80 text-emerald-400 border-emerald-500/30 hover:bg-slate-900'}`}
+          aria-label={t.wardrobe}
+          className="px-4 py-2 rounded-xl font-semibold text-xs transition flex items-center gap-2 cursor-pointer border border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
         >
           <Sparkles className="w-4 h-4" />
           {t.wardrobe}
         </button>
       </div>
 
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
+      <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
           <StoreView
             siteSettings={siteSettings}
@@ -2044,8 +2048,8 @@ export default function App() {
         </div>
       )}
 
-      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-6 backdrop-blur-md space-y-3 w-full">
-        <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
+      <footer className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">
+        <div className="geostore-footer-links flex justify-center items-center gap-6 text-slate-400 font-bold">
           <button
             onClick={() => setIsTermsOpen(true)}
             className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"

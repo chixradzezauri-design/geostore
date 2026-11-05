@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
+  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
 export default function StoreView({
@@ -244,15 +244,30 @@ export default function StoreView({
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
-    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return <Footprints className="w-4 h-4 text-amber-400" />;
-    if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ლაპტოპ') || name.includes('computer') || name.includes('კომპიუტერ') || name.includes('notebook')) return <Laptop className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-4 h-4 text-amber-400" />;
-    if (name.includes('საათ') || name.includes('watch')) return <Watch className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ფოტო') || name.includes('camera') || name.includes('ვიდეო')) return <CameraIcon className="w-4 h-4 text-amber-400" />;
-    if (name.includes('ტელევიზორ') || name.includes('tv')) return <Tv className="w-4 h-4 text-amber-400" />;
-    if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-4 h-4 text-amber-400" />;
-    return <Sparkles className="w-4 h-4 text-amber-400" />;
+    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return <Footprints className="w-5 h-5" />;
+    if (name.includes('აქსესუარ') || name.includes('accessor') || name.includes('ჩანთა') || name.includes('bag')) return <Briefcase className="w-5 h-5" />;
+    if (name.includes('სამკაულ') || name.includes('jewel') || name.includes('ბეჭედ') || name.includes('ყელსაბამ')) return <Gem className="w-5 h-5" />;
+    if (name.includes('კაც') || name.includes('men') || name.includes('male')) return <UserRound className="w-5 h-5" />;
+    if (name.includes('ქალ') || name.includes('women') || name.includes('female') || name.includes('ტანსაცმ') || name.includes('clothing') || name.includes('apparel')) return <Shirt className="w-5 h-5" />;
+    if (name.includes('სმარტფონ') || name.includes('phone') || name.includes('მობილურ')) return <Smartphone className="w-5 h-5" />;
+    if (name.includes('ლაპტოპ') || name.includes('computer') || name.includes('კომპიუტერ') || name.includes('notebook')) return <Laptop className="w-5 h-5" />;
+    if (name.includes('ყურსასმენ') || name.includes('audio') || name.includes('sound') || name.includes('აუდიო')) return <Headphones className="w-5 h-5" />;
+    if (name.includes('საათ') || name.includes('watch')) return <Watch className="w-5 h-5" />;
+    if (name.includes('ფოტო') || name.includes('camera') || name.includes('ვიდეო')) return <CameraIcon className="w-5 h-5" />;
+    if (name.includes('ტელევიზორ') || name.includes('tv')) return <Tv className="w-5 h-5" />;
+    if (name.includes('დინამიკ') || name.includes('speaker')) return <Speaker className="w-5 h-5" />;
+    return <Sparkles className="w-5 h-5" />;
+  };
+
+  const getCategoryImage = (catName) => {
+    const name = (catName || '').toLowerCase();
+    if (name.includes('ფეხსაცმელ') || name.includes('shoe') || name.includes('sneaker') || name.includes('ბათინკ')) return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('აქსესუარ') || name.includes('accessor') || name.includes('bag') || name.includes('ჩანთა')) return 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('კაც') || name.includes('men') || name.includes('male')) return 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('ქალ') || name.includes('women') || name.includes('female')) return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('ტანსაცმ') || name.includes('clothing') || name.includes('apparel')) return 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?auto=format&fit=crop&w=1000&q=88';
+    if (name.includes('სამკაულ') || name.includes('jewel')) return 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=88';
+    return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
   };
 
   const currentBasePrice = selectedCustomVariant ? selectedCustomVariant.priceGEL : (selectedProduct?.priceGEL || 0);
@@ -260,40 +275,21 @@ export default function StoreView({
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
-      {/* 🌟 HERO BANNER */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#0e0e12] via-[#09090b] to-[#050507] border border-amber-500/30 rounded-[2rem] p-5 sm:p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 group">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-        <div className="space-y-3 max-w-2xl text-center lg:text-left z-10">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black tracking-widest uppercase shadow-inner">
-            <Award className="w-3.5 h-3.5 text-amber-400" /> ოფიციალური პრემიუმ ბუტიკი
-          </div>
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug">
-            {siteSettings?.heroTitle || 'GEOSTORE — მოდისა და ფეხსაცმელების ბუტიკი'}
-          </h1>
-          <p className="text-slate-400 text-xs sm:text-sm font-normal leading-relaxed max-w-xl">
-            {siteSettings?.heroSubtitle || 'აღმოაჩინეთ ელიტარული ტანსაცმელი, ფეხსაცმელები და აქსესუარები.'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1">
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> ადგილზე მორგება</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-amber-200/90 font-bold bg-[#121216] px-3.5 py-2 rounded-xl border border-amber-500/20 shadow-sm"><Zap className="w-3.5 h-3.5 text-amber-400" /> VIP მიწოდება</span>
+      {/* GEOSTORE FASHION EDITORIAL HERO */}
+      <section className="gs-fashion-hero" aria-label="GEOSTORE fashion collection">
+        <div className="gs-fashion-hero__image" role="img" aria-label="Fashion editorial collection" />
+        <div className="gs-fashion-hero__content">
+          <span className="gs-fashion-eyebrow">GEOSTORE / NEW SEASON</span>
+          <p className="gs-fashion-kicker">შეარჩიე შენი სტილი</p>
+          <h1>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? 'შენი სტილი. შენი არჩევანი.' : (siteSettings?.heroTitle || 'შენი სტილი. შენი არჩევანი.')}</h1>
+          <p className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.' : (siteSettings?.heroSubtitle || 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.')}</p>
+          <div className="gs-fashion-hero__actions">
+            <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">კოლექციის ნახვა <span aria-hidden="true">↗</span></button>
+            <span className="gs-fashion-hero__note">CLOTHING · SHOES · ACCESSORIES</span>
           </div>
         </div>
-
-        <div className="hidden lg:flex flex-col gap-3 shrink-0 z-10 w-72">
-          {(promoSlots || []).slice(0, 2).map((slot) => (
-            <div key={slot.id} className="bg-[#121216] border border-amber-500/30 p-4 rounded-2xl shadow-xl flex items-center justify-between group/card hover:border-amber-400 transition-all duration-300">
-              <div>
-                <span className="text-[10px] font-black text-amber-400 tracking-widest uppercase flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> {slot.tag}</span>
-                <h4 className="text-xs font-bold text-white mt-0.5">{slot.title}</h4>
-              </div>
-              <div className="bg-[#1a1a20] p-2.5 rounded-xl border border-amber-500/20">
-                <ArrowUpRight className="w-4 h-4 text-amber-400" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        <div className="gs-fashion-hero__stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
+      </section>
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
@@ -359,9 +355,9 @@ export default function StoreView({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-amber-400" /> ელიტარული კატეგორიები & სუბკატეგორიები
+              <FolderTree className="w-4 h-4 text-amber-400" /> აღმოაჩინე კოლექციები
             </h3>
-            <p className="text-slate-400 text-xs mt-0.5">აირჩიეთ კატეგორია ან სუბკატეგორია ზუსტი ძიებისთვის</p>
+            <p className="text-slate-400 text-xs mt-0.5">შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი</p>
           </div>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
             {processedProducts?.length || 0} პროდუქტი ვიტრინაზე
@@ -395,25 +391,27 @@ export default function StoreView({
         )}
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="gs-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div 
+            role="button"
+            tabIndex={0}
+            aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
-            className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+            className={`gs-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
                 ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                 : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
             }`}
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+            <div className="gs-category-photo" style={{ backgroundImage: 'linear-gradient(180deg, rgba(20,18,16,.02) 10%, rgba(20,18,16,.78) 100%), url("https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88")' }} />
             <div className="flex justify-between items-start z-10">
-              <div className="bg-amber-400 p-2.5 rounded-2xl text-slate-950 shadow-md">
-                <Sparkles className="w-4 h-4" />
-              </div>
+              <div className="gs-category-icon gs-category-icon--all"><Sparkles className="w-5 h-5" /></div>
               <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
                 {activeProducts.length}
               </span>
             </div>
-            <div className="z-15">
+            <div className="relative z-10">
               <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">ყველა კატეგორია</h4>
               <p className="text-[10px] text-slate-400 mt-0.5">სრული კოლექცია</p>
             </div>
@@ -422,7 +420,7 @@ export default function StoreView({
           {(mainCategories.length > 0 ? mainCategories : (categories || []).map(c => typeof c === 'object' ? c : { id: c, name: c })).map(cat => {
             const catName = cat.name;
             const catId = cat.id || catName;
-            const catImage = cat.image || cat.img; // 🌟 ადმინ პანელიდან ატვირთული ფოტო
+            const catImage = cat.image || cat.img || getCategoryImage(catName); // Admin-uploaded image takes priority
             const subCats = getSubCategories(catId);
             const isSelected = selectedCategory === catName;
             const isOpen = openParentCatId === catId;
@@ -431,32 +429,26 @@ export default function StoreView({
             return (
               <div 
                 key={catId}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory(catName); setSelectedSubCategory(null); setOpenParentCatId(isOpen ? null : catId); } }}
                 onClick={() => { 
                   setSelectedCategory(catName); 
                   setSelectedSubCategory(null);
                   setOpenParentCatId(isOpen ? null : catId);
                 }}
-                className={`group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+                className={`gs-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
                   isSelected 
                     ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                     : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
                 }`}
               >
                 {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
-                {catImage && (
-                  <div className="absolute inset-0 opacity-25 group-hover:opacity-40 transition-opacity pointer-events-none">
-                    <img src={catImage} alt={catName} className="w-full h-full object-cover" />
-                  </div>
-                )}
+                <div className="gs-category-photo" style={{ backgroundImage: `linear-gradient(180deg, rgba(20,18,16,.04) 10%, rgba(20,18,16,.76) 100%), url("${catImage}")` }} />
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
-                  <div className="bg-[#1a1a22] border border-amber-500/30 w-10 h-10 rounded-2xl overflow-hidden text-amber-400 shadow-md flex items-center justify-center shrink-0">
-                    {catImage ? (
-                      <img src={catImage} alt={catName} className="w-full h-full object-cover" />
-                    ) : (
-                      getCategoryIcon(catName)
-                    )}
-                  </div>
+                  <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>
                   <div className="flex items-center gap-1 z-10">
                     {subCats.length > 0 && <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700">{subCats.length} სუბ</span>}
                     <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">{pCount}</span>
@@ -507,7 +499,7 @@ export default function StoreView({
       </div>
 
       {/* Filters & Sorting */}
-      <div className="bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div className="gs-filter-panel bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="flex items-center gap-2.5 w-full md:w-auto">
           <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> ფასი:
@@ -555,7 +547,7 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
+        <div className="gs-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -566,11 +558,11 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <div key={prod.id} className="group bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem] p-4 sm:p-5 flex flex-col justify-between hover:border-amber-400 transition-all duration-500 shadow-2xl hover:shadow-amber-500/15">
+              <article key={prod.id} className="gs-product-card group flex flex-col">
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
-                  className="relative bg-[#060608] rounded-3xl p-5 sm:p-6 border border-amber-500/10 flex items-center justify-center h-52 sm:h-60 overflow-hidden cursor-pointer group/img"
+                  className="gs-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
@@ -604,15 +596,15 @@ export default function StoreView({
                   </div>
                 </div>
 
-                <div className="py-3 sm:py-4 space-y-2.5">
+                <div className="gs-product-info py-3 sm:py-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
                     <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
-                  <div className="flex items-baseline gap-2.5 pt-0.5">
+                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <div className="gs-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
                     {prod.oldPriceGEL && <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
@@ -620,11 +612,11 @@ export default function StoreView({
 
                 <button 
                   onClick={() => handleOpenProduct(prod)} 
-                  className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3.5 sm:py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
+                  className="gs-product-action gs-product-card-action w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა & კალათა' : 'კალათაში დამატება'}
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა' : 'ნახვა და დამატება'}
                 </button>
-              </div>
+              </article>
             );
           })}
         </div>
@@ -632,11 +624,11 @@ export default function StoreView({
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+        <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
+          <div className="gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]">
             
-            <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0 z-20">
+            <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
               </span>
@@ -649,11 +641,11 @@ export default function StoreView({
               </button>
             </div>
 
-            <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin pb-28">
+            <div className="gs-product-modal-body p-4 sm:p-7 overflow-y-auto space-y-6 scrollbar-thin pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 <div className="space-y-4">
-                  <div className="bg-[#060608] rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 border border-amber-500/30 flex items-center justify-center h-60 sm:h-80 shadow-2xl">
+                  <div className="gs-product-detail-image flex items-center justify-center h-60 sm:h-80">
                     <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
                   
@@ -727,7 +719,7 @@ export default function StoreView({
                   )}
 
                   {isClothingOrFootwear(selectedProduct) && (
-                    <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <div className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="text-slate-300 font-bold">აირჩიეთ ზომა (მხოლოდ მარაგშია): <b className="text-amber-400">{selectedSize}</b></span>
                         <div className="flex items-center gap-2">
@@ -754,7 +746,7 @@ export default function StoreView({
                               key={size}
                               type="button"
                               onClick={() => setSelectedSize(size)}
-                              className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                              className={`gs-size-option px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
                             >
                               {size} 🟢
                             </button>
@@ -918,7 +910,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 bg-[#121216]/95 backdrop-blur-xl border-t border-amber-500/30 p-4 sm:p-5 shadow-2xl z-30">
+            <div className="gs-product-modal-cta absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
@@ -936,9 +928,11 @@ export default function StoreView({
                   }); 
                   setSelectedProduct(null); 
                 }} 
-                className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+                className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
               >
-                <ShoppingBag className="w-5 h-5" /> კალათაში დამატება {isClothingOrFootwear(selectedProduct) ? `(ზომა: ${selectedSize})` : ''} — {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                <span className="gs-modal-add-label">კალათაში დამატება{isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}</span>
+                <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>
 
@@ -948,8 +942,8 @@ export default function StoreView({
 
       {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <form onSubmit={handleCalculateSmartSize} className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+        <div className="gs-size-modal fixed inset-0 z-[10000] flex items-center justify-center p-4 animate-in fade-in">
+          <form onSubmit={handleCalculateSmartSize} className="gs-size-modal-panel p-6 sm:p-7 max-w-md w-full space-y-5 text-xs relative">
             <button type="button" onClick={() => setIsSmartSizeModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
             
             <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
@@ -999,8 +993,8 @@ export default function StoreView({
 
       {/* 📏 ზომების გიდის მოდალი */}
       {isSizeGuideOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0d0d10] border border-amber-500/40 rounded-[2.5rem] p-7 max-w-md w-full space-y-5 text-xs text-white shadow-2xl relative">
+        <div className="gs-size-modal fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="gs-size-modal-panel p-6 sm:p-7 max-w-md w-full space-y-5 text-xs relative">
             <button onClick={() => setIsSizeGuideOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer p-1">✕</button>
             
             <div className="flex items-center gap-3.5 border-b border-amber-500/20 pb-4">
