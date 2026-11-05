@@ -1327,7 +1327,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="w-full max-w-full overflow-hidden">
+      <div className="w-full max-w-full overflow-visible">
         <Header
           siteSettings={siteSettings}
           setActiveTab={setActiveTab}
