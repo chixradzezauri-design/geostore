@@ -3083,3 +3083,74 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   }
 }
 
+/* GEOSTORE — consistent commerce dialogs (visual-only wrapper hooks) */
+.gs-commerce-overlay{
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+    max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;
+  background:rgba(31,26,21,.68)!important;backdrop-filter:blur(12px)!important;
+}
+.gs-commerce-dialog{
+  min-width:0!important;border:1px solid #e5dbd0!important;border-radius:5px!important;
+  background:#fffdfa!important;color:#302a24!important;
+  box-shadow:0 24px 76px rgba(20,15,11,.25)!important;
+}
+.gs-commerce-dialog>div:first-child,
+.gs-commerce-dialog>header{
+  border-color:#e9e1d8!important;
+}
+.gs-commerce-dialog h3,.gs-commerce-dialog h4{color:#302a24!important}
+.gs-commerce-dialog [class*="text-white"],
+.gs-commerce-dialog [class*="text-slate-200"],
+.gs-commerce-dialog [class*="text-slate-300"],
+.gs-commerce-dialog [class*="text-slate-400"]{color:#65594f!important}
+.gs-commerce-dialog [class*="text-amber-"]{color:#806b56!important}
+.gs-commerce-dialog [class*="border-amber-"]{border-color:#e6ddd3!important}
+.gs-commerce-dialog [class*="bg-[#0d0d10]"],
+.gs-commerce-dialog [class*="bg-[#121216]"],
+.gs-commerce-dialog [class*="bg-[#141418]"],
+.gs-commerce-dialog [class*="bg-[#08080a]"]{
+  background:#f5f1eb!important;border-color:#e6ddd3!important;color:#302a24!important;
+}
+.gs-commerce-dialog input,.gs-commerce-dialog select,.gs-commerce-dialog textarea{
+  min-width:0!important;min-height:42px!important;border:1px solid #e2d8cd!important;
+  border-radius:3px!important;background:#faf7f2!important;color:#302a24!important;
+  box-shadow:none!important;font-size:12px!important;
+}
+.gs-commerce-dialog input::placeholder,.gs-commerce-dialog textarea::placeholder{color:#a09283!important}
+.gs-commerce-dialog input:focus,.gs-commerce-dialog select:focus,.gs-commerce-dialog textarea:focus{
+  border-color:#a99178!important;outline:2px solid rgba(169,145,120,.15)!important;
+}
+.gs-commerce-dialog button[class*="bg-amber-400"],
+.gs-commerce-dialog button[class*="bg-neutral-950"]{
+  min-height:40px!important;border:1px solid #302a24!important;border-radius:3px!important;
+  background:#302a24!important;color:#fffdfa!important;box-shadow:none!important;
+}
+.gs-commerce-dialog button[class*="bg-amber-400"]:hover,
+.gs-commerce-dialog button[class*="bg-neutral-950"]:hover{
+  background:#6e5b48!important;border-color:#6e5b48!important;
+}
+.gs-commerce-dialog button[class*="rounded-2xl"],
+.gs-commerce-dialog button[class*="rounded-xl"],
+.gs-commerce-dialog button[class*="rounded-full"]{border-radius:3px!important}
+.gs-commerce-dialog--tracker,.gs-commerce-dialog--notifications,.gs-commerce-dialog--account{
+  max-height:min(88dvh,780px)!important;overflow-y:auto!important;
+}
+.gs-commerce-dialog--tracker [class*="bg-[#121216]"],
+.gs-commerce-dialog--notifications [class*="bg-[#121216]"],
+.gs-commerce-dialog--account [class*="bg-[#121216]"]{background:#f5f1eb!important}
+.gs-commerce-dialog--success>div>div[class*="bg-neutral-950"]{
+  background:#302a24!important;
+}
+@media(max-width:600px){
+  .gs-commerce-overlay{align-items:flex-end!important;padding:8px!important}
+  .gs-commerce-dialog--checkout,.gs-commerce-dialog--tracker,
+  .gs-commerce-dialog--notifications,.gs-commerce-dialog--account{
+    width:100%!important;max-width:100%!important;max-height:calc(100dvh - 16px)!important;
+    padding:16px!important;border-radius:5px!important;
+  }
+  .gs-commerce-dialog--checkout form{gap:13px!important;padding:15px!important}
+  .gs-commerce-dialog--checkout header{padding:13px 15px!important}
+  .gs-commerce-dialog--success{margin:auto!important;padding:0!important}
+  .gs-commerce-dialog--tracker [class*="grid-cols-4"]{gap:3px!important;font-size:8px!important;line-height:1.35!important}
+}
+
