@@ -943,12 +943,12 @@ export default function App() {
     const password = authForm.password;
 
     if (!email || !password) {
-      alert('შეიყვანეთ ელ-ფოსტა და პაროლი.');
+      alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
       return;
     }
 
     if (password.length < 6) {
-      alert('პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
+      alert(currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
       return;
     }
 
@@ -958,7 +958,7 @@ export default function App() {
         const phone = authForm.phone.trim();
 
         if (!name || !phone) {
-          alert('შეავსეთ სახელი და ტელეფონის ნომერი.');
+          alert(currentLang === 'en' ? 'Enter your name and phone number.' : currentLang === 'ru' ? 'Укажите имя и номер телефона.' : 'შეავსეთ სახელი და ტელეფონის ნომერი.');
           return;
         }
 
@@ -990,7 +990,7 @@ export default function App() {
             password: ''
           });
 
-          showToast('🎉 რეგისტრაცია წარმატებულია!');
+          showToast(currentLang === 'en' ? '🎉 Registration successful!' : currentLang === 'ru' ? '🎉 Регистрация прошла успешно!' : '🎉 რეგისტრაცია წარმატებულია!');
         } else {
           setIsAuthOpen(false);
 
@@ -1002,7 +1002,7 @@ export default function App() {
           });
 
           alert(
-            'რეგისტრაცია მიღებულია. შესვლის დასასრულებლად შეამოწმეთ ელ-ფოსტა და დაადასტურეთ ანგარიში.'
+            currentLang === 'en' ? 'Registration received. Check your email and confirm your account to finish signing in.' : currentLang === 'ru' ? 'Заявка на регистрацию принята. Проверьте почту и подтвердите аккаунт, чтобы завершить вход.' : 'რეგისტრაცია მიღებულია. შესვლის დასასრულებლად შეამოწმეთ ელ-ფოსტა და დაადასტურეთ ანგარიში.'
           );
         }
       } else {
@@ -1018,7 +1018,7 @@ export default function App() {
 
         if (!data.session || !data.user) {
           throw new Error(
-            'ავტორიზაციის სესია ვერ შეიქმნა. სცადეთ ხელახლა.'
+            currentLang === 'en' ? 'Could not create a sign-in session. Please try again.' : currentLang === 'ru' ? 'Не удалось создать сеанс входа. Попробуйте еще раз.' : 'ავტორიზაციის სესია ვერ შეიქმნა. სცადეთ ხელახლა.'
           );
         }
 
@@ -1032,7 +1032,7 @@ export default function App() {
           password: ''
         });
 
-        showToast('🔑 ავტორიზაცია წარმატებულია!');
+        showToast(currentLang === 'en' ? '🔑 Signed in successfully!' : currentLang === 'ru' ? '🔑 Вход выполнен успешно!' : '🔑 ავტორიზაცია წარმატებულია!');
       }
     } catch (error) {
       console.error('Supabase authentication error:', error);
@@ -1042,18 +1042,18 @@ export default function App() {
       if (
         message.toLowerCase().includes('invalid login credentials')
       ) {
-        alert('არასწორი ელ-ფოსტა ან პაროლი.');
+        alert(currentLang === 'en' ? 'Incorrect email or password.' : currentLang === 'ru' ? 'Неверная почта или пароль.' : 'არასწორი ელ-ფოსტა ან პაროლი.');
       } else if (
         message.toLowerCase().includes('user already registered')
       ) {
-        alert('ეს ელ-ფოსტა უკვე რეგისტრირებულია. სცადეთ შესვლა.');
+        alert(currentLang === 'en' ? 'This email is already registered. Please sign in.' : currentLang === 'ru' ? 'Этот адрес электронной почты уже зарегистрирован. Войдите в аккаунт.' : 'ეს ელ-ფოსტა უკვე რეგისტრირებულია. სცადეთ შესვლა.');
       } else if (
         message.toLowerCase().includes('email not confirmed')
       ) {
-        alert('გთხოვთ, ჯერ დაადასტუროთ ელ-ფოსტა.');
+        alert(currentLang === 'en' ? 'Please confirm your email address first.' : currentLang === 'ru' ? 'Сначала подтвердите адрес электронной почты.' : 'გთხოვთ, ჯერ დაადასტუროთ ელ-ფოსტა.');
       } else {
         alert(
-          `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
+          currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
         );
       }
     }
@@ -1070,12 +1070,12 @@ export default function App() {
       setCurrentUser(null);
       setActiveTab('store');
 
-      showToast('ანგარიშიდან წარმატებით გამოხვედით.');
+      showToast(currentLang === 'en' ? 'Signed out successfully.' : currentLang === 'ru' ? 'Вы успешно вышли из аккаунта.' : 'ანგარიშიდან წარმატებით გამოხვედით.');
     } catch (error) {
       console.error('Supabase logout error:', error);
 
       alert(
-        'ანგარიშიდან გამოსვლა ვერ მოხერხდა. სცადეთ ხელახლა.'
+        currentLang === 'en' ? 'Could not sign out. Please try again.' : currentLang === 'ru' ? 'Не удалось выйти из аккаунта. Попробуйте еще раз.' : 'ანგარიშიდან გამოსვლა ვერ მოხერხდა. სცადეთ ხელახლა.'
       );
     }
   };
