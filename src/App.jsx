@@ -2048,8 +2048,8 @@ export default function App() {
         </div>
       )}
 
-      <footer className="bg-slate-950 border-t border-slate-900/80 py-8 text-center text-xs text-slate-500 mt-6 backdrop-blur-md space-y-3 w-full">
-        <div className="flex justify-center items-center gap-6 text-slate-400 font-bold">
+      <footer className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">
+        <div className="geostore-footer-links flex justify-center items-center gap-6 text-slate-400 font-bold">
           <button
             onClick={() => setIsTermsOpen(true)}
             className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
