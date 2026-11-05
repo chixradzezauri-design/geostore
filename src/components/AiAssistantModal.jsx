@@ -373,6 +373,65 @@ export default function AiAssistantModal({
     };
   };
 
+  // პასუხების ლოკალიზაცია: არსებული კატალოგის ძიება და შეკვეთის ლოგიკა უცვლელი რჩება.
+  const localizeAiReply = (result, userQuery) => {
+    if (currentLang === 'ka' || !result) return result;
+    const query = String(userQuery || '').trim().toLowerCase();
+    const isEnglish = currentLang === 'en';
+    const t = (en, ru) => isEnglish ? en : ru;
+    const text = result.text || '';
+
+    if (text.includes('კვლავ ვსაუბრობთ პროდუქტზე')) {
+      return { ...result, text: selectedProduct
+        ? t(`Yes! We are still discussing “${selectedProduct.name}”. What would you like to know next?`, `Да! Мы всё ещё обсуждаем товар «${selectedProduct.name}». Что хотите узнать дальше?`)
+        : t('Hello! 🌟 I can help you shop. Ask me about a category, product, price, color, or outfit ideas.', 'Здравствуйте! 🌟 Я помогу с покупками. Спросите о категории, товаре, цене, цвете или подборе образа.') };
+    }
+    if (text.startsWith('გამარჯობა! 🌟 სიამოვნებით')) {
+      return { ...result, text: t('Hello! 🌟 I’d be happy to help you shop. Ask about a category, product, price, color, or outfit ideas from your digital wardrobe!', 'Здравствуйте! 🌟 Буду рад помочь с покупками. Спросите о категории, товаре, цене, цвете или образах из цифрового гардероба!') };
+    }
+    if (text.includes('ციფრული გარდერობი ჯერ ცარიელია')) {
+      return { ...result, text: t('🧥 Your digital wardrobe is empty for now. Open the “AI Digital Wardrobe” section, add your clothing, and I can help create outfits and choose matching items from the store.', '🧥 Ваш цифровой гардероб пока пуст. Перейдите в раздел «AI Digital Wardrobe», добавьте свою одежду, и я помогу составить образы и подобрать подходящие товары из магазина.') };
+    }
+    if (text.includes('ციფრულ გარდერობში ფიქსირდება')) {
+      const count = text.match(/(\\d+) ნივთი/)?.[1] || '';
+      return { ...result, text: t(`✨ Your digital wardrobe contains ${count} item(s). Stylist tip: one of the premium items below could complement your existing clothes.`, `✨ В вашем цифровом гардеробе ${count} предмет(а). Совет стилиста: один из представленных ниже премиальных товаров может дополнить вашу одежду.`) };
+    }
+    if (text.startsWith('📦 შეკვეთა #')) {
+      const id = text.match(/შეკვეთა #([^:\\n]+)/)?.[1] || '';
+      const recipient = text.match(/მიმღები: ([^\\n]+)/)?.[1] || '';
+      const date = text.match(/თარიღი: ([^\\n]+)/)?.[1] || '';
+      const amount = text.match(/თანხა: ([^\\n]+)/)?.[1] || '';
+      const status = text.match(/სტატუსი: 🟢 ([^\\n]+)/)?.[1] || '';
+      return { ...result, text: t(`📦 Order #${id}:\\n• Recipient: ${recipient}\\n• Date: ${date}\\n• Total: ${amount}\\n• Status: 🟢 ${status}`, `📦 Заказ #${id}:\\n• Получатель: ${recipient}\\n• Дата: ${date}\\n• Сумма: ${amount}\\n• Статус: 🟢 ${status}`) };
+    }
+    if (text.includes('ვერ მოიძებნა ბაზაში')) {
+      const code = text.match(/კოდით "([^"]+)"/)?.[1] || '';
+      return { ...result, text: t(`🔍 Order with code “${code}” was not found in the database.`, `🔍 Заказ с кодом «${code}» не найден в базе данных.`) };
+    }
+    if (text.includes('უნიკალური ნომერი')) {
+      return { ...result, text: t('To check your order, please send its unique order number (for example, ORD-1025)! 📦', 'Чтобы проверить заказ, отправьте его уникальный номер (например, ORD-1025)! 📦') };
+    }
+    if (text.startsWith('🔥 მიმდინარე სპეციალური ფასდაკლებები')) {
+      const count = text.match(/\\((\\d+) ნივთი\\)/)?.[1] || result.products?.length || 0;
+      return { ...result, text: t(`🔥 Current special offers and discounts (${count} items):`, `🔥 Текущие специальные предложения и скидки (${count} товаров):`) };
+    }
+    if (text.startsWith('🚀 მიწოდება მთელი საქართველოს მასშტაბით')) {
+      const fee = value => Number(value) === 0 ? t('Free', 'Бесплатно') : `${value} ₾`;
+      return { ...result, text: t(`🚀 Delivery across Georgia:\\n• Tbilisi / Rustavi: ${fee(deliveryFees.tbilisi)}\\n• Major cities: ${fee(deliveryFees.bigCities)}\\n• Other regions: ${fee(deliveryFees.other)}`, `🚀 Доставка по всей Грузии:\\n• Тбилиси / Рустави: ${fee(deliveryFees.tbilisi)}\\n• Крупные города: ${fee(deliveryFees.bigCities)}\\n• Другие регионы: ${fee(deliveryFees.other)}`) };
+    }
+    if (text.includes('ოფიციალური ქარხნული გარანტია')) {
+      return { ...result, text: t('🛡️ All products are covered by the applicable official manufacturer warranty and return policy.', '🛡️ На все товары распространяются соответствующая официальная гарантия производителя и политика возврата.') };
+    }
+    if (text.startsWith('✨ კატეგორიებისა და მოთხოვნის შესაბამისად ნაპოვნია')) {
+      const count = text.match(/\\((\\d+) ვარიანტი\\)/)?.[1] || result.products?.length || 0;
+      return { ...result, text: t(`✨ Found ${count} matching product option(s) based on your request:`, `✨ По вашему запросу найдено подходящих вариантов: ${count}:`) };
+    }
+    if (text.startsWith('🤔 ზუსტი დამთხვევა ვერ მოიძებნა')) {
+      return { ...result, text: t('🤔 I couldn’t find an exact match, but here are some top picks from our premium catalog:', '🤔 Точное совпадение не найдено, но вот несколько популярных товаров из нашего премиального каталога:') };
+    }
+    return result;
+  };
+
   const handleSendMessage = async (textToSend) => {
     const queryText = textToSend || inputMessage;
     if (!queryText.trim()) return;
@@ -385,7 +444,7 @@ export default function AiAssistantModal({
     const refreshedProducts = await fetchLiveProducts();
 
     setTimeout(() => {
-      const aiResult = generateAiReply(queryText, refreshedProducts);
+      const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
       const aiMsg = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
