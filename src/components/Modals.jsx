@@ -94,7 +94,7 @@ export default function Modals({
       products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
       preparing: 'მზადდება', onTheWay: 'გზაშია 🚚', delivered: 'ჩაბარებულია ✅',
       deliveryInfo: 'ინფორმაცია მიწოდებაზე',
-      deliveryNote: '{copy.deliveryNote}',
+      deliveryNote: 'შეკვეთის სტატუსი ახლდება ადმინპანელიდან. კურიერის GPS მდებარეობა ამჟამად საიტთან დაკავშირებული არ არის, ამიტომ რუკაზე ცოცხალი მდებარეობა არ აისახება.',
       trackerPrompt: 'შეიყვანეთ შეკვეთის კოდი ზედა ველში სტატუსის სანახავად.',
       trackerEmpty: 'შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.',
       trackerNotFound: 'შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.',
@@ -652,7 +652,7 @@ export default function Modals({
 
       {/* 🔔 3. ADVANCED NOTIFICATIONS CENTER MODAL */}
       {isNotificationsOpen && (
-        <div className="gs-commerce-overlay gs-commerce-overlay--account fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
+        <div className="gs-commerce-overlay gs-commerce-overlay--notifications fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="gs-commerce-dialog gs-commerce-dialog--notifications bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
