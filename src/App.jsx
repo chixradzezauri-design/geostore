@@ -1813,8 +1813,8 @@ export default function App() {
             <Sparkles className="gs-floating-sparkle" aria-hidden="true" />
           </span>
           <span className="gs-floating-action-copy">
-            <strong>AI ასისტენტი</strong>
-            <small>რჩევები და შერჩევა</small>
+            <strong>{currentLang === 'en' ? 'AI Assistant' : currentLang === 'ru' ? 'AI-помощник' : 'AI ასისტენტი'}</strong>
+            <small>{currentLang === 'en' ? 'Style & recommendations' : currentLang === 'ru' ? 'Стиль и рекомендации' : 'რჩევები და შერჩევა'}</small>
           </span>
           <span className="gs-floating-action-arrow" aria-hidden="true">↗</span>
         </button>
@@ -1827,7 +1827,7 @@ export default function App() {
               <span className="gs-support-heading-icon"><MessageSquare aria-hidden="true" /></span>
               <span className="gs-support-heading-copy">
                 <strong>{t.supportChat}</strong>
-                <small>GEOSTORE · მომხმარებელთა დახმარება</small>
+                <small>{currentLang === 'en' ? 'GEOSTORE · Customer care' : currentLang === 'ru' ? 'GEOSTORE · Поддержка клиентов' : 'GEOSTORE · მომხმარებელთა დახმარება'}</small>
               </span>
               <button
                 type="button"
@@ -1939,8 +1939,8 @@ export default function App() {
           >
             <span className="gs-floating-action-icon"><MessageSquare aria-hidden="true" /></span>
             <span className="gs-floating-action-copy">
-              <strong>დახმარება</strong>
-              <small>მოგვწერე ნებისმიერ დროს</small>
+              <strong>{currentLang === 'en' ? 'Support' : currentLang === 'ru' ? 'Поддержка' : 'დახმარება'}</strong>
+              <small>{currentLang === 'en' ? 'We are here to help' : currentLang === 'ru' ? 'Мы готовы помочь' : 'მოგვწერე ნებისმიერ დროს'}</small>
             </span>
             <span className="gs-support-online-dot" aria-label="ონლაინ" />
           </button>
