@@ -884,7 +884,7 @@ export default function StoreView({
                       </div>
 
                       <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
-                        შეფასების და ფოტოს გამოქვეყნება
+                        {storeText.publishReview}
                       </button>
                     </form>
 
