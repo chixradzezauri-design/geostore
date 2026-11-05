@@ -884,3 +884,114 @@ html{scroll-behavior:smooth}
     transition-duration: .01ms !important;
   }
 }
+
+/* =========================================================
+   GEOSTORE — supporting screens and overlay design alignment
+   Visual-only overrides; no application or data behavior changes.
+   ========================================================= */
+.geostore-wardrobe-premium,
+.geostore-admin-premium {
+  width: 100%;
+  min-width: 0;
+  color: var(--gs-ink, #29241f);
+  font-family: 'Manrope', 'Noto Sans Georgian', sans-serif;
+}
+.geostore-wardrobe-premium { padding: clamp(14px, 2vw, 26px) 0; }
+.geostore-wardrobe-premium > div,
+.geostore-admin-premium > div { color: var(--gs-ink, #29241f) !important; }
+.geostore-wardrobe-premium [class*="bg-slate-950"],
+.geostore-wardrobe-premium [class*="bg-slate-900"],
+.geostore-wardrobe-premium [class*="bg-slate-800"],
+.geostore-wardrobe-premium [class*="bg-[#"] { background: #fffdfa !important; }
+.geostore-wardrobe-premium [class*="bg-gradient-to-r"] {
+  background: linear-gradient(115deg, #eee7de, #fffdfa 58%, #e9e0d5) !important;
+}
+.geostore-wardrobe-premium [class*="text-white"],
+.geostore-wardrobe-premium [class*="text-slate-100"],
+.geostore-wardrobe-premium [class*="text-slate-200"],
+.geostore-wardrobe-premium [class*="text-slate-300"] { color: #29241f !important; }
+.geostore-wardrobe-premium [class*="text-slate-400"],
+.geostore-wardrobe-premium [class*="text-slate-500"] { color: #776b60 !important; }
+.geostore-wardrobe-premium [class*="text-emerald-"] { color: #80694f !important; }
+.geostore-wardrobe-premium [class*="border-emerald-"],
+.geostore-wardrobe-premium [class*="border-slate-"] { border-color: #e6ddd3 !important; }
+.geostore-wardrobe-premium button,
+.geostore-wardrobe-premium input,
+.geostore-wardrobe-premium select,
+.geostore-wardrobe-premium textarea { font-family: 'Manrope', 'Noto Sans Georgian', sans-serif !important; }
+.geostore-wardrobe-premium input,
+.geostore-wardrobe-premium select,
+.geostore-wardrobe-premium textarea {
+  color: #29241f !important; background-color: #fffdfa !important; border-color: #d9cfc3 !important;
+}
+.geostore-admin-premium { padding: clamp(12px, 2vw, 24px) 0 48px; }
+.geostore-admin-premium [class*="bg-slate-950"],
+.geostore-admin-premium [class*="bg-slate-900"],
+.geostore-admin-premium [class*="bg-slate-800"],
+.geostore-admin-premium [class*="bg-[#"] {
+  background-color: #fffdfa !important; background-image: none !important;
+}
+.geostore-admin-premium [class*="text-white"],
+.geostore-admin-premium [class*="text-slate-100"],
+.geostore-admin-premium [class*="text-slate-200"],
+.geostore-admin-premium [class*="text-slate-300"] { color: #29241f !important; }
+.geostore-admin-premium [class*="text-slate-400"],
+.geostore-admin-premium [class*="text-slate-500"] { color: #776b60 !important; }
+.geostore-admin-premium [class*="text-emerald-400"],
+.geostore-admin-premium [class*="text-amber-300"],
+.geostore-admin-premium [class*="text-amber-400"] { color: #80694f !important; }
+.geostore-admin-premium [class*="border-emerald-"],
+.geostore-admin-premium [class*="border-amber-"],
+.geostore-admin-premium [class*="border-slate-"] { border-color: #e6ddd3 !important; }
+.geostore-admin-premium input,
+.geostore-admin-premium select,
+.geostore-admin-premium textarea {
+  max-width: 100%; min-width: 0; color: #29241f !important; background: #fffdfa !important;
+  border-color: #d9cfc3 !important; border-radius: 8px !important;
+}
+.geostore-admin-premium button { font-family: 'Manrope', 'Noto Sans Georgian', sans-serif !important; }
+.geostore-admin-premium :focus-visible,
+.geostore-wardrobe-premium :focus-visible { outline: 2px solid #92785f !important; outline-offset: 2px !important; }
+
+/* Legacy dialogs: AI assistant, comparison, image search, order tracker and install. */
+.geostore-shell .fixed.inset-0[class*="bg-slate-950"],
+.geostore-shell .fixed.inset-0[class*="bg-slate-900"] { background-color: rgba(35, 29, 23, .58) !important; }
+.geostore-shell .fixed.inset-0 > div[class*="bg-[#"],
+.geostore-shell .fixed.inset-0 > div[class*="bg-slate-900"],
+.geostore-shell .fixed.inset-0 > div[class*="bg-slate-950"] {
+  color: #29241f !important; background: #fffdfa !important; border-color: #e6ddd3 !important;
+  border-radius: 18px !important; box-shadow: 0 24px 80px rgba(36, 29, 22, .2) !important;
+  max-height: min(92dvh, 860px); overflow-y: auto;
+}
+.geostore-shell .fixed.inset-0 > div [class*="bg-[#"],
+.geostore-shell .fixed.inset-0 > div [class*="bg-slate-950"],
+.geostore-shell .fixed.inset-0 > div [class*="bg-slate-900"],
+.geostore-shell .fixed.inset-0 > div [class*="bg-slate-800"] {
+  background-color: #f5f1eb !important; background-image: none !important;
+}
+.geostore-shell .fixed.inset-0 > div [class*="text-white"],
+.geostore-shell .fixed.inset-0 > div [class*="text-slate-100"],
+.geostore-shell .fixed.inset-0 > div [class*="text-slate-200"],
+.geostore-shell .fixed.inset-0 > div [class*="text-slate-300"] { color: #29241f !important; }
+.geostore-shell .fixed.inset-0 > div [class*="text-slate-400"],
+.geostore-shell .fixed.inset-0 > div [class*="text-slate-500"] { color: #776b60 !important; }
+.geostore-shell .fixed.inset-0 > div [class*="text-emerald-"],
+.geostore-shell .fixed.inset-0 > div [class*="text-amber-"] { color: #80694f !important; }
+.geostore-shell .fixed.inset-0 > div [class*="border-emerald-"],
+.geostore-shell .fixed.inset-0 > div [class*="border-amber-"],
+.geostore-shell .fixed.inset-0 > div [class*="border-slate-"] { border-color: #e6ddd3 !important; }
+.geostore-shell .fixed.inset-0 > div input,
+.geostore-shell .fixed.inset-0 > div select,
+.geostore-shell .fixed.inset-0 > div textarea {
+  color: #29241f !important; background: #fffdfa !important; border-color: #d9cfc3 !important;
+  min-height: 42px; max-width: 100%;
+}
+.geostore-shell .fixed.inset-0 > div button { font-family: 'Manrope', 'Noto Sans Georgian', sans-serif !important; }
+@media (max-width: 640px) {
+  .geostore-admin-premium { padding: 10px 0 34px; }
+  .geostore-wardrobe-premium { padding-top: 10px; }
+  .geostore-shell .fixed.inset-0 { padding: 12px !important; }
+  .geostore-shell .fixed.inset-0 > div {
+    width: 100% !important; max-width: 100% !important; padding: 18px !important; border-radius: 16px !important;
+  }
+}
