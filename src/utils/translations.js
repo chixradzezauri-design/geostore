@@ -3,7 +3,7 @@
 export const translations = {
   ka: {
     storeName: "GEOSTORE",
-    topBarText: "GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი",
+    topBarText: "GEOSTORE — შენი სტილი, შენი არჩევანი",
     searchPlaceholder: "მოძებნე სასურველი პროდუქტი...",
     wardrobe: "ჩემი გარდერობი",
     aiStylist: "AI სტილისტი",
@@ -51,7 +51,7 @@ export const translations = {
   },
   en: {
     storeName: "GEOSTORE",
-    topBarText: "GEOSTORE - #1 Tech Online Marketplace in Georgia",
+    topBarText: "GEOSTORE — Style for every day",
     searchPlaceholder: "Search for products...",
     wardrobe: "My Wardrobe",
     aiStylist: "AI Stylist",
@@ -99,7 +99,7 @@ export const translations = {
   },
   ru: {
     storeName: "GEOSTORE",
-    topBarText: "GEOSTORE - №1 Онлайн маркетплейс техники в Грузии",
+    topBarText: "GEOSTORE — стиль на каждый день",
     searchPlaceholder: "Поиск товаров...",
     wardrobe: "Мой гардероб",
     aiStylist: "AI Стилист",
