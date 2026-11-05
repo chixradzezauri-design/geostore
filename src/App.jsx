@@ -1911,7 +1911,7 @@ export default function App() {
                 type="text"
                 name="csubject"
                 placeholder="Subject"
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner"
+                className="gs-support-field"
               />
 
               <textarea
