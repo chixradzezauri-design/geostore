@@ -47,7 +47,7 @@ export default function AiAssistantModal({
       placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
       inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
       disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
-      quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო'
+      quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო', selectedProductContext: 'კონტექსტი: ', prompts: [{ label: '👋 გამარჯობა', query: 'გამარჯობა' }, { label: '🧥 ტანსაცმელი', query: 'ტანსაცმელი' }, { label: '👟 ფეხსაცმელები', query: 'ფეხსაცმელები' }, { label: '📱 სმარტფონები', query: 'სმარტფონები' }, { label: '💻 ლეპტოპები', query: 'ლეპტოპები' }, { label: '🔥 ფასდაკლებები', query: 'ფასდაკლებები' }, { label: '🚚 მიწოდება', query: 'მიწოდება' }]
     },
     en: {
       title: 'AI Stylist', context: 'Smart catalog assistant', ready: 'Ready',
@@ -58,7 +58,7 @@ export default function AiAssistantModal({
       placeholder: 'What are you looking for? Add a product, size or budget...',
       inputLabel: 'Message for AI assistant', send: 'Send message',
       disclaimer: 'AI recommendations are for informational purposes · GEOSTORE',
-      quickPrompts: 'Quick prompts', productImage: 'Product image'
+      quickPrompts: 'Quick prompts', productImage: 'Product image', selectedProductContext: 'Selected product: ', prompts: [{ label: '👋 Hello', query: 'გამარჯობა' }, { label: '🧥 Clothing', query: 'ტანსაცმელი' }, { label: '👟 Shoes', query: 'ფეხსაცმელები' }, { label: '📱 Smartphones', query: 'სმარტფონები' }, { label: '💻 Laptops', query: 'ლეპტოპები' }, { label: '🔥 Discounts', query: 'ფასდაკლებები' }, { label: '🚚 Delivery', query: 'მიწოდება' }]
     },
     ru: {
       title: 'AI-стилист', context: 'Умный помощник каталога', ready: 'Готов',
@@ -69,7 +69,7 @@ export default function AiAssistantModal({
       placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
       inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
       disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE',
-      quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара'
+      quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара', selectedProductContext: 'Товар: ', prompts: [{ label: '👋 Привет', query: 'გამარჯობა' }, { label: '🧥 Одежда', query: 'ტანსაცმელი' }, { label: '👟 Обувь', query: 'ფეხსაცმელები' }, { label: '📱 Смартфоны', query: 'სმარტფონები' }, { label: '💻 Ноутбуки', query: 'ლეპტოპები' }, { label: '🔥 Скидки', query: 'ფასდაკლებები' }, { label: '🚚 Доставка', query: 'მიწოდება' }]
     }
   })[currentLang] || ({
     title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
@@ -404,7 +404,7 @@ export default function AiAssistantModal({
               <strong id="gs-ai-title">{siteSettings?.storeName || 'GEOSTORE'} {uiText.title}</strong>
               <span id="gs-ai-description" className="gs-ai-context">
                 <FolderTree aria-hidden="true" />
-                {selectedProduct ? 'კონტექსტი: ' + selectedProduct.name : 'კატალოგის ჭკვიანი ასისტენტი'}
+                {selectedProduct ? uiText.selectedProductContext + selectedProduct.name : uiText.context}
               </span>
             </span>
           </div>
@@ -516,15 +516,15 @@ export default function AiAssistantModal({
 
         <footer className="gs-ai-composer-area">
           <div className="gs-ai-suggestions" aria-label={uiText.quickPrompts}>
-            {['👋 გამარჯობა', '🧥 ტანსაცმელი', '👟 ფეხსაცმელები', '📱 სმარტფონები', '💻 ლეპტოპები', '🔥 ფასდაკლებები', '🚚 მიწოდება'].map((chip, index) => (
+            {uiText.prompts.map((prompt, index) => (
               <button
                 type="button"
                 key={index}
-                onClick={() => handleSendMessage(chip.replace(/[👋🧥👟📱💻🔥🚚]/g, '').trim())}
+                onClick={() => handleSendMessage(prompt.query)}
                 className="gs-ai-suggestion-chip"
               >
                 <Lightbulb aria-hidden="true" />
-                <span>{chip}</span>
+                <span>{prompt.label}</span>
               </button>
             ))}
           </div>
