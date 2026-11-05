@@ -1956,6 +1956,7 @@ export default function App() {
       </div>
 
       <Modals
+        currentLang={currentLang}
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
         checkoutForm={checkoutForm}
