@@ -499,7 +499,7 @@ export default function StoreView({
       </div>
 
       {/* Filters & Sorting */}
-      <div className="bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div className="gs-filter-panel bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="flex items-center gap-2.5 w-full md:w-auto">
           <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> ფასი:
