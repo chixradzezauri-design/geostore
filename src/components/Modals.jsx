@@ -94,7 +94,7 @@ export default function Modals({
       products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
       preparing: 'მზადდება', onTheWay: 'გზაშია 🚚', delivered: 'ჩაბარებულია ✅',
       deliveryInfo: 'ინფორმაცია მიწოდებაზე',
-      deliveryNote: '{copy.deliveryNote}',
+      deliveryNote: 'შეკვეთის სტატუსი ახლდება ადმინპანელიდან. კურიერის GPS მდებარეობა ამჟამად საიტთან დაკავშირებული არ არის, ამიტომ რუკაზე ცოცხალი მდებარეობა არ აისახება.',
       trackerPrompt: 'შეიყვანეთ შეკვეთის კოდი ზედა ველში სტატუსის სანახავად.',
       trackerEmpty: 'შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.',
       trackerNotFound: 'შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.',
@@ -882,7 +882,7 @@ export default function Modals({
                 type="button"
                 onClick={() => setIsTermsOpen(false)}
                 className="gs-terms-close"
-                aria-label="დახურვა"
+                aria-label={uiText.close}
               >
                 <X aria-hidden="true" />
               </button>
@@ -911,7 +911,7 @@ export default function Modals({
           <div className="gs-warranty-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-amber-400" /> საგარანტიო წესები
+                <ShieldCheck className="w-5 h-5 text-amber-400" /> {currentLang === 'en' ? 'Warranty policy' : currentLang === 'ru' ? 'Гарантийные условия' : 'საგარანტიო წესები'}
               </h3>
               <button onClick={() => setIsWarrantyOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
@@ -919,12 +919,12 @@ export default function Modals({
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-thin">
               <div className="space-y-2 bg-[#121216] p-4 rounded-2xl border border-amber-500/20">
-                <h4 className="font-black text-amber-300 text-sm">1. ოფიციალური გარანტია</h4>
-                <p>GEOSTORE-ზე წარმოდგენილ ყველა ტექნიკაზე მოქმედებს ქარხნული გარანტია.</p>
+                <h4 className="font-black text-amber-300 text-sm">{currentLang === 'en' ? '1. Official warranty' : currentLang === 'ru' ? '1. Официальная гарантия' : '1. ოფიციალური გარანტია'}</h4>
+                <p>{currentLang === 'en' ? 'All electronics offered on GEOSTORE are covered by the manufacturer warranty.' : currentLang === 'ru' ? 'На всю электронику, представленную на GEOSTORE, распространяется гарантия производителя.' : 'GEOSTORE-ზე წარმოდგენილ ყველა ტექნიკაზე მოქმედებს ქარხნული გარანტია.'}</p>
               </div>
             </div>
             <button onClick={() => setIsWarrantyOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
-              გაგებულია
+              {currentLang === 'en' ? 'Understood' : currentLang === 'ru' ? 'Понятно' : 'გაგებულია'}
             </button>
           </div>
         </div>
