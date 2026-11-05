@@ -34,8 +34,51 @@ export default function AiAssistantModal({
   selectedProduct = null,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   addToCart,
-  formatPrice
+  formatPrice,
+  currentLang = 'ka'
 }) {
+  const uiText = ({
+    ka: {
+      title: 'AI სტილისტი', context: uiText.context, ready: 'მზადაა',
+      clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
+      welcome: '{uiText.welcome}',
+      recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
+      addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
+      placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
+      inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
+      disclaimer: '{uiText.disclaimer}'
+    },
+    en: {
+      title: 'AI Stylist', context: 'Smart catalog assistant', ready: 'Ready',
+      clear: 'Clear chat', close: 'Close AI assistant',
+      welcome: 'Tell me what you are looking for — I can help you choose a product or style.',
+      recommendations: 'Recommended products', inStock: 'In stock', outOfStock: 'Out of stock',
+      addToCart: 'Add to cart', typing: 'Finding the best options...',
+      placeholder: 'What are you looking for? Add a product, size or budget...',
+      inputLabel: 'Message for AI assistant', send: 'Send message',
+      disclaimer: 'AI recommendations are for informational purposes · GEOSTORE'
+    },
+    ru: {
+      title: 'AI-стилист', context: 'Умный помощник каталога', ready: 'Готов',
+      clear: 'Очистить чат', close: 'Закрыть AI-помощника',
+      welcome: 'Напишите, что вы ищете — я помогу выбрать товар или стиль.',
+      recommendations: 'Рекомендованные товары', inStock: 'В наличии', outOfStock: 'Нет в наличии',
+      addToCart: 'В корзину', typing: 'Подбираю лучшие варианты...',
+      placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
+      inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
+      disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE'
+    }
+  })[currentLang] || ({
+    title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
+    clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
+    welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.',
+    recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
+    addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
+    placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
+    inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
+    disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE'
+  });
+
   const getInitialGreeting = () => {
     let wardrobeCount = 0;
     try {
@@ -354,7 +397,7 @@ export default function AiAssistantModal({
             </span>
             <span className="gs-ai-brand-copy">
               <span className="gs-ai-overline">GEOSTORE PERSONAL SHOPPING</span>
-              <strong id="gs-ai-title">{siteSettings?.storeName || 'GEOSTORE'} AI სტილისტი</strong>
+              <strong id="gs-ai-title">{siteSettings?.storeName || 'GEOSTORE'} {uiText.title}</strong>
               <span id="gs-ai-description" className="gs-ai-context">
                 <FolderTree aria-hidden="true" />
                 {selectedProduct ? 'კონტექსტი: ' + selectedProduct.name : 'კატალოგის ჭკვიანი ასისტენტი'}
@@ -362,12 +405,12 @@ export default function AiAssistantModal({
             </span>
           </div>
           <div className="gs-ai-header-actions">
-            <span className="gs-ai-status"><i aria-hidden="true" /> მზადაა</span>
+            <span className="gs-ai-status"><i aria-hidden="true" /> {uiText.ready}</span>
             <button
               type="button"
               onClick={handleResetChat}
-              title="საუბრის გასუფთავება"
-              aria-label="საუბრის გასუფთავება"
+              title={uiText.clear}
+              aria-label={uiText.clear}
               className="gs-ai-icon-button"
             >
               <RotateCcw aria-hidden="true" />
@@ -375,8 +418,8 @@ export default function AiAssistantModal({
             <button
               type="button"
               onClick={() => setIsAiAssistantOpen(false)}
-              title="დახურვა"
-              aria-label="AI ასისტენტის დახურვა"
+              title={uiText.close}
+              aria-label={uiText.close}
               className="gs-ai-icon-button gs-ai-close"
             >
               <X aria-hidden="true" />
@@ -406,7 +449,7 @@ export default function AiAssistantModal({
                     <div className="gs-ai-recommendations">
                       <div className="gs-ai-recommendations-title">
                         <ShoppingBag aria-hidden="true" />
-                        <span>შერჩეული პროდუქტები</span>
+                        <span>{uiText.recommendations}</span>
                       </div>
                       {msg.recommendedProducts.map((prod) => (
                         <article key={prod.id} className="gs-ai-product-card">
@@ -425,9 +468,9 @@ export default function AiAssistantModal({
                             </div>
                             <span className={prod.stock > 0 ? 'gs-ai-stock is-available' : 'gs-ai-stock is-unavailable'}>
                               {prod.stock > 0 ? (
-                                <><CheckCircle2 aria-hidden="true" /> მარაგშია</>
+                                <><CheckCircle2 aria-hidden="true" /> {uiText.inStock}</>
                               ) : (
-                                <><AlertCircle aria-hidden="true" /> ამოწურულია</>
+                                <><AlertCircle aria-hidden="true" /> {uiText.outOfStock}</>
                               )}
                             </span>
                             {prod.tags && prod.tags.length > 0 && (
@@ -444,7 +487,7 @@ export default function AiAssistantModal({
                             className="gs-ai-add-button"
                           >
                             <ShoppingBag aria-hidden="true" />
-                            <span>კალათაში</span>
+                            <span>{uiText.addToCart}</span>
                           </button>
                         </article>
                       ))}
@@ -459,7 +502,7 @@ export default function AiAssistantModal({
                 <span className="gs-ai-message-avatar" aria-hidden="true"><Bot /></span>
                 <div className="gs-ai-typing" role="status">
                   <span className="gs-ai-typing-dots"><i /><i /><i /></span>
-                  <span>ვარჩევ საუკეთესო ვარიანტებს...</span>
+                  <span>{uiText.typing}</span>
                 </div>
               </div>
             )}
@@ -493,11 +536,11 @@ export default function AiAssistantModal({
               type="text"
               value={inputMessage}
               onChange={(event) => setInputMessage(event.target.value)}
-              placeholder="რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი..."
-              aria-label="შეტყობინება AI ასისტენტისთვის"
+              placeholder={uiText.placeholder}
+              aria-label={uiText.inputLabel}
               className="gs-ai-input"
             />
-            <button type="submit" className="gs-ai-send-button" aria-label="შეტყობინების გაგზავნა">
+            <button type="submit" className="gs-ai-send-button" aria-label={uiText.send}>
               <Send aria-hidden="true" />
             </button>
           </form>
