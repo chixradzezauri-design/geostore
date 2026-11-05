@@ -1744,7 +1744,7 @@ export default function App() {
                 {t.orderHistory}
               </h3>
 
-              <div className="gs-support-form">
+              <div className="space-y-3">
                 {orders.filter(
                   (o) =>
                     o.user_email === currentUser.email
