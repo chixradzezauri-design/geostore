@@ -1838,19 +1838,6 @@ export default function App() {
                 <X aria-hidden="true" />
               </button>
             </div>
-              <h4 className="gs-support-panel-title">
-                <MessageSquare className="w-4 h-4" />
-                {t.supportChat}
-              </h4>
-
-              <button
-                onClick={() => setSupportOpen(false)}
-                className="gs-support-close"
-              >
-                ✕
-              </button>
-            </div>
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -1903,7 +1890,7 @@ export default function App() {
                   );
                 }
               }}
-              className="space-y-3"
+              className="gs-support-form"
             >
               <input
                 type="text"
@@ -1917,7 +1904,7 @@ export default function App() {
                 type="email"
                 name="cemail"
                 placeholder="Email"
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner"
+                className="gs-support-field"
               />
 
               <input
@@ -1932,7 +1919,7 @@ export default function App() {
                 rows="3"
                 placeholder="Write your message..."
                 required
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 resize-none shadow-inner"
+                className="gs-support-field"
               />
 
               <button
