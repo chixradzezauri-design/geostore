@@ -393,6 +393,10 @@ export default function StoreView({
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
         <div className="gs-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div 
+            role="button"
+            tabIndex={0}
+            aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
             className={`gs-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
@@ -407,7 +411,7 @@ export default function StoreView({
                 {activeProducts.length}
               </span>
             </div>
-            <div className="z-15">
+            <div className="relative z-10">
               <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">ყველა კატეგორია</h4>
               <p className="text-[10px] text-slate-400 mt-0.5">სრული კოლექცია</p>
             </div>
@@ -425,6 +429,10 @@ export default function StoreView({
             return (
               <div 
                 key={catId}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory(catName); setSelectedSubCategory(null); setOpenParentCatId(isOpen ? null : catId); } }}
                 onClick={() => { 
                   setSelectedCategory(catName); 
                   setSelectedSubCategory(null);
@@ -437,7 +445,7 @@ export default function StoreView({
                 }`}
               >
                 {/* 🌟 თუ ატვირთულია ფოტო, გამოჩნდეს ფონზე მსუბუქი გამჭვირვალობით */}
-                <div className="gs-category-photo" style={{ backgroundImage: `linear-gradient(180deg, rgba(20,18,16,.04) 10%, rgba(20,18,16,.76) 100%), url("${catImage}"` }} />
+                <div className="gs-category-photo" style={{ backgroundImage: `linear-gradient(180deg, rgba(20,18,16,.04) 10%, rgba(20,18,16,.76) 100%), url("${catImage}")` }} />
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
                 <div className="flex justify-between items-start z-10">
                   <div className="gs-category-icon" aria-hidden="true">{getCategoryIcon(catName)}</div>
