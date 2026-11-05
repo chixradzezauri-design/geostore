@@ -215,6 +215,9 @@ export default function Modals({
   const localizeMessage = (message) => {
     const messages = {
       'შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.': copy.trackerEmpty,
+      'შეავსეთ სახელი, ტელეფონი და მისამართი.': currentLang === 'en' ? 'Enter your name, phone number and address.' : currentLang === 'ru' ? 'Укажите имя, номер телефона и адрес.' : 'შეავსეთ სახელი, ტელეფონი და მისამართი.',
+      'სტუმრის შეკვეთისთვის მიუთითეთ სწორი ელ-ფოსტა.': currentLang === 'en' ? 'Enter a valid email address for guest checkout.' : currentLang === 'ru' ? 'Укажите корректный адрес электронной почты для заказа без входа.' : 'სტუმრის შეკვეთისთვის მიუთითეთ სწორი ელ-ფოსტა.',
+      'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.': currentLang === 'en' ? 'Your cart is empty. Add a product before checkout.' : currentLang === 'ru' ? 'Корзина пуста. Добавьте товар перед оформлением заказа.' : 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.'
       'შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.': copy.trackerNotFound,
       'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.': copy.trackerFailed,
       'შეკვეთის კოდი დაკოპირდა.': copy.codeCopied
@@ -510,7 +513,7 @@ export default function Modals({
               )}
               <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)}
                 className="mt-6 w-full rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800">
-                გასაგებია
+                {copy.understood}
               </button>
             </div>
           </section>
@@ -639,7 +642,7 @@ export default function Modals({
               <span className="text-slate-400 font-bold">{copy.totalNotifications} <b className="text-amber-400">{notifications.length}</b></span>
               {notifications.length > 0 && (
                 <button onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
-                  ყველას წაკითხულად მონიშვნა
+                  {copy.markRead}
                 </button>
               )}
             </div>
@@ -666,7 +669,7 @@ export default function Modals({
             </div>
 
             <button onClick={() => setIsNotificationsOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition shadow-lg shadow-amber-500/20 cursor-pointer text-xs">
-              დახურვა
+              {copy.close}
             </button>
           </div>
         </div>
@@ -692,7 +695,7 @@ export default function Modals({
                 onClick={() => { setAuthSubMode('standard'); setIsPinSetupMode(false); }}
                 className={`flex-1 py-2 rounded-xl transition cursor-pointer ${authSubMode === 'standard' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
               >
-                სტანდარტული
+                {copy.standard}
               </button>
               <button 
                 type="button" 
