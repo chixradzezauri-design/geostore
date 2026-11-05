@@ -525,16 +525,16 @@ export default function Modals({
                     if (navigator.clipboard?.writeText) {
                       navigator.clipboard.writeText(orderConfirmation.id)
                         .then(() => alert(copy.codeCopied))
-                        .catch(() => alert('შეკვეთის კოდი: ' + orderConfirmation.id));
+                        .catch(() => alert(copy.orderCode + ': ' + orderConfirmation.id));
                     } else {
-                      alert('შეკვეთის კოდი: ' + orderConfirmation.id);
+                      alert(copy.orderCode + ': ' + orderConfirmation.id);
                     }
                   }}
                   className="mt-3 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white"
-                {copy.copyCode}</button>
+                >{copy.copyCode}</button>
               </div>
               {orderConfirmation.email && (
-                <p className="mt-4 break-all text-[10px] text-neutral-500"{copy.confirmation} {orderConfirmation.email}</p>
+                <p className="mt-4 break-all text-[10px] text-neutral-500">{copy.confirmation} {orderConfirmation.email}</p>
               )}
               <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)}
                 className="mt-6 w-full rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800">
