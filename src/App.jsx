@@ -1994,6 +1994,7 @@ export default function App() {
       />
 
       <AiAssistantModal
+        currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         products={products}
