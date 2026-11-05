@@ -1379,6 +1379,7 @@ export default function App() {
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
           <StoreView
+            currentLang={currentLang}
             siteSettings={siteSettings}
             promoSlots={promoSlots}
             categories={categories}
