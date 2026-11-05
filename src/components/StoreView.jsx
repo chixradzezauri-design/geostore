@@ -547,7 +547,7 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
+        <div className="gs-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -558,11 +558,11 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <div key={prod.id} className="group bg-[#0e0e12] border border-amber-500/20 rounded-[2.5rem] p-4 sm:p-5 flex flex-col justify-between hover:border-amber-400 transition-all duration-500 shadow-2xl hover:shadow-amber-500/15">
+              <article key={prod.id} className="gs-product-card group flex flex-col">
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
-                  className="relative bg-[#060608] rounded-3xl p-5 sm:p-6 border border-amber-500/10 flex items-center justify-center h-52 sm:h-60 overflow-hidden cursor-pointer group/img"
+                  className="gs-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
@@ -596,15 +596,15 @@ export default function StoreView({
                   </div>
                 </div>
 
-                <div className="py-3 sm:py-4 space-y-2.5">
+                <div className="gs-product-info py-3 sm:py-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
                     <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
-                  <div className="flex items-baseline gap-2.5 pt-0.5">
+                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <div className="gs-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
                     {prod.oldPriceGEL && <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
@@ -612,11 +612,11 @@ export default function StoreView({
 
                 <button 
                   onClick={() => handleOpenProduct(prod)} 
-                  className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-3.5 sm:py-4 rounded-2xl text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-amber-500/30 shadow-lg cursor-pointer active:scale-95 group/btn"
+                  className="gs-product-action w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა & კალათა' : 'კალათაში დამატება'}
                 </button>
-              </div>
+              </article>
             );
           })}
         </div>
@@ -624,11 +624,11 @@ export default function StoreView({
 
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+        <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
           
-          <div className="relative bg-[#0d0d10] border border-amber-500/55 rounded-[2rem] sm:rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[90vh]">
+          <div className="gs-product-dialog relative w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92dvh]">
             
-            <div className="flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 border-b border-amber-500/20 bg-[#121216]/90 shrink-0 z-20">
+            <div className="gs-product-modal-header flex justify-between items-center px-5 sm:px-6 py-3.5 sm:py-4 shrink-0 z-20">
               <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> პროდუქტის დეტალური ხედი
               </span>
@@ -641,11 +641,11 @@ export default function StoreView({
               </button>
             </div>
 
-            <div className="p-4 sm:p-8 overflow-y-auto space-y-6 scrollbar-thin pb-28">
+            <div className="gs-product-modal-body p-4 sm:p-7 overflow-y-auto space-y-6 scrollbar-thin pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 <div className="space-y-4">
-                  <div className="bg-[#060608] rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 border border-amber-500/30 flex items-center justify-center h-60 sm:h-80 shadow-2xl">
+                  <div className="gs-product-detail-image flex items-center justify-center h-60 sm:h-80">
                     <img src={activeImage || selectedProduct.image} alt="" className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
                   
@@ -910,7 +910,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 bg-[#121216]/95 backdrop-blur-xl border-t border-amber-500/30 p-4 sm:p-5 shadow-2xl z-30">
+            <div className="gs-product-modal-cta absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
