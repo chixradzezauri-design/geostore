@@ -193,7 +193,7 @@ export default function Modals({
     orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
     products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
     preparing: 'მზადდება', onTheWay: 'გზაშია 🚚', delivered: 'ჩაბარებულია ✅',
-    deliveryInfo: 'ინფორმაცია მიწოდებაზე', deliveryNote: 'შეკვეთის სტატუსი ახლდება ადმინპანელიდან. კურიერის GPS მდებარეობა ამჟამად საიტთან დაკავშირებული არ არის, ამიტომ რუკაზე ცოცხალი მდებარეობა არ აისახება.',
+    deliveryInfo: 'ინფორმაცია მიწოდებაზე', deliveryNote: '{copy.deliveryNote}',
     trackerPrompt: 'შეიყვანეთ შეკვეთის კოდი ზედა ველში სტატუსის სანახავად.',
     trackerEmpty: 'შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.',
     trackerNotFound: 'შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.',
@@ -387,17 +387,17 @@ export default function Modals({
           const passkeyUser = currentUser || usersList.find(u => u.hasPasskey) || usersList[0];
           if (passkeyUser) {
             setCurrentUser(passkeyUser);
-            alert(`✅ Face ID / Touch ID ვერიფიკაცია წარმატებულია (${passkeyUser.name})!`);
+            alert(currentLang === 'en' ? `✅ Face ID / Touch ID verification successful (${passkeyUser.name})!` : currentLang === 'ru' ? `✅ Проверка Face ID / Touch ID прошла успешно (${passkeyUser.name})!` : `✅ Face ID / Touch ID ვერიფიკაცია წარმატებულია (${passkeyUser.name})!`);
           } else {
-            alert('✅ Face ID ვერიფიკაცია წარმატებულია, გთხოვთ გაიაროთ რეგისტრაცია.');
+            alert(currentLang === 'en' ? '✅ Face ID verification successful. Please register.' : currentLang === 'ru' ? '✅ Проверка Face ID прошла успешно. Пожалуйста, зарегистрируйтесь.' : '✅ Face ID ვერიფიკაცია წარმატებულია, გთხოვთ გაიაროთ რეგისტრაცია.');
           }
           setIsAuthOpen(false);
         }
       } else {
-        alert('ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
+        alert(currentLang === 'en' ? 'Biometric sensor is unavailable on this device.' : currentLang === 'ru' ? 'Биометрический датчик недоступен на этом устройстве.' : 'ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
       }
     } catch {
-      alert('Face ID ავტორიზაცია გაუქმდა ან ვერ მოხერხდა.');
+      alert(currentLang === 'en' ? 'Face ID sign-in was cancelled or failed.' : currentLang === 'ru' ? 'Вход по Face ID отменён или не выполнен.' : 'Face ID ავტორიზაცია გაუქმდა ან ვერ მოხერხდა.');
     }
   };
 
@@ -434,7 +434,7 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="text" required autoComplete="name" placeholder="გიორგი გიორგაძე" value={checkoutForm.name}
+                    <input type="text" required autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
                       onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
