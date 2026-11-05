@@ -41,7 +41,7 @@ export default function AiAssistantModal({
     ka: {
       title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
       clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
-      welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.',
+      welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.', greeting: 'გამარჯობა! 🌟 მე ვარ GEOSTORE-ის შოპინგ-ასისტენტი. დაგეხმარები კატალოგში პროდუქტის მოძებნაში, ვარიანტების შედარებასა და სტილის შერჩევაში.', selectedGreeting: (name, price) => `გამარჯობა! 👋 ახლა ათვალიერებ პროდუქტს „${name}“ (${price}). გინდა დეტალების, ზომების ან შესაფერისი ნივთების შერჩევაში დაგეხმარო?`,
       recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
       addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
       placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
@@ -53,6 +53,8 @@ export default function AiAssistantModal({
       title: 'AI Stylist', context: 'Smart catalog assistant', ready: 'Ready',
       clear: 'Clear chat', close: 'Close AI assistant',
       welcome: 'Tell me what you are looking for — I can help you choose a product or style.',
+      greeting: 'Hello! I’m your GEOSTORE shopping assistant. I can help you explore products, compare options and find a style.',
+      selectedGreeting: (name, price) => `Hello! I see you’re viewing “${name}” (${price}). Would you like help checking its details, available sizes or matching items?`,
       recommendations: 'Recommended products', inStock: 'In stock', outOfStock: 'Out of stock',
       addToCart: 'Add to cart', typing: 'Finding the best options...',
       placeholder: 'What are you looking for? Add a product, size or budget...',
@@ -64,6 +66,8 @@ export default function AiAssistantModal({
       title: 'AI-стилист', context: 'Умный помощник каталога', ready: 'Готов',
       clear: 'Очистить чат', close: 'Закрыть AI-помощника',
       welcome: 'Напишите, что вы ищете — я помогу выбрать товар или стиль.',
+      greeting: 'Здравствуйте! Я ваш помощник по покупкам GEOSTORE. Помогу найти товары, сравнить варианты и подобрать стиль.',
+      selectedGreeting: (name, price) => `Здравствуйте! Вы просматриваете «${name}» (${price}). Помочь проверить характеристики, размеры или подобрать сочетающиеся товары?`,
       recommendations: 'Рекомендуемые товары', inStock: 'В наличии', outOfStock: 'Нет в наличии',
       addToCart: 'В корзину', typing: 'Подбираю лучшие варианты...',
       placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
@@ -74,7 +78,7 @@ export default function AiAssistantModal({
   })[currentLang] || ({
     title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
     clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
-    welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.',
+    welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.', greeting: 'გამარჯობა! 🌟 მე ვარ GEOSTORE-ის შოპინგ-ასისტენტი. დაგეხმარები კატალოგში პროდუქტის მოძებნაში, ვარიანტების შედარებასა და სტილის შერჩევაში.', selectedGreeting: (name, price) => `გამარჯობა! 👋 ახლა ათვალიერებ პროდუქტს „${name}“ (${price}). გინდა დეტალების, ზომების ან შესაფერისი ნივთების შერჩევაში დაგეხმარო?`,
     recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
     addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
     placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
@@ -96,14 +100,14 @@ export default function AiAssistantModal({
       return {
         id: 'm1',
         sender: 'ai',
-        text: `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ? გსურთ შევუძებნოთ შესაფერისი წყვილი ან შევამოწმოთ ზომები?`,
+        text: uiText.selectedGreeting ? uiText.selectedGreeting(selectedProduct.name, formatPrice(selectedProduct.priceGEL)) : `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ?`,
         recommendedProducts: [selectedProduct]
       };
     }
     return {
       id: 'm1',
       sender: 'ai',
-      text: `გამარჯობა! 🌟 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის გაფართოებული AI სტილისტი და კონსიერჟი.\n\nმაქვს სრული წვდომა კატეგორიების სრულ იერარქიაზე, თქვენს ციფრული გარდერობის ${wardrobeCount} ნივთზე, აქტიურ კუპონებსა და შეკვეთებზე. როგორ მოვძებნო სასურველი პროდუქტი ან შევქმნათ ლუქი დღეს?`
+      text: uiText.greeting || `გამარჯობა! 🌟 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის შოპინგ-ასისტენტი. თქვენს ციფრულ გარდერობში შენახულია ${wardrobeCount} ნივთი. როგორ დაგეხმაროთ პროდუქტის მოძებნაში ან სტილის შერჩევაში?`
     };
   };
 
