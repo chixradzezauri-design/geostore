@@ -612,9 +612,9 @@ export default function StoreView({
 
                 <button 
                   onClick={() => handleOpenProduct(prod)} 
-                  className="gs-product-action w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
+                  className="gs-product-action gs-product-card-action w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა & კალათა' : 'კალათაში დამატება'}
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? 'ზომის არჩევა' : 'ნახვა და დამატება'}
                 </button>
               </article>
             );
@@ -719,7 +719,7 @@ export default function StoreView({
                   )}
 
                   {isClothingOrFootwear(selectedProduct) && (
-                    <div className="space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <div className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="text-slate-300 font-bold">აირჩიეთ ზომა (მხოლოდ მარაგშია): <b className="text-amber-400">{selectedSize}</b></span>
                         <div className="flex items-center gap-2">
@@ -746,7 +746,7 @@ export default function StoreView({
                               key={size}
                               type="button"
                               onClick={() => setSelectedSize(size)}
-                              className={`px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                              className={`gs-size-option px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
                             >
                               {size} 🟢
                             </button>
@@ -928,7 +928,7 @@ export default function StoreView({
                   }); 
                   setSelectedProduct(null); 
                 }} 
-                className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+                className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
               >
                 <ShoppingBag className="w-5 h-5" /> კალათაში დამატება {isClothingOrFootwear(selectedProduct) ? `(ზომა: ${selectedSize})` : ''} — {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
               </button>
