@@ -39,14 +39,15 @@ export default function AiAssistantModal({
 }) {
   const uiText = ({
     ka: {
-      title: 'AI სტილისტი', context: uiText.context, ready: 'მზადაა',
+      title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
       clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
-      welcome: '{uiText.welcome}',
+      welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.',
       recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
       addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
       placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
       inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
-      disclaimer: '{uiText.disclaimer}'
+      disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
+      quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო'
     },
     en: {
       title: 'AI Stylist', context: 'Smart catalog assistant', ready: 'Ready',
@@ -56,17 +57,19 @@ export default function AiAssistantModal({
       addToCart: 'Add to cart', typing: 'Finding the best options...',
       placeholder: 'What are you looking for? Add a product, size or budget...',
       inputLabel: 'Message for AI assistant', send: 'Send message',
-      disclaimer: 'AI recommendations are for informational purposes · GEOSTORE'
+      disclaimer: 'AI recommendations are for informational purposes · GEOSTORE',
+      quickPrompts: 'Quick prompts', productImage: 'Product image'
     },
     ru: {
       title: 'AI-стилист', context: 'Умный помощник каталога', ready: 'Готов',
       clear: 'Очистить чат', close: 'Закрыть AI-помощника',
       welcome: 'Напишите, что вы ищете — я помогу выбрать товар или стиль.',
-      recommendations: 'Рекомендованные товары', inStock: 'В наличии', outOfStock: 'Нет в наличии',
+      recommendations: 'Рекомендуемые товары', inStock: 'В наличии', outOfStock: 'Нет в наличии',
       addToCart: 'В корзину', typing: 'Подбираю лучшие варианты...',
       placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
       inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
-      disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE'
+      disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE',
+      quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара'
     }
   })[currentLang] || ({
     title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
@@ -76,7 +79,8 @@ export default function AiAssistantModal({
     addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
     placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
     inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
-    disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE'
+    disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
+    quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო'
   });
 
   const getInitialGreeting = () => {
@@ -430,7 +434,7 @@ export default function AiAssistantModal({
         <div className="gs-ai-conversation">
           <div className="gs-ai-welcome-note">
             <Sparkles aria-hidden="true" />
-            <span>მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.</span>
+            <span>{uiText.welcome}</span>
           </div>
 
           <div className="gs-ai-messages" role="log" aria-live="polite" aria-relevant="additions text">
@@ -455,7 +459,7 @@ export default function AiAssistantModal({
                         <article key={prod.id} className="gs-ai-product-card">
                           <img
                             src={prod.image}
-                            alt={prod.name || 'პროდუქტის ფოტო'}
+                            alt={prod.name || uiText.productImage}
                             className="gs-ai-product-image"
                           />
                           <div className="gs-ai-product-info">
@@ -511,7 +515,7 @@ export default function AiAssistantModal({
         </div>
 
         <footer className="gs-ai-composer-area">
-          <div className="gs-ai-suggestions" aria-label="სწრაფი კითხვები">
+          <div className="gs-ai-suggestions" aria-label={uiText.quickPrompts}>
             {['👋 გამარჯობა', '🧥 ტანსაცმელი', '👟 ფეხსაცმელები', '📱 სმარტფონები', '💻 ლეპტოპები', '🔥 ფასდაკლებები', '🚚 მიწოდება'].map((chip, index) => (
               <button
                 type="button"
@@ -544,7 +548,7 @@ export default function AiAssistantModal({
               <Send aria-hidden="true" />
             </button>
           </form>
-          <p className="gs-ai-disclaimer">AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE</p>
+          <p className="gs-ai-disclaimer">{uiText.disclaimer}</p>
         </footer>
       </section>
     </div>
