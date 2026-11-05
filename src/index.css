@@ -438,3 +438,65 @@ html{scroll-behavior:smooth}
  .geostore-fashion-store .gs-category-grid{gap:7px!important}
  .geostore-fashion-store .gs-category-card{height:106px!important;padding:9px!important}
 }
+
+
+/* GEOSTORE product actions: compact sizing and premium cart CTA */
+.geostore-fashion-store .gs-product-card-action{
+  min-height:38px!important;padding:8px 12px!important;
+  font-size:10px!important;font-weight:650!important;letter-spacing:.025em!important;
+  line-height:1.2!important;gap:7px!important;
+}
+.geostore-fashion-store .gs-product-card-action svg{width:14px!important;height:14px!important;flex:none}
+.geostore-fashion-store .gs-size-selector{
+  padding:14px!important;border:1px solid #e6ddd3!important;
+  border-radius:5px!important;background:#f7f4f0!important;
+  box-shadow:0 5px 16px rgba(43,32,23,.045)!important;
+}
+.geostore-fashion-store .gs-size-selector>div:first-child>span{
+  color:#51463c!important;font-size:12px!important;font-weight:650!important;
+}
+.geostore-fashion-store .gs-size-selector>div:first-child>div{gap:7px!important;flex-wrap:wrap!important}
+.geostore-fashion-store .gs-size-selector>div:first-child button{
+  min-height:31px!important;padding:6px 9px!important;border-radius:3px!important;
+  font-size:10px!important;line-height:1.2!important;
+}
+.geostore-fashion-store .gs-size-selector>div:first-child button svg{width:13px!important;height:13px!important}
+.geostore-fashion-store .gs-size-selector>div:last-child{
+  display:flex!important;flex-wrap:wrap!important;gap:7px!important;
+}
+.geostore-fashion-store .gs-size-selector .gs-size-option{
+  min-width:42px!important;min-height:38px!important;padding:8px 11px!important;
+  border-radius:3px!important;background:#fff!important;color:#51463c!important;
+  border:1px solid #ded4c9!important;font-size:11px!important;font-weight:650!important;
+  box-shadow:none!important;transform:none!important;
+}
+.geostore-fashion-store .gs-size-selector .gs-size-option:hover{
+  border-color:#8b755f!important;background:#f1ece6!important;
+}
+.geostore-fashion-store .gs-size-selector .gs-size-option.bg-amber-400{
+  background:#302a24!important;color:#fff!important;border-color:#302a24!important;
+}
+.geostore-fashion-store .gs-product-modal-cta{
+  padding:10px 14px!important;
+}
+.geostore-fashion-store .gs-modal-add-to-cart{
+  min-height:46px!important;padding:11px 16px!important;
+  border-radius:4px!important;background:#29241f!important;color:#fff!important;
+  border:1px solid #29241f!important;box-shadow:0 5px 14px rgba(41,36,31,.13)!important;
+  font-size:12px!important;font-weight:650!important;letter-spacing:.015em!important;
+  line-height:1.3!important;
+}
+.geostore-fashion-store .gs-modal-add-to-cart svg{width:17px!important;height:17px!important;flex:none}
+.geostore-fashion-store .gs-modal-add-to-cart:hover{background:#665747!important;border-color:#665747!important}
+@media(max-width:700px){
+ .geostore-fashion-store .gs-product-card-action{min-height:35px!important;padding:7px 5px!important;font-size:9px!important;letter-spacing:0!important}
+ .geostore-fashion-store .gs-size-selector{padding:11px!important;gap:10px!important}
+ .geostore-fashion-store .gs-size-selector>div:first-child{align-items:flex-start!important}
+ .geostore-fashion-store .gs-size-selector>div:first-child>span{font-size:11px!important;line-height:1.45!important}
+ .geostore-fashion-store .gs-size-selector>div:first-child>div{gap:6px!important}
+ .geostore-fashion-store .gs-size-selector>div:first-child button{font-size:9px!important;padding:6px 7px!important;min-height:29px!important}
+ .geostore-fashion-store .gs-size-selector .gs-size-option{min-width:39px!important;min-height:35px!important;padding:7px 9px!important;font-size:10px!important}
+ .geostore-fashion-store .gs-product-modal-cta{padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important}
+ .geostore-fashion-store .gs-modal-add-to-cart{min-height:43px!important;padding:9px 10px!important;font-size:11px!important;gap:7px!important}
+ .geostore-fashion-store .gs-modal-add-to-cart svg{width:15px!important;height:15px!important}
+}
