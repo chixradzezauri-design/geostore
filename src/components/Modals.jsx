@@ -636,7 +636,7 @@ export default function Modals({
                     <Truck className="w-4 h-4" /> {copy.deliveryInfo}
                   </h4>
                   <p className="text-xs leading-6 text-slate-300">
-                    შეკვეთის სტატუსი ახლდება ადმინპანელიდან. კურიერის GPS მდებარეობა ამჟამად საიტთან დაკავშირებული არ არის, ამიტომ რუკაზე ცოცხალი მდებარეობა არ აისახება.
+{currentLang === 'en' ? 'Order status is updated by the admin team. Live courier GPS is not connected to the store yet, so a real-time map location is not available.' : currentLang === 'ru' ? 'Статус заказа обновляется администраторами. GPS-отслеживание курьера пока не подключено, поэтому его местоположение в реальном времени на карте недоступно.' : 'შეკვეთის სტატუსი ახლდება ადმინპანელიდან. კურიერის GPS მდებარეობა ამჟამად საიტთან დაკავშირებული არ არის, ამიტომ რუკაზე ცოცხალი მდებარეობა არ აისახება.'}
                   </p>
                 </div>
               </div>
