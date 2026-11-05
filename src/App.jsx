@@ -1402,14 +1402,17 @@ export default function App() {
         )}
 
         {activeTab === 'wardrobe' && (
-          <AIDigitalWardrobe
-            products={products}
-            addToCart={addToCart}
-            formatPrice={formatPrice}
-          />
+          <div className="geostore-wardrobe-premium">
+            <AIDigitalWardrobe
+              products={products}
+              addToCart={addToCart}
+              formatPrice={formatPrice}
+            />
+          </div>
         )}
 
         {activeTab === 'admin' && (
+          <div className="geostore-admin-premium">
           <AdminDashboardPro
             adminLoggedIn={adminLoggedIn}
             setAdminLoggedIn={setAdminLoggedIn}
@@ -1445,6 +1448,7 @@ export default function App() {
             deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
           />
+          </div>
         )}
 
         {activeTab === 'wishlist' && (
