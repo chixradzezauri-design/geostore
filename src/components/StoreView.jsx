@@ -930,7 +930,9 @@ export default function StoreView({
                 }} 
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
               >
-                <ShoppingBag className="w-5 h-5" /> კალათაში დამატება {isClothingOrFootwear(selectedProduct) ? `(ზომა: ${selectedSize})` : ''} — {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
+                <ShoppingBag className="w-4 h-4 shrink-0" />
+                <span className="gs-modal-add-label">კალათაში დამატება{isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}</span>
+                <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>
 
