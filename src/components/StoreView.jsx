@@ -912,10 +912,16 @@ export default function StoreView({
                 disabled={Number(selectedProduct.stock ?? 0) <= 0}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
-                  let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''})`;
-                  if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
-                  if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
-                  if (hasVipWarranty) customName += ' + VIP გარანტია';
+                  const sizeLabel = currentLang === 'en' ? 'Size' : currentLang === 'ru' ? 'Размер' : 'ზომა';
+                  const selectedOptions = [];
+                  if (isCf && selectedSize) selectedOptions.push(\`${sizeLabel}: \${selectedSize}\`);
+                  if (selectedColor) selectedOptions.push(\`${storeText.color.replace(/[:：]\s*$/, '')}: \${selectedColor}\`);
+                  let customName = selectedOptions.length
+                    ? \`${selectedProduct.name} (\${selectedOptions.join(', ')})\`
+                    : selectedProduct.name;
+                  if (isGiftWrapped) customName += \` + \${storeText.giftWrap}\`;
+                  if (giftMessage.trim()) customName += \` [\${storeText.giftMessage.replace(/[:：]\\s*$/, '')}: "\${giftMessage.trim()}"]\`;
+                  if (hasVipWarranty) customName += \` + \${storeText.vipWarranty}\`;
 
                   const added = addToCart({ 
                     ...selectedProduct, 
