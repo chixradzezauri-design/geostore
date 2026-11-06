@@ -1392,11 +1392,11 @@ export default function AdminDashboardPro({
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
-    const code = couponForm.code.trim().toUpperCase();
+    const code = couponForm.code.trim().toUpperCase().replace(/\s+/g, '');
     const discountPercent = Number(couponForm.discountPercent);
     const minOrderGEL = Number(couponForm.minOrderGEL) || 0;
 
-    if (!code || !Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100 || !Number.isFinite(minOrderGEL) || minOrderGEL < 0) {
+    if (!/^[A-Z0-9_-]{3,64}$/.test(code) || !Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100 || !Number.isFinite(minOrderGEL) || minOrderGEL < 0) {
       alert('შეამოწმეთ კუპონის კოდი, ფასდაკლება (1-100%) და მინიმალური შეკვეთა.');
       return;
     }
@@ -1427,7 +1427,7 @@ export default function AdminDashboardPro({
       }
 
       if (typeof setCoupons === 'function') {
-        setCoupons(prev => [newC, ...(prev || []).filter(c => c.code !== newC.code)]);
+        setCoupons(prev => [newC, ...(prev || []).filter(c => String(c.code || '').trim().toUpperCase() !== newC.code)]);
       }
       setCouponForm({ code: '', discountPercent: '', minOrderGEL: '' });
       logActivity(`შეიქმნა ახალი კუპონი: ${newC.code}`);
