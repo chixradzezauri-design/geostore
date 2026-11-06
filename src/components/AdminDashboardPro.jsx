@@ -2566,7 +2566,7 @@ export default function AdminDashboardPro({
                 </button>
               </div>
 
-              <form id="geostore-product-form" onSubmit={handleSaveProduct} className="space-y-5 text-xs">
+              <form id="geostore-product-form" onSubmit={handleSaveProduct} className="admin-product-form space-y-5 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div>
                     <label className="text-slate-400 font-bold block mb-1">პროდუქტის დასახელება *</label>
@@ -2707,7 +2707,7 @@ export default function AdminDashboardPro({
                   {productVariants.length > 0 && (
                     <div className="space-y-2 pt-2">
                       {productVariants.map(v => (
-                        <div key={v.id} className="bg-slate-900 p-3 rounded-2xl border border-amber-500/20 flex justify-between items-center text-xs">
+                        <div key={v.id} className="admin-product-variant bg-slate-900 p-3 rounded-2xl border border-amber-500/20 flex justify-between items-center text-xs">
                           <div><b className="text-white">{v.name}</b> <span className="text-emerald-400 font-bold ml-3">{v.priceGEL} ₾</span> <span className="text-slate-400 ml-2">(მარაგი: {v.stock})</span></div>
                           <button type="button" onClick={() => handleRemoveCustomVariant(v.id)} className="text-rose-400 hover:text-rose-300 p-1"><Trash2 className="w-4 h-4" /></button>
                         </div>
@@ -2752,7 +2752,7 @@ export default function AdminDashboardPro({
 
               <div className="space-y-3.5">
                 {filteredProducts?.map(p => (
-                  <div key={p.id} className="bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
+                  <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="flex items-center gap-3.5">
                       <img src={p.image} alt="" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
@@ -2761,7 +2761,7 @@ export default function AdminDashboardPro({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+                    <div className="admin-product-controls flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">COGS:</span>
                         <input 
