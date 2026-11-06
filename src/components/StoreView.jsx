@@ -261,6 +261,13 @@ export default function StoreView({
   };
 
   const currentBasePrice = selectedCustomVariant ? selectedCustomVariant.priceGEL : (selectedProduct?.priceGEL || 0);
+  const selectedVariantStockValue = selectedCustomVariant?.stock;
+  const selectedVariantStockNumber = Number(selectedVariantStockValue);
+  const hasKnownSelectedVariantStock = selectedVariantStockValue !== null &&
+    selectedVariantStockValue !== undefined &&
+    selectedVariantStockValue !== '' &&
+    Number.isFinite(selectedVariantStockNumber);
+  const selectedVariantOutOfStock = hasKnownSelectedVariantStock && selectedVariantStockNumber <= 0;
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -667,15 +674,23 @@ export default function StoreView({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {selectedProduct.variants.map(v => {
                           const isSel = selectedCustomVariant?.id === v.id;
+                          const rawVariantStock = v.stock;
+                          const variantStockNumber = Number(rawVariantStock);
+                          const hasKnownVariantStock = rawVariantStock !== null &&
+                            rawVariantStock !== undefined &&
+                            rawVariantStock !== '' &&
+                            Number.isFinite(variantStockNumber);
+                          const variantOutOfStock = hasKnownVariantStock && variantStockNumber <= 0;
                           return (
                             <button
                               key={v.id}
                               type="button"
+                              disabled={variantOutOfStock}
                               onClick={() => setSelectedCustomVariant(v)}
-                              className={`gs-product-variant-option p-3 rounded-2xl text-left transition cursor-pointer border flex justify-between items-center ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
+                              className={`gs-product-variant-option p-3 rounded-2xl text-left transition border flex justify-between items-center ${variantOutOfStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'} ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
                             >
                               <span>{v.name}</span>
-                              <span className="font-black">{v.priceGEL} ₾</span>
+                              <span className="font-black text-right">{v.priceGEL} ₾{hasKnownVariantStock ? <small className="block text-[9px] font-semibold">{currentLang === 'en' ? `Stock: ${Math.max(0, Math.floor(variantStockNumber))}` : currentLang === 'ru' ? `Остаток: ${Math.max(0, Math.floor(variantStockNumber))}` : `მარაგი: ${Math.max(0, Math.floor(variantStockNumber))}`}</small> : null}</span>
                             </button>
                           );
                         })}
@@ -896,7 +911,7 @@ export default function StoreView({
 
             <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
-                disabled={selectedProduct.stock !== null && selectedProduct.stock !== undefined && selectedProduct.stock !== '' && Number.isFinite(Number(selectedProduct.stock)) && Number(selectedProduct.stock) <= 0}
+                disabled={(selectedProduct.stock !== null && selectedProduct.stock !== undefined && selectedProduct.stock !== '' && Number.isFinite(Number(selectedProduct.stock)) && Number(selectedProduct.stock) <= 0) || selectedVariantOutOfStock}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
                   let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
