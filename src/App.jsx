@@ -646,6 +646,131 @@ export default function App() {
   useEffect(() => {
     fetchStorePricingSettings();
   }, []);
+  const buildStorefrontSnapshot = () => ({
+    schemaVersion: 1,
+    siteSettings,
+    categories,
+    banners: bannersList || [],
+    updatedAt: new Date().toISOString()
+  });
+
+  const fetchStorefrontConfig = async (adminMode = false) => {
+    try {
+      if (adminMode) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isAuthorizedAdmin(session?.user)) return;
+      }
+      const headers = await getSupabaseHeaders({ authenticated: adminMode });
+      const fields = adminMode ? 'draft_config,published_config' : 'published_config';
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.main&select=${fields}`,
+        { headers }
+      );
+      if (!response.ok) throw new Error(await response.text());
+      const rows = await response.json();
+      const config = adminMode
+        ? (rows?.[0]?.draft_config || rows?.[0]?.published_config)
+        : rows?.[0]?.published_config;
+      if (!config || typeof config !== 'object') return;
+
+      if (config.siteSettings && typeof config.siteSettings === 'object') {
+        setSiteSettings((current) => ({ ...current, ...config.siteSettings }));
+      }
+      if (Array.isArray(config.categories)) setCategoriesList(config.categories);
+      if (Array.isArray(config.banners)) setBannersList(config.banners);
+    } catch (error) {
+      console.error('Storefront config fetch error:', error);
+    }
+  };
+
+  const saveStorefrontDraft = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!isAuthorizedAdmin(session?.user)) {
+      throw new Error('დიზაინის მონახაზის შესანახად საჭიროა ადმინისტრატორის ავტორიზაცია.');
+    }
+    const headers = await getSupabaseHeaders({ authenticated: true });
+    const existingResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.main&select=is_published`,
+      { headers }
+    );
+    if (!existingResponse.ok) throw new Error(await existingResponse.text());
+    const existingRows = await existingResponse.json();
+    const snapshot = buildStorefrontSnapshot();
+    const now = new Date().toISOString();
+    const payload = {
+      config_key: 'main',
+      draft_config: snapshot,
+      is_published: Boolean(existingRows?.[0]?.is_published),
+      draft_updated_at: now,
+      updated_by: session.user.id
+    };
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+      {
+        method: 'POST',
+        headers: {
+          ...headers,
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+    if (!response.ok) throw new Error(await response.text());
+    showToast('მაღაზიის დიზაინის მონახაზი უსაფრთხოდ შეინახა.');
+    return snapshot;
+  };
+
+  const publishStorefrontConfig = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!isAuthorizedAdmin(session?.user)) {
+      throw new Error('გამოსაქვეყნებლად საჭიროა ადმინისტრატორის ავტორიზაცია.');
+    }
+    const snapshot = await saveStorefrontDraft();
+    const headers = await getSupabaseHeaders({ authenticated: true });
+    const versionResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_versions`, {
+      method: 'POST',
+      headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        config_key: 'main',
+        snapshot,
+        version_label: `GEOSTORE publish ${new Date().toLocaleString('ka-GE')}`,
+        created_by: session.user.id
+      })
+    });
+    if (!versionResponse.ok) throw new Error(await versionResponse.text());
+
+    const now = new Date().toISOString();
+    const publishResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+      {
+        method: 'POST',
+        headers: {
+          ...headers,
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify({
+          config_key: 'main',
+          draft_config: snapshot,
+          published_config: snapshot,
+          is_published: true,
+          draft_updated_at: now,
+          published_at: now,
+          updated_by: session.user.id
+        })
+      }
+    );
+    if (!publishResponse.ok) throw new Error(await publishResponse.text());
+    showToast('მაღაზიის ცვლილებები გამოქვეყნდა.');
+    return true;
+  };
+
+  useEffect(() => {
+    fetchStorefrontConfig(false);
+  }, []);
+
+  useEffect(() => {
+    if (adminLoggedIn) fetchStorefrontConfig(true);
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     if (adminLoggedIn) {
