@@ -1,179 +1,226 @@
-// src/components/ImageSearchModal.jsx - Search by Image (Visual Search)
 import React, { useState, useRef } from 'react';
 import { X, Camera, Upload, Sparkles, ShoppingBag, AlertCircle, RefreshCw } from 'lucide-react';
+
+const loadImage = (src) => new Promise((resolve, reject) => {
+  const image = new Image();
+  if (/^https?:/i.test(src)) image.crossOrigin = 'anonymous';
+  image.decoding = 'async';
+  image.onload = () => resolve(image);
+  image.onerror = () => reject(new Error('ფოტოს ჩატვირთვა ვერ მოხერხდა.'));
+  image.src = src;
+});
+
+const createColorHistogram = async (src) => {
+  const image = await loadImage(src);
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) throw new Error('ბრაუზერის ვიზუალური ძიება მიუწვდომელია.');
+  context.drawImage(image, 0, 0, 32, 32);
+  const pixels = context.getImageData(0, 0, 32, 32).data;
+  const histogram = new Array(24).fill(0);
+  const totals = [0, 0, 0];
+
+  for (let i = 0; i < pixels.length; i += 4) {
+    const alpha = pixels[i + 3];
+    if (alpha < 48) continue;
+    const channels = [pixels[i], pixels[i + 1], pixels[i + 2]];
+    channels.forEach((value, channel) => {
+      const bin = Math.min(7, Math.floor(value / 32));
+      histogram[channel * 8 + bin] += 1;
+      totals[channel] += 1;
+    });
+  }
+
+  for (let channel = 0; channel < 3; channel += 1) {
+    const total = totals[channel] || 1;
+    for (let bin = 0; bin < 8; bin += 1) {
+      histogram[channel * 8 + bin] /= total;
+    }
+  }
+  return histogram;
+};
+
+const compareHistograms = (first, second) => {
+  // Bhattacharyya coefficient: 1 means similar colour distribution, 0 means dissimilar.
+  let score = 0;
+  for (let i = 0; i < first.length; i += 1) {
+    score += Math.sqrt(first[i] * second[i]);
+  }
+  return score / 3;
+};
 
 export default function ImageSearchModal({
   isImageSearchOpen,
   setIsImageSearchOpen,
-  products,
+  products = [],
   addToCart,
   formatPrice
 }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
+  const [searchError, setSearchError] = useState('');
   const fileInputRef = useRef(null);
 
   if (!isImageSearchOpen) return null;
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
-    // ფორმატისა და ზომის შემოწმება (მაქს 5MB)
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('გთხოვთ აირჩიოთ მხარდაჭერილი ფოტოს ფორმატი (JPEG, PNG, WebP).');
+      setSearchError('აირჩიეთ JPEG, PNG ან WebP ფორმატის ფოტო.');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('ფოტოს ზომა არ უნდა აღემატებოდეს 5MB-ს.');
+      setSearchError('ფოტოს ზომა არ უნდა აღემატებოდეს 5MB-ს.');
       return;
     }
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setSelectedImage(reader.result);
+      setSelectedImage(typeof reader.result === 'string' ? reader.result : null);
       setSearchResults(null);
+      setSearchError('');
     };
+    reader.onerror = () => setSearchError('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
     reader.readAsDataURL(file);
   };
 
-  const handleStartVisualSearch = () => {
-    if (!selectedImage) return;
+  const handleStartVisualSearch = async () => {
+    if (!selectedImage || isSearching) return;
     setIsSearching(true);
+    setSearchError('');
+    setSearchResults(null);
 
-    // რეალური ვიზუალური შედარების სიმულაცია პროდუქტების ბაზასთან
-    setTimeout(() => {
-      const shuffled = [...products].sort(() => 0.5 - Math.random());
-      setSearchResults(shuffled.slice(0, 3)); // დავაბრუნოთ ყველაზე მსგავსი 3 პროდუქტი
+    try {
+      const targetHistogram = await createColorHistogram(selectedImage);
+      const candidates = (Array.isArray(products) ? products : [])
+        .filter((product) => product?.image && Number(product.stock ?? 1) > 0)
+        .slice(0, 80);
+
+      const scored = await Promise.all(candidates.map(async (product) => {
+        try {
+          const histogram = await createColorHistogram(product.image);
+          return { product, score: compareHistograms(targetHistogram, histogram) };
+        } catch {
+          return null;
+        }
+      }));
+
+      const matches = scored
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map((item) => item.product);
+
+      setSearchResults(matches);
+      if (candidates.length === 0) {
+        setSearchError('კატალოგში ჯერ არ არის ფოტოიანი, მარაგში არსებული პროდუქტი.');
+      } else if (matches.length === 0) {
+        setSearchError('კატალოგის ფოტოები ვერ შედარდა. სცადეთ სხვა ფოტო ან ჩვეულებრივი ძიება.');
+      }
+    } catch (error) {
+      setSearchError(error?.message || 'ფოტოს დამუშავება ვერ მოხერხდა. სცადეთ სხვა ფოტო.');
+    } finally {
       setIsSearching(false);
-    }, 1200);
+    }
   };
 
   const handleReset = () => {
     setSelectedImage(null);
     setSearchResults(null);
+    setSearchError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-slate-900/95 border border-slate-800/80 rounded-[2.5rem] max-w-lg w-full flex flex-col p-6 shadow-2xl backdrop-blur-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center border-b border-slate-800/80 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl">
-              <Camera className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <h3 className="font-black text-white text-sm">ფოტოთი ძიება (Visual Search)</h3>
-              <p className="text-[10px] text-slate-400">აატვირთეთ ფოტო და იპოვეთ მსგავსი პროდუქტები</p>
+    <div className="gs-image-search-overlay fixed inset-0 z-[10020] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <section className="gs-image-search-dialog w-full max-w-lg max-h-[90dvh] overflow-y-auto relative" role="dialog" aria-modal="true" aria-labelledby="gs-image-search-title">
+        <header className="gs-image-search-header flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="gs-image-search-icon"><Camera className="w-5 h-5" /></span>
+            <div className="min-w-0">
+              <h3 id="gs-image-search-title">ფოტოთი ძიება</h3>
+              <p>შეადარე ფოტოს ფერები კატალოგის პროდუქტებს</p>
             </div>
           </div>
-          <button 
-            onClick={() => setIsImageSearchOpen(false)} 
-            className="p-2 bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white rounded-2xl transition cursor-pointer"
-          >
+          <button type="button" onClick={() => setIsImageSearchOpen(false)} className="gs-image-search-close" aria-label="დახურვა">
             <X className="w-5 h-5" />
           </button>
-        </div>
+        </header>
 
-        {/* Body Content */}
-        <div className="py-6 space-y-5">
+        <div className="gs-image-search-body">
           {!selectedImage ? (
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-700/80 hover:border-emerald-500/60 bg-slate-950/40 rounded-[2rem] p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 group"
-            >
-              <div className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition shadow-inner">
-                <Upload className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-white">დააკლიკეთ ფოტოს ასატვირთად</p>
-                <p className="text-[10px] text-slate-400">მხარდაჭერილია: JPEG, PNG, WebP (მაქს. 5MB)</p>
-              </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept="image/jpeg, image/png, image/webp" 
-                className="hidden" 
-              />
-            </div>
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="gs-image-search-upload">
+              <span className="gs-image-search-upload-icon"><Upload className="w-6 h-6" /></span>
+              <strong>ატვირთე პროდუქტის ფოტო</strong>
+              <small>JPEG, PNG ან WebP · მაქსიმუმ 5MB</small>
+            </button>
           ) : (
-            <div className="space-y-4">
-              {/* Preview */}
-              <div className="relative bg-slate-950/80 border border-slate-800 rounded-3xl p-4 flex items-center justify-center overflow-hidden">
-                <img src={selectedImage} alt="Upload preview" className="max-h-52 object-contain rounded-2xl shadow-lg" />
-                <button 
-                  onClick={handleReset}
-                  className="absolute top-3 right-3 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 p-2 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" /> შეცვლა
-                </button>
-              </div>
-
-              {!searchResults && !isSearching && (
-                <button 
-                  onClick={handleStartVisualSearch}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" /> ვიზუალური ძიების დაწყება
-                </button>
-              )}
+            <div className="gs-image-search-preview">
+              <img src={selectedImage} alt="ატვირთული ფოტოს წინასწარი ნახვა" />
+              <button type="button" onClick={handleReset} className="gs-image-search-change">
+                <RefreshCw className="w-3.5 h-3.5" /> შეცვლა
+              </button>
             </div>
           )}
 
-          {/* Loading Indicator */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/jpeg, image/png, image/webp"
+            className="hidden"
+            aria-label="აირჩიეთ ფოტო"
+          />
+
+          {searchError && (
+            <p className="gs-image-search-error" role="status"><AlertCircle className="w-4 h-4 shrink-0" />{searchError}</p>
+          )}
+
+          {selectedImage && !searchResults && !isSearching && (
+            <button type="button" onClick={handleStartVisualSearch} className="gs-image-search-submit">
+              <Sparkles className="w-4 h-4" /> მსგავსი პროდუქტების მოძებნა
+            </button>
+          )}
+
           {isSearching && (
-            <div className="text-center py-8 space-y-3">
-              <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-xs text-slate-400 font-bold">მიმდინარეობს პროდუქტების ვიზუალური შედარება...</p>
+            <div className="gs-image-search-loading" role="status">
+              <span className="gs-image-search-spinner" />
+              <p>ფოტოების შედარება მიმდინარეობს…</p>
             </div>
           )}
 
-          {/* Search Results */}
           {searchResults && (
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-400" /> ნაპოვნი მსგავსი პროდუქტები:
-              </h4>
-
+            <div className="gs-image-search-results">
+              <h4><Sparkles className="w-4 h-4" /> ვიზუალურად მსგავსი პროდუქტები</h4>
+              <p className="gs-image-search-note">შედარება სრულდება მოწყობილობაზე ფოტოების ფერთა განაწილებით; ეს არ არის AI ობიექტების ამოცნობა.</p>
               {searchResults.length === 0 ? (
-                <div className="text-center py-6 bg-slate-950/60 rounded-2xl border border-slate-800">
-                  <AlertCircle className="w-6 h-6 text-amber-400 mx-auto mb-2" />
-                  <p className="text-xs text-slate-300 font-bold">ზუსტი ვიზუალური დამთხვევა ვერ მოიძებნა.</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">სცადეთ სხვა ფოტოს ატვირთვა ან გამოიყენეთ ჩვეულებრივი ძიება.</p>
-                </div>
+                <div className="gs-image-search-empty"><AlertCircle className="w-5 h-5" /><p>მსგავსი პროდუქტი ვერ მოიძებნა.</p></div>
               ) : (
-                <div className="space-y-2.5">
-                  {searchResults.map(p => (
-                    <div key={p.id} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-inner">
-                      <img src={p.image} alt="" className="w-14 h-14 object-contain bg-slate-900 rounded-xl p-1 border border-slate-800 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <h5 className="font-bold text-white text-xs truncate">{p.name}</h5>
-                        <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(p.priceGEL)}</p>
-                        <span className="text-[9px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full">მარაგშია: {p.stock || 1} ც.</span>
+                <div className="gs-image-search-list">
+                  {searchResults.map((product) => (
+                    <article key={product.id} className="gs-image-search-result">
+                      <img src={product.image} alt={product.name || ''} loading="lazy" decoding="async" />
+                      <div className="gs-image-search-result-info">
+                        <strong>{product.name}</strong>
+                        <span>{formatPrice(product.priceGEL)}</span>
+                        <small>მარაგშია: {product.stock ?? 0} ც.</small>
                       </div>
-                      <button 
-                        onClick={() => {
-                          addToCart(p);
-                          setIsImageSearchOpen(false);
-                        }}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3.5 py-2.5 rounded-xl text-xs font-black flex items-center gap-1 shrink-0 transition cursor-pointer shadow-md shadow-emerald-500/20"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" /> კალათაში
+                      <button type="button" onClick={() => { addToCart(product); setIsImageSearchOpen(false); }}>
+                        <ShoppingBag className="w-4 h-4" /> დამატება
                       </button>
-                    </div>
+                    </article>
                   ))}
                 </div>
               )}
             </div>
           )}
         </div>
-
-      </div>
+      </section>
     </div>
   );
 }
