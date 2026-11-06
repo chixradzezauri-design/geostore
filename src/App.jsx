@@ -61,7 +61,7 @@ const STOREFRONT_IMAGE_TYPES = {
 };
 const STOREFRONT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
-const uploadStorefrontImage = async (imageData, folder, index, userId) => {
+const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedAssets) => {
   const value = String(imageData || '').trim();
   if (!value.startsWith('data:')) return value;
 
@@ -93,6 +93,8 @@ const uploadStorefrontImage = async (imageData, folder, index, userId) => {
 
   const encodedPath = path.split('/').map(encodeURIComponent).join('/');
   const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${STOREFRONT_MEDIA_BUCKET}/${encodedPath}`;
+  uploadedAssets.push({ path, publicUrl });
+
   const metadataResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_media`, {
     method: 'POST',
     headers: await getSupabaseHeaders({ authenticated: true }),
@@ -110,6 +112,28 @@ const uploadStorefrontImage = async (imageData, folder, index, userId) => {
   });
   if (!metadataResponse.ok) throw new Error('ფოტო აიტვირთა, მაგრამ მედიის ჩანაწერი ვერ შეინახა: ' + (await metadataResponse.text()));
   return publicUrl;
+};
+
+const cleanupStorefrontUploads = async (uploadedAssets) => {
+  const assets = Array.isArray(uploadedAssets) ? uploadedAssets : [];
+  await Promise.allSettled(assets.map(async ({ path }) => {
+    const encodedPath = String(path || '').split('/').map(encodeURIComponent).join('/');
+    if (!encodedPath) return;
+    const storageResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/${STOREFRONT_MEDIA_BUCKET}/${encodedPath}`, {
+      method: 'DELETE',
+      headers: await getSupabaseHeaders({ authenticated: true })
+    });
+    if (!storageResponse.ok) {
+      console.error('Storefront upload cleanup failed:', path, await storageResponse.text());
+    }
+    const metadataResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/storefront_media?storage_path=eq.${encodeURIComponent(path)}`,
+      { method: 'DELETE', headers: await getSupabaseHeaders({ authenticated: true }) }
+    );
+    if (!metadataResponse.ok) {
+      console.error('Storefront media metadata cleanup failed:', path, await metadataResponse.text());
+    }
+  }));
 };
 
 const DEFAULT_CATEGORIES = [
@@ -535,23 +559,26 @@ export default function App() {
   const handlePublishStorefront = async () => {
     if (!adminLoggedIn || storefrontPublishBusy) return;
     setStorefrontPublishBusy(true);
+    const uploadedAssets = [];
+    let storefrontPublished = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
 
-      const publishedCategories = await Promise.all(
-        (Array.isArray(categories) ? categories : []).map(async (category, index) => {
-          const image = category.image || category.img || '';
-          const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id);
-          return { ...category, image: uploaded, img: uploaded };
-        })
-      );
-      const publishedBanners = await Promise.all(
-        (Array.isArray(bannersList) ? bannersList : []).map(async (banner, index) => ({
-          ...banner,
-          image: await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id)
-        }))
-      );
+      const publishedCategories = [];
+      for (let index = 0; index < (Array.isArray(categories) ? categories.length : 0); index += 1) {
+        const category = categories[index];
+        const image = category.image || category.img || '';
+        const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
+        publishedCategories.push({ ...category, image: uploaded, img: uploaded });
+      }
+
+      const publishedBanners = [];
+      for (let index = 0; index < (Array.isArray(bannersList) ? bannersList.length : 0); index += 1) {
+        const banner = bannersList[index];
+        const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
+        publishedBanners.push({ ...banner, image });
+      }
 
       const snapshot = {
         categories: publishedCategories,
@@ -579,6 +606,7 @@ export default function App() {
         }
       );
       if (!configResponse.ok) throw new Error('საიტის კონფიგურაციის შენახვა ვერ მოხერხდა: ' + (await configResponse.text()));
+      storefrontPublished = true;
 
       const versionResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_versions`, {
         method: 'POST',
@@ -600,6 +628,9 @@ export default function App() {
         ? 'საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიაც შეინახა.'
         : 'საიტის ცვლილებები გამოქვეყნდა, თუმცა ვერსიის ისტორიის ჩანაწერი ვერ შეინახა.');
     } catch (error) {
+      if (!storefrontPublished && uploadedAssets.length) {
+        await cleanupStorefrontUploads(uploadedAssets);
+      }
       alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
     } finally {
       setStorefrontPublishBusy(false);
