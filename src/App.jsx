@@ -586,12 +586,8 @@ export default function App() {
           return rightTime - leftTime || String(left.id ?? '').localeCompare(String(right.id ?? ''));
         });
 
+        // The products state persistence effect below owns the local cache write.
         setProducts(formatted);
-        try {
-          localStorage.setItem('geostore_products', JSON.stringify(formatted));
-        } catch {
-          // localStorage შეიძლება მიუწვდომელი იყოს.
-        }
       }
     } catch (error) {
       console.error('Products fetch error:', error);
@@ -661,17 +657,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (adminLoggedIn) {
-      fetchOrders();
-    }
+    // Product data (including potentially large product images) is fetched once
+    // per session/auth-state change, not every 15 seconds for every visitor.
     fetchProductsFromDatabase();
 
-    const interval = setInterval(() => {
-      if (adminLoggedIn) {
-        fetchOrders();
-      }
-      fetchProductsFromDatabase();
-    }, 15000);
+    if (!adminLoggedIn) return undefined;
+
+    // Keep the existing admin order refresh cadence without repeatedly
+    // downloading the full public catalogue.
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 15000);
 
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
