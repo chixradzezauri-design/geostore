@@ -81,7 +81,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       subCategory: newItem.subCategory,
       color: newItem.color,
       season: newItem.season,
-      image: newItem.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600'
+      image: newItem.image || null
     };
 
     setWardrobe(prev => [createdItem, ...prev]);
@@ -243,7 +243,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                 <div className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
                   <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">შენი გარდერობიდან</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
-                    <img src={generatedOutfit.top.image} alt="" className="max-h-full max-w-full object-contain rounded-lg" />
+                    {generatedOutfit.top.image ? <img src={generatedOutfit.top.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                   </div>
                   <h4 className="font-bold text-white text-xs">{generatedOutfit.top.name}</h4>
                 </div>
@@ -254,7 +254,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                 <div className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
                   <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">შენი გარდერობიდან</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
-                    <img src={generatedOutfit.shoes.image} alt="" className="max-h-full max-w-full object-contain rounded-lg" />
+                    {generatedOutfit.shoes.image ? <img src={generatedOutfit.shoes.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                   </div>
                   <h4 className="font-bold text-white text-xs">{generatedOutfit.shoes.name}</h4>
                 </div>
@@ -265,7 +265,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                 <div className="bg-gradient-to-b from-emerald-950/30 to-slate-900 border border-emerald-500/40 rounded-2xl p-4 text-center space-y-3 relative">
                   <span className="text-[10px] font-black text-slate-950 bg-emerald-400 px-3 py-1 rounded-full uppercase">💡 AI რეკომენდაცია მაღაზიიდან</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
-                    <img src={generatedOutfit.storeAddon.image} alt="" className="max-h-full max-w-full object-contain rounded-lg" />
+                    {generatedOutfit.storeAddon.image ? <img src={generatedOutfit.storeAddon.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                   </div>
                   <h4 className="font-bold text-white text-xs line-clamp-1">{generatedOutfit.storeAddon.name}</h4>
                   <p className="text-emerald-400 font-black text-xs">{formatPrice ? formatPrice(generatedOutfit.storeAddon.priceGEL) : `${generatedOutfit.storeAddon.priceGEL} ₾`}</p>
@@ -309,7 +309,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
             {wardrobe.map(item => (
               <div key={item.id} className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-3.5 space-y-2.5 relative group hover:border-emerald-400 transition shadow-lg">
                 <div className="h-36 sm:h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center overflow-hidden">
-                  <img src={item.image} alt="" className="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300" />
+                  {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                 </div>
                 <div>
                   <span className="text-[9px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">{item.category}</span>
