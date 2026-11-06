@@ -851,20 +851,6 @@ export default function App() {
     }
   };
 
-  const proAnalytics = useMemo(() => {
-    const totalRevenueGEL = orders.reduce(
-      (acc, o) => acc + (Number(o.totalGEL) || 0),
-      0
-    );
-
-    return {
-      totalRevenueGEL,
-      netProfitGEL: totalRevenueGEL * 0.25,
-      totalOrdersCount: orders.length,
-      lowStockProducts: products.filter((p) => p.stock <= 3)
-    };
-  }, [orders, products]);
-
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
     const rawAvailableStock = Number(product?.stock ?? 0);
@@ -1473,7 +1459,6 @@ export default function App() {
             handleAdminLogin={handleAdminLogin}
             handleLogout={handleLogout}
             adminError={adminError}
-            proAnalytics={proAnalytics}
             orders={orders || []}
             setOrders={setOrders}
             usersList={usersList || []}
