@@ -3933,3 +3933,28 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-order-status-filters{width:100%!important;gap:4px!important;padding:5px!important}
  .geostore-shell .admin-dashboard-pro .admin-order-status-filters>button{font-size:10px!important;padding:8px 9px!important}
 }
+
+
+/* Product editor and inventory cards: stable sizing and touch-friendly controls. */
+.geostore-shell .admin-dashboard-pro .admin-product-form{min-width:0!important;width:100%!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form>div,
+.geostore-shell .admin-dashboard-pro .admin-product-row,
+.geostore-shell .admin-dashboard-pro .admin-product-variant{min-width:0!important;max-width:100%!important}
+.geostore-shell .admin-dashboard-pro .admin-product-row{align-items:center}
+.geostore-shell .admin-dashboard-pro .admin-product-controls{min-width:0!important}
+.geostore-shell .admin-dashboard-pro .admin-product-controls>div{min-width:0!important}
+.geostore-shell .admin-dashboard-pro .admin-product-variant>div{min-width:0!important;overflow-wrap:anywhere}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-product-form{gap:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-form>div{padding:13px!important;border-radius:15px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-form input:not([type="file"]),
+ .geostore-shell .admin-dashboard-pro .admin-product-form select{min-height:42px!important;font-size:13px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-form input[type="file"]{font-size:11px!important;max-width:100%!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-variant{align-items:flex-start!important;gap:10px!important;flex-wrap:wrap!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-variant>div{flex:1 1 100%!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-row{align-items:stretch!important;padding:12px!important;gap:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-controls{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;justify-content:stretch!important;gap:8px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-controls>div{min-width:0!important;justify-content:space-between!important;gap:5px!important;padding:7px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-controls input{width:100%!important;max-width:76px!important;min-width:0!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-controls>button{min-height:40px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+}
