@@ -1190,6 +1190,8 @@ export default function App() {
         name: item.name,
         price: Number(item.priceGEL ?? item.price) || 0,
         quantity: Math.max(1, Number(quantity) || 1),
+        selected_size: item.selectedSize || null,
+        selected_color: item.selectedColor || null,
         purchase_cost: purchaseCost,
         category: catalogProduct?.category || item.category || '',
         vendor: catalogProduct?.vendor || item.vendor || ''
@@ -1568,13 +1570,22 @@ export default function App() {
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={`${item.id}-${item.name}`}
+                      key={`${item.id}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}`}
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
                         <h4 className="gs-cart-item-title font-bold text-xs text-white">
                           {item.name}
                         </h4>
+
+                        {(item.selectedSize || item.selectedColor) && (
+                          <p className="gs-cart-item-variant text-slate-400 text-[11px]">
+                            {[
+                              item.selectedSize ? `ზომა: ${item.selectedSize}` : null,
+                              item.selectedColor ? `ფერი: ${item.selectedColor}` : null
+                            ].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
 
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} x {item.quantity}
@@ -1584,7 +1595,12 @@ export default function App() {
                       <button
                         onClick={() =>
                           setCart((prev) =>
-                            prev.filter((c) => !(c.id === item.id && c.name === item.name))
+                            prev.filter((c) => !(
+                              c.id === item.id &&
+                              c.name === item.name &&
+                              (c.selectedSize || null) === (item.selectedSize || null) &&
+                              (c.selectedColor || null) === (item.selectedColor || null)
+                            ))
                           )
                         }
                         className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
