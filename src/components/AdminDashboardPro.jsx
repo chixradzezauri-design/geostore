@@ -2030,21 +2030,21 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'ai_analyst' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-ai-analyst bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Sparkles className="w-5 h-5 text-emerald-400" /> AI ბიზნეს ასისტენტი & ანალიტიკოსი
             </h3>
-            <div className="bg-slate-950/80 border border-emerald-500/20 p-5 rounded-3xl space-y-4 max-h-[400px] overflow-y-auto text-xs shadow-inner">
+            <div className="admin-ai-chat bg-slate-950/80 border border-emerald-500/20 p-5 rounded-3xl space-y-4 max-h-[400px] overflow-y-auto text-xs shadow-inner">
               {aiChatLogs.map((log, idx) => (
-                <div key={idx} className={`flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-4 rounded-2xl ${log.role === 'user' ? 'bg-emerald-500 text-slate-950 font-bold shadow' : 'bg-slate-900 text-slate-200 border border-emerald-500/20'}`}>
+                <div key={idx} className={`admin-ai-message flex ${log.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`admin-ai-bubble max-w-[85%] p-4 rounded-2xl ${log.role === 'user' ? 'bg-emerald-500 text-slate-950 font-bold shadow' : 'bg-slate-900 text-slate-200 border border-emerald-500/20'}`}>
                     {log.text}
                   </div>
                 </div>
               ))}
               {isAiThinking && <div className="text-emerald-400 italic text-[11px]">AI აანალიზებს ბიზნეს მონაცემებს...</div>}
             </div>
-            <form onSubmit={handleAiAsk} className="flex gap-3">
+            <form onSubmit={handleAiAsk} className="admin-ai-composer flex gap-3">
               <input type="text" placeholder="დასვით კითხვა (მაგ: რა არის ჩვენი სუფთა მოგება?)..." value={aiQuery} onChange={e => setAiQuery(e.target.value)} className="flex-1 bg-slate-950 border border-emerald-500/25 p-4 rounded-2xl text-xs text-white outline-none shadow-inner" />
               <button type="submit" className="bg-emerald-500 text-slate-950 font-black px-6 py-4 rounded-2xl cursor-pointer shadow-lg">გაგზავნა</button>
             </form>
