@@ -203,64 +203,58 @@ export default function Modals({
     return messages[message] || message;
   };
   const getNotificationCopy = (notification) => {
-    const status = String(notification?.status || '').trim().toLowerCase();
-    const orderCode = notification?.orderId ? `#${notification.orderId}` : '';
-    const messages = {
-      'ახალი': ['შეკვეთა მიღებულია', 'თქვენი შეკვეთა მიღებულია და მალე დაიწყება დამუშავება.'],
-      new: ['შეკვეთა მიღებულია', 'თქვენი შეკვეთა მიღებულია და მალე დაიწყება დამუშავება.'],
-      'молодой': ['შეკვეთა მიღებულია', 'თქვენი შეკვეთა მიღებულია და მალე დაიწყება დამუშავება.'],
-      'მუშავდება': ['შეკვეთა მუშავდება', 'თქვენი შეკვეთა მუშავდება. გაცნობებთ სტატუსის შემდეგ ცვლილებას.'],
-      processing: ['შეკვეთა მუშავდება', 'თქვენი შეკვეთა მუშავდება. გაცნობებთ სტატუსის შემდეგ ცვლილებას.'],
-      'в обработке': ['შეკვეთა მუშავდება', 'თქვენი შეკვეთა მუშავდება. გაცნობებთ სტატუსის შემდეგ ცვლილებას.'],
-      'გაგზავნილი': ['შეკვეთა გამოგზავნილია', 'თქვენი შეკვეთა გადაეცა მიწოდების პროცესს.'],
-      shipped: ['შეკვეთა გამოგზავნილია', 'თქვენი შეკვეთა გადაეცა მიწოდების პროცესს.'],
-      'отправлен': ['შეკვეთა გამოგზავნილია', 'თქვენი შეკვეთა გადაეცა მიწოდების პროცესს.'],
-      'დასრულებული': ['შეკვეთა დასრულებულია', 'თქვენი შეკვეთა დასრულებულად აღირიცხა.'],
-      completed: ['შეკვეთა დასრულებულია', 'თქვენი შეკვეთა დასრულებულად აღირიცხა.'],
-      'ჩაბარებულია': ['შეკვეთა ჩაბარებულია', 'თქვენი შეკვეთა წარმატებით ჩაბარდა.'],
-      delivered: ['შეკვეთა ჩაბარებულია', 'თქვენი შეკვეთა წარმატებით ჩაბარდა.'],
-      'г доставлен': ['შეკვეთა ჩაბარებულია', 'თქვენი შეკვეთა წარმატებით ჩაბარდა.'],
-      'გაუქმებული': ['შეკვეთა გაუქმებულია', 'თქვენი შეკვეთა გაუქმდა. საჭიროების შემთხვევაში დაუკავშირდით მხარდაჭერას.'],
-      cancelled: ['შეკვეთა გაუქმებულია', 'თქვენი შეკვეთა გაუქმდა. საჭიროების შემთხვევაში დაუკავშირდით მხარდაჭერას.'],
-      canceled: ['შეკვეთა გაუქმებულია', 'თქვენი შეკვეთა გაუქმდა. საჭიროების შემთხვევაში დაუკავშირდით მხარდაჭერას.'],
-      'отменён': ['შეკვეთა გაუქმებულია', 'თქვენი შეკვეთა გაუქმდა. საჭიროების შემთხვევაში დაუკავშირდით მხარდაჭერას.']
+    const raw = String(notification?.status || '').trim().toLowerCase();
+    const groups = {
+      received: ['ახალი', 'new', 'новый'],
+      processing: ['მუშავდება', 'processing', 'в обработке'],
+      shipped: ['გაგზავნილი', 'shipped', 'отправлен', 'გზაშია', 'on the way', 'в пути'],
+      completed: ['დასრულებული', 'completed', 'завершён'],
+      delivered: ['ჩაბარებულია', 'delivered', 'доставлен'],
+      cancelled: ['გაუქმებული', 'cancelled', 'canceled', 'отменён']
     };
-    const fallback = messages[status] || ['შეკვეთის სტატუსი განახლდა', 'თქვენი შეკვეთის სტატუსი შეიცვალა. დეტალები იხილეთ შეკვეთების ისტორიაში.'];
-    const translated = currentLang === 'en'
-      ? ({
-          'ახალი': ['Order received', 'Your order has been received and will be processed soon.'],
-          new: ['Order received', 'Your order has been received and will be processed soon.'],
-          'მუშავდება': ['Order processing', 'Your order is being processed. We will notify you when it changes.'],
-          processing: ['Order processing', 'Your order is being processed. We will notify you when it changes.'],
-          'გაგზავნილი': ['Order shipped', 'Your order has entered the delivery process.'],
-          shipped: ['Order shipped', 'Your order has entered the delivery process.'],
-          'დასრულებული': ['Order completed', 'Your order has been marked as completed.'],
-          completed: ['Order completed', 'Your order has been marked as completed.'],
-          'ჩაბარებულია': ['Order delivered', 'Your order has been successfully delivered.'],
-          delivered: ['Order delivered', 'Your order has been successfully delivered.'],
-          'გაუქმებული': ['Order cancelled', 'Your order was cancelled. Contact support if you need help.'],
-          cancelled: ['Order cancelled', 'Your order was cancelled. Contact support if you need help.'],
-          canceled: ['Order cancelled', 'Your order was cancelled. Contact support if you need help.']
-        })[status]
-      : currentLang === 'ru'
-        ? ({
-            'ახალი': ['Заказ принят', 'Ваш заказ принят и скоро будет обработан.'],
-            new: ['Заказ принят', 'Ваш заказ принят и скоро будет обработан.'],
-            'мუშავდება': ['Заказ обрабатывается', 'Ваш заказ обрабатывается. Мы сообщим об изменении статуса.'],
-            processing: ['Заказ обрабатывается', 'Ваш заказ обрабатывается. Мы сообщим об изменении статуса.'],
-            'გაგზავნილი': ['Заказ отправлен', 'Ваш заказ передан в доставку.'],
-            shipped: ['Заказ отправлен', 'Ваш заказ передан в доставку.'],
-            'доставлен': ['Заказ доставлен', 'Ваш заказ успешно доставлен.'],
-            delivered: ['Заказ доставлен', 'Ваш заказ успешно доставлен.'],
-            'отменён': ['Заказ отменён', 'Ваш заказ отменён. Если нужна помощь, свяжитесь с поддержкой.'],
-            cancelled: ['Заказ отменён', 'Ваш заказ отменён. Если нужна помощь, свяжитесь с поддержкой.'],
-            canceled: ['Заказ отменён', 'Ваш заказ отменён. Если нужна помощь, свяжитесь с поддержкой.']
-          })[status]
-        : null;
-    const chosen = translated || fallback;
+    const key = Object.keys(groups).find((name) => groups[name].includes(raw)) || 'updated';
+    const copy = {
+      received: {
+        ka: ['შეკვეთა მიღებულია', 'თქვენი შეკვეთა მიღებულია და მალე დაიწყება დამუშავება.'],
+        en: ['Order received', 'Your order has been received and will be processed soon.'],
+        ru: ['Заказ принят', 'Ваш заказ принят и скоро будет обработан.']
+      },
+      processing: {
+        ka: ['შეკვეთა მუშავდება', 'თქვენი შეკვეთა მუშავდება. გაცნობებთ სტატუსის შემდეგ ცვლილებას.'],
+        en: ['Order processing', 'Your order is being processed. We will notify you when it changes.'],
+        ru: ['Заказ обрабатывается', 'Ваш заказ обрабатывается. Мы сообщим об изменении статуса.']
+      },
+      shipped: {
+        ka: ['შეკვეთა გამოგზავნილია', 'თქვენი შეკვეთა გადაეცა მიწოდების პროცესს.'],
+        en: ['Order shipped', 'Your order has entered the delivery process.'],
+        ru: ['Заказ отправлен', 'Ваш заказ передан в доставку.']
+      },
+      completed: {
+        ka: ['შეკვეთა დასრულებულია', 'თქვენი შეკვეთა დასრულებულად აღირიცხა.'],
+        en: ['Order completed', 'Your order has been marked as completed.'],
+        ru: ['Заказ завершён', 'Ваш заказ отмечен как завершённый.']
+      },
+      delivered: {
+        ka: ['შეკვეთა ჩაბარებულია', 'თქვენი შეკვეთა წარმატებით ჩაბარდა.'],
+        en: ['Order delivered', 'Your order has been successfully delivered.'],
+        ru: ['Заказ доставлен', 'Ваш заказ успешно доставлен.']
+      },
+      cancelled: {
+        ka: ['შეკვეთა გაუქმებულია', 'თქვენი შეკვეთა გაუქმდა. საჭიროების შემთხვევაში დაუკავშირდით მხარდაჭერას.'],
+        en: ['Order cancelled', 'Your order was cancelled. Contact support if you need help.'],
+        ru: ['Заказ отменён', 'Ваш заказ отменён. Если нужна помощь, свяжитесь с поддержкой.']
+      },
+      updated: {
+        ka: ['შეკვეთის სტატუსი განახლდა', 'თქვენი შეკვეთის სტატუსი შეიცვალა. დეტალები იხილეთ შეკვეთების ისტორიაში.'],
+        en: ['Order status updated', 'Your order status has changed. See your order history for details.'],
+        ru: ['Статус заказа обновлён', 'Статус вашего заказа изменился. Подробности доступны в истории заказов.']
+      }
+    };
+    const language = currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka';
+    const orderCode = notification?.orderId ? ` · #${notification.orderId}` : '';
     return {
-      title: orderCode ? `${chosen[0]} · ${orderCode}` : chosen[0],
-      message: chosen[1]
+      title: copy[key][language][0] + orderCode,
+      message: copy[key][language][1]
     };
   };
   const localizedNotificationDate = (date) => {
