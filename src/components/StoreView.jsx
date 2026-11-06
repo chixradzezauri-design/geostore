@@ -342,7 +342,7 @@ export default function StoreView({
                     <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(prod.priceGEL)}</span>
-                      {prod.oldPriceGEL && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
+                      {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
                   </div>
                   <button onClick={() => addToCart(prod)} disabled={Number(prod.stock ?? 0) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
@@ -595,7 +595,7 @@ export default function StoreView({
                   </button>
 
                   <div className="gs-catalog-product-badges absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 z-10">
-                    {prod.oldPriceGEL && (
+                    {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && (
                       <span className="gs-catalog-sale-badge bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{storeText.discount}</span>
                     )}
                     {tagsArray.slice(0, 2).map((tag, idx) => (
@@ -618,7 +618,7 @@ export default function StoreView({
                   <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="gs-product-price gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
-                    {prod.oldPriceGEL && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
+                    {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
@@ -686,7 +686,7 @@ export default function StoreView({
                     <span className="text-xl sm:text-3xl font-black text-amber-400">
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
-                    {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                    {Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
                   {selectedProduct.variants && selectedProduct.variants.length > 0 && (
