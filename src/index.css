@@ -4040,3 +4040,43 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-ai-composer input{min-height:44px!important;padding:12px!important;border-radius:13px!important}
  .geostore-shell .admin-dashboard-pro .admin-ai-composer button{width:100%!important;min-height:43px!important;padding:10px 14px!important;border-radius:13px!important}
 }
+
+
+/* Staff and access-control panels: responsive, readable, touch-friendly. */
+.geostore-shell .admin-dashboard-pro .admin-staff{min-width:0;width:100%}
+.geostore-shell .admin-dashboard-pro .admin-staff-panel{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-staff-panel h3{line-height:1.5;overflow-wrap:anywhere}
+.geostore-shell .admin-dashboard-pro .admin-staff-existing-form,
+.geostore-shell .admin-dashboard-pro .admin-staff-create-form{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-staff-existing-form select,
+.geostore-shell .admin-dashboard-pro .admin-staff-create-form input,
+.geostore-shell .admin-dashboard-pro .admin-staff-create-form select{min-width:0;width:100%;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-staff-permissions{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-staff-permission-grid,
+.geostore-shell .admin-dashboard-pro .admin-staff-edit-permissions{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-staff-permission-grid label,
+.geostore-shell .admin-dashboard-pro .admin-staff-edit-permissions label{min-width:0;display:flex;align-items:flex-start;line-height:1.45;overflow-wrap:anywhere}
+.geostore-shell .admin-dashboard-pro .admin-staff-permission-grid input,
+.geostore-shell .admin-dashboard-pro .admin-staff-edit-permissions input{flex:0 0 16px;margin-top:1px}
+.geostore-shell .admin-dashboard-pro .admin-staff-card{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-staff-card p{overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-staff-actions{flex-wrap:wrap}
+.geostore-shell .admin-dashboard-pro .admin-staff-edit-panel{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-staff-edit-panel input{min-width:0;max-width:100%}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-staff{gap:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-panel{padding:14px!important;border-radius:17px!important;gap:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-panel h3{font-size:13px!important;align-items:flex-start!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-create-form>div:first-child{grid-template-columns:minmax(0,1fr)!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-permissions{padding:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-permission-grid,
+ .geostore-shell .admin-dashboard-pro .admin-staff-edit-permissions{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-permission-grid label,
+ .geostore-shell .admin-dashboard-pro .admin-staff-edit-permissions label{font-size:12px;min-height:28px}
+ .geostore-shell .admin-dashboard-pro .admin-staff-card{padding:13px!important;border-radius:16px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-actions{width:100%;justify-content:flex-start!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-actions button{min-height:40px}
+ .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel{padding:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel>div:last-child{flex-wrap:wrap}
+ .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel>div:last-child button{flex:1 1 120px;min-height:40px}
+}
