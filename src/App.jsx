@@ -1721,7 +1721,16 @@ export default function App() {
       total_gel: Number(serverOrderResult.total_gel),
       status: 'ახალი',
       itemSummary: (Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder)
-        .map((i) => `${i.name} (x${i.quantity})`)
+        .map((i) => {
+          const options = [
+            i.selectedSize || i.selected_size,
+            i.selectedColor || i.selected_color,
+            i.selectedVariant || i.selected_variant
+          ].filter(Boolean);
+          if (i.gift_wrap) options.push('სასაჩუქრე შეფუთვა');
+          if (i.vip_warranty) options.push('VIP გარანტია');
+          return `${i.name}${options.length ? ` [${options.join(', ')}]` : ''} (x${i.quantity})`;
+        })
         .join(', ')
     };
 
