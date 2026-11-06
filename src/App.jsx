@@ -216,27 +216,6 @@ export default function App() {
     loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS)
   );
 
-  const [promoSlots] = useState([
-    {
-      id: 'ps1',
-      title: 'საგაზაფხულო ფასდაკლებები',
-      tag: 'HOT DEAL',
-      bgGradient: 'from-emerald-600/30 to-teal-800/40'
-    },
-    {
-      id: 'ps2',
-      title: '0% განვადება 24 თვემდე',
-      tag: 'FINANCE',
-      bgGradient: 'from-cyan-600/30 to-blue-800/40'
-    },
-    {
-      id: 'ps3',
-      title: 'უფასო მიწოდება თბილისში',
-      tag: 'EXPRESS',
-      bgGradient: 'from-green-600/30 to-emerald-900/40'
-    }
-  ]);
-
   const [activeTab, setActiveTab] = useState('store');
 
   // ეს URL პარამეტრი მხოლოდ ძველი ინტერფეისის გადართვას აკეთებს.
@@ -1412,7 +1391,6 @@ export default function App() {
           <StoreView
             currentLang={currentLang}
             siteSettings={siteSettings}
-            promoSlots={promoSlots}
             categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
