@@ -1119,56 +1119,49 @@ export default function AdminDashboardPro({
       is_featured: productForm.isFeatured || false
     };
 
-      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
-        method: 'POST',
-        headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_product: newProdPayload })
-      });
-
-      if (res.ok) {
-        const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
-        const localProdObject = {
-          id: prodId,
-          createdAt: existingProduct?.createdAt || new Date().toISOString(),
-          sku: newProdPayload.sku,
-          name: newProdPayload.name,
-          category: newProdPayload.category,
-          vendor: newProdPayload.vendor,
-          priceGEL: newProdPayload.price_gel,
-          oldPriceGEL: newProdPayload.old_price_gel,
-          purchaseCost: newProdPayload.purchase_cost,
-          stock: newProdPayload.stock,
-          image: newProdPayload.image,
-          gallery: galleryImages,
-          tags: tagsArray,
-          description: newProdPayload.description,
-          availableSizes: newProdPayload.available_sizes,
-          availableColors: newProdPayload.available_colors,
-          variants: productVariants,
-          material: newProdPayload.material,
-          durability: newProdPayload.durability,
-          brand: newProdPayload.brand,
-          isFeatured: newProdPayload.is_featured,
-          model: newProdPayload.model,
-          cpu: newProdPayload.cpu,
-          ram: newProdPayload.ram,
-          storage: newProdPayload.storage,
-          gpu: newProdPayload.gpu,
-          screenSize: newProdPayload.screen_size,
-          os: newProdPayload.os
-        };
-
-        if (typeof setProducts === 'function') {
-          setProducts(prev => editingProductId ? (prev || []).map(p => String(p.id) === String(editingProductId) ? localProdObject : p) : [localProdObject, ...(prev || [])]);
-        }
-        const wasEditing = Boolean(editingProductId);
-        resetProductEditor();
-        logActivity(`${wasEditing ? 'განახლდა' : 'დაემატა'} პროდუქტი: ${newProdPayload.name}`);
-        alert(wasEditing ? '✅ პროდუქტი სრულად განახლდა!' : '✅ პროდუქტი წარმატებით დაემატა!');
+      let savedProductRow = null;
+      if (editingProductId) {
+        // Do not overwrite checkout stock deductions with the editor's stale snapshot.
+        const updatePayload = { ...newProdPayload };
+        delete updatePayload.id;
+        delete updatePayload.stock;
+        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
+          method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
+        });
+        if (!updateResponse.ok) throw new Error(await updateResponse.text());
+        const updatedRows = await updateResponse.json();
+        if (!Array.isArray(updatedRows) || updatedRows.length !== 1) throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
+        savedProductRow = updatedRows[0];
       } else {
-        const err = await res.text();
-        alert('შეცდომა ბაზაში შენახვისას: ' + err);
+        const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
+          method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
+        });
+        if (!createResponse.ok) throw new Error(await createResponse.text());
+        await createResponse.json();
       }
+      const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
+      const localProdObject = {
+        id: prodId, createdAt: existingProduct?.createdAt || new Date().toISOString(),
+        sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
+        vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
+        oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
+        stock: editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock,
+        image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
+        description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
+        availableColors: newProdPayload.available_colors, variants: productVariants,
+        material: newProdPayload.material, durability: newProdPayload.durability,
+        brand: newProdPayload.brand, isFeatured: newProdPayload.is_featured,
+        model: newProdPayload.model, cpu: newProdPayload.cpu, ram: newProdPayload.ram,
+        storage: newProdPayload.storage, gpu: newProdPayload.gpu,
+        screenSize: newProdPayload.screen_size, os: newProdPayload.os
+      };
+      if (typeof setProducts === 'function') {
+        setProducts(prev => editingProductId ? (prev || []).map(p => String(p.id) === String(editingProductId) ? localProdObject : p) : [localProdObject, ...(prev || [])]);
+      }
+      const wasEditing = Boolean(editingProductId);
+      resetProductEditor();
+      logActivity((wasEditing ? 'განახლდა' : 'დაემატა') + ' პროდუქტი: ' + newProdPayload.name);
+      alert(wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!');
     } catch (error) {
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
     }
@@ -2851,7 +2844,8 @@ export default function AdminDashboardPro({
                   </div>
                   <div>
                     <label className="text-slate-400 font-bold block mb-1">მარაგი</label>
-                    <input type="number" min="0" step="1" inputMode="numeric" placeholder="10" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                    <input type="number" min="0" step="1" inputMode="numeric" placeholder="10" value={productForm.stock} disabled={Boolean(editingProductId)} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed" />
+                    {editingProductId && <p className="mt-1 text-[11px] leading-relaxed text-amber-300">არსებული პროდუქტის მარაგი შეცვალეთ პროდუქტის სიაში — შეკვეთების ჩამოჭრა უსაფრთხოდ იქნება გათვალისწინებული.</p>}
                   </div>
                 </div>
 
