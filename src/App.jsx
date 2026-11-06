@@ -794,15 +794,19 @@ export default function App() {
 
       if (couponResponse.ok) {
         const rows = await couponResponse.json();
-        if (Array.isArray(rows)) {
-          setCoupons(rows.map((row) => ({
+        setCoupons(Array.isArray(rows) ? rows
+          .filter((row) => row && row.active === true && typeof row.code === 'string')
+          .map((row) => ({
             id: row.id,
-            code: row.code,
+            code: row.code.trim().toUpperCase(),
             discountPercent: Number(row.discount_percent),
             minOrderGEL: Number(row.min_order_gel) || 0,
-            status: row.active ? 'აქტიური' : 'გამორთული'
-          })));
-        }
+            status: 'აქტიური'
+          })) : []);
+      } else {
+        // Never leave stale local coupons usable when the authoritative DB request fails.
+        setCoupons([]);
+        setAppliedCoupon(null);
       }
 
       if (deliveryResponse.ok) {
