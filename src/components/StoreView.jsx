@@ -766,7 +766,7 @@ export default function StoreView({
                   )}
 
                   <div className="gs-product-option-card gs-product-option-card--gift bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
-                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
+                    <label className="flex items-center justify-between cursor-pointer">
                       <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
                           <Gift className="w-5 h-5" />
@@ -776,8 +776,8 @@ export default function StoreView({
                           <p className="text-[10px] text-slate-400">{storeText.giftWrapInfo}</p>
                         </div>
                       </div>
-                      <input type="checkbox" checked={isGiftWrapped} onClick={(e) => e.stopPropagation()} onChange={() => setIsGiftWrapped(!isGiftWrapped)} aria-label={storeText.giftWrap} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
-                    </div>
+                      <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} aria-label={storeText.giftWrap} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
+                    </label>
 
                     {isGiftWrapped && (
                       <div className="pt-2 animate-in fade-in">
@@ -795,7 +795,7 @@ export default function StoreView({
                     )}
                   </div>
 
-                  <div className="gs-product-option-card gs-product-option-card--warranty bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
+                  <label className="gs-product-option-card gs-product-option-card--warranty bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
                         <ShieldAlert className="w-5 h-5" />
@@ -805,8 +805,8 @@ export default function StoreView({
                         <p className="text-[10px] text-slate-400">{storeText.warrantyInfo}</p>
                       </div>
                     </div>
-                    <input type="checkbox" checked={hasVipWarranty} onClick={(e) => e.stopPropagation()} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
-                  </div>
+                    <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
+                  </label>
 
                   <div className="space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="text-amber-300 font-bold block text-sm">{storeText.description}</span>
