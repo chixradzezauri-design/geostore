@@ -29,6 +29,9 @@ export default function Header({
   unreadNotificationsCount = 0,
   searchQuery = '',
   setSearchQuery,
+  categories = [],
+  selectedCategory = 'ყველა',
+  setSelectedCategory,
   handleInstallClick,
   currentLang = 'ka',
   setCurrLang
@@ -76,6 +79,10 @@ export default function Header({
 
   const linkClass = (tab) =>
     `gs-menu-link${activeTab === tab ? ' is-active' : ''}`;
+  const mainCategories = (categories || []).filter((category) => !category?.parentId);
+  const categoryLabel = currentLang === 'en' ? 'Categories' : currentLang === 'ru' ? 'Категории' : 'კატეგორიები';
+  const allCategoriesLabel = currentLang === 'en' ? 'All products' : currentLang === 'ru' ? 'Все товары' : 'ყველა პროდუქტი';
+  const categoryName = (category) => typeof category === 'string' ? category : (category?.name || '');
 
   return (
     <header ref={headerRef} className={`gs-site-header${menuOpen ? ' is-menu-open' : ''}`}>
