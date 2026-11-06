@@ -562,8 +562,12 @@ export default function AdminDashboardPro({
   }, [calcForm]);
 
   const analyticsData = useMemo(() => {
-    const isCancelled = order => ['გაუქმებული', 'cancelled'].includes(String(order?.status || '').trim().toLowerCase());
-    const isDelivered = order => ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed'].includes(String(order?.status || '').trim().toLowerCase());
+    const isCancelled = order => [
+      'გაუქმებული', 'cancelled', 'canceled', 'отменён', 'отменен'
+    ].includes(String(order?.status || '').trim().toLowerCase());
+    const isDelivered = order => [
+      'დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён', 'завершен'
+    ].includes(String(order?.status || '').trim().toLowerCase());
     const parseDate = value => {
       if (!value) return null;
       const raw = String(value).trim();
@@ -711,8 +715,10 @@ export default function AdminDashboardPro({
     })).filter(product => Number.isFinite(product._stockValue) && product._stockValue >= 0 && product._stockValue <= 5)
       .sort((a, b) => a._stockValue - b._stockValue);
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-    const grossProfit = unknownCogsItems === 0 ? totalSalesRevenue - totalCogs : null;
-    const netProfit = grossProfit === null ? null : grossProfit - totalExpenses;
+    // Gross profit is product revenue less product cost. Delivery fees are
+    // tracked separately and added to net operating result, not product margin.
+    const grossProfit = unknownCogsItems === 0 ? totalProductRevenue - totalCogs : null;
+    const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
     periodExpenses.forEach(expense => {
       const label = expense.category || 'კატეგორია მითითებული არ არის';
