@@ -814,9 +814,27 @@ export default function App() {
         if (active) setMyOrdersLoading(false);
       }
     };
+
+    if (!currentUser?.email) {
+      setMyOrders([]);
+      setMyOrdersLoading(false);
+      return () => { active = false; };
+    }
+    if (activeTab !== 'profile') return () => { active = false; };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void loadOwnOrders();
+    };
     void loadOwnOrders();
-    return () => { active = false; };
-  }, [currentUser?.email]);
+    const interval = window.setInterval(() => void loadOwnOrders(), 30000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [currentUser?.email, activeTab]);
 
   const fetchOrders = async () => {
     try {
