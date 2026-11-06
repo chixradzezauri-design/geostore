@@ -1365,6 +1365,9 @@ export default function App() {
           unreadNotificationsCount={unreadNotificationsCount}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
           handleInstallClick={handleInstallClick}
           currentLang={currentLang}
           setCurrLang={setCurrLang}
