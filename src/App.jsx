@@ -971,11 +971,14 @@ export default function App() {
       ? [quickBuyProduct]
       : cart;
 
-    return itemsToCalc.reduce(
-      (acc, item) =>
-        acc + item.priceGEL * (item.quantity || 1),
-      0
-    );
+    return itemsToCalc.reduce((acc, item) => {
+      const rawPrice = item?.priceGEL ?? item?.price;
+      const price = Number(rawPrice);
+      const rawQuantity = Number(item?.quantity ?? 1);
+      const quantity = Number.isFinite(rawQuantity) ? Math.max(1, Math.floor(rawQuantity)) : 1;
+      if (!Number.isFinite(price) || price < 0) return acc;
+      return acc + price * quantity;
+    }, 0);
   }, [cart, quickBuyProduct]);
 
   const currentDeliveryCost = useMemo(() => {
@@ -991,12 +994,13 @@ export default function App() {
   }, [selectedRegion, deliveryFees]);
 
   const cartTotalGEL = useMemo(() => {
-    const sub = appliedCoupon
-      ? cartSubtotalGEL -
-        (cartSubtotalGEL * appliedCoupon.discountPercent) / 100
-      : cartSubtotalGEL;
-
-    return Math.max(0, sub) + currentDeliveryCost;
+    const rawDiscount = Number(appliedCoupon?.discountPercent);
+    const discountPercent = Number.isFinite(rawDiscount)
+      ? Math.min(100, Math.max(0, rawDiscount))
+      : 0;
+    const sub = cartSubtotalGEL - (cartSubtotalGEL * discountPercent) / 100;
+    const delivery = Number(currentDeliveryCost);
+    return Math.max(0, sub) + (Number.isFinite(delivery) ? Math.max(0, delivery) : 0);
   }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
 
   const handleApplyCoupon = (e) => {
@@ -1006,22 +1010,39 @@ export default function App() {
 
     if (!cleanCode) return;
 
-    const found = coupons.find(
-      (c) =>
-        c.code.toUpperCase() === cleanCode &&
-        (c.status === 'აქტიური' || !c.status)
+    const found = (Array.isArray(coupons) ? coupons : []).find(
+      (coupon) =>
+        typeof coupon?.code === 'string' &&
+        coupon.code.trim().toUpperCase() === cleanCode &&
+        (coupon.status === 'აქტიური' || !coupon.status)
     );
 
-    if (found) {
-      setAppliedCoupon(found);
+    const discountPercent = Number(found?.discountPercent);
+    const minOrderGEL = Number(found?.minOrderGEL ?? 0);
+    if (
+      found &&
+      Number.isFinite(discountPercent) &&
+      discountPercent > 0 &&
+      discountPercent <= 100 &&
+      Number.isFinite(minOrderGEL) &&
+      minOrderGEL >= 0
+    ) {
+      if (cartSubtotalGEL < minOrderGEL) {
+        const message = currentLang === 'en'
+          ? `This coupon requires a minimum product subtotal of ${minOrderGEL} ₾.`
+          : currentLang === 'ru'
+            ? `Для этого купона минимальная сумма товаров — ${minOrderGEL} ₾.`
+            : `ამ კუპონისთვის პროდუქციის მინიმალური ღირებულებაა ${minOrderGEL} ₾.`;
+        showToast(message);
+        return;
+      }
 
-      showToast(
-        `🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`
-      );
-
+      setAppliedCoupon({ ...found, discountPercent, minOrderGEL });
+      showToast(`🎉 პრომო-კოდი გააქტიურდა (-${discountPercent}%)!`);
       setPromoInput('');
     } else {
-      alert('არასწორი ან გაუქმებული პრომო-კოდი!');
+      setAppliedCoupon(null);
+      alert(currentLang === 'en' ? 'Invalid or inactive coupon code.' : currentLang === 'ru' ? 'Недействительный или отключённый промокод.' : 'არასწორი ან გაუქმებული პრომო-კოდი!');
     }
   };
 
