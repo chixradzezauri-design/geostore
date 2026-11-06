@@ -1477,6 +1477,92 @@ export default function App() {
         return;
       }
 
+      // Recheck live coupon and delivery settings immediately before order creation.
+      // Any change refreshes the UI and requires the customer to confirm again.
+      const pricingHeaders = await getSupabaseHeaders();
+      const [freshCouponResponse, freshDeliveryResponse] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/store_coupons?select=id,code,discount_percent,min_order_gel,active&active=eq.true&order=code.asc`, { headers: pricingHeaders }),
+        fetch(`${SUPABASE_URL}/rest/v1/store_delivery_fees?select=region,fee_gel`, { headers: pricingHeaders })
+      ]);
+      if (!freshCouponResponse.ok || !freshDeliveryResponse.ok) {
+        throw new Error(currentLang === 'en'
+          ? 'Current delivery and coupon settings could not be verified. Please try again.'
+          : currentLang === 'ru'
+            ? 'Не удалось проверить актуальные условия доставки и купона. Повторите попытку.'
+            : 'მიწოდებისა და კუპონის მიმდინარე პირობების შემოწმება ვერ მოხერხდა. სცადეთ თავიდან.');
+      }
+
+      const [freshCouponRows, freshDeliveryRows] = await Promise.all([
+        freshCouponResponse.json(),
+        freshDeliveryResponse.json()
+      ]);
+      if (!Array.isArray(freshCouponRows) || !Array.isArray(freshDeliveryRows)) {
+        throw new Error('Checkout pricing settings are invalid.');
+      }
+
+      const freshFees = { ...deliveryFees };
+      let selectedFeeFound = false;
+      freshDeliveryRows.forEach((row) => {
+        if (!Object.prototype.hasOwnProperty.call(freshFees, row.region)) return;
+        const fee = Number(row.fee_gel);
+        if (!Number.isFinite(fee) || fee < 0) return;
+        freshFees[row.region] = fee;
+        if (row.region === selectedRegion) selectedFeeFound = true;
+      });
+      if (!selectedFeeFound) {
+        throw new Error(currentLang === 'en'
+          ? 'Delivery price for the selected region is unavailable. Please contact support.'
+          : currentLang === 'ru'
+            ? 'Стоимость доставки для выбранного региона недоступна. Свяжитесь с поддержкой.'
+            : 'არჩეული რეგიონის მიწოდების ფასი ვერ მოიძებნა. დაუკავშირდით მხარდაჭერას.');
+      }
+
+      const freshCoupons = freshCouponRows.map((row) => ({
+        id: row.id,
+        code: row.code,
+        discountPercent: Number(row.discount_percent),
+        minOrderGEL: Number(row.min_order_gel) || 0,
+        status: row.active ? 'აქტიური' : 'გამორთული'
+      }));
+      const oldSelectedFee = Number(currentDeliveryCost);
+      const newSelectedFee = Number(freshFees[selectedRegion]);
+      let pricingChanged = !Number.isFinite(oldSelectedFee) || oldSelectedFee !== newSelectedFee;
+      let freshAppliedCoupon = null;
+
+      if (eligibleAppliedCoupon) {
+        freshAppliedCoupon = freshCoupons.find((coupon) =>
+          typeof coupon.code === 'string' &&
+          coupon.code.trim().toUpperCase() === eligibleAppliedCoupon.code.trim().toUpperCase()
+        ) || null;
+        if (!freshAppliedCoupon ||
+            freshAppliedCoupon.discountPercent !== Number(eligibleAppliedCoupon.discountPercent) ||
+            freshAppliedCoupon.minOrderGEL !== Number(eligibleAppliedCoupon.minOrderGEL ?? 0) ||
+            cartSubtotalGEL < freshAppliedCoupon.minOrderGEL) {
+          pricingChanged = true;
+        }
+      }
+
+      if (pricingChanged) {
+        setDeliveryFees(freshFees);
+        setCoupons(freshCoupons);
+        setAppliedCoupon(freshAppliedCoupon && cartSubtotalGEL >= freshAppliedCoupon.minOrderGEL
+          ? freshAppliedCoupon
+          : null);
+        const message = currentLang === 'en'
+          ? 'Delivery or coupon terms have changed. The latest prices are now shown. Please review your order and submit it again.'
+          : currentLang === 'ru'
+            ? 'Условия доставки или купона изменились. Показаны актуальные цены. Проверьте заказ и отправьте его повторно.'
+            : 'მიწოდების ან კუპონის პირობები შეიცვალა. ნაჩვენებია განახლებული ფასები. გადაამოწმეთ შეკვეთა და ხელახლა დაადასტურეთ.';
+        setCheckoutError(message);
+        showToast(message);
+        setIsSubmittingOrder(false);
+        orderSubmitLock.current = false;
+        return;
+      }
+
+      setDeliveryFees(freshFees);
+      setCoupons(freshCoupons);
+
       orderUserEmail = orderSession?.user?.email || customerEmail;
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderUserEmail)) {
         throw new Error('შეკვეთისთვის საჭიროა სწორი ელ-ფოსტა.');
