@@ -114,3 +114,67 @@ WITH CHECK (
   AND status = 'ღია'
   AND reply IS NULL
 );
+
+-- Prevent a privileged status RPC call with a NULL status from bypassing the
+-- allowed-status check. Existing status transitions and stock restoration
+-- behavior are otherwise unchanged.
+CREATE OR REPLACE FUNCTION private.admin_update_order_status(p_order_id text, p_new_status text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+  v_updated integer;
+begin
+  if coalesce(auth.jwt()->'app_metadata'->>'role', '') <> 'admin'
+     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
+    raise exception 'ადმინისტრატორის უფლებები არ დადასტურდა.';
+  end if;
+  if p_new_status is null
+     or p_new_status not in ('ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული') then
+    raise exception 'შეკვეთის სტატუსი არასწორია.';
+  end if;
+
+  select * into v_order from public.orders where id = p_order_id for update;
+  if not found then raise exception 'შეკვეთა ვერ მოიძებნა.'; end if;
+  if v_order.status = 'გაუქმებული' and p_new_status <> 'გაუქმებული' then
+    raise exception 'გაუქმებული შეკვეთის ხელახლა გააქტიურება დაუშვებელია.';
+  end if;
+
+  if p_new_status = 'გაუქმებული'
+     and v_order.status <> 'გაუქმებული'
+     and v_order.stock_deducted_at is not null
+     and v_order.stock_restored_at is null then
+    for v_item in
+      select item->>'id' as product_id,
+             sum((item->>'quantity')::integer)::integer as quantity
+        from jsonb_array_elements(coalesce(v_order.items, '[]'::jsonb)) as e(item)
+       group by item->>'id'
+       order by item->>'id'
+    loop
+      update public.products
+         set stock = coalesce(stock, 0) + v_item.quantity
+       where id = v_item.product_id;
+      get diagnostics v_updated = row_count;
+      if v_updated <> 1 then
+        raise exception 'მარაგის აღდგენა ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id;
+      end if;
+    end loop;
+    update public.orders set status = p_new_status, stock_restored_at = now()
+     where id = p_order_id;
+  else
+    update public.orders set status = p_new_status where id = p_order_id;
+  end if;
+  return jsonb_build_object('order_id', p_order_id, 'status', p_new_status);
+end;
+$function$;
+
+-- All existing orders have a valid non-empty status. Make that invariant
+-- explicit so direct writes cannot leave orders in an undefined state.
+ALTER TABLE public.orders
+  ALTER COLUMN status SET DEFAULT 'ახალი';
+ALTER TABLE public.orders
+  ALTER COLUMN status SET NOT NULL;
