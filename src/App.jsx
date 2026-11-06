@@ -73,6 +73,159 @@ const DEFAULT_VENDORS = [
 
 const DEFAULT_PRODUCTS = [];
 
+// სატესტო კატალოგი — ჩართულია მხოლოდ ?demoCatalog=1 პარამეტრით.
+// ეს ჩანაწერები არ ინახება Supabase-ში და არ ცვლის რეალურ პროდუქტებს/მარაგს.
+const DEMO_CATALOG_ENABLED =
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('demoCatalog') === '1';
+
+const DEMO_PRODUCTS = [
+  {
+    id: 'demo-fashion-women-dress-001',
+    sku: 'DEMO-W-001',
+    name: 'ქალის მინიმალისტური შავი კაბა',
+    category: 'ქალის ტანსაცმელი',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 129,
+    oldPriceGEL: 169,
+    stock: 12,
+    availableSizes: ['XS', 'S', 'M', 'L'],
+    availableColors: ['შავი', 'კრემისფერი'],
+    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — მინიმალისტური ყოველდღიური კაბა.',
+    material: 'ბამბის ნაზავი',
+    tags: ['demo', 'women', 'dress'],
+    isFeatured: true
+  },
+  {
+    id: 'demo-fashion-men-shirt-002',
+    sku: 'DEMO-M-002',
+    name: 'მამაკაცის თეთრი კლასიკური პერანგი',
+    category: 'მამაკაცის ტანსაცმელი',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 89,
+    oldPriceGEL: null,
+    stock: 18,
+    availableSizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    availableColors: ['თეთრი', 'ცისფერი'],
+    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — კლასიკური ყოველდღიური პერანგი.',
+    material: 'ბამბა',
+    tags: ['demo', 'men', 'shirt'],
+    isFeatured: true
+  },
+  {
+    id: 'demo-fashion-sneakers-003',
+    sku: 'DEMO-S-003',
+    name: 'უნისექსის ყოველდღიური სნიკერები',
+    category: 'ფეხსაცმელი',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 159,
+    oldPriceGEL: 199,
+    stock: 9,
+    availableSizes: ['37', '38', '39', '40', '41', '42', '43'],
+    availableColors: ['თეთრი', 'შავი'],
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — ყოველდღიური კომფორტული ფეხსაცმელი.',
+    material: 'ტექსტილი და სინთეტიკური მასალა',
+    tags: ['demo', 'shoes', 'sneakers'],
+    isFeatured: true
+  },
+  {
+    id: 'demo-fashion-handbag-004',
+    sku: 'DEMO-A-004',
+    name: 'ქალის სტრუქტურირებული ჩანთა',
+    category: 'ჩანთები',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 119,
+    oldPriceGEL: null,
+    stock: 7,
+    availableSizes: [],
+    availableColors: ['შავი', 'ყავისფერი'],
+    image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — ყოველდღიური სტილის ჩანთა.',
+    material: 'სინთეტიკური ტყავი',
+    tags: ['demo', 'women', 'bag'],
+    isFeatured: false
+  },
+  {
+    id: 'demo-fashion-jacket-005',
+    sku: 'DEMO-M-005',
+    name: 'მამაკაცის ყოველდღიური ქურთუკი',
+    category: 'მამაკაცის ტანსაცმელი',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 229,
+    oldPriceGEL: 279,
+    stock: 5,
+    availableSizes: ['M', 'L', 'XL'],
+    availableColors: ['მუქი ლურჯი', 'შავი'],
+    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — სეზონური ყოველდღიური ქურთუკი.',
+    material: 'პოლიესტერის ნაზავი',
+    tags: ['demo', 'men', 'jacket'],
+    isFeatured: false
+  },
+  {
+    id: 'demo-fashion-jewelry-006',
+    sku: 'DEMO-J-006',
+    name: 'მინიმალისტური მეტალის ყელსაბამი',
+    category: 'სამკაულები',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 49,
+    oldPriceGEL: null,
+    stock: 24,
+    availableSizes: [],
+    availableColors: ['ოქროსფერი', 'ვერცხლისფერი'],
+    image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — სადა ყოველდღიური ყელსაბამი.',
+    material: 'უჟანგავი მეტალი',
+    tags: ['demo', 'jewelry', 'accessory'],
+    isFeatured: false
+  },
+  {
+    id: 'demo-fashion-trousers-007',
+    sku: 'DEMO-W-007',
+    name: 'ქალის სწორი ჭრის შარვალი',
+    category: 'ქალის ტანსაცმელი',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 139,
+    oldPriceGEL: null,
+    stock: 10,
+    availableSizes: ['XS', 'S', 'M', 'L', 'XL'],
+    availableColors: ['შავი', 'ქვიშისფერი'],
+    image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — სწორი სილუეტის შარვალი.',
+    material: 'ვისკოზის ნაზავი',
+    tags: ['demo', 'women', 'trousers'],
+    isFeatured: false
+  },
+  {
+    id: 'demo-fashion-cap-008',
+    sku: 'DEMO-A-008',
+    name: 'უნისექსის ბეისბოლის ქუდი',
+    category: 'აქსესუარები',
+    brand: 'GEOSTORE Studio',
+    vendor: 'DEMO — სატესტო პროდუქტი',
+    priceGEL: 35,
+    oldPriceGEL: 45,
+    stock: 30,
+    availableSizes: ['One size'],
+    availableColors: ['შავი', 'თეთრი', 'ბეჟი'],
+    image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85',
+    description: 'სატესტო პროდუქტი — ყოველდღიური აქსესუარი.',
+    material: 'ბამბა',
+    tags: ['demo', 'unisex', 'cap'],
+    isFeatured: false
+  }
+];
+
 const DEFAULT_COUPONS = [];
 
 const DEFAULT_NOTIFICATIONS = [
@@ -1468,7 +1621,10 @@ export default function App() {
   };
 
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    const catalogProducts = DEMO_CATALOG_ENABLED
+      ? [...products, ...DEMO_PRODUCTS]
+      : products;
+    return catalogProducts.filter((p) => {
       const matchesCategory =
         selectedCategory === t.allCategories ||
         selectedCategory === 'ყველა' ||
