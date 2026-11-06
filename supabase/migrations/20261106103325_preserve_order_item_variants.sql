@@ -177,9 +177,27 @@ begin
     from jsonb_array_elements(p_order->'items') e(item)
     order by item->>'id', item->>'selected_size', item->>'selected_color'
   loop
-    select id, name, price_gel, purchase_cost, vendor, category into v_product
+    select id, name, price_gel, purchase_cost, vendor, category, available_sizes, available_colors into v_product
       from public.products where id = v_item.product_id;
     if not found then raise exception 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; end if;
+    if v_item.selected_size is not null and (
+      jsonb_typeof(coalesce(v_product.available_sizes, '[]'::jsonb)) <> 'array'
+      or not exists (
+        select 1 from jsonb_array_elements_text(v_product.available_sizes) as allowed(value)
+        where allowed.value = v_item.selected_size
+      )
+    ) then
+      raise exception 'არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.';
+    end if;
+    if v_item.selected_color is not null and (
+      jsonb_typeof(coalesce(v_product.available_colors, '[]'::jsonb)) <> 'array'
+      or not exists (
+        select 1 from jsonb_array_elements_text(v_product.available_colors) as allowed(value)
+        where allowed.value = v_item.selected_color
+      )
+    ) then
+      raise exception 'არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.';
+    end if;
     v_line := jsonb_build_object(
       'id', v_product.id,
       'name', v_product.name,
