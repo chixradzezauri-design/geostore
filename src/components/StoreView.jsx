@@ -658,7 +658,7 @@ export default function StoreView({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 <div className="gs-product-gallery space-y-4">
-                  <div className="gs-product-detail-image flex items-center justify-center h-60 sm:h-80">
+                  <div className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
                     <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
                   
@@ -674,13 +674,13 @@ export default function StoreView({
                 </div>
 
                 <div className="gs-product-info space-y-5 sm:space-y-6 text-xs w-full">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="gs-product-detail-heading space-y-2">
+                    <div className="gs-product-detail-meta flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
                       <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
                     </div>
-                    <h2 className="text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
-                    <p className="text-slate-400 text-xs">{storeText.vendor} <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
+                    <h2 className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
+                    <p className="gs-product-detail-vendor text-slate-400 text-xs">{storeText.vendor} <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                   </div>
 
                   <div className="gs-product-price-panel bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
@@ -715,7 +715,7 @@ export default function StoreView({
                   )}
 
                   {(selectedProduct.material || selectedProduct.durability) && (
-                    <div className="bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {selectedProduct.material && (
                         <div className="bg-[#08080a] p-3 rounded-2xl border border-amber-500/10">
                           <span className="text-slate-400 block text-[10px]">{storeText.material}</span>
@@ -762,7 +762,7 @@ export default function StoreView({
                               aria-pressed={selectedSize === size}
                               className={`gs-size-option px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
                             >
-                              {size} 🟢
+                              {size}
                             </button>
                           );
                         })}
@@ -782,7 +782,7 @@ export default function StoreView({
                             aria-pressed={selectedColor === colName}
                             className={`gs-color-option flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === colName ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
                           >
-                            <span className="w-3.5 h-3.5 rounded-full border border-amber-400/40 bg-amber-400/80"></span>
+                            <span className="gs-color-swatch w-3.5 h-3.5 rounded-full border border-amber-400/40 bg-amber-400/80" aria-hidden="true"></span>
                             {colName}
                           </button>
                         ))}
@@ -838,7 +838,7 @@ export default function StoreView({
                     <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
                   </div>
 
-                  <div className="flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
+                  <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                     <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
                     <span>{storeText.inStock} <b className="text-amber-400 font-black">{storeText.available}</b> {storeText.deliveryFit}</span>
                   </div>
@@ -925,7 +925,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="gs-product-modal-cta absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
+            <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
