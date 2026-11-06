@@ -497,8 +497,7 @@ export default function App() {
           const authorizedAdmin = isAuthorizedAdmin(authUser);
           setCurrentUser(normalizeAuthUser(authUser));
           setAdminLoggedIn(authorizedAdmin);
-          setActiveTab((current) =>
-            authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
+          setActiveTab((current) =>            authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
           );
         }
       } catch (error) {
@@ -702,17 +701,54 @@ export default function App() {
 
   const fetchProductsFromDatabase = async () => {
     try {
-      const headers = await getSupabaseHeaders({ authenticated: adminLoggedIn });
-      const res = adminLoggedIn
-        ? await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_products`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({})
-          })
-        : await fetch(
-            `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc,id.asc`,
-            { headers }
-          );
+      let res;
+      if (adminLoggedIn) {
+        const requestAdminProducts = async () => fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_products`, {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({})
+        });
+
+        res = await requestAdminProducts();
+        if (!res.ok) {
+          const errorBody = await res.text().catch(() => '');
+          const isAuthFailure = res.status === 401 || res.status === 403 ||
+            errorBody.includes('42501') ||
+            errorBody.includes('Not authorized to read admin product data');
+
+          if (isAuthFailure) {
+            // A revoked/rotated access token can briefly race the auth listener.
+            // Refresh once, then verify the refreshed identity with the Auth server
+            // before retrying the privileged RPC. Never weaken the database guard.
+            const { data: { session: refreshedSession } = {}, error: refreshError } =
+              await supabase.auth.refreshSession();
+
+            if (refreshError || !refreshedSession?.access_token) {
+              setAdminLoggedIn(false);
+              setActiveTab((current) => current === 'admin' ? 'store' : current);
+              throw new Error('ადმინისტრატორის სესია განახლდა ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
+            }
+
+            const { data: { user: verifiedUser } = {}, error: verifyError } =
+              await supabase.auth.getUser(refreshedSession.access_token);
+
+            if (verifyError || !isAuthorizedAdmin(verifiedUser)) {
+              setAdminLoggedIn(false);
+              setActiveTab((current) => current === 'admin' ? 'store' : current);
+              throw new Error('ადმინისტრატორის უფლებები ვერ დადასტურდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
+            }
+
+            res = await requestAdminProducts();
+          } else {
+            throw new Error(errorBody || 'პროდუქტების ჩატვირთვა ვერ მოხერხდა.');
+          }
+        }
+      } else {
+        res = await fetch(
+          `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc,id.asc`,
+          { headers: await getSupabaseHeaders() }
+        );
+      }
 
       if (!res.ok) {
         const errorBody = await res.text().catch(() => '');
@@ -997,8 +1033,7 @@ export default function App() {
       return deliveryFees.tbilisi;
     }
 
-    if (selectedRegion === 'bigCities') {
-      return deliveryFees.bigCities;
+    if (selectedRegion === 'bigCities') {      return deliveryFees.bigCities;
     }
 
     return deliveryFees.other;
@@ -1497,8 +1532,7 @@ export default function App() {
       };
       const message = messages[currentLang] || messages.ka;
       setCheckoutError(message);
-      showToast(message);
-      setIsSubmittingOrder(false);
+      showToast(message);      setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
     }
@@ -1997,7 +2031,6 @@ export default function App() {
                         alt=""
                         className="w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
                       />
-
                       <div>
                         <h4 className="font-bold text-xs text-white line-clamp-1">
                           {prod.name}
@@ -2497,8 +2530,7 @@ export default function App() {
                 {isSubmittingSupport
                   ? (currentLang === 'en' ? 'Sending…' : currentLang === 'ru' ? 'Отправка…' : 'იგზავნება…')
                   : t.sendMessage}
-              </button>
-            </form>
+              </button>            </form>
           </div>
         ) : (
           <button
