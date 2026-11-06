@@ -573,7 +573,7 @@ export default function StoreView({
                   onClick={() => handleOpenProduct(prod)}
                   className="gs-product-media gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
-                  <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
+                  <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
