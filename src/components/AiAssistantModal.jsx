@@ -47,7 +47,7 @@ export default function AiAssistantModal({
       placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
       inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
       disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
-      quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო', selectedProductContext: 'კონტექსტი: ', prompts: [{ label: '👋 გამარჯობა', query: 'გამარჯობა' }, { label: '🧥 ტანსაცმელი', query: 'ტანსაცმელი' }, { label: '👟 ფეხსაცმელები', query: 'ფეხსაცმელები' }, { label: '📱 სმარტფონები', query: 'სმარტფონები' }, { label: '💻 ლეპტოპები', query: 'ლეპტოპები' }, { label: '🔥 ფასდაკლებები', query: 'ფასდაკლებები' }, { label: '🚚 მიწოდება', query: 'მიწოდება' }]
+      quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო', selectedProductContext: 'კონტექსტი: ', prompts: [{ label: '👋 გამარჯობა', query: 'გამარჯობა' }, { label: '🧥 ტანსაცმელი', query: 'ტანსაცმელი' }, { label: '👟 ფეხსაცმელები', query: 'ფეხსაცმელები' }, { label: '👜 ჩანთები', query: 'ჩანთები' }, { label: '✨ აქსესუარები', query: 'აქსესუარები' }, { label: '🔥 ფასდაკლებები', query: 'ფასდაკლებები' }, { label: '🚚 მიწოდება', query: 'მიწოდება' }]
     },
     en: {
       title: 'AI Stylist', context: 'Smart catalog assistant', ready: 'Ready',
@@ -60,7 +60,7 @@ export default function AiAssistantModal({
       placeholder: 'What are you looking for? Add a product, size or budget...',
       inputLabel: 'Message for AI assistant', send: 'Send message',
       disclaimer: 'AI recommendations are for informational purposes · GEOSTORE',
-      quickPrompts: 'Quick prompts', productImage: 'Product image', selectedProductContext: 'Selected product: ', prompts: [{ label: '👋 Hello', query: 'Hello' }, { label: '🧥 Clothing', query: 'Clothing' }, { label: '👟 Shoes', query: 'Shoes' }, { label: '📱 Smartphones', query: 'Smartphones' }, { label: '💻 Laptops', query: 'Laptops' }, { label: '🔥 Discounts', query: 'Discounts' }, { label: '🚚 Delivery', query: 'Delivery' }]
+      quickPrompts: 'Quick prompts', productImage: 'Product image', selectedProductContext: 'Selected product: ', prompts: [{ label: '👋 Hello', query: 'Hello' }, { label: '🧥 Clothing', query: 'Clothing' }, { label: '👟 Shoes', query: 'Shoes' }, { label: '👜 Bags', query: 'Bags' }, { label: '✨ Accessories', query: 'Accessories' }, { label: '🔥 Discounts', query: 'Discounts' }, { label: '🚚 Delivery', query: 'Delivery' }]
     },
     ru: {
       title: 'AI-стилист', context: 'Умный помощник каталога', ready: 'Готов',
@@ -73,7 +73,7 @@ export default function AiAssistantModal({
       placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
       inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
       disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE',
-      quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара', selectedProductContext: 'Товар: ', prompts: [{ label: '👋 Привет', query: 'Привет' }, { label: '🧥 Одежда', query: 'Одежда' }, { label: '👟 Обувь', query: 'Обувь' }, { label: '📱 Смартфоны', query: 'Смартфоны' }, { label: '💻 Ноутбуки', query: 'Ноутбуки' }, { label: '🔥 Скидки', query: 'Скидки' }, { label: '🚚 Доставка', query: 'Доставка' }]
+      quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара', selectedProductContext: 'Товар: ', prompts: [{ label: '👋 Привет', query: 'Привет' }, { label: '🧥 Одежда', query: 'Одежда' }, { label: '👟 Обувь', query: 'Обувь' }, { label: '👜 Сумки', query: 'Сумки' }, { label: '✨ Аксессуары', query: 'Аксессуары' }, { label: '🔥 Скидки', query: 'Скидки' }, { label: '🚚 Доставка', query: 'Доставка' }]
     }
   })[currentLang] || ({
     title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
@@ -198,9 +198,10 @@ export default function AiAssistantModal({
     const localizedPromptAliases = {
       hello: 'გამარჯობა', привет: 'გამარჯობა',
       clothing: 'ტანსაცმელი', одежда: 'ტანსაცმელი',
-      shoes: 'ფეხსაცმელები', обувь: 'ფეხსაცმელები',
-      smartphones: 'სმარტფონები', смартфоны: 'სმარტფონები',
-      laptops: 'ლეპტოპები', ноутбуки: 'ლეპტოპები',
+      shoes: 'ფეხსაცმელი', обувь: 'ფეხსაცმელი',
+      bags: 'ჩანთები', сумки: 'ჩანთები',
+      accessories: 'აქსესუარები', аксессуары: 'აქსესუარები',
+      jewelry: 'სამკაულები', украшения: 'სამკაულები',
       discounts: 'ფასდაკლებები', скидки: 'ფასდაკლებები',
       delivery: 'მიწოდება', доставка: 'მიწოდება'
     };
@@ -233,10 +234,22 @@ export default function AiAssistantModal({
         };
       }
 
-      const randomStoreItem = sourceProducts[Math.floor(Math.random() * sourceProducts.length)];
+      const wardrobeTerms = userWardrobe
+        .map((item) => [item?.name, item?.category, item?.type, item?.color, ...(Array.isArray(item?.tags) ? item.tags : [])].filter(Boolean).join(' ').toLowerCase())
+        .join(' ');
+      const rankedWardrobeMatches = sourceProducts
+        .map((product) => {
+          const productText = [product.name, product.category, product.description, ...(Array.isArray(product.tags) ? product.tags : [])].filter(Boolean).join(' ').toLowerCase();
+          const terms = wardrobeTerms.split(/\\s+/).filter((term) => term.length > 2);
+          const score = terms.reduce((total, term) => total + (productText.includes(term) ? 1 : 0), 0);
+          return { product, score };
+        })
+        .sort((a, b) => b.score - a.score || Number(b.product.isFeatured) - Number(a.product.isFeatured) || (Number(a.product.priceGEL) || 0) - (Number(b.product.priceGEL) || 0))
+        .slice(0, 3)
+        .map((item) => item.product);
       return {
-        text: `✨ თქვენს ციფრულ გარდერობში ფიქსირდება ${userWardrobe.length} ნივთი. AI სტილისტის რეკომენდაცია: თქვენს არსებულ ტანსაცმელს შესანიშნავად მოუხდება ჩვენი ვიტრინიდან ქვემოთ წარმოდგენილი პრემიუმ პროდუქტი!`,
-        products: [randomStoreItem]
+        text: `✨ თქვენს ციფრულ გარდერობში ფიქსირდება ${userWardrobe.length} ნივთი. რეკომენდაციები შერჩეულია გარდერობის აღწერებთან და კატალოგის კატეგორიებთან შესაბამისობით.`,
+        products: rankedWardrobeMatches
       };
     }
 
@@ -260,7 +273,7 @@ export default function AiAssistantModal({
         }
       } else {
         return {
-          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მომწეროთ შეკვეთის უნიკალური ნომერი (მაგ: ORD-1025)! 📦',
+          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მომწეროთ შეკვეთის უნიკალური ნომერი (მაგ: ORD-...)! 📦',
           products: []
         };
       }
@@ -441,10 +454,10 @@ export default function AiAssistantModal({
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    const refreshedProducts = await fetchLiveProducts();
+    const currentProducts = liveProducts.length > 0 ? liveProducts : products;
 
     setTimeout(() => {
-      const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
+      const aiResult = localizeAiReply(generateAiReply(queryText, currentProducts), queryText);
       const aiMsg = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
