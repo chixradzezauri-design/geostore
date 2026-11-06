@@ -1984,7 +1984,7 @@ export default function AdminDashboardPro({
 
         {adminTab === 'expenses' && (
           <div className="admin-expenses space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება (Supabase ბაზაში)
               </h3>
@@ -2052,12 +2052,12 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'staff' && (
-          <div className="space-y-6">
+          <div className="admin-staff space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Users className="w-5 h-5 text-emerald-400" /> არსებული რეგისტრირებული მომხმარებლისთვის მენეჯერის უფლებების მინიჭება
               </h3>
-              <form onSubmit={handleAddExistingUserAsStaff} className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+              <form onSubmit={handleAddExistingUserAsStaff} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <select 
                   value={selectedUserEmailForStaff} 
                   onChange={e => setSelectedUserEmailForStaff(e.target.value)} 
@@ -2080,7 +2080,7 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის ხელით შექმნა & დეტალური უფლებები (ACL)
               </h3>
-              <form onSubmit={handleAddStaff} className="space-y-4 text-xs">
+              <form onSubmit={handleAddStaff} className="admin-staff-create-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <input type="text" placeholder="თანამშრომლის სახელი *" required value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <input type="email" placeholder="ელ-ფოსტა *" required value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -2092,9 +2092,9 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
+                <div className="admin-staff-permissions bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
                   <span className="text-slate-400 font-bold block mb-2">მოდულებზე წვდომის უფლებები:</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="admin-staff-permission-grid grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
                       { key: 'products', label: 'პროდუქტების მართვა' },
                       { key: 'orders', label: 'შეკვეთების მართვა' },
@@ -2136,7 +2136,7 @@ export default function AdminDashboardPro({
                     const isEditing = editingStaffId === st.id;
 
                     return (
-                      <div key={st.id} className="bg-slate-950/60 p-4 sm:p-5 rounded-3xl border border-emerald-500/20 space-y-3 shadow-inner">
+                      <div key={st.id} className="admin-staff-card bg-slate-950/60 p-4 sm:p-5 rounded-3xl border border-emerald-500/20 space-y-3 shadow-inner">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                           <div>
                             <div className="flex items-center gap-2.5">
@@ -2146,7 +2146,7 @@ export default function AdminDashboardPro({
                             <p className="text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
                           </div>
 
-                          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                          <div className="admin-staff-actions flex items-center gap-2 w-full sm:w-auto justify-end">
                             <button 
                               onClick={() => {
                                 if (isEditing) {
@@ -2176,7 +2176,7 @@ export default function AdminDashboardPro({
                         )}
 
                         {isEditing && (
-                          <div className="bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in text-xs">
+                          <div className="admin-staff-edit-panel bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in text-xs">
                             <div className="space-y-1">
                               <label className="text-slate-400 font-bold">როლი</label>
                               <input 
@@ -2188,7 +2188,7 @@ export default function AdminDashboardPro({
                             </div>
                             <div className="space-y-1">
                               <span className="text-slate-400 font-bold block">უფლებები:</span>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              <div className="admin-staff-edit-permissions grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {[
                                   { key: 'products', label: 'პროდუქტები' },
                                   { key: 'orders', label: 'შეკვეთები' },
