@@ -855,13 +855,23 @@ export default function App() {
   }, [orders, products]);
 
   const addToCart = (product, quantity = 1) => {
-    if (Number(product?.stock ?? 0) <= 0) {
+    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+    const availableStock = Math.max(0, Math.floor(Number(product?.stock ?? 0)));
+    const sameCartLine = (item) => item.id === product.id && item.name === product.name;
+    const existingCartLine = cart.find(sameCartLine);
+    const alreadyInCart = Math.max(0, Math.floor(Number(existingCartLine?.quantity) || 0));
+
+    if (availableStock <= 0) {
       showToast('პროდუქტი ამჟამად მარაგში არ არის.');
       return;
     }
 
+    if (alreadyInCart + requestedQuantity > availableStock) {
+      showToast(`მარაგში დარჩენილია მხოლოდ ${Math.max(0, availableStock - alreadyInCart)} ცალი.`);
+      return;
+    }
+
     setCart((prev) => {
-      const sameCartLine = (item) => item.id === product.id && item.name === product.name;
       const existing = prev.find(sameCartLine);
 
       if (existing) {
@@ -869,13 +879,13 @@ export default function App() {
           sameCartLine(item)
             ? {
                 ...item,
-                quantity: item.quantity + quantity
+                quantity: item.quantity + requestedQuantity
               }
             : item
         );
       }
 
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, quantity: requestedQuantity }];
     });
 
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
