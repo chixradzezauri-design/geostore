@@ -46,11 +46,11 @@ BEGIN
       RAISE EXCEPTION 'არჩეული ვარიანტის პროდუქტი ვერ მოიძებნა.';
     END IF;
 
-    -- Match App.jsx legacy defaults only when the database value is NULL.
-    -- An explicit empty array means that the product has no such options.
+    -- NULL means no configured options, matching the checkout RPC and UI.
+    -- An explicit empty array also means that no options are available.
     IF v_selected_size IS NOT NULL THEN
       IF v_allowed_sizes IS NULL OR v_allowed_sizes = 'null'::jsonb THEN
-        v_allowed_sizes := '["S","M","L","XL"]'::jsonb;
+        v_allowed_sizes := '[]'::jsonb;
       END IF;
 
       IF jsonb_typeof(v_allowed_sizes) IS DISTINCT FROM 'array' THEN
@@ -68,7 +68,7 @@ BEGIN
 
     IF v_selected_color IS NOT NULL THEN
       IF v_allowed_colors IS NULL OR v_allowed_colors = 'null'::jsonb THEN
-        v_allowed_colors := '["შავი","თეთრი"]'::jsonb;
+        v_allowed_colors := '[]'::jsonb;
       END IF;
 
       IF jsonb_typeof(v_allowed_colors) IS DISTINCT FROM 'array' THEN
