@@ -833,7 +833,7 @@ export default function AdminDashboardPro({
       alert('ხარჯის კატეგორია და აღწერა სავალდებულოა.');
       return;
     }
-    if (!/^\d+(?:\\.\d{1,2})?$/.test(amountText) || !Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
+    if (!/^\d+(?:\.\d{1,2})?$/.test(amountText) || !Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
       alert('ხარჯის თანხა უნდა იყოს 0-ზე მეტი, მაქსიმუმ 1,000,000,000 და არაუმეტეს 2 ათწილადი ნიშნით.');
       return;
     }
