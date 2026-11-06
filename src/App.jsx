@@ -506,9 +506,11 @@ export default function App() {
         setOrders(
           data.map((o) => ({
             id: o.id,
+            created_at: o.created_at || null,
             date: o.created_at
               ? new Date(o.created_at).toLocaleDateString('ka-GE')
               : 'დღეს',
+            time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
             customerName: o.customer_name,
             user_email: o.customer_email || o.user_email || '',
             phone: o.phone,
@@ -519,6 +521,7 @@ export default function App() {
             items: Array.isArray(o.items) ? o.items : [],
             stock_deducted_at: o.stock_deducted_at || null,
             stock_restored_at: o.stock_restored_at || null,
+            status_changed_at: o.status_changed_at || null,
             itemSummary: Array.isArray(o.items)
               ? o.items
                   .map((i) => `${i.name} (x${i.quantity})`)
@@ -677,7 +680,7 @@ export default function App() {
         fetchOrders();
       }
       fetchProductsFromDatabase();
-    }, 4000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
