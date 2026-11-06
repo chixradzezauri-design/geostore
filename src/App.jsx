@@ -1884,6 +1884,7 @@ export default function App() {
                         </div>
 
                         <button
+                          type="button"
                           onClick={() => setAppliedCoupon(null)}
                           className="text-rose-400 hover:text-rose-300 p-1 cursor-pointer"
                         >
@@ -2142,10 +2143,18 @@ export default function App() {
                 if (!name || !message || name.length > 100 || message.length > 4000 || subject.length > 150 || email.length > 254) return;
                 setIsSubmittingSupport(true);
 
-                // Use a high-entropy identifier to avoid collisions with existing support tickets.
-                const ticketId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
                 try {
+                  if (!window.crypto?.getRandomValues) {
+                    throw new Error(currentLang === 'en'
+                      ? 'Secure ticket creation is unavailable in this browser.'
+                      : currentLang === 'ru'
+                        ? 'Создание безопасного номера обращения недоступно в этом браузере.'
+                        : 'ამ ბრაუზერში მიმართვის უსაფრთხო ნომრის შექმნა მიუწვდომელია.');
+                  }
+                  const ticketBytes = new Uint8Array(16);
+                  window.crypto.getRandomValues(ticketBytes);
+                  const ticketId = `t-${Array.from(ticketBytes, byte => byte.toString(16).padStart(2, '0')).join('')}`;
+
                   const response = await fetch(
                     `${SUPABASE_URL}/rest/v1/support_tickets`,
                     {
@@ -2198,6 +2207,7 @@ export default function App() {
               <input
                 type="text"
                 name="cname"
+                aria-label={currentLang === 'en' ? 'Your name' : currentLang === 'ru' ? 'Ваше имя' : 'თქვენი სახელი'}
                 placeholder={currentLang === 'en' ? 'Your name *' : currentLang === 'ru' ? 'Ваше имя *' : 'თქვენი სახელი *'}
                 required
                 maxLength={100}
@@ -2208,6 +2218,7 @@ export default function App() {
                 type="email"
                 name="cemail"
                 maxLength={254}
+                aria-label={currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელფოსტა'}
                 placeholder={currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელფოსტა'}
                 className="gs-support-field"
               />
@@ -2216,6 +2227,7 @@ export default function App() {
                 type="text"
                 name="csubject"
                 maxLength={150}
+                aria-label={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 className="gs-support-field"
               />
@@ -2224,6 +2236,7 @@ export default function App() {
                 name="cmessage"
                 rows="3"
                 maxLength={4000}
+                aria-label={currentLang === 'en' ? 'Message' : currentLang === 'ru' ? 'Сообщение' : 'შეტყობინება'}
                 placeholder={currentLang === 'en' ? 'Write your message...' : currentLang === 'ru' ? 'Напишите сообщение...' : 'დაწერე შეტყობინება...'}
                 required
                 className="gs-support-field"
