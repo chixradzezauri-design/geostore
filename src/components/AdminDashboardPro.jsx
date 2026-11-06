@@ -561,7 +561,10 @@ export default function AdminDashboardPro({
     deliveredOrders.forEach(order => {
       const orderTotal = Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
       totalSalesRevenue += orderTotal;
-      const items = Array.isArray(order.items) ? order.items : [];
+      const rawItems = Array.isArray(order.items) ? order.items : [];
+      const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
+      const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
+      if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
       const lineGross = items.reduce((sum, item) => sum + (Math.max(0, Number(item.priceGEL ?? item.price) || 0) * Math.max(1, Number(item.quantity) || 1)), 0);
       const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
       const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
@@ -577,7 +580,8 @@ export default function AdminDashboardPro({
       }
 
       items.forEach(item => {
-        const product = productById.get(String(item.id));
+        const productId = item.id ?? item.product_id;
+        const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = Math.max(1, Number(item.quantity) || 1);
         const itemGross = Math.max(0, Number(item.priceGEL ?? item.price) || 0) * quantity;
         const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
