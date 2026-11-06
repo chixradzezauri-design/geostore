@@ -2030,9 +2030,12 @@ export default function App() {
             </h2>
 
             {cart.length === 0 ? (
-              <p className="text-slate-500 text-xs py-8">
-                {t.emptyCart}
-              </p>
+              <div className="gs-cart-empty flex flex-col items-center justify-center gap-3 text-center px-5 py-12 sm:py-16">
+                <span className="gs-cart-empty-icon flex items-center justify-center w-14 h-14 rounded-full border border-slate-200 bg-slate-50 text-slate-500">
+                  <ShoppingBag className="w-6 h-6" aria-hidden="true" />
+                </span>
+                <p className="text-slate-500 text-sm font-medium">{t.emptyCart}</p>
+              </div>
             ) : (
               <div className="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
@@ -2049,8 +2052,8 @@ export default function App() {
                         {(item.selectedSize || item.selectedColor) && (
                           <p className="gs-cart-item-variant text-slate-400 text-[11px]">
                             {[
-                              item.selectedSize ? `ზომა: ${item.selectedSize}` : null,
-                              item.selectedColor ? `ფერი: ${item.selectedColor}` : null
+                              item.selectedSize ? `${currentLang === 'en' ? 'Size' : currentLang === 'ru' ? 'Размер' : 'ზომა'}: ${item.selectedSize}` : null,
+                              item.selectedColor ? `${currentLang === 'en' ? 'Color' : currentLang === 'ru' ? 'Цвет' : 'ფერი'}: ${item.selectedColor}` : null
                             ].filter(Boolean).join(' · ')}
                           </p>
                         )}
@@ -2071,6 +2074,7 @@ export default function App() {
                             ))
                           )
                         }
+                        aria-label={currentLang === 'en' ? `Remove ${item.name} from cart` : currentLang === 'ru' ? `Удалить ${item.name} из корзины` : `წაშალე ${item.name} კალათიდან`}
                         className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                       >
                         {t.remove}
