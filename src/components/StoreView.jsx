@@ -809,7 +809,7 @@ export default function StoreView({
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                     <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{Number.isFinite(Number(selectedProduct.stock)) ? (Number(selectedProduct.stock) > 0 ? `${Number(selectedProduct.stock)} ${currentLang === 'en' ? 'units' : currentLang === 'ru' ? 'шт.' : 'ცალი'}` : (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'არ არის მარაგში')) : (currentLang === 'en' ? 'To be confirmed' : currentLang === 'ru' ? 'Уточняется' : 'დასაზუსტებელია')}</b> {storeText.deliveryFit}</span>
+                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{selectedProduct.stock !== null && selectedProduct.stock !== undefined && selectedProduct.stock !== '' && Number.isFinite(Number(selectedProduct.stock)) ? (Number(selectedProduct.stock) > 0 ? `${Number(selectedProduct.stock)} ${currentLang === 'en' ? 'units' : currentLang === 'ru' ? 'шт.' : 'ცალი'}` : (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'არ არის მარაგში')) : (currentLang === 'en' ? 'To be confirmed' : currentLang === 'ru' ? 'Уточняется' : 'დასაზუსტებელია')}</b> {storeText.deliveryFit}</span>
                   </div>
 
                   <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
@@ -896,7 +896,7 @@ export default function StoreView({
 
             <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
-                disabled={Number.isFinite(Number(selectedProduct.stock)) && Number(selectedProduct.stock) <= 0}
+                disabled={selectedProduct.stock !== null && selectedProduct.stock !== undefined && selectedProduct.stock !== '' && Number.isFinite(Number(selectedProduct.stock)) && Number(selectedProduct.stock) <= 0}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
                   let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
@@ -916,7 +916,7 @@ export default function StoreView({
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="gs-modal-add-label">{Number.isFinite(Number(selectedProduct.stock)) && Number(selectedProduct.stock) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'არ არის მარაგში') : `${storeText.addToCart}${isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}`}</span>
+                <span className="gs-modal-add-label">{selectedProduct.stock !== null && selectedProduct.stock !== undefined && selectedProduct.stock !== '' && Number.isFinite(Number(selectedProduct.stock)) && Number(selectedProduct.stock) <= 0 ? (currentLang === 'en' ? 'Out of stock' : currentLang === 'ru' ? 'Нет в наличии' : 'არ არის მარაგში') : `${storeText.addToCart}${isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}`}</span>
                 <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>
