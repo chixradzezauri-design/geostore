@@ -6366,3 +6366,25 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .geostore-storefront .gs-catalog-product-card,
   .geostore-fashion-store .geostore-storefront .gs-catalog-product-image{transition:none!important}
 }
+
+
+/* GEOSTORE — catalog price-range validation feedback */
+.geostore-fashion-store .gs-price-range-error{
+  width:100%;
+  margin:0;
+  padding:11px 14px;
+  border:1px solid rgba(220,110,90,.35);
+  border-radius:11px;
+  background:rgba(120,35,25,.16);
+  color:#f0b2a5;
+  font-size:12px;
+  line-height:1.5;
+}
+.geostore-fashion-store .gs-filter-panel input[type="number"]{
+  min-width:0;
+  font-variant-numeric:tabular-nums;
+}
+.geostore-fashion-store .gs-filter-panel input[type="number"]::-webkit-inner-spin-button,
+.geostore-fashion-store .gs-filter-panel input[type="number"]::-webkit-outer-spin-button{
+  margin:0;
+}
