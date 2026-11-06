@@ -2230,7 +2230,7 @@ export default function AdminDashboardPro({
 
         {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
         {adminTab === 'orders' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-orders-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
                 <h3 className="font-black text-white text-lg flex items-center gap-2.5">
@@ -2278,7 +2278,7 @@ export default function AdminDashboardPro({
                 <p className="text-slate-500 text-xs py-10 text-center">შეკვეთები ვერ მოიძებნა.</p>
               ) : (
                 paginatedOrders.map(o => (
-                  <div key={o.id} className="bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
+                  <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
@@ -2302,7 +2302,7 @@ export default function AdminDashboardPro({
                       </div>
                     )}
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
+                    <div className="admin-order-card-footer flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
                         <span className={`${getOrderStatusClasses(o.status || 'ახალი')} px-3 py-1 rounded-xl text-[10px] font-black`}>
@@ -2310,7 +2310,7 @@ export default function AdminDashboardPro({
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                      <div className="admin-order-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                         <button 
                           onClick={() => {
                             setSelectedOrderForModal(o);
@@ -2337,7 +2337,7 @@ export default function AdminDashboardPro({
                             <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
                           </button>
                         ) : (
-                          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
+                          <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
@@ -2368,8 +2368,8 @@ export default function AdminDashboardPro({
 
         {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
-          <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
-            <div className="bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-3xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[92vh] overflow-y-auto">
+          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+            <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-3xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[92vh] overflow-y-auto">
               
               <div className="flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <div className="flex items-center gap-3">
