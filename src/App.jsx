@@ -1727,8 +1727,8 @@ export default function App() {
             i.selectedColor || i.selected_color,
             i.selectedVariant || i.selected_variant
           ].filter(Boolean);
-          if (i.gift_wrap) options.push('სასაჩუქრე შეფუთვა');
-          if (i.vip_warranty) options.push('VIP გარანტია');
+          if (i.gift_wrap) options.push(currentLang === 'en' ? 'Gift wrap' : currentLang === 'ru' ? 'Подарочная упаковка' : 'სასაჩუქრე შეფუთვა');
+          if (i.vip_warranty) options.push(currentLang === 'en' ? 'VIP warranty' : currentLang === 'ru' ? 'VIP-гарантия' : 'VIP გარანტია');
           return `${i.name}${options.length ? ` [${options.join(', ')}]` : ''} (x${i.quantity})`;
         })
         .join(', ')
