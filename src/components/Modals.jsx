@@ -702,8 +702,8 @@ export default function Modals({
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-thin">
               <div className="space-y-2 bg-[#121216] p-4 rounded-2xl border border-amber-500/20">
-                <h4 className="font-black text-amber-300 text-sm">{currentLang === 'en' ? '1. Official warranty' : currentLang === 'ru' ? '1. Официальная гарантия' : '1. ოფიციალური გარანტია'}</h4>
-                <p>{currentLang === 'en' ? 'All electronics offered on GEOSTORE are covered by the manufacturer warranty.' : currentLang === 'ru' ? 'На всю электронику, представленную на GEOSTORE, распространяется гарантия производителя.' : 'GEOSTORE-ზე წარმოდგენილ ყველა ტექნიკაზე მოქმედებს ქარხნული გარანტია.'}</p>
+                <h4 className="font-black text-amber-300 text-sm">{currentLang === 'en' ? '1. Product-specific warranty' : currentLang === 'ru' ? '1. Гарантия конкретного товара' : '1. პროდუქტის ინდივიდუალური გარანტია'}</h4>
+                <p>{currentLang === 'en' ? 'Warranty availability, duration and service conditions depend on the individual product and are stated on its product page or confirmed by the seller before purchase. Do not assume that every item includes a manufacturer warranty.' : currentLang === 'ru' ? 'Наличие, срок и условия гарантии зависят от конкретного товара и указываются на его странице или подтверждаются продавцом до покупки. Не следует считать, что на каждый товар распространяется гарантия производителя.' : 'გარანტიის არსებობა, ვადა და მომსახურების პირობები დამოკიდებულია კონკრეტულ პროდუქტზე და მითითებულია მის გვერდზე ან შეძენამდე ზუსტდება გამყიდველთან. არ უნდა ვივარაუდოთ, რომ ყველა ნივთზე ქარხნული გარანტია მოქმედებს.'}</p>
               </div>
             </div>
             <button onClick={() => setIsWarrantyOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
