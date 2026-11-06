@@ -856,13 +856,12 @@ export default function App() {
 
   const addToCart = (product, quantity = 1) => {
     setCart((prev) => {
-      const existing = prev.find(
-        (item) => item.id === product.id
-      );
+      const sameCartLine = (item) => item.id === product.id && item.name === product.name;
+      const existing = prev.find(sameCartLine);
 
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
+          sameCartLine(item)
             ? {
                 ...item,
                 quantity: item.quantity + quantity
@@ -1547,7 +1546,7 @@ export default function App() {
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={item.id}
+                      key={`${item.id}-${item.name}`}
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
@@ -1563,7 +1562,7 @@ export default function App() {
                       <button
                         onClick={() =>
                           setCart((prev) =>
-                            prev.filter((c) => c.id !== item.id)
+                            prev.filter((c) => !(c.id === item.id && c.name === item.name))
                           )
                         }
                         className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
