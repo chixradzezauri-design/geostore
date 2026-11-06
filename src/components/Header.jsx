@@ -82,6 +82,13 @@ export default function Header({
   const mainCategories = (categories || []).filter((category) => !category?.parentId);
   const categoryLabel = currentLang === 'en' ? 'Categories' : currentLang === 'ru' ? 'Категории' : 'კატეგორიები';
   const allCategoriesLabel = currentLang === 'en' ? 'All products' : currentLang === 'ru' ? 'Все товары' : 'ყველა პროდუქტი';
+  const mainMenuLabel = currentLang === 'en' ? 'Main menu' : currentLang === 'ru' ? 'Главное меню' : 'მთავარი მენიუ';
+  const storeAccountLabel = currentLang === 'en' ? 'Store & account' : currentLang === 'ru' ? 'Магазин и аккаунт' : 'მაღაზია და ანგარიში';
+  const storeLabel = currentLang === 'en' ? 'Store' : currentLang === 'ru' ? 'Магазин' : 'მაღაზია';
+  const servicesLabel = currentLang === 'en' ? 'Services' : currentLang === 'ru' ? 'Сервисы' : 'სერვისები';
+  const adminLabel = currentLang === 'en' ? 'Admin panel' : currentLang === 'ru' ? 'Панель администратора' : 'ადმინისტრირება';
+  const installLabel = currentLang === 'en' ? 'Install app' : currentLang === 'ru' ? 'Установить приложение' : 'აპის დაყენება';
+  const languageLabel = currentLang === 'en' ? 'Language' : currentLang === 'ru' ? 'Язык' : 'ენა';
   const menuToggleLabel = currentLang === 'en'
     ? (menuOpen ? 'Close main menu' : 'Open main menu')
     : currentLang === 'ru'
@@ -156,7 +163,7 @@ export default function Header({
           <div className="gs-menu-heading">
             <div className="gs-menu-brand">
               <strong>GEOSTORE</strong>
-              <span>{currentUser ? (currentUser.name || currentUser.email || t.profile) : 'მთავარი მენიუ'}</span>
+              <span>{currentUser ? (currentUser.name || currentUser.email || t.profile) : mainMenuLabel}</span>
             </div>
             {currentUser ? (
               <button type="button" className="gs-menu-account" onClick={() => goTo('profile')}>
@@ -176,10 +183,10 @@ export default function Header({
           </div>
 
 
-          <section className="gs-menu-section" aria-label="მაღაზია და ანგარიში">
-            <p className="gs-menu-section-title">მაღაზია და ანგარიში</p>
+          <section className="gs-menu-section" aria-label={storeAccountLabel}>
+            <p className="gs-menu-section-title">{storeAccountLabel}</p>
             <button type="button" className={linkClass('store')} onClick={() => goTo('store')}>
-              <Store aria-hidden="true" /><span>მაღაზია</span>
+              <Store aria-hidden="true" /><span>{storeLabel}</span>
             </button>
             <button type="button" className={linkClass('cart')} onClick={() => goTo('cart')}>
               <ShoppingBag aria-hidden="true" /><span>{t.cart || 'კალათა'}</span>
@@ -196,7 +203,7 @@ export default function Header({
             )}
             {adminLoggedIn && (
               <button type="button" className={linkClass('admin')} onClick={() => goTo('admin')}>
-                <ShieldCheck aria-hidden="true" /><span>ადმინისტრირება</span>
+                <ShieldCheck aria-hidden="true" /><span>{adminLabel}</span>
               </button>
             )}
           </section>
@@ -235,8 +242,8 @@ export default function Header({
             })}
           </section>
 
-          <section className="gs-menu-section" aria-label="სერვისები">
-            <p className="gs-menu-section-title">სერვისები</p>
+          <section className="gs-menu-section" aria-label={servicesLabel}>
+            <p className="gs-menu-section-title">{servicesLabel}</p>
             <button type="button" className="gs-menu-link" onClick={() => runAction(setIsTrackerOpen)}>
               <PackageCheck aria-hidden="true" /><span>{t.orderTracker || 'შეკვეთის მოძებნა'}</span>
             </button>
@@ -271,13 +278,13 @@ export default function Header({
             )}
             {typeof handleInstallClick === 'function' && (
               <button type="button" className="gs-menu-link" onClick={() => { handleInstallClick(); closeMenu(); }}>
-                <Download aria-hidden="true" /><span>აპის დაყენება</span>
+                <Download aria-hidden="true" /><span>{installLabel}</span>
               </button>
             )}
           </section>
 
           <div className="gs-menu-footer">
-            <span><Globe aria-hidden="true" /> ენა / Language</span>
+            <span><Globe aria-hidden="true" /> {languageLabel}</span>
             <div className="gs-menu-languages">
               {['ka', 'en', 'ru'].map((lang) => (
                 <button
