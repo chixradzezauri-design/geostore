@@ -1,6 +1,6 @@
 // src/components/AIDigitalWardrobe.jsx - Full AI Digital Wardrobe & Personal Stylist
 import React, { useState, useEffect } from 'react';
-import { validateImageFile, isSafeImageUrl } from '../utils/imageSafety';
+import { validateImageFile, isSafeImageUrl, isValidImageDataUrl } from '../utils/imageSafety';
 import { 
   Sparkles, Shirt, Footprints, Camera, Plus, Trash2, Zap, CloudSun, 
   Calendar, Check, ShoppingBag, Eye, RefreshCw, Tag, Heart, ArrowRight, Layers
@@ -79,7 +79,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   const handleAddItem = (e) => {
     e.preventDefault();
     if (!newItem.name.trim()) return;
-    if (newItem.image && !String(newItem.image).startsWith('data:image/') && !isSafeImageUrl(newItem.image)) {
+    if (newItem.image && !isValidImageDataUrl(newItem.image) && !isSafeImageUrl(newItem.image)) {
       alert('ფოტოს ბმული უნდა იწყებოდეს http:// ან https:// მისამართით.');
       return;
     }
