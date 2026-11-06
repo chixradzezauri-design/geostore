@@ -909,7 +909,8 @@ export default function StoreView({
                     priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
                     name: customName,
                     selectedSize: isCf ? selectedSize : null,
-                    selectedColor: selectedColor
+                    selectedColor: selectedColor,
+                    selectedVariant: selectedCustomVariant?.name || null
                   }); 
                   setSelectedProduct(null); 
                 }} 
