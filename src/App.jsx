@@ -1519,6 +1519,10 @@ export default function App() {
         selected_size: item.selectedSize || null,
         selected_color: item.selectedColor || null,
         selected_variant: item.selectedVariant || null,
+        selected_variant_id: item.selectedVariantId || null,
+        gift_wrap: Boolean(item.giftWrap),
+        gift_message: item.giftWrap ? String(item.giftMessage || '').slice(0, 300) : '',
+        vip_warranty: Boolean(item.vipWarranty),
         purchase_cost: purchaseCost,
         category: catalogProduct?.category || item.category || '',
         vendor: catalogProduct?.vendor || item.vendor || ''
