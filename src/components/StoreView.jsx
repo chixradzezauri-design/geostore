@@ -99,8 +99,10 @@ export default function StoreView({
     const defaultSizes = prod.availableSizes || ['S', 'M', 'L', 'XL'];
     setSelectedSize(defaultSizes[0] || 'M');
 
-    const defaultColors = prod.availableColors || ['შავი'];
-    setSelectedColor(defaultColors[0] || '');
+    const parsedColors = Array.isArray(prod.availableColors)
+      ? prod.availableColors
+      : (typeof prod.colors === 'string' ? prod.colors.split(',').map(color => color.trim()).filter(Boolean) : []);
+    setSelectedColor(parsedColors[0] || '');
 
 
     setIsGiftWrapped(false);
