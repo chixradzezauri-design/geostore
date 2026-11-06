@@ -1465,12 +1465,23 @@ export default function AdminDashboardPro({
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
-    const code = couponForm.code.trim().toUpperCase().replace(/\s+/g, '');
-    const discountPercent = Number(couponForm.discountPercent);
-    const minOrderGEL = Number(couponForm.minOrderGEL) || 0;
+    const code = String(couponForm.code || '').trim().toUpperCase().replace(/\s+/g, '');
+    const discountText = String(couponForm.discountPercent ?? '').trim();
+    const minOrderText = String(couponForm.minOrderGEL ?? '').trim();
+    const discountPercent = Number(discountText);
+    const minOrderGEL = minOrderText === '' ? 0 : Number(minOrderText);
 
-    if (!/^[A-Z0-9_-]{3,64}$/.test(code) || !Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100 || !Number.isFinite(minOrderGEL) || minOrderGEL < 0) {
-      alert('შეამოწმეთ კუპონის კოდი, ფასდაკლება (1-100%) და მინიმალური შეკვეთა.');
+    const validDiscount = /^\\d+(?:\\.\\d{1,2})?$/.test(discountText)
+      && Number.isFinite(discountPercent)
+      && discountPercent > 0
+      && discountPercent <= 100;
+    const validMinimum = (minOrderText === '' || /^\\d+(?:\\.\\d{1,2})?$/.test(minOrderText))
+      && Number.isFinite(minOrderGEL)
+      && minOrderGEL >= 0
+      && minOrderGEL <= 1000000000;
+
+    if (!/^[A-Z0-9_-]{3,64}$/.test(code) || !validDiscount || !validMinimum) {
+      alert('კოდი უნდა შეიცავდეს 3-64 ლათინურ ასოს/ციფრს. ფასდაკლება: 0-ზე მეტი და მაქსიმუმ 100% (2 ათწილადი); მინიმალური შეკვეთა: 0-1,000,000,000 ₾ (2 ათწილადი).');
       return;
     }
 
@@ -3506,8 +3517,8 @@ export default function AdminDashboardPro({
               </h3>
               <form onSubmit={handleCreateCoupon} className="admin-coupon-form grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
                 <input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
-                <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="1" max="100" step="0.01" value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" step="0.01" value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="0.01" max="100" step="0.01" inputMode="decimal" value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" max="1000000000" step="0.01" inputMode="decimal" value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კუპონის დამატება</button>
               </form>
             </div>
