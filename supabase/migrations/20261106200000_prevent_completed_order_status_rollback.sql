@@ -117,3 +117,66 @@ begin
   return jsonb_build_object('order_id', p_order_id, 'status', p_new_status);
 end;
 $function$;
+
+
+-- Enforce the same transition rules for direct table updates, not only RPC calls.
+-- The dedicated reactivation RPC remains supported only with fresh password auth
+-- and an atomic stock-restoration reversal.
+CREATE OR REPLACE FUNCTION private.guard_order_status_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_password_auth_time bigint;
+BEGIN
+  IF NEW.status IS NOT DISTINCT FROM OLD.status THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.status IN ('დასრულებული', 'ჩაბარებულია')
+     AND NEW.status NOT IN ('დასრულებული', 'ჩაბარებულია') THEN
+    RAISE EXCEPTION 'ჩაბარებული შეკვეთის სტატუსის შეცვლა დაუშვებელია.';
+  END IF;
+
+  IF OLD.status IN ('გაგზავნილი', 'გზაშია')
+     AND NEW.status NOT IN ('გაგზავნილი', 'გზაშია', 'დასრულებული', 'ჩაბარებულია') THEN
+    RAISE EXCEPTION 'გაგზავნილი შეკვეთის წინა სტატუსზე დაბრუნება ან გაუქმება დაუშვებელია.';
+  END IF;
+
+  IF OLD.status = 'გაუქმებული' AND NEW.status <> 'გაუქმებული' THEN
+    IF NEW.status <> 'ახალი'
+       OR OLD.stock_restored_at IS NULL
+       OR OLD.stock_deducted_at IS NULL
+       OR NEW.stock_restored_at IS NOT NULL
+       OR NEW.stock_deducted_at IS NULL
+       OR NEW.stock_deducted_at <= OLD.stock_deducted_at
+       OR auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid
+       OR coalesce(auth.jwt()->'app_metadata'->>'role', '') <> 'admin' THEN
+      RAISE EXCEPTION 'გაუქმებული შეკვეთის ხელახლა გააქტიურება მხოლოდ დაცული პროცედურით არის შესაძლებელი.';
+    END IF;
+
+    SELECT max((entry->>'timestamp')::bigint)
+      INTO v_password_auth_time
+      FROM jsonb_array_elements(coalesce(auth.jwt()->'amr', '[]'::jsonb)) AS entry
+     WHERE entry->>'method' = 'password'
+       AND coalesce(entry->>'timestamp', '') ~ '^[0-9]+$';
+
+    IF v_password_auth_time IS NULL
+       OR extract(epoch FROM now())::bigint - v_password_auth_time > 300
+       OR v_password_auth_time > extract(epoch FROM now())::bigint + 30 THEN
+      RAISE EXCEPTION 'ხელახლა გააქტიურებისთვის საჭიროა პაროლის ახლიდან დადასტურება.';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS orders_guard_status_transition ON public.orders;
+
+CREATE TRIGGER orders_guard_status_transition
+BEFORE UPDATE OF status ON public.orders
+FOR EACH ROW
+EXECUTE FUNCTION private.guard_order_status_transition();
