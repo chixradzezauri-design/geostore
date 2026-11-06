@@ -1999,11 +1999,11 @@ export default function App() {
                         </span>
 
                         <span>
-                          -{formatPrice(
-                            (cartSubtotalGEL *
-                              eligibleAppliedCoupon.discountPercent) /
-                              100
-                          )}
+                          -{formatPrice(calculateCheckoutTotals({
+                            subtotal: cartSubtotalGEL,
+                            discountPercent: eligibleAppliedCoupon.discountPercent,
+                            deliveryFee: 0
+                          }).discountGEL)}
                         </span>
                       </div>
                     )}
