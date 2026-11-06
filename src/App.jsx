@@ -53,10 +53,11 @@ const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
 };
 
 const DEFAULT_CATEGORIES = [
-  { id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null },
-  { id: 'c2', name: 'ლეპტოპები', icon: 'Laptop', parentId: null },
-  { id: 'c3', name: 'აქსესუარები', icon: 'Sparkles', parentId: null },
-  { id: 'c4', name: 'ჭკვიანი საათები', icon: 'Watch', parentId: null }
+  { id: 'c1', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null },
+  { id: 'c1-women', name: 'ქალის ტანსაცმელი', icon: 'Shirt', parentId: 'c1' },
+  { id: 'c1-men', name: 'მამაკაცის ტანსაცმელი', icon: 'Shirt', parentId: 'c1' },
+  { id: 'c2', name: 'ფეხსაცმელი', icon: 'Footprints', parentId: null },
+  { id: 'c3', name: 'აქსესუარები', icon: 'Sparkles', parentId: null }
 ];
 
 const DEFAULT_VENDORS = [
@@ -64,25 +65,9 @@ const DEFAULT_VENDORS = [
   { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
 ];
 
-const DEFAULT_PRODUCTS = [
-  {
-    id: 'prod-1',
-    sku: 'GEO-IP15P',
-    name: 'iPhone 15 Pro Max 256GB Titanium',
-    category: 'სმარტფონები',
-    brand: 'Apple',
-    vendor: 'GEOSTORE ოფიციალური',
-    priceGEL: 3899,
-    oldPriceGEL: 4299,
-    stock: 8,
-    image:
-      'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
-    description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით.',
-    availableSizes: ['S', 'M', 'L', 'XL'],
-    material: 'ტიტანი / კერამიკა',
-    durability: 'IP68 Water Resistant'
-  }
-];
+// Do not seed a demo product into the live storefront. Catalogue items
+// must come from Supabase so displayed price and stock match server checkout.
+const DEFAULT_PRODUCTS = [];
 
 const DEFAULT_COUPONS = [
   { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
