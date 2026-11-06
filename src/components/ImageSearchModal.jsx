@@ -1,5 +1,6 @@
 // src/components/ImageSearchModal.jsx - Search by Image (Visual Search)
 import React, { useState, useRef } from 'react';
+import { validateImageFile } from '../utils/imageSafety';
 import { X, Camera, Upload, Sparkles, ShoppingBag, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ImageSearchModal({
@@ -16,26 +17,22 @@ export default function ImageSearchModal({
 
   if (!isImageSearchOpen) return null;
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-
-    // ფორმატისა და ზომის შემოწმება (მაქს 5MB)
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('გთხოვთ აირჩიოთ მხარდაჭერილი ფოტოს ფორმატი (JPEG, PNG, WebP).');
-      return;
+    try {
+      await validateImageFile(file, 5 * 1024 * 1024, ['image/jpeg', 'image/png', 'image/webp']);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result);
+        setSearchResults(null);
+      };
+      reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
+      reader.readAsDataURL(file);
+    } catch (error) {
+      alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.');
     }
-    if (file.size > 5 * 1024 * 1024) {
-      alert('ფოტოს ზომა არ უნდა აღემატებოდეს 5MB-ს.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSelectedImage(reader.result);
-      setSearchResults(null);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleStartVisualSearch = () => {
