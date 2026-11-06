@@ -864,7 +864,8 @@ export default function App() {
 
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
-    const availableStock = Math.max(0, Math.floor(Number(product?.stock ?? 0)));
+    const rawAvailableStock = Number(product?.stock ?? 0);
+    const availableStock = Number.isFinite(rawAvailableStock) ? Math.max(0, Math.floor(rawAvailableStock)) : 0;
     const sameCartLine = (item) => item.id === product.id && item.name === product.name;
     const existingCartLine = cart.find(sameCartLine);
     const alreadyInCart = Math.max(0, Math.floor(Number(existingCartLine?.quantity) || 0));
