@@ -355,51 +355,29 @@ export default function Modals({
         }
       }
     } else {
-      const matchedUser = usersList.find(u => u.pinHash && u.pinHash === btoa(pinCode));
-      if (matchedUser) {
-        setCurrentUser(matchedUser);
-        alert(`🔓 წარმატებით შეხვედით როგორც ${matchedUser.name}!`);
-        setIsAuthOpen(false);
-        setPinCode('');
-        setFailedAttempts(0);
-      } else {
-        setFailedAttempts(prev => prev + 1);
-        setPinError('ვერ მოიძებნა ანგარიში ამ PIN-კოდით.');
-      }
+      // A locally stored PIN must never create an authenticated user session.
+      // Only Supabase Auth can establish the signed-in identity.
+      setPinError(
+        currentLang === 'en'
+          ? 'PIN can only unlock an already authenticated account. Please sign in with your email and password.'
+          : currentLang === 'ru'
+            ? 'PIN-код может разблокировать только уже авторизованный аккаунт. Войдите по электронной почте и паролю.'
+            : 'PIN-კოდი მხოლოდ უკვე ავტორიზებული ანგარიშის განბლოკვისთვის გამოიყენება. შედით ელ-ფოსტითა და პაროლით.'
+      );
+      setPinCode('');
     }
   };
 
   const handleBiometricLogin = async () => {
-    if (!window.PublicKeyCredential) {
-      alert('თქვენი ბრაუზერი ან მოწყობილობა არ მხარს უჭერს Passkeys / Face ID ავტორიზაციას.');
-      return;
-    }
-    try {
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if (available) {
-        const assertion = await navigator.credentials.get({
-          publicKey: {
-            challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
-            timeout: 60000,
-            userVerification: "required"
-          }
-        });
-        if (assertion) {
-          const passkeyUser = currentUser || usersList.find(u => u.hasPasskey) || usersList[0];
-          if (passkeyUser) {
-            setCurrentUser(passkeyUser);
-            alert(currentLang === 'en' ? `✅ Face ID / Touch ID verification successful (${passkeyUser.name})!` : currentLang === 'ru' ? `✅ Проверка Face ID / Touch ID прошла успешно (${passkeyUser.name})!` : `✅ Face ID / Touch ID ვერიფიკაცია წარმატებულია (${passkeyUser.name})!`);
-          } else {
-            alert(currentLang === 'en' ? '✅ Face ID verification successful. Please register.' : currentLang === 'ru' ? '✅ Проверка Face ID прошла успешно. Пожалуйста, зарегистрируйтесь.' : '✅ Face ID ვერიფიკაცია წარმატებულია, გთხოვთ გაიაროთ რეგისტრაცია.');
-          }
-          setIsAuthOpen(false);
-        }
-      } else {
-        alert(currentLang === 'en' ? 'Biometric sensor is unavailable on this device.' : currentLang === 'ru' ? 'Биометрический датчик недоступен на этом устройстве.' : 'ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
-      }
-    } catch {
-      alert(currentLang === 'en' ? 'Face ID sign-in was cancelled or failed.' : currentLang === 'ru' ? 'Вход по Face ID отменён или не выполнен.' : 'Face ID ავტორიზაცია გაუქმდა ან ვერ მოხერხდა.');
-    }
+    // WebAuthn requires a server-issued challenge and server-side assertion
+    // verification. A browser-only credential prompt is not authentication.
+    alert(
+      currentLang === 'en'
+        ? 'Secure Passkey / Face ID sign-in is not configured yet. Please use your email and password.'
+        : currentLang === 'ru'
+          ? 'Безопасный вход по Passkey / Face ID пока не настроен. Используйте электронную почту и пароль.'
+          : 'Passkey / Face ID-ით უსაფრთხო შესვლა ჯერ არ არის გამართული. გამოიყენეთ ელ-ფოსტა და პაროლი.'
+    );
   };
 
   return (
