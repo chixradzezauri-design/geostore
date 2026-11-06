@@ -373,6 +373,7 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
+  const pendingCheckoutRef = useRef(null);
   const [checkoutError, setCheckoutError] = useState('');
   const [orderConfirmation, setOrderConfirmation] = useState(null);
 
@@ -1376,11 +1377,6 @@ export default function App() {
     let orderId = '';
 
     try {
-      // 128-bit random ID prevents predictable order references; legacy IDs remain valid.
-      const randomOrderIdBytes = new Uint8Array(16);
-      window.crypto.getRandomValues(randomOrderIdBytes);
-      orderId = `ORD-${Array.from(randomOrderIdBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
-
       // ერთი და იგივე Supabase სესია განსაზღვრავს მომხმარებლის ელფოსტასაც
       // და Authorization ტოკენსაც, რათა RLS შემოწმება თანმიმდევრული იყოს.
       const {
@@ -1394,6 +1390,70 @@ export default function App() {
       orderUserEmail = orderSession?.user?.email || customerEmail;
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderUserEmail)) {
         throw new Error('შეკვეთისთვის საჭიროა სწორი ელ-ფოსტა.');
+      }
+
+      // Keep one idempotency key for the same checkout payload across retries
+      // and page reloads. Only a SHA-256 digest (never contact details) is persisted.
+      const groupedCheckoutItems = new Map();
+      itemsToOrder.forEach((item) => {
+        const key = JSON.stringify([String(item.id), item.selected_size || null, item.selected_color || null]);
+        const current = groupedCheckoutItems.get(key) || {
+          id: String(item.id),
+          selected_size: item.selected_size || null,
+          selected_color: item.selected_color || null,
+          quantity: 0
+        };
+        current.quantity += Number(item.quantity) || 0;
+        groupedCheckoutItems.set(key, current);
+      });
+      const checkoutFingerprintPayload = {
+        customer_name: customerName,
+        phone: customerPhone,
+        address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+        user_email: orderSession?.user?.email || 'guest',
+        customer_email: orderUserEmail.toLowerCase(),
+        items: Array.from(groupedCheckoutItems.entries())
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([, item]) => item),
+        coupon_code: (appliedCoupon?.code || '').trim().toUpperCase(),
+        delivery_region: selectedRegion
+      };
+      const fingerprintSource = JSON.stringify(checkoutFingerprintPayload);
+      let checkoutFingerprint = fingerprintSource;
+      let canPersistFingerprint = false;
+      if (window.crypto?.subtle?.digest && typeof TextEncoder !== 'undefined') {
+        const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprintSource));
+        checkoutFingerprint = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+        canPersistFingerprint = true;
+      }
+
+      let storedPendingCheckout = null;
+      if (canPersistFingerprint) {
+        try {
+          storedPendingCheckout = JSON.parse(window.sessionStorage.getItem('geostore.pendingCheckout') || 'null');
+        } catch {
+          storedPendingCheckout = null;
+        }
+      }
+      const reusableCheckout = [pendingCheckoutRef.current, storedPendingCheckout]
+        .find((entry) => entry?.fingerprint === checkoutFingerprint && /^ORD-[A-F0-9]{32}$/.test(entry.orderId));
+
+      if (reusableCheckout) {
+        orderId = reusableCheckout.orderId;
+      } else {
+        // 128-bit random ID prevents predictable order references; legacy IDs remain valid.
+        const randomOrderIdBytes = new Uint8Array(16);
+        window.crypto.getRandomValues(randomOrderIdBytes);
+        orderId = `ORD-${Array.from(randomOrderIdBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+      }
+
+      pendingCheckoutRef.current = { fingerprint: checkoutFingerprint, orderId };
+      if (canPersistFingerprint) {
+        try {
+          window.sessionStorage.setItem('geostore.pendingCheckout', JSON.stringify(pendingCheckoutRef.current));
+        } catch {
+          // In-memory retry protection remains active if browser storage is unavailable.
+        }
       }
 
       const response = await fetch(
@@ -1478,6 +1538,13 @@ export default function App() {
     setIsSubmittingOrder(false);
     orderSubmitLock.current = false;
     setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: Number(serverOrderResult.total_gel) });
+    if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
+    try {
+      const savedPendingCheckout = JSON.parse(window.sessionStorage.getItem('geostore.pendingCheckout') || 'null');
+      if (savedPendingCheckout?.orderId === orderId) window.sessionStorage.removeItem('geostore.pendingCheckout');
+    } catch {
+      // Confirmation is already committed; storage cleanup must not block checkout.
+    }
     setCart([]);
     setAppliedCoupon(null);
 
