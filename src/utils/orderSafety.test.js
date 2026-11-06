@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  calculateCheckoutTotals,
   createSecureOrderId,
   groupCheckoutItems,
   isReusableCheckout
@@ -74,5 +75,31 @@ test('fails closed when a secure random source is unavailable', () => {
   assert.throws(
     () => createSecureOrderId(null),
     /უსაფრთხო შეკვეთის ნომრის გენერირება/
+  );
+});
+
+
+test('rounds coupon discount to cents before adding delivery, matching server checkout', () => {
+  assert.deepEqual(
+    calculateCheckoutTotals({ subtotal: 100.05, discountPercent: 10, deliveryFee: 10 }),
+    { subtotalGEL: 100.05, discountGEL: 10.01, deliveryGEL: 10, totalGEL: 100.04 }
+  );
+});
+
+test('keeps a zero-discount total and supports a full discount', () => {
+  assert.equal(
+    calculateCheckoutTotals({ subtotal: 100, discountPercent: 0, deliveryFee: 15 }).totalGEL,
+    115
+  );
+  assert.equal(
+    calculateCheckoutTotals({ subtotal: 100, discountPercent: 100, deliveryFee: 0 }).totalGEL,
+    0
+  );
+});
+
+test('clamps invalid discount and delivery values safely', () => {
+  assert.deepEqual(
+    calculateCheckoutTotals({ subtotal: 50, discountPercent: 150, deliveryFee: -5 }),
+    { subtotalGEL: 50, discountGEL: 50, deliveryGEL: 0, totalGEL: 0 }
   );
 });
