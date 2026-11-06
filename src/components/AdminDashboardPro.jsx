@@ -2782,12 +2782,21 @@ export default function AdminDashboardPro({
                         </button>
 
                         {isCancelledOrderStatus(o.status) ? (
-                          <button
-                            onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
-                            className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
-                          >
-                            <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
-                          </button>
+                          o.stock_deducted_at && o.stock_restored_at ? (
+                            <button
+                              onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                              className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
+                            >
+                              <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
+                            </button>
+                          ) : (
+                            <span
+                              className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-200 text-[10px] leading-relaxed"
+                              title="რეაქტივაცია მოითხოვს მარაგის ჩამოჭრისა და აღდგენის დადასტურებულ ჩანაწერებს."
+                            >
+                              რეაქტივაცია მიუწვდომელია — მარაგის ისტორია არასრულია
+                            </span>
+                          )
                         ) : (
                           <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
