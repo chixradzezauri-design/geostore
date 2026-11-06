@@ -173,26 +173,11 @@ const DEFAULT_VENDORS = [
 // must come from Supabase so displayed price and stock match server checkout.
 const DEFAULT_PRODUCTS = [];
 
-const DEFAULT_COUPONS = [
-  { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
-];
+// Never invent a live coupon. Active coupons are loaded from Supabase.
+const DEFAULT_COUPONS = [];
 
-const DEFAULT_NOTIFICATIONS = [
-  {
-    id: 'n1',
-    title: 'მოგესალმებით GEOSTORE-ში!',
-    message: 'ისარგებლეთ 10% ფასდაკლებით პრომო-კოდით: GEOSTORE2026',
-    date: 'დღეს',
-    read: false
-  },
-  {
-    id: 'n2',
-    title: 'უფასო მიწოდება',
-    message: 'მიწოდება თბილისის მასშტაბით სრულიად უფასოა!',
-    date: 'გუშინ',
-    read: false
-  }
-];
+// Storefront notifications must come from real persisted events, not demo promises.
+const DEFAULT_NOTIFICATIONS = [];
 
 // Supabase Auth მომხმარებლის ფორმატის შენარჩუნება,
 // რათა არსებული Header და პროფილის კომპონენტები იმუშაოს.
@@ -309,16 +294,27 @@ export default function App() {
   );
 
   const [coupons, setCoupons] = useState(() =>
-    loadSafeStorage('geostore_coupons', DEFAULT_COUPONS)
-  );
+    loadSafeStorage('geostore_coupons', DEFAULT_COUPONS).filter((coupon) =>
+      !(coupon?.id === 'c1' &&
+        String(coupon?.code || '').trim().toUpperCase() === 'GEOSTORE2026' &&
+        Number(coupon?.discountPercent) === 10)
+  ));
 
   const [bannersList, setBannersList] = useState(() =>
     loadSafeStorage('geostore_banners', [])
   );
 
   const [notifications, setNotifications] = useState(() =>
-    loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS)
-  );
+    loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS).filter((notification) =>
+      !(
+        (notification?.id === 'n1' &&
+          notification?.title === 'მოგესალმებით GEOSTORE-ში!' &&
+          String(notification?.message || '').includes('GEOSTORE2026')) ||
+        (notification?.id === 'n2' &&
+          notification?.title === 'უფასო მიწოდება' &&
+          String(notification?.message || '').includes('თბილისის მასშტაბით სრულიად უფასოა'))
+      )
+  ));
 
   const [activeTab, setActiveTab] = useState('store');
 
