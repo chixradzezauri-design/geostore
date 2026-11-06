@@ -2488,25 +2488,25 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'support' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
             </h3>
-            <div className="space-y-4">
+            <div className="admin-support-list space-y-4">
               {(!supportTickets || supportTickets.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
               ) : (
                 supportTickets.map(t => (
-                  <div key={t.id} className="bg-slate-950/60 p-5 sm:p-6 rounded-3xl border border-emerald-500/20 space-y-4 text-xs shadow-inner">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                      <div className="flex items-center gap-3 flex-wrap">
+                  <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-5 sm:p-6 rounded-3xl border border-emerald-500/20 space-y-4 text-xs shadow-inner">
+                    <div className="admin-support-ticket-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
+                      <div className="admin-support-ticket-meta flex items-center gap-3 flex-wrap">
                         <span className="font-black text-emerald-400 text-sm">#{t.id}</span>
                         <span className="text-white font-black text-sm">{t.subject}</span>
                         <span className="text-slate-500 text-[10px]">({t.date})</span>
                       </div>
                       
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <div className="flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20">
+                      <div className="admin-support-ticket-controls flex items-center gap-2.5 flex-wrap">
+                        <div className="admin-support-status-actions flex items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20">
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'ღია')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'ღია' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ღია</button>
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
@@ -2515,21 +2515,21 @@ export default function AdminDashboardPro({
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="admin-support-ticket-content space-y-1.5">
                       <p className="text-slate-300">მომხმარებელი: <b className="text-white">{t.customerName}</b> ({t.email})</p>
-                      <p className="text-slate-200 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 mt-2">
+                      <p className="admin-support-ticket-message text-slate-200 bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 mt-2">
                         <b className="text-emerald-400 block mb-1">კითხვა:</b> "{t.message}"
                       </p>
                     </div>
 
                     {t.reply && (
-                      <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-1 shadow">
+                      <div className="admin-support-ticket-reply bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-1 shadow">
                         <b className="text-emerald-400 block text-xs">ადმინისტრატორის პასუხი:</b>
                         <p className="text-slate-200">{t.reply}</p>
                       </div>
                     )}
 
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <div className="admin-support-reply-form flex flex-col sm:flex-row gap-3 pt-2">
                       <input 
                         type="text" 
                         placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
