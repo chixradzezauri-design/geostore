@@ -8,18 +8,6 @@ export const headers = {
   'Content-Type': 'application/json'
 };
 
-const TG_BOT_TOKEN = "8968372156:AAHe6OHQZfdChPXS4wQDQ5omSA1DNIS6VEY";
-const TG_CHAT_ID = "8740008890";
-
-export const sendTelegramNotification = (text) => {
-  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
-  fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: TG_CHAT_ID, text: text, parse_mode: 'Markdown' })
-  }).catch(err => console.log("TG Error:", err));
-};
-
 export const INITIAL_CATEGORIES = [
   { id: 'cat-1', name: 'სმარტფონები', icon: '📱' },
   { id: 'cat-2', name: 'ლეპტოპები', icon: '💻' },
