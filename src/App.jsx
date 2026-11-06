@@ -610,12 +610,27 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const markAllNotificationsAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((n) => ({ ...n, read: true }))
-    );
-
-    showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
+  const markAllNotificationsAsRead = async () => {
+    if (!currentUser?.email || notificationsLoading || !notifications.some((n) => !n.read)) return;
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/mark_my_order_notifications_read`,
+        {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({})
+        }
+      );
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'შეტყობინებების განახლება ვერ მოხერხდა.');
+      }
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
+    } catch (error) {
+      console.error('Mark notifications read failed:', error);
+      showToast(currentLang === 'en' ? 'Could not update notifications.' : currentLang === 'ru' ? 'Не удалось обновить уведомления.' : 'შეტყობინებების განახლება ვერ მოხერხდა.');
+    }
   };
 
   const unreadNotificationsCount = useMemo(() => {
@@ -835,6 +850,69 @@ export default function App() {
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
   }, [currentUser?.email, activeTab]);
+
+  useEffect(() => {
+    let active = true;
+    const loadNotifications = async () => {
+      if (!currentUser?.email) {
+        setNotifications([]);
+        setNotificationsLoading(false);
+        return;
+      }
+      setNotificationsLoading(true);
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/get_my_order_notifications`,
+          {
+            method: 'POST',
+            headers: await getSupabaseHeaders({ authenticated: true }),
+            body: JSON.stringify({})
+          }
+        );
+        if (!response.ok) {
+          const errorBody = await response.text().catch(() => '');
+          throw new Error(errorBody || 'შეტყობინებების მიღება ვერ მოხერხდა.');
+        }
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('შეტყობინებების მონაცემები არასწორია.');
+        if (!active) return;
+        setNotifications(rows.map((n) => ({
+          id: String(n.id),
+          orderId: n.order_id,
+          status: n.status,
+          title: '',
+          message: '',
+          date: n.created_at ? new Date(n.created_at).toLocaleString(currentLang === 'en' ? 'en-GB' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : '',
+          read: Boolean(n.read_at),
+          readAt: n.read_at || null
+        })));
+      } catch (error) {
+        if (active) {
+          console.error('Order notifications fetch failed:', error);
+          setNotifications([]);
+        }
+      } finally {
+        if (active) setNotificationsLoading(false);
+      }
+    };
+
+    if (!currentUser?.email) {
+      setNotifications([]);
+      setNotificationsLoading(false);
+      return () => { active = false; };
+    }
+    void loadNotifications();
+    const interval = window.setInterval(() => void loadNotifications(), 30000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void loadNotifications();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [currentUser?.email, currentLang]);
 
   const fetchOrders = async () => {
     try {
@@ -1182,15 +1260,6 @@ export default function App() {
       );
     } catch {}
   }, [bannersList]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        'geostore_notifications',
-        JSON.stringify(notifications)
-      );
-    } catch {}
-  }, [notifications]);
 
   const cartSubtotalGEL = useMemo(() => {
     const itemsToCalc = quickBuyProduct
