@@ -239,11 +239,13 @@ export default function StoreView({
 
     if (minPrice !== '') {
       const min = Number(minPrice);
-      result = result.filter(p => Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) >= min);
+      result = result.filter(p => p.priceGEL !== null && p.priceGEL !== undefined && p.priceGEL !== '' &&
+        Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) >= min);
     }
     if (maxPrice !== '') {
       const max = Number(maxPrice);
-      result = result.filter(p => Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) <= max);
+      result = result.filter(p => p.priceGEL !== null && p.priceGEL !== undefined && p.priceGEL !== '' &&
+        Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) <= max);
     }
 
     if (sortBy === 'price-asc' || sortBy === 'price-desc') {
@@ -251,8 +253,8 @@ export default function StoreView({
       result.sort((a, b) => {
         const priceA = Number(a.priceGEL);
         const priceB = Number(b.priceGEL);
-        const validA = Number.isFinite(priceA);
-        const validB = Number.isFinite(priceB);
+        const validA = a.priceGEL !== null && a.priceGEL !== undefined && a.priceGEL !== '' && Number.isFinite(priceA);
+        const validB = b.priceGEL !== null && b.priceGEL !== undefined && b.priceGEL !== '' && Number.isFinite(priceB);
         if (validA !== validB) return validA ? -1 : 1;
         if (!validA) return 0;
         return (priceA - priceB) * direction;
