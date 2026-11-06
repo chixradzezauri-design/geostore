@@ -993,8 +993,10 @@ export default function AdminDashboardPro({
       });
 
       if (res.ok) {
+        const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
         const localProdObject = {
           id: prodId,
+          createdAt: existingProduct?.createdAt || new Date().toISOString(),
           sku: newProdPayload.sku,
           name: newProdPayload.name,
           category: newProdPayload.category,
