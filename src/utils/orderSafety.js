@@ -72,3 +72,61 @@ export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee
     totalGEL: Number((Math.max(0, safeSubtotal - discountGEL) + safeDeliveryFee).toFixed(10))
   };
 };
+
+
+/**
+ * Compares cart snapshots with a fresh public catalogue response.
+ * The server RPC remains authoritative; this is a customer-facing stale-cart
+ * guard so changed prices/stock are reviewed before the order is submitted.
+ */
+export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
+  const cart = Array.isArray(cartItems) ? cartItems : [];
+  const catalog = Array.isArray(catalogProducts) ? catalogProducts : [];
+  const byId = new Map(catalog.map((product) => [String(product?.id ?? ''), product]));
+  const requestedById = new Map();
+
+  for (const item of cart) {
+    const id = String(item?.id ?? '');
+    const quantity = Number(item?.quantity ?? 1);
+    if (!id) continue;
+    requestedById.set(id, (requestedById.get(id) || 0) +
+      (Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1));
+  }
+
+  const changes = [];
+  const refreshedCart = cart.map((item) => {
+    const product = byId.get(String(item?.id ?? ''));
+    if (!product) {
+      changes.push({ id: item?.id, name: item?.name || String(item?.id || ''), type: 'unavailable' });
+      return item;
+    }
+
+    const currentPrice = Number(product.price_gel);
+    const currentStock = Number(product.stock ?? 0);
+    const safeStock = Number.isFinite(currentStock) ? Math.max(0, Math.floor(currentStock)) : 0;
+    const oldPrice = Number(item?.priceGEL ?? item?.price);
+    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0;
+
+    if (!hasValidPrice) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'invalid_price' });
+      return item;
+    }
+    if (!Number.isFinite(oldPrice) || oldPrice !== currentPrice) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'price', oldValue: oldPrice, newValue: currentPrice });
+    }
+    if ((requestedById.get(String(item?.id ?? '')) || 0) > safeStock) {
+      if (!changes.some((change) => String(change.id) === String(item?.id) && change.type === 'stock')) {
+        changes.push({ id: item?.id, name: product.name || item?.name || '', type: safeStock > 0 ? 'stock' : 'unavailable_stock', requested: requestedById.get(String(item?.id ?? '')) || 0, available: safeStock });
+      }
+    }
+
+    return {
+      ...item,
+      name: product.name || item.name,
+      priceGEL: currentPrice,
+      stock: safeStock
+    };
+  });
+
+  return { cartItems: refreshedCart, changes, hasChanges: changes.length > 0 };
+};
