@@ -33,6 +33,7 @@ export default function Modals({
   isNotificationsOpen,
   setIsNotificationsOpen,
   notifications = [],
+  notificationsLoading = false,
   markAllNotificationsAsRead,
   orders = [],
   lookupOrderForTracking,
@@ -595,7 +596,12 @@ export default function Modals({
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
-              {notifications.length === 0 ? (
+              {notificationsLoading ? (
+                <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
+                  <Bell className="w-8 h-8 text-amber-400/50 mx-auto animate-pulse" />
+                  <p className="text-slate-400 text-xs font-bold">{currentLang === 'en' ? 'Loading notifications…' : currentLang === 'ru' ? 'Загрузка уведомлений…' : 'შეტყობინებები იტვირთება…'}</p>
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
                   <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
                   <p className="text-slate-400 text-xs font-bold" >{copy.noNotifications}</p>
