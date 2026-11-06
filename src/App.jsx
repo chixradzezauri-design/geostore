@@ -1409,7 +1409,7 @@ export default function App() {
       const checkoutFingerprintPayload = {
         customer_name: customerName,
         phone: customerPhone,
-        address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+        address: customerAddress,
         user_email: orderSession?.user?.email || 'guest',
         customer_email: orderUserEmail.toLowerCase(),
         items: Array.from(groupedCheckoutItems.entries())
@@ -1422,9 +1422,13 @@ export default function App() {
       let checkoutFingerprint = fingerprintSource;
       let canPersistFingerprint = false;
       if (window.crypto?.subtle?.digest && typeof TextEncoder !== 'undefined') {
-        const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprintSource));
-        checkoutFingerprint = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-        canPersistFingerprint = true;
+        try {
+          const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprintSource));
+          checkoutFingerprint = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+          canPersistFingerprint = true;
+        } catch {
+          // Keep checkout available; this attempt is protected in memory only.
+        }
       }
 
       let storedPendingCheckout = null;
