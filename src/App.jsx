@@ -570,7 +570,7 @@ export default function App() {
       prev.map((n) => ({ ...n, read: true }))
     );
 
-    showToast('🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
+    showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
   };
 
   const unreadNotificationsCount = useMemo(() => {
