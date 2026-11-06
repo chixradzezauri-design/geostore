@@ -131,28 +131,36 @@ const isAuthorizedAdmin = (user) =>
   user?.app_metadata?.role === 'admin' &&
   user?.id === '1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 
+const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
+
 const getOrderStatusClasses = (status) => {
-  switch (String(status || '').trim().toLowerCase()) {
-    case 'ახალი':
-    case 'new':
+  switch (normalizeOrderStatus(status)) {
+    case 'ახალი': case 'new': case 'новый':
       return 'bg-blue-500/10 text-blue-300 border border-blue-500/40';
-    case 'მუშავდება':
-    case 'processing':
+    case 'მუშავდება': case 'processing': case 'в обработке':
       return 'bg-amber-500/10 text-amber-300 border border-amber-500/40';
-    case 'გაგზავნილი':
-    case 'გზაშია':
-    case 'shipped':
+    case 'გაგზავნილი': case 'გზაშია': case 'shipped': case 'on the way': case 'отправлен': case 'в пути':
       return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/40';
-    case 'დასრულებული':
-    case 'ჩაბარებულია':
-    case 'delivered':
+    case 'დასრულებული': case 'ჩაბარებულია': case 'delivered': case 'completed': case 'доставлен': case 'завершён':
       return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
-    case 'გაუქმებული':
-    case 'cancelled':
+    case 'გაუქმებული': case 'cancelled': case 'canceled': case 'отменён':
       return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
     default:
       return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
   }
+};
+
+const localizeOrderStatus = (status, lang = 'ka') => {
+  const key = normalizeOrderStatus(status);
+  const labels = {
+    'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
+    'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
+    'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
+    'დასრულებული': ['დასრულებული', 'Completed', 'Завершён'], completed: ['დასრულებული', 'Completed', 'Завершён'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['დასრულებული', 'Completed', 'Завершён'],
+    'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
+  };
+  const languageIndex = lang === 'en' ? 1 : lang === 'ru' ? 2 : 0;
+  return labels[key]?.[languageIndex] || status || labels.new[languageIndex];
 };
 
 export default function App() {
@@ -1677,8 +1685,8 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
-            <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+          <div className="gs-profile-page max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+            <div className="gs-profile-card bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" />
                 {t.profile}
@@ -1687,7 +1695,7 @@ export default function App() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
-                    Name
+                    {currentLang === 'en' ? 'Name' : currentLang === 'ru' ? 'Имя' : 'სახელი'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
@@ -1697,7 +1705,7 @@ export default function App() {
 
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
-                    Email
+                    {currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელ-ფოსტა'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block truncate">
@@ -1707,7 +1715,7 @@ export default function App() {
 
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
-                    Phone
+                    {currentLang === 'en' ? 'Phone' : currentLang === 'ru' ? 'Телефон' : 'ტელეფონი'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
@@ -1723,11 +1731,11 @@ export default function App() {
                 </h3>
 
                 <p className="text-slate-400 text-xs leading-relaxed">
-                  ანგარიშის დაცვა და პაროლის მართვა ხორციელდება
-                  Supabase Auth-ის მეშვეობით. PIN და Face ID
-                  ფუნქციები ამ ვერსიაში გამორთულია, რადგან ძველი
-                  იმპლემენტაცია რეალურ უსაფრთხო ავტორიზაციას არ
-                  უზრუნველყოფდა.
+                  {currentLang === 'en'
+                    ? 'Account security and password management are handled by Supabase Auth. PIN and Face ID sign-in are disabled in this version because the previous implementation did not provide reliable authentication.'
+                    : currentLang === 'ru'
+                      ? 'Защита аккаунта и управление паролем обеспечиваются Supabase Auth. Вход по PIN и Face ID отключён в этой версии, поскольку прежняя реализация не обеспечивала надёжную аутентификацию.'
+                      : 'ანგარიშის დაცვა და პაროლის მართვა ხორციელდება Supabase Auth-ის მეშვეობით. PIN და Face ID ფუნქციები ამ ვერსიაში გამორთულია, რადგან ძველი იმპლემენტაცია რეალურ უსაფრთხო ავტორიზაციას არ უზრუნველყოფდა.'}
                 </p>
               </div>
 
@@ -1739,7 +1747,7 @@ export default function App() {
               </button>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+            <div className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
@@ -1762,13 +1770,11 @@ export default function App() {
                     .map((order) => (
                       <div
                         key={order.id}
-                        className="bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
+                        className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-black text-emerald-400">
-                              #{order.id}
-                            </span>
+                            <span className="gs-profile-order-code font-black text-emerald-400">#{order.id}</span>
 
                             <span className="text-slate-500 text-[10px]">
                               ({order.date})
@@ -1776,11 +1782,11 @@ export default function App() {
                           </div>
 
                           <p className="text-slate-300 text-[11px]">
-                            📍 Address: {order.address}
+                            📍 {currentLang === 'en' ? 'Address' : currentLang === 'ru' ? 'Адрес' : 'მისამართი'}: {order.address}
                           </p>
 
                           <p className="text-slate-400 text-[11px]">
-                            📞 Phone: {order.phone}
+                            📞 {currentLang === 'en' ? 'Phone' : currentLang === 'ru' ? 'Телефон' : 'ტელეფონი'}: {order.phone}
                           </p>
                         </div>
 
@@ -1790,7 +1796,7 @@ export default function App() {
                           </span>
 
                           <span className={`${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
-                            {order.status || 'New'}
+                            {localizeOrderStatus(order.status || 'New', currentLang)}
                           </span>
                         </div>
                       </div>
