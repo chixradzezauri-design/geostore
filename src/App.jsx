@@ -1162,41 +1162,78 @@ export default function App() {
     };
   }, [orders, products]);
 
+  const getCartLineKey = (item) => JSON.stringify([
+    String(item.id || ''),
+    item.selectedSize || null,
+    item.selectedColor || null,
+    item.selectedVariantId || null,
+    Boolean(item.giftWrap),
+    item.giftWrap ? String(item.giftMessage || '') : '',
+    Boolean(item.vipWarranty),
+    item.name || ''
+  ]);
+
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
     const parsedStock = Number(product.stock);
     const hasKnownStock = product.stock !== null && product.stock !== undefined && product.stock !== '' && Number.isFinite(parsedStock);
     const availableStock = hasKnownStock ? Math.max(0, Math.floor(parsedStock)) : null;
-    const isSameCartVariant = (item) =>
-      String(item.id) === String(product.id) &&
-      (item.selectedSize || null) === (product.selectedSize || null) &&
-      (item.selectedColor || null) === (product.selectedColor || null) &&
-      (item.name || '') === (product.name || '');
-    // Stock is tracked per product (not per size/color), so all variants
-    // of the same product share one quantity limit.
+    const selectedVariant = Array.isArray(product.variants)
+      ? product.variants.find((variant) => String(variant.id) === String(product.selectedVariantId))
+      : null;
+    if (product.selectedVariantId && !selectedVariant) {
+      showToast(
+        currentLang === 'en'
+          ? 'This product option is no longer available. Reopen the product and choose again.'
+          : currentLang === 'ru'
+            ? 'Этот вариант больше недоступен. Откройте товар и выберите вариант снова.'
+            : 'ეს ვარიანტი აღარ არის ხელმისაწვდომი. ხელახლა გახსენით პროდუქტი და აირჩიეთ ვარიანტი.'
+      );
+      return;
+    }
+    const rawVariantStock = selectedVariant?.stock;
+    const parsedVariantStock = Number(rawVariantStock);
+    const hasKnownVariantStock = rawVariantStock !== null && rawVariantStock !== undefined && rawVariantStock !== '' && Number.isFinite(parsedVariantStock);
+    const availableVariantStock = hasKnownVariantStock ? Math.max(0, Math.floor(parsedVariantStock)) : null;
+    const isSameCartVariant = (item) => getCartLineKey(item) === getCartLineKey(product);
     const existingQuantity = cart
       .filter((item) => String(item.id) === String(product.id))
       .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
+    const existingVariantQuantity = cart
+      .filter((item) =>
+        String(item.id) === String(product.id) &&
+        String(item.selectedVariantId || '') === String(product.selectedVariantId || '')
+      )
+      .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
 
-    if (availableStock !== null && (availableStock <= 0 || existingQuantity >= availableStock)) {
+    if (
+      (availableStock !== null && (availableStock <= 0 || existingQuantity >= availableStock)) ||
+      (availableVariantStock !== null && (availableVariantStock <= 0 || existingVariantQuantity >= availableVariantStock))
+    ) {
       showToast(
         currentLang === 'en'
-          ? 'No more stock is available for this product.'
+          ? 'No more stock is available for this product option.'
           : currentLang === 'ru'
-            ? 'Больше нет товара в наличии.'
-            : 'ამ პროდუქტის მარაგი ამ რაოდენობით აღარ არის ხელმისაწვდომი.'
+            ? 'Для выбранного варианта больше нет товара в наличии.'
+            : 'არჩეული ვარიანტის მარაგი ამ რაოდენობით აღარ არის ხელმისაწვდომი.'
       );
       return;
     }
 
     setCart((prev) => {
       const existing = prev.find(isSameCartVariant);
-      const currentQuantity = prev
+      const currentProductQuantity = prev
         .filter((item) => String(item.id) === String(product.id))
         .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
-      const safeQuantity = availableStock === null
-        ? requestedQuantity
-        : Math.min(requestedQuantity, Math.max(0, availableStock - currentQuantity));
+      const currentVariantQuantity = prev
+        .filter((item) =>
+          String(item.id) === String(product.id) &&
+          String(item.selectedVariantId || '') === String(product.selectedVariantId || '')
+        )
+        .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
+      const productRemaining = availableStock === null ? requestedQuantity : Math.max(0, availableStock - currentProductQuantity);
+      const variantRemaining = availableVariantStock === null ? requestedQuantity : Math.max(0, availableVariantStock - currentVariantQuantity);
+      const safeQuantity = Math.min(requestedQuantity, productRemaining, variantRemaining);
 
       if (safeQuantity <= 0) return prev;
 
@@ -1959,7 +1996,7 @@ export default function App() {
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={item.id}
+                      key={getCartLineKey(item)}
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
@@ -1975,7 +2012,7 @@ export default function App() {
                       <button
                         onClick={() =>
                           setCart((prev) =>
-                            prev.filter((c) => c.id !== item.id)
+                            prev.filter((c) => getCartLineKey(c) !== getCartLineKey(item))
                           )
                         }
                         className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
