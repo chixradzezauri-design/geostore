@@ -1,4 +1,4 @@
-const hasControlCharacters = (value) => /[\\u0000-\\u001f\\u007f]/.test(value);
+const hasControlCharacters = (value) => /[\u0000-\u001f\u007f]/.test(value);
 
 export const validateCheckoutContact = ({ name, phone, email, address, requireEmail = false }) => {
   const cleanName = String(name ?? '').trim();
@@ -9,14 +9,14 @@ export const validateCheckoutContact = ({ name, phone, email, address, requireEm
   if (cleanName.length < 2 || cleanName.length > 100 || hasControlCharacters(cleanName)) {
     return { valid: false, field: 'name' };
   }
-  if (!/^\\d{9,15}$/.test(phoneDigits)) {
+  if (!/^\d{9,15}$/.test(phoneDigits)) {
     return { valid: false, field: 'phone' };
   }
   if (cleanAddress.length < 3 || cleanAddress.length > 300 || hasControlCharacters(cleanAddress)) {
     return { valid: false, field: 'address' };
   }
   if (requireEmail || cleanEmail) {
-    if (cleanEmail.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(cleanEmail)) {
+    if (cleanEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       return { valid: false, field: 'email' };
     }
   }
