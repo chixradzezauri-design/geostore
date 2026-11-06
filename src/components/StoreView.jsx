@@ -94,7 +94,7 @@ export default function StoreView({
 
   const handleOpenProduct = (prod) => {
     setSelectedProduct(prod);
-    setActiveImage(prod.image);
+    setActiveImage(prod.image || prod.gallery?.[0] || null);
     
     const defaultSizes = prod.availableSizes || ['S', 'M', 'L', 'XL'];
     setSelectedSize(defaultSizes[0] || 'M');
@@ -335,7 +335,7 @@ export default function StoreView({
               return (
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
-                    <img src={prod.image} alt="" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                    {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
                     <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
                   </div>
                   <div className="py-3 space-y-1.5">
@@ -572,7 +572,7 @@ export default function StoreView({
                   onClick={() => handleOpenProduct(prod)}
                   className="gs-product-media gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
-                  <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
+                  {prod.image ? <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
@@ -658,7 +658,7 @@ export default function StoreView({
                 
                 <div className="gs-product-gallery space-y-4">
                   <div className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
-                    <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" />
+                    {(activeImage || selectedProduct.image) ? <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
