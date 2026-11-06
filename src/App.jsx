@@ -60,36 +60,18 @@ const sendTelegramNotification = () => {
 };
 
 const DEFAULT_CATEGORIES = [
-  { id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null },
-  { id: 'c2', name: 'ლეპტოპები', icon: 'Laptop', parentId: null },
-  { id: 'c3', name: 'აქსესუარები', icon: 'Sparkles', parentId: null },
-  { id: 'c4', name: 'ჭკვიანი საათები', icon: 'Watch', parentId: null }
+  { id: 'fashion-clothing', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null },
+  { id: 'fashion-shoes', name: 'ფეხსაცმელი', icon: 'Footprints', parentId: null },
+  { id: 'fashion-bags', name: 'ჩანთები', icon: 'Briefcase', parentId: null },
+  { id: 'fashion-accessories', name: 'აქსესუარები', icon: 'Sparkles', parentId: null },
+  { id: 'fashion-jewelry', name: 'სამკაულები', icon: 'Gem', parentId: null }
 ];
 
 const DEFAULT_VENDORS = [
-  { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
-  { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
+  { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' }
 ];
 
-const DEFAULT_PRODUCTS = [
-  {
-    id: 'prod-1',
-    sku: 'GEO-IP15P',
-    name: 'iPhone 15 Pro Max 256GB Titanium',
-    category: 'სმარტფონები',
-    brand: 'Apple',
-    vendor: 'GEOSTORE ოფიციალური',
-    priceGEL: 3899,
-    oldPriceGEL: 4299,
-    stock: 8,
-    image:
-      'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=600',
-    description: 'ახალი თაობის ფლაგმანი A17 Pro ჩიპით.',
-    availableSizes: ['S', 'M', 'L', 'XL'],
-    material: 'ტიტანი / კერამიკა',
-    durability: 'IP68 Water Resistant'
-  }
-];
+const DEFAULT_PRODUCTS = [];
 
 const DEFAULT_COUPONS = [
   { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
@@ -194,15 +176,25 @@ export default function App() {
 
   const t = translations[currentLang] || translations.ka;
 
-  const [siteSettings, setSiteSettings] = useState(() =>
-    loadSafeStorage('geostore_site_settings', {
+  const [siteSettings, setSiteSettings] = useState(() => {
+    const defaults = {
       storeName: 'GEOSTORE',
-      topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი',
-      heroTitle: 'მრავალვენდერიანი მარკეტფლეისი საუკეთესო შეთავაზებებით',
-      heroSubtitle:
-        'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
-    })
-  );
+      topBarText: 'GEOSTORE — შენი სტილი, შენი არჩევანი',
+      heroTitle: 'შენი სტილი. შენი არჩევანი.',
+      heroSubtitle: 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.'
+    };
+    const saved = loadSafeStorage('geostore_site_settings', null);
+    if (!saved || typeof saved !== 'object') return defaults;
+
+    // Migrate only untouched legacy technology-store copy; preserve owner edits.
+    return {
+      ...defaults,
+      ...saved,
+      topBarText: saved.topBarText === 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი' ? defaults.topBarText : saved.topBarText,
+      heroTitle: saved.heroTitle === 'მრავალვენდერიანი მარკეტფლეისი საუკეთესო შეთავაზებებით' ? defaults.heroTitle : saved.heroTitle,
+      heroSubtitle: saved.heroSubtitle === 'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!' ? defaults.heroSubtitle : saved.heroSubtitle
+    };
+  });
 
   const [deliveryFees, setDeliveryFees] = useState(() =>
     loadSafeStorage('geostore_delivery_fees', {
@@ -214,9 +206,22 @@ export default function App() {
 
   const [selectedRegion, setSelectedRegion] = useState('tbilisi');
 
-  const [categories, setCategoriesList] = useState(() =>
-    loadSafeStorage('geostore_cats', DEFAULT_CATEGORIES)
-  );
+  const [categories, setCategoriesList] = useState(() => {
+    const saved = loadSafeStorage('geostore_cats', null);
+    const legacyTechnologyCategories = new Set([
+      'სმარტფონები', 'ლეპტოპები', 'აქსესუარები', 'ჭკვიანი საათები', 'ტელევიზორები'
+    ]);
+    const isUntouchedLegacySeed =
+      Array.isArray(saved) &&
+      saved.length > 0 &&
+      saved.length <= 5 &&
+      saved.every((category) => legacyTechnologyCategories.has(category?.name));
+
+    // Replace only the untouched default technology categories; custom categories stay intact.
+    return !Array.isArray(saved) || saved.length === 0 || isUntouchedLegacySeed
+      ? DEFAULT_CATEGORIES
+      : saved;
+  });
 
   const [vendorsList, setVendorsList] = useState(() =>
     loadSafeStorage('geostore_vendors', DEFAULT_VENDORS)
