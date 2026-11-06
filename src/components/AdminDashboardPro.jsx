@@ -9,6 +9,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
+import { validateProductVariants } from '../utils/productValidation';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
@@ -350,12 +351,26 @@ export default function AdminDashboardPro({
 
   const handleAddCustomVariant = (e) => {
     e.preventDefault();
-    if (!newVarName.trim() || !newVarPrice) return;
+    const name = String(newVarName || '').trim();
+    const priceText = String(newVarPrice ?? '').trim();
+    const stockText = String(newVarStock ?? '').trim();
+    const price = Number(priceText);
+    const stock = stockText === '' ? 10 : Number(stockText);
+
+    if (!name || name.length > 80) return alert('ვარიანტის სახელი აუცილებელია და მაქსიმუმ 80 სიმბოლო უნდა იყოს.');
+    if (!Number.isFinite(price) || price < 0 || price > 1000000000 || !/^\\d+(?:\\.\\d{1,2})?$/.test(priceText)) {
+      return alert('ვარიანტის ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
+    }
+    if (!Number.isSafeInteger(stock) || stock < 0 || stock > 1000000) {
+      return alert('ვარიანტის მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
+    }
+    if (productVariants.length >= 50) return alert('ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.');
+
     const varObj = {
       id: `var-${Date.now()}`,
-      name: newVarName.trim(),
-      priceGEL: Number(newVarPrice),
-      stock: newVarStock === '' ? 10 : Math.max(0, Math.trunc(Number(newVarStock) || 0))
+      name,
+      priceGEL: price,
+      stock
     };
     setProductVariants(prev => [...prev, varObj]);
     setNewVarName('');
@@ -1104,6 +1119,21 @@ export default function AdminDashboardPro({
     if (productForm.stock !== '' && (!/^\d+$/.test(String(productForm.stock).trim()) || !Number.isSafeInteger(Number(productForm.stock)) || Number(productForm.stock) > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
 
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    if (tagsArray.length > 30 || tagsArray.some(tag => tag.length > 40) ||
+        new Set(tagsArray.map(tag => tag.toLocaleLowerCase())).size !== tagsArray.length) {
+      return alert('ტეგები უნდა იყოს უნიკალური: მაქსიმუმ 30 ტეგი, თითოეული არაუმეტეს 40 სიმბოლოსი.');
+    }
+    const variantsValidation = validateProductVariants(productVariants);
+    if (!variantsValidation.valid) {
+      const variantErrors = {
+        count: 'ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.',
+        shape: 'პროდუქტის ვარიანტის მონაცემები არასწორია.',
+        identity: 'თითოეულ ვარიანტს უნდა ჰქონდეს უნიკალური ID და სახელი (მაქსიმუმ 80 სიმბოლო).',
+        price: 'ვარიანტის ფასი არასწორია.',
+        stock: 'ვარიანტის მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.'
+      };
+      return alert(variantErrors[variantsValidation.reason] || 'პროდუქტის ვარიანტების შემოწმება ვერ მოხერხდა.');
+    }
     const prodId = editingProductId || `prod-${Date.now()}`;
     let galleryImages = [];
     let newlyUploadedImages = [];
