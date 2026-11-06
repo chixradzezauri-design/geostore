@@ -4126,3 +4126,29 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child>div{flex:1 1 0}
  .geostore-shell .admin-dashboard-pro .admin-category-card button{min-width:38px;min-height:38px}
 }
+
+/* Order cards, actions and detail dialog responsive refinements. */
+.geostore-shell .admin-dashboard-pro .admin-orders-panel,
+.geostore-shell .admin-dashboard-pro .admin-order-card{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-order-card p,
+.geostore-shell .admin-dashboard-pro .admin-order-card b{overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-order-actions{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-order-status-actions{max-width:100%;scrollbar-width:thin;overscroll-behavior-x:contain}
+.geostore-shell .admin-dashboard-pro .admin-order-status-actions button{flex:0 0 auto;white-space:nowrap;min-height:34px}
+.geostore-shell .admin-dashboard-pro .admin-order-detail-overlay{overscroll-behavior:contain}
+.geostore-shell .admin-dashboard-pro .admin-order-detail-modal{min-width:0;max-width:min(100%,48rem);overflow-wrap:anywhere}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-orders-panel{padding:14px!important;border-radius:18px!important;gap:16px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-card{padding:13px!important;border-radius:16px!important;gap:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-card-footer{align-items:flex-start!important;gap:10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch!important;gap:7px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-actions>button{min-width:0;justify-content:center;padding:9px 7px!important;font-size:10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-status-actions{grid-column:1/-1;width:100%;max-width:100%;justify-content:flex-start;overflow-x:auto}
+ .geostore-shell .admin-dashboard-pro .admin-order-detail-overlay{align-items:flex-start!important;padding:8px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-detail-modal{width:100%!important;max-height:calc(100dvh - 16px)!important;padding:15px!important;border-radius:18px!important;gap:15px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-detail-modal .bg-slate-900\/80{padding:12px!important;border-radius:14px!important}
+}
+@media(max-width:380px){
+ .geostore-shell .admin-dashboard-pro .admin-order-actions{grid-template-columns:minmax(0,1fr)}
+ .geostore-shell .admin-dashboard-pro .admin-order-status-actions button{padding:7px 8px!important;font-size:9px!important}
+}
