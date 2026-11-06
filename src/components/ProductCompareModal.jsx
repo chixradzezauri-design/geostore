@@ -58,7 +58,7 @@ export default function ProductCompareModal({
 
                   <div className="space-y-4">
                     <div className="bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 flex items-center justify-center h-48">
-                      <img src={prod.image} alt="" className="max-h-full object-contain" />
+                      {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="max-h-full object-contain" /> : <span className="text-[10px] font-black tracking-[0.2em] text-amber-400/60">GEOSTORE</span>}
                     </div>
 
                     <div className="space-y-1">
