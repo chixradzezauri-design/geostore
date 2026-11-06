@@ -1503,11 +1503,22 @@ export default function App() {
       const purchaseCost = rawPurchaseCost === null || rawPurchaseCost === undefined || rawPurchaseCost === ''
         ? null
         : (Number.isFinite(Number(rawPurchaseCost)) && Number(rawPurchaseCost) > 0 ? Number(rawPurchaseCost) : null);
+      const snapshotPrice = Number(item.priceGEL ?? item.price);
+      const snapshotQuantity = Math.floor(Number(quantity));
+      if (!Number.isFinite(snapshotPrice) || snapshotPrice < 0) {
+        throw new Error('პროდუქტის ფასი არასწორია. განაახლეთ კალათა და სცადეთ თავიდან.');
+      }
+      if (!Number.isSafeInteger(snapshotQuantity) || snapshotQuantity < 1) {
+        throw new Error('პროდუქტის რაოდენობა არასწორია. განაახლეთ კალათა და სცადეთ თავიდან.');
+      }
       return {
         id: item.id,
         name: item.name,
-        price: Number(item.priceGEL ?? item.price) || 0,
-        quantity: Math.max(1, Number(quantity) || 1),
+        price: snapshotPrice,
+        quantity: snapshotQuantity,
+        selected_size: item.selectedSize || null,
+        selected_color: item.selectedColor || null,
+        selected_variant: item.selectedVariant || null,
         purchase_cost: purchaseCost,
         category: catalogProduct?.category || item.category || '',
         vendor: catalogProduct?.vendor || item.vendor || ''
