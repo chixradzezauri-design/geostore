@@ -68,6 +68,7 @@ begin
              sum((item->>'quantity')::integer)::integer as quantity
         from jsonb_array_elements(coalesce(v_order.items, '[]'::jsonb)) as e(item)
        where coalesce(trim(coalesce(item->>'selected_variant_id', item->>'selectedVariantId')), '') <> ''
+       and coalesce((item->>'variant_stock_tracked')::boolean, false)
        group by item->>'id', coalesce(item->>'selected_variant_id', item->>'selectedVariantId')
        order by item->>'id', coalesce(item->>'selected_variant_id', item->>'selectedVariantId')
     loop
@@ -206,6 +207,7 @@ begin
            sum((item->>'quantity')::integer)::integer as quantity
       from jsonb_array_elements(v_order.items) as e(item)
      where coalesce(trim(coalesce(item->>'selected_variant_id', item->>'selectedVariantId')), '') <> ''
+       and coalesce((item->>'variant_stock_tracked')::boolean, false)
      group by item->>'id', coalesce(item->>'selected_variant_id', item->>'selectedVariantId')
      order by item->>'id', coalesce(item->>'selected_variant_id', item->>'selectedVariantId')
   loop
