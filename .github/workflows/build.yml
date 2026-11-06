@@ -2,11 +2,10 @@ name: Build check
 
 on:
   push:
-    branches:
-      - fix/admin-white-screen
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
