@@ -935,14 +935,14 @@ export default function StoreView({
                   if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
                   if (hasVipWarranty) customName += ' + VIP გარანტია';
 
-                  addToCart({ 
+                  const added = addToCart({ 
                     ...selectedProduct, 
                     priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
                     name: customName,
                     selectedSize: isCf ? selectedSize : null,
                     selectedColor: selectedColor
                   }); 
-                  setSelectedProduct(null); 
+                  if (added !== false) setSelectedProduct(null); 
                 }} 
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >
