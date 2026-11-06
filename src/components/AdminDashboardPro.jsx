@@ -2093,7 +2093,7 @@ export default function AdminDashboardPro({
             <button
               type="button"
               onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
-              disabled={storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
+              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
               className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
             >
               {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
