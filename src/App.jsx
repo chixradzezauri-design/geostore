@@ -2043,9 +2043,6 @@ export default function App() {
         setSelectedRegion={setSelectedRegion}
         deliveryFees={deliveryFees}
         currentUser={currentUser}
-        setCurrentUser={setCurrentUser}
-        usersList={usersList}
-        setUsersList={setUsersList}
           />
         </Suspense>
       )}
