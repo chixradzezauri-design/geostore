@@ -282,19 +282,19 @@ export default function StoreView({
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
       {/* GEOSTORE FASHION EDITORIAL HERO */}
-      <section className="gs-fashion-hero" aria-label="GEOSTORE fashion collection">
-        <div className="gs-fashion-hero__image" role="img" aria-label="Fashion editorial collection" />
-        <div className="gs-fashion-hero__content">
+      <section className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
+        <div className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
+        <div className="gs-fashion-hero__content gs-editorial-hero-content">
           <span className="gs-fashion-eyebrow">GEOSTORE / NEW SEASON</span>
           <p className="gs-fashion-kicker">{storeText.styleKicker}</p>
           <h1>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? 'შენი სტილი. შენი არჩევანი.' : (siteSettings?.heroTitle || 'შენი სტილი. შენი არჩევანი.')}</h1>
           <p className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.' : (siteSettings?.heroSubtitle || 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.')}</p>
-          <div className="gs-fashion-hero__actions">
+          <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
             <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">{storeText.viewCollection} <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">CLOTHING · SHOES · ACCESSORIES</span>
           </div>
         </div>
-        <div className="gs-fashion-hero__stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
+        <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
       </section>
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
@@ -357,8 +357,8 @@ export default function StoreView({
       )}
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
+      <div className="gs-editorial-collections space-y-6">
+        <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
               <FolderTree className="w-4 h-4 text-amber-400" /> {storeText.discoverCollections}
@@ -397,20 +397,20 @@ export default function StoreView({
         )}
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
-        <div className="gs-category-grid gs-catalog-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="gs-category-grid gs-catalog-category-grid gs-editorial-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div 
             role="button"
             tabIndex={0}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); } }}
             onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }}
-            className={`gs-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+            className={`gs-category-card gs-editorial-category-card gs-category-card--all group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
               selectedCategory === 'ყველა' && !selectedSubCategory
                 ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                 : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
             }`}
           >
-            <div className="gs-category-photo" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88")' }} />
+            <div className="gs-category-photo gs-editorial-category-photo" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=88")' }} />
             <div className="flex justify-between items-start z-10">
               <div className="gs-category-icon gs-category-icon--all"><Sparkles className="w-5 h-5" /></div>
               <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
@@ -444,7 +444,7 @@ export default function StoreView({
                   setSelectedSubCategory(null);
                   setOpenParentCatId(isOpen ? null : catId);
                 }}
-                className={`gs-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
+                className={`gs-category-card gs-editorial-category-card group relative overflow-hidden bg-gradient-to-br from-[#121216] to-[#08080a] border rounded-3xl p-5 flex flex-col justify-between h-36 sm:h-40 cursor-pointer transition-all duration-300 shadow-xl ${
                   isSelected 
                     ? 'border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]' 
                     : 'border-amber-500/20 hover:border-amber-400 hover:scale-[1.02]'
