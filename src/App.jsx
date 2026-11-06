@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, reconcileCartWithCatalog } from './utils/orderSafety';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1439,6 +1439,44 @@ export default function App() {
       if (sessionError) throw sessionError;
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
+
+      // Refresh the public catalogue immediately before checkout. This is a
+      // customer-facing stale-cart guard; the SQL RPC still rechecks price
+      // and stock under row locks and remains the source of truth.
+      const catalogueResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/products?select=id,name,price_gel,stock`,
+        { headers: await getSupabaseHeaders() }
+      );
+      if (!catalogueResponse.ok) {
+        throw new Error('პროდუქტების მიმდინარე ფასისა და მარაგის შემოწმება ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.');
+      }
+      const latestCatalogue = await catalogueResponse.json();
+      if (!Array.isArray(latestCatalogue)) {
+        throw new Error('პროდუქტების მიმდინარე მონაცემები არასწორია. გთხოვთ, სცადოთ თავიდან.');
+      }
+      const checkoutCart = quickBuyProduct ? [quickBuyProduct] : cart;
+      const reconciliation = reconcileCartWithCatalog(checkoutCart, latestCatalogue);
+      if (reconciliation.hasChanges) {
+        if (!quickBuyProduct) setCart(reconciliation.cartItems);
+        setProducts((previous) => previous.map((product) => {
+          const current = latestCatalogue.find((entry) => String(entry.id) === String(product.id));
+          return current
+            ? { ...product, name: current.name || product.name, priceGEL: Number(current.price_gel), stock: Math.max(0, Math.floor(Number(current.stock) || 0)) }
+            : product;
+        }));
+        const changedNames = [...new Set(reconciliation.changes.map((change) => change.name).filter(Boolean))].slice(0, 3).join(', ');
+        const message = currentLang === 'en'
+          ? `The price or stock changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
+          : currentLang === 'ru'
+            ? `Цена или наличие изменились для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
+            : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
+        setCheckoutError(message);
+        showToast(message);
+        setIsSubmittingOrder(false);
+        orderSubmitLock.current = false;
+        return;
+      }
+
       orderUserEmail = orderSession?.user?.email || customerEmail;
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderUserEmail)) {
         throw new Error('შეკვეთისთვის საჭიროა სწორი ელ-ფოსტა.');
