@@ -910,7 +910,11 @@ export default function StoreView({
                     name: customName,
                     selectedSize: isCf ? selectedSize : null,
                     selectedColor: selectedColor,
-                    selectedVariant: selectedCustomVariant?.name || null
+                    selectedVariant: selectedCustomVariant?.name || null,
+                    selectedVariantId: selectedCustomVariant?.id || null,
+                    giftWrap: Boolean(isGiftWrapped),
+                    giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 300) : '',
+                    vipWarranty: Boolean(hasVipWarranty)
                   }); 
                   setSelectedProduct(null); 
                 }} 
