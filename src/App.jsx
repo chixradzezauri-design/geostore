@@ -676,7 +676,7 @@ export default function App() {
   };
 
   const handlePublishStorefront = async () => {
-    if (!adminLoggedIn || storefrontPublishBusy) return;
+    if (!adminLoggedIn || storefrontPublishBusy || storefrontDraftBusy) return;
     setStorefrontPublishBusy(true);
     const uploadedAssets = [];
     let storefrontPublished = false;
