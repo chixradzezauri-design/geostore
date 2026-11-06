@@ -52,6 +52,66 @@ const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
   };
 };
 
+const STOREFRONT_MEDIA_BUCKET = 'storefront-media';
+const STOREFRONT_IMAGE_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif'
+};
+const STOREFRONT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+const uploadStorefrontImage = async (imageData, folder, index, userId) => {
+  const value = String(imageData || '').trim();
+  if (!value.startsWith('data:')) return value;
+
+  const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
+  if (!match) throw new Error('კატეგორიის ან ბანერის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
+  const mimeType = match[1].toLowerCase();
+  const base64 = match[2];
+  const sizeBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
+  if (sizeBytes <= 0 || sizeBytes > STOREFRONT_IMAGE_MAX_BYTES) {
+    throw new Error('კატეგორიის ან ბანერის თითოეული ფოტო მაქსიმუმ 5 MB უნდა იყოს.');
+  }
+
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let offset = 0; offset < binary.length; offset += 1) bytes[offset] = binary.charCodeAt(offset);
+  const extension = STOREFRONT_IMAGE_TYPES[mimeType];
+  const safeFolder = folder === 'banners' ? 'banners' : 'categories';
+  const path = `storefront/${safeFolder}/${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}.${extension}`;
+  const headers = await getSupabaseHeaders({ authenticated: true });
+  headers['Content-Type'] = mimeType;
+  headers['x-upsert'] = 'false';
+
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${STOREFRONT_MEDIA_BUCKET}/${path}`, {
+    method: 'POST',
+    headers,
+    body: new Blob([bytes], { type: mimeType })
+  });
+  if (!response.ok) throw new Error('ფოტოს ატვირთვა ვერ მოხერხდა: ' + (await response.text()));
+
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${STOREFRONT_MEDIA_BUCKET}/${encodedPath}`;
+  const metadataResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_media`, {
+    method: 'POST',
+    headers: await getSupabaseHeaders({ authenticated: true }),
+    body: JSON.stringify({
+      storage_path: path,
+      public_url: publicUrl,
+      file_name: path.split('/').pop(),
+      mime_type: mimeType,
+      size_bytes: sizeBytes,
+      alt_text: '',
+      folder: safeFolder,
+      is_public: true,
+      created_by: userId
+    })
+  });
+  if (!metadataResponse.ok) throw new Error('ფოტო აიტვირთა, მაგრამ მედიის ჩანაწერი ვერ შეინახა: ' + (await metadataResponse.text()));
+  return publicUrl;
+};
+
 const DEFAULT_CATEGORIES = [
   { id: 'c1', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null },
   { id: 'c1-women', name: 'ქალის ტანსაცმელი', icon: 'Shirt', parentId: 'c1' },
@@ -275,6 +335,7 @@ export default function App() {
   // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
   // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -311,6 +372,29 @@ export default function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const loadPublishedStorefront = async () => {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=published_config,is_published`,
+          { headers: await getSupabaseHeaders() }
+        );
+        if (!response.ok) return;
+        const rows = await response.json();
+        const config = rows?.[0]?.is_published ? rows[0].published_config : null;
+        if (!active || !config || typeof config !== 'object') return;
+        if (Array.isArray(config.categories)) setCategoriesList(config.categories);
+        if (Array.isArray(config.banners)) setBannersList(config.banners);
+        if (config.siteSettings && typeof config.siteSettings === 'object') setSiteSettings(config.siteSettings);
+      } catch (error) {
+        console.error('Published storefront config load error:', error);
+      }
+    };
+    loadPublishedStorefront();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (isCheckoutOpen || orderConfirmation || isAuthOpen || isTermsOpen || isWarrantyOpen || isTrackerOpen || isNotificationsOpen) {
@@ -447,6 +531,80 @@ export default function App() {
   const unreadNotificationsCount = useMemo(() => {
     return notifications.filter((n) => !n.read).length;
   }, [notifications]);
+
+  const handlePublishStorefront = async () => {
+    if (!adminLoggedIn || storefrontPublishBusy) return;
+    setStorefrontPublishBusy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
+
+      const publishedCategories = await Promise.all(
+        (Array.isArray(categories) ? categories : []).map(async (category, index) => {
+          const image = category.image || category.img || '';
+          const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id);
+          return { ...category, image: uploaded, img: uploaded };
+        })
+      );
+      const publishedBanners = await Promise.all(
+        (Array.isArray(bannersList) ? bannersList : []).map(async (banner, index) => ({
+          ...banner,
+          image: await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id)
+        }))
+      );
+
+      const snapshot = {
+        categories: publishedCategories,
+        banners: publishedBanners,
+        siteSettings: siteSettings && typeof siteSettings === 'object' ? siteSettings : {}
+      };
+      const publishedAt = new Date().toISOString();
+      const configResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+        {
+          method: 'POST',
+          headers: {
+            ...(await getSupabaseHeaders({ authenticated: true })),
+            Prefer: 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            config_key: 'storefront',
+            draft_config: snapshot,
+            published_config: snapshot,
+            is_published: true,
+            updated_by: session.user.id,
+            draft_updated_at: publishedAt,
+            published_at: publishedAt
+          })
+        }
+      );
+      if (!configResponse.ok) throw new Error('საიტის კონფიგურაციის შენახვა ვერ მოხერხდა: ' + (await configResponse.text()));
+
+      const versionResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_versions`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders({ authenticated: true }),
+        body: JSON.stringify({
+          config_key: 'storefront',
+          snapshot,
+          version_label: `გამოქვეყნება ${new Date(publishedAt).toLocaleString('ka-GE')}`,
+          created_by: session.user.id
+        })
+      });
+      if (!versionResponse.ok) {
+        console.error('Storefront version snapshot save failed:', await versionResponse.text());
+      }
+
+      setCategoriesList(publishedCategories);
+      setBannersList(publishedBanners);
+      alert(versionResponse.ok
+        ? 'საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიაც შეინახა.'
+        : 'საიტის ცვლილებები გამოქვეყნდა, თუმცა ვერსიის ისტორიის ჩანაწერი ვერ შეინახა.');
+    } catch (error) {
+      alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
+    } finally {
+      setStorefrontPublishBusy(false);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -1443,6 +1601,8 @@ export default function App() {
             setCategoriesList={setCategoriesList}
             bannersList={bannersList || []}
             setBannersList={setBannersList}
+            onPublishStorefront={handlePublishStorefront}
+            storefrontPublishBusy={storefrontPublishBusy}
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             formatPrice={formatPrice}
