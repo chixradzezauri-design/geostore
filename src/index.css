@@ -8009,3 +8009,97 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button>div{gap:6px!important}
  .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child h2{font-size:14px!important}
 }
+
+
+/* GEOSTORE maintenance: stabilize the existing mobile navigation without changing behavior */
+.geostore-shell .gs-site-header,
+.geostore-shell .gs-site-header-inner,
+.geostore-shell .gs-main-menu,
+.geostore-shell .gs-menu-heading,
+.geostore-shell .gs-menu-section,
+.geostore-shell .gs-menu-link {
+  min-width: 0;
+  box-sizing: border-box;
+}
+.geostore-shell .gs-main-menu {
+  overscroll-behavior: contain;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.geostore-shell .gs-menu-heading > *,
+.geostore-shell .gs-menu-link > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.geostore-shell .gs-menu-auth button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .geostore-shell .gs-main-menu {
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+  .geostore-shell .gs-menu-heading {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .geostore-shell .gs-menu-auth {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+  .geostore-shell .gs-menu-auth button {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 9px 10px;
+    line-height: 1.35;
+  }
+  .geostore-shell .gs-menu-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .geostore-shell .gs-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 9px 10px;
+  }
+  .geostore-shell .gs-menu-link > span:not(.gs-menu-count) {
+    flex: 1 1 auto;
+  }
+  .geostore-shell .gs-menu-count {
+    flex: 0 0 auto;
+  }
+  .geostore-shell .gs-menu-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+@media (max-width: 390px) {
+  .geostore-shell .gs-main-menu {
+    max-width: calc(100vw - 12px);
+    max-height: calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 12px;
+  }
+  .geostore-shell .gs-menu-auth {
+    gap: 6px;
+  }
+  .geostore-shell .gs-menu-auth button {
+    padding-inline: 7px;
+    font-size: 12px;
+  }
+  .geostore-shell .gs-menu-link {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+}
