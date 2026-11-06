@@ -1447,14 +1447,22 @@ export default function AdminDashboardPro({
   };
 
   const handleDeleteCoupon = async (id) => {
+    if (!window.confirm('ნამდვილად გსურთ ამ კუპონის წაშლა?')) return;
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/store_coupons?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
-        headers: await getSupabaseHeaders()
+        headers: {
+          ...(await getSupabaseHeaders()),
+          Prefer: 'return=representation'
+        }
       });
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
         throw new Error(errorBody || 'კუპონის წაშლა ვერ მოხერხდა.');
+      }
+      const deletedRows = await response.json();
+      if (!Array.isArray(deletedRows) || deletedRows.length === 0) {
+        throw new Error('კუპონი ბაზაში ვერ მოიძებნა ან წაშლის უფლება არ გაქვთ.');
       }
       if (typeof setCoupons === 'function') {
         setCoupons(prev => (prev || []).filter(c => c.id !== id));
