@@ -27,6 +27,7 @@ import {
 import { translations } from './utils/translations';
 import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
+import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1727,8 +1728,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('Order submission failed:', err);
-      const message =
-        err.message || 'შეკვეთის გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.';
+      const message = getCheckoutErrorMessage(err, currentLang);
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
