@@ -1097,8 +1097,11 @@ export default function AdminDashboardPro({
       if (typeof setProducts === 'function') {
         setProducts(prev => (prev || []).map(p => {
           if (category === 'ყველა' || p.category === category) {
-            const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
-            const discountedPrice = Math.round(Number(basePrice) * (1 - percent / 100) * 100) / 100;
+            const currentPrice = Number(p.priceGEL) || 0;
+            const savedOldPrice = Number(p.oldPriceGEL) || 0;
+            // Only reuse the saved original price when it is genuinely above the current price.
+            const basePrice = savedOldPrice > currentPrice ? savedOldPrice : currentPrice;
+            const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
             return {
               ...p,
               oldPriceGEL: basePrice,
