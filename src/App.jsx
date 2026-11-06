@@ -1385,13 +1385,13 @@ export default function App() {
         const name = authForm.name.trim();
         const phone = authForm.phone.trim();
 
-        if (name.length < 2 || name.length > 100) {
-          alert(currentLang === 'en' ? 'Name must contain 2–100 characters.' : currentLang === 'ru' ? 'Имя должно содержать 2–100 символов.' : 'სახელი უნდა შეიცავდეს 2–100 სიმბოლოს.');
+        if (name.length < 2 || name.length > 100 || /[\u0000-\u001f\u007f]/.test(name)) {
+          alert(currentLang === 'en' ? 'Name must contain 2–100 valid characters.' : currentLang === 'ru' ? 'Имя должно содержать 2–100 допустимых символов.' : 'სახელი უნდა შეიცავდეს 2–100 დასაშვებ სიმბოლოს.');
           return;
         }
         const normalizedPhone = phone.replace(/\D/g, '');
-        if (!/^\d{9,15}$/.test(normalizedPhone)) {
-          alert(currentLang === 'en' ? 'Phone number must contain 9–15 digits.' : currentLang === 'ru' ? 'Номер телефона должен содержать 9–15 цифр.' : 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.');
+        if (!/^[+()\d\s-]+$/.test(phone) || !/^\d{9,15}$/.test(normalizedPhone)) {
+          alert(currentLang === 'en' ? 'Enter a valid phone number with 9–15 digits.' : currentLang === 'ru' ? 'Введите корректный номер телефона из 9–15 цифр.' : 'შეიყვანეთ სწორი ტელეფონის ნომერი 9–15 ციფრით.');
           return;
         }
 
