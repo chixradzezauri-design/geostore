@@ -323,6 +323,7 @@ export default function AdminDashboardPro({
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
+  const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
@@ -1060,29 +1061,81 @@ export default function AdminDashboardPro({
     logActivity('გადმოიწერა პროდუქტების CSV ექსპორტი');
   };
 
-  const handleApplyFlashSale = (e) => {
+  const handleApplyFlashSale = async (e) => {
     e.preventDefault();
-    const percent = Number(flashSaleForm.discountPercent);
-    if (!percent || percent <= 0) return;
 
-    if (typeof setProducts === 'function') {
-      setProducts(prev => (prev || []).map(p => {
-        if (flashSaleForm.category === 'ყველა' || p.category === flashSaleForm.category) {
-          const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
-          const discountedPrice = Math.round(basePrice * (1 - percent / 100));
-          return {
-            ...p,
-            oldPriceGEL: basePrice,
-            priceGEL: discountedPrice
-          };
-        }
-        return p;
-      }));
+    const percent = Number(flashSaleForm.discountPercent);
+    const category = String(flashSaleForm.category || '').trim();
+
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
+      alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
+      return;
     }
 
-    logActivity(`გააქტიურდა მასობრივი ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${flashSaleForm.category}`);
-    alert(`⚡ წარმატებით გააქტიურდა ${percent}%-იანი ფასდაკლება!`);
-    setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+    if (!category) {
+      alert('აირჩიეთ პროდუქტის კატეგორია.');
+      return;
+    }
+
+    if (typeof setProducts !== 'function') {
+      alert('პროდუქტების განახლება ამჟამად მიუწვდომელია. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return;
+    }
+
+    if (isApplyingFlashSale) return;
+    setIsApplyingFlashSale(true);
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_apply_flash_sale`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_discount_percent: percent,
+          p_category: category
+        })
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
+      }
+
+      const updatedCount = Number(await response.json());
+      if (!Number.isInteger(updatedCount) || updatedCount < 0) {
+        throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
+      }
+
+      if (updatedCount === 0) {
+        alert('არჩეულ კატეგორიაში განახლებადი პროდუქტი ვერ მოიძებნა.');
+        return;
+      }
+
+      setProducts(prev => (prev || []).map(product => {
+        if (category !== 'ყველა' && product.category !== category) return product;
+
+        const currentPrice = Number(product.priceGEL ?? product.price_gel ?? 0);
+        const previousPrice = Number(product.oldPriceGEL ?? product.old_price_gel);
+        const basePrice = Number.isFinite(previousPrice) && previousPrice > currentPrice
+          ? previousPrice
+          : currentPrice;
+        const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
+
+        return {
+          ...product,
+          oldPriceGEL: basePrice,
+          priceGEL: discountedPrice
+        };
+      }));
+
+      logActivity(`გააქტიურდა მასობრივი ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}. განახლდა ${updatedCount} პროდუქტი.`);
+      alert(`⚡ ფასდაკლება წარმატებით შეინახა ბაზაში. განახლდა ${updatedCount} პროდუქტი.`);
+      setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+    } catch (error) {
+      console.error('Flash sale update failed:', error);
+      alert('ფასდაკლება ვერ გააქტიურდა: ' + (error?.message || 'სერვერთან კავშირის შეცდომა.'));
+    } finally {
+      setIsApplyingFlashSale(false);
+    }
   };
 
   const handlePrintInvoice = (order) => {
@@ -2830,8 +2883,8 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <button type="submit" className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
-                <Zap className="w-4 h-4" /> ფასდაკლების მასობრივად გააქტიურება
+              <button type="submit" disabled={isApplyingFlashSale} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+                <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
               </button>
             </form>
           </div>
