@@ -942,6 +942,11 @@ export default function App() {
     );
 
     if (found) {
+      const minimumOrder = Number(found.minOrderGEL) || 0;
+      if (cartSubtotalGEL < minimumOrder) {
+        alert(`ამ კუპონის გამოსაყენებლად კალათის მინიმალური თანხაა ${formatPrice(minimumOrder)}.`);
+        return;
+      }
       setAppliedCoupon(found);
 
       showToast(

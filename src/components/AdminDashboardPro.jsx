@@ -160,6 +160,7 @@ export default function AdminDashboardPro({
     { role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isUploadingStorefrontMedia, setIsUploadingStorefrontMedia] = useState(false);
 
   useEffect(() => {
     try {
@@ -306,8 +307,8 @@ export default function AdminDashboardPro({
       defaultColors = ['ტიტანი', 'ვერცხლისფერი', 'შავი', 'ოქროსფერი'];
     } else if (nameLower.includes('ლეპტოპ') || nameLower.includes('კომპიუტერ')) {
       defaultSizes = ['8GB RAM / 256GB SSD', '16GB RAM / 512GB SSD', '32GB RAM / 1TB SSD'];
-    } else if (nameLower.includes('აქსესუარ') || nameLower.includes('საათ')) {
-      defaultSizes = ['Standard / One Size'];
+    } else if (nameLower.includes('ჩანთა') || nameLower.includes('აქსესუარ') || nameLower.includes('საათ') || nameLower.includes('სამკაულ')) {
+      defaultSizes = ['One Size'];
     }
 
     setProductForm(prev => ({
@@ -772,20 +773,94 @@ export default function AdminDashboardPro({
     );
   }
 
-  const handleCategoryFileChange = (e, isEditing = false) => {
+  const uploadStorefrontAsset = async (file, folder) => {
+    if (!file) throw new Error('აირჩიეთ ფოტო.');
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) throw new Error('მხარდაჭერილია JPEG, PNG, WebP და GIF.');
+    if (file.size > 5 * 1024 * 1024) throw new Error('ფოტოს ზომა არ უნდა აღემატებოდეს 5MB-ს.');
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token || !session?.user?.id) throw new Error('ფოტოს ასატვირთად საჭიროა ადმინისტრატორის ავტორიზაცია.');
+
+    const safeName = String(file.name || 'image')
+      .normalize('NFKD')
+      .replace(/[^a-zA-Z0-9._-]+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(-80);
+    const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName || 'image'}`;
+    const storagePath = `${folder}/${uniqueName}`;
+    const encodedPath = storagePath.split('/').map(encodeURIComponent).join('/');
+    const storageUrl = `${SUPABASE_URL}/storage/v1/object/storefront-media/${encodedPath}`;
+    const authHeaders = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': file.type,
+      'x-upsert': 'false'
+    };
+
+    const uploadResponse = await fetch(storageUrl, {
+      method: 'POST',
+      headers: authHeaders,
+      body: file
+    });
+    if (!uploadResponse.ok) throw new Error(await uploadResponse.text());
+
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/storefront-media/${encodedPath}`;
+    const metadataResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_media`, {
+      method: 'POST',
+      headers: {
+        ...(await getSupabaseHeaders()),
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        storage_path: storagePath,
+        public_url: publicUrl,
+        file_name: file.name || safeName,
+        mime_type: file.type,
+        size_bytes: file.size,
+        alt_text: file.name || 'GEOSTORE image',
+        folder,
+        is_public: true,
+        created_by: session.user.id
+      })
+    });
+
+    if (!metadataResponse.ok) {
+      await fetch(storageUrl, { method: 'DELETE', headers: authHeaders }).catch(() => {});
+      throw new Error(await metadataResponse.text());
+    }
+    return publicUrl;
+  };
+
+  const handleCategoryFileChange = async (e, isEditing = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsUploadingStorefrontMedia(true);
+    try {
+      const imageUrl = await uploadStorefrontAsset(file, 'categories');
+      if (isEditing) setEditCatImage(imageUrl);
+      else setNewCatImage(imageUrl);
+    } catch (error) {
+      alert(error?.message || 'კატეგორიის ფოტოს ატვირთვა ვერ მოხერხდა.');
+    } finally {
+      setIsUploadingStorefrontMedia(false);
+      e.target.value = '';
+    }
+  };
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64Result = reader.result;
-      if (isEditing) {
-        setEditCatImage(base64Result);
-      } else {
-        setNewCatImage(base64Result);
-      }
-    };
-    reader.readAsDataURL(file);
+  const handleBannerImageFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingStorefrontMedia(true);
+    try {
+      const imageUrl = await uploadStorefrontAsset(file, 'banners');
+      setBannerForm((current) => ({ ...current, image: imageUrl }));
+    } catch (error) {
+      alert(error?.message || 'ბანერის ფოტოს ატვირთვა ვერ მოხერხდა.');
+    } finally {
+      setIsUploadingStorefrontMedia(false);
+      e.target.value = '';
+    }
   };
 
   const handleAddCategory = (e) => {
@@ -907,21 +982,21 @@ export default function AdminDashboardPro({
     } catch (error) { alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-
-    const promises = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(promises).then(base64Images => {
-      setSelectedImages(prev => [...(prev || []), ...base64Images]);
-    });
+    setIsUploadingStorefrontMedia(true);
+    try {
+      const uploadedImages = await Promise.all(
+        files.map((file) => uploadStorefrontAsset(file, 'products'))
+      );
+      setSelectedImages((previous) => [...(previous || []), ...uploadedImages]);
+    } catch (error) {
+      alert(error?.message || 'პროდუქტის ფოტოს ატვირთვა ვერ მოხერხდა.');
+    } finally {
+      setIsUploadingStorefrontMedia(false);
+      e.target.value = '';
+    }
   };
 
   const handleEditProduct = (p) => {
@@ -1652,7 +1727,7 @@ export default function AdminDashboardPro({
   const mainCategories = safeCategories.filter(c => !c.parentId);
 
   const catLower = productForm.category.toLowerCase();
-  const isClothing = catLower.includes('ტანსაცმელ') || catLower.includes('ქურთუკ') || catLower.includes('შარვალ');
+  const isClothing = ['ტანსაცმელ', 'ქურთუკ', 'შარვალ', 'ჯინს', 'პერანგ', 'კაბ', 'ქვედაბოლო'].some((term) => catLower.includes(term));
   const isShoes = catLower.includes('ფეხსაცმელ') || catLower.includes('shoe');
   const isLaptop = catLower.includes('ლეპტოპ') || catLower.includes('კომპიუტერ');
   const isPhone = catLower.includes('სმარტფონ') || catLower.includes('ტელეფონ');
@@ -2924,7 +2999,12 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="სათაური" required value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <input type="text" placeholder="ქვესათაური / აღწერა" value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                <input type="text" placeholder="ბანერის ფოტოს URL" value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" placeholder="ბანერის ფოტოს URL (ან ატვირთეთ ქვემოთ)" value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <label className="admin-media-upload">
+                  <ImageIcon className="w-4 h-4" />
+                  <span>{isUploadingStorefrontMedia ? 'იტვირთება…' : 'ბანერის ფოტოს ატვირთვა (მაქს. 5MB)'}</span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={isUploadingStorefrontMedia} onChange={handleBannerImageFileChange} />
+                </label>
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">ბანერის დამატება</button>
               </form>
             </div>

@@ -1002,3 +1002,11 @@
   .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:1fr!important}
   .admin-dashboard-pro .admin-storefront-save,.admin-dashboard-pro .admin-storefront-publish{flex:1 1 100%!important}
 }
+
+.admin-dashboard-pro .admin-media-upload{
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;
+  min-height:42px!important;padding:9px 12px!important;border:1px dashed #cbd5c4!important;border-radius:3px!important;
+  background:#f6f8f3!important;color:#59674f!important;font-size:10px!important;font-weight:750!important;cursor:pointer!important;
+}
+.admin-dashboard-pro .admin-media-upload input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.admin-dashboard-pro .admin-media-upload svg{width:15px!important;height:15px!important}
