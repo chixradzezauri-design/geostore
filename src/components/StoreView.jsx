@@ -54,23 +54,7 @@ export default function StoreView({
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openParentCatId, setOpenParentCatId] = useState(null);
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        }
-        return { hours: 12, minutes: 0, seconds: 0 };
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const [allReviews, setAllReviews] = useState(() => {
     try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
@@ -313,22 +297,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-black">
-              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
-                <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.hours}</span>
-              </div>
-              <span className="text-amber-400 text-base">:</span>
-              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
-                <span className="text-sm sm:text-base">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.minutes}</span>
-              </div>
-              <span className="text-amber-400 text-base">:</span>
-              <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
-                <span className="text-sm sm:text-base">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.seconds}</span>
-              </div>
-            </div>
+
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
