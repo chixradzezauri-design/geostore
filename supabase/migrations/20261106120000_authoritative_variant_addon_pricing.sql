@@ -1,7 +1,7 @@
--- GEOSTORE: server-authoritative pricing for custom variants and paid add-ons.
--- This replaces the existing private checkout implementation without changing
--- its stock transaction, coupon validation, delivery lookup, or idempotency flow.
--- Apply only after the repository's historical migration chain is reconciled.
+-- GEOSTORE: server-authoritative pricing and inventory for custom variants/add-ons.
+-- Preserves the existing checkout authentication, coupon, delivery, idempotency,
+-- product-level stock transaction, and order snapshot behavior.
+-- Apply only after the historical migration chain has been reconciled.
 do $guard$
 begin
   if to_regprocedure('private.create_order_with_stock(jsonb)') is null then
@@ -38,6 +38,8 @@ declare
   v_variant_name text;
   v_variant_price numeric;
   v_variant_price_text text;
+  v_variant_stock_text text;
+  v_variant_stock integer;
   v_gift_wrap boolean;
   v_gift_message text;
   v_vip_warranty boolean;
@@ -258,33 +260,7 @@ begin
       end if;
       v_variant_name := nullif(trim(v_variant->>'name'), '');
       v_variant_price_text := coalesce(v_variant->>'priceGEL', v_variant->>'price_gel');
-      if coalesce(v_variant_price_text, '') !~ '^[0-9]+([.][0-9]{1,2})?
-  if v_coupon_code <> '' then
-    select discount_percent, min_order_gel into v_coupon from public.store_coupons where code = v_coupon_code and active = true;
-    if not found then raise exception 'კუპონი არასწორია ან აღარ არის აქტიური.'; end if;
-    if v_subtotal < v_coupon.min_order_gel then raise exception 'კუპონის მინიმალური შეკვეთის თანხა არ შესრულდა.'; end if;
-    v_discount := round(v_subtotal * v_coupon.discount_percent / 100, 2);
-  end if;
-  v_total := round(greatest(0, v_subtotal - v_discount) + v_delivery, 2);
-  for v_item in
-    select item->>'id' as product_id, sum((item->>'quantity')::integer)::integer as quantity
-      from jsonb_array_elements(v_items) e(item) group by item->>'id' order by item->>'id'
-  loop
-    update public.products set stock = coalesce(stock, 0) - v_item.quantity
-     where id = v_item.product_id and coalesce(stock, 0) >= v_item.quantity;
-    get diagnostics v_updated = row_count;
-    if v_updated <> 1 then raise exception 'მარაგის განახლება ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id; end if;
-  end loop;
-  v_result := jsonb_build_object('order_id', v_order_id, 'stock_deducted', true, 'items', v_items,
-    'subtotal_gel', v_subtotal, 'discount_gel', v_discount, 'delivery_gel', v_delivery, 'total_gel', v_total);
-  insert into public.orders(id, customer_name, phone, address, user_email, customer_email, items,
-    total_gel, status, stock_deducted_at, checkout_result, checkout_request)
-  values (v_order_id, p_order->>'customer_name', p_order->>'phone', p_order->>'address',
-    v_user_email, v_customer_email, v_items, v_total, 'ახალი', now(), v_result, v_request);
-  return v_result;
-end;
-$function$
- then
+      if coalesce(v_variant_price_text, '') !~ '^[0-9]+([.][0-9]{1,2})?$' then
         raise exception 'პროდუქტის ვარიანტის ფასი არასწორია.';
       end if;
       v_variant_price := v_variant_price_text::numeric;
@@ -340,6 +316,60 @@ $function$
     get diagnostics v_updated = row_count;
     if v_updated <> 1 then raise exception 'მარაგის განახლება ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id; end if;
   end loop;
+  -- Enforce and deduct per-variant stock where the variant defines a stock count.
+  -- The product-level stock remains the aggregate cap and is deducted above.
+  for v_item in
+    select item->>'id' as product_id,
+           item->>'selected_variant_id' as variant_id,
+           sum((item->>'quantity')::integer)::integer as quantity
+      from jsonb_array_elements(v_items) e(item)
+     where coalesce(trim(item->>'selected_variant_id'), '') <> ''
+     group by item->>'id', item->>'selected_variant_id'
+     order by item->>'id', item->>'selected_variant_id'
+  loop
+    select variants into v_product
+      from public.products
+     where id = v_item.product_id
+     for update;
+    if not found then
+      raise exception 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id;
+    end if;
+    select entry.variant into v_variant
+      from jsonb_array_elements(
+        case when jsonb_typeof(coalesce(v_product.variants, '[]'::jsonb)) = 'array'
+             then coalesce(v_product.variants, '[]'::jsonb)
+             else '[]'::jsonb end
+      ) as entry(variant)
+     where entry.variant->>'id' = v_item.variant_id
+     limit 1;
+    if v_variant is null then
+      raise exception 'არჩეული ვარიანტი აღარ არსებობს. განაახლეთ პროდუქტი და სცადეთ თავიდან.';
+    end if;
+    v_variant_stock_text := v_variant->>'stock';
+    if coalesce(v_variant_stock_text, '') <> '' then
+      if v_variant_stock_text !~ '^[0-9]{1,9}$' then
+        raise exception 'პროდუქტის ვარიანტის მარაგის მონაცემი არასწორია.';
+      end if;
+      v_variant_stock := v_variant_stock_text::integer;
+      if v_variant_stock < v_item.quantity then
+        raise exception 'არჩეული ვარიანტის მარაგი აღარ არის საკმარისი.';
+      end if;
+      update public.products p
+         set variants = (
+           select jsonb_agg(
+             case when entry.variant->>'id' = v_item.variant_id
+               then jsonb_set(entry.variant, '{stock}', to_jsonb(v_variant_stock - v_item.quantity), true)
+               else entry.variant
+             end
+             order by entry.ordinality
+           )
+             from jsonb_array_elements(coalesce(p.variants, '[]'::jsonb))
+                  with ordinality as entry(variant, ordinality)
+         )
+       where p.id = v_item.product_id;
+    end if;
+  end loop;
+
   v_result := jsonb_build_object('order_id', v_order_id, 'stock_deducted', true, 'items', v_items,
     'subtotal_gel', v_subtotal, 'discount_gel', v_discount, 'delivery_gel', v_delivery, 'total_gel', v_total);
   insert into public.orders(id, customer_name, phone, address, user_email, customer_email, items,
