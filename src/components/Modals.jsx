@@ -5,6 +5,7 @@ import {
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
   Search, PackageCheck, Clock, Navigation, Map, Bell, Sparkles, Tag 
 } from 'lucide-react';
+import { normalizeTrackingLookup } from '../utils/orderSafety';
 
 export default function Modals({
   isCheckoutOpen,
@@ -85,7 +86,7 @@ export default function Modals({
       secureOrder: 'თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში', close: 'დახურვა', orderAccepted: 'შეკვეთა მიღებულია',
       thankYou: 'მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.',
       orderCode: 'შეკვეთის კოდი', copyCode: 'კოდის კოპირება', codeCopied: 'შეკვეთის კოდი დაკოპირდა.',
-      confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის ლაივ-ტრეკინგი',
+      confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
       orderPhone: 'შეკვეთაზე მითითებული ტელეფონი', checking: 'მოწმდება...', search: 'ძებნა',
       orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
       products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
@@ -113,7 +114,7 @@ export default function Modals({
       secureOrder: 'Your order is securely stored with GEOSTORE', close: 'Close', orderAccepted: 'Order received',
       thankYou: 'Thank you for your purchase. Keep your order code to check its status later.',
       orderCode: 'Order code', copyCode: 'Copy code', codeCopied: 'Order code copied.',
-      confirmation: 'Confirmation:', understood: 'Got it', trackerTitle: 'Live order tracking',
+      confirmation: 'Confirmation:', understood: 'Got it', trackerTitle: 'Track your order', trackerInvalidCode: 'The order code is invalid. Enter the complete ORD code.', trackerInvalidPhone: 'The phone number must contain 9–15 digits.',
       orderPhone: 'Phone number used for the order', checking: 'Checking...', search: 'Search',
       orderDate: 'Order date:', total: 'Total amount:', items: 'Order items:',
       products: 'Products', deliveryProgress: 'Delivery progress', accepted: 'Accepted',
@@ -141,7 +142,7 @@ export default function Modals({
       secureOrder: 'Ваш заказ надежно сохраняется в GEOSTORE', close: 'Закрыть', orderAccepted: 'Заказ принят',
       thankYou: 'Спасибо за покупку. Сохраните код заказа, чтобы позже проверить его статус.',
       orderCode: 'Код заказа', copyCode: 'Скопировать код', codeCopied: 'Код заказа скопирован.',
-      confirmation: 'Подтверждение:', understood: 'Понятно', trackerTitle: 'Отслеживание заказа',
+      confirmation: 'Подтверждение:', understood: 'Понятно', trackerTitle: 'Статус заказа', trackerInvalidCode: 'Неверный код заказа. Введите полный код ORD.', trackerInvalidPhone: 'Номер телефона должен содержать 9–15 цифр.',
       orderPhone: 'Телефон, указанный при заказе', checking: 'Проверка...', search: 'Поиск',
       orderDate: 'Дата заказа:', total: 'Итого:', items: 'Состав заказа:',
       products: 'Товары', deliveryProgress: 'Статус доставки', accepted: 'Принят',
@@ -170,7 +171,7 @@ export default function Modals({
     secureOrder: 'თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში', close: 'დახურვა', orderAccepted: 'შეკვეთა მიღებულია',
     thankYou: 'მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.',
     orderCode: 'შეკვეთის კოდი', copyCode: 'კოდის კოპირება', codeCopied: 'შეკვეთის კოდი დაკოპირდა.',
-    confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის ლაივ-ტრეკინგი',
+    confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
     orderPhone: 'შეკვეთაზე მითითებული ტელეფონი', checking: 'მოწმდება...', search: 'ძებნა',
     orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
     products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
@@ -248,15 +249,17 @@ export default function Modals({
 
   const handleSearchOrder = async (e) => {
     e.preventDefault();
-    const cleanId = searchOrderId.trim().toUpperCase().replace(/^#+/, '');
-    const cleanPhone = searchOrderPhone.trim();
+    const normalizedLookup = normalizeTrackingLookup(searchOrderId, searchOrderPhone);
 
-    if (!cleanId || !cleanPhone) {
+    if (!normalizedLookup.valid) {
       setTrackedOrder(null);
-      setTrackerError('შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.');
+      setTrackerError(normalizedLookup.reason === 'order_id'
+        ? copy.trackerInvalidCode
+        : copy.trackerInvalidPhone);
       return;
     }
     if (typeof lookupOrderForTracking !== 'function' || isSearchingOrder) return;
+    const { orderId: cleanId, phone: cleanPhone } = normalizedLookup;
 
     setIsSearchingOrder(true);
     setTrackedOrder(null);
@@ -443,10 +446,10 @@ export default function Modals({
               </button>
             </div>
 
-            <form onSubmit={handleSearchOrder} className="gs-order-tracker-form grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+            <form onSubmit={handleSearchOrder} className="gs-order-tracker-form grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2" aria-busy={isSearchingOrder}>
               <div className="relative">
                 <input type="text" aria-label={copy.orderCode} placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
-                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" maxLength={64} required
+                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={64} required
                   className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
                 <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
               </div>
@@ -461,7 +464,7 @@ export default function Modals({
             </form>
 
             {trackerError && (
-              <p className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{localizeMessage(trackerError)}</p>
+              <p role="alert" aria-live="polite" className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{localizeMessage(trackerError)}</p>
             )}
 
             {trackedOrder ? (
@@ -603,13 +606,13 @@ export default function Modals({
                 <>
                   <div className="space-y-1">
                     <label htmlFor="geostore-auth-name" className="text-slate-300 font-bold">{copy.name}</label>
-                    <input id="geostore-auth-name" type="text" required maxLength={100} autoComplete="name" placeholder={copy.yourName} value={authForm.name}
+                    <input id="geostore-auth-name" type="text" required minLength={2} maxLength={100} autoComplete="name" placeholder={copy.yourName} value={authForm.name}
                       onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
                   <div className="space-y-1">
                     <label htmlFor="geostore-auth-phone" className="text-slate-300 font-bold">{copy.phone}</label>
-                    <input id="geostore-auth-phone" type="tel" required maxLength={24} autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
+                    <input id="geostore-auth-phone" type="tel" required minLength={9} maxLength={24} autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
                       onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
@@ -625,7 +628,7 @@ export default function Modals({
 
               <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" type="password" required minLength={6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>
