@@ -158,6 +158,8 @@ export default function AdminDashboardPro({
   setCategoriesList,
   bannersList = [],
   setBannersList,
+  onSaveStorefrontDraft,
+  storefrontDraftBusy = false,
   onPublishStorefront,
   storefrontPublishBusy = false,
   siteSettings,
@@ -2080,6 +2082,14 @@ export default function AdminDashboardPro({
             <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
+              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
+              className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
+            >
+              {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
+            </button>
             <button
               type="button"
               onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
