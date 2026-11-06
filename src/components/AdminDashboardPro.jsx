@@ -1624,18 +1624,35 @@ export default function AdminDashboardPro({
 
   const handleAddBanner = (e) => {
     e.preventDefault();
-    if (!bannerForm.title) return;
+    const title = String(bannerForm.title || '').trim();
+    const subtitle = String(bannerForm.subtitle || '').trim();
+    const image = String(bannerForm.image || '').trim();
+    if (!title || title.length > 120 || subtitle.length > 240) {
+      alert('ბანერის სათაური სავალდებულოა (მაქსიმუმ 120 სიმბოლო), აღწერა კი მაქსიმუმ 240 სიმბოლო.');
+      return;
+    }
+    if (image) {
+      try {
+        const parsedImageUrl = new URL(image);
+        if (!['http:', 'https:'].includes(parsedImageUrl.protocol)) throw new Error('Unsupported image URL protocol');
+      } catch {
+        alert('ბანერის ფოტოსთვის მიუთითეთ სწორი HTTPS ან HTTP ბმული.');
+        return;
+      }
+    }
     const newB = {
       id: `b-${Date.now()}`,
       ...bannerForm,
-      image: bannerForm.image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
+      title,
+      subtitle,
+      image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
     };
     if (typeof setBannersList === 'function') {
       setBannersList(prev => [...(prev || []), newB]);
     }
     setBannerForm({ title: '', subtitle: '', image: '', link: '' });
-    logActivity(`დაემატა ბანერი: ${newB.title}`);
-    alert('✅ სარეკლამო ბანერი წარმატებით დაემატა!');
+    logActivity(`დაემატა ბანერის მონახაზი: ${newB.title}`);
+    alert('ბანერის მონახაზი შეინახა. საიტზე გამოსაჩენად დააჭირეთ „ცვლილებების გამოქვეყნება“.');
   };
 
   const handleDeleteBanner = (id) => {
@@ -3244,7 +3261,7 @@ export default function AdminDashboardPro({
                 <textarea rows="4" placeholder="დაწერეთ შეტყობინება..." required value={broadcastForm.message} onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 resize-none shadow-inner" />
               </div>
               <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
-                <Send className="w-4 h-4" /> შეტყობინების გაგზავნა ყველა მომხმარებელს
+                <Send className="w-4 h-4" /> სატესტო შეტყობინების შენახვა
               </button>
             </form>
           </div>
@@ -3258,10 +3275,10 @@ export default function AdminDashboardPro({
               </h3>
               <form onSubmit={handleAddBanner} className="admin-banner-form space-y-4 text-xs">
                 <div className="admin-banner-fields grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <input type="text" placeholder="სათაური" required value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="text" placeholder="ქვესათაური / აღწერა" value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" placeholder="სათაური" required maxLength={120} value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" placeholder="ქვესათაური / აღწერა" maxLength={240} value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                <input type="text" placeholder="ბანერის ფოტოს URL" value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" placeholder="ბანერის ფოტოს URL (HTTP/HTTPS)" maxLength={2048} value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">ბანერის დამატება</button>
               </form>
             </div>
