@@ -1958,7 +1958,7 @@ export default function App() {
               <input
                 type="text"
                 name="csubject"
-                maxLength={160}
+                maxLength={150}
                 placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 className="gs-support-field"
               />
@@ -1966,7 +1966,7 @@ export default function App() {
               <textarea
                 name="cmessage"
                 rows="3"
-                maxLength={5000}
+                maxLength={4000}
                 placeholder={currentLang === 'en' ? 'Write your message...' : currentLang === 'ru' ? 'Напишите сообщение...' : 'დაწერე შეტყობინება...'}
                 required
                 className="gs-support-field"
