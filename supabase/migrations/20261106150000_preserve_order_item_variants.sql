@@ -40,6 +40,14 @@ begin
     or jsonb_array_length(p_order->'items') = 0 then
     raise exception 'შეკვეთაში პროდუქტები არ არის.';
   end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(p_order->'items') e(item)
+    where length(coalesce(item->>'selected_size', '')) > 40
+       or length(coalesce(item->>'selected_color', '')) > 60
+  ) then
+    raise exception 'პროდუქტის ზომის ან ფერის მონაცემი ზედმეტად გრძელია.';
+  end if;
   v_order_id := p_order->>'id';
   v_user_email := coalesce(p_order->>'user_email', 'guest');
   v_customer_email := nullif(lower(trim(coalesce(p_order->>'customer_email', ''))), '');
