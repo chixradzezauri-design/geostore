@@ -301,6 +301,7 @@ export default function AdminDashboardPro({
   };
 
   const [productForm, setProductForm] = useState(productFormInitial);
+  const [stockDrafts, setStockDrafts] = useState({});
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
@@ -961,6 +962,7 @@ export default function AdminDashboardPro({
       });
       if (!response.ok) throw new Error(await response.text());
       if (typeof setProducts === 'function') setProducts(prev => (prev || []).map(p => String(p.id) === String(id) ? updated : p));
+      if (field === 'stock') setStockDrafts(prev => { const next = { ...prev }; delete next[String(id)]; return next; });
     } catch (error) { alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
@@ -2811,7 +2813,7 @@ export default function AdminDashboardPro({
                   </div>
                   <div>
                     <label className="text-slate-400 font-bold block mb-1">მარაგი</label>
-                    <input type="number" placeholder="10" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                    <input type="number" min="0" step="1" inputMode="numeric" placeholder="10" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   </div>
                 </div>
 
@@ -2990,8 +2992,21 @@ export default function AdminDashboardPro({
                           step="1"
                           inputMode="numeric"
                           aria-label={`მარაგი: ${p.name}`}
-                          value={p.stock ?? 0}
-                          onChange={e => handleQuickUpdateProduct(p.id, 'stock', e.target.value)}
+                          value={stockDrafts[String(p.id)] ?? String(p.stock ?? 0)}
+                          onChange={e => setStockDrafts(prev => ({ ...prev, [String(p.id)]: e.target.value }))}
+                          onBlur={e => {
+                            const draft = stockDrafts[String(p.id)];
+                            if (draft === undefined) return;
+                            if (draft.trim() === '' || Number(draft) === Number(p.stock ?? 0)) {
+                              setStockDrafts(prev => { const next = { ...prev }; delete next[String(p.id)]; return next; });
+                              return;
+                            }
+                            handleQuickUpdateProduct(p.id, 'stock', draft);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                            if (e.key === 'Escape') setStockDrafts(prev => { const next = { ...prev }; delete next[String(p.id)]; return next; });
+                          }}
                           className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400"
                         />
                         <span className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
