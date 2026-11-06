@@ -394,6 +394,7 @@ export default function App() {
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
 
@@ -2056,13 +2057,15 @@ export default function App() {
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
+                if (isSubmittingSupport) return;
 
                 const name = e.target.cname.value.trim();
                 const email = e.target.cemail.value.trim();
                 const subject = e.target.csubject.value.trim();
                 const message = e.target.cmessage.value.trim();
 
-                if (!name || !message) return;
+                if (!name || !message || name.length > 100 || message.length > 4000 || subject.length > 150 || email.length > 254) return;
+                setIsSubmittingSupport(true);
 
                 // Use a high-entropy identifier to avoid collisions with existing support tickets.
                 const ticketId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -2079,9 +2082,11 @@ export default function App() {
                       body: JSON.stringify({
                         id: ticketId,
                         customer_name: name,
-                        email: email || 'guest@geostore.ge',
-                        subject: subject || 'General',
-                        message
+                        email: email || null,
+                        subject: subject || null,
+                        message,
+                        status: 'ღია',
+                        reply: null
                       })
                     }
                   );
@@ -2109,6 +2114,8 @@ export default function App() {
                         ? 'Не удалось отправить обращение в поддержку.'
                         : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.')
                   );
+                } finally {
+                  setIsSubmittingSupport(false);
                 }
               }}
               className="gs-support-form"
@@ -2149,9 +2156,13 @@ export default function App() {
 
               <button
                 type="submit"
-                className="gs-support-submit"
+                disabled={isSubmittingSupport}
+                aria-busy={isSubmittingSupport}
+                className="gs-support-submit disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {t.sendMessage}
+                {isSubmittingSupport
+                  ? (currentLang === 'en' ? 'Sending…' : currentLang === 'ru' ? 'Отправка…' : 'იგზავნება…')
+                  : t.sendMessage}
               </button>
             </form>
           </div>
