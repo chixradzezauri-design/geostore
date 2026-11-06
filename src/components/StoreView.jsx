@@ -787,6 +787,7 @@ export default function StoreView({
                         <textarea
                           rows="2"
                           placeholder={storeText.giftPlaceholder}
+                          aria-label={storeText.giftMessage}
                           value={giftMessage}
                           onChange={(e) => setGiftMessage(e.target.value)}
                           className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 text-xs resize-none shadow-inner"
