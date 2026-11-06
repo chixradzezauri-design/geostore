@@ -397,7 +397,7 @@ export default function StoreView({
         )}
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
-        <div className="gs-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="gs-category-grid gs-catalog-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div 
             role="button"
             tabIndex={0}
@@ -505,8 +505,8 @@ export default function StoreView({
       </div>
 
       {/* Filters & Sorting */}
-      <div className="gs-filter-panel bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
+      <div className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+        <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
           <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
@@ -516,7 +516,7 @@ export default function StoreView({
             aria-label={storeText.minPrice}
             value={minPrice} 
             onChange={e => setMinPrice(e.target.value)}
-            className="w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           <span className="text-slate-500">-</span>
           <input 
@@ -532,7 +532,7 @@ export default function StoreView({
           )}
         </div>
 
-        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+        <div className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
           <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
@@ -540,7 +540,7 @@ export default function StoreView({
             aria-label={storeText.sort}
             value={sortBy} 
             onChange={e => setSortBy(e.target.value)}
-            className="bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
+            className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
             <option value="default">{storeText.defaultSort}</option>
             <option value="price-asc">{storeText.priceLow}</option>
@@ -556,7 +556,7 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
         </div>
       ) : (
-        <div className="gs-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
+        <div className="gs-product-grid gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -567,11 +567,11 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <article key={prod.id} className="gs-product-card group flex flex-col">
+              <article key={prod.id} className="gs-product-card gs-catalog-product-card group flex flex-col">
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
-                  className="gs-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
+                  className="gs-product-media gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
                   <img src={prod.image} alt={prod.name} className="w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
                   
@@ -605,15 +605,15 @@ export default function StoreView({
                   </div>
                 </div>
 
-                <div className="gs-product-info py-3 sm:py-4 space-y-2.5">
+                <div className="gs-product-info gs-catalog-product-info py-3 sm:py-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
                     <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
-                  <div className="gs-product-price flex items-baseline gap-2.5 pt-0.5">
+                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <div className="gs-product-price gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
                     {prod.oldPriceGEL && <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
@@ -621,7 +621,7 @@ export default function StoreView({
 
                 <button 
                   onClick={() => handleOpenProduct(prod)} 
-                  className="gs-product-action gs-product-card-action w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
+                  className="gs-product-action gs-product-card-action gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd}
                 </button>
