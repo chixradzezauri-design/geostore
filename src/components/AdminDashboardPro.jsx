@@ -1582,11 +1582,27 @@ export default function AdminDashboardPro({
 
   const handleAddVendor = (e) => {
     e.preventDefault();
-    if (!vendorForm.name || vendorForm.commission === '') return;
+    const vendorName = String(vendorForm.name || '').trim();
+    const commissionText = String(vendorForm.commission ?? '').trim();
+    const commission = Number(commissionText);
+
+    if (!vendorName || vendorName.length > 100) {
+      alert('ვენდორის სახელი სავალდებულოა და მაქსიმუმ 100 სიმბოლოს უნდა შეიცავდეს.');
+      return;
+    }
+    if (!/^\\d+(?:\\.\\d{1,2})?$/.test(commissionText) || !Number.isFinite(commission) || commission < 0 || commission > 100) {
+      alert('კომისია უნდა იყოს 0-დან 100%-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
+      return;
+    }
+    if ((vendorsList || []).some(v => String(v?.name || '').trim().toLocaleLowerCase() === vendorName.toLocaleLowerCase())) {
+      alert('ასეთი სახელის ვენდორი უკვე არსებობს.');
+      return;
+    }
+
     const newV = {
       id: `v-${Date.now()}`,
-      name: vendorForm.name,
-      commission: Number(vendorForm.commission),
+      name: vendorName,
+      commission,
       status: 'აქტიური'
     };
     if (typeof setVendorsList === 'function') {
@@ -1633,23 +1649,37 @@ export default function AdminDashboardPro({
 
   const handleSendBroadcast = (e) => {
     e.preventDefault();
-    if (!broadcastForm.title || !broadcastForm.message) return;
-    
+    const title = String(broadcastForm.title || '').trim();
+    const message = String(broadcastForm.message || '').trim();
+    if (!title || !message) {
+      alert('შეავსეთ შეტყობინების სათაური და ტექსტი.');
+      return;
+    }
+    if (title.length > 120 || message.length > 2000) {
+      alert('სათაური მაქსიმუმ 120, ხოლო ტექსტი მაქსიმუმ 2000 სიმბოლოს უნდა შეიცავდეს.');
+      return;
+    }
+
     const newNotification = {
       id: `notif-${Date.now()}`,
-      title: broadcastForm.title,
-      message: broadcastForm.message,
+      title,
+      message,
       date: new Date().toLocaleDateString('ka-GE')
     };
 
     try {
-      const existing = JSON.parse(localStorage.getItem('geostore_broadcasts') || '[]');
+      const parsed = JSON.parse(localStorage.getItem('geostore_broadcasts') || '[]');
+      const existing = Array.isArray(parsed) ? parsed : [];
       localStorage.setItem('geostore_broadcasts', JSON.stringify([newNotification, ...existing]));
-    } catch {}
+    } catch (error) {
+      console.error('Local test notification save failed:', error);
+      alert('სატესტო შეტყობინება ამ მოწყობილობაზე ვერ შეინახა. შეამოწმეთ მოწყობილობის მეხსიერება და სცადეთ თავიდან.');
+      return;
+    }
 
     setBroadcastForm({ title: '', message: '' });
-    logActivity(`გაიგზავნა ბროდკასტი: ${broadcastForm.title}`);
-    alert('🚀 შეტყობინება წარმატებით გაეგზავნა ყველა მომხმარებელს!');
+    logActivity(`შეინახა სატესტო შეტყობინება ამ მოწყობილობაზე: ${title}`);
+    alert('სატესტო შეტყობინება შეინახა მხოლოდ ამ მოწყობილობაზე. სხვა მომხმარებლებს არ ეგზავნება.');
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
@@ -3201,8 +3231,9 @@ export default function AdminDashboardPro({
         {adminTab === 'broadcasts' && (
           <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-              <Send className="w-5 h-5 text-emerald-400" /> გლობალური შეტყობინების (Broadcast) გაგზავნა
+              <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
+            <p className="text-xs text-amber-300 leading-6">ეს ფუნქცია შეტყობინებას მხოლოდ ამ მოწყობილობის ბრაუზერში ინახავს. მომხმარებლებისთვის რეალური გაგზავნა ჯერ დაკავშირებული არ არის.</p>
             <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label className="text-slate-400 font-bold">შეტყობინების სათაური</label>
@@ -3487,8 +3518,8 @@ export default function AdminDashboardPro({
                 <Store className="w-5 h-5 text-emerald-400" /> ახალი ვენდორის დამატება და კომისია
               </h3>
               <form onSubmit={handleAddVendor} className="admin-vendor-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                <input type="text" placeholder="ვენდორის სახელი *" required value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <input type="number" placeholder="კომისია %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" placeholder="ვენდორის სახელი *" required maxLength={100} value={vendorForm.name} onChange={e => setVendorForm({...vendorForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" min="0" max="100" step="0.01" inputMode="decimal" placeholder="კომისია %" required value={vendorForm.commission} onChange={e => setVendorForm({...vendorForm, commission: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer flex items-center justify-center gap-1.5">
                   <Percent className="w-4 h-4" /> ვენდორის დამატება
                 </button>
