@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, reconcileCartWithCatalog } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -767,12 +767,18 @@ export default function App() {
   };
 
   const lookupOrderForTracking = async (orderId, phone) => {
+    const normalized = normalizeTrackingLookup(orderId, phone);
+    if (!normalized.valid) {
+      throw new Error(normalized.reason === 'order_id'
+        ? 'შეკვეთის კოდი არასწორია.'
+        : 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.');
+    }
     const response = await fetch(
       `${SUPABASE_URL}/rest/v1/rpc/lookup_order_for_tracking`,
       {
         method: 'POST',
         headers: await getSupabaseHeaders({ authenticated: true }),
-        body: JSON.stringify({ p_order_id: orderId, p_phone: phone })
+        body: JSON.stringify({ p_order_id: normalized.orderId, p_phone: normalized.phone })
       }
     );
 
