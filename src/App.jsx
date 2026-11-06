@@ -1503,7 +1503,7 @@ export default function App() {
         )}
 
         {activeTab === 'cart' && (
-          <div className="gs-cart-page space-y-6">
+          <div className="gs-cart-page gs-cart-layout space-y-6">
             <h2 className="gs-cart-title text-xl font-black text-white tracking-tight flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-400" />
               {t.cart}
@@ -1514,8 +1514,8 @@ export default function App() {
                 {t.emptyCart}
               </p>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-3">
+              <div className="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
                       key={item.id}
@@ -1623,7 +1623,7 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className="space-y-1.5 text-xs text-slate-300">
+                  <div className="gs-cart-totals space-y-1.5 text-xs text-slate-300">
                     <div className="flex justify-between">
                       <span>{t.subtotal}</span>
                       <span>{formatPrice(cartSubtotalGEL)}</span>
