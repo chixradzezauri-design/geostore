@@ -77,9 +77,28 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let offset = 0; offset < binary.length; offset += 1) bytes[offset] = binary.charCodeAt(offset);
+
+  const startsWithBytes = signature => signature.every((byte, offset) => bytes[offset] === byte);
+  const isJpeg = mimeType === 'image/jpeg' && startsWithBytes([0xff, 0xd8, 0xff]);
+  const isPng = mimeType === 'image/png' && startsWithBytes([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const isGif = mimeType === 'image/gif' && (
+    startsWithBytes([0x47, 0x49, 0x46, 0x38, 0x37, 0x61]) ||
+    startsWithBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61])
+  );
+  const isWebp = mimeType === 'image/webp' && bytes.length >= 12 &&
+    startsWithBytes([0x52, 0x49, 0x46, 0x46]) &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+  if (!(isJpeg || isPng || isGif || isWebp)) {
+    throw new Error('ფაილის რეალური ფორმატი მითითებულ ტიპს არ ემთხვევა. ატვირთეთ ნამდვილი JPG, PNG, WEBP ან GIF ფოტო.');
+  }
+
   const extension = STOREFRONT_IMAGE_TYPES[mimeType];
   const safeFolder = folder === 'banners' ? 'banners' : 'categories';
-  const path = `storefront/${safeFolder}/${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}.${extension}`;
+  if (!window.crypto?.getRandomValues) throw new Error('უსაფრთხო ატვირთვისთვის ბრაუზერის კრიპტოგრაფიული ფუნქცია მიუწვდომელია.');
+  const randomBytes = new Uint8Array(12);
+  window.crypto.getRandomValues(randomBytes);
+  const randomSuffix = Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  const path = `storefront/${safeFolder}/${Date.now()}-${index}-${randomSuffix}.${extension}`;
   const headers = await getSupabaseHeaders({ authenticated: true });
   headers['Content-Type'] = mimeType;
   headers['x-upsert'] = 'false';
