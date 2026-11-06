@@ -2128,7 +2128,7 @@ export default function AdminDashboardPro({
 
             <div className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
               <h3 className="admin-staff-list-title font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
-              <div className="space-y-3">
+              <div className="admin-staff-cards-list space-y-3">
                 {staffList.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
                 ) : (
@@ -3286,8 +3286,8 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'settings' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900/80 border border-amber-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-3 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-settings-panel space-y-6">
+            <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-3 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
               <p className="text-xs text-slate-300 leading-6">
                 ადმინისტრატორის წვდომა მოწმდება Supabase Auth-ის სერვერული სესიით და დაცული app_metadata.role მნიშვნელობით.
@@ -3299,11 +3299,11 @@ export default function AdminDashboardPro({
               </p>
             </div>
 
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-delivery-settings bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Truck className="w-5 h-5 text-emerald-400" /> მიწოდების ტარიფების რედაქტირება
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="admin-delivery-fee-fields grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🏙️ თბილისი / რუსთავი (₾):</label>
                   <input type="number" value={deliveryFees?.tbilisi ?? 0} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, tbilisi: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
@@ -3322,11 +3322,11 @@ export default function AdminDashboardPro({
               </button>
             </div>
 
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-global-settings bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Settings className="w-5 h-5 text-emerald-400" /> საიტის გლობალური პარამეტრები
               </h3>
-              <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveSettings} className="admin-global-settings-form space-y-4 text-xs">
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
                   <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
