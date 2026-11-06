@@ -1882,10 +1882,10 @@ export default function App() {
               onSubmit={async (e) => {
                 e.preventDefault();
 
-                const name = e.target.cname.value;
-                const email = e.target.cemail.value;
-                const subject = e.target.csubject.value;
-                const message = e.target.cmessage.value;
+                const name = e.target.cname.value.trim();
+                const email = e.target.cemail.value.trim();
+                const subject = e.target.csubject.value.trim();
+                const message = e.target.cmessage.value.trim();
 
                 if (!name || !message) return;
 
@@ -1906,8 +1906,7 @@ export default function App() {
                         customer_name: name,
                         email: email || 'guest@geostore.ge',
                         subject: subject || 'General',
-                        message,
-                        status: 'Open'
+                        message
                       })
                     }
                   );
@@ -1944,12 +1943,14 @@ export default function App() {
                 name="cname"
                 placeholder={currentLang === 'en' ? 'Your name *' : currentLang === 'ru' ? 'Ваше имя *' : 'თქვენი სახელი *'}
                 required
+                maxLength={100}
                 className="gs-support-field"
               />
 
               <input
                 type="email"
                 name="cemail"
+                maxLength={254}
                 placeholder={currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელფოსტა'}
                 className="gs-support-field"
               />
@@ -1957,6 +1958,7 @@ export default function App() {
               <input
                 type="text"
                 name="csubject"
+                maxLength={160}
                 placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
                 className="gs-support-field"
               />
@@ -1964,6 +1966,7 @@ export default function App() {
               <textarea
                 name="cmessage"
                 rows="3"
+                maxLength={5000}
                 placeholder={currentLang === 'en' ? 'Write your message...' : currentLang === 'ru' ? 'Напишите сообщение...' : 'დაწერე შეტყობინება...'}
                 required
                 className="gs-support-field"
