@@ -3990,3 +3990,34 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 @media(max-width:360px){
  .geostore-shell .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:minmax(0,1fr)!important}
 }
+
+
+/* Expense manager and profit calculator responsive layout. */
+.geostore-shell .admin-dashboard-pro .admin-profit-calculator,
+.geostore-shell .admin-dashboard-pro .admin-expenses{width:100%;max-width:100%;min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-calculator-layout{align-items:stretch;min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-calculator-results{min-width:0;overflow:hidden}
+.geostore-shell .admin-dashboard-pro .admin-calculator-results>div{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-calculator-results>div span{min-width:0;overflow-wrap:anywhere}
+.geostore-shell .admin-dashboard-pro .admin-calculator-results>div b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.geostore-shell .admin-dashboard-pro .admin-expense-form{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-expense-form input,
+.geostore-shell .admin-dashboard-pro .admin-expense-form select{min-width:0;max-width:100%;width:100%}
+.geostore-shell .admin-dashboard-pro .admin-expense-row{min-width:0;gap:12px}
+.geostore-shell .admin-dashboard-pro .admin-expense-row>div:first-child{min-width:0;overflow-wrap:anywhere}
+.geostore-shell .admin-dashboard-pro .admin-expense-row>div:last-child{flex:0 0 auto;white-space:nowrap}
+@media(max-width:760px){
+ .geostore-shell .admin-dashboard-pro .admin-profit-calculator,
+ .geostore-shell .admin-dashboard-pro .admin-expenses>div{padding:14px!important;border-radius:16px!important}
+ .geostore-shell .admin-dashboard-pro .admin-calculator-layout{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-profit-calculator input{min-height:42px!important;font-size:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-calculator-results{padding:14px!important;border-radius:15px!important}
+ .geostore-shell .admin-dashboard-pro .admin-calculator-results h4{font-size:13px!important}
+ .geostore-shell .admin-dashboard-pro .admin-calculator-results>div{font-size:11px!important;line-height:1.4}
+ .geostore-shell .admin-dashboard-pro .admin-calculator-results>div b{font-size:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-expense-form>div:first-child{grid-template-columns:minmax(0,1fr)!important}
+ .geostore-shell .admin-dashboard-pro .admin-expense-form button{width:100%!important;min-height:44px!important}
+ .geostore-shell .admin-dashboard-pro .admin-expense-row{align-items:flex-start!important;flex-wrap:wrap!important;padding:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-expense-row>div:first-child{flex:1 1 100%!important}
+ .geostore-shell .admin-dashboard-pro .admin-expense-row>div:last-child{width:100%;justify-content:space-between!important}
+}
