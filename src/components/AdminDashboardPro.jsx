@@ -1023,16 +1023,17 @@ export default function AdminDashboardPro({
     let newProdPayload;
 
     try {
-      const sourceImages = selectedImages.length > 0
-        ? selectedImages
-        : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800'];
+      const sourceImages = selectedImages.length > 0 ? selectedImages : [];
+      if (sourceImages.length === 0 && !editingProductId) {
+        throw new Error('ახალი პროდუქტის შესანახად ატვირთეთ მინიმუმ ერთი ფოტო.');
+      }
       if (sourceImages.length > MAX_PRODUCT_GALLERY_IMAGES) {
         throw new Error(`პროდუქტის გალერეაში მაქსიმუმ ${MAX_PRODUCT_GALLERY_IMAGES} ფოტოა დაშვებული.`);
       }
       galleryImages = await Promise.all(
         sourceImages.map((image, index) => uploadProductImage(image, prodId, index))
       );
-      const mainImage = galleryImages[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
+      const mainImage = galleryImages[0] || null;
       newProdPayload = {
       id: prodId,
       sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -2903,7 +2904,7 @@ export default function AdminDashboardPro({
                 {filteredProducts?.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="admin-product-identity flex items-center gap-3.5">
-                      <img src={p.image} alt="" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
+                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
