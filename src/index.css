@@ -4350,3 +4350,39 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-coupon-card,
  .geostore-shell .admin-dashboard-pro .admin-vendor-card{align-items:flex-start!important}
 }
+
+/* Admin security and store settings: consistent responsive controls without changing auth or save behavior. */
+.geostore-shell .admin-dashboard-pro .admin-settings-panel,
+.geostore-shell .admin-dashboard-pro .admin-security-notice,
+.geostore-shell .admin-dashboard-pro .admin-delivery-settings,
+.geostore-shell .admin-dashboard-pro .admin-global-settings{min-width:0;max-width:100%;width:100%}
+.geostore-shell .admin-dashboard-pro .admin-delivery-fee-fields>*{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-delivery-fee-fields input,
+.geostore-shell .admin-dashboard-pro .admin-global-settings-form input{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.geostore-shell .admin-dashboard-pro .admin-security-notice p{overflow-wrap:anywhere;line-height:1.65}
+.geostore-shell .admin-dashboard-pro .admin-global-settings-form{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-staff-cards-list{display:flex;flex-direction:column;gap:12px;min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-staff-card{min-width:0;max-width:100%;overflow:hidden}
+.geostore-shell .admin-dashboard-pro .admin-staff-card>div:first-child>div:first-child{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-staff-card b,
+.geostore-shell .admin-dashboard-pro .admin-staff-member-email{overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-staff-permission-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.geostore-shell .admin-dashboard-pro .admin-staff-edit-panel{min-width:0;max-width:100%}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-settings-panel{gap:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-security-notice,
+ .geostore-shell .admin-dashboard-pro .admin-delivery-settings,
+ .geostore-shell .admin-dashboard-pro .admin-global-settings{padding:14px!important;border-radius:17px!important}
+ .geostore-shell .admin-dashboard-pro .admin-delivery-fee-fields{grid-template-columns:minmax(0,1fr)!important;gap:9px!important}
+ .geostore-shell .admin-dashboard-pro .admin-delivery-settings>button{width:100%;min-height:44px}
+ .geostore-shell .admin-dashboard-pro .admin-global-settings-form>button{min-height:44px}
+ .geostore-shell .admin-dashboard-pro .admin-staff-list-panel{padding:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-card>div:first-child{align-items:flex-start!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-actions{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:stretch!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-actions button{min-height:40px}
+ .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel{padding:12px!important}
+}
+@media(max-width:380px){
+ .geostore-shell .admin-dashboard-pro .admin-staff-actions{grid-template-columns:minmax(0,1fr)!important}
+ .geostore-shell .admin-dashboard-pro .admin-staff-permission-chip{font-size:9px!important}
+}
