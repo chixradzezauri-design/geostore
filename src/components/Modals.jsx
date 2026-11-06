@@ -312,13 +312,13 @@ export default function Modals({
               </button>
             </header>
 
-            <form onSubmit={handlePlaceOrder} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+            <form onSubmit={handlePlaceOrder} aria-busy={isSubmittingOrder} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
               <div className="gs-checkout-contact-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="text" required autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
+                    <input type="text" required maxLength={100} autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
                       onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
@@ -328,7 +328,7 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.phone} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="tel" required autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
+                    <input type="tel" required maxLength={24} autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
                       onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
@@ -337,7 +337,7 @@ export default function Modals({
 
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.email} {!currentUser?.email && <span className="text-neutral-400">*</span>}</span>
-                <input type="email" required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
+                <input type="email" maxLength={254} required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
                   placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''}
                   onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white read-only:cursor-not-allowed read-only:opacity-65" />
@@ -361,7 +361,7 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.address} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <input type="text" required autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
+                  <input type="text" required maxLength={300} autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
                     onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
                     className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                 </span>
@@ -603,13 +603,13 @@ export default function Modals({
                 <>
                   <div className="space-y-1">
                     <label htmlFor="geostore-auth-name" className="text-slate-300 font-bold">{copy.name}</label>
-                    <input id="geostore-auth-name" type="text" required autoComplete="name" placeholder={copy.yourName} value={authForm.name}
+                    <input id="geostore-auth-name" type="text" required maxLength={100} autoComplete="name" placeholder={copy.yourName} value={authForm.name}
                       onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
                   <div className="space-y-1">
                     <label htmlFor="geostore-auth-phone" className="text-slate-300 font-bold">{copy.phone}</label>
-                    <input id="geostore-auth-phone" type="tel" required autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
+                    <input id="geostore-auth-phone" type="tel" required maxLength={24} autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
                       onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
@@ -618,7 +618,7 @@ export default function Modals({
 
               <div className="space-y-1">
                 <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
-                <input id="geostore-auth-email" type="email" required autoComplete="email" placeholder="name@example.com" value={authForm.email}
+                <input id="geostore-auth-email" type="email" maxLength={254} required autoComplete="email" placeholder="name@example.com" value={authForm.email}
                   onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>
