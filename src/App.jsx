@@ -993,15 +993,23 @@ export default function App() {
     return deliveryFees.other;
   }, [selectedRegion, deliveryFees]);
 
+  const eligibleAppliedCoupon = useMemo(() => {
+    if (!appliedCoupon) return null;
+    const minimum = Number(appliedCoupon.minOrderGEL ?? 0);
+    return Number.isFinite(minimum) && minimum >= 0 && cartSubtotalGEL >= minimum
+      ? appliedCoupon
+      : null;
+  }, [appliedCoupon, cartSubtotalGEL]);
+
   const cartTotalGEL = useMemo(() => {
-    const rawDiscount = Number(appliedCoupon?.discountPercent);
+    const rawDiscount = Number(eligibleAppliedCoupon?.discountPercent);
     const discountPercent = Number.isFinite(rawDiscount)
       ? Math.min(100, Math.max(0, rawDiscount))
       : 0;
     const sub = cartSubtotalGEL - (cartSubtotalGEL * discountPercent) / 100;
     const delivery = Number(currentDeliveryCost);
     return Math.max(0, sub) + (Number.isFinite(delivery) ? Math.max(0, delivery) : 0);
-  }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
+  }, [cartSubtotalGEL, eligibleAppliedCoupon, currentDeliveryCost]);
 
   const handleApplyCoupon = (e) => {
     e.preventDefault();
@@ -1449,7 +1457,7 @@ export default function App() {
         user_email: orderSession?.user?.email || 'guest',
         customer_email: orderUserEmail.toLowerCase(),
         items: groupCheckoutItems(itemsToOrder),
-        coupon_code: (appliedCoupon?.code || '').trim().toUpperCase(),
+        coupon_code: (eligibleAppliedCoupon?.code || '').trim().toUpperCase(),
         delivery_region: selectedRegion
       };
       const fingerprintSource = JSON.stringify(checkoutFingerprintPayload);
@@ -1512,7 +1520,7 @@ export default function App() {
               user_email: orderSession?.user?.email || 'guest',
               customer_email: orderUserEmail,
               items: itemsToOrder,
-              coupon_code: appliedCoupon?.code || '',
+              coupon_code: eligibleAppliedCoupon?.code || '',
               delivery_region: selectedRegion,
               total_gel: cartTotalGEL
             }
@@ -1899,15 +1907,15 @@ export default function App() {
                       {t.promoCode}
                     </span>
 
-                    {appliedCoupon ? (
+                    {eligibleAppliedCoupon ? (
                       <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between text-xs">
                         <div>
                           <b className="text-amber-300 uppercase">
-                            {appliedCoupon.code}
+                            {eligibleAppliedCoupon.code}
                           </b>
 
                           <span className="text-emerald-400 block text-[10px]">
-                            (-{appliedCoupon.discountPercent}% {t.discount})
+                            (-{eligibleAppliedCoupon.discountPercent}% {t.discount})
                           </span>
                         </div>
 
@@ -1950,16 +1958,16 @@ export default function App() {
                       <span>{formatPrice(cartSubtotalGEL)}</span>
                     </div>
 
-                    {appliedCoupon && (
+                    {eligibleAppliedCoupon && (
                       <div className="flex justify-between text-emerald-400">
                         <span>
-                          {t.discount} (-{appliedCoupon.discountPercent}%):
+                          {t.discount} (-{eligibleAppliedCoupon.discountPercent}%):
                         </span>
 
                         <span>
                           -{formatPrice(
                             (cartSubtotalGEL *
-                              appliedCoupon.discountPercent) /
+                              eligibleAppliedCoupon.discountPercent) /
                               100
                           )}
                         </span>
