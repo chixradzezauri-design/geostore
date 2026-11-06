@@ -164,8 +164,8 @@ begin
       'name', v_product.name,
       'price', v_product.price_gel,
       'quantity', v_item.quantity,
-      'selected_size', v_item.selected_size,
-      'selected_color', v_item.selected_color,
+      'selectedSize', v_item.selected_size,
+      'selectedColor', v_item.selected_color,
       'purchase_cost', v_product.purchase_cost,
       'vendor', v_product.vendor,
       'category', v_product.category
