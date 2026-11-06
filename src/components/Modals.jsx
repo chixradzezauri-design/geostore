@@ -410,9 +410,9 @@ export default function Modals({
             role="dialog"
             aria-modal="true"
             aria-labelledby="geostore-checkout-title"
-            className="gs-commerce-dialog gs-commerce-dialog--checkout relative flex max-h-[min(92dvh,860px)] w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-black/10 bg-white text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.35)]"
+            className="gs-commerce-dialog gs-commerce-dialog--checkout gs-checkout-dialog relative flex max-h-[min(92dvh,860px)] w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-black/10 bg-white text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.35)]"
           >
-            <header className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4 sm:px-7 sm:py-5">
+            <header className="gs-checkout-header flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4 sm:px-7 sm:py-5">
               <div>
                 <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-neutral-500">GEOSTORE · CHECKOUT</p>
                 <h3 id="geostore-checkout-title" className="text-lg font-semibold tracking-tight sm:text-xl">{copy.checkoutTitle}</h3>
@@ -428,8 +428,8 @@ export default function Modals({
               </button>
             </header>
 
-            <form onSubmit={handlePlaceOrder} className="min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <form onSubmit={handlePlaceOrder} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+              <div className="gs-checkout-contact-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
@@ -484,12 +484,12 @@ export default function Modals({
               </label>
 
               {checkoutError && (
-                <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
+                <p role="alert" className="gs-checkout-error rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
                   {localizeMessage(checkoutError)}
                 </p>
               )}
 
-              <div className="border-t border-neutral-200 pt-4">
+              <div className="gs-checkout-submit-area border-t border-neutral-200 pt-4">
                 <button type="submit" disabled={isSubmittingOrder}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-55">
                   {isSubmittingOrder ? copy.sending : copy.confirmOrder}
@@ -508,7 +508,7 @@ export default function Modals({
             role="dialog"
             aria-modal="true"
             aria-labelledby="geostore-order-success-title"
-            className="gs-commerce-dialog gs-commerce-dialog--success my-auto w-full max-w-md overflow-hidden rounded-[28px] border border-white/15 bg-white text-center text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
+            className="gs-commerce-dialog gs-commerce-dialog--success gs-order-success-dialog my-auto w-full max-w-md overflow-hidden rounded-[28px] border border-white/15 bg-white text-center text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.4)]"
           >
             <div className="px-6 pb-6 pt-8 sm:px-8 sm:pt-9">
               <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-neutral-950 text-white">
@@ -517,7 +517,7 @@ export default function Modals({
               <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-neutral-500">GEOSTORE · ORDER CONFIRMED</p>
               <h3 id="geostore-order-success-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{copy.orderAccepted}</h3>
               <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">{copy.thankYou}</p>
-              <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <div className="gs-order-code-panel mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
                 <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500" >{copy.orderCode}</span>
                 <strong className="mt-2 block break-all text-lg font-semibold tracking-[0.08em] text-neutral-950 sm:text-xl">#{orderConfirmation.id}</strong>
                 <button type="button"
