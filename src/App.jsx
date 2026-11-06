@@ -928,35 +928,71 @@ export default function App() {
     return Math.max(0, sub) + currentDeliveryCost;
   }, [cartSubtotalGEL, appliedCoupon, currentDeliveryCost]);
 
+  // A coupon must remain present, active and valid for the current cart.
+  // If an administrator disables/deletes it or the cart drops below its
+  // minimum, remove the client-side discount immediately.
+  useEffect(() => {
+    if (!appliedCoupon) return;
+
+    const currentCoupon = (coupons || []).find(
+      (coupon) => coupon?.id === appliedCoupon.id && coupon?.code === appliedCoupon.code
+    );
+    const discountPercent = Number(currentCoupon?.discountPercent);
+    const minimumOrder = Number(currentCoupon?.minOrderGEL);
+
+    if (
+      !currentCoupon ||
+      (currentCoupon.status && currentCoupon.status !== 'აქტიური') ||
+      !Number.isFinite(discountPercent) ||
+      discountPercent <= 0 ||
+      discountPercent > 100 ||
+      !Number.isFinite(minimumOrder) ||
+      minimumOrder < 0 ||
+      cartSubtotalGEL < minimumOrder
+    ) {
+      setAppliedCoupon(null);
+    }
+  }, [appliedCoupon, coupons, cartSubtotalGEL]);
+
   const handleApplyCoupon = (e) => {
     e.preventDefault();
 
-    const cleanCode = promoInput.trim().toUpperCase();
-
+    const cleanCode = String(promoInput || '').trim().toUpperCase();
     if (!cleanCode) return;
 
-    const found = coupons.find(
-      (c) =>
-        c.code.toUpperCase() === cleanCode &&
-        (c.status === 'აქტიური' || !c.status)
+    const found = (Array.isArray(coupons) ? coupons : []).find(
+      (coupon) =>
+        typeof coupon?.code === 'string' &&
+        coupon.code.trim().toUpperCase() === cleanCode &&
+        (!coupon.status || coupon.status === 'აქტიური')
     );
 
-    if (found) {
-      const minimumOrder = Number(found.minOrderGEL) || 0;
-      if (cartSubtotalGEL < minimumOrder) {
-        alert(`ამ კუპონის გამოსაყენებლად კალათის მინიმალური თანხაა ${formatPrice(minimumOrder)}.`);
-        return;
-      }
-      setAppliedCoupon(found);
-
-      showToast(
-        `🎉 პრომო-კოდი გააქტიურდა (-${found.discountPercent}%)!`
-      );
-
-      setPromoInput('');
-    } else {
+    if (!found) {
       alert('არასწორი ან გაუქმებული პრომო-კოდი!');
+      return;
     }
+
+    const discountPercent = Number(found.discountPercent);
+    const minimumOrder = Number(found.minOrderGEL ?? 0);
+
+    if (!Number.isFinite(discountPercent) || discountPercent <= 0 || discountPercent > 100) {
+      alert('ამ კუპონის ფასდაკლების მონაცემი არასწორია. აირჩიეთ სხვა კუპონი.');
+      return;
+    }
+
+    if (!Number.isFinite(minimumOrder) || minimumOrder < 0) {
+      alert('ამ კუპონის მინიმალური შეკვეთის მონაცემი არასწორია.');
+      return;
+    }
+
+    if (cartSubtotalGEL < minimumOrder) {
+      alert(`ამ კუპონის გამოსაყენებლად კალათის მინიმალური თანხაა ${formatPrice(minimumOrder)}.`);
+      return;
+    }
+
+    setAppliedCoupon(found);
+    showToast(`🎉 პრომო-კოდი გააქტიურდა (-${discountPercent}%)!`);
+    setPromoInput('');
   };
 
   const proAnalytics = useMemo(() => {
