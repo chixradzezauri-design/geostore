@@ -292,3 +292,8 @@ begin
   );
 end;
 $function$;
+
+-- Orders are an audit and stock-accounting ledger. The admin UI has no
+-- order-delete workflow; prevent direct REST deletion from erasing that ledger.
+DROP POLICY IF EXISTS "Admin can delete orders" ON public.orders;
+REVOKE DELETE ON TABLE public.orders FROM PUBLIC, anon, authenticated;
