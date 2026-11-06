@@ -37,7 +37,6 @@ export default function StoreView({
 
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('');
-  const [selectedCustomVariant, setSelectedCustomVariant] = useState(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   // 🌟 ჭკვიანი ზომის შერჩევის სახელმწიფო (Smart Size Recommender)
@@ -102,7 +101,6 @@ export default function StoreView({
     const defaultColors = prod.availableColors || ['შავი'];
     setSelectedColor(defaultColors[0] || '');
 
-    setSelectedCustomVariant(prod.variants && prod.variants.length > 0 ? prod.variants[0] : null);
 
     setIsGiftWrapped(false);
     setGiftMessage('');
@@ -275,7 +273,9 @@ export default function StoreView({
     return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
   };
 
-  const currentBasePrice = selectedCustomVariant ? selectedCustomVariant.priceGEL : (selectedProduct?.priceGEL || 0);
+  // The checkout RPC currently prices from the server catalogue row only.
+  // Never display or pass an unverified client-side custom-variant price.
+  const currentBasePrice = selectedProduct?.priceGEL || 0;
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -689,30 +689,6 @@ export default function StoreView({
                     {Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
-                  {selectedProduct.variants && selectedProduct.variants.length > 0 && (
-                    <div className="gs-product-variants space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/30">
-                      <span className="text-amber-400 font-bold block flex items-center gap-1.5">
-                        <Layers className="w-4 h-4" /> {storeText.variant}
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedProduct.variants.map(v => {
-                          const isSel = selectedCustomVariant?.id === v.id;
-                          return (
-                            <button
-                              key={v.id}
-                              type="button"
-                              onClick={() => setSelectedCustomVariant(v)}
-                              className={`gs-product-variant-option p-3 rounded-2xl text-left transition cursor-pointer border flex justify-between items-center ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
-                            >
-                              <span>{v.name}</span>
-                              <span className="font-black">{v.priceGEL} ₾</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
                   {(selectedProduct.material || selectedProduct.durability) && (
                     <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {selectedProduct.material && (
@@ -929,7 +905,7 @@ export default function StoreView({
                 disabled={Number(selectedProduct.stock ?? 0) <= 0}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
-                  let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
+                  let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''})`;
                   if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
                   if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
                   if (hasVipWarranty) customName += ' + VIP გარანტია';
