@@ -1164,27 +1164,51 @@ export default function App() {
 
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+    const hasKnownStock = product.stock !== null && product.stock !== undefined && product.stock !== '';
+    const availableStock = hasKnownStock ? Math.max(0, Math.floor(Number(product.stock) || 0)) : null;
     const isSameCartVariant = (item) =>
       String(item.id) === String(product.id) &&
       (item.selectedSize || null) === (product.selectedSize || null) &&
       (item.selectedColor || null) === (product.selectedColor || null) &&
       (item.name || '') === (product.name || '');
+    const existingQuantity = cart
+      .filter(isSameCartVariant)
+      .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
+
+    if (availableStock !== null && (availableStock <= 0 || existingQuantity >= availableStock)) {
+      showToast(
+        currentLang === 'en'
+          ? 'No more stock is available for this product.'
+          : currentLang === 'ru'
+            ? 'Больше нет товара в наличии.'
+            : 'ამ პროდუქტის მარაგი ამ რაოდენობით აღარ არის ხელმისაწვდომი.'
+      );
+      return;
+    }
 
     setCart((prev) => {
       const existing = prev.find(isSameCartVariant);
+      const currentQuantity = prev
+        .filter(isSameCartVariant)
+        .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
+      const safeQuantity = availableStock === null
+        ? requestedQuantity
+        : Math.min(requestedQuantity, Math.max(0, availableStock - currentQuantity));
+
+      if (safeQuantity <= 0) return prev;
 
       if (existing) {
         return prev.map((item) =>
           isSameCartVariant(item)
             ? {
                 ...item,
-                quantity: Math.max(1, Number(item.quantity) || 1) + requestedQuantity
+                quantity: Math.max(1, Number(item.quantity) || 1) + safeQuantity
               }
             : item
         );
       }
 
-      return [...prev, { ...product, quantity: requestedQuantity }];
+      return [...prev, { ...product, quantity: safeQuantity }];
     });
 
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
