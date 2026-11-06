@@ -155,7 +155,7 @@ export default function AiAssistantModal({
               oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
               stock: Number.isFinite(Number(p.stock)) ? Math.max(0, Number(p.stock)) : 0,
               vendor: p.vendor || 'GEOSTORE ოფიციალური',
-              image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
+              image: p.image || null,
               tags: parsedTags,
               availableSizes: parsedSizes,
               availableColors: parsedColors,
