@@ -8,6 +8,7 @@ import {
 
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
+import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
@@ -40,7 +41,9 @@ const uploadProductImage = async (imageData, productId, index) => {
   if (!value.startsWith('data:')) return value;
 
   const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
-  if (!match) throw new Error('ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
+  if (!match || !isValidImageDataUrl(value, MAX_PRODUCT_IMAGE_BYTES)) {
+    throw new Error('ფოტოს რეალური ფორმატი არასწორია. ატვირთეთ ნამდვილი JPG, PNG, WEBP ან GIF ფოტო.');
+  }
 
   const mimeType = match[1].toLowerCase();
   const base64 = match[2];
@@ -972,7 +975,7 @@ export default function AdminDashboardPro({
       alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
     }
   };
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
     if (files.length === 0) return;
@@ -983,26 +986,19 @@ export default function AdminDashboardPro({
       return;
     }
 
-    const invalidFile = files.find(file =>
-      !Object.prototype.hasOwnProperty.call(PRODUCT_IMAGE_TYPES, file.type) ||
-      file.size <= 0 ||
-      file.size > MAX_PRODUCT_IMAGE_BYTES
-    );
-    if (invalidFile) {
-      alert('გამოიყენეთ JPG, PNG, WEBP ან GIF ფორმატი. თითოეული ფოტოს ზომა მაქსიმუმ 5 MB უნდა იყოს.');
-      return;
+    try {
+      await Promise.all(files.map(file => validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES)));
+      const promises = files.map(file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('ფოტოს წაკითხვა ვერ მოხერხდა.'));
+        reader.readAsDataURL(file);
+      }));
+      const base64Images = await Promise.all(promises);
+      setSelectedImages(prev => [...(prev || []), ...base64Images]);
+    } catch (error) {
+      alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.');
     }
-
-    const promises = files.map(file => new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('ფოტოს წაკითხვა ვერ მოხერხდა.'));
-      reader.readAsDataURL(file);
-    }));
-
-    Promise.all(promises)
-      .then(base64Images => setSelectedImages(prev => [...(prev || []), ...base64Images]))
-      .catch(error => alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.'));
   };
 
   const handleEditProduct = (p) => {
