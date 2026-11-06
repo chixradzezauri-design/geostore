@@ -1093,22 +1093,56 @@ export default function AdminDashboardPro({
       alert('გთხოვთ დაუშვათ Popup ფანჯრები ბრაუზერში.');
       return;
     }
+    // Prevent the invoice window from navigating the admin tab.
+    try { printWindow.opener = null; } catch {}
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]);
+
+    const safeImageSrc = (value) => {
+      const image = String(value ?? '').trim();
+      if (/^https:\/\//i.test(image)) return escapeHtml(image);
+      if (/^data:image\/(?:png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$/i.test(image)) return escapeHtml(image);
+      return '';
+    };
+
+    const numericValue = (value) => {
+      const number = Number(value);
+      return Number.isFinite(number) && number >= 0 ? number : 0;
+    };
 
     const itemsRows = Array.isArray(order.items) && order.items.length > 0
-      ? order.items.map(item => `
-          <tr>
-            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name} ${item.selectedSize ? `(ზომა: ${item.selectedSize})` : ''} ${item.selectedColor ? `(ფერი: ${item.selectedColor})` : ''}</td>
-            <td>${item.quantity || 1}</td>
-            <td>${item.priceGEL || item.price || 0} ₾</td>
-            <td>${(item.priceGEL || item.price || 0) * (item.quantity || 1)} ₾</td>
-          </tr>
-        `).join('')
-      : `<tr><td>${order.itemSummary || 'პროდუქტები'}</td><td>1</td><td>${order.totalGEL} ₾</td><td>${order.totalGEL} ₾</td></tr>`;
+      ? order.items.map((item) => {
+          const imageSrc = safeImageSrc(item.image);
+          const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
+          const unitPrice = numericValue(item.priceGEL ?? item.price);
+          return `
+            <tr>
+              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : ''}</td>
+              <td>${quantity}</td>
+              <td>${unitPrice.toFixed(2)} ₾</td>
+              <td>${(unitPrice * quantity).toFixed(2)} ₾</td>
+            </tr>
+          `;
+        }).join('')
+      : `<tr><td>${escapeHtml(order.itemSummary || 'პროდუქტები')}</td><td>1</td><td>${numericValue(order.totalGEL).toFixed(2)} ₾</td><td>${numericValue(order.totalGEL).toFixed(2)} ₾</td></tr>`;
+
+    const formattedTotal = typeof formatPrice === 'function'
+      ? escapeHtml(formatPrice(order.totalGEL))
+      : `${numericValue(order.totalGEL).toFixed(2)} ₾`;
 
     const htmlContent = `
-      <html>
+      <!doctype html>
+      <html lang="ka">
         <head>
-          <title>ინვოისი #${order.id}</title>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>ინვოისი #${escapeHtml(order.id)}</title>
           <style>
             body { font-family: 'Noto Sans Georgian', sans-serif; padding: 30px; color: #111; }
             .header { display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
@@ -1124,19 +1158,19 @@ export default function AdminDashboardPro({
           <div class="header">
             <div>
               <div class="store-name">GEOSTORE</div>
-              <p>ონლაინ მარკეტფლეისი საქართველოში</p>
+              <p>ონლაინ მაღაზია</p>
             </div>
             <div style="text-align: right;">
-              <h2>შეკვეთა #${order.id}</h2>
-              <p>თარიღი: ${order.date} ${order.time || ''}</p>
+              <h2>შეკვეთა #${escapeHtml(order.id)}</h2>
+              <p>თარიღი: ${escapeHtml(order.date)} ${escapeHtml(order.time || '')}</p>
             </div>
           </div>
           <div class="order-info">
-            <p><b>მყიდველი:</b> ${order.customerName}</p>
-            <p><b>ტელეფონი:</b> ${order.phone}</p>
-            <p><b>ელ-ფოსტა:</b> ${order.user_email || 'მითითებული არ არის'}</p>
-            <p><b>მიტანის მისამართი:</b> ${order.address}</p>
-            <p><b>სტატუსი:</b> ${order.status || 'ახალი'}</p>
+            <p><b>მყიდველი:</b> ${escapeHtml(order.customerName)}</p>
+            <p><b>ტელეფონი:</b> ${escapeHtml(order.phone)}</p>
+            <p><b>ელ-ფოსტა:</b> ${escapeHtml(order.user_email || 'მითითებული არ არის')}</p>
+            <p><b>მიტანის მისამართი:</b> ${escapeHtml(order.address)}</p>
+            <p><b>სტატუსი:</b> ${escapeHtml(order.status || 'ახალი')}</p>
           </div>
           <table>
             <thead>
@@ -1152,12 +1186,13 @@ export default function AdminDashboardPro({
             </tbody>
           </table>
           <div class="total">
-            სულ გადასახდელი: ${typeof formatPrice === 'function' ? formatPrice(order.totalGEL) : order.totalGEL + ' ₾'}
+            სულ გადასახდელი: ${formattedTotal}
           </div>
         </body>
       </html>
     `;
 
+    printWindow.document.open();
     printWindow.document.write(htmlContent);
     printWindow.document.close();
     printWindow.focus();
@@ -1166,7 +1201,7 @@ export default function AdminDashboardPro({
       printWindow.close();
     }, 500);
 
-    logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${order.id}`);
+    logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${escapeHtml(order.id)}`);
   };
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
