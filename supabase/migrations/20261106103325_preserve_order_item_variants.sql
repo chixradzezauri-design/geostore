@@ -180,22 +180,22 @@ begin
     select id, name, price_gel, purchase_cost, vendor, category, available_sizes, available_colors into v_product
       from public.products where id = v_item.product_id;
     if not found then raise exception 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; end if;
-    if v_item.selected_size is not null and (
-      jsonb_typeof(coalesce(v_product.available_sizes, '[]'::jsonb)) <> 'array'
-      or not exists (
-        select 1 from jsonb_array_elements_text(v_product.available_sizes) as allowed(value)
+    if v_item.selected_size is not null and case
+      when jsonb_typeof(coalesce(v_product.available_sizes, '[]'::jsonb)) = 'array' then not exists (
+        select 1 from jsonb_array_elements_text(coalesce(v_product.available_sizes, '[]'::jsonb)) as allowed(value)
         where allowed.value = v_item.selected_size
       )
-    ) then
+      else true
+    end then
       raise exception 'არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.';
     end if;
-    if v_item.selected_color is not null and (
-      jsonb_typeof(coalesce(v_product.available_colors, '[]'::jsonb)) <> 'array'
-      or not exists (
-        select 1 from jsonb_array_elements_text(v_product.available_colors) as allowed(value)
+    if v_item.selected_color is not null and case
+      when jsonb_typeof(coalesce(v_product.available_colors, '[]'::jsonb)) = 'array' then not exists (
+        select 1 from jsonb_array_elements_text(coalesce(v_product.available_colors, '[]'::jsonb)) as allowed(value)
         where allowed.value = v_item.selected_color
       )
-    ) then
+      else true
+    end then
       raise exception 'არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.';
     end if;
     v_line := jsonb_build_object(
