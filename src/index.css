@@ -5550,3 +5550,110 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .geostore-storefront .gs-sort-control{gap:7px!important}
   .geostore-fashion-store .geostore-storefront .gs-sort-control>div:first-child{font-size:10px!important}
 }
+
+
+/* GEOSTORE — mobile checkout containment and safe-area fix */
+@media (max-width: 760px) {
+  .gs-commerce-overlay--checkout {
+    box-sizing: border-box !important;
+    align-items: flex-start !important;
+    padding-top: max(8px, env(safe-area-inset-top)) !important;
+    padding-right: 8px !important;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    padding-left: 8px !important;
+  }
+
+  .gs-commerce-dialog--checkout {
+    display: flex !important;
+    flex: 0 1 auto !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    overscroll-behavior: contain !important;
+    box-sizing: border-box !important;
+  }
+
+  .gs-commerce-dialog--checkout > .gs-checkout-header {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    padding: 13px 15px !important;
+  }
+
+  .gs-commerce-dialog--checkout > .gs-checkout-form {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px 15px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain !important;
+    box-sizing: border-box !important;
+  }
+
+  .gs-commerce-dialog--checkout .gs-checkout-contact-grid,
+  .gs-commerce-dialog--checkout .gs-checkout-contact-grid > label {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .gs-commerce-dialog--checkout input,
+  .gs-commerce-dialog--checkout select,
+  .gs-commerce-dialog--checkout textarea {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important;
+  }
+
+  .gs-checkout-header h3,
+  .gs-checkout-header p,
+  .gs-checkout-error {
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  .gs-order-success-dialog,
+  .gs-order-code-panel {
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .gs-order-code-panel strong {
+    display: block !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (max-width: 360px) {
+  .gs-commerce-overlay--checkout {
+    padding-right: 6px !important;
+    padding-left: 6px !important;
+  }
+
+  .gs-commerce-dialog--checkout > .gs-checkout-header {
+    gap: 8px !important;
+    padding-right: 12px !important;
+    padding-left: 12px !important;
+  }
+
+  .gs-commerce-dialog--checkout > .gs-checkout-header > div {
+    min-width: 0 !important;
+  }
+
+  .gs-commerce-dialog--checkout > .gs-checkout-form {
+    padding-right: 12px !important;
+    padding-left: 12px !important;
+  }
+}
