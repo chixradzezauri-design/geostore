@@ -936,7 +936,6 @@ export default function AdminDashboardPro({
     const val = Number(value);
     if (!Number.isFinite(val) || val < 0) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
     if (field === 'stock' && !Number.isInteger(val)) return alert('მარაგი უნდა იყოს მთელი რიცხვი. შეიყვანეთ ცალი რაოდენობა ათწილადის გარეშე.');
-    const currentPrice = Number(current.priceGEL ?? current.price_gel ?? 0);
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
     const currentValue = current[column] ?? current[field];
