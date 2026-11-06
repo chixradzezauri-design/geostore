@@ -76,7 +76,9 @@ export default function AdminDashboardPro({
   setSiteSettings,
   formatPrice,
   deliveryFees,
-  setDeliveryFees
+  setDeliveryFees,
+  onSaveStorefrontDraft,
+  onPublishStorefront
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -1732,9 +1734,42 @@ export default function AdminDashboardPro({
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
             <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
           </div>
-          <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+          <div className="admin-welcome-actions flex flex-wrap items-center gap-2">
+            <div className="admin-connection-status flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+            </div>
+            <button
+              type="button"
+              className="admin-storefront-save"
+              onClick={async () => {
+                try {
+                  if (typeof onSaveStorefrontDraft !== 'function') throw new Error('შენახვის ფუნქცია მიუწვდომელია.');
+                  await onSaveStorefrontDraft();
+                  alert('დიზაინის მონახაზი შენახულია. საჯარო საიტზე ჯერ არ გამოქვეყნებულა.');
+                } catch (error) {
+                  alert(error?.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+                }
+              }}
+            >
+              მონახაზის შენახვა
+            </button>
+            <button
+              type="button"
+              className="admin-storefront-publish"
+              onClick={async () => {
+                if (!window.confirm('გამოქვეყნდეს მიმდინარე კატეგორიები, ბანერები და საიტის პარამეტრები საჯარო მაღაზიაში?')) return;
+                try {
+                  if (typeof onPublishStorefront !== 'function') throw new Error('გამოქვეყნების ფუნქცია მიუწვდომელია.');
+                  await onPublishStorefront();
+                  alert('ცვლილებები გამოქვეყნდა.');
+                } catch (error) {
+                  alert(error?.message || 'გამოქვეყნება ვერ მოხერხდა.');
+                }
+              }}
+            >
+              ცვლილებების გამოქვეყნება
+            </button>
           </div>
         </div>
 
