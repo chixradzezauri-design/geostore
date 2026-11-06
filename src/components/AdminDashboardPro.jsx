@@ -122,6 +122,8 @@ export default function AdminDashboardPro({
   setCategoriesList,
   bannersList = [],
   setBannersList,
+  onPublishStorefront,
+  storefrontPublishBusy = false,
   siteSettings,
   setSiteSettings,
   formatPrice,
@@ -1904,9 +1906,19 @@ export default function AdminDashboardPro({
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
             <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
           </div>
-          <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
+              disabled={storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
+              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
+            >
+              {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
+            </button>
+            <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+            </div>
           </div>
         </div>
 
