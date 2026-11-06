@@ -32,8 +32,14 @@ begin
     raise exception 'შეკვეთა ვერ მოიძებნა.';
   end if;
 
-  if v_order.status = 'დასრულებული' and p_new_status <> 'დასრულებული' then
+  if v_order.status in ('დასრულებული', 'ჩაბარებულია')
+     and p_new_status not in ('დასრულებული', 'ჩაბარებულია') then
     raise exception 'ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია.';
+  end if;
+
+  if v_order.status in ('გაგზავნილი', 'გზაშია')
+     and p_new_status not in ('გაგზავნილი', 'გზაშია', 'დასრულებული', 'ჩაბარებულია') then
+    raise exception 'გაგზავნილი შეკვეთის წინა სტატუსზე დაბრუნება ან გაუქმება დაუშვებელია.';
   end if;
 
   if v_order.status = 'გაუქმებული' and p_new_status <> 'გაუქმებული' then
