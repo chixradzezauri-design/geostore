@@ -2881,27 +2881,17 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <div className="admin-product-variants bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                <div className="admin-product-variants-notice bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-2">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
                     <Layers className="w-4 h-4" />
-                    <span>ვარიანტების ბილდერი (ინდივიდუალური ფასი & მარაგი)</span>
+                    <span>ინდივიდუალური ვარიანტები დროებით გამორთულია</span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
-                    <input type="text" placeholder="ვარიანტი (მაგ: შავი / 256GB)" value={newVarName} onChange={e => setNewVarName(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
-                    <input type="number" placeholder="ფასი (GEL)" value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
-                    <input type="number" placeholder="მარაგი" value={newVarStock} onChange={e => setNewVarStock(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
-                    <button type="button" onClick={handleAddCustomVariant} className="bg-amber-500 text-slate-950 font-black py-3 rounded-xl cursor-pointer hover:bg-amber-400 transition">+ ვარიანტი</button>
-                  </div>
-                  {productVariants.length > 0 && (
-                    <div className="admin-product-variant-list space-y-2 pt-2">
-                      {productVariants.map(v => (
-                        <div key={v.id} className="admin-product-variant bg-slate-900 p-3 rounded-2xl border border-amber-500/20 flex justify-between items-center text-xs">
-                          <div><b className="text-white">{v.name}</b> <span className="text-emerald-400 font-bold ml-3">{v.priceGEL} ₾</span> <span className="text-slate-400 ml-2">(მარაგი: {v.stock})</span></div>
-                          <button type="button" onClick={() => handleRemoveCustomVariant(v.id)} className="text-rose-400 hover:text-rose-300 p-1"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    ვარიანტის ცალკე ფასისა და მარაგის სერვერული დამუშავება ჯერ დასრულებული არ არის.
+                    არსებული შენახული ვარიანტები შენარჩუნებულია, მაგრამ ახალი ვარიანტის ფასით შეკვეთის გაფორმება
+                    ხელახლა ჩაირთვება მხოლოდ მას შემდეგ, რაც შეკვეთა, მარაგის ჩამოჭრა, გაუქმება და აღდგენა
+                    ერთიანად იქნება დაცული სერვერზე.
+                  </p>
                 </div>
 
                 <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
