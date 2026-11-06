@@ -7,8 +7,6 @@ import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
 import StoreView from './components/StoreView';
-import AiAssistantModal from './components/AiAssistantModal';
-import Modals from './components/Modals';
 
 import {
   MessageSquare,
@@ -33,6 +31,8 @@ const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
 const AIDigitalWardrobe = lazy(() => import('./components/AIDigitalWardrobe'));
 const ProductCompareModal = lazy(() => import('./components/ProductCompareModal'));
 const ImageSearchModal = lazy(() => import('./components/ImageSearchModal'));
+const AiAssistantModal = lazy(() => import('./components/AiAssistantModal'));
+const Modals = lazy(() => import('./components/Modals'));
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
@@ -354,6 +354,18 @@ export default function App() {
   const [isWarrantyOpen, setIsWarrantyOpen] = useState(false);
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [hasLoadedModals, setHasLoadedModals] = useState(false);
+  const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
+
+  useEffect(() => {
+    if (isCheckoutOpen || orderConfirmation || isAuthOpen || isTermsOpen || isWarrantyOpen || isTrackerOpen || isNotificationsOpen) {
+      setHasLoadedModals(true);
+    }
+  }, [isCheckoutOpen, orderConfirmation, isAuthOpen, isTermsOpen, isWarrantyOpen, isTrackerOpen, isNotificationsOpen]);
+
+  useEffect(() => {
+    if (isAiAssistantOpen) setHasLoadedAiAssistant(true);
+  }, [isAiAssistantOpen]);
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -1971,7 +1983,9 @@ export default function App() {
         )}
       </div>
 
-      <Modals
+      {hasLoadedModals && (
+        <Suspense fallback={null}>
+          <Modals
         currentLang={currentLang}
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
@@ -2008,7 +2022,9 @@ export default function App() {
         setCurrentUser={setCurrentUser}
         usersList={usersList}
         setUsersList={setUsersList}
-      />
+          />
+        </Suspense>
+      )}
 
       {isImageSearchOpen && (
         <Suspense fallback={null}>
@@ -2022,7 +2038,9 @@ export default function App() {
         </Suspense>
       )}
 
-      <AiAssistantModal
+      {hasLoadedAiAssistant && (
+        <Suspense fallback={null}>
+          <AiAssistantModal
         currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
@@ -2035,7 +2053,9 @@ export default function App() {
         deliveryFees={deliveryFees}
         addToCart={addToCart}
         formatPrice={formatPrice}
-      />
+          />
+        </Suspense>
+      )}
 
       {isComparisonOpen && (
         <Suspense fallback={null}>
