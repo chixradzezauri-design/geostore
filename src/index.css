@@ -183,7 +183,7 @@ html{scroll-behavior:smooth}
 .geostore-fashion-store .gs-product-price p:first-child{color:#2b2621!important;font-size:19px!important;font-weight:700!important;letter-spacing:-.03em}
 .geostore-fashion-store .gs-product-price p:last-child{color:#9b8c7e!important}
 .geostore-fashion-store .gs-product-card>button.gs-product-action{width:calc(100% - 32px)!important;min-height:43px!important;margin:0 16px 16px!important;padding:11px 8px!important;border:1px solid #29241f!important;border-radius:2px!important;background:#29241f!important;color:#fff!important;font-size:10px!important;letter-spacing:.08em!important;text-transform:uppercase!important;box-shadow:none!important}
-.geostore-fashion-store .gs-product-card>button.gs-product-action svg{color:#fff!important}
+
 .geostore-fashion-store .gs-product-card>button.gs-product-action:hover{background:#6c5948!important;border-color:#6c5948!important}
 .geostore-fashion-store .gs-product-card button[title="სურვილების სიაში დამატება"],.geostore-fashion-store .gs-product-card button[title="შედარებაში დამატება"]{width:36px!important;height:36px!important;padding:8px!important;border-radius:50%!important;background:rgba(255,255,255,.94)!important;color:#665446!important;border:1px solid #e9dfd5!important;box-shadow:0 3px 10px rgba(30,25,20,.08)!important}
 .geostore-fashion-store .gs-product-card button[title="სურვილების სიაში დამატება"] svg,.geostore-fashion-store .gs-product-card button[title="შედარებაში დამატება"] svg{width:16px;height:16px}
@@ -228,7 +228,7 @@ html{scroll-behavior:smooth}
  .geostore-fashion-store .gs-product-info>div:first-child>div{font-size:9px!important;padding:4px 6px!important}
  .geostore-fashion-store .gs-product-title{min-height:37px!important;font-size:11px!important;line-height:1.4!important}
  .geostore-fashion-store .gs-product-price{gap:6px!important;flex-wrap:wrap}
- .geostore-fashion-store .gs-product-price p:first-child{font-size:15px!important}
+ 
  .geostore-fashion-store .gs-product-price p:last-child{font-size:10px!important}
  .geostore-fashion-store .gs-product-card>button.gs-product-action{width:calc(100% - 20px)!important;min-height:38px!important;margin:0 10px 10px!important;padding:8px 4px!important;font-size:9px!important;letter-spacing:.02em!important}
  .geostore-fashion-store .gs-product-card button[title="სურვილების სიაში დამატება"],.geostore-fashion-store .gs-product-card button[title="შედარებაში დამატება"]{width:31px!important;height:31px!important;padding:6px!important}
@@ -326,7 +326,7 @@ html{scroll-behavior:smooth}
 }
 @media(max-width:700px){
  .geostore-fashion-store .gs-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
- .geostore-fashion-store .gs-product-media{padding:8px!important}
+ 
  .geostore-fashion-store .gs-product-info{gap:7px!important;padding:10px 9px 8px!important}
  .geostore-fashion-store .gs-product-title{min-height:36px!important;font-size:11px!important;line-height:1.4!important}
  .geostore-fashion-store .gs-product-price p:first-child{font-size:15px!important}
@@ -491,7 +491,7 @@ html{scroll-behavior:smooth}
 @media(max-width:700px){
  .geostore-fashion-store .gs-product-card-action{min-height:35px!important;padding:7px 5px!important;font-size:9px!important;letter-spacing:0!important}
  .geostore-fashion-store .gs-size-selector{padding:11px!important;gap:10px!important}
- .geostore-fashion-store .gs-size-selector>div:first-child{align-items:flex-start!important}
+ 
  .geostore-fashion-store .gs-size-selector>div:first-child>span{font-size:11px!important;line-height:1.45!important}
  .geostore-fashion-store .gs-size-selector>div:first-child>div{gap:6px!important}
  .geostore-fashion-store .gs-size-selector>div:first-child button{font-size:9px!important;padding:6px 7px!important;min-height:29px!important}
@@ -562,7 +562,7 @@ html{scroll-behavior:smooth}
  .geostore-fashion-store .gs-size-selector .gs-size-option{min-width:35px!important;min-height:32px!important;padding:6px 8px!important;font-size:9px!important}
  .geostore-fashion-store .gs-modal-add-to-cart{min-height:42px!important;padding:8px 9px!important;gap:7px!important;font-size:10px!important}
  .geostore-fashion-store .gs-modal-add-price{font-size:10px!important;padding-left:7px!important}
- .geostore-fashion-store .gs-product-modal-cta{padding:8px 9px calc(8px + env(safe-area-inset-bottom))!important}
+ 
 }
 @media(max-width:360px){
  .geostore-fashion-store .gs-modal-add-to-cart{gap:5px!important;padding-left:7px!important;padding-right:7px!important}
@@ -2545,7 +2545,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-filter-panel{
     padding:11px!important;
   }
-  .geostore-fashion-store .gs-product-grid{gap:9px!important}
+  
   .gs-ai-overlay{
     padding:max(5px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right))
       max(5px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))!important;
@@ -2687,7 +2687,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 }
 @media(max-width:380px){
   .geostore-fashion-store .gs-product-info{padding:8px 7px!important}
-  .geostore-fashion-store .gs-product-title{font-size:10px!important}
+  
   .geostore-fashion-store .gs-product-price p:first-child{font-size:14px!important}
   .geostore-fashion-store .gs-product-card-action,
   .geostore-fashion-store .gs-product-card>button.gs-product-action{font-size:8px!important}
@@ -3393,9 +3393,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   box-shadow:0 5px 20px rgba(43,32,23,.04)!important;
   color:#51463c!important;
 }
-.geostore-fashion-store .gs-filter-panel>div{
-  min-width:0!important;
-}
+
 .geostore-fashion-store .gs-filter-panel input,
 .geostore-fashion-store .gs-filter-panel select{
   min-width:0!important;
@@ -4061,7 +4059,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .geostore-shell .admin-dashboard-pro .admin-staff-card{min-width:0;max-width:100%}
 .geostore-shell .admin-dashboard-pro .admin-staff-card p{overflow-wrap:anywhere;word-break:break-word}
 .geostore-shell .admin-dashboard-pro .admin-staff-actions{flex-wrap:wrap}
-.geostore-shell .admin-dashboard-pro .admin-staff-edit-panel{min-width:0;max-width:100%}
+
 .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel input{min-width:0;max-width:100%}
 @media(max-width:640px){
  .geostore-shell .admin-dashboard-pro .admin-staff{gap:14px!important}
@@ -4075,8 +4073,8 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-staff-edit-permissions label{font-size:12px;min-height:28px}
  .geostore-shell .admin-dashboard-pro .admin-staff-card{padding:13px!important;border-radius:16px!important}
  .geostore-shell .admin-dashboard-pro .admin-staff-actions{width:100%;justify-content:flex-start!important}
- .geostore-shell .admin-dashboard-pro .admin-staff-actions button{min-height:40px}
- .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel{padding:12px!important}
+ 
+ 
  .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel>div:last-child{flex-wrap:wrap}
  .geostore-shell .admin-dashboard-pro .admin-staff-edit-panel>div:last-child button{flex:1 1 120px;min-height:40px}
 }
@@ -4105,7 +4103,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .geostore-shell .admin-dashboard-pro .admin-category-form select{min-width:0;max-width:100%;width:100%}
 .geostore-shell .admin-dashboard-pro .admin-banner-card,
 .geostore-shell .admin-dashboard-pro .admin-category-card{min-width:0;max-width:100%}
-.geostore-shell .admin-dashboard-pro .admin-banner-card>div{min-width:0;flex:1 1 auto}
+
 .geostore-shell .admin-dashboard-pro .admin-banner-card h4,
 .geostore-shell .admin-dashboard-pro .admin-banner-card p,
 .geostore-shell .admin-dashboard-pro .admin-category-card h4{overflow-wrap:anywhere;word-break:break-word}
@@ -4121,8 +4119,8 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-banner-card img{width:64px!important;height:58px!important}
  .geostore-shell .admin-dashboard-pro .admin-banner-card h4{font-size:12px!important;line-height:1.4}
  .geostore-shell .admin-dashboard-pro .admin-banner-card p{font-size:10px!important;line-height:1.4}
- .geostore-shell .admin-dashboard-pro .admin-category-card{padding:12px!important;border-radius:16px!important}
- .geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child{align-items:flex-start!important}
+ 
+ 
  .geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child>div{flex:1 1 0}
  .geostore-shell .admin-dashboard-pro .admin-category-card button{min-width:38px;min-height:38px}
 }
