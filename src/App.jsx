@@ -26,6 +26,7 @@ import {
 
 import { translations } from './utils/translations';
 import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
+import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1393,17 +1394,36 @@ export default function App() {
     const customerEmail = checkoutForm.email?.trim().toLowerCase() || '';
     const customerAddress = checkoutForm.address?.trim() || '';
 
-    if (!customerName || !customerPhone || !customerAddress) {
-      const message = 'შეავსეთ სახელი, ტელეფონი და მისამართი.';
-      setCheckoutError(message);
-      showToast(message);
-      setIsSubmittingOrder(false);
-      orderSubmitLock.current = false;
-      return;
-    }
+    const contactValidation = validateCheckoutContact({
+      name: customerName,
+      phone: customerPhone,
+      email: currentUser?.email || customerEmail,
+      address: customerAddress,
+      requireEmail: !currentUser?.email
+    });
 
-    if (!currentUser?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-      const message = 'სტუმრის შეკვეთისთვის მიუთითეთ სწორი ელ-ფოსტა.';
+    if (!contactValidation.valid) {
+      const messages = {
+        ka: {
+          name: 'სახელი უნდა შეიცავდეს 2–100 სიმბოლოს.',
+          phone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
+          email: 'სტუმრის შეკვეთისთვის მიუთითეთ სწორი ელ-ფოსტა.',
+          address: 'მისამართი უნდა შეიცავდეს 3–300 სიმბოლოს.'
+        },
+        en: {
+          name: 'Name must contain 2–100 characters.',
+          phone: 'Phone number must contain 9–15 digits.',
+          email: 'Enter a valid email address for guest checkout.',
+          address: 'Address must contain 3–300 characters.'
+        },
+        ru: {
+          name: 'Имя должно содержать 2–100 символов.',
+          phone: 'Номер телефона должен содержать 9–15 цифр.',
+          email: 'Для гостевого заказа укажите корректный адрес электронной почты.',
+          address: 'Адрес должен содержать 3–300 символов.'
+        }
+      };
+      const message = (messages[currentLang] || messages.ka)[contactValidation.field];
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
@@ -1421,7 +1441,7 @@ export default function App() {
         id: item.id,
         name: item.name,
         price: Number(item.priceGEL ?? item.price) || 0,
-        quantity: Math.max(1, Number(quantity) || 1),
+        quantity: Number(quantity ?? 1),
         selected_size: item.selectedSize || null,
         selected_color: item.selectedColor || null,
         purchase_cost: purchaseCost,
@@ -1435,7 +1455,26 @@ export default function App() {
       : cart.map(item => buildOrderItemSnapshot(item, item.quantity));
 
     if (itemsToOrder.length === 0) {
-      const message = 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
+      const message = currentLang === 'en'
+        ? 'Your cart is empty. Add a product before checkout.'
+        : currentLang === 'ru'
+          ? 'Корзина пуста. Добавьте товар перед оформлением заказа.'
+          : 'კალათა ცარიელია. დაამატეთ პროდუქტი შეკვეთამდე.';
+      setCheckoutError(message);
+      showToast(message);
+      setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
+      return;
+    }
+
+    const itemValidation = validateCheckoutItems(itemsToOrder);
+    if (!itemValidation.valid) {
+      const messages = {
+        ka: 'შეკვეთის პროდუქტების ან რაოდენობის მონაცემები არასწორია. გადაამოწმეთ კალათა.',
+        en: 'Some product or quantity details are invalid. Please review your cart.',
+        ru: 'Данные товара или количество указаны неверно. Проверьте корзину.'
+      };
+      const message = messages[currentLang] || messages.ka;
       setCheckoutError(message);
       showToast(message);
       setIsSubmittingOrder(false);
