@@ -55,6 +55,104 @@ begin
       raise exception 'შეკვეთის პროდუქტების სია ცარიელია ან არასწორია.';
     end if;
 
+    -- Validate every raw line before aggregation so a negative or malformed
+    -- quantity cannot be hidden by another line for the same product.
+    if exists (
+      select 1
+        from jsonb_array_elements(v_order.items) as e(item)
+       where jsonb_typeof(e.item) is distinct from 'object'
+          or coalesce(trim(e.item->>'id'), '') = ''
+          or coalesce(e.item->>'quantity', '') !~ '^[0-9]+
+      select item->>'id' as product_id,
+             sum((item->>'quantity')::integer)::integer as quantity
+        from jsonb_array_elements(v_order.items) as e(item)
+       group by item->>'id'
+       order by item->>'id'
+    loop
+      if coalesce(trim(v_item.product_id), '') = ''
+         or v_item.quantity is null
+         or v_item.quantity <= 0 then
+        raise exception 'შეკვეთის პროდუქტის ID ან რაოდენობა არასწორია.';
+      end if;
+
+      update public.products
+         set stock = coalesce(stock, 0) + v_item.quantity
+       where id = v_item.product_id;
+
+      get diagnostics v_updated = row_count;
+      if v_updated <> 1 then
+        raise exception 'მარაგის აღდგენა ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id;
+      end if;
+    end loop;
+
+    update public.orders
+       set status = p_new_status,
+           stock_restored_at = now()
+     where id = p_order_id;
+  else
+    update public.orders
+       set status = p_new_status
+     where id = p_order_id;
+  end if;
+
+  return jsonb_build_object('order_id', p_order_id, 'status', p_new_status);
+end;
+$function$;
+
+          or case
+               when coalesce(e.item->>'quantity', '') ~ '^[0-9]+
+      select item->>'id' as product_id,
+             sum((item->>'quantity')::integer)::integer as quantity
+        from jsonb_array_elements(v_order.items) as e(item)
+       group by item->>'id'
+       order by item->>'id'
+    loop
+      if coalesce(trim(v_item.product_id), '') = ''
+         or v_item.quantity is null
+         or v_item.quantity <= 0 then
+        raise exception 'შეკვეთის პროდუქტის ID ან რაოდენობა არასწორია.';
+      end if;
+
+      update public.products
+         set stock = coalesce(stock, 0) + v_item.quantity
+       where id = v_item.product_id;
+
+      get diagnostics v_updated = row_count;
+      if v_updated <> 1 then
+        raise exception 'მარაგის აღდგენა ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id;
+      end if;
+    end loop;
+
+    update public.orders
+       set status = p_new_status,
+           stock_restored_at = now()
+     where id = p_order_id;
+  else
+    update public.orders
+       set status = p_new_status
+     where id = p_order_id;
+  end if;
+
+  return jsonb_build_object('order_id', p_order_id, 'status', p_new_status);
+end;
+$function$;
+
+                 then (e.item->>'quantity')::numeric not between 1 and 100
+               else true
+             end
+    ) then
+      raise exception 'შეკვეთის პროდუქტის ID ან რაოდენობა არასწორია.';
+    end if;
+
+    if exists (
+      select 1
+        from jsonb_array_elements(v_order.items) as e(item)
+       group by e.item->>'id'
+      having sum((e.item->>'quantity')::numeric) > 100
+    ) then
+      raise exception 'ერთი პროდუქტის ჯამური რაოდენობა 100-ს არ უნდა აღემატებოდეს.';
+    end if;
+
     for v_item in
       select item->>'id' as product_id,
              sum((item->>'quantity')::integer)::integer as quantity
