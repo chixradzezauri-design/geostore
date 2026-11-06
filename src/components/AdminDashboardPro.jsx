@@ -2231,7 +2231,7 @@ export default function AdminDashboardPro({
         {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
         {adminTab === 'orders' && (
           <div className="admin-orders-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
-            <div className="admin-orders-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
+            <div className="admin-orders-header admin-orders-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
                 <h3 className="font-black text-white text-lg flex items-center gap-2.5">
                   <PackageCheck className="w-6 h-6 text-emerald-400" /> შეკვეთების სრული მართვის სისტემა ({filteredOrders.length})
@@ -2247,8 +2247,8 @@ export default function AdminDashboardPro({
             </div>
 
             {/* ძებნა და სტატუსების ფილტრაცია */}
-            <div className="admin-orders-toolbar flex flex-col sm:flex-row gap-3 items-center justify-between">
-              <div className="admin-order-search relative w-full sm:w-80">
+            <div className="admin-orders-toolbar admin-orders-controls flex flex-col sm:flex-row gap-3 items-center justify-between">
+              <div className="admin-order-search admin-orders-search relative w-full sm:w-80">
                 <input 
                   type="text" 
                   placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
@@ -2279,7 +2279,7 @@ export default function AdminDashboardPro({
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                    <div className="admin-order-card-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
                         <span className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
@@ -2289,7 +2289,7 @@ export default function AdminDashboardPro({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
+                    <div className="admin-order-card-customer grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
                       <p>მყიდველი: <b className="text-white">{o.customerName}</b></p>
                       <p>ტელეფონი: <b className="text-emerald-300">📞 {o.phone}</b></p>
                       <p className="sm:col-span-2 text-slate-400 text-[11px]">📍 მისამართი: {o.address}</p>
@@ -2297,7 +2297,7 @@ export default function AdminDashboardPro({
                     </div>
 
                     {!o.stock_deducted_at && (
-                      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200 text-[11px] leading-relaxed">
+                      <div className="admin-order-stock-warning rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200 text-[11px] leading-relaxed">
                         ⚠️ ძველი შეკვეთა — მარაგის ჩამოჭრა სისტემაში დადასტურებული არ არის. გაუქმებისას მარაგი ავტომატურად არ აღდგება. გაუქმებამდე გადაამოწმეთ პროდუქტის რეალური მარაგი.
                       </div>
                     )}
@@ -2351,7 +2351,7 @@ export default function AdminDashboardPro({
                 ))
               )}
               {filteredOrders.length > ORDERS_PER_PAGE && (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                <div className="admin-orders-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
                   <p className="text-[11px] text-slate-400">ნაჩვენებია {(safeOrderPage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(safeOrderPage * ORDERS_PER_PAGE, filteredOrders.length)} / {filteredOrders.length}</p>
                   <div className="flex flex-wrap items-center justify-center gap-1.5">
                     <button type="button" onClick={() => setCurrentOrderPage(Math.max(1, safeOrderPage - 1))} disabled={safeOrderPage === 1} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">წინა</button>
