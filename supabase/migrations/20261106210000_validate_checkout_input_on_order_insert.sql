@@ -23,7 +23,7 @@ begin
   end if;
 
   if new.address is null
-    or length(btrim(new.address)) not between 3 and 300
+    or length(btrim(new.address)) not between 3 and 400
     or new.address ~ '[[:cntrl:]]' then
     raise exception 'მისამართი არასწორია.';
   end if;
@@ -41,8 +41,13 @@ begin
     raise exception 'ელფოსტის მისამართი არასწორია.';
   end if;
 
-  if jsonb_typeof(new.items) is distinct from 'array'
-    or jsonb_array_length(new.items) not between 1 and 50 then
+  if jsonb_typeof(new.items) is distinct from 'array' then
+    raise exception 'შეკვეთის პროდუქტების სია არასწორია.';
+  end if;
+
+  -- The RPC appends a short delivery label to the stored address. The
+  -- browser still enforces the customer's actual address limit of 300 chars.
+  if jsonb_array_length(new.items) not between 1 and 50 then
     raise exception 'შეკვეთის პროდუქტების სია არასწორია.';
   end if;
 
