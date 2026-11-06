@@ -173,26 +173,11 @@ const DEFAULT_VENDORS = [
 // must come from Supabase so displayed price and stock match server checkout.
 const DEFAULT_PRODUCTS = [];
 
-const DEFAULT_COUPONS = [
-  { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
-];
+// No demo coupon is activated by default. Configure real offers in the admin panel.
+const DEFAULT_COUPONS = [];
 
-const DEFAULT_NOTIFICATIONS = [
-  {
-    id: 'n1',
-    title: 'მოგესალმებით GEOSTORE-ში!',
-    message: 'ისარგებლეთ 10% ფასდაკლებით პრომო-კოდით: GEOSTORE2026',
-    date: 'დღეს',
-    read: false
-  },
-  {
-    id: 'n2',
-    title: 'უფასო მიწოდება',
-    message: 'მიწოდება თბილისის მასშტაბით სრულიად უფასოა!',
-    date: 'გუშინ',
-    read: false
-  }
-];
+// No fabricated promotions or delivery announcements are shown by default.
+const DEFAULT_NOTIFICATIONS = [];
 
 // Supabase Auth მომხმარებლის ფორმატის შენარჩუნება,
 // რათა არსებული Header და პროფილის კომპონენტები იმუშაოს.
