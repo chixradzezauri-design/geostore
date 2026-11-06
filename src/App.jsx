@@ -139,21 +139,32 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
 const cleanupStorefrontUploads = async (uploadedAssets) => {
   const assets = Array.isArray(uploadedAssets) ? uploadedAssets : [];
   await Promise.allSettled(assets.map(async ({ path }) => {
-    const encodedPath = String(path || '').split('/').map(encodeURIComponent).join('/');
-    if (!encodedPath) return;
+    const safePath = String(path || '').replace(/^\\/+/, '');
+    const isManagedStorefrontPath =
+      safePath.startsWith('storefront/categories/') ||
+      safePath.startsWith('storefront/banners/');
+    if (!isManagedStorefrontPath) return;
+
+    const encodedPath = safePath.split('/').map(encodeURIComponent).join('/');
     const storageResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/${STOREFRONT_MEDIA_BUCKET}/${encodedPath}`, {
       method: 'DELETE',
       headers: await getSupabaseHeaders({ authenticated: true })
     });
-    if (!storageResponse.ok) {
-      console.error('Storefront upload cleanup failed:', path, await storageResponse.text());
+
+    // Keep the media row if Storage deletion failed. Removing its metadata
+    // while the public object still exists would create an untracked orphan.
+    // A 404 means the object is already absent, so metadata cleanup is safe.
+    if (!storageResponse.ok && storageResponse.status !== 404) {
+      console.error('Storefront upload cleanup failed:', safePath, await storageResponse.text());
+      return;
     }
+
     const metadataResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/storefront_media?storage_path=eq.${encodeURIComponent(path)}`,
+      `${SUPABASE_URL}/rest/v1/storefront_media?storage_path=eq.${encodeURIComponent(safePath)}`,
       { method: 'DELETE', headers: await getSupabaseHeaders({ authenticated: true }) }
     );
     if (!metadataResponse.ok) {
-      console.error('Storefront media metadata cleanup failed:', path, await metadataResponse.text());
+      console.error('Storefront media metadata cleanup failed:', safePath, await metadataResponse.text());
     }
   }));
 };
