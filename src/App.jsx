@@ -317,17 +317,9 @@ export default function App() {
     loadSafeStorage('geostore_banners', [])
   );
 
-  const [notifications, setNotifications] = useState(() =>
-    loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS).filter((notification) =>
-      !(
-        (notification?.id === 'n1' &&
-          notification?.title === 'მოგესალმებით GEOSTORE-ში!' &&
-          String(notification?.message || '').includes('GEOSTORE2026')) ||
-        (notification?.id === 'n2' &&
-          notification?.title === 'უფასო მიწოდება' &&
-          String(notification?.message || '').includes('თბილისის მასშტაბით სრულიად უფასოა'))
-      )
-  ));
+  // Notifications are server-owned and scoped to the authenticated account.
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState('store');
 
