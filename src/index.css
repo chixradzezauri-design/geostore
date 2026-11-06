@@ -4875,3 +4875,59 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-catalog-product-title{font-size:10px!important}
   .geostore-fashion-store .gs-catalog-product-price p:first-child{font-size:13px!important}
 }
+
+/* GEOSTORE — always-visible storefront search and category shortcuts */
+.geostore-fashion-store .gs-header-search-row{
+  display:flex!important;align-items:stretch!important;gap:8px!important;
+  width:min(620px,calc(100% - 32px))!important;min-width:0!important;
+  margin:0 auto 13px!important;
+}
+.geostore-fashion-store .gs-header-search{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  flex:1 1 auto!important;min-width:0!important;min-height:43px!important;
+  padding:0 13px!important;border:1px solid #e3d8cb!important;border-radius:7px!important;
+  background:#f6f2ed!important;color:#6f5b47!important;
+  transition:border-color .18s ease,box-shadow .18s ease!important;
+}
+.geostore-fashion-store .gs-header-search:focus-within{
+  border-color:#a88b6b!important;box-shadow:0 0 0 3px rgba(155,128,101,.12)!important;
+}
+.geostore-fashion-store .gs-header-search>svg{width:17px!important;height:17px!important;flex:0 0 17px!important;color:#8b7359!important}
+.geostore-fashion-store .gs-header-search input{
+  width:100%!important;min-width:0!important;min-height:40px!important;
+  padding:8px 0!important;border:0!important;outline:0!important;
+  background:transparent!important;color:#302921!important;
+  box-shadow:none!important;font-size:12px!important;
+}
+.geostore-fashion-store .gs-header-search input::placeholder{color:#9a8d80!important}
+.geostore-fashion-store .gs-header-image-search{
+  display:grid!important;place-items:center!important;flex:0 0 43px!important;
+  width:43px!important;min-height:43px!important;padding:0!important;
+  border:1px solid #302921!important;border-radius:7px!important;
+  background:#302921!important;color:#fffdfa!important;cursor:pointer!important;
+  transition:background .18s ease,border-color .18s ease!important;
+}
+.geostore-fashion-store .gs-header-image-search:hover{background:#6c5948!important;border-color:#6c5948!important}
+.geostore-fashion-store .gs-header-image-search svg{width:17px!important;height:17px!important}
+.geostore-fashion-store .gs-menu-categories{padding-bottom:10px!important;border-bottom:1px solid #eee6dc!important}
+.geostore-fashion-store .gs-menu-category-link{min-height:37px!important;padding:7px 10px!important;font-size:11px!important}
+.geostore-fashion-store .gs-menu-category-link>svg{width:15px!important;height:15px!important;flex:0 0 15px!important}
+.geostore-fashion-store .gs-menu-category-link .gs-menu-category-dot{
+  display:block!important;flex:0 0 7px!important;width:7px!important;height:7px!important;
+  margin:0 4px!important;border-radius:50%!important;background:#b69a79!important;
+}
+.geostore-fashion-store .gs-menu-category-link>span:nth-of-type(2){flex:1 1 auto!important;min-width:0!important}
+.geostore-fashion-store .gs-menu-category-link[aria-pressed="true"] .gs-menu-category-dot{background:#302921!important;box-shadow:0 0 0 3px #e9dfd3!important}
+@media(max-width:760px){
+  .geostore-fashion-store .gs-header-search-row{width:calc(100% - 24px)!important;margin:0 auto 10px!important;gap:7px!important}
+  .geostore-fashion-store .gs-header-search{min-height:40px!important;padding:0 10px!important}
+  .geostore-fashion-store .gs-header-search input{min-height:38px!important;font-size:12px!important}
+  .geostore-fashion-store .gs-header-image-search{flex-basis:40px!important;width:40px!important;min-height:40px!important}
+  .geostore-fashion-store .gs-menu-categories{padding-bottom:8px!important}
+  .geostore-fashion-store .gs-menu-category-link{min-height:39px!important}
+}
+@media(max-width:360px){
+  .geostore-fashion-store .gs-header-search-row{width:calc(100% - 20px)!important}
+  .geostore-fashion-store .gs-header-search{gap:7px!important}
+  .geostore-fashion-store .gs-header-search input{font-size:11px!important}
+}
