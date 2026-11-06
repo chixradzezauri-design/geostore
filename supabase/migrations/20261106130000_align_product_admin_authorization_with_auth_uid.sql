@@ -73,7 +73,7 @@ BEGIN
     WHERE schemaname = 'public'
   LOOP
     EXECUTE format(
-      'REVOKE TRUNCATE, REFERENCES, TRIGGER ON TABLE %I.%I FROM anon, authenticated',
+      'REVOKE MAINTAIN, TRUNCATE, REFERENCES, TRIGGER ON TABLE %I.%I FROM anon, authenticated',
       v_table.schemaname,
       v_table.tablename
     );
