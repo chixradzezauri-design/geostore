@@ -497,7 +497,8 @@ export default function App() {
           const authorizedAdmin = isAuthorizedAdmin(authUser);
           setCurrentUser(normalizeAuthUser(authUser));
           setAdminLoggedIn(authorizedAdmin);
-          setActiveTab((current) =>            authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
+          setActiveTab((current) =>
+            authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
           );
         }
       } catch (error) {
@@ -1033,7 +1034,8 @@ export default function App() {
       return deliveryFees.tbilisi;
     }
 
-    if (selectedRegion === 'bigCities') {      return deliveryFees.bigCities;
+    if (selectedRegion === 'bigCities') {
+      return deliveryFees.bigCities;
     }
 
     return deliveryFees.other;
@@ -1532,7 +1534,8 @@ export default function App() {
       };
       const message = messages[currentLang] || messages.ka;
       setCheckoutError(message);
-      showToast(message);      setIsSubmittingOrder(false);
+      showToast(message);
+      setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
     }
@@ -2031,6 +2034,7 @@ export default function App() {
                         alt=""
                         className="w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
                       />
+
                       <div>
                         <h4 className="font-bold text-xs text-white line-clamp-1">
                           {prod.name}
@@ -2530,7 +2534,8 @@ export default function App() {
                 {isSubmittingSupport
                   ? (currentLang === 'en' ? 'Sending…' : currentLang === 'ru' ? 'Отправка…' : 'იგზავნება…')
                   : t.sendMessage}
-              </button>            </form>
+              </button>
+            </form>
           </div>
         ) : (
           <button
