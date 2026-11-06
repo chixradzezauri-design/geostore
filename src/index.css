@@ -4179,3 +4179,34 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-order-detail-modal>div:last-child{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
  .geostore-shell .admin-dashboard-pro .admin-order-detail-modal>div:last-child button{width:100%;min-height:42px}
 }
+
+/* Customer support tickets: readable hierarchy and mobile-safe controls. */
+.geostore-shell .admin-dashboard-pro .admin-support-panel,
+.geostore-shell .admin-dashboard-pro .admin-support-ticket{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-support-ticket-meta,
+.geostore-shell .admin-dashboard-pro .admin-support-ticket-controls{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-support-ticket-content,
+.geostore-shell .admin-dashboard-pro .admin-support-ticket-message,
+.geostore-shell .admin-dashboard-pro .admin-support-ticket-reply{overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-support-status-actions{max-width:100%;flex-wrap:wrap}
+.geostore-shell .admin-dashboard-pro .admin-support-status-actions button{min-height:34px;white-space:nowrap}
+.geostore-shell .admin-dashboard-pro .admin-support-reply-form{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-support-reply-form input{min-width:0;width:100%}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-support-panel{padding:14px!important;border-radius:18px!important;gap:15px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket{padding:13px!important;border-radius:16px!important;gap:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket-header{align-items:stretch!important;gap:10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket-meta{gap:7px 10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket-controls{width:100%;justify-content:space-between;align-items:flex-start}
+ .geostore-shell .admin-dashboard-pro .admin-support-status-actions{flex:1;display:flex;flex-wrap:wrap;gap:3px!important;padding:4px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-status-actions button{padding:8px 9px!important;font-size:10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket-content>p:first-child{line-height:1.6}
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket-message,
+ .geostore-shell .admin-dashboard-pro .admin-support-ticket-reply{padding:12px!important;line-height:1.65}
+ .geostore-shell .admin-dashboard-pro .admin-support-reply-form{display:flex!important;flex-direction:column!important;gap:8px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-reply-form input{min-height:44px;padding:11px 12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-support-reply-form button{width:100%;min-height:44px}
+}
+@media(max-width:380px){
+ .geostore-shell .admin-dashboard-pro .admin-support-status-actions button{padding:7px 7px!important;font-size:9px!important}
+}
