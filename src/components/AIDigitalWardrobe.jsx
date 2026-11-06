@@ -10,26 +10,14 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   const [wardrobe, setWardrobe] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_digital_wardrobe');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'w1',
-          name: 'შავი ქურთუკი',
-          category: 'ტანსაცმელი',
-          subCategory: 'ქურთუკი',
-          color: 'შავი',
-          season: 'ზამთარი / შემოდგომა',
-          image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600'
-        },
-        {
-          id: 'w2',
-          name: 'თეთრი სპორტული ბოტასი',
-          category: 'ფეხსაცმელი',
-          subCategory: 'ბოტასი',
-          color: 'თეთრი',
-          season: 'ყველა სეზონი',
-          image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=600'
-        }
-      ];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      // Remove only the two untouched demo garments; preserve all user-added wardrobe items.
+      return parsed.filter((item) => !(
+        (item?.id === 'w1' && item?.name === 'შავი ქურთუკი') ||
+        (item?.id === 'w2' && item?.name === 'თეთრი სპორტული ბოტასი')
+      ));
     } catch {
       return [];
     }
@@ -62,11 +50,30 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      alert('აირჩიეთ JPEG, PNG ან WebP ფოტო, მაქსიმუმ 5MB.');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewItem(prev => ({ ...prev, image: reader.result }));
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const scale = Math.min(1, 1200 / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d');
+        if (!context) return alert('ფოტოს დამუშავება ვერ მოხერხდა.');
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        setNewItem((previous) => ({ ...previous, image: canvas.toDataURL('image/webp', 0.82) }));
+      };
+      image.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
+      image.src = reader.result;
     };
+    reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   // ➕ გარდერობში ახალი ნივთის დამატება
@@ -81,7 +88,13 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       subCategory: newItem.subCategory,
       color: newItem.color,
       season: newItem.season,
-      image: newItem.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=600'
+      image: newItem.image || (
+        newItem.category === 'ფეხსაცმელი'
+          ? 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=600'
+          : newItem.category === 'აქსესუარები' || newItem.category === 'ჩანთები' || newItem.category === 'სამკაულები'
+            ? 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=600'
+            : 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=600'
+      )
     };
 
     setWardrobe(prev => [createdItem, ...prev]);
@@ -94,47 +107,70 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
     setWardrobe(prev => prev.filter(item => item.id !== id));
   };
 
-  // 🤖 AI სტილისტის მიერ აუტფიტის გენერაცია
+  // Rule-based outfit matching: deterministic, free and based only on the user's wardrobe.
   const handleGenerateOutfit = () => {
     setIsGenerating(true);
     setGeneratedOutfit(null);
 
-    setTimeout(() => {
-      // 1. გარდერობიდან ვირჩევთ ტანსაცმელსა და ფეხსაცმელს
-      const clothes = wardrobe.filter(i => i.category === 'ტანსაცმელი');
-      const footwear = wardrobe.filter(i => i.category === 'ფეხსაცმელი');
+    window.setTimeout(() => {
+      const isCold = weather.includes('ცივი') || weather.includes('წვიმიანი') || weather.includes('ქარიანი');
+      const seasonMatches = (item) => {
+        const season = String(item.season || '').toLowerCase();
+        return season.includes('ყველა') || (isCold
+          ? season.includes('ზამთ') || season.includes('შემოდგომ')
+          : season.includes('ზაფხ') || season.includes('გაზაფხ'));
+      };
+      const scoreWardrobeItem = (item) => {
+        const text = [item.name, item.subCategory, item.color, item.season].filter(Boolean).join(' ').toLowerCase();
+        let score = seasonMatches(item) ? 3 : 0;
+        if (event.includes('სპორტ') && /სპორტ|ბოტას|სნიკერ|ვარჯიშ/.test(text)) score += 3;
+        if (event.includes('ოფიციალურ') && /კლასიკ|პიჯაკ|პერანგ|შარვალ|ქუსლ/.test(text)) score += 3;
+        if (event.includes('წვეულ') && /კაბ|ელეგანტ|ქუსლ|სამკაულ|ჩანთა/.test(text)) score += 3;
+        if (event.includes('Casual') && /ჯინს|მაისურ|კედ|ბოტას|ყოველდღ/.test(text)) score += 2;
+        if (/შავი|თეთრი|ნაცრისფერი|ბეჟი|ლურჯი/.test(text)) score += 1;
+        return score;
+      };
+      const pickBest = (items) => [...items].sort((a, b) =>
+        scoreWardrobeItem(b) - scoreWardrobeItem(a) ||
+        String(a.name || '').localeCompare(String(b.name || ''), 'ka')
+      )[0] || null;
 
-      const topItem = clothes[Math.floor(Math.random() * clothes.length)] || clothes[0];
-      const shoesItem = footwear[Math.floor(Math.random() * footwear.length)] || footwear[0];
+      const clothes = wardrobe.filter((item) => item.category === 'ტანსაცმელი');
+      const footwear = wardrobe.filter((item) => item.category === 'ფეხსაცმელი');
+      const accessories = wardrobe.filter((item) => ['აქსესუარები', 'ჩანთები', 'სამკაულები'].includes(item.category));
+      const topItem = pickBest(clothes);
+      const shoesItem = pickBest(footwear);
+      const accessoryItem = pickBest(accessories);
 
-      // 2. მაღაზიიდან ვურჩევთ შესაფერის პროდუქტს აუტფიტის სრულყოფისთვის
-      const recommendedStoreProduct = products.length > 0 
-        ? products[Math.floor(Math.random() * products.length)]
-        : null;
+      const productCandidates = (Array.isArray(products) ? products : [])
+        .filter((product) => Number(product.stock ?? 0) > 0 && product.image);
+      const storeAddon = [...productCandidates].sort((a, b) => {
+        const aText = [a.name, a.category, ...(a.tags || [])].join(' ').toLowerCase();
+        const bText = [b.name, b.category, ...(b.tags || [])].join(' ').toLowerCase();
+        const accessoryScore = (text) => /აქსესუარ|ჩანთა|სამკაულ|accessor|bag|jewel/.test(text) ? 2 : 0;
+        return accessoryScore(bText) - accessoryScore(aText) ||
+          (Number(a.priceGEL) || 0) - (Number(b.priceGEL) || 0);
+      })[0] || null;
 
-      let advice = `AI სტილისტის რჩევა (${weather} | ${event}): `;
-      if (weather.includes('წვიმიანი') || weather.includes('ცივი')) {
-        advice += "გირჩევთ ფენობრივ ჩაცმულობას და თბილ აქსესუარებს. კონტრასტული ფერები შესანიშნავ განწყობას შექმნის!";
+      let advice = `შერჩევა: ${weather} · ${event}. `;
+      if (!topItem && !shoesItem && !accessoryItem) {
+        advice += 'გარდერობში ჯერ ნივთები არ არის. დაამატე ტანსაცმელი, ფეხსაცმელი ან აქსესუარი და სცადე ხელახლა.';
+      } else if (isCold) {
+        advice += 'უპირატესობა მივანიჭე სეზონისთვის შესაფერის ნივთებს და პრაქტიკულ ფერებს.';
       } else {
-        advice += "მინიმალისტური და ჰაეროვანი კომბინაცია იდეალურია დღევანდელი დღისთვის!";
+        advice += 'კომბინაცია დალაგებულია ღონისძიების ტიპისა და შენს გარდერობში არსებული ნივთების მიხედვით.';
       }
 
-      setGeneratedOutfit({
-        top: topItem,
-        shoes: shoesItem,
-        storeAddon: recommendedStoreProduct,
-        advice: advice
-      });
-
+      setGeneratedOutfit({ top: topItem, shoes: shoesItem, accessory: accessoryItem, storeAddon, advice });
       setIsGenerating(false);
-    }, 1200);
+    }, 350);
   };
 
   return (
-    <div className="space-y-8 w-full pb-16 animate-in fade-in duration-500 text-white">
+    <div className="gs-wardrobe-root space-y-8 w-full pb-16 animate-in fade-in duration-500 text-white">
       
       {/* 🌟 HERO BANNER */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="gs-wardrobe-hero relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-xl text-center md:text-left z-10">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
             <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" /> AI Personal Stylist & Wardrobe
@@ -173,7 +209,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       </div>
 
       {/* 🤖 AI STYLIST GENERATOR SECTION */}
-      <div className="bg-slate-900/80 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl">
+      <div className="gs-wardrobe-generator bg-slate-900/80 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl">
         <div className="flex items-center gap-3 border-b border-emerald-500/20 pb-4">
           <div className="bg-emerald-500/20 p-3 rounded-2xl border border-emerald-500/30">
             <Sparkles className="w-6 h-6 text-emerald-400" />
@@ -237,7 +273,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
               <span>{generatedOutfit.advice}</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="gs-wardrobe-outfit-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Top Item */}
               {generatedOutfit.top && (
                 <div className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
@@ -257,6 +293,16 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                     <img src={generatedOutfit.shoes.image} alt="" className="max-h-full max-w-full object-contain rounded-lg" />
                   </div>
                   <h4 className="font-bold text-white text-xs">{generatedOutfit.shoes.name}</h4>
+                </div>
+              )}
+
+              {generatedOutfit.accessory && (
+                <div className="gs-wardrobe-outfit-card bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
+                  <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">შენი აქსესუარი</span>
+                  <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
+                    <img src={generatedOutfit.accessory.image} alt={generatedOutfit.accessory.name} className="max-h-full max-w-full object-contain rounded-lg" />
+                  </div>
+                  <h4 className="font-bold text-white text-xs">{generatedOutfit.accessory.name}</h4>
                 </div>
               )}
 
@@ -348,6 +394,9 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
                 <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-bold outline-none cursor-pointer">
                   <option value="ტანსაცმელი">👕 ტანსაცმელი</option>
                   <option value="ფეხსაცმელი">👟 ფეხსაცმელი</option>
+                  <option value="ჩანთები">👜 ჩანთები</option>
+                  <option value="აქსესუარები">✨ აქსესუარები</option>
+                  <option value="სამკაულები">💍 სამკაულები</option>
                 </select>
               </div>
 

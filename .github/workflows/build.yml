@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/admin-white-screen
+      - release/geostore-full-storefront-rebuild
   pull_request:
     branches:
       - main

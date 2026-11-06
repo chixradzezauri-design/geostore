@@ -1010,3 +1010,33 @@
 }
 .admin-dashboard-pro .admin-media-upload input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
 .admin-dashboard-pro .admin-media-upload svg{width:15px!important;height:15px!important}
+
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root{display:flex!important;flex-direction:column!important;gap:26px!important;max-width:1500px!important;margin:0 auto!important;color:#30392c!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-hero,
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-generator{
+  border:1px solid #e1e6dc!important;border-radius:5px!important;background:#fffefa!important;
+  color:#30392c!important;box-shadow:0 8px 26px rgba(29,37,25,.055)!important;backdrop-filter:none!important;
+}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="text-white"],
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="text-slate-100"],
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="text-slate-200"]{color:#30392c!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="text-slate-400"],
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="text-slate-500"]{color:#778271!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="bg-slate-950"],
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="bg-slate-900"],
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="bg-slate-800"]{background:#f5f7f2!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="border-emerald-"]{border-color:#e0e6da!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root [class*="text-emerald-"]{color:#56664c!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root button[class*="bg-emerald-"]{background:#273024!important;color:#fff!important;box-shadow:none!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root input,
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root select{min-height:42px!important;border:1px solid #dfe5d9!important;border-radius:3px!important;background:#fffefa!important;color:#30392c!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-outfit-grid{align-items:stretch!important}
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-outfit-grid>div,
+.geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-root .grid>div[class*="rounded-2xl"]{
+  border:1px solid #e2e7dd!important;border-radius:4px!important;background:#fffefa!important;box-shadow:none!important;
+}
+@media(max-width:760px){
+ .geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-hero,
+ .geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-generator{padding:15px!important}
+ .geostore-shell:not(.geostore-fashion-store) .gs-wardrobe-outfit-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+}
