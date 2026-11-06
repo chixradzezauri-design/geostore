@@ -393,6 +393,7 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
+  const authSubmitLock = useRef(false);
   const pendingCheckoutRef = useRef(null);
   const [checkoutError, setCheckoutError] = useState('');
   const [orderConfirmation, setOrderConfirmation] = useState(null);
@@ -1169,6 +1170,10 @@ export default function App() {
       return;
     }
 
+    // Prevent duplicate Supabase auth requests from rapid taps or repeated submits.
+    if (authSubmitLock.current) return;
+    authSubmitLock.current = true;
+
     try {
       if (authMode === 'register') {
         const name = authForm.name.trim();
@@ -1273,6 +1278,8 @@ export default function App() {
           currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
         );
       }
+    } finally {
+      authSubmitLock.current = false;
     }
   };
 
