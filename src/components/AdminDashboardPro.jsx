@@ -1178,7 +1178,7 @@ export default function AdminDashboardPro({
     const itemsRows = Array.isArray(order.items) && order.items.length > 0
       ? order.items.map(item => `
           <tr>
-            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name} ${item.selectedSize ? `(ზომა: ${item.selectedSize})` : ''} ${item.selectedColor ? `(ფერი: ${item.selectedColor})` : ''}</td>
+            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name} ${(item.selectedSize || item.selected_size) ? `(ზომა: ${item.selectedSize || item.selected_size})` : ''} ${(item.selectedColor || item.selected_color) ? `(ფერი: ${item.selectedColor || item.selected_color})` : ''} ${(item.selectedVariant || item.selected_variant) ? `(ვარიანტი: ${item.selectedVariant || item.selected_variant})` : ''}</td>
             <td>${item.quantity || 1}</td>
             <td>${item.priceGEL || item.price || 0} ₾</td>
             <td>${(item.priceGEL || item.price || 0) * (item.quantity || 1)} ₾</td>
