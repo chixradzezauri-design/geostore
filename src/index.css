@@ -4094,3 +4094,35 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-staff-list-title{font-size:13px!important}
  .geostore-shell .admin-dashboard-pro .admin-staff-permission-chip{font-size:10px;min-height:30px;padding:6px 8px!important}
 }
+
+/* CMS banner and category manager responsive layout. */
+.geostore-shell .admin-dashboard-pro .admin-banners,
+.geostore-shell .admin-dashboard-pro .admin-category-manager{min-width:0;width:100%;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-banner-form,
+.geostore-shell .admin-dashboard-pro .admin-category-form{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-banner-form input,
+.geostore-shell .admin-dashboard-pro .admin-category-form input,
+.geostore-shell .admin-dashboard-pro .admin-category-form select{min-width:0;max-width:100%;width:100%}
+.geostore-shell .admin-dashboard-pro .admin-banner-card,
+.geostore-shell .admin-dashboard-pro .admin-category-card{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-banner-card>div{min-width:0;flex:1 1 auto}
+.geostore-shell .admin-dashboard-pro .admin-banner-card h4,
+.geostore-shell .admin-dashboard-pro .admin-banner-card p,
+.geostore-shell .admin-dashboard-pro .admin-category-card h4{overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-banner-card>button{flex:0 0 auto;min-width:40px;min-height:40px}
+.geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child>div{min-width:0}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-banners,
+ .geostore-shell .admin-dashboard-pro .admin-category-manager{gap:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-banners>.bg-slate-900\/80,
+ .geostore-shell .admin-dashboard-pro .admin-category-manager>.bg-slate-900\/80{padding:14px!important;border-radius:17px!important;gap:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-banner-card{padding:11px!important;border-radius:15px!important;align-items:flex-start!important}
+ .geostore-shell .admin-dashboard-pro .admin-banner-card img{width:64px!important;height:58px!important}
+ .geostore-shell .admin-dashboard-pro .admin-banner-card h4{font-size:12px!important;line-height:1.4}
+ .geostore-shell .admin-dashboard-pro .admin-banner-card p{font-size:10px!important;line-height:1.4}
+ .geostore-shell .admin-dashboard-pro .admin-category-card{padding:12px!important;border-radius:16px!important}
+ .geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child{align-items:flex-start!important}
+ .geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child>div{flex:1 1 0}
+ .geostore-shell .admin-dashboard-pro .admin-category-card button{min-width:38px;min-height:38px}
+}
