@@ -34,6 +34,14 @@ export const isReusableCheckout = (entry, fingerprint) => (
   )
 );
 
+export const normalizeTrackingLookup = (orderId, phone) => {
+  const normalizedOrderId = String(orderId || '').trim().replace(/^#+/, '').toUpperCase();
+  const normalizedPhone = String(phone || '').replace(/[^0-9]/g, '');
+  if (!/^[A-Z0-9_-]{6,64}$/.test(normalizedOrderId)) return { valid: false, reason: 'order_id' };
+  if (!/^\d{9,15}$/.test(normalizedPhone)) return { valid: false, reason: 'phone' };
+  return { valid: true, orderId: normalizedOrderId, phone: normalizedPhone };
+};
+
 export const createSecureOrderId = (cryptoApi) => {
   if (!cryptoApi || typeof cryptoApi.getRandomValues !== 'function') {
     throw new Error('უსაფრთხო შეკვეთის ნომრის გენერირება ვერ მოხერხდა.');
