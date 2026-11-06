@@ -716,6 +716,8 @@ export default function AdminDashboardPro({
         ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
         ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
         ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.totalCogs.toFixed(2)],
+        ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
+        ['უცნობი თვითღირებულების ერთეულები', financialOverview.unknownCogsItems],
         ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება' : financialOverview.grossProfit.toFixed(2)],
         ['ოპერაციული ხარჯები', financialOverview.totalExpenses.toFixed(2)],
         ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება' : financialOverview.netProfit.toFixed(2)]
@@ -743,7 +745,7 @@ export default function AdminDashboardPro({
       let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
       if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
-      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
+      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
       else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
@@ -1999,7 +2001,7 @@ export default function AdminDashboardPro({
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
                 <p className="text-2xl sm:text-3xl font-black text-amber-400">{financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
-                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : 'მთლიანი მოგება − ოპერაციული ხარჯები'}</span>
+                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება − ოპერაციული ხარჯები'}</span>
               </div>
             </div>
 
