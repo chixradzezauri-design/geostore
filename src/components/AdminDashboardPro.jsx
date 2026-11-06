@@ -2258,7 +2258,7 @@ export default function AdminDashboardPro({
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
               </div>
 
-              <div className="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto">
+              <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto">
                 {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
                   <button 
                     key={st}
