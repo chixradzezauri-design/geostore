@@ -1943,11 +1943,11 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'calculator' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-profit-calculator bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Calculator className="w-5 h-5 text-emerald-400" /> გაყიდვებისა და მოგების კალკულატორი
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+            <div className="admin-calculator-layout grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -1970,7 +1970,7 @@ export default function AdminDashboardPro({
                   </div>
                 </div>
               </div>
-              <div className="bg-slate-950/80 border border-emerald-500/30 p-6 rounded-3xl space-y-3 shadow-inner flex flex-col justify-center">
+              <div className="admin-calculator-results bg-slate-950/80 border border-emerald-500/30 p-6 rounded-3xl space-y-3 shadow-inner flex flex-col justify-center">
                 <h4 className="font-black text-emerald-400 text-sm mb-1">გამოთვლილი მონაცემები</h4>
                 <div className="flex justify-between"><span>ფასდაკლებული ფასი:</span><b className="text-white">{calculatedSalesMetrics.discountedPrice.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>მთლიანი მოგება:</span><b className="text-emerald-400">{calculatedSalesMetrics.grossProfit.toFixed(2)} ₾</b></div>
@@ -1983,12 +1983,12 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'expenses' && (
-          <div className="space-y-6">
+          <div className="admin-expenses space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება (Supabase ბაზაში)
               </h3>
-              <form onSubmit={handleAddExpense} className="space-y-4 text-xs">
+              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <select value={expenseForm.category} onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none">
                     <option value="რეკლამა & მარკეტინგი">რეკლამა & მარკეტინგი</option>
@@ -2012,7 +2012,7 @@ export default function AdminDashboardPro({
                   <p className="text-slate-500 text-xs text-center py-4">ხარჯები ჯერ არ არის დამატებული.</p>
                 ) : (
                   expenses.map(exp => (
-                    <div key={exp.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
+                    <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
                       <div>
                         <b className="text-white">{exp.description}</b> <span className="text-slate-400">({exp.category})</span> 
                         <span className="text-slate-500 text-[10px] ml-2">{exp.date}</span>
