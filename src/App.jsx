@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
+import { Analytics } from '@vercel/analytics/react';
 
 import Header from './components/Header';
 import StoreView from './components/StoreView';
@@ -2079,6 +2080,8 @@ export default function App() {
 
         <p>© 2026 GEOSTORE. {t.allRightsReserved}</p>
       </footer>
+
+      <Analytics />
     </div>
   );
 }
