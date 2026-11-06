@@ -496,7 +496,7 @@ export default function App() {
   const fetchOrders = async () => {
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`,
+        `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
         { headers: await getSupabaseHeaders({ authenticated: true }) }
       );
 
@@ -555,6 +555,7 @@ export default function App() {
       if (Array.isArray(data)) {
         const formatted = data.map((p) => ({
           id: p.id,
+          createdAt: p.created_at || null,
           sku: p.sku || `GEO-${p.id}`,
           name: p.name,
           category: p.category || 'სმარტფონები',
@@ -583,6 +584,13 @@ export default function App() {
           os: p.os || '',
           isFeatured: Boolean(p.is_featured)
         }));
+
+        // Keep product order deterministic when several rows share a timestamp.
+        formatted.sort((left, right) => {
+          const leftTime = Date.parse(left.createdAt || '') || 0;
+          const rightTime = Date.parse(right.createdAt || '') || 0;
+          return rightTime - leftTime || String(left.id ?? '').localeCompare(String(right.id ?? ''));
+        });
 
         setProducts(formatted);
         try {
