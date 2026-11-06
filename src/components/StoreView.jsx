@@ -1,5 +1,6 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
+import { validateImageFile } from '../utils/imageSafety';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -147,14 +148,19 @@ export default function StoreView({
     setSelectedSize(rec);
   };
 
-  const handleReviewImageChange = (e) => {
+  const handleReviewImageChange = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewReviewImage(reader.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      await validateImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setNewReviewImage(reader.result);
+      reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
+      reader.readAsDataURL(file);
+    } catch (error) {
+      alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+    }
   };
 
   const handleAddReview = (e, productId) => {
@@ -860,7 +866,7 @@ export default function StoreView({
                       <div className="gs-product-review-upload flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                         <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
-                          <input type="file" accept="image/*" onChange={handleReviewImageChange} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} className="hidden" />
                         </label>
                         {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
