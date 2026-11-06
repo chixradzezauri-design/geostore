@@ -1565,6 +1565,10 @@ export default function AdminDashboardPro({
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     const existingOrder = (orders || []).find(order => order.id === orderId);
+    if (['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed'].includes(String(existingOrder?.status || '').trim().toLowerCase()) && newStatus !== existingOrder.status) {
+      alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
+      return;
+    }
     if (existingOrder?.status === 'გაუქმებული' && newStatus !== 'გაუქმებული') {
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
@@ -2541,10 +2545,10 @@ export default function AdminDashboardPro({
                           </button>
                         ) : (
                           <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={['გაგზავნილი', 'დასრულებული'].includes(o.status)} title={['გაგზავნილი', 'დასრულებული'].includes(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
                           </div>
                         )}
