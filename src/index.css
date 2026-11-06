@@ -3923,3 +3923,13 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro button,
  .geostore-shell .admin-dashboard-content button{min-height:36px!important;line-height:1.35!important}
 }
+
+
+/* Admin order status filters: preserve readable labels and allow deliberate
+   horizontal touch scrolling on narrow screens without widening the page. */
+.geostore-shell .admin-dashboard-pro .admin-order-status-filters{min-width:0!important;max-width:100%!important;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:rgba(16,185,129,.45) transparent;-webkit-overflow-scrolling:touch}
+.geostore-shell .admin-dashboard-pro .admin-order-status-filters>button{flex:0 0 auto!important;white-space:nowrap!important;min-height:34px!important;padding:8px 10px!important}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-order-status-filters{width:100%!important;gap:4px!important;padding:5px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-status-filters>button{font-size:10px!important;padding:8px 9px!important}
+}
