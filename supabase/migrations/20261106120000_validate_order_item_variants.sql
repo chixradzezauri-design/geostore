@@ -68,7 +68,7 @@ BEGIN
 
     IF v_selected_color IS NOT NULL THEN
       IF v_allowed_colors IS NULL OR v_allowed_colors = 'null'::jsonb THEN
-        v_allowed_colors := '["შავი","თეთრი"]'::jsonb;
+        v_allowed_colors := '["შავი"]'::jsonb;
       END IF;
 
       IF jsonb_typeof(v_allowed_colors) IS DISTINCT FROM 'array' THEN
