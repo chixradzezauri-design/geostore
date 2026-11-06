@@ -1401,6 +1401,14 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const duplicateCode = (coupons || []).some((coupon) =>
+      String(coupon?.code || '').trim().toUpperCase() === code
+    );
+    if (duplicateCode) {
+      alert('ეს კუპონის კოდი უკვე არსებობს. გამოიყენეთ სხვა კოდი.');
+      return;
+    }
+
     const newC = {
       id: `c-${Date.now()}`,
       code,
