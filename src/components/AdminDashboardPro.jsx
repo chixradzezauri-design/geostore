@@ -2231,7 +2231,7 @@ export default function AdminDashboardPro({
         {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
         {adminTab === 'orders' && (
           <div className="admin-orders-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
+            <div className="admin-orders-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
                 <h3 className="font-black text-white text-lg flex items-center gap-2.5">
                   <PackageCheck className="w-6 h-6 text-emerald-400" /> შეკვეთების სრული მართვის სისტემა ({filteredOrders.length})
@@ -2247,8 +2247,8 @@ export default function AdminDashboardPro({
             </div>
 
             {/* ძებნა და სტატუსების ფილტრაცია */}
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-              <div className="relative w-full sm:w-80">
+            <div className="admin-orders-toolbar flex flex-col sm:flex-row gap-3 items-center justify-between">
+              <div className="admin-order-search relative w-full sm:w-80">
                 <input 
                   type="text" 
                   placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
@@ -2273,7 +2273,7 @@ export default function AdminDashboardPro({
             </div>
 
             {/* შეკვეთების სია */}
-            <div className="space-y-4">
+            <div className="admin-orders-list space-y-4">
               {filteredOrders.length === 0 ? (
                 <p className="text-slate-500 text-xs py-10 text-center">შეკვეთები ვერ მოიძებნა.</p>
               ) : (
@@ -2305,7 +2305,7 @@ export default function AdminDashboardPro({
                     <div className="admin-order-card-footer flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">სტატუსი:</span>
-                        <span className={`${getOrderStatusClasses(o.status || 'ახალი')} px-3 py-1 rounded-xl text-[10px] font-black`}>
+                        <span className={`admin-order-status-badge ${getOrderStatusClasses(o.status || 'ახალი')} px-3 py-1 rounded-xl text-[10px] font-black`}>
                           {o.status || 'ახალი'}
                         </span>
                       </div>
@@ -2368,16 +2368,16 @@ export default function AdminDashboardPro({
 
         {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
-          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
             <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-3xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[92vh] overflow-y-auto">
               
-              <div className="flex justify-between items-center border-b border-emerald-500/20 pb-4">
+              <div className="admin-order-detail-header flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-emerald-500/20 p-3 rounded-2xl border border-emerald-500/30">
                     <PackageCheck className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="font-black text-base text-white">შეკვეთა #{selectedOrderForModal.id}</h3>
+                    <h3 id="admin-order-detail-title" className="font-black text-base text-white">შეკვეთა #{selectedOrderForModal.id}</h3>
                     <p className="text-[11px] text-slate-400">თარიღი: {selectedOrderForModal.date} {selectedOrderForModal.time || ''}</p>
                   </div>
                 </div>
@@ -2450,7 +2450,7 @@ export default function AdminDashboardPro({
               {/* 4. ადმინისტრატორის პირადი შენიშვნა */}
               <div className="admin-order-note-editor space-y-2">
                 <label className="text-slate-300 font-bold block">📝 ადმინისტრატორის პირადი შენიშვნა შეკვეთაზე:</label>
-                <div className="flex gap-2">
+                <div className="admin-order-note-controls flex gap-2">
                   <input 
                     type="text" 
                     placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
@@ -2468,7 +2468,7 @@ export default function AdminDashboardPro({
               </div>
 
               {/* მოდალის ქვედა ღილაკები */}
-              <div className="flex gap-3 pt-2">
+              <div className="admin-order-detail-footer flex gap-3 pt-2">
                 <button 
                   onClick={() => handlePrintInvoice(selectedOrderForModal)} 
                   className="flex-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black py-3.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
