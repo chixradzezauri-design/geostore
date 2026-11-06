@@ -34,8 +34,59 @@ export default function AiAssistantModal({
   selectedProduct = null,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   addToCart,
-  formatPrice
+  formatPrice,
+  currentLang = 'ka'
 }) {
+  const uiText = ({
+    ka: {
+      title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
+      clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
+      welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.', greeting: 'გამარჯობა! 🌟 მე ვარ GEOSTORE-ის შოპინგ-ასისტენტი. დაგეხმარები კატალოგში პროდუქტის მოძებნაში, ვარიანტების შედარებასა და სტილის შერჩევაში.', selectedGreeting: (name, price) => `გამარჯობა! 👋 ახლა ათვალიერებ პროდუქტს „${name}“ (${price}). გინდა დეტალების, ზომების ან შესაფერისი ნივთების შერჩევაში დაგეხმარო?`,
+      recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
+      addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
+      placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
+      inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
+      disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
+      quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო', selectedProductContext: 'კონტექსტი: ', prompts: [{ label: '👋 გამარჯობა', query: 'გამარჯობა' }, { label: '🧥 ტანსაცმელი', query: 'ტანსაცმელი' }, { label: '👟 ფეხსაცმელები', query: 'ფეხსაცმელები' }, { label: '📱 სმარტფონები', query: 'სმარტფონები' }, { label: '💻 ლეპტოპები', query: 'ლეპტოპები' }, { label: '🔥 ფასდაკლებები', query: 'ფასდაკლებები' }, { label: '🚚 მიწოდება', query: 'მიწოდება' }]
+    },
+    en: {
+      title: 'AI Stylist', context: 'Smart catalog assistant', ready: 'Ready',
+      clear: 'Clear chat', close: 'Close AI assistant',
+      welcome: 'Tell me what you are looking for — I can help you choose a product or style.',
+      greeting: 'Hello! I’m your GEOSTORE shopping assistant. I can help you explore products, compare options and find a style.',
+      selectedGreeting: (name, price) => `Hello! I see you’re viewing “${name}” (${price}). Would you like help checking its details, available sizes or matching items?`,
+      recommendations: 'Recommended products', inStock: 'In stock', outOfStock: 'Out of stock',
+      addToCart: 'Add to cart', typing: 'Finding the best options...',
+      placeholder: 'What are you looking for? Add a product, size or budget...',
+      inputLabel: 'Message for AI assistant', send: 'Send message',
+      disclaimer: 'AI recommendations are for informational purposes · GEOSTORE',
+      quickPrompts: 'Quick prompts', productImage: 'Product image', selectedProductContext: 'Selected product: ', prompts: [{ label: '👋 Hello', query: 'Hello' }, { label: '🧥 Clothing', query: 'Clothing' }, { label: '👟 Shoes', query: 'Shoes' }, { label: '📱 Smartphones', query: 'Smartphones' }, { label: '💻 Laptops', query: 'Laptops' }, { label: '🔥 Discounts', query: 'Discounts' }, { label: '🚚 Delivery', query: 'Delivery' }]
+    },
+    ru: {
+      title: 'AI-стилист', context: 'Умный помощник каталога', ready: 'Готов',
+      clear: 'Очистить чат', close: 'Закрыть AI-помощника',
+      welcome: 'Напишите, что вы ищете — я помогу выбрать товар или стиль.',
+      greeting: 'Здравствуйте! Я ваш помощник по покупкам GEOSTORE. Помогу найти товары, сравнить варианты и подобрать стиль.',
+      selectedGreeting: (name, price) => `Здравствуйте! Вы просматриваете «${name}» (${price}). Помочь проверить характеристики, размеры или подобрать сочетающиеся товары?`,
+      recommendations: 'Рекомендуемые товары', inStock: 'В наличии', outOfStock: 'Нет в наличии',
+      addToCart: 'В корзину', typing: 'Подбираю лучшие варианты...',
+      placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
+      inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
+      disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE',
+      quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара', selectedProductContext: 'Товар: ', prompts: [{ label: '👋 Привет', query: 'Привет' }, { label: '🧥 Одежда', query: 'Одежда' }, { label: '👟 Обувь', query: 'Обувь' }, { label: '📱 Смартфоны', query: 'Смартфоны' }, { label: '💻 Ноутбуки', query: 'Ноутбуки' }, { label: '🔥 Скидки', query: 'Скидки' }, { label: '🚚 Доставка', query: 'Доставка' }]
+    }
+  })[currentLang] || ({
+    title: 'AI სტილისტი', context: 'კატალოგის ჭკვიანი ასისტენტი', ready: 'მზადაა',
+    clear: 'საუბრის გასუფთავება', close: 'AI ასისტენტის დახურვა',
+    welcome: 'მომწერე რას ეძებ — დაგეხმარები პროდუქტისა და სტილის შერჩევაში.', greeting: 'გამარჯობა! 🌟 მე ვარ GEOSTORE-ის შოპინგ-ასისტენტი. დაგეხმარები კატალოგში პროდუქტის მოძებნაში, ვარიანტების შედარებასა და სტილის შერჩევაში.', selectedGreeting: (name, price) => `გამარჯობა! 👋 ახლა ათვალიერებ პროდუქტს „${name}“ (${price}). გინდა დეტალების, ზომების ან შესაფერისი ნივთების შერჩევაში დაგეხმარო?`,
+    recommendations: 'შერჩეული პროდუქტები', inStock: 'მარაგშია', outOfStock: 'ამოწურულია',
+    addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
+    placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
+    inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
+    disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
+    quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო'
+  });
+
   const getInitialGreeting = () => {
     let wardrobeCount = 0;
     try {
@@ -49,14 +100,14 @@ export default function AiAssistantModal({
       return {
         id: 'm1',
         sender: 'ai',
-        text: `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ? გსურთ შევუძებნოთ შესაფერისი წყვილი ან შევამოწმოთ ზომები?`,
+        text: uiText.selectedGreeting ? uiText.selectedGreeting(selectedProduct.name, formatPrice(selectedProduct.priceGEL)) : `გამარჯობა! 👋 ვხედავ, რომ ათვალიერებთ პროდუქტს: "${selectedProduct.name}" (${formatPrice(selectedProduct.priceGEL)}).\n\nრით შემიძლია დაგეხმაროთ მის შესახებ?`,
         recommendedProducts: [selectedProduct]
       };
     }
     return {
       id: 'm1',
       sender: 'ai',
-      text: `გამარჯობა! 🌟 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის გაფართოებული AI სტილისტი და კონსიერჟი.\n\nმაქვს სრული წვდომა კატეგორიების სრულ იერარქიაზე, თქვენს ციფრული გარდერობის ${wardrobeCount} ნივთზე, აქტიურ კუპონებსა და შეკვეთებზე. როგორ მოვძებნო სასურველი პროდუქტი ან შევქმნათ ლუქი დღეს?`
+      text: uiText.greeting || `გამარჯობა! 🌟 მე ვარ ${siteSettings?.storeName || 'GEOSTORE'}-ის შოპინგ-ასისტენტი. თქვენს ციფრულ გარდერობში შენახულია ${wardrobeCount} ნივთი. როგორ დაგეხმაროთ პროდუქტის მოძებნაში ან სტილის შერჩევაში?`
     };
   };
 
@@ -144,7 +195,16 @@ export default function AiAssistantModal({
   // 🧠 ულტრა-ინტელექტუალური AI ძრავი კატეგორიების იერარქიის სრული მხარდაჭერით
   const generateAiReply = (userQuery, currentProductsList) => {
     const rawQuery = userQuery.trim();
-    const query = rawQuery.toLowerCase();
+    const localizedPromptAliases = {
+      hello: 'გამარჯობა', привет: 'გამარჯობა',
+      clothing: 'ტანსაცმელი', одежда: 'ტანსაცმელი',
+      shoes: 'ფეხსაცმელები', обувь: 'ფეხსაცმელები',
+      smartphones: 'სმარტფონები', смартфоны: 'სმარტფონები',
+      laptops: 'ლეპტოპები', ноутбуки: 'ლეპტოპები',
+      discounts: 'ფასდაკლებები', скидки: 'ფასდაკლებები',
+      delivery: 'მიწოდება', доставка: 'მიწოდება'
+    };
+    const query = (localizedPromptAliases[rawQuery.toLowerCase()] || rawQuery).toLowerCase();
     const words = query.split(/\s+/).filter(w => w.length > 0);
     const sourceProducts = currentProductsList && currentProductsList.length > 0 ? currentProductsList : (liveProducts.length > 0 ? liveProducts : products);
 
@@ -313,6 +373,65 @@ export default function AiAssistantModal({
     };
   };
 
+  // პასუხების ლოკალიზაცია: არსებული კატალოგის ძიება და შეკვეთის ლოგიკა უცვლელი რჩება.
+  const localizeAiReply = (result, userQuery) => {
+    if (currentLang === 'ka' || !result) return result;
+    const query = String(userQuery || '').trim().toLowerCase();
+    const isEnglish = currentLang === 'en';
+    const t = (en, ru) => isEnglish ? en : ru;
+    const text = result.text || '';
+
+    if (text.includes('კვლავ ვსაუბრობთ პროდუქტზე')) {
+      return { ...result, text: selectedProduct
+        ? t(`Yes! We are still discussing “${selectedProduct.name}”. What would you like to know next?`, `Да! Мы всё ещё обсуждаем товар «${selectedProduct.name}». Что хотите узнать дальше?`)
+        : t('Hello! 🌟 I can help you shop. Ask me about a category, product, price, color, or outfit ideas.', 'Здравствуйте! 🌟 Я помогу с покупками. Спросите о категории, товаре, цене, цвете или подборе образа.') };
+    }
+    if (text.startsWith('გამარჯობა! 🌟 სიამოვნებით')) {
+      return { ...result, text: t('Hello! 🌟 I’d be happy to help you shop. Ask about a category, product, price, color, or outfit ideas from your digital wardrobe!', 'Здравствуйте! 🌟 Буду рад помочь с покупками. Спросите о категории, товаре, цене, цвете или образах из цифрового гардероба!') };
+    }
+    if (text.includes('ციფრული გარდერობი ჯერ ცარიელია')) {
+      return { ...result, text: t('🧥 Your digital wardrobe is empty for now. Open the “AI Digital Wardrobe” section, add your clothing, and I can help create outfits and choose matching items from the store.', '🧥 Ваш цифровой гардероб пока пуст. Перейдите в раздел «AI Digital Wardrobe», добавьте свою одежду, и я помогу составить образы и подобрать подходящие товары из магазина.') };
+    }
+    if (text.includes('ციფრულ გარდერობში ფიქსირდება')) {
+      const count = text.match(/(\\d+) ნივთი/)?.[1] || '';
+      return { ...result, text: t(`✨ Your digital wardrobe contains ${count} item(s). Stylist tip: one of the premium items below could complement your existing clothes.`, `✨ В вашем цифровом гардеробе ${count} предмет(а). Совет стилиста: один из представленных ниже премиальных товаров может дополнить вашу одежду.`) };
+    }
+    if (text.startsWith('📦 შეკვეთა #')) {
+      const id = text.match(/შეკვეთა #([^:\\n]+)/)?.[1] || '';
+      const recipient = text.match(/მიმღები: ([^\\n]+)/)?.[1] || '';
+      const date = text.match(/თარიღი: ([^\\n]+)/)?.[1] || '';
+      const amount = text.match(/თანხა: ([^\\n]+)/)?.[1] || '';
+      const status = text.match(/სტატუსი: 🟢 ([^\\n]+)/)?.[1] || '';
+      return { ...result, text: t(`📦 Order #${id}:\\n• Recipient: ${recipient}\\n• Date: ${date}\\n• Total: ${amount}\\n• Status: 🟢 ${status}`, `📦 Заказ #${id}:\\n• Получатель: ${recipient}\\n• Дата: ${date}\\n• Сумма: ${amount}\\n• Статус: 🟢 ${status}`) };
+    }
+    if (text.includes('ვერ მოიძებნა ბაზაში')) {
+      const code = text.match(/კოდით "([^"]+)"/)?.[1] || '';
+      return { ...result, text: t(`🔍 Order with code “${code}” was not found in the database.`, `🔍 Заказ с кодом «${code}» не найден в базе данных.`) };
+    }
+    if (text.includes('უნიკალური ნომერი')) {
+      return { ...result, text: t('To check your order, please send its unique order number (for example, ORD-1025)! 📦', 'Чтобы проверить заказ, отправьте его уникальный номер (например, ORD-1025)! 📦') };
+    }
+    if (text.startsWith('🔥 მიმდინარე სპეციალური ფასდაკლებები')) {
+      const count = text.match(/\\((\\d+) ნივთი\\)/)?.[1] || result.products?.length || 0;
+      return { ...result, text: t(`🔥 Current special offers and discounts (${count} items):`, `🔥 Текущие специальные предложения и скидки (${count} товаров):`) };
+    }
+    if (text.startsWith('🚀 მიწოდება მთელი საქართველოს მასშტაბით')) {
+      const fee = value => Number(value) === 0 ? t('Free', 'Бесплатно') : `${value} ₾`;
+      return { ...result, text: t(`🚀 Delivery across Georgia:\\n• Tbilisi / Rustavi: ${fee(deliveryFees.tbilisi)}\\n• Major cities: ${fee(deliveryFees.bigCities)}\\n• Other regions: ${fee(deliveryFees.other)}`, `🚀 Доставка по всей Грузии:\\n• Тбилиси / Рустави: ${fee(deliveryFees.tbilisi)}\\n• Крупные города: ${fee(deliveryFees.bigCities)}\\n• Другие регионы: ${fee(deliveryFees.other)}`) };
+    }
+    if (text.includes('ოფიციალური ქარხნული გარანტია')) {
+      return { ...result, text: t('🛡️ All products are covered by the applicable official manufacturer warranty and return policy.', '🛡️ На все товары распространяются соответствующая официальная гарантия производителя и политика возврата.') };
+    }
+    if (text.startsWith('✨ კატეგორიებისა და მოთხოვნის შესაბამისად ნაპოვნია')) {
+      const count = text.match(/\\((\\d+) ვარიანტი\\)/)?.[1] || result.products?.length || 0;
+      return { ...result, text: t(`✨ Found ${count} matching product option(s) based on your request:`, `✨ По вашему запросу найдено подходящих вариантов: ${count}:`) };
+    }
+    if (text.startsWith('🤔 ზუსტი დამთხვევა ვერ მოიძებნა')) {
+      return { ...result, text: t('🤔 I couldn’t find an exact match, but here are some top picks from our premium catalog:', '🤔 Точное совпадение не найдено, но вот несколько популярных товаров из нашего премиального каталога:') };
+    }
+    return result;
+  };
+
   const handleSendMessage = async (textToSend) => {
     const queryText = textToSend || inputMessage;
     if (!queryText.trim()) return;
@@ -325,7 +444,7 @@ export default function AiAssistantModal({
     const refreshedProducts = await fetchLiveProducts();
 
     setTimeout(() => {
-      const aiResult = generateAiReply(queryText, refreshedProducts);
+      const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
       const aiMsg = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
@@ -338,129 +457,172 @@ export default function AiAssistantModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-      <div className="relative bg-[#0d0d10] border border-emerald-500/40 rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-2xl h-[92vh] sm:h-[680px] flex flex-col justify-between shadow-2xl overflow-hidden">
-        
-        {/* Header */}
-        <div className="bg-[#121216] p-4 sm:p-5 border-b border-emerald-500/20 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/10 p-2.5 rounded-2xl border border-emerald-500/30">
-              <Bot className="w-6 h-6 text-emerald-400 animate-pulse" />
-            </div>
-            <div>
-              <h3 className="font-black text-white text-xs sm:text-sm flex items-center gap-1.5">
-                {siteSettings?.storeName || 'GEOSTORE'} AI სტილისტი <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              </h3>
-              <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                <FolderTree className="w-3 h-3" /> {selectedProduct ? `კონტექსტი: ${selectedProduct.name}` : 'კატეგორიებისა და სუბკატეგორიების ინტელექტი'}
-              </p>
-            </div>
+    <div className="gs-ai-overlay">
+      <section
+        className="gs-ai-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gs-ai-title"
+        aria-describedby="gs-ai-description"
+      >
+        <header className="gs-ai-header">
+          <div className="gs-ai-brand">
+            <span className="gs-ai-brand-icon">
+              <Bot aria-hidden="true" />
+              <span className="gs-ai-brand-sparkle"><Sparkles aria-hidden="true" /></span>
+            </span>
+            <span className="gs-ai-brand-copy">
+              <span className="gs-ai-overline">GEOSTORE PERSONAL SHOPPING</span>
+              <strong id="gs-ai-title">{siteSettings?.storeName || 'GEOSTORE'} {uiText.title}</strong>
+              <span id="gs-ai-description" className="gs-ai-context">
+                <FolderTree aria-hidden="true" />
+                {selectedProduct ? uiText.selectedProductContext + selectedProduct.name : uiText.context}
+              </span>
+            </span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handleResetChat} 
-              title="საუბრის გასუფთავება"
-              className="text-slate-400 hover:text-emerald-400 p-2 rounded-xl bg-slate-900 border border-slate-800 transition cursor-pointer"
+          <div className="gs-ai-header-actions">
+            <span className="gs-ai-status"><i aria-hidden="true" /> {uiText.ready}</span>
+            <button
+              type="button"
+              onClick={handleResetChat}
+              title={uiText.clear}
+              aria-label={uiText.clear}
+              className="gs-ai-icon-button"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw aria-hidden="true" />
             </button>
-            <button 
-              onClick={() => setIsAiAssistantOpen(false)} 
-              className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer"
+            <button
+              type="button"
+              onClick={() => setIsAiAssistantOpen(false)}
+              title={uiText.close}
+              aria-label={uiText.close}
+              className="gs-ai-icon-button gs-ai-close"
             >
-              <X className="w-5 h-5" />
+              <X aria-hidden="true" />
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Messages Body */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 text-xs scrollbar-thin">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[88%] sm:max-w-[85%] p-4 rounded-3xl space-y-3 ${msg.sender === 'user' ? 'bg-emerald-500 text-slate-950 font-bold rounded-tr-none' : 'bg-[#141418] border border-emerald-500/20 text-slate-200 rounded-tl-none shadow-xl'}`}>
-                <p className="leading-relaxed whitespace-pre-line">{msg.text}</p>
+        <div className="gs-ai-conversation">
+          <div className="gs-ai-welcome-note">
+            <Sparkles aria-hidden="true" />
+            <span>{uiText.welcome}</span>
+          </div>
 
-                {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
-                  <div className="space-y-2.5 pt-2 border-t border-emerald-500/20">
-                    {msg.recommendedProducts.map(prod => (
-                      <div key={prod.id} className="bg-[#08080a] p-3 rounded-2xl border border-emerald-500/20 flex items-center justify-between gap-3 shadow-inner">
-                        <div className="flex items-center gap-3">
-                          <img src={prod.image} alt="" className="w-12 h-12 object-contain bg-[#121216] p-1 rounded-xl border border-emerald-500/20 shrink-0" />
-                          <div>
-                            <h5 className="font-bold text-white text-xs line-clamp-1">{prod.name}</h5>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-emerald-400 font-black text-xs">{formatPrice(prod.priceGEL)}</span>
-                              {prod.oldPriceGEL && <span className="text-slate-500 text-[10px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
-                              {prod.stock > 0 ? (
-                                <span className="text-[9px] text-emerald-400/80 flex items-center gap-0.5"><CheckCircle2 className="w-2.5 h-2.5" /> მარაგშია</span>
-                              ) : (
-                                <span className="text-[9px] text-rose-400 flex items-center gap-0.5"><AlertCircle className="w-2.5 h-2.5" /> ამოწურულია</span>
+          <div className="gs-ai-messages" role="log" aria-live="polite" aria-relevant="additions text">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={'gs-ai-message-row ' + (msg.sender === 'user' ? 'is-user' : 'is-ai')}
+              >
+                {msg.sender !== 'user' && (
+                  <span className="gs-ai-message-avatar" aria-hidden="true"><Bot /></span>
+                )}
+                <article className={'gs-ai-bubble ' + (msg.sender === 'user' ? 'gs-ai-bubble--user' : 'gs-ai-bubble--assistant')}>
+                  <p className="gs-ai-message-text">{msg.text}</p>
+
+                  {msg.recommendedProducts && msg.recommendedProducts.length > 0 && (
+                    <div className="gs-ai-recommendations">
+                      <div className="gs-ai-recommendations-title">
+                        <ShoppingBag aria-hidden="true" />
+                        <span>{uiText.recommendations}</span>
+                      </div>
+                      {msg.recommendedProducts.map((prod) => (
+                        <article key={prod.id} className="gs-ai-product-card">
+                          <img
+                            src={prod.image}
+                            alt={prod.name || uiText.productImage}
+                            className="gs-ai-product-image"
+                          />
+                          <div className="gs-ai-product-info">
+                            <h4>{prod.name}</h4>
+                            <div className="gs-ai-product-price-row">
+                              <strong>{formatPrice(prod.priceGEL)}</strong>
+                              {prod.oldPriceGEL && (
+                                <del>{formatPrice(prod.oldPriceGEL)}</del>
                               )}
                             </div>
+                            <span className={prod.stock > 0 ? 'gs-ai-stock is-available' : 'gs-ai-stock is-unavailable'}>
+                              {prod.stock > 0 ? (
+                                <><CheckCircle2 aria-hidden="true" /> {uiText.inStock}</>
+                              ) : (
+                                <><AlertCircle aria-hidden="true" /> {uiText.outOfStock}</>
+                              )}
+                            </span>
                             {prod.tags && prod.tags.length > 0 && (
-                              <div className="flex gap-1 mt-1 flex-wrap">
-                                {prod.tags.slice(0, 3).map((t, idx) => (
-                                  <span key={idx} className="bg-emerald-500/10 text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                    #{t}
-                                  </span>
+                              <div className="gs-ai-product-tags">
+                                {prod.tags.slice(0, 3).map((tag, index) => (
+                                  <span key={index}>#{tag}</span>
                                 ))}
                               </div>
                             )}
                           </div>
-                        </div>
-                        <button 
-                          onClick={() => addToCart(prod)}
-                          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-2 rounded-xl font-black text-[10px] flex items-center gap-1 shrink-0 transition shadow cursor-pointer"
-                        >
-                          <ShoppingBag className="w-3 h-3" /> კალათაში
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          <button
+                            type="button"
+                            onClick={() => addToCart(prod)}
+                            className="gs-ai-add-button"
+                          >
+                            <ShoppingBag aria-hidden="true" />
+                            <span>{uiText.addToCart}</span>
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </article>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-[#141418] border border-emerald-500/20 p-3.5 rounded-3xl text-emerald-400 font-bold flex items-center gap-2 text-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> AI აანალიზებს კატეგორიებსა და კატალოგს...
+            {isTyping && (
+              <div className="gs-ai-message-row is-ai">
+                <span className="gs-ai-message-avatar" aria-hidden="true"><Bot /></span>
+                <div className="gs-ai-typing" role="status">
+                  <span className="gs-ai-typing-dots"><i /><i /><i /></span>
+                  <span>{uiText.typing}</span>
+                </div>
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {/* Quick Suggestion Chips */}
-        <div className="px-4 sm:px-6 py-2 flex gap-2 overflow-x-auto scrollbar-none text-[11px] shrink-0">
-          {['👋 გამარჯობა', '🧥 ტანსაცმელი', '👟 ფეხსაცმელები', '📱 სმარტფონები', '💻 ლეპტოპები', '🔥 ფასდაკლებები', '🚚 მიწოდება'].map((chip, idx) => (
-            <button 
-              key={idx} 
-              onClick={() => handleSendMessage(chip.replace(/[👋🧥👟📱💻🔥🚚]/g, '').trim())} 
-              className="bg-[#141418] hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1 shrink-0"
-            >
-              <Lightbulb className="w-3 h-3" /> {chip}
+        <footer className="gs-ai-composer-area">
+          <div className="gs-ai-suggestions" aria-label={uiText.quickPrompts}>
+            {uiText.prompts.map((prompt, index) => (
+              <button
+                type="button"
+                key={index}
+                onClick={() => handleSendMessage(prompt.query)}
+                className="gs-ai-suggestion-chip"
+              >
+                <Lightbulb aria-hidden="true" />
+                <span>{prompt.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSendMessage();
+            }}
+            className="gs-ai-composer"
+          >
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(event) => setInputMessage(event.target.value)}
+              placeholder={uiText.placeholder}
+              aria-label={uiText.inputLabel}
+              className="gs-ai-input"
+            />
+            <button type="submit" className="gs-ai-send-button" aria-label={uiText.send}>
+              <Send aria-hidden="true" />
             </button>
-          ))}
-        </div>
-
-        {/* Input Form */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-3 sm:p-4 bg-[#121216] border-t border-emerald-500/20 flex gap-2 sm:gap-3 shrink-0">
-          <input 
-            type="text" 
-            placeholder="აღწერეთ სასურველი კატეგორია, პროდუქტი ან ბიუჯეტი..." 
-            value={inputMessage} 
-            onChange={e => setInputMessage(e.target.value)} 
-            className="flex-1 bg-[#08080a] border border-emerald-500/20 p-3 sm:p-3.5 rounded-2xl text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
-          />
-          <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 p-3 sm:p-3.5 rounded-2xl font-black transition cursor-pointer shadow-lg shadow-emerald-500/20">
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
-
-      </div>
+          </form>
+          <p className="gs-ai-disclaimer">{uiText.disclaimer}</p>
+        </footer>
+      </section>
     </div>
   );
 }

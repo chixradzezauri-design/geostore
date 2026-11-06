@@ -131,28 +131,36 @@ const isAuthorizedAdmin = (user) =>
   user?.app_metadata?.role === 'admin' &&
   user?.id === '1060de3d-d28a-45f8-9a64-5e0368cffc4b';
 
+const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
+
 const getOrderStatusClasses = (status) => {
-  switch (String(status || '').trim().toLowerCase()) {
-    case 'ახალი':
-    case 'new':
+  switch (normalizeOrderStatus(status)) {
+    case 'ახალი': case 'new': case 'новый':
       return 'bg-blue-500/10 text-blue-300 border border-blue-500/40';
-    case 'მუშავდება':
-    case 'processing':
+    case 'მუშავდება': case 'processing': case 'в обработке':
       return 'bg-amber-500/10 text-amber-300 border border-amber-500/40';
-    case 'გაგზავნილი':
-    case 'გზაშია':
-    case 'shipped':
+    case 'გაგზავნილი': case 'გზაშია': case 'shipped': case 'on the way': case 'отправлен': case 'в пути':
       return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/40';
-    case 'დასრულებული':
-    case 'ჩაბარებულია':
-    case 'delivered':
+    case 'დასრულებული': case 'ჩაბარებულია': case 'delivered': case 'completed': case 'доставлен': case 'завершён':
       return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
-    case 'გაუქმებული':
-    case 'cancelled':
+    case 'გაუქმებული': case 'cancelled': case 'canceled': case 'отменён':
       return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
     default:
       return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
   }
+};
+
+const localizeOrderStatus = (status, lang = 'ka') => {
+  const key = normalizeOrderStatus(status);
+  const labels = {
+    'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
+    'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
+    'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
+    'დასრულებული': ['დასრულებული', 'Completed', 'Завершён'], completed: ['დასრულებული', 'Completed', 'Завершён'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['დასრულებული', 'Completed', 'Завершён'],
+    'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
+  };
+  const languageIndex = lang === 'en' ? 1 : lang === 'ru' ? 2 : 0;
+  return labels[key]?.[languageIndex] || status || labels.new[languageIndex];
 };
 
 export default function App() {
@@ -943,12 +951,12 @@ export default function App() {
     const password = authForm.password;
 
     if (!email || !password) {
-      alert('შეიყვანეთ ელ-ფოსტა და პაროლი.');
+      alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
       return;
     }
 
     if (password.length < 6) {
-      alert('პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
+      alert(currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
       return;
     }
 
@@ -958,7 +966,7 @@ export default function App() {
         const phone = authForm.phone.trim();
 
         if (!name || !phone) {
-          alert('შეავსეთ სახელი და ტელეფონის ნომერი.');
+          alert(currentLang === 'en' ? 'Enter your name and phone number.' : currentLang === 'ru' ? 'Укажите имя и номер телефона.' : 'შეავსეთ სახელი და ტელეფონის ნომერი.');
           return;
         }
 
@@ -990,7 +998,7 @@ export default function App() {
             password: ''
           });
 
-          showToast('🎉 რეგისტრაცია წარმატებულია!');
+          showToast(currentLang === 'en' ? '🎉 Registration successful!' : currentLang === 'ru' ? '🎉 Регистрация прошла успешно!' : '🎉 რეგისტრაცია წარმატებულია!');
         } else {
           setIsAuthOpen(false);
 
@@ -1002,7 +1010,7 @@ export default function App() {
           });
 
           alert(
-            'რეგისტრაცია მიღებულია. შესვლის დასასრულებლად შეამოწმეთ ელ-ფოსტა და დაადასტურეთ ანგარიში.'
+            currentLang === 'en' ? 'Registration received. Check your email and confirm your account to finish signing in.' : currentLang === 'ru' ? 'Заявка на регистрацию принята. Проверьте почту и подтвердите аккаунт, чтобы завершить вход.' : 'რეგისტრაცია მიღებულია. შესვლის დასასრულებლად შეამოწმეთ ელ-ფოსტა და დაადასტურეთ ანგარიში.'
           );
         }
       } else {
@@ -1018,7 +1026,7 @@ export default function App() {
 
         if (!data.session || !data.user) {
           throw new Error(
-            'ავტორიზაციის სესია ვერ შეიქმნა. სცადეთ ხელახლა.'
+            currentLang === 'en' ? 'Could not create a sign-in session. Please try again.' : currentLang === 'ru' ? 'Не удалось создать сеанс входа. Попробуйте еще раз.' : 'ავტორიზაციის სესია ვერ შეიქმნა. სცადეთ ხელახლა.'
           );
         }
 
@@ -1032,7 +1040,7 @@ export default function App() {
           password: ''
         });
 
-        showToast('🔑 ავტორიზაცია წარმატებულია!');
+        showToast(currentLang === 'en' ? '🔑 Signed in successfully!' : currentLang === 'ru' ? '🔑 Вход выполнен успешно!' : '🔑 ავტორიზაცია წარმატებულია!');
       }
     } catch (error) {
       console.error('Supabase authentication error:', error);
@@ -1042,18 +1050,18 @@ export default function App() {
       if (
         message.toLowerCase().includes('invalid login credentials')
       ) {
-        alert('არასწორი ელ-ფოსტა ან პაროლი.');
+        alert(currentLang === 'en' ? 'Incorrect email or password.' : currentLang === 'ru' ? 'Неверная почта или пароль.' : 'არასწორი ელ-ფოსტა ან პაროლი.');
       } else if (
         message.toLowerCase().includes('user already registered')
       ) {
-        alert('ეს ელ-ფოსტა უკვე რეგისტრირებულია. სცადეთ შესვლა.');
+        alert(currentLang === 'en' ? 'This email is already registered. Please sign in.' : currentLang === 'ru' ? 'Этот адрес электронной почты уже зарегистрирован. Войдите в аккаунт.' : 'ეს ელ-ფოსტა უკვე რეგისტრირებულია. სცადეთ შესვლა.');
       } else if (
         message.toLowerCase().includes('email not confirmed')
       ) {
-        alert('გთხოვთ, ჯერ დაადასტუროთ ელ-ფოსტა.');
+        alert(currentLang === 'en' ? 'Please confirm your email address first.' : currentLang === 'ru' ? 'Сначала подтвердите адрес электронной почты.' : 'გთხოვთ, ჯერ დაადასტუროთ ელ-ფოსტა.');
       } else {
         alert(
-          `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
+          currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
         );
       }
     }
@@ -1070,12 +1078,12 @@ export default function App() {
       setCurrentUser(null);
       setActiveTab('store');
 
-      showToast('ანგარიშიდან წარმატებით გამოხვედით.');
+      showToast(currentLang === 'en' ? 'Signed out successfully.' : currentLang === 'ru' ? 'Вы успешно вышли из аккаунта.' : 'ანგარიშიდან წარმატებით გამოხვედით.');
     } catch (error) {
       console.error('Supabase logout error:', error);
 
       alert(
-        'ანგარიშიდან გამოსვლა ვერ მოხერხდა. სცადეთ ხელახლა.'
+        currentLang === 'en' ? 'Could not sign out. Please try again.' : currentLang === 'ru' ? 'Не удалось выйти из аккаунта. Попробуйте еще раз.' : 'ანგარიშიდან გამოსვლა ვერ მოხერხდა. სცადეთ ხელახლა.'
       );
     }
   };
@@ -1350,9 +1358,16 @@ export default function App() {
           setIsComparisonOpen={setIsComparisonOpen}
           setIsTrackerOpen={setIsTrackerOpen}
           setIsNotificationsOpen={setIsNotificationsOpen}
+          setSupportOpen={setSupportOpen}
+          setIsTermsOpen={setIsTermsOpen}
+          setIsWarrantyOpen={setIsWarrantyOpen}
+          adminLoggedIn={adminLoggedIn}
           unreadNotificationsCount={unreadNotificationsCount}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
           handleInstallClick={handleInstallClick}
           currentLang={currentLang}
           setCurrLang={setCurrLang}
@@ -1372,20 +1387,10 @@ export default function App() {
         </div>
       )}
 
-      <div className="geostore-wardrobe-shortcut w-full max-w-[1440px] mx-auto px-4 sm:px-6 pt-2 flex justify-end box-border">
-        <button
-          onClick={() => setActiveTab('wardrobe')}
-          aria-label={t.wardrobe}
-          className="px-4 py-2 rounded-xl font-semibold text-xs transition flex items-center gap-2 cursor-pointer border border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
-        >
-          <Sparkles className="w-4 h-4" />
-          {t.wardrobe}
-        </button>
-      </div>
-
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
           <StoreView
+            currentLang={currentLang}
             siteSettings={siteSettings}
             promoSlots={promoSlots}
             categories={categories}
@@ -1402,17 +1407,14 @@ export default function App() {
         )}
 
         {activeTab === 'wardrobe' && (
-          <div className="geostore-wardrobe-premium">
-            <AIDigitalWardrobe
-              products={products}
-              addToCart={addToCart}
-              formatPrice={formatPrice}
-            />
-          </div>
+          <AIDigitalWardrobe
+            products={products}
+            addToCart={addToCart}
+            formatPrice={formatPrice}
+          />
         )}
 
         {activeTab === 'admin' && (
-          <div className="geostore-admin-premium">
           <AdminDashboardPro
             adminLoggedIn={adminLoggedIn}
             setAdminLoggedIn={setAdminLoggedIn}
@@ -1448,7 +1450,6 @@ export default function App() {
             deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
           />
-          </div>
         )}
 
         {activeTab === 'wishlist' && (
@@ -1513,8 +1514,8 @@ export default function App() {
         )}
 
         {activeTab === 'cart' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+          <div className="gs-cart-page gs-cart-layout space-y-6">
+            <h2 className="gs-cart-title text-xl font-black text-white tracking-tight flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-400" />
               {t.cart}
             </h2>
@@ -1524,19 +1525,19 @@ export default function App() {
                 {t.emptyCart}
               </p>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-3">
+              <div className="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
+                      className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
-                        <h4 className="font-bold text-xs text-white">
+                        <h4 className="gs-cart-item-title font-bold text-xs text-white">
                           {item.name}
                         </h4>
 
-                        <p className="text-emerald-400 font-bold">
+                        <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} x {item.quantity}
                         </p>
                       </div>
@@ -1547,7 +1548,7 @@ export default function App() {
                             prev.filter((c) => c.id !== item.id)
                           )
                         }
-                        className="text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
+                        className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                       >
                         {t.remove}
                       </button>
@@ -1555,7 +1556,7 @@ export default function App() {
                   ))}
                 </div>
 
-                <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
+                <div className="gs-cart-summary bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
                   <div className="space-y-2 border-b border-slate-800 pb-4">
                     <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs">
                       <Truck className="w-3.5 h-3.5" />
@@ -1633,7 +1634,7 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className="space-y-1.5 text-xs text-slate-300">
+                  <div className="gs-cart-totals space-y-1.5 text-xs text-slate-300">
                     <div className="flex justify-between">
                       <span>{t.subtotal}</span>
                       <span>{formatPrice(cartSubtotalGEL)}</span>
@@ -1676,7 +1677,7 @@ export default function App() {
                       setCheckoutError('');
                       setIsCheckoutOpen(true);
                     }}
-                    className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
+                    className="gs-cart-checkout w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-xl shadow-emerald-500/20 transition cursor-pointer"
                   >
                     {t.checkout}
                   </button>
@@ -1687,8 +1688,8 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && currentUser && (
-          <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
-            <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+          <div className="gs-profile-page max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+            <div className="gs-profile-card bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h2 className="text-base font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <User className="w-5 h-5 text-emerald-400" />
                 {t.profile}
@@ -1697,7 +1698,7 @@ export default function App() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-slate-300 pt-2">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
-                    Name
+                    {currentLang === 'en' ? 'Name' : currentLang === 'ru' ? 'Имя' : 'სახელი'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
@@ -1707,7 +1708,7 @@ export default function App() {
 
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
-                    Email
+                    {currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელ-ფოსტა'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block truncate">
@@ -1717,7 +1718,7 @@ export default function App() {
 
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/60">
                   <span className="text-slate-500 block text-[10px] font-bold uppercase">
-                    Phone
+                    {currentLang === 'en' ? 'Phone' : currentLang === 'ru' ? 'Телефон' : 'ტელეფონი'}
                   </span>
 
                   <b className="text-white text-sm mt-1 block">
@@ -1733,11 +1734,11 @@ export default function App() {
                 </h3>
 
                 <p className="text-slate-400 text-xs leading-relaxed">
-                  ანგარიშის დაცვა და პაროლის მართვა ხორციელდება
-                  Supabase Auth-ის მეშვეობით. PIN და Face ID
-                  ფუნქციები ამ ვერსიაში გამორთულია, რადგან ძველი
-                  იმპლემენტაცია რეალურ უსაფრთხო ავტორიზაციას არ
-                  უზრუნველყოფდა.
+                  {currentLang === 'en'
+                    ? 'Account security and password management are handled by Supabase Auth. PIN and Face ID sign-in are disabled in this version because the previous implementation did not provide reliable authentication.'
+                    : currentLang === 'ru'
+                      ? 'Защита аккаунта и управление паролем обеспечиваются Supabase Auth. Вход по PIN и Face ID отключён в этой версии, поскольку прежняя реализация не обеспечивала надёжную аутентификацию.'
+                      : 'ანგარიშის დაცვა და პაროლის მართვა ხორციელდება Supabase Auth-ის მეშვეობით. PIN და Face ID ფუნქციები ამ ვერსიაში გამორთულია, რადგან ძველი იმპლემენტაცია რეალურ უსაფრთხო ავტორიზაციას არ უზრუნველყოფდა.'}
                 </p>
               </div>
 
@@ -1749,7 +1750,7 @@ export default function App() {
               </button>
             </div>
 
-            <div className="bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
+            <div className="gs-profile-orders bg-slate-900/40 border border-slate-800/80 p-8 rounded-[2.5rem] space-y-4 text-xs shadow-2xl backdrop-blur-2xl">
               <h3 className="text-sm font-black text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
                 <ShoppingBag className="w-4 h-4 text-emerald-400" />
                 {t.orderHistory}
@@ -1772,13 +1773,11 @@ export default function App() {
                     .map((order) => (
                       <div
                         key={order.id}
-                        className="bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
+                        className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-black text-emerald-400">
-                              #{order.id}
-                            </span>
+                            <span className="gs-profile-order-code font-black text-emerald-400">#{order.id}</span>
 
                             <span className="text-slate-500 text-[10px]">
                               ({order.date})
@@ -1786,11 +1785,11 @@ export default function App() {
                           </div>
 
                           <p className="text-slate-300 text-[11px]">
-                            📍 Address: {order.address}
+                            📍 {currentLang === 'en' ? 'Address' : currentLang === 'ru' ? 'Адрес' : 'მისამართი'}: {order.address}
                           </p>
 
                           <p className="text-slate-400 text-[11px]">
-                            📞 Phone: {order.phone}
+                            📞 {currentLang === 'en' ? 'Phone' : currentLang === 'ru' ? 'Телефон' : 'ტელეფონი'}: {order.phone}
                           </p>
                         </div>
 
@@ -1800,7 +1799,7 @@ export default function App() {
                           </span>
 
                           <span className={`${getOrderStatusClasses(order.status || 'New')} px-3 py-1 rounded-xl text-[10px] font-bold mt-1`}>
-                            {order.status || 'New'}
+                            {localizeOrderStatus(order.status || 'New', currentLang)}
                           </span>
                         </div>
                       </div>
@@ -1812,39 +1811,43 @@ export default function App() {
         )}
       </main>
 
-      <div className="fixed bottom-6 left-6 z-50">
+      <div className="gs-floating-ai">
         <button
+          type="button"
           onClick={() => setIsAiAssistantOpen(true)}
-          className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black p-4 rounded-full shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer border border-emerald-300/40"
+          className="gs-floating-action gs-floating-action--ai"
+          aria-label={currentLang === 'en' ? 'Open AI assistant' : currentLang === 'ru' ? 'Открыть AI-помощника' : 'AI ასისტენტის გახსნა'}
         >
-          <div className="relative">
-            <Bot className="w-6 h-6 animate-pulse" />
-            <Sparkles className="w-3.5 h-3.5 text-slate-950 absolute -top-1 -right-1" />
-          </div>
-
-          <span className="hidden group-hover:inline text-xs font-black pr-1 tracking-tight">
-            AI Assistant
+          <span className="gs-floating-action-icon">
+            <Bot aria-hidden="true" />
+            <Sparkles className="gs-floating-sparkle" aria-hidden="true" />
           </span>
+          <span className="gs-floating-action-copy">
+            <strong>{currentLang === 'en' ? 'AI Assistant' : currentLang === 'ru' ? 'AI-помощник' : 'AI ასისტენტი'}</strong>
+            <small>{currentLang === 'en' ? 'Style & recommendations' : currentLang === 'ru' ? 'Стиль и рекомендации' : 'რჩევები და შერჩევა'}</small>
+          </span>
+          <span className="gs-floating-action-arrow" aria-hidden="true">↗</span>
         </button>
       </div>
 
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="gs-floating-support">
         {supportOpen ? (
-          <div className="w-80 bg-slate-900/90 border border-slate-800/80 rounded-[2.5rem] shadow-2xl p-5 space-y-4 text-xs text-white backdrop-blur-3xl animate-in fade-in duration-300">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h4 className="font-black flex items-center gap-2 text-emerald-400">
-                <MessageSquare className="w-4 h-4" />
-                {t.supportChat}
-              </h4>
-
+          <div className="gs-support-panel">
+            <div className="gs-support-panel-heading">
+              <span className="gs-support-heading-icon"><MessageSquare aria-hidden="true" /></span>
+              <span className="gs-support-heading-copy">
+                <strong>{t.supportChat}</strong>
+                <small>{currentLang === 'en' ? 'GEOSTORE · Customer care' : currentLang === 'ru' ? 'GEOSTORE · Поддержка клиентов' : 'GEOSTORE · მომხმარებელთა დახმარება'}</small>
+              </span>
               <button
+                type="button"
                 onClick={() => setSupportOpen(false)}
-                className="text-slate-400 hover:text-white font-black text-sm cursor-pointer p-1"
+                className="gs-support-close"
+                aria-label={currentLang === 'en' ? 'Close' : currentLang === 'ru' ? 'Закрыть' : 'დახურვა'}
               >
-                ✕
+                <X aria-hidden="true" />
               </button>
             </div>
-
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -1886,52 +1889,60 @@ export default function App() {
                     );
                   }
 
-                  alert('✅ Support ticket sent successfully!');
+                  alert(currentLang === 'en'
+                    ? 'Support request sent successfully.'
+                    : currentLang === 'ru'
+                      ? 'Обращение в поддержку успешно отправлено.'
+                      : 'მხარდაჭერის მოთხოვნა წარმატებით გაიგზავნა.');
 
                   e.target.reset();
                   setSupportOpen(false);
                 } catch (error) {
                   console.error('Support ticket error:', error);
                   alert(
-                    error.message || 'Error sending message.'
+                    error.message || (currentLang === 'en'
+                      ? 'Could not send the support request.'
+                      : currentLang === 'ru'
+                        ? 'Не удалось отправить обращение в поддержку.'
+                        : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.')
                   );
                 }
               }}
-              className="space-y-3"
+              className="gs-support-form"
             >
               <input
                 type="text"
                 name="cname"
-                placeholder="Your Name *"
+                placeholder={currentLang === 'en' ? 'Your name *' : currentLang === 'ru' ? 'Ваше имя *' : 'თქვენი სახელი *'}
                 required
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner"
+                className="gs-support-field"
               />
 
               <input
                 type="email"
                 name="cemail"
-                placeholder="Email"
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner"
+                placeholder={currentLang === 'en' ? 'Email' : currentLang === 'ru' ? 'Эл. почта' : 'ელფოსტა'}
+                className="gs-support-field"
               />
 
               <input
                 type="text"
                 name="csubject"
-                placeholder="Subject"
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 shadow-inner"
+                placeholder={currentLang === 'en' ? 'Subject' : currentLang === 'ru' ? 'Тема' : 'თემა'}
+                className="gs-support-field"
               />
 
               <textarea
                 name="cmessage"
                 rows="3"
-                placeholder="Write your message..."
+                placeholder={currentLang === 'en' ? 'Write your message...' : currentLang === 'ru' ? 'Напишите сообщение...' : 'დაწერე შეტყობინება...'}
                 required
-                className="w-full bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-white outline-none focus:border-emerald-500 resize-none shadow-inner"
+                className="gs-support-field"
               />
 
               <button
                 type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer"
+                className="gs-support-submit"
               >
                 {t.sendMessage}
               </button>
@@ -1939,19 +1950,23 @@ export default function App() {
           </div>
         ) : (
           <button
+            type="button"
             onClick={() => setSupportOpen(true)}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-full shadow-2xl transition flex items-center gap-2 group cursor-pointer"
+            className="gs-floating-action gs-floating-action--support"
+            aria-label={currentLang === 'en' ? 'Open support chat' : currentLang === 'ru' ? 'Открыть чат поддержки' : 'მხარდაჭერის ჩატის გახსნა'}
           >
-            <MessageSquare className="w-6 h-6" />
-
-            <span className="hidden group-hover:inline text-xs pr-1">
-              Support
+            <span className="gs-floating-action-icon"><MessageSquare aria-hidden="true" /></span>
+            <span className="gs-floating-action-copy">
+              <strong>{currentLang === 'en' ? 'Support' : currentLang === 'ru' ? 'Поддержка' : 'დახმარება'}</strong>
+              <small>{currentLang === 'en' ? 'We are here to help' : currentLang === 'ru' ? 'Мы готовы помочь' : 'მოგვწერე ნებისმიერ დროს'}</small>
             </span>
+            <span className="gs-support-online-dot" aria-label={currentLang === 'en' ? 'Online' : currentLang === 'ru' ? 'В сети' : 'ონლაინ'} />
           </button>
         )}
       </div>
 
       <Modals
+        currentLang={currentLang}
         isCheckoutOpen={isCheckoutOpen}
         setIsCheckoutOpen={setIsCheckoutOpen}
         checkoutForm={checkoutForm}
@@ -1998,6 +2013,7 @@ export default function App() {
       />
 
       <AiAssistantModal
+        currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         products={products}
