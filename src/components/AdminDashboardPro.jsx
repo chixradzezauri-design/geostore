@@ -969,8 +969,9 @@ export default function AdminDashboardPro({
     const column = columnByField[field];
     if (!column) return;
     const val = Number(value);
-    if (!Number.isFinite(val) || val < 0) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
-    if (field === 'stock' && !Number.isInteger(val)) return alert('მარაგი უნდა იყოს მთელი რიცხვი. შეიყვანეთ ცალი რაოდენობა ათწილადის გარეშე.');
+    if (!Number.isFinite(val) || val < 0 || val > 1000000000) return alert('შეიყვანეთ სწორი რიცხვი 0-დან 1,000,000,000-მდე.');
+    if ((field === 'priceGEL' || field === 'purchaseCost') && !/^\\d+(?:\\.\\d{1,2})?$/.test(String(value).trim())) return alert('ფასი და თვითღირებულება მაქსიმუმ 2 ათწილადი ნიშნით უნდა შეიყვანოთ.');
+    if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
     const currentValue = current[column] ?? current[field];
@@ -1060,9 +1061,10 @@ export default function AdminDashboardPro({
     if (!productName || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
     if (productName.length > 160) return alert('პროდუქტის სახელი მაქსიმუმ 160 სიმბოლოს უნდა შეიცავდეს.');
     if (!String(productForm.category || '').trim() || String(productForm.category).trim().length > 80) return alert('აირჩიეთ სწორი კატეგორია (მაქსიმუმ 80 სიმბოლო).');
-    if (!Number.isFinite(Number(productForm.priceGEL)) || String(productForm.priceGEL).trim() === '' || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    const priceValue = Number(productForm.priceGEL);
+    if (!Number.isFinite(priceValue) || String(productForm.priceGEL).trim() === '' || priceValue < 0 || priceValue > 1000000000 || !/^\\d+(?:\\.\\d{1,2})?$/.test(String(productForm.priceGEL).trim())) return alert('ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
     const purchaseCost = productForm.purchaseCost === '' ? 0 : Number(productForm.purchaseCost);
-    if (!Number.isFinite(purchaseCost) || purchaseCost < 0) return alert('თვითღირებულება უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    if (!Number.isFinite(purchaseCost) || purchaseCost < 0 || purchaseCost > 1000000000 || (productForm.purchaseCost !== '' && !/^\\d+(?:\\.\\d{1,2})?$/.test(String(productForm.purchaseCost).trim()))) return alert('თვითღირებულება უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
     if (String(productForm.description || '').length > 5000) return alert('აღწერა მაქსიმუმ 5000 სიმბოლოს უნდა შეიცავდეს.');
     if (String(productForm.tags || '').length > 1000) return alert('ტეგების ველი ზედმეტად გრძელია.');
     const normalizeProductOptions = (value, label) => {
@@ -1087,9 +1089,9 @@ export default function AdminDashboardPro({
     const availableColors = normalizeProductOptions(productForm.availableColors, 'ფერები');
     if (availableColors === null) return;
     const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
-    if (!Number.isFinite(originalPrice) || originalPrice < 0) return alert('ძველი ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
-    if (originalPrice > 0 && originalPrice <= Number(productForm.priceGEL)) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
-    if (productForm.stock !== '' && (!Number.isInteger(Number(productForm.stock)) || Number(productForm.stock) < 0)) return alert('მარაგი უნდა იყოს მთელი, ნულზე არანაკლები რიცხვი.');
+    if (!Number.isFinite(originalPrice) || originalPrice < 0 || originalPrice > 1000000000 || (productForm.oldPriceGEL !== '' && !/^\\d+(?:\\.\\d{1,2})?$/.test(String(productForm.oldPriceGEL).trim()))) return alert('ძველი ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
+    if (originalPrice > 0 && originalPrice <= priceValue) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
+    if (productForm.stock !== '' && (!/^\\d+$/.test(String(productForm.stock).trim()) || !Number.isSafeInteger(Number(productForm.stock)) || Number(productForm.stock) > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
 
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const prodId = editingProductId || `prod-${Date.now()}`;
@@ -1119,10 +1121,10 @@ export default function AdminDashboardPro({
       name: productName,
       category: String(productForm.category).trim(),
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
-      price_gel: Number(productForm.priceGEL),
+      price_gel: priceValue,
       old_price_gel: originalPrice > 0 ? originalPrice : null,
       purchase_cost: purchaseCost,
-      stock: productForm.stock === '' ? 1 : Math.max(0, Math.trunc(Number(productForm.stock) || 0)),
+      stock: productForm.stock === '' ? 1 : Number(productForm.stock),
       image: mainImage,
       gallery: galleryImages,
       tags: tagsArray,
@@ -1228,7 +1230,7 @@ export default function AdminDashboardPro({
     const percent = Number(flashSaleForm.discountPercent);
     const category = String(flashSaleForm.category || 'ყველა').trim();
 
-    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\\d+(?:\\.\\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
       alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
       return;
     }
