@@ -1,9 +1,9 @@
-// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Real PIN & Passkeys Auth
+// src/components/Modals.jsx - GEOSTORE checkout, account and customer dialogs
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
-  Search, PackageCheck, Clock, Navigation, Map, KeyRound, Fingerprint, Bell, Sparkles, Tag 
+  Search, PackageCheck, Clock, Navigation, Map, Bell, Sparkles, Tag 
 } from 'lucide-react';
 
 export default function Modals({
@@ -39,9 +39,6 @@ export default function Modals({
   setSelectedRegion,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   currentUser,
-  setCurrentUser,
-  usersList = [],
-  setUsersList,
   currentLang = 'ka'
 }) {
   const termsCopy = ({
@@ -101,12 +98,7 @@ export default function Modals({
       trackerFailed: 'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.',
       notifications: 'შეტყობინებების ცენტრი', totalNotifications: 'სულ შეტყობინება:',
       markRead: 'ყველას წაკითხულად მონიშვნა', noNotifications: 'ახალი შეტყობინებები არ არის.',
-      auth: 'ავტორიზაცია', register: 'რეგისტრაცია', pinLogin: 'PIN-კოდით შესვლა',
-      standard: 'სტანდარტული', pin: 'PIN-კოდი', pinRepeat: 'გაიმეორეთ PIN-კოდი',
-      pinSave: 'PIN-კოდის შენახვა', pinEnter: 'შესვლა PIN-კოდით', pinLabel: 'PIN-კოდი',
-      pinManage: 'მართეთ თქვენი PIN-კოდი:', pinChange: 'შეცვალეთ ან დააყენეთ PIN-კოდი:',
-      pinCreate: 'შექმენით პირადი PIN-კოდი:', pinPrompt: 'შეიყვანეთ თქვენი 4-ციფრიანი PIN-კოდი:',
-      pinCheck: 'უკვე გაქვთ PIN? შემოწმება', pinNew: 'ახალი PIN-კოდის შექმნა / შეცვლა',
+      auth: 'ავტორიზაცია', register: 'რეგისტრაცია',
       name: 'სახელი', yourName: 'თქვენი სახელი', password: 'პაროლი',
       login: 'შესვლა სისტემაში', finishRegister: 'რეგისტრაციის დასრულება',
       faceId: 'Face ID-ით / Passkey-ით შესვლა',
@@ -134,12 +126,7 @@ export default function Modals({
       trackerFailed: 'Order tracking is temporarily unavailable. Please try again later.',
       notifications: 'Notifications', totalNotifications: 'Total notifications:',
       markRead: 'Mark all as read', noNotifications: 'There are no new notifications.',
-      auth: 'Sign in', register: 'Create account', pinLogin: 'Sign in with PIN',
-      standard: 'Standard', pin: 'PIN code', pinRepeat: 'Confirm PIN code',
-      pinSave: 'Save PIN code', pinEnter: 'Continue with PIN', pinLabel: 'PIN code',
-      pinManage: 'Manage your PIN code:', pinChange: 'Set or change your PIN code:',
-      pinCreate: 'Create a personal PIN code:', pinPrompt: 'Enter your 4-digit PIN code:',
-      pinCheck: 'Already have a PIN? Verify', pinNew: 'Create / change PIN code',
+      auth: 'Sign in', register: 'Create account',
       name: 'Name', yourName: 'Your name', password: 'Password',
       login: 'Sign in', finishRegister: 'Complete registration',
       faceId: 'Continue with Face ID / Passkey',
@@ -167,12 +154,7 @@ export default function Modals({
       trackerFailed: 'Отслеживание заказа временно недоступно. Попробуйте позже.',
       notifications: 'Уведомления', totalNotifications: 'Всего уведомлений:',
       markRead: 'Отметить все как прочитанные', noNotifications: 'Новых уведомлений нет.',
-      auth: 'Вход', register: 'Регистрация', pinLogin: 'Вход по PIN-коду',
-      standard: 'Стандартный', pin: 'PIN-код', pinRepeat: 'Повторите PIN-код',
-      pinSave: 'Сохранить PIN-код', pinEnter: 'Войти по PIN-коду', pinLabel: 'PIN-код',
-      pinManage: 'Управление PIN-кодом:', pinChange: 'Установите или измените PIN-код:',
-      pinCreate: 'Создайте личный PIN-код:', pinPrompt: 'Введите ваш 4-значный PIN-код:',
-      pinCheck: 'Уже есть PIN? Проверить', pinNew: 'Создать / изменить PIN-код',
+      auth: 'Вход', register: 'Регистрация',
       name: 'Имя', yourName: 'Ваше имя', password: 'Пароль',
       login: 'Войти', finishRegister: 'Завершить регистрацию',
       faceId: 'Войти с Face ID / Passkey',
@@ -201,11 +183,6 @@ export default function Modals({
     notifications: 'შეტყობინებების ცენტრი', totalNotifications: 'სულ შეტყობინება:',
     markRead: 'ყველას წაკითხულად მონიშვნა', noNotifications: 'ახალი შეტყობინებები არ არის.',
     auth: 'ავტორიზაცია', register: 'რეგისტრაცია', pinLogin: 'PIN-კოდით შესვლა',
-    standard: 'სტანდარტული', pin: 'PIN-კოდი', pinRepeat: 'გაიმეორეთ PIN-კოდი',
-    pinSave: 'PIN-კოდის შენახვა', pinEnter: 'შესვლა PIN-კოდით', pinLabel: 'PIN-კოდი',
-    pinManage: 'მართეთ თქვენი PIN-კოდი:', pinChange: 'შეცვალეთ ან დააყენეთ PIN-კოდი:',
-    pinCreate: 'შექმენით პირადი PIN-კოდი:', pinPrompt: 'შეიყვანეთ თქვენი 4-ციფრიანი PIN-კოდი:',
-    pinCheck: 'უკვე გაქვთ PIN? შემოწმება', pinNew: 'ახალი PIN-კოდის შექმნა / შეცვლა',
     name: 'სახელი', yourName: 'თქვენი სახელი', password: 'პაროლი',
     login: 'შესვლა სისტემაში', finishRegister: 'რეგისტრაციის დასრულება',
     faceId: 'Face ID-ით / Passkey-ით შესვლა',
@@ -268,12 +245,6 @@ export default function Modals({
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
 
-  const [authSubMode, setAuthSubMode] = useState('standard');
-  const [pinCode, setPinCode] = useState('');
-  const [confirmPinCode, setConfirmPinCode] = useState('');
-  const [isPinSetupMode, setIsPinSetupMode] = useState(false);
-  const [pinError, setPinError] = useState('');
-  const [failedAttempts, setFailedAttempts] = useState(0);
 
   const handleSearchOrder = async (e) => {
     e.preventDefault();
@@ -312,72 +283,6 @@ export default function Modals({
     if (['გზაშია', 'გაგზავნილი', 'კურიერთან', 'shipped', 'on the way', 'в пути', 'отправлен'].includes(s)) return 75;
     if (['მზადდება', 'მუშავდება', 'processing', 'в обработке'].includes(s)) return 40;
     return 15;
-  };
-
-  const handlePinAuthSubmit = (e) => {
-    e.preventDefault();
-    if (failedAttempts >= 3) {
-      setPinError('მცდელობების ლიმიტი ამოწურულია. გთხოვთ გამოიყენოთ პაროლი.');
-      return;
-    }
-    if (pinCode.length < 4) {
-      setPinError('PIN-კოდი უნდა შედგებოდეს მინიმუმ 4 ციფრისგან.');
-      return;
-    }
-
-    if (currentUser) {
-      if (isPinSetupMode) {
-        if (pinCode !== confirmPinCode) {
-          setPinError('PIN-კოდები არ ემთხვევა ერთმანეთს!');
-          return;
-        }
-        const encodedPin = btoa(pinCode);
-        const updatedUser = { ...currentUser, pinHash: encodedPin };
-        setCurrentUser(updatedUser);
-        if (setUsersList) {
-          setUsersList(usersList.map(u => u.email === currentUser.email ? updatedUser : u));
-        }
-        alert('🎉 PIN-კოდი წარმატებით დაყენდა / განახლდა!');
-        setIsPinSetupMode(false);
-        setAuthSubMode('standard');
-        setPinCode('');
-        setConfirmPinCode('');
-        setIsAuthOpen(false);
-      } else {
-        if (currentUser.pinHash && currentUser.pinHash === btoa(pinCode)) {
-          alert('🔓 PIN-კოდი სწორია!');
-          setFailedAttempts(0);
-          setIsAuthOpen(false);
-          setPinCode('');
-        } else {
-          setFailedAttempts(prev => prev + 1);
-          setPinError(`არასწორი PIN-კოდი! დარჩენილი მცდელობა: ${3 - (failedAttempts + 1)}`);
-        }
-      }
-    } else {
-      // A locally stored PIN must never create an authenticated user session.
-      // Only Supabase Auth can establish the signed-in identity.
-      setPinError(
-        currentLang === 'en'
-          ? 'PIN can only unlock an already authenticated account. Please sign in with your email and password.'
-          : currentLang === 'ru'
-            ? 'PIN-код может разблокировать только уже авторизованный аккаунт. Войдите по электронной почте и паролю.'
-            : 'PIN-კოდი მხოლოდ უკვე ავტორიზებული ანგარიშის განბლოკვისთვის გამოიყენება. შედით ელ-ფოსტითა და პაროლით.'
-      );
-      setPinCode('');
-    }
-  };
-
-  const handleBiometricLogin = async () => {
-    // WebAuthn requires a server-issued challenge and server-side assertion
-    // verification. A browser-only credential prompt is not authentication.
-    alert(
-      currentLang === 'en'
-        ? 'Secure Passkey / Face ID sign-in is not configured yet. Please use your email and password.'
-        : currentLang === 'ru'
-          ? 'Безопасный вход по Passkey / Face ID пока не настроен. Используйте электронную почту и пароль.'
-          : 'Passkey / Face ID-ით უსაფრთხო შესვლა ჯერ არ არის გამართული. გამოიყენეთ ელ-ფოსტა და პაროლი.'
-    );
   };
 
   return (
@@ -679,161 +584,60 @@ export default function Modals({
         </div>
       )}
 
-      {/* 4. ავტორიზაცია / რეგისტრაცია (PIN-კოდით და Face ID-ით რეალური მხარდაჭერით) */}
+      {/* 4. Supabase email/password sign-in and registration */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Lock className="w-5 h-5 text-amber-400" /> 
-                {authSubMode === 'pin' ? copy.pinLogin : authMode === 'login' ? copy.auth : copy.register}
+                <Lock className="w-5 h-5 text-amber-400" />
+                {authMode === 'login' ? copy.auth : copy.register}
               </h3>
-              <button onClick={() => setIsAuthOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex gap-2 bg-[#121216] p-1.5 rounded-2xl border border-amber-500/20 text-[11px] font-bold">
-              <button 
-                type="button" 
-                onClick={() => { setAuthSubMode('standard'); setIsPinSetupMode(false); }}
-                className={`flex-1 py-2 rounded-xl transition cursor-pointer ${authSubMode === 'standard' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                {copy.standard}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setAuthSubMode('pin')}
-                className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${authSubMode === 'pin' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                <KeyRound className="w-3.5 h-3.5" /> {copy.pin}
-              </button>
-            </div>
-
-            {authSubMode === 'pin' ? (
-              <form onSubmit={handlePinAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
-                <div className="bg-amber-500/10 p-3.5 rounded-2xl border border-amber-500/20 text-[11px] text-amber-300 space-y-1">
-                  <b>{currentUser ? (isPinSetupMode ? copy.pinChange : copy.pinManage) : (isPinSetupMode ? copy.pinCreate : copy.pinPrompt)}</b>
-                </div>
-
-                {pinError && <p className="text-rose-400 text-[11px] font-bold">{localizeMessage(pinError)}</p>}
-
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold" >{copy.pinLabel}</label>
-                  <input
-                    type="password"
-                    maxLength="6"
-                    required
-                    placeholder="••••"
-                    value={pinCode}
-                    onChange={e => setPinCode(e.target.value)}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
-                  />
-                </div>
-
-                {(isPinSetupMode || (currentUser && !currentUser.pinHash)) && (
+            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
+              {authMode === 'register' && (
+                <>
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-bold" >{copy.pinRepeat}</label>
-                    <input
-                      type="password"
-                      maxLength="6"
-                      required
-                      placeholder="••••"
-                      value={confirmPinCode}
-                      onChange={e => setConfirmPinCode(e.target.value)}
-                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
-                    />
+                    <label className="text-slate-300 font-bold">{copy.name}</label>
+                    <input type="text" required autoComplete="name" placeholder={copy.yourName} value={authForm.name}
+                      onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
+                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
-                )}
+                  <div className="space-y-1">
+                    <label className="text-slate-300 font-bold">{copy.phone}</label>
+                    <input type="tel" required autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
+                      onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
+                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+                  </div>
+                </>
+              )}
 
-                <button type="submit" disabled={failedAttempts >= 3} className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
-                  {isPinSetupMode || (currentUser && !currentUser.pinHash) ? copy.pinSave : copy.pinEnter}
-                </button>
+              <div className="space-y-1">
+                <label className="text-slate-300 font-bold">{copy.email}</label>
+                <input type="email" required autoComplete="email" placeholder="name@example.com" value={authForm.email}
+                  onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
+                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+              </div>
 
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsPinSetupMode(!isPinSetupMode)}
-                    className="text-slate-400 hover:text-amber-400 text-[11px] font-bold cursor-pointer underline"
-                  >
-                    {isPinSetupMode ? copy.pinCheck : copy.pinNew}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
-                {authMode === 'register' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-slate-300 font-bold" >{copy.name}</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder={copy.yourName}
-                        value={authForm.name}
-                        onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
-                        className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-slate-300 font-bold" >{copy.phone}</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="599 00 00 00"
-                        value={authForm.phone}
-                        onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
-                        className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                      />
-                    </div>
-                  </>
-                )}
+              <div className="space-y-1">
+                <label className="text-slate-300 font-bold">{copy.password}</label>
+                <input type="password" required autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                  onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
+                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold" >{copy.email}</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@example.com"
-                    value={authForm.email}
-                    onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold" >{copy.password}</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={authForm.password}
-                    onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                  />
-                </div>
-
-                <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-                  {authMode === 'login' ? copy.login : copy.finishRegister}
-                </button>
-
-                {authMode === 'login' && (
-                  <button 
-                    type="button"
-                    onClick={handleBiometricLogin}
-                    className="w-full bg-[#16161a] hover:bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black py-3 rounded-2xl transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
-                  >
-                    <Fingerprint className="w-4 h-4 text-amber-400" /> {copy.faceId}
-                  </button>
-                )}
-              </form>
-            )}
+              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
+                {authMode === 'login' ? copy.login : copy.finishRegister}
+              </button>
+            </form>
 
             <div className="text-center pt-2 border-t border-amber-500/20">
-              <button
-                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer"
-              >
+              <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer">
                 {authMode === 'login' ? copy.noAccount : copy.hasAccount}
               </button>
             </div>
