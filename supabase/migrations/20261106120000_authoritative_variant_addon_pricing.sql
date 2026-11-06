@@ -291,6 +291,7 @@ begin
       'selectedColor', v_item.selected_color,
       'selected_variant', v_variant_name,
       'selected_variant_id', v_variant_id,
+      'variant_stock_tracked', coalesce(v_variant->>'stock', '') <> '',
       'gift_wrap', v_gift_wrap,
       'gift_message', v_gift_message,
       'vip_warranty', v_vip_warranty,
