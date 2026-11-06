@@ -642,18 +642,30 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Product data (including potentially large product images) is fetched once
-    // per session/auth-state change, not every 15 seconds for every visitor.
+    // Product data (including potentially large product images) is fetched on
+    // load and when the visitor returns to the active tab, not every 15 seconds.
     fetchProductsFromDatabase();
 
-    if (!adminLoggedIn) return undefined;
+    const refreshProductsWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchProductsFromDatabase();
+      }
+    };
+    document.addEventListener('visibilitychange', refreshProductsWhenVisible);
+
+    if (!adminLoggedIn) {
+      return () => document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
+    }
 
     // Keep the existing admin order refresh cadence without repeatedly
     // downloading the full public catalogue.
     fetchOrders();
     const interval = setInterval(fetchOrders, 15000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
+    };
   }, [adminLoggedIn]);
 
   useEffect(() => {
