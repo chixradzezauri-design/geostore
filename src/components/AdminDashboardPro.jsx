@@ -373,6 +373,7 @@ export default function AdminDashboardPro({
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
+  const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
@@ -1150,13 +1151,27 @@ export default function AdminDashboardPro({
 
   const handleApplyFlashSale = async (e) => {
     e.preventDefault();
+
     const percent = Number(flashSaleForm.discountPercent);
-    const category = flashSaleForm.category || 'ყველა';
+    const category = String(flashSaleForm.category || 'ყველა').trim();
 
     if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
       alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
       return;
     }
+
+    if (!category) {
+      alert('აირჩიეთ პროდუქტის კატეგორია.');
+      return;
+    }
+
+    if (typeof setProducts !== 'function') {
+      alert('პროდუქტების განახლება ამჟამად მიუწვდომელია. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return;
+    }
+
+    if (isApplyingFlashSale) return;
+    setIsApplyingFlashSale(true);
 
     try {
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_apply_flash_sale', {
@@ -1173,36 +1188,41 @@ export default function AdminDashboardPro({
         throw new Error(errorText || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
       }
 
-      const updatedCount = Number(await response.json()) || 0;
+      const updatedCount = Number(await response.json());
+      if (!Number.isInteger(updatedCount) || updatedCount < 0) {
+        throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
+      }
+
       if (updatedCount === 0) {
         alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა.');
         return;
       }
 
-      if (typeof setProducts === 'function') {
-        setProducts(prev => (prev || []).map(p => {
-          if (category === 'ყველა' || p.category === category) {
-            const currentPrice = Number(p.priceGEL) || 0;
-            const savedOldPrice = Number(p.oldPriceGEL) || 0;
-            // Only reuse the saved original price when it is genuinely above the current price.
-            const basePrice = savedOldPrice > currentPrice ? savedOldPrice : currentPrice;
-            const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
-            return {
-              ...p,
-              oldPriceGEL: basePrice,
-              priceGEL: discountedPrice
-            };
-          }
-          return p;
-        }));
-      }
+      setProducts(prev => (prev || []).map(product => {
+        if (category !== 'ყველა' && product.category !== category) return product;
+
+        const currentPrice = Number(product.priceGEL ?? product.price_gel ?? 0);
+        const savedOldPrice = Number(product.oldPriceGEL ?? product.old_price_gel);
+        const basePrice = Number.isFinite(savedOldPrice) && savedOldPrice > currentPrice
+          ? savedOldPrice
+          : currentPrice;
+        const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
+
+        return {
+          ...product,
+          oldPriceGEL: basePrice,
+          priceGEL: discountedPrice
+        };
+      }));
 
       logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
       alert(`⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`);
       setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
     } catch (error) {
       console.error('Flash sale update failed:', error);
-      alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error.message || 'ქსელის შეცდომა'));
+      alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error?.message || 'ქსელის შეცდომა'));
+    } finally {
+      setIsApplyingFlashSale(false);
     }
   };
 
@@ -2987,8 +3007,8 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <button type="submit" className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
-                <Zap className="w-4 h-4" /> ფასდაკლების მასობრივად გააქტიურება
+              <button type="submit" disabled={isApplyingFlashSale} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+                <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
               </button>
             </form>
           </div>
