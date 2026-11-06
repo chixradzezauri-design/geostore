@@ -1507,6 +1507,52 @@ export default function App() {
           ? t.bigCitiesDelivery
           : t.otherDelivery;
 
+    // Demo items are never allowed to reach the production order RPC.
+    const hasDemoItems = itemsToOrder.some((item) =>
+      String(item.id || '').startsWith('demo-fashion-')
+    );
+    const allItemsAreDemo = itemsToOrder.length > 0 && itemsToOrder.every((item) =>
+      String(item.id || '').startsWith('demo-fashion-')
+    );
+
+    if (hasDemoItems && (!DEMO_CATALOG_ENABLED || !allItemsAreDemo)) {
+      const message = currentLang === 'en'
+        ? 'Demo products can only be checked out separately in Demo Catalog mode. Remove demo items or open the demo catalog.'
+        : currentLang === 'ru'
+          ? 'Тестовые товары можно оформить только отдельно в режиме демо-каталога. Удалите тестовые товары или откройте демо-каталог.'
+          : 'სატესტო პროდუქტების შეკვეთა შესაძლებელია მხოლოდ ცალკე, დემო-კატალოგის რეჟიმში. წაშალეთ დემო ნივთები ან გახსენით დემო-კატალოგი.';
+      setCheckoutError(message);
+      showToast(message);
+      setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
+      return;
+    }
+
+    if (DEMO_CATALOG_ENABLED && allItemsAreDemo) {
+      const demoOrderId = `DEMO-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+      const demoEmail = currentUser?.email || customerEmail || '';
+      setIsCheckoutOpen(false);
+      setCheckoutError('');
+      setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
+      setOrderConfirmation({
+        id: demoOrderId,
+        email: demoEmail,
+        totalGEL: Number(cartTotalGEL) || 0,
+        isDemo: true
+      });
+      setCart([]);
+      setAppliedCoupon(null);
+      showToast(
+        currentLang === 'en'
+          ? 'Demo checkout completed — no real order was created.'
+          : currentLang === 'ru'
+            ? 'Тестовое оформление завершено — реальный заказ не создан.'
+            : 'სატესტო გაფორმება დასრულდა — რეალური შეკვეთა არ შექმნილა.'
+      );
+      return;
+    }
+
     let orderUserEmail = 'guest';
     let serverOrderResult = null;
     // Keep the order ID in the outer scope: it is needed after the RPC succeeds.
@@ -1666,6 +1712,16 @@ export default function App() {
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
+        </div>
+      )}
+
+      {DEMO_CATALOG_ENABLED && (
+        <div role="status" className="mx-auto mt-3 w-[calc(100%-2rem)] max-w-[1440px] rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-center text-xs font-semibold text-amber-200">
+          {currentLang === 'en'
+            ? 'DEMO MODE · Sample products only · Checkout does not create real orders or change stock'
+            : currentLang === 'ru'
+              ? 'ДЕМО-РЕЖИМ · Только образцы товаров · Оформление не создаёт реальные заказы и не меняет остатки'
+              : 'სატესტო რეჟიმი · მხოლოდ ნიმუშები · შეკვეთა რეალურად არ იქმნება და მარაგი არ იცვლება'}
         </div>
       )}
 
