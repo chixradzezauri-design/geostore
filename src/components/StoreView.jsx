@@ -915,12 +915,12 @@ export default function StoreView({
                   const sizeLabel = currentLang === 'en' ? 'Size' : currentLang === 'ru' ? 'Размер' : 'ზომა';
                   const selectedOptions = [];
                   if (isCf && selectedSize) selectedOptions.push(`${sizeLabel}: ${selectedSize}`);
-                  if (selectedColor) selectedOptions.push(`${storeText.color.replace(/[:：]\\s*$/, '')}: ${selectedColor}`);
+                  if (selectedColor) selectedOptions.push(`${storeText.color.replace(/[:：]\s*$/, '')}: ${selectedColor}`);
                   let customName = selectedOptions.length
                     ? `${selectedProduct.name} (${selectedOptions.join(', ')})`
                     : selectedProduct.name;
                   if (isGiftWrapped) customName += ` + ${storeText.giftWrap}`;
-                  if (giftMessage.trim()) customName += ` [${storeText.giftMessage.replace(/[:：]\\s*$/, '')}: "${giftMessage.trim()}"]`;
+                  if (giftMessage.trim()) customName += ` [${storeText.giftMessage.replace(/[:：]\s*$/, '')}: "${giftMessage.trim()}"]`;
                   if (hasVipWarranty) customName += ` + ${storeText.vipWarranty}`;
 
                   const added = addToCart({ 
