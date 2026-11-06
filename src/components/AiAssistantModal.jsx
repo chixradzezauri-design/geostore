@@ -2,14 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle, Shirt, FolderTree } from 'lucide-react';
 
-const SUPABASE_URL = "https://xmtnszxtnfxnrojionoa.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6InhtdG5zenh0bmZ4bnJvamlvbm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MzQ0NDksImV4cCI6MjEwODMxMDQ0OX0.RtYgfVKkzW2KHNR6r9snMhTKIm16kyyDLJXr5BoVAJM";
-
-const headers = {
-  'apikey': SUPABASE_ANON_KEY,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json'
-};
+import { supabase } from '../supabaseClient';
 
 // 🔤 ქართული და ინგლისური სინონიმებისა და სტილისტური ტერმინების გაფართოებული ლექსიკონი
 const SYNONYMS = {
@@ -127,10 +120,13 @@ export default function AiAssistantModal({
   // 🔄 სრული კატალოგის დინამიური წამოღება Supabase ბაზიდან
   const fetchLiveProducts = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) {
+      // Request only public catalog columns; purchase_cost must remain private.
+      const { data, error } = await supabase
+        .from('products')
+        .select('id,sku,name,category,vendor,price_gel,old_price_gel,stock,image,tags,available_sizes,available_colors,description,material,durability')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (data && data.length > 0) {
           const formatted = data.map(p => {
             let parsedTags = [];
             if (p.tags) {
@@ -157,7 +153,7 @@ export default function AiAssistantModal({
               category: p.category || 'ზოგადი',
               priceGEL: Number(p.price_gel) || 0,
               oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
-              stock: Number(p.stock) ?? 10,
+              stock: Number.isFinite(Number(p.stock)) ? Math.max(0, Number(p.stock)) : 0,
               vendor: p.vendor || 'GEOSTORE ოფიციალური',
               image: p.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800',
               tags: parsedTags,
