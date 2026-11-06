@@ -213,14 +213,8 @@ export default function AdminDashboardPro({
     } catch {}
   };
 
-  useEffect(() => {
-    // Orders contain customer details; fetch and refresh them only for an authenticated admin.
-    if (!adminLoggedIn) return undefined;
+  // Order data is refreshed centrally by App.jsx; this function remains for post-mutation refreshes.
 
-    fetchAdminOrders();
-    const interval = setInterval(fetchAdminOrders, 15000);
-    return () => clearInterval(interval);
-  }, [adminLoggedIn]);
 
   const safeCategories = React.useMemo(() => {
     try {
@@ -353,10 +347,11 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    if (!adminLoggedIn) return undefined;
     fetchTickets();
-    const interval = setInterval(fetchTickets, 4000);
+    const interval = setInterval(fetchTickets, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
