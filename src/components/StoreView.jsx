@@ -563,7 +563,7 @@ export default function StoreView({
             const prodReviews = allReviews[prod.id] || [];
             const avgRating = prodReviews.length > 0 
               ? (prodReviews.reduce((acc, r) => acc + r.rating, 0) / prodReviews.length).toFixed(1) 
-              : '5.0';
+              : '—';
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
