@@ -177,7 +177,9 @@ export default function AdminDashboardPro({
 
   useEffect(() => {
     fetchExpenses();
-    const interval = setInterval(fetchExpenses, 5000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchExpenses();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -212,13 +214,15 @@ export default function AdminDashboardPro({
 
   useEffect(() => {
     fetchAdminOrders();
-    const interval = setInterval(fetchAdminOrders, 4000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchAdminOrders();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const safeCategories = React.useMemo(() => {
     try {
-      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
+      if (!Array.isArray(categoriesList)) return [{ id: 'fashion-clothing', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null, image: '' }];
       return categoriesList.map((cat, idx) => {
         if (!cat) return null;
         if (typeof cat === 'string') {
@@ -238,7 +242,7 @@ export default function AdminDashboardPro({
         return null;
       }).filter(Boolean);
     } catch {
-      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '', img: '' }];
+      return [{ id: 'fashion-clothing', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null, image: '', img: '' }];
     }
   }, [categoriesList]);
   
