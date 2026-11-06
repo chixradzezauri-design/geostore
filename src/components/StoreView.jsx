@@ -765,7 +765,25 @@ export default function StoreView({
                             aria-pressed={selectedColor === colName}
                             className={`gs-color-option flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === colName ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
                           >
-                            <span className="gs-color-swatch w-3.5 h-3.5 rounded-full border border-amber-400/40 bg-amber-400/80" aria-hidden="true"></span>
+                            <span
+                              className="gs-color-swatch w-3.5 h-3.5 rounded-full border border-black/15"
+                              style={{ backgroundColor: ({
+                                black: '#171717', 'შავი': '#171717', 'черный': '#171717',
+                                white: '#ffffff', 'თეთრი': '#ffffff', 'белый': '#ffffff',
+                                red: '#dc2626', 'წითელი': '#dc2626', 'красный': '#dc2626',
+                                blue: '#2563eb', 'ლურჯი': '#2563eb', 'синий': '#2563eb',
+                                green: '#16a34a', 'მწვანე': '#16a34a', 'зеленый': '#16a34a',
+                                gray: '#9ca3af', grey: '#9ca3af', 'ნაცრისფერი': '#9ca3af', 'серый': '#9ca3af',
+                                beige: '#d6c2a1', 'ბეჟი': '#d6c2a1', 'бежевый': '#d6c2a1',
+                                brown: '#854d0e', 'ყავისფერი': '#854d0e', 'коричневый': '#854d0e',
+                                pink: '#ec4899', 'ვარდისფერი': '#ec4899', 'розовый': '#ec4899',
+                                purple: '#9333ea', 'იისფერი': '#9333ea', 'фиолетовый': '#9333ea',
+                                yellow: '#eab308', 'ყვითელი': '#eab308', 'желтый': '#eab308',
+                                orange: '#f97316', 'ნარინჯისფერი': '#f97316', 'оранжевый': '#f97316',
+                                navy: '#1e3a8a', 'მუქი ლურჯი': '#1e3a8a', 'темно-синий': '#1e3a8a'
+                              })[String(colName).trim().toLowerCase()] || '#b8a58a' }}
+                              aria-hidden="true"
+                            />
                             {colName}
                           </button>
                         ))}
