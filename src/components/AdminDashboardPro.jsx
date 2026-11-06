@@ -358,7 +358,7 @@ export default function AdminDashboardPro({
     const stock = stockText === '' ? 10 : Number(stockText);
 
     if (!name || name.length > 80) return alert('ვარიანტის სახელი აუცილებელია და მაქსიმუმ 80 სიმბოლო უნდა იყოს.');
-    if (!Number.isFinite(price) || price < 0 || price > 1000000000 || !/^\\d+(?:\\.\\d{1,2})?$/.test(priceText)) {
+    if (!Number.isFinite(price) || price < 0 || price > 1000000000 || !/^\d+(?:\.\d{1,2})?$/.test(priceText)) {
       return alert('ვარიანტის ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
     }
     if (!Number.isSafeInteger(stock) || stock < 0 || stock > 1000000) {
@@ -1641,7 +1641,7 @@ export default function AdminDashboardPro({
       alert('ვენდორის სახელი სავალდებულოა და მაქსიმუმ 100 სიმბოლოს უნდა შეიცავდეს.');
       return;
     }
-    if (!/^\\d+(?:\\.\\d{1,2})?$/.test(commissionText) || !Number.isFinite(commission) || commission < 0 || commission > 100) {
+    if (!/^\d+(?:\.\d{1,2})?$/.test(commissionText) || !Number.isFinite(commission) || commission < 0 || commission > 100) {
       alert('კომისია უნდა იყოს 0-დან 100%-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
       return;
     }
