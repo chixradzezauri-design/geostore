@@ -9,7 +9,6 @@ import {
 export default function StoreView({
   currentLang = 'ka',
   siteSettings,
-  promoSlots,
   categories = [],
   selectedCategory,
   setSelectedCategory,
