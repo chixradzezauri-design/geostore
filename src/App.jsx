@@ -457,6 +457,9 @@ export default function App() {
   }, [adminLoggedIn]);
 
   useEffect(() => {
+    // Admins load their private draft in the separate authenticated effect above.
+    // Do not let a slower public-config request overwrite that draft after login.
+    if (adminLoggedIn) return undefined;
     let active = true;
     const loadPublishedStorefront = async () => {
       try {
@@ -477,7 +480,7 @@ export default function App() {
     };
     loadPublishedStorefront();
     return () => { active = false; };
-  }, []);
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     if (isCheckoutOpen || orderConfirmation || isAuthOpen || isTermsOpen || isWarrantyOpen || isTrackerOpen || isNotificationsOpen) {
