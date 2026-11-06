@@ -2876,13 +2876,13 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'banners' && (
-          <div className="space-y-6">
+          <div className="admin-banners space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Megaphone className="w-5 h-5 text-emerald-400" /> ახალი სარეკლამო ბანერის დამატება
               </h3>
-              <form onSubmit={handleAddBanner} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <form onSubmit={handleAddBanner} className="admin-banner-form space-y-4 text-xs">
+                <div className="admin-banner-fields grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <input type="text" placeholder="სათაური" required value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <input type="text" placeholder="ქვესათაური / აღწერა" value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
@@ -2892,9 +2892,9 @@ export default function AdminDashboardPro({
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">აქტიური ბანერები ({bannersList?.length || 0})</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="admin-banner-list grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(bannersList || []).map(b => (
-                  <div key={b.id} className="bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs gap-3 shadow-inner">
+                  <div key={b.id} className="admin-banner-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs gap-3 shadow-inner">
                     <div className="flex items-center gap-3.5">
                       <img src={b.image} alt="" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
@@ -2911,12 +2911,12 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'categories' && (
-          <div className="space-y-6">
+          <div className="admin-category-manager space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან)
               </h3>
-              <form onSubmit={handleAddCategory} className="space-y-4 text-xs">
+              <form onSubmit={handleAddCategory} className="admin-category-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <input type="text" placeholder="სახელწოდება *" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
@@ -2976,7 +2976,7 @@ export default function AdminDashboardPro({
                     const displayImage = parentCat.image || parentCat.img;
 
                     return (
-                      <div key={parentCat.id} className="bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
+                      <div key={parentCat.id} className="admin-category-card bg-slate-950/60 border border-emerald-500/20 rounded-3xl p-5 space-y-3 shadow-inner">
                         <div className="flex justify-between items-center flex-wrap gap-3">
                           <div className="flex items-center gap-3">
                             {displayImage ? (
