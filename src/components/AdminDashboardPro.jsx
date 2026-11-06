@@ -925,12 +925,16 @@ export default function AdminDashboardPro({
     const numericFields = ['priceGEL', 'oldPriceGEL', 'purchaseCost', 'stock'];
     const val = numericFields.includes(field) ? Number(value) : value;
     if (numericFields.includes(field) && (!Number.isFinite(val) || val < 0)) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
+    const currentPrice = Number(current.priceGEL ?? current.price_gel ?? 0);
+    const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
+    if (field === 'oldPriceGEL' && val > 0 && val <= currentPrice) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს; ფასდაკლების მოსახსნელად შეიყვანეთ 0.');
+    if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
     const updated = { ...current, [field]: val };
     const payload = {
       id: String(updated.id), sku: updated.sku || null, name: updated.name,
       category: updated.category || null, brand: updated.brand || null, vendor: updated.vendor || null,
       price_gel: Number(updated.priceGEL ?? updated.price_gel ?? 0),
-      old_price_gel: updated.oldPriceGEL ?? updated.old_price_gel ?? null,
+      old_price_gel: Number(updated.oldPriceGEL ?? updated.old_price_gel ?? 0) > 0 ? Number(updated.oldPriceGEL ?? updated.old_price_gel) : null,
       purchase_cost: Number(updated.purchaseCost ?? updated.purchase_cost ?? 0),
       stock: Math.trunc(Number(updated.stock ?? 0)), image: updated.image || null,
       description: updated.description || '', gallery: updated.gallery || [], tags: updated.tags || [],
@@ -1015,6 +1019,9 @@ export default function AdminDashboardPro({
     e.preventDefault();
     if (!productForm.name.trim() || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
     if (!Number.isFinite(Number(productForm.priceGEL)) || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
+    if (!Number.isFinite(originalPrice) || originalPrice < 0) return alert('ძველი ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    if (originalPrice > 0 && originalPrice <= Number(productForm.priceGEL)) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
     if (productForm.stock !== '' && (!Number.isInteger(Number(productForm.stock)) || Number(productForm.stock) < 0)) return alert('მარაგი უნდა იყოს მთელი, ნულზე არანაკლები რიცხვი.');
 
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
@@ -1041,7 +1048,7 @@ export default function AdminDashboardPro({
       category: productForm.category,
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
       price_gel: Number(productForm.priceGEL),
-      old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
+      old_price_gel: originalPrice > 0 ? originalPrice : null,
       purchase_cost: productForm.purchaseCost ? Number(productForm.purchaseCost) : 0,
       stock: productForm.stock === '' ? 1 : Math.max(0, Math.trunc(Number(productForm.stock) || 0)),
       image: mainImage,
