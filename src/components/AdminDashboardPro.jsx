@@ -79,6 +79,31 @@ const uploadProductImage = async (imageData, productId, index) => {
   return `${SUPABASE_URL}/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/${encodedPath}`;
 };
 
+const deleteProductImages = async (imageUrls, productId) => {
+  const publicPrefix = `${SUPABASE_URL}/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`;
+  const productPrefix = `products/${String(productId)}/`;
+  const paths = [...new Set((Array.isArray(imageUrls) ? imageUrls : []).filter(url => typeof url === 'string' && url.startsWith(publicPrefix)).map(url => {
+    try {
+      const encodedPath = url.slice(publicPrefix.length).split('?')[0];
+      const path = encodedPath.split('/').map(segment => decodeURIComponent(segment)).join('/');
+      return path.startsWith(productPrefix) ? path : null;
+    } catch { return null; }
+  }).filter(Boolean))];
+  if (!paths.length) return true;
+  try {
+    const headers = await getSupabaseHeaders();
+    delete headers.Prefer;
+    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${PRODUCT_IMAGE_BUCKET}`, {
+      method: 'DELETE', headers, body: JSON.stringify({ prefixes: paths })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return true;
+  } catch (error) {
+    console.warn('GEOSTORE product image cleanup failed:', error);
+    return false;
+  }
+};
+
 const getOrderStatusClasses = (status) => {
   switch (String(status || '').trim().toLowerCase()) {
     case 'ახალი':
@@ -1048,6 +1073,7 @@ export default function AdminDashboardPro({
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const prodId = editingProductId || `prod-${Date.now()}`;
     let galleryImages = [];
+    let newlyUploadedImages = [];
     let newProdPayload;
 
     try {
@@ -1058,9 +1084,13 @@ export default function AdminDashboardPro({
       if (sourceImages.length > MAX_PRODUCT_GALLERY_IMAGES) {
         throw new Error(`პროდუქტის გალერეაში მაქსიმუმ ${MAX_PRODUCT_GALLERY_IMAGES} ფოტოა დაშვებული.`);
       }
-      galleryImages = await Promise.all(
-        sourceImages.map((image, index) => uploadProductImage(image, prodId, index))
-      );
+      newlyUploadedImages = [];
+      for (let index = 0; index < sourceImages.length; index += 1) {
+        const sourceImage = sourceImages[index];
+        const uploadedImage = await uploadProductImage(sourceImage, prodId, index);
+        galleryImages.push(uploadedImage);
+        if (String(sourceImage || '').startsWith('data:')) newlyUploadedImages.push(uploadedImage);
+      }
       const mainImage = galleryImages[0] || null;
       newProdPayload = {
       id: prodId,
@@ -1113,6 +1143,14 @@ export default function AdminDashboardPro({
         await createResponse.json();
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
+      if (editingProductId && existingProduct) {
+        const previousImages = [...new Set([
+          ...(Array.isArray(existingProduct.gallery) ? existingProduct.gallery : []),
+          existingProduct.image
+        ].filter(Boolean))];
+        const removedImages = previousImages.filter(url => !galleryImages.includes(url));
+        if (removedImages.length > 0) await deleteProductImages(removedImages, prodId);
+      }
       const localProdObject = {
         id: prodId, createdAt: existingProduct?.createdAt || new Date().toISOString(),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
@@ -1136,6 +1174,7 @@ export default function AdminDashboardPro({
       logActivity((wasEditing ? 'განახლდა' : 'დაემატა') + ' პროდუქტი: ' + newProdPayload.name);
       alert(wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!');
     } catch (error) {
+      if (newlyUploadedImages.length > 0) await deleteProductImages(newlyUploadedImages, prodId);
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
     }
   };
@@ -2947,7 +2986,7 @@ export default function AdminDashboardPro({
                   <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
-                  <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" />
                   
                   {selectedImages.length > 0 && (
                     <div className="flex gap-3 overflow-x-auto pt-3 pb-1">
