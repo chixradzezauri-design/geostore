@@ -2126,8 +2126,8 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
+            <div className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
+              <h3 className="admin-staff-list-title font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
               <div className="space-y-3">
                 {staffList.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
@@ -2143,7 +2143,7 @@ export default function AdminDashboardPro({
                               <b className="text-white text-sm">{st.name}</b>
                               <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">{st.role}</span>
                             </div>
-                            <p className="text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
+                            <p className="admin-staff-member-email text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
                           </div>
 
                           <div className="admin-staff-actions flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -2168,8 +2168,9 @@ export default function AdminDashboardPro({
                         {!isEditing && (
                           <div className="flex flex-wrap gap-1.5 pt-1 text-[10px]">
                             {Object.entries(st.permissions || {}).map(([key, val]) => (
-                              <span key={key} className={`px-2.5 py-1 rounded-xl border ${val ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-                                {key}: {val ? '✓' : '✗'}
+                              <span key={key} className={`admin-staff-permission-chip px-2.5 py-1 rounded-xl border ${val ? 'is-enabled bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'is-disabled bg-slate-900 text-slate-500 border-slate-800'}`}>
+                                <span>{({ products: 'პროდუქტები', orders: 'შეკვეთები', analytics: 'ანალიტიკა', expenses: 'ფინანსები', crm: 'CRM მომხმარებლები', settings: 'საიტის პარამეტრები' })[key] || key}</span>
+                                <span aria-label={val ? 'ჩართულია' : 'გამორთულია'}>{val ? '✓' : '✕'}</span>
                               </span>
                             ))}
                           </div>
