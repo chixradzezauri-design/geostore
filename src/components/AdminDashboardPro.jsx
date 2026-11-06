@@ -1885,10 +1885,17 @@ export default function AdminDashboardPro({
     u.phone?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
-  const filteredProducts = (products || []).filter(p => 
+  const filteredProducts = (products || []).filter(p =>
     p.name?.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
     p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
-  );
+  ).sort((left, right) => {
+    // Keep the admin catalogue in a deterministic order even when the
+    // server returns rows with identical timestamps in a different order.
+    const leftTime = Date.parse(left.createdAt || left.created_at || '') || 0;
+    const rightTime = Date.parse(right.createdAt || right.created_at || '') || 0;
+    return rightTime - leftTime ||
+      String(left.id ?? '').localeCompare(String(right.id ?? ''));
+  });
 
   // Keep this as a derived value, not a hook: the login view returns
   // before this section, so a useMemo here would change hook order
