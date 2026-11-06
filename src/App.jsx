@@ -2834,6 +2834,7 @@ export default function App() {
         isNotificationsOpen={isNotificationsOpen}
         setIsNotificationsOpen={setIsNotificationsOpen}
         notifications={notifications}
+        notificationsLoading={notificationsLoading}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
         orders={orders}
         lookupOrderForTracking={lookupOrderForTracking}
