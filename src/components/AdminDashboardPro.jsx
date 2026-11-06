@@ -128,6 +128,14 @@ const getOrderStatusClasses = (status) => {
   }
 };
 
+const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
+const isDeliveredOrderStatus = (status) =>
+  ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён'].includes(normalizeOrderStatus(status));
+const isShippedOrderStatus = (status) =>
+  ['გაგზავნილი', 'გზაშია', 'shipped', 'on the way', 'отправлен', 'в пути'].includes(normalizeOrderStatus(status));
+const isCancelledOrderStatus = (status) =>
+  ['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(normalizeOrderStatus(status));
+
 export default function AdminDashboardPro({
   adminLoggedIn,
   setAdminLoggedIn,
@@ -1711,15 +1719,22 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    const existingOrder = (orders || []).find(order => order.id === orderId);
-    if (['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed'].includes(String(existingOrder?.status || '').trim().toLowerCase()) && newStatus !== existingOrder.status) {
+    const existingOrder = (orders || []).find(order => String(order.id) === String(orderId));
+    const currentStatus = normalizeOrderStatus(existingOrder?.status);
+    const nextStatus = normalizeOrderStatus(newStatus);
+
+    if (isDeliveredOrderStatus(currentStatus) && nextStatus !== currentStatus) {
       alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
       return;
     }
-    if (existingOrder?.status === 'გაუქმებული' && newStatus !== 'გაუქმებული') {
+    if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
       setReactivationError('');
+      return;
+    }
+    if (isShippedOrderStatus(currentStatus) && !isShippedOrderStatus(nextStatus) && !isDeliveredOrderStatus(nextStatus)) {
+      alert('შეკვეთა უკვე გაგზავნილია. მისი წინა სტატუსზე დაბრუნება ან გაუქმება დაუშვებელია; საჭიროების შემთხვევაში გამოიყენეთ დაბრუნების ცალკე პროცესი.');
       return;
     }
 
@@ -2690,7 +2705,7 @@ export default function AdminDashboardPro({
                           <Printer className="w-4 h-4" /> ინვოისი
                         </button>
 
-                        {o.status === 'გაუქმებული' ? (
+                        {isCancelledOrderStatus(o.status) ? (
                           <button
                             onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
                             className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
@@ -2699,11 +2714,11 @@ export default function AdminDashboardPro({
                           </button>
                         ) : (
                           <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={['გაგზავნილი', 'დასრულებული'].includes(o.status)} title={['გაგზავნილი', 'დასრულებული'].includes(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status)} title={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
                           </div>
                         )}
                       </div>
