@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
+import { createSecureOrderId, groupCheckoutItems, isReusableCheckout } from './utils/orderSafety';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1413,27 +1414,13 @@ export default function App() {
 
       // Keep one idempotency key for the same checkout payload across retries
       // and page reloads. Only a SHA-256 digest (never contact details) is persisted.
-      const groupedCheckoutItems = new Map();
-      itemsToOrder.forEach((item) => {
-        const key = JSON.stringify([String(item.id), item.selected_size || null, item.selected_color || null]);
-        const current = groupedCheckoutItems.get(key) || {
-          id: String(item.id),
-          selected_size: item.selected_size || null,
-          selected_color: item.selected_color || null,
-          quantity: 0
-        };
-        current.quantity += Number(item.quantity) || 0;
-        groupedCheckoutItems.set(key, current);
-      });
       const checkoutFingerprintPayload = {
         customer_name: customerName,
         phone: customerPhone,
         address: customerAddress,
         user_email: orderSession?.user?.email || 'guest',
         customer_email: orderUserEmail.toLowerCase(),
-        items: Array.from(groupedCheckoutItems.entries())
-          .sort(([left], [right]) => left.localeCompare(right))
-          .map(([, item]) => item),
+        items: groupCheckoutItems(itemsToOrder),
         coupon_code: (appliedCoupon?.code || '').trim().toUpperCase(),
         delivery_region: selectedRegion
       };
@@ -1459,15 +1446,13 @@ export default function App() {
         }
       }
       const reusableCheckout = [pendingCheckoutRef.current, storedPendingCheckout]
-        .find((entry) => entry?.fingerprint === checkoutFingerprint && /^ORD-[A-F0-9]{32}$/.test(entry.orderId));
+        .find((entry) => isReusableCheckout(entry, checkoutFingerprint));
 
       if (reusableCheckout) {
         orderId = reusableCheckout.orderId;
       } else {
         // 128-bit random ID prevents predictable order references; legacy IDs remain valid.
-        const randomOrderIdBytes = new Uint8Array(16);
-        window.crypto.getRandomValues(randomOrderIdBytes);
-        orderId = `ORD-${Array.from(randomOrderIdBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+        orderId = createSecureOrderId(window.crypto);
       }
 
       pendingCheckoutRef.current = { fingerprint: checkoutFingerprint, orderId };
