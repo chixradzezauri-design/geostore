@@ -843,19 +843,19 @@ export default function StoreView({
                     <span>{storeText.inStock} <b className="text-amber-400 font-black">{storeText.available}</b> {storeText.deliveryFit}</span>
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t border-amber-500/20">
-                    <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
+                    <h3 className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
                       <MessageSquare className="w-4 h-4 text-amber-400" /> {storeText.reviews} ({(allReviews[selectedProduct.id] || []).length})
                     </h3>
 
-                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
+                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
                       <span className="text-amber-300 font-bold block text-xs">{storeText.leaveReview}</span>
-                      <div className="flex gap-2 items-center">
+                      <div className="gs-product-review-rating flex gap-2 items-center">
                         <span className="text-slate-400">{storeText.rating}</span>
                         <select 
                           value={newReviewRating} 
                           onChange={e => setNewReviewRating(Number(e.target.value))}
-                          className="bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
+                          className="gs-product-review-rating-select bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
                         >
                           <option value="5">⭐⭐⭐⭐⭐ (5)</option>
                           <option value="4">⭐⭐⭐⭐ (4)</option>
@@ -870,7 +870,7 @@ export default function StoreView({
                         value={newReviewAuthor} 
                         onChange={e => setNewReviewAuthor(e.target.value)}
                         required
-                        className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
+                        className="gs-product-review-field w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
                       />
                       <textarea 
                         placeholder={storeText.reviewPlaceholder} 
@@ -878,10 +878,10 @@ export default function StoreView({
                         onChange={e => setNewReviewComment(e.target.value)}
                         required
                         rows="2"
-                        className="w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
+                        className="gs-product-review-field gs-product-review-comment w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400 resize-none"
                       ></textarea>
 
-                      <div className="flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
+                      <div className="gs-product-review-upload flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                         <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
                           <input type="file" accept="image/*" onChange={handleReviewImageChange} className="hidden" />
@@ -889,30 +889,30 @@ export default function StoreView({
                         {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
 
-                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
+                      <button type="submit" className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
                         {storeText.publishReview}
                       </button>
                     </form>
 
-                    <div className="space-y-3 pt-2">
+                    <div className="gs-product-review-list space-y-3 pt-2">
                       {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
                         <p className="text-slate-500 text-xs text-center py-4">{storeText.noReviews}</p>
                       ) : (
                         allReviews[selectedProduct.id].map(rev => (
-                          <div key={rev.id} className="bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
-                            <div className="flex justify-between items-center">
-                              <b className="text-white text-xs">{rev.author}</b>
+                          <div key={rev.id} className="gs-product-review-card bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
+                            <div className="gs-product-review-card-header flex justify-between items-center">
+                              <b className="gs-product-review-author text-white text-xs">{rev.author}</b>
                               <span className="text-[10px] text-slate-500">{rev.date}</span>
                             </div>
-                            <div className="flex items-center gap-1 text-amber-400 text-xs">
+                            <div className="gs-product-review-stars flex items-center gap-1 text-amber-400 text-xs" aria-label={`${rev.rating} / 5`}>
                               {Array.from({ length: rev.rating }).map((_, i) => (
                                 <Star key={i} className="w-3 h-3 fill-amber-400" />
                               ))}
                             </div>
-                            <p className="text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
+                            <p className="gs-product-review-comment-text text-slate-300 text-xs leading-relaxed">{rev.comment}</p>
                             {rev.image && (
                               <div className="mt-2">
-                                <img src={rev.image} alt="UGC" className="w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
+                                <img src={rev.image} alt="UGC" loading="lazy" decoding="async" className="gs-product-review-image w-24 h-24 object-cover rounded-xl border border-amber-500/30 shadow-md" />
                               </div>
                             )}
                           </div>
