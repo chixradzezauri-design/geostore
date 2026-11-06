@@ -1062,29 +1062,59 @@ export default function AdminDashboardPro({
     logActivity('გადმოიწერა პროდუქტების CSV ექსპორტი');
   };
 
-  const handleApplyFlashSale = (e) => {
+  const handleApplyFlashSale = async (e) => {
     e.preventDefault();
     const percent = Number(flashSaleForm.discountPercent);
-    if (!percent || percent <= 0) return;
+    const category = flashSaleForm.category || 'ყველა';
 
-    if (typeof setProducts === 'function') {
-      setProducts(prev => (prev || []).map(p => {
-        if (flashSaleForm.category === 'ყველა' || p.category === flashSaleForm.category) {
-          const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
-          const discountedPrice = Math.round(basePrice * (1 - percent / 100));
-          return {
-            ...p,
-            oldPriceGEL: basePrice,
-            priceGEL: discountedPrice
-          };
-        }
-        return p;
-      }));
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
+      alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
+      return;
     }
 
-    logActivity(`გააქტიურდა მასობრივი ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${flashSaleForm.category}`);
-    alert(`⚡ წარმატებით გააქტიურდა ${percent}%-იანი ფასდაკლება!`);
-    setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+    try {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_apply_flash_sale', {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_discount_percent: percent,
+          p_category: category
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
+      }
+
+      const updatedCount = Number(await response.json()) || 0;
+      if (updatedCount === 0) {
+        alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა.');
+        return;
+      }
+
+      if (typeof setProducts === 'function') {
+        setProducts(prev => (prev || []).map(p => {
+          if (category === 'ყველა' || p.category === category) {
+            const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
+            const discountedPrice = Math.round(Number(basePrice) * (1 - percent / 100) * 100) / 100;
+            return {
+              ...p,
+              oldPriceGEL: basePrice,
+              priceGEL: discountedPrice
+            };
+          }
+          return p;
+        }));
+      }
+
+      logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
+      alert(`⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`);
+      setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+    } catch (error) {
+      console.error('Flash sale update failed:', error);
+      alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error.message || 'ქსელის შეცდომა'));
+    }
   };
 
   const handlePrintInvoice = (order) => {
