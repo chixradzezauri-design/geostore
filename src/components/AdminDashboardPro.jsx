@@ -1031,8 +1031,15 @@ export default function AdminDashboardPro({
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!productForm.name.trim() || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
-    if (!Number.isFinite(Number(productForm.priceGEL)) || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    const productName = String(productForm.name || '').trim();
+    if (!productName || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
+    if (productName.length > 160) return alert('პროდუქტის სახელი მაქსიმუმ 160 სიმბოლოს უნდა შეიცავდეს.');
+    if (!String(productForm.category || '').trim() || String(productForm.category).trim().length > 80) return alert('აირჩიეთ სწორი კატეგორია (მაქსიმუმ 80 სიმბოლო).');
+    if (!Number.isFinite(Number(productForm.priceGEL)) || String(productForm.priceGEL).trim() === '' || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    const purchaseCost = productForm.purchaseCost === '' ? 0 : Number(productForm.purchaseCost);
+    if (!Number.isFinite(purchaseCost) || purchaseCost < 0) return alert('თვითღირებულება უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    if (String(productForm.description || '').length > 5000) return alert('აღწერა მაქსიმუმ 5000 სიმბოლოს უნდა შეიცავდეს.');
+    if (String(productForm.tags || '').length > 1000) return alert('ტეგების ველი ზედმეტად გრძელია.');
     const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
     if (!Number.isFinite(originalPrice) || originalPrice < 0) return alert('ძველი ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
     if (originalPrice > 0 && originalPrice <= Number(productForm.priceGEL)) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
@@ -1058,12 +1065,12 @@ export default function AdminDashboardPro({
       newProdPayload = {
       id: prodId,
       sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
-      name: productForm.name,
-      category: productForm.category,
+      name: productName,
+      category: String(productForm.category).trim(),
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
       price_gel: Number(productForm.priceGEL),
       old_price_gel: originalPrice > 0 ? originalPrice : null,
-      purchase_cost: productForm.purchaseCost ? Number(productForm.purchaseCost) : 0,
+      purchase_cost: purchaseCost,
       stock: productForm.stock === '' ? 1 : Math.max(0, Math.trunc(Number(productForm.stock) || 0)),
       image: mainImage,
       gallery: galleryImages,
