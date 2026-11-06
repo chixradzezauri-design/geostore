@@ -855,9 +855,18 @@ export default function App() {
     const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
     const rawAvailableStock = Number(product?.stock ?? 0);
     const availableStock = Number.isFinite(rawAvailableStock) ? Math.max(0, Math.floor(rawAvailableStock)) : 0;
-    const sameCartLine = (item) => item.id === product.id && item.name === product.name;
+    // A product can have multiple clothing sizes/colors in one cart.
+    // Keep each selected variant as a separate line, while enforcing stock
+    // against the total quantity of the underlying product across all variants.
+    const sameProduct = (item) => item.id === product.id && item.name === product.name;
+    const sameCartLine = (item) =>
+      sameProduct(item) &&
+      (item.selectedSize || null) === (product.selectedSize || null) &&
+      (item.selectedColor || null) === (product.selectedColor || null);
     const existingCartLine = cart.find(sameCartLine);
-    const alreadyInCart = Math.max(0, Math.floor(Number(existingCartLine?.quantity) || 0));
+    const alreadyInCart = cart
+      .filter(sameProduct)
+      .reduce((total, item) => total + Math.max(0, Math.floor(Number(item.quantity) || 0)), 0);
 
     if (availableStock <= 0) {
       showToast('პროდუქტი ამჟამად მარაგში არ არის.');
