@@ -1331,25 +1331,43 @@ export default function AdminDashboardPro({
         return;
       }
 
-      setProducts(prev => (prev || []).map(product => {
-        if (category !== 'ყველა' && product.category !== category) return product;
+      // Re-read the server's final values: some products may be skipped when
+      // rounding would leave their price unchanged, and concurrent admin edits may occur.
+      let refreshedRows = null;
+      try {
+        const refreshResponse = await fetch(
+          SUPABASE_URL + '/rest/v1/products?select=id,price_gel,old_price_gel,stock&' +
+          (category === 'ყველა' ? 'order=id.asc' : 'category=eq.' + encodeURIComponent(category) + '&order=id.asc'),
+          { headers: await getSupabaseHeaders() }
+        );
+        if (refreshResponse.ok) {
+          const rows = await refreshResponse.json();
+          if (Array.isArray(rows)) refreshedRows = rows;
+        }
+      } catch (refreshError) {
+        console.warn('Flash sale saved, but product refresh failed:', refreshError);
+      }
 
-        const currentPrice = Number(product.priceGEL ?? product.price_gel ?? 0);
-        const savedOldPrice = Number(product.oldPriceGEL ?? product.old_price_gel);
-        const basePrice = Number.isFinite(savedOldPrice) && savedOldPrice > currentPrice
-          ? savedOldPrice
-          : currentPrice;
-        const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
-
-        return {
-          ...product,
-          oldPriceGEL: basePrice,
-          priceGEL: discountedPrice
-        };
-      }));
+      if (refreshedRows) {
+        const savedById = new Map(refreshedRows.map(row => [String(row.id), row]));
+        setProducts(prev => (prev || []).map(product => {
+          const saved = savedById.get(String(product.id));
+          if (!saved) return product;
+          return {
+            ...product,
+            priceGEL: Number(saved.price_gel),
+            price_gel: Number(saved.price_gel),
+            oldPriceGEL: saved.old_price_gel == null ? null : Number(saved.old_price_gel),
+            old_price_gel: saved.old_price_gel,
+            stock: saved.stock
+          };
+        }));
+      }
 
       logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
-      alert(`⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`);
+      alert(refreshedRows
+        ? `⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`
+        : `ფასდაკლება ბაზაში შენახულია (${updatedCount} პროდუქტი), თუმცა სიის განახლება ვერ მოხერხდა. განაახლეთ გვერდი, რომ ფასები ზუსტად გამოჩნდეს.`);
       setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
     } catch (error) {
       console.error('Flash sale update failed:', error);
