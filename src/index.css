@@ -7929,3 +7929,83 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size:14px!important;
   }
 }
+
+
+/* GEOSTORE — admin workspace hierarchy and responsive navigation */
+.geostore-shell .admin-dashboard-pro{
+  --admin-accent:#c2a98d;--admin-border:rgba(194,169,141,.2);--admin-muted:#aaa198;
+  width:100%;min-width:0;align-items:stretch!important;gap:20px!important;
+}
+.geostore-shell .admin-dashboard-pro>*{min-width:0}
+.geostore-shell .admin-dashboard-pro>div:first-child{
+  width:100%!important;max-width:286px!important;flex:0 0 286px!important;
+  position:sticky!important;top:16px!important;max-height:calc(100dvh - 32px)!important;
+  overflow-y:auto!important;overscroll-behavior:contain!important;padding:18px!important;
+  border:1px solid var(--admin-border)!important;border-radius:18px!important;
+  background:#111110!important;box-shadow:0 14px 44px rgba(0,0,0,.16)!important;
+}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:first-child{border-color:var(--admin-border)!important;padding-bottom:15px!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:first-child>div:first-child{border-color:var(--admin-border)!important;border-radius:10px!important;background:#211e1a!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:first-child h3{color:#f4f0ea!important;letter-spacing:.015em!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:first-child p{color:var(--admin-muted)!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2){display:flex!important;flex-direction:column!important;gap:5px!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button{
+  min-height:42px!important;padding:9px 10px!important;border:1px solid transparent!important;
+  border-radius:9px!important;background:transparent!important;color:#c7c0b7!important;
+  box-shadow:none!important;transform:none!important;text-align:left!important;font-size:11px!important;line-height:1.4!important;
+}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button:hover{border-color:var(--admin-border)!important;background:#211f1c!important;color:#fff!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button.bg-emerald-500{border-color:rgba(194,169,141,.38)!important;background:#c2a98d!important;color:#171411!important}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button>div{min-width:0}
+.geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button span{min-width:0;overflow-wrap:anywhere}
+.geostore-shell .admin-dashboard-pro>div:first-child>button{min-height:43px!important;border-radius:9px!important}
+.geostore-shell .admin-dashboard-pro>div:nth-child(2){min-width:0!important;flex:1 1 0%!important;gap:18px!important}
+.geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child{
+  min-width:0!important;padding:19px 22px!important;border:1px solid var(--admin-border)!important;
+  border-radius:17px!important;background:#111110!important;box-shadow:0 12px 36px rgba(0,0,0,.14)!important;
+}
+.geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child h2{color:#f6f2ec!important;font-size:16px!important;line-height:1.45!important}
+.geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child p{color:var(--admin-muted)!important;line-height:1.55!important}
+.geostore-shell .admin-dashboard-pro .admin-analytics-toolbar,.geostore-shell .admin-dashboard-pro .admin-analytics-card,
+.geostore-shell .admin-dashboard-pro .admin-orders-panel,.geostore-shell .admin-dashboard-pro .admin-order-card,
+.geostore-shell .admin-dashboard-pro .admin-profit-calculator,.geostore-shell .admin-dashboard-pro .admin-staff-panel,
+.geostore-shell .admin-dashboard-pro .admin-ai-analyst,.geostore-shell .admin-dashboard-pro .admin-expense-row{
+  border-color:var(--admin-border)!important;background:#111110!important;box-shadow:0 10px 30px rgba(0,0,0,.12)!important;
+}
+.geostore-shell .admin-dashboard-pro .admin-analytics-card,.geostore-shell .admin-dashboard-pro .admin-order-card{border-radius:13px!important}
+.geostore-shell .admin-dashboard-pro .admin-analytics-card>p:first-child{color:#c8c0b6!important;line-height:1.55!important}
+.geostore-shell .admin-dashboard-pro .admin-analytics-card>p:nth-child(2){overflow-wrap:anywhere!important;font-variant-numeric:tabular-nums!important}
+.geostore-shell .admin-dashboard-pro .admin-orders-panel{padding:clamp(15px,2.3vw,25px)!important;border-radius:17px!important}
+.geostore-shell .admin-dashboard-pro .admin-orders-header,.geostore-shell .admin-dashboard-pro .admin-orders-toolbar{gap:12px!important}
+.geostore-shell .admin-dashboard-pro .admin-orders-header{border-color:var(--admin-border)!important}
+.geostore-shell .admin-dashboard-pro .admin-orders-header h3{color:#f3eee7!important;font-size:15px!important;line-height:1.5!important}
+.geostore-shell .admin-dashboard-pro .admin-orders-header p{color:var(--admin-muted)!important;line-height:1.55!important}
+.geostore-shell .admin-dashboard-pro .admin-order-card{padding:15px!important;border-radius:13px!important}
+.geostore-shell .admin-dashboard-pro .admin-order-card-heading{border-color:rgba(255,255,255,.09)!important}
+.geostore-shell .admin-dashboard-pro .admin-order-card-heading>*,.geostore-shell .admin-dashboard-pro .admin-order-card-customer>*{min-width:0!important;overflow-wrap:anywhere!important}
+.geostore-shell .admin-dashboard-pro .admin-orders-search input,.geostore-shell .admin-dashboard-pro input:not([type="checkbox"]):not([type="radio"]),
+.geostore-shell .admin-dashboard-pro select,.geostore-shell .admin-dashboard-pro textarea{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+.geostore-shell .admin-dashboard-pro button{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:1023px){
+ .geostore-shell .admin-dashboard-pro{gap:14px!important}
+ .geostore-shell .admin-dashboard-pro>div:first-child{position:relative!important;top:auto!important;max-width:none!important;flex:0 0 auto!important;max-height:none!important;overflow:visible!important;padding:15px!important}
+ .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;max-height:270px!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-right:2px!important}
+ .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button{min-width:0!important;min-height:43px!important;padding:8px!important;font-size:10px!important}
+}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro{padding-left:0!important;padding-right:0!important}
+ .geostore-shell .admin-dashboard-pro>div:first-child{border-radius:14px!important}
+ .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child{align-items:stretch!important;padding:15px!important;border-radius:14px!important}
+ .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child>div:last-child{width:100%!important}
+ .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child>div:last-child>button{width:100%!important;min-height:43px!important;justify-content:center!important}
+ .geostore-shell .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ .geostore-shell .admin-dashboard-pro .admin-analytics-card{padding:15px!important}
+ .geostore-shell .admin-dashboard-pro .admin-analytics-card>p:nth-child(2){font-size:25px!important}
+ .geostore-shell .admin-dashboard-pro .admin-orders-panel{padding:14px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-card{padding:12px!important}
+}
+@media(max-width:360px){
+ .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button{font-size:9px!important;gap:4px!important}
+ .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button>div{gap:6px!important}
+ .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child h2{font-size:14px!important}
+}
