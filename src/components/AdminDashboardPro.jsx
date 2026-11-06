@@ -25,6 +25,57 @@ const getSupabaseHeaders = async () => {
   };
 };
 
+const PRODUCT_IMAGE_BUCKET = 'storefront-media';
+const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_PRODUCT_GALLERY_IMAGES = 10;
+const PRODUCT_IMAGE_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif'
+};
+
+const uploadProductImage = async (imageData, productId, index) => {
+  const value = String(imageData || '').trim();
+  if (!value.startsWith('data:')) return value;
+
+  const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
+  if (!match) throw new Error('ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
+
+  const mimeType = match[1].toLowerCase();
+  const base64 = match[2];
+  const estimatedBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
+  if (estimatedBytes <= 0 || estimatedBytes > MAX_PRODUCT_IMAGE_BYTES) {
+    throw new Error('თითოეული ფოტოს ზომა არ უნდა აღემატებოდეს 5 MB-ს.');
+  }
+
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let offset = 0; offset < binary.length; offset += 1) bytes[offset] = binary.charCodeAt(offset);
+
+  const path = `products/${encodeURIComponent(String(productId))}/${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}.${PRODUCT_IMAGE_TYPES[mimeType]}`;
+  const headers = await getSupabaseHeaders();
+  delete headers.Prefer;
+  headers['Content-Type'] = mimeType;
+  headers['x-upsert'] = 'false';
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${PRODUCT_IMAGE_BUCKET}/${path}`,
+    {
+      method: 'POST',
+      headers,
+      body: new Blob([bytes], { type: mimeType })
+    }
+  );
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error('ფოტოს Storage-ში ატვირთვა ვერ მოხერხდა: ' + detail);
+  }
+
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+  return `${SUPABASE_URL}/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/${encodedPath}`;
+};
+
 const getOrderStatusClasses = (status) => {
   switch (String(status || '').trim().toLowerCase()) {
     case 'ახალი':
@@ -903,19 +954,35 @@ export default function AdminDashboardPro({
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = '';
     if (files.length === 0) return;
 
-    const promises = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    });
+    const currentCount = (selectedImages || []).length;
+    if (currentCount + files.length > MAX_PRODUCT_GALLERY_IMAGES) {
+      alert(`პროდუქტის გალერეაში მაქსიმუმ ${MAX_PRODUCT_GALLERY_IMAGES} ფოტოს დამატებაა შესაძლებელი.`);
+      return;
+    }
 
-    Promise.all(promises).then(base64Images => {
-      setSelectedImages(prev => [...(prev || []), ...base64Images]);
-    });
+    const invalidFile = files.find(file =>
+      !Object.prototype.hasOwnProperty.call(PRODUCT_IMAGE_TYPES, file.type) ||
+      file.size <= 0 ||
+      file.size > MAX_PRODUCT_IMAGE_BYTES
+    );
+    if (invalidFile) {
+      alert('გამოიყენეთ JPG, PNG, WEBP ან GIF ფორმატი. თითოეული ფოტოს ზომა მაქსიმუმ 5 MB უნდა იყოს.');
+      return;
+    }
+
+    const promises = files.map(file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('ფოტოს წაკითხვა ვერ მოხერხდა.'));
+      reader.readAsDataURL(file);
+    }));
+
+    Promise.all(promises)
+      .then(base64Images => setSelectedImages(prev => [...(prev || []), ...base64Images]))
+      .catch(error => alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.'));
   };
 
   const handleEditProduct = (p) => {
@@ -950,12 +1017,23 @@ export default function AdminDashboardPro({
     if (!Number.isFinite(Number(productForm.priceGEL)) || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
     if (productForm.stock !== '' && (!Number.isInteger(Number(productForm.stock)) || Number(productForm.stock) < 0)) return alert('მარაგი უნდა იყოს მთელი, ნულზე არანაკლები რიცხვი.');
 
-    const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
-    const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-
     const prodId = editingProductId || `prod-${Date.now()}`;
-    const newProdPayload = {
+    let galleryImages = [];
+    let newProdPayload;
+
+    try {
+      const sourceImages = selectedImages.length > 0
+        ? selectedImages
+        : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800'];
+      if (sourceImages.length > MAX_PRODUCT_GALLERY_IMAGES) {
+        throw new Error(`პროდუქტის გალერეაში მაქსიმუმ ${MAX_PRODUCT_GALLERY_IMAGES} ფოტოა დაშვებული.`);
+      }
+      galleryImages = await Promise.all(
+        sourceImages.map((image, index) => uploadProductImage(image, prodId, index))
+      );
+      const mainImage = galleryImages[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
+      newProdPayload = {
       id: prodId,
       sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       name: productForm.name,
@@ -985,7 +1063,6 @@ export default function AdminDashboardPro({
       is_featured: productForm.isFeatured || false
     };
 
-    try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
         method: 'POST',
         headers: await getSupabaseHeaders(),
@@ -1036,8 +1113,8 @@ export default function AdminDashboardPro({
         const err = await res.text();
         alert('შეცდომა ბაზაში შენახვისას: ' + err);
       }
-    } catch {
-      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+    } catch (error) {
+      alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
     }
   };
 
