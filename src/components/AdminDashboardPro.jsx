@@ -2053,7 +2053,7 @@ export default function AdminDashboardPro({
 
         {adminTab === 'staff' && (
           <div className="admin-staff space-y-6">
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Users className="w-5 h-5 text-emerald-400" /> არსებული რეგისტრირებული მომხმარებლისთვის მენეჯერის უფლებების მინიჭება
               </h3>
@@ -2076,7 +2076,7 @@ export default function AdminDashboardPro({
               </form>
             </div>
 
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის ხელით შექმნა & დეტალური უფლებები (ACL)
               </h3>
