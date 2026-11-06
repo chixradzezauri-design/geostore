@@ -659,14 +659,14 @@ export default function StoreView({
                 
                 <div className="gs-product-gallery space-y-4">
                   <div className="gs-product-detail-image flex items-center justify-center h-60 sm:h-80">
-                    <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} className="max-h-full max-w-full object-contain drop-shadow-2xl" />
+                    <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
-                    <div className="flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
+                    <div className="gs-product-gallery-thumbnails flex gap-2.5 sm:gap-3 overflow-x-auto pb-2 scrollbar-none" role="group" aria-label={`${selectedProduct.name || storeText.productDetails} — ფოტოები`}>
                       {selectedProduct.gallery.map((img, idx) => (
-                        <button key={idx} onClick={() => setActiveImage(img)} className={`w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
-                          <img src={img} alt={`${selectedProduct.name || storeText.productDetails} ${idx + 1}`} className="w-full h-full object-contain rounded-xl" />
+                        <button key={idx} type="button" onClick={() => setActiveImage(img)} aria-label={`${selectedProduct.name || storeText.productDetails} — ფოტო ${idx + 1}`} aria-pressed={activeImage === img} className={`gs-product-gallery-thumb w-16 h-16 sm:w-20 sm:h-20 bg-[#060608] rounded-2xl p-2 border-2 transition cursor-pointer shrink-0 shadow ${activeImage === img ? 'border-amber-400 scale-105' : 'border-amber-500/20 hover:border-amber-400/50'}`}>
+                          <img src={img} alt={`${selectedProduct.name || storeText.productDetails} ${idx + 1}`} loading="lazy" decoding="async" draggable={false} className="w-full h-full object-contain rounded-xl" />
                         </button>
                       ))}
                     </div>
