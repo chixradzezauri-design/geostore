@@ -390,6 +390,8 @@ export default function App() {
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [storefrontDraftBusy, setStorefrontDraftBusy] = useState(false);
   const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
+  const storefrontSaveLock = useRef(false);
+  const storefrontPublishLock = useRef(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -619,7 +621,8 @@ export default function App() {
   }, [notifications]);
 
   const handleSaveStorefrontDraft = async () => {
-    if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy) return;
+    if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
+    storefrontSaveLock.current = true;
     setStorefrontDraftBusy(true);
     const uploadedAssets = [];
     try {
@@ -674,12 +677,14 @@ export default function App() {
       if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
       alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
     } finally {
+      storefrontSaveLock.current = false;
       setStorefrontDraftBusy(false);
     }
   };
 
   const handlePublishStorefront = async () => {
-    if (!adminLoggedIn || storefrontPublishBusy || storefrontDraftBusy) return;
+    if (!adminLoggedIn || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
+    storefrontPublishLock.current = true;
     setStorefrontPublishBusy(true);
     const uploadedAssets = [];
     let storefrontPublished = false;
@@ -705,7 +710,7 @@ export default function App() {
       const snapshot = {
         categories: publishedCategories,
         banners: publishedBanners,
-        siteSettings: siteSettings && typeof siteSettings === 'object' ? siteSettings : {}
+        siteSettings: siteSettings && typeof siteSettings === 'object' && !Array.isArray(siteSettings) ? siteSettings : {}
       };
       const publishedAt = new Date().toISOString();
       const configResponse = await fetch(
@@ -755,6 +760,7 @@ export default function App() {
       }
       alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
     } finally {
+      storefrontPublishLock.current = false;
       setStorefrontPublishBusy(false);
     }
   };
