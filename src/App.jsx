@@ -855,6 +855,11 @@ export default function App() {
   }, [orders, products]);
 
   const addToCart = (product, quantity = 1) => {
+    if (Number(product?.stock ?? 0) <= 0) {
+      showToast('პროდუქტი ამჟამად მარაგში არ არის.');
+      return;
+    }
+
     setCart((prev) => {
       const sameCartLine = (item) => item.id === product.id && item.name === product.name;
       const existing = prev.find(sameCartLine);
