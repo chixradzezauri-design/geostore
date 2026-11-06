@@ -1471,11 +1471,11 @@ export default function AdminDashboardPro({
     const discountPercent = Number(discountText);
     const minOrderGEL = minOrderText === '' ? 0 : Number(minOrderText);
 
-    const validDiscount = /^\\d+(?:\\.\\d{1,2})?$/.test(discountText)
+    const validDiscount = /^\d+(?:\.\d{1,2})?$/.test(discountText)
       && Number.isFinite(discountPercent)
       && discountPercent > 0
       && discountPercent <= 100;
-    const validMinimum = (minOrderText === '' || /^\\d+(?:\\.\\d{1,2})?$/.test(minOrderText))
+    const validMinimum = (minOrderText === '' || /^\d+(?:\.\d{1,2})?$/.test(minOrderText))
       && Number.isFinite(minOrderGEL)
       && minOrderGEL >= 0
       && minOrderGEL <= 1000000000;
