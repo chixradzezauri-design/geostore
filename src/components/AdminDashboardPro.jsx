@@ -934,6 +934,44 @@ export default function AdminDashboardPro({
     const val = numericFields.includes(field) ? Number(value) : value;
     if (numericFields.includes(field) && (!Number.isFinite(val) || val < 0)) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
     if (field === 'stock' && !Number.isInteger(val)) return alert('მარაგი უნდა იყოს მთელი რიცხვი. შეიყვანეთ ცალი რაოდენობა ათწილადის გარეშე.');
+    if (field === 'stock') {
+      const currentStockValue = current.stock;
+      const stockFilter = currentStockValue == null
+        ? 'stock=is.null'
+        : 'stock=eq.' + encodeURIComponent(String(currentStockValue));
+      try {
+        const response = await fetch(
+          SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + stockFilter,
+          {
+            method: 'PATCH',
+            headers: await getSupabaseHeaders(),
+            body: JSON.stringify({ stock: val })
+          }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const savedRows = await response.json();
+        if (!Array.isArray(savedRows) || savedRows.length !== 1) {
+          throw new Error('მარაგი პარალელურად შეიცვალა. განაახლეთ პროდუქტის სია და სცადეთ ხელახლა.');
+        }
+        const savedStock = Number(savedRows[0].stock);
+        if (!Number.isInteger(savedStock) || savedStock < 0) {
+          throw new Error('სერვერმა მარაგის არასწორი მნიშვნელობა დააბრუნა. განაახლეთ პროდუქტის სია.');
+        }
+        if (typeof setProducts === 'function') {
+          setProducts(prev => (prev || []).map(p =>
+            String(p.id) === String(id) ? { ...p, stock: savedStock } : p
+          ));
+        }
+        setStockDrafts(prev => {
+          const next = { ...prev };
+          delete next[String(id)];
+          return next;
+        });
+      } catch (error) {
+        alert('მარაგის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
+      }
+      return;
+    }
     const currentPrice = Number(current.priceGEL ?? current.price_gel ?? 0);
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'oldPriceGEL' && val > 0 && val <= currentPrice) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს; ფასდაკლების მოსახსნელად შეიყვანეთ 0.');
