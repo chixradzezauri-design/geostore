@@ -1577,6 +1577,8 @@ export default function App() {
             formatPrice={formatPrice}
             deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
+            onSaveStorefrontDraft={saveStorefrontDraft}
+            onPublishStorefront={publishStorefrontConfig}
           />
         )}
 
