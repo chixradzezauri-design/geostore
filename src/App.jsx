@@ -2553,16 +2553,14 @@ export default function App() {
                       method: 'POST',
                       headers: {
                         ...(await getSupabaseHeaders()),
-                        Prefer: 'return=representation'
+                        Prefer: 'return=minimal'
                       },
                       body: JSON.stringify({
                         id: ticketId,
                         customer_name: name,
                         email: email || null,
                         subject: subject || null,
-                        message,
-                        status: 'ღია',
-                        reply: null
+                        message
                       })
                     }
                   );
