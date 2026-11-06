@@ -450,7 +450,7 @@ export default function Modals({
                   className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
                 <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
               </div>
-              <input type="tel" inputMode="tel" autoComplete="tel"
+              <input type="tel" inputMode="tel" autoComplete="tel" maxLength={24}
                 placeholder={copy.orderPhone} value={searchOrderPhone}
                 onChange={e => setSearchOrderPhone(e.target.value)} required
                 className="w-full bg-[#08080a] border border-amber-500/20 px-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
