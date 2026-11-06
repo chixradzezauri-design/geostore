@@ -118,7 +118,7 @@ begin
             'selected_color', grouped.selected_color,
             'quantity', grouped.quantity
           )
-          || case when grouped.selected_variant_id is not null
+          || case when grouped.selected_variant_id is not null or grouped.selected_variant is not null
                then jsonb_build_object('selected_variant_id', grouped.selected_variant_id, 'selected_variant', grouped.selected_variant)
                else '{}'::jsonb end
           || case when grouped.gift_wrap
@@ -128,7 +128,7 @@ begin
                then jsonb_build_object('vip_warranty', true)
                else '{}'::jsonb end
           order by grouped.product_id, grouped.selected_size nulls first, grouped.selected_color nulls first,
-                   grouped.selected_variant_id nulls first, grouped.gift_wrap, grouped.vip_warranty
+                   grouped.selected_variant_id nulls first, grouped.gift_wrap, grouped.gift_message nulls first, grouped.vip_warranty
         ),
         '[]'::jsonb
       )
@@ -231,7 +231,7 @@ begin
       coalesce((item->>'vip_warranty')::boolean, false) as vip_warranty
     from jsonb_array_elements(p_order->'items') e(item)
     order by item->>'id', item->>'selected_size', item->>'selected_color',
-             item->>'selected_variant_id', item->>'gift_wrap', item->>'vip_warranty'
+             item->>'selected_variant_id', item->>'gift_wrap', item->>'gift_message', item->>'vip_warranty'
   loop
     select id, name, price_gel, purchase_cost, vendor, category, variants into v_product
       from public.products where id = v_item.product_id;
