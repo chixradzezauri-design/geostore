@@ -1233,8 +1233,13 @@ export default function App() {
         const name = authForm.name.trim();
         const phone = authForm.phone.trim();
 
-        if (!name || !phone) {
-          alert(currentLang === 'en' ? 'Enter your name and phone number.' : currentLang === 'ru' ? 'Укажите имя и номер телефона.' : 'შეავსეთ სახელი და ტელეფონის ნომერი.');
+        if (name.length < 2 || name.length > 100) {
+          alert(currentLang === 'en' ? 'Name must contain 2–100 characters.' : currentLang === 'ru' ? 'Имя должно содержать 2–100 символов.' : 'სახელი უნდა შეიცავდეს 2–100 სიმბოლოს.');
+          return;
+        }
+        const normalizedPhone = phone.replace(/\\D/g, '');
+        if (!/^\\d{9,15}$/.test(normalizedPhone)) {
+          alert(currentLang === 'en' ? 'Phone number must contain 9–15 digits.' : currentLang === 'ru' ? 'Номер телефона должен содержать 9–15 цифр.' : 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.');
           return;
         }
 
@@ -1327,6 +1332,21 @@ export default function App() {
         message.toLowerCase().includes('email not confirmed')
       ) {
         alert(currentLang === 'en' ? 'Please confirm your email address first.' : currentLang === 'ru' ? 'Сначала подтвердите адрес электронной почты.' : 'გთხოვთ, ჯერ დაადასტუროთ ელ-ფოსტა.');
+      } else if (
+        message.toLowerCase().includes('email rate limit') ||
+        message.toLowerCase().includes('too many requests')
+      ) {
+        alert(currentLang === 'en' ? 'Too many attempts. Please wait a few minutes and try again.' : currentLang === 'ru' ? 'Слишком много попыток. Подождите несколько минут и повторите.' : 'ძალიან ბევრი მცდელობაა. მოიცადეთ რამდენიმე წუთი და სცადეთ ხელახლა.');
+      } else if (
+        message.toLowerCase().includes('signup is disabled') ||
+        message.toLowerCase().includes('signups not allowed')
+      ) {
+        alert(currentLang === 'en' ? 'New registrations are temporarily unavailable.' : currentLang === 'ru' ? 'Новая регистрация временно недоступна.' : 'ახალი რეგისტრაცია დროებით მიუწვდომელია.');
+      } else if (
+        message.toLowerCase().includes('password should be at least') ||
+        message.toLowerCase().includes('weak password')
+      ) {
+        alert(currentLang === 'en' ? 'Choose a stronger password with at least 6 characters.' : currentLang === 'ru' ? 'Выберите более надежный пароль длиной не менее 6 символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი, მინიმუმ 6 სიმბოლოთი.');
       } else {
         alert(
           currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
