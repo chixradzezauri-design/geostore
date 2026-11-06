@@ -536,6 +536,14 @@ export default function AdminDashboardPro({
     });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
     const pipelineOrders = periodOrders.filter(order => !isCancelled(order) && !isDelivered(order));
+    // Legacy rows may predate status/stock audit columns. Keep them in sales
+    // history, but expose the missing audit metadata instead of implying it exists.
+    const deliveredOrdersMissingStatusDate = deliveredOrders.filter(order =>
+      !(order.status_changed_at || order.statusChangedAt)
+    ).length;
+    const deliveredOrdersWithoutStockTracking = deliveredOrders.filter(order =>
+      !(order.stock_deducted_at || order.stockDeductedAt)
+    ).length;
     const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
     const productById = new Map((products || []).map(product => [String(product.id), product]));
 
@@ -654,6 +662,7 @@ export default function AdminDashboardPro({
 
     return {
       periodOrders, deliveredOrders, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
+      deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
@@ -1934,6 +1943,17 @@ export default function AdminDashboardPro({
                 <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
               </button>
             </div>
+            {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
+              <div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block mb-1">ისტორიული შეკვეთების მონაცემების შენიშვნა</strong>
+                {financialOverview.deliveredOrdersMissingStatusDate > 0 && (
+                  <span className="block">{financialOverview.deliveredOrdersMissingStatusDate} ჩაბარებულ შეკვეთას სტატუსის ცვლილების თარიღი არ აქვს; პერიოდისთვის გამოყენებულია შეკვეთის შექმნის თარიღი.</span>
+                )}
+                {financialOverview.deliveredOrdersWithoutStockTracking > 0 && (
+                  <span className="block">{financialOverview.deliveredOrdersWithoutStockTracking} ჩაბარებულ შეკვეთაზე მარაგის ჩამოჭრის ჩანაწერი არ არსებობს; ეს ძველი შეკვეთები ფინანსურ ბრუნვაში რჩება, მაგრამ მარაგის ისტორია დადასტურებული არ არის.</span>
+                )}
+              </div>
+            )}
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-5">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
