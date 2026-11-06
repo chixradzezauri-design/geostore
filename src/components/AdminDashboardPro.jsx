@@ -1046,19 +1046,20 @@ export default function AdminDashboardPro({
       alert('ექსპორტისთვის პროდუქტები არ არის.');
       return;
     }
-    let csvContent = "data:text/csv;charset=utf-8,ID,SKU,Name,Category,Price(GEL),Stock,Vendor\r\n";
-    products.forEach(p => {
-      const row = [p.id, p.sku || 'N/A', `"${p.name}"`, `"${p.category}"`, p.priceGEL, p.stock || 1, `"${p.vendor || 'GEOSTORE'}"`];
-      csvContent += row.join(",") + "\r\n";
-    });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `geostore_products_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportCsv(
+      `geostore_products_${Date.now()}.csv`,
+      ['ID', 'SKU', 'Name', 'Category', 'Price (GEL)', 'Stock', 'Vendor'],
+      products.map(p => [
+        p.id,
+        p.sku || 'N/A',
+        p.name,
+        p.category,
+        p.priceGEL,
+        p.stock ?? 0,
+        p.vendor || 'GEOSTORE'
+      ])
+    );
     logActivity('გადმოიწერა პროდუქტების CSV ექსპორტი');
   };
 
@@ -1605,20 +1606,20 @@ export default function AdminDashboardPro({
       alert('გადმოსაწერი შეკვეთები არ არის.');
       return;
     }
-    
-    let csvContent = "data:text/csv;charset=utf-8,ID,Date,Customer,Phone,Address,Total(GEL),Status\r\n";
-    orders.forEach(o => {
-      const row = [o.id, o.date, `"${o.customerName}"`, `"${o.phone}"`, `"${o.address}"`, o.totalGEL, o.status || 'ახალი'];
-      csvContent += row.join(",") + "\r\n";
-    });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `geostore_orders_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportCsv(
+      `geostore_orders_${Date.now()}.csv`,
+      ['ID', 'Date', 'Customer', 'Phone', 'Address', 'Total (GEL)', 'Status'],
+      orders.map(o => [
+        o.id,
+        o.date,
+        o.customerName,
+        o.phone,
+        o.address,
+        o.totalGEL,
+        o.status || 'ახალი'
+      ])
+    );
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
