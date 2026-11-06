@@ -117,6 +117,19 @@ export default function AiAssistantModal({
     }
   }, [isAiAssistantOpen, selectedProduct]);
 
+  // Keep the assistant keyboard-dismissable without changing its chat or shopping flow.
+  useEffect(() => {
+    if (!isAiAssistantOpen) return undefined;
+    const handleDialogKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsAiAssistantOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleDialogKeyDown);
+    return () => document.removeEventListener('keydown', handleDialogKeyDown);
+  }, [isAiAssistantOpen, setIsAiAssistantOpen]);
+
   // 🔄 სრული კატალოგის დინამიური წამოღება Supabase ბაზიდან
   const fetchLiveProducts = async () => {
     try {
