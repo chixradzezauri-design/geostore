@@ -162,3 +162,17 @@ Privilege interpretation:
 - Anonymous product column grants do not include `purchase_cost`; the sensitive cost field is not exposed through the public catalog SELECT path.
 
 This is a catalog-level policy/grant review, not an attempted penetration test or a browser-authenticated role simulation.
+
+
+## Staged checkout migration source correction
+
+During static review, the original `20261106210000_validate_checkout_input_on_order_insert.sql` on `main` was found malformed: its phone regex was unterminated, duplicate SQL appeared after `COMMIT;`, and its selected-variant length checks did not match the camelCase keys emitted by the live checkout RPC.
+
+A corrected copy has now been saved on this maintenance branch at the same migration path. Static source checks on the corrected branch file confirmed:
+- Exactly one `BEGIN` and one `COMMIT`.
+- Exactly one validation function and one trigger definition.
+- A complete phone allowlist regex.
+- Both camelCase and snake_case size/color keys.
+- No SQL content after the final `COMMIT;`.
+
+This is source-level validation only. The corrected migration has **not** been executed against Supabase and still must wait for full migration-history reconciliation and non-production SQL testing. The `main` branch source remains unchanged by this maintenance-branch correction.
