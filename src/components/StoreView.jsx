@@ -579,6 +579,8 @@ export default function StoreView({
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
                     className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2.5 sm:p-3 bg-[#121216]/90 backdrop-blur-md rounded-2xl text-rose-400 border border-amber-500/20 hover:scale-110 transition cursor-pointer z-10 shadow-lg"
                     title={storeText.wishlistTitle}
+                    aria-label={storeText.wishlistTitle}
+                    aria-pressed={isWish}
                   >
                     <Heart className={`w-4 h-4 ${isWish ? 'fill-rose-500 text-rose-500' : ''}`} />
                   </button>
@@ -587,35 +589,37 @@ export default function StoreView({
                     onClick={(e) => { e.stopPropagation(); toggleComparison(prod); }} 
                     className={`absolute top-14 right-3 sm:top-16 sm:right-4 p-2.5 sm:p-3 backdrop-blur-md rounded-2xl border transition cursor-pointer z-10 shadow-lg ${isCompared ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#121216]/90 text-amber-400 border-amber-500/20 hover:scale-110'}`}
                     title={storeText.compareTitle}
+                    aria-label={storeText.compareTitle}
+                    aria-pressed={isCompared}
                   >
                     <Scale className="w-4 h-4" />
                   </button>
 
-                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 z-10">
+                  <div className="gs-catalog-product-badges absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 z-10">
                     {prod.oldPriceGEL && (
-                      <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{storeText.discount}</span>
+                      <span className="gs-catalog-sale-badge bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{storeText.discount}</span>
                     )}
                     {tagsArray.slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{tag}</span>
+                      <span key={idx} className="gs-catalog-tag-badge bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{tag}</span>
                     ))}
                   </div>
 
-                  <div className="absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
+                  <div className="gs-catalog-image-overlay absolute inset-0 bg-[#060608]/80 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 text-xs font-black text-amber-300 backdrop-blur-sm">
                     <Eye className="w-4 h-4 text-amber-400" /> {storeText.viewDetails}
                   </div>
                 </div>
 
                 <div className="gs-product-info gs-catalog-product-info py-3 sm:py-4 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
-                    <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
+                  <div className="gs-catalog-product-meta flex items-center justify-between">
+                    <span className="gs-catalog-vendor text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
+                    <div className="gs-catalog-rating flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
                   <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="gs-product-price gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
-                    <p className="text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
-                    {prod.oldPriceGEL && <p className="text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
+                    <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
+                    {prod.oldPriceGEL && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
