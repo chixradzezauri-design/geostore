@@ -189,9 +189,6 @@ const DEFAULT_PRODUCTS = [];
 // Never invent a live coupon. Active coupons are loaded from Supabase.
 const DEFAULT_COUPONS = [];
 
-// Storefront notifications must come from real persisted events, not demo promises.
-const DEFAULT_NOTIFICATIONS = [];
-
 // Supabase Auth მომხმარებლის ფორმატის შენარჩუნება,
 // რათა არსებული Header და პროფილის კომპონენტები იმუშაოს.
 const normalizeAuthUser = (user) => {
