@@ -156,27 +156,16 @@ export default function AdminDashboardPro({
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
+  // This is a local planning list only; it does not create Supabase Auth users or grant server permissions.
   const [staffList, setStaffList] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_staff_list');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      { 
-        id: 'st-1', 
-        name: 'გიორგი მენეჯერი', 
-        email: 'manager@geostore.ge', 
-        role: 'მენეჯერი', 
-        permissions: { products: true, orders: true, analytics: true, expenses: true, crm: true, settings: false } 
-      },
-      { 
-        id: 'st-2', 
-        name: 'ნინო ოპერატორი', 
-        email: 'operator@geostore.ge', 
-        role: 'ოპერატორი', 
-        permissions: { products: false, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
       }
-    ];
+    } catch {}
+    return [];
   });
 
   const [staffForm, setStaffForm] = useState({ 
@@ -438,7 +427,7 @@ export default function AdminDashboardPro({
       permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
     });
     logActivity(`დაემატა ახალი თანამშრომელი: ${newStaffMember.name} (${newStaffMember.role})`);
-    alert('✅ თანამშრომელი წარმატებით დაემატა სისტემას!');
+    alert('✅ ჩანაწერი დაემატა მხოლოდ ამ მოწყობილობის ლოკალურ სიას. ანგარიშის შექმნა ან წვდომის მინიჭება არ მომხდარა.');
   };
 
   const handleAddExistingUserAsStaff = (e) => {
@@ -468,7 +457,7 @@ export default function AdminDashboardPro({
     setStaffList(prev => [...prev, newStaffMember]);
     setSelectedUserEmailForStaff('');
     logActivity(`რეგისტრირებული მომხმარებელი (${newStaffMember.email}) დაწინაურდა მენეჯერად`);
-    alert(`✅ მომხმარებელი (${newStaffMember.name}) წარმატებით დაემატა მენეჯერების სიაში!`);
+    alert(`✅ მომხმარებელი (${newStaffMember.name}) დაემატა მხოლოდ ლოკალურ სიაში. მენეჯერის რეალური წვდომა არ მინიჭებულა.`);
   };
 
   const handleSaveEditedStaff = (staffId) => {
@@ -2247,9 +2236,13 @@ export default function AdminDashboardPro({
 
         {adminTab === 'staff' && (
           <div className="admin-staff space-y-6">
+            <div role="note" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs leading-6 text-amber-100">
+              <strong className="block mb-1">მნიშვნელოვანი: თანამშრომლების მართვა ჯერ რეალურ ავტორიზაციასთან დაკავშირებული არ არის.</strong>
+              ეს სია ინახება მხოლოდ ამ ბრაუზერის localStorage-ში. აქ დამატება, როლის ან მოდულების შეცვლა არ ქმნის Supabase ანგარიშს და არ ანიჭებს მონაცემებზე ან ადმინისტრატორის პანელზე წვდომას. სერვერზე დაცული მოქმედებები კვლავ მხოლოდ მთავარ ადმინისტრატორს შეუძლია.
+            </div>
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Users className="w-5 h-5 text-emerald-400" /> არსებული რეგისტრირებული მომხმარებლისთვის მენეჯერის უფლებების მინიჭება
+                <Users className="w-5 h-5 text-emerald-400" /> რეგისტრირებული მომხმარებლის ლოკალურ თანამშრომელთა სიაში დამატება
               </h3>
               <form onSubmit={handleAddExistingUserAsStaff} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <select 
@@ -2265,14 +2258,14 @@ export default function AdminDashboardPro({
                   ))}
                 </select>
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 px-4 rounded-2xl transition cursor-pointer shadow-lg">
-                  + მენეჯერად დანიშვნა
+                  + სიაში დამატება
                 </button>
               </form>
             </div>
 
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის ხელით შექმნა & დეტალური უფლებები (ACL)
+                <UserCog className="w-5 h-5 text-emerald-400" /> თანამშრომლის ლოკალური ჩანაწერი & სასურველი მოდულები
               </h3>
               <form onSubmit={handleAddStaff} className="admin-staff-create-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -2287,7 +2280,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 <div className="admin-staff-permissions bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
-                  <span className="text-slate-400 font-bold block mb-2">მოდულებზე წვდომის უფლებები:</span>
+                  <span className="text-slate-400 font-bold block mb-2">სასურველი მოდულები (წვდომას არ ანიჭებს):</span>
                   <div className="admin-staff-permission-grid grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
                       { key: 'products', label: 'პროდუქტების მართვა' },
@@ -2316,12 +2309,12 @@ export default function AdminDashboardPro({
                   </div>
                 </div>
 
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ თანამშრომლის სისტემაში დამატება</button>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ლოკალურ სიაში დამატება</button>
               </form>
             </div>
 
             <div className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="admin-staff-list-title font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
+              <h3 className="admin-staff-list-title font-black text-white text-base">ლოკალური თანამშრომელთა ჩანაწერები ({staffList.length})</h3>
               <div className="admin-staff-cards-list space-y-3">
                 {staffList.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
