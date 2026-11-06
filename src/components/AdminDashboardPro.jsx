@@ -932,6 +932,7 @@ export default function AdminDashboardPro({
     const numericFields = ['priceGEL', 'oldPriceGEL', 'purchaseCost', 'stock'];
     const val = numericFields.includes(field) ? Number(value) : value;
     if (numericFields.includes(field) && (!Number.isFinite(val) || val < 0)) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
+    if (field === 'stock' && !Number.isInteger(val)) return alert('მარაგი უნდა იყოს მთელი რიცხვი. შეიყვანეთ ცალი რაოდენობა ათწილადის გარეშე.');
     const currentPrice = Number(current.priceGEL ?? current.price_gel ?? 0);
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'oldPriceGEL' && val > 0 && val <= currentPrice) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს; ფასდაკლების მოსახსნელად შეიყვანეთ 0.');
