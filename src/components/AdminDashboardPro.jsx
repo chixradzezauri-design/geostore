@@ -366,8 +366,11 @@ export default function AdminDashboardPro({
     }
     if (productVariants.length >= 50) return alert('ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.');
 
+    const generatedVariantId = typeof globalThis.crypto?.randomUUID === 'function'
+      ? `var-${globalThis.crypto.randomUUID()}`
+      : `var-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const varObj = {
-      id: `var-${Date.now()}`,
+      id: generatedVariantId,
       name,
       priceGEL: price,
       stock
