@@ -977,6 +977,7 @@ export default function AdminDashboardPro({
 
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
+    const productToDelete = (products || []).find(product => String(product.id) === String(id));
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product', {
         method: 'POST', headers: await getSupabaseHeaders(),
@@ -984,9 +985,16 @@ export default function AdminDashboardPro({
       });
       if (!res.ok) throw new Error(await res.text());
       if (await res.json() !== true) throw new Error('პროდუქტი ვერ წაიშალა ან აღარ არსებობს.');
-      if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => p.id !== id));
+      if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => String(p.id) !== String(id)));
+      const productImages = [
+        ...(Array.isArray(productToDelete?.gallery) ? productToDelete.gallery : []),
+        productToDelete?.image
+      ].filter(Boolean);
+      const imagesCleaned = await deleteProductImages(productImages, id);
       logActivity('წაიშალა პროდუქტი ბაზიდან (ID: ' + id + ')');
-      alert('✅ პროდუქტი წარმატებით წაიშალა!');
+      alert(imagesCleaned
+        ? '✅ პროდუქტი და მისი ატვირთული ფოტოები წარმატებით წაიშალა!'
+        : 'პროდუქტი წაიშალა, მაგრამ ზოგი ფოტო Storage-დან ვერ წაიშალა. პროდუქტი აღარ ჩანს მაღაზიაში; დარჩენილი ფოტოების გასუფთავება ცალკე იქნება საჭირო.');
     } catch (error) { alert('წაშლა ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
@@ -1209,13 +1217,16 @@ export default function AdminDashboardPro({
         await createResponse.json();
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
+      let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
         const previousImages = [...new Set([
           ...(Array.isArray(existingProduct.gallery) ? existingProduct.gallery : []),
           existingProduct.image
         ].filter(Boolean))];
         const removedImages = previousImages.filter(url => !galleryImages.includes(url));
-        if (removedImages.length > 0) await deleteProductImages(removedImages, prodId);
+        if (removedImages.length > 0) {
+          imageCleanupWarning = !(await deleteProductImages(removedImages, prodId));
+        }
       }
       const localProdObject = {
         id: prodId, createdAt: existingProduct?.createdAt || new Date().toISOString(),
@@ -1238,7 +1249,11 @@ export default function AdminDashboardPro({
       const wasEditing = Boolean(editingProductId);
       resetProductEditor();
       logActivity((wasEditing ? 'განახლდა' : 'დაემატა') + ' პროდუქტი: ' + newProdPayload.name);
-      alert(wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!');
+      alert(imageCleanupWarning
+        ? (wasEditing
+          ? 'პროდუქტი განახლდა და მარაგი შენარჩუნებულია, მაგრამ ძველი ფოტოების ნაწილი Storage-დან ვერ წაიშალა.'
+          : 'პროდუქტი დაემატა, მაგრამ ძველი ფოტოების ნაწილი Storage-დან ვერ წაიშალა.')
+        : (wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!'));
     } catch (error) {
       if (newlyUploadedImages.length > 0) await deleteProductImages(newlyUploadedImages, prodId);
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
