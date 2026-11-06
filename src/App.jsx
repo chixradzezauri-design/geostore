@@ -475,7 +475,7 @@ export default function App() {
         if (!active || !config || typeof config !== 'object') return;
         if (Array.isArray(config.categories)) setCategoriesList(config.categories);
         if (Array.isArray(config.banners)) setBannersList(config.banners);
-        if (config.siteSettings && typeof config.siteSettings === 'object') setSiteSettings(config.siteSettings);
+        if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) setSiteSettings(config.siteSettings);
       } catch (error) {
         console.error('Published storefront config load error:', error);
       }
