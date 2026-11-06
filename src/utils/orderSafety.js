@@ -69,6 +69,6 @@ export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee
     subtotalGEL: safeSubtotal,
     discountGEL,
     deliveryGEL: safeDeliveryFee,
-    totalGEL: Math.max(0, safeSubtotal - discountGEL) + safeDeliveryFee
+    totalGEL: Number((Math.max(0, safeSubtotal - discountGEL) + safeDeliveryFee).toFixed(10))
   };
 };
