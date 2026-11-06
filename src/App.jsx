@@ -52,15 +52,6 @@ const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
   };
 };
 
-// Telegram-ის შეტყობინება დროებით გამორთულია.
-// Bot Token არ უნდა ინახებოდეს React-ის ან browser-ის კოდში.
-// Telegram-ის ხელახლა ჩართვა საჭიროა მხოლოდ სერვერული ფუნქციით.
-const sendTelegramNotification = () => {
-  console.warn(
-    'Telegram შეტყობინება გამორთულია. საჭიროა უსაფრთხო სერვერული ინტეგრაცია.'
-  );
-};
-
 const DEFAULT_CATEGORIES = [
   { id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null },
   { id: 'c2', name: 'ლეპტოპები', icon: 'Laptop', parentId: null },
@@ -1321,7 +1312,6 @@ export default function App() {
     // Refresh the storefront in the background after acknowledging the order.
     void fetchProductsFromDatabase();
 
-    sendTelegramNotification();
 
     setIsCheckoutOpen(false);
     setCheckoutError('');
