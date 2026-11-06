@@ -1652,7 +1652,7 @@ export default function AdminDashboardPro({
   const isPhone = catLower.includes('სმარტფონ') || catLower.includes('ტელეფონ');
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
+    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
