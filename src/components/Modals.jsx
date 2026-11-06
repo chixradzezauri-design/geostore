@@ -515,9 +515,28 @@ export default function Modals({
               <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full bg-neutral-950 text-white">
                 <PackageCheck className="h-7 w-7" />
               </div>
-              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-neutral-500">GEOSTORE · ORDER CONFIRMED</p>
-              <h3 id="geostore-order-success-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{copy.orderAccepted}</h3>
-              <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">{copy.thankYou}</p>
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-neutral-500">
+                {orderConfirmation.isDemo ? 'GEOSTORE · DEMO CHECKOUT' : 'GEOSTORE · ORDER CONFIRMED'}
+              </p>
+              {orderConfirmation.isDemo && (
+                <div role="alert" className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-900">
+                  {currentLang === 'en'
+                    ? 'TEST ONLY — no real order was saved, no payment was taken, and stock was not changed.'
+                    : currentLang === 'ru'
+                      ? 'ТОЛЬКО ТЕСТ — реальный заказ не сохранён, оплата не списана, остатки не изменены.'
+                      : 'მხოლოდ ტესტი — რეალური შეკვეთა არ შენახულა, თანხა არ ჩამოჭრილა და მარაგი არ შეცვლილა.'}
+                </div>
+              )}
+              <h3 id="geostore-order-success-title" className="text-xl font-semibold tracking-tight sm:text-2xl">
+                {orderConfirmation.isDemo
+                  ? (currentLang === 'en' ? 'Demo checkout complete' : currentLang === 'ru' ? 'Тестовое оформление завершено' : 'სატესტო გაფორმება დასრულებულია')
+                  : copy.orderAccepted}
+              </h3>
+              <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">
+                {orderConfirmation.isDemo
+                  ? (currentLang === 'en' ? 'This demo code is not valid for order tracking.' : currentLang === 'ru' ? 'Этот тестовый код не подходит для отслеживания заказа.' : 'ეს სატესტო კოდი შეკვეთის ტრეკინგისთვის არ მოქმედებს.')
+                  : copy.thankYou}
+              </p>
               <div className="gs-order-code-panel mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
                 <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500" >{copy.orderCode}</span>
                 <strong className="mt-2 block break-all text-lg font-semibold tracking-[0.08em] text-neutral-950 sm:text-xl">#{orderConfirmation.id}</strong>
