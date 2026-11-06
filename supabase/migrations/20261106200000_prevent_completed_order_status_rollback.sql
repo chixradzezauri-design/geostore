@@ -180,3 +180,115 @@ CREATE TRIGGER orders_guard_status_transition
 BEFORE UPDATE OF status ON public.orders
 FOR EACH ROW
 EXECUTE FUNCTION private.guard_order_status_transition();
+
+-- Validate every stored order line before aggregating during reactivation.
+-- This mirrors checkout/cancellation limits so malformed legacy JSON cannot
+-- hide negative quantities or inflate a product's stock deduction.
+CREATE OR REPLACE FUNCTION private.admin_reactivate_cancelled_order(p_order_id text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+  v_updated integer;
+  v_password_auth_time bigint;
+begin
+  if auth.uid() is null
+     or coalesce(auth.jwt()->'app_metadata'->>'role', '') <> 'admin'
+     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
+    raise exception 'ადმინისტრატორის უფლებები არ დადასტურდა.';
+  end if;
+
+  select max((entry->>'timestamp')::bigint)
+    into v_password_auth_time
+    from jsonb_array_elements(coalesce(auth.jwt()->'amr', '[]'::jsonb)) as entry
+   where entry->>'method' = 'password'
+     and coalesce(entry->>'timestamp', '') ~ '^[0-9]+$';
+
+  if v_password_auth_time is null
+     or extract(epoch from now())::bigint - v_password_auth_time > 300
+     or v_password_auth_time > extract(epoch from now())::bigint + 30 then
+    raise exception 'ხელახლა გააქტიურებისთვის საჭიროა ადმინისტრატორის პაროლის ახლიდან დადასტურება.';
+  end if;
+
+  select * into v_order
+    from public.orders
+   where id = p_order_id
+   for update;
+
+  if not found then
+    raise exception 'შეკვეთა ვერ მოიძებნა.';
+  end if;
+  if v_order.status <> 'გაუქმებული' then
+    raise exception 'მხოლოდ გაუქმებული შეკვეთის ხელახლა გააქტიურებაა შესაძლებელი.';
+  end if;
+  if v_order.stock_restored_at is null then
+    raise exception 'შეკვეთის მარაგის აღდგენის ჩანაწერი ვერ დადასტურდა.';
+  end if;
+  if v_order.stock_deducted_at is null then
+    raise exception 'შეკვეთას მარაგის ჩამოჭრის ჩანაწერი არ აქვს.';
+  end if;
+  if jsonb_typeof(coalesce(v_order.items, '[]'::jsonb)) <> 'array'
+     or jsonb_array_length(coalesce(v_order.items, '[]'::jsonb)) = 0 then
+    raise exception 'შეკვეთის პროდუქტების სია ცარიელია ან არასწორია.';
+  end if;
+
+  if exists (
+    select 1
+      from jsonb_array_elements(v_order.items) as e(item)
+     where jsonb_typeof(e.item) is distinct from 'object'
+        or coalesce(trim(e.item->>'id'), '') = ''
+        or coalesce(e.item->>'quantity', '') !~ '^[0-9]{1,3}$'
+        or case
+             when coalesce(e.item->>'quantity', '') ~ '^[0-9]{1,3}$'
+               then (e.item->>'quantity')::numeric not between 1 and 100
+             else true
+           end
+  ) then
+    raise exception 'შეკვეთის პროდუქტის ID ან რაოდენობა არასწორია.';
+  end if;
+
+  if exists (
+    select 1
+      from jsonb_array_elements(v_order.items) as e(item)
+     group by e.item->>'id'
+    having sum((e.item->>'quantity')::numeric) > 100
+  ) then
+    raise exception 'ერთი პროდუქტის ჯამური რაოდენობა 100-ს არ უნდა აღემატებოდეს.';
+  end if;
+
+  for v_item in
+    select item->>'id' as product_id,
+           sum((item->>'quantity')::integer)::integer as quantity
+      from jsonb_array_elements(v_order.items) as e(item)
+     group by item->>'id'
+     order by item->>'id'
+  loop
+    update public.products
+       set stock = coalesce(stock, 0) - v_item.quantity
+     where id = v_item.product_id
+       and coalesce(stock, 0) >= v_item.quantity;
+
+    get diagnostics v_updated = row_count;
+    if v_updated <> 1 then
+      raise exception 'მარაგში აღარ არის საკმარისი რაოდენობა პროდუქტისთვის: %', v_item.product_id;
+    end if;
+  end loop;
+
+  update public.orders
+     set status = 'ახალი',
+         stock_deducted_at = now(),
+         stock_restored_at = null
+   where id = p_order_id;
+
+  return jsonb_build_object(
+    'order_id', p_order_id,
+    'status', 'ახალი',
+    'stock_deducted', true,
+    'reauthorized', true
+  );
+end;
+$function$;
