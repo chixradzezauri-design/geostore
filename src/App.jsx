@@ -1206,7 +1206,11 @@ export default function App() {
   };
 
   const addToCart = (product, quantity = 1) => {
-    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+    const requestedQuantity = Number(quantity);
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
+      showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
+      return false;
+    }
     const selectedSize = String(product?.selectedSize || '').trim();
     const selectedColor = String(product?.selectedColor || '').trim();
     const allowedSizes = Array.isArray(product?.availableSizes)
@@ -1230,12 +1234,11 @@ export default function App() {
     // A product can have multiple clothing sizes/colors in one cart.
     // Keep each selected variant as a separate line, while enforcing stock
     // against the total quantity of the underlying product across all variants.
-    const sameProduct = (item) => item.id === product.id && item.name === product.name;
+    const sameProduct = (item) => String(item.id) === String(product.id);
     const sameCartLine = (item) =>
       sameProduct(item) &&
-      (item.selectedSize || null) === (product.selectedSize || null) &&
-      (item.selectedColor || null) === (product.selectedColor || null);
-    const existingCartLine = cart.find(sameCartLine);
+      (String(item.selectedSize || '').trim() || null) === (selectedSize || null) &&
+      (String(item.selectedColor || '').trim() || null) === (selectedColor || null);
     const alreadyInCart = cart
       .filter(sameProduct)
       .reduce((total, item) => total + Math.max(0, Math.floor(Number(item.quantity) || 0)), 0);
@@ -1264,7 +1267,12 @@ export default function App() {
         );
       }
 
-      return [...prev, { ...product, quantity: requestedQuantity }];
+      return [...prev, {
+        ...product,
+        selectedSize: selectedSize || null,
+        selectedColor: selectedColor || null,
+        quantity: requestedQuantity
+      }];
     });
 
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
