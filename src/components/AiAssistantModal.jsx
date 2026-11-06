@@ -166,7 +166,6 @@ export default function AiAssistantModal({
           });
           setLiveProducts(formatted);
           return formatted;
-        }
       }
     } catch {}
     return liveProducts.length > 0 ? liveProducts : products;
