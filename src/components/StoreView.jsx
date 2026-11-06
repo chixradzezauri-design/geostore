@@ -215,6 +215,10 @@ export default function StoreView({
     }
   };
 
+  const hasInvalidPriceRange = minPrice !== '' && maxPrice !== '' &&
+    Number.isFinite(Number(minPrice)) && Number.isFinite(Number(maxPrice)) &&
+    Number(minPrice) > Number(maxPrice);
+
   const processedProducts = useMemo(() => {
     let result = [...activeProducts];
 
@@ -231,23 +235,34 @@ export default function StoreView({
       }
     }
 
-    if (minPrice !== '' && !isNaN(minPrice)) {
-      result = result.filter(p => p.priceGEL >= Number(minPrice));
+    if (hasInvalidPriceRange) return [];
+
+    if (minPrice !== '') {
+      const min = Number(minPrice);
+      result = result.filter(p => Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) >= min);
     }
-    if (maxPrice !== '' && !isNaN(maxPrice)) {
-      result = result.filter(p => p.priceGEL <= Number(maxPrice));
+    if (maxPrice !== '') {
+      const max = Number(maxPrice);
+      result = result.filter(p => Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) <= max);
     }
 
-    if (sortBy === 'price-asc') {
-      result.sort((a, b) => a.priceGEL - b.priceGEL);
-    } else if (sortBy === 'price-desc') {
-      result.sort((a, b) => b.priceGEL - a.priceGEL);
+    if (sortBy === 'price-asc' || sortBy === 'price-desc') {
+      const direction = sortBy === 'price-asc' ? 1 : -1;
+      result.sort((a, b) => {
+        const priceA = Number(a.priceGEL);
+        const priceB = Number(b.priceGEL);
+        const validA = Number.isFinite(priceA);
+        const validB = Number.isFinite(priceB);
+        if (validA !== validB) return validA ? -1 : 1;
+        if (!validA) return 0;
+        return (priceA - priceB) * direction;
+      });
     } else if (sortBy === 'name-asc') {
-      result.sort((a, b) => a.name.localeCompare(b.name, 'ka'));
+      result.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), currentLang || 'ka'));
     }
 
     return result;
-  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories]);
+  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang]);
 
   const flashSaleProducts = useMemo(() => {
     return activeProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
@@ -518,20 +533,26 @@ export default function StoreView({
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
           <input 
-            type="number" 
-            placeholder={storeText.minPrice} 
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder={storeText.minPrice}
             aria-label={storeText.minPrice}
-            value={minPrice} 
-            onChange={e => setMinPrice(e.target.value)}
+            value={minPrice}
+            onChange={e => setMinPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
             className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           <span className="text-slate-500">-</span>
           <input 
-            type="number" 
-            placeholder={storeText.maxPrice} 
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder={storeText.maxPrice}
             aria-label={storeText.maxPrice}
-            value={maxPrice} 
-            onChange={e => setMaxPrice(e.target.value)}
+            value={maxPrice}
+            onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : ' ')}
             className="w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
@@ -556,6 +577,16 @@ export default function StoreView({
           </select>
         </div>
       </div>
+
+      {hasInvalidPriceRange && (
+        <p className="gs-price-range-error" role="alert">
+          {currentLang === 'en'
+            ? 'Minimum price cannot be greater than maximum price.'
+            : currentLang === 'ru'
+              ? 'Минимальная цена не может быть выше максимальной.'
+              : 'მინიმალური ფასი მაქსიმალურ ფასზე მეტი ვერ იქნება.'}
+        </p>
+      )}
 
       {/* Products Grid */}
       {processedProducts.length === 0 ? (
