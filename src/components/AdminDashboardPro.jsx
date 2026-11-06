@@ -822,18 +822,32 @@ export default function AdminDashboardPro({
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
-    if (!expenseForm.amount || !expenseForm.description) return;
-    if (!Number.isFinite(Number(expenseForm.amount)) || Number(expenseForm.amount) <= 0) {
-      alert('ხარჯის თანხა უნდა იყოს ნულზე მეტი.');
+    const amountText = String(expenseForm.amount ?? '').trim();
+    const description = String(expenseForm.description ?? '').trim();
+    const category = String(expenseForm.category ?? '').trim();
+    const amount = Number(amountText);
+    const validDate = /^\\d{4}-\\d{2}-\\d{2}$/.test(String(expenseForm.date || ''))
+      && !Number.isNaN(new Date(`${expenseForm.date}T00:00:00`).getTime());
+
+    if (!description || !category) {
+      alert('ხარჯის კატეგორია და აღწერა სავალდებულოა.');
+      return;
+    }
+    if (!/^\\d+(?:\\.\\d{1,2})?$/.test(amountText) || !Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
+      alert('ხარჯის თანხა უნდა იყოს 0-ზე მეტი, მაქსიმუმ 1,000,000,000 და არაუმეტეს 2 ათწილადი ნიშნით.');
+      return;
+    }
+    if (!validDate) {
+      alert('ხარჯის თარიღი არასწორია.');
       return;
     }
 
     const newExp = {
       id: `exp-${Date.now()}`,
-      category: expenseForm.category,
-      amount: Number(expenseForm.amount),
+      category,
+      amount,
       date: expenseForm.date,
-      description: expenseForm.description
+      description
     };
 
     try {
