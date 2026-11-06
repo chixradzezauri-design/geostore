@@ -55,7 +55,7 @@ BEGIN
     INSERT INTO public.order_notifications
       (order_id, recipient_email, event_key, status)
     VALUES
-      (NEW.id, v_email, 'status:' || v_status, v_status)
+      (NEW.id, v_email, 'status:' || v_status || ':' || txid_current()::text, v_status)
     ON CONFLICT (order_id, event_key) DO NOTHING;
   END IF;
 
