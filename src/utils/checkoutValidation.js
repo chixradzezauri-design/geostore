@@ -10,7 +10,7 @@ export const validateCheckoutContact = ({ name, phone, email, address, requireEm
   if (cleanName.length < 2 || cleanName.length > 100 || hasControlCharacters(cleanName)) {
     return { valid: false, field: 'name' };
   }
-  if (!/^[+()\d\s-]+$/.test(rawPhone) || !/^\d{9,15}$/.test(phoneDigits)) {
+  if (hasControlCharacters(rawPhone) || !/^[+()\d\s-]+$/.test(rawPhone) || !/^\d{9,15}$/.test(phoneDigits)) {
     return { valid: false, field: 'phone' };
   }
   if (cleanAddress.length < 3 || cleanAddress.length > 300 || hasControlCharacters(cleanAddress)) {
