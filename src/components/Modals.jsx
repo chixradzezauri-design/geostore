@@ -248,7 +248,7 @@ export default function Modals({
 
   const handleSearchOrder = async (e) => {
     e.preventDefault();
-    const cleanId = searchOrderId.trim().toUpperCase().replace('#', '');
+    const cleanId = searchOrderId.trim().toUpperCase().replace(/^#+/, '');
     const cleanPhone = searchOrderPhone.trim();
 
     if (!cleanId || !cleanPhone) {
@@ -446,7 +446,7 @@ export default function Modals({
             <form onSubmit={handleSearchOrder} className="gs-order-tracker-form grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
               <div className="relative">
                 <input type="text" placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
-                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" required
+                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" maxLength={64} required
                   className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
                 <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
               </div>
