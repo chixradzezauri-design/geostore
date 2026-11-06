@@ -25,6 +25,57 @@ const getSupabaseHeaders = async () => {
   };
 };
 
+const PRODUCT_IMAGE_BUCKET = 'storefront-media';
+const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_PRODUCT_GALLERY_IMAGES = 10;
+const PRODUCT_IMAGE_TYPES = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif'
+};
+
+const uploadProductImage = async (imageData, productId, index) => {
+  const value = String(imageData || '').trim();
+  if (!value.startsWith('data:')) return value;
+
+  const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
+  if (!match) throw new Error('ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
+
+  const mimeType = match[1].toLowerCase();
+  const base64 = match[2];
+  const estimatedBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
+  if (estimatedBytes <= 0 || estimatedBytes > MAX_PRODUCT_IMAGE_BYTES) {
+    throw new Error('თითოეული ფოტოს ზომა არ უნდა აღემატებოდეს 5 MB-ს.');
+  }
+
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let offset = 0; offset < binary.length; offset += 1) bytes[offset] = binary.charCodeAt(offset);
+
+  const path = `products/${encodeURIComponent(String(productId))}/${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}.${PRODUCT_IMAGE_TYPES[mimeType]}`;
+  const headers = await getSupabaseHeaders();
+  delete headers.Prefer;
+  headers['Content-Type'] = mimeType;
+  headers['x-upsert'] = 'false';
+
+  const response = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${PRODUCT_IMAGE_BUCKET}/${path}`,
+    {
+      method: 'POST',
+      headers,
+      body: new Blob([bytes], { type: mimeType })
+    }
+  );
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error('ფოტოს Storage-ში ატვირთვა ვერ მოხერხდა: ' + detail);
+  }
+
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+  return `${SUPABASE_URL}/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/${encodedPath}`;
+};
+
 const getOrderStatusClasses = (status) => {
   switch (String(status || '').trim().toLowerCase()) {
     case 'ახალი':
@@ -57,7 +108,6 @@ export default function AdminDashboardPro({
   handleAdminLogin,
   handleLogout,
   adminError,
-  proAnalytics,
   orders = [],
   setOrders,
   usersList = [],
@@ -72,6 +122,8 @@ export default function AdminDashboardPro({
   setCategoriesList,
   bannersList = [],
   setBannersList,
+  onPublishStorefront,
+  storefrontPublishBusy = false,
   siteSettings,
   setSiteSettings,
   formatPrice,
@@ -104,27 +156,16 @@ export default function AdminDashboardPro({
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
+  // This is a local planning list only; it does not create Supabase Auth users or grant server permissions.
   const [staffList, setStaffList] = useState(() => {
     try {
       const saved = localStorage.getItem('geostore_staff_list');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      { 
-        id: 'st-1', 
-        name: 'გიორგი მენეჯერი', 
-        email: 'manager@geostore.ge', 
-        role: 'მენეჯერი', 
-        permissions: { products: true, orders: true, analytics: true, expenses: true, crm: true, settings: false } 
-      },
-      { 
-        id: 'st-2', 
-        name: 'ნინო ოპერატორი', 
-        email: 'operator@geostore.ge', 
-        role: 'ოპერატორი', 
-        permissions: { products: false, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
       }
-    ];
+    } catch {}
+    return [];
   });
 
   const [staffForm, setStaffForm] = useState({ 
@@ -176,10 +217,13 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    // Do not poll private finance data until the server-verified admin session is active.
+    if (!adminLoggedIn) return undefined;
+
     fetchExpenses();
-    const interval = setInterval(fetchExpenses, 5000);
+    const interval = setInterval(fetchExpenses, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   const fetchAdminOrders = async () => {
     try {
@@ -210,15 +254,12 @@ export default function AdminDashboardPro({
     } catch {}
   };
 
-  useEffect(() => {
-    fetchAdminOrders();
-    const interval = setInterval(fetchAdminOrders, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  // Order data is refreshed centrally by App.jsx; this function remains for post-mutation refreshes.
+
 
   const safeCategories = React.useMemo(() => {
     try {
-      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
+      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null, image: '' }];
       return categoriesList.map((cat, idx) => {
         if (!cat) return null;
         if (typeof cat === 'string') {
@@ -238,7 +279,7 @@ export default function AdminDashboardPro({
         return null;
       }).filter(Boolean);
     } catch {
-      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '', img: '' }];
+      return [{ id: 'c1', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null, image: '', img: '' }];
     }
   }, [categoriesList]);
   
@@ -260,6 +301,7 @@ export default function AdminDashboardPro({
   };
 
   const [productForm, setProductForm] = useState(productFormInitial);
+  const [stockDrafts, setStockDrafts] = useState({});
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
@@ -323,6 +365,7 @@ export default function AdminDashboardPro({
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
+  const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
@@ -347,10 +390,11 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    if (!adminLoggedIn) return undefined;
     fetchTickets();
-    const interval = setInterval(fetchTickets, 4000);
+    const interval = setInterval(fetchTickets, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
@@ -384,7 +428,7 @@ export default function AdminDashboardPro({
       permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
     });
     logActivity(`დაემატა ახალი თანამშრომელი: ${newStaffMember.name} (${newStaffMember.role})`);
-    alert('✅ თანამშრომელი წარმატებით დაემატა სისტემას!');
+    alert('✅ ჩანაწერი დაემატა მხოლოდ ამ მოწყობილობის ლოკალურ სიას. ანგარიშის შექმნა ან წვდომის მინიჭება არ მომხდარა.');
   };
 
   const handleAddExistingUserAsStaff = (e) => {
@@ -414,7 +458,7 @@ export default function AdminDashboardPro({
     setStaffList(prev => [...prev, newStaffMember]);
     setSelectedUserEmailForStaff('');
     logActivity(`რეგისტრირებული მომხმარებელი (${newStaffMember.email}) დაწინაურდა მენეჯერად`);
-    alert(`✅ მომხმარებელი (${newStaffMember.name}) წარმატებით დაემატა მენეჯერების სიაში!`);
+    alert(`✅ მომხმარებელი (${newStaffMember.name}) დაემატა მხოლოდ ლოკალურ სიაში. მენეჯერის რეალური წვდომა არ მინიჭებულა.`);
   };
 
   const handleSaveEditedStaff = (staffId) => {
@@ -484,9 +528,23 @@ export default function AdminDashboardPro({
       return date >= from && date <= today;
     };
 
-    const periodOrders = (orders || []).filter(order => inPeriod(order.created_at || order.createdAt || order.date));
+    const periodOrders = (orders || []).filter(order => {
+      const delivered = !isCancelled(order) && isDelivered(order);
+      const reportingDate = delivered
+        ? (order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date)
+        : (order.created_at || order.createdAt || order.date);
+      return inPeriod(reportingDate);
+    });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
     const pipelineOrders = periodOrders.filter(order => !isCancelled(order) && !isDelivered(order));
+    // Legacy rows may predate status/stock audit columns. Keep them in sales
+    // history, but expose the missing audit metadata instead of implying it exists.
+    const deliveredOrdersMissingStatusDate = deliveredOrders.filter(order =>
+      !(order.status_changed_at || order.statusChangedAt)
+    ).length;
+    const deliveredOrdersWithoutStockTracking = deliveredOrders.filter(order =>
+      !(order.stock_deducted_at || order.stockDeductedAt)
+    ).length;
     const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
     const productById = new Map((products || []).map(product => [String(product.id), product]));
 
@@ -568,7 +626,7 @@ export default function AdminDashboardPro({
     const trendBuckets = new Map();
     const useDailyTrend = analyticsPeriod === '30' || analyticsPeriod === '90';
     deliveredOrders.forEach(order => {
-      const date = parseDate(order.created_at || order.createdAt || order.date);
+      const date = parseDate(order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date);
       if (!date) return;
       const key = useDailyTrend
         ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
@@ -605,6 +663,7 @@ export default function AdminDashboardPro({
 
     return {
       periodOrders, deliveredOrders, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
+      deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
@@ -871,51 +930,73 @@ export default function AdminDashboardPro({
   const handleQuickUpdateProduct = async (id, field, value) => {
     const current = (products || []).find(p => String(p.id) === String(id));
     if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
-    const numericFields = ['priceGEL', 'oldPriceGEL', 'purchaseCost', 'stock'];
-    const val = numericFields.includes(field) ? Number(value) : value;
-    if (numericFields.includes(field) && (!Number.isFinite(val) || val < 0)) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
-    const updated = { ...current, [field]: val };
-    const payload = {
-      id: String(updated.id), sku: updated.sku || null, name: updated.name,
-      category: updated.category || null, brand: updated.brand || null, vendor: updated.vendor || null,
-      price_gel: Number(updated.priceGEL ?? updated.price_gel ?? 0),
-      old_price_gel: updated.oldPriceGEL ?? updated.old_price_gel ?? null,
-      purchase_cost: Number(updated.purchaseCost ?? updated.purchase_cost ?? 0),
-      stock: Math.trunc(Number(updated.stock ?? 0)), image: updated.image || null,
-      description: updated.description || '', gallery: updated.gallery || [], tags: updated.tags || [],
-      available_sizes: updated.availableSizes || updated.available_sizes || [],
-      available_colors: updated.availableColors || updated.available_colors || [],
-      variants: updated.variants || [], material: updated.material || null, durability: updated.durability || null,
-      model: updated.model || null, cpu: updated.cpu || null, ram: updated.ram || null,
-      storage: updated.storage || null, gpu: updated.gpu || null,
-      screen_size: updated.screenSize || updated.screen_size || null, os: updated.os || null,
-      is_featured: Boolean(updated.isFeatured ?? updated.is_featured)
-    };
+    const columnByField = { priceGEL: 'price_gel', purchaseCost: 'purchase_cost', stock: 'stock' };
+    const column = columnByField[field];
+    if (!column) return;
+    const val = Number(value);
+    if (!Number.isFinite(val) || val < 0) return alert('შეიყვანეთ სწორი, ნულზე არანაკლები რიცხვი.');
+    if (field === 'stock' && !Number.isInteger(val)) return alert('მარაგი უნდა იყოს მთელი რიცხვი. შეიყვანეთ ცალი რაოდენობა ათწილადის გარეშე.');
+    const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
+    if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
+    const currentValue = current[column] ?? current[field];
+    const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
-        method: 'POST', headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_product: payload })
+      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + compareFilter, {
+        method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify({ [column]: val })
       });
       if (!response.ok) throw new Error(await response.text());
-      if (typeof setProducts === 'function') setProducts(prev => (prev || []).map(p => String(p.id) === String(id) ? updated : p));
-    } catch (error) { alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
+      const savedRows = await response.json();
+      if (!Array.isArray(savedRows) || savedRows.length !== 1) {
+        throw new Error('მონაცემი პარალელურად შეიცვალა. განაახლეთ პროდუქტის სია და სცადეთ ხელახლა.');
+      }
+      const savedValue = Number(savedRows[0][column]);
+      if (!Number.isFinite(savedValue) || savedValue < 0 || (field === 'stock' && !Number.isInteger(savedValue))) {
+        throw new Error('სერვერმა არასწორი მნიშვნელობა დააბრუნა. განაახლეთ პროდუქტის სია.');
+      }
+      if (typeof setProducts === 'function') {
+        setProducts(prev => (prev || []).map(p => {
+          if (String(p.id) !== String(id)) return p;
+          if (field === 'priceGEL') return { ...p, priceGEL: savedValue, price_gel: savedValue };
+          if (field === 'purchaseCost') return { ...p, purchaseCost: savedValue, purchase_cost: savedValue };
+          return { ...p, stock: savedValue };
+        }));
+      }
+      if (field === 'stock') setStockDrafts(prev => { const next = { ...prev }; delete next[String(id)]; return next; });
+    } catch (error) {
+      alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
+    }
   };
-
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = '';
     if (files.length === 0) return;
 
-    const promises = files.map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    });
+    const currentCount = (selectedImages || []).length;
+    if (currentCount + files.length > MAX_PRODUCT_GALLERY_IMAGES) {
+      alert(`პროდუქტის გალერეაში მაქსიმუმ ${MAX_PRODUCT_GALLERY_IMAGES} ფოტოს დამატებაა შესაძლებელი.`);
+      return;
+    }
 
-    Promise.all(promises).then(base64Images => {
-      setSelectedImages(prev => [...(prev || []), ...base64Images]);
-    });
+    const invalidFile = files.find(file =>
+      !Object.prototype.hasOwnProperty.call(PRODUCT_IMAGE_TYPES, file.type) ||
+      file.size <= 0 ||
+      file.size > MAX_PRODUCT_IMAGE_BYTES
+    );
+    if (invalidFile) {
+      alert('გამოიყენეთ JPG, PNG, WEBP ან GIF ფორმატი. თითოეული ფოტოს ზომა მაქსიმუმ 5 MB უნდა იყოს.');
+      return;
+    }
+
+    const promises = files.map(file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('ფოტოს წაკითხვა ვერ მოხერხდა.'));
+      reader.readAsDataURL(file);
+    }));
+
+    Promise.all(promises)
+      .then(base64Images => setSelectedImages(prev => [...(prev || []), ...base64Images]))
+      .catch(error => alert(error.message || 'ფოტოს დამუშავება ვერ მოხერხდა.'));
   };
 
   const handleEditProduct = (p) => {
@@ -948,21 +1029,36 @@ export default function AdminDashboardPro({
     e.preventDefault();
     if (!productForm.name.trim() || productForm.priceGEL === '') return alert('შეავსეთ პროდუქტის სახელი და ფასი.');
     if (!Number.isFinite(Number(productForm.priceGEL)) || Number(productForm.priceGEL) < 0) return alert('ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
+    if (!Number.isFinite(originalPrice) || originalPrice < 0) return alert('ძველი ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
+    if (originalPrice > 0 && originalPrice <= Number(productForm.priceGEL)) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
     if (productForm.stock !== '' && (!Number.isInteger(Number(productForm.stock)) || Number(productForm.stock) < 0)) return alert('მარაგი უნდა იყოს მთელი, ნულზე არანაკლები რიცხვი.');
 
-    const mainImage = selectedImages.length > 0 ? selectedImages[0] : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800';
-    const galleryImages = selectedImages.length > 0 ? selectedImages : [mainImage];
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-
     const prodId = editingProductId || `prod-${Date.now()}`;
-    const newProdPayload = {
+    let galleryImages = [];
+    let newProdPayload;
+
+    try {
+      const sourceImages = selectedImages.length > 0 ? selectedImages : [];
+      if (sourceImages.length === 0 && !editingProductId) {
+        throw new Error('ახალი პროდუქტის შესანახად ატვირთეთ მინიმუმ ერთი ფოტო.');
+      }
+      if (sourceImages.length > MAX_PRODUCT_GALLERY_IMAGES) {
+        throw new Error(`პროდუქტის გალერეაში მაქსიმუმ ${MAX_PRODUCT_GALLERY_IMAGES} ფოტოა დაშვებული.`);
+      }
+      galleryImages = await Promise.all(
+        sourceImages.map((image, index) => uploadProductImage(image, prodId, index))
+      );
+      const mainImage = galleryImages[0] || null;
+      newProdPayload = {
       id: prodId,
       sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
       name: productForm.name,
       category: productForm.category,
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
       price_gel: Number(productForm.priceGEL),
-      old_price_gel: productForm.oldPriceGEL ? Number(productForm.oldPriceGEL) : null,
+      old_price_gel: originalPrice > 0 ? originalPrice : null,
       purchase_cost: productForm.purchaseCost ? Number(productForm.purchaseCost) : 0,
       stock: productForm.stock === '' ? 1 : Math.max(0, Math.trunc(Number(productForm.stock) || 0)),
       image: mainImage,
@@ -985,57 +1081,51 @@ export default function AdminDashboardPro({
       is_featured: productForm.isFeatured || false
     };
 
-    try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
-        method: 'POST',
-        headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_product: newProdPayload })
-      });
-
-      if (res.ok) {
-        const localProdObject = {
-          id: prodId,
-          sku: newProdPayload.sku,
-          name: newProdPayload.name,
-          category: newProdPayload.category,
-          vendor: newProdPayload.vendor,
-          priceGEL: newProdPayload.price_gel,
-          oldPriceGEL: newProdPayload.old_price_gel,
-          purchaseCost: newProdPayload.purchase_cost,
-          stock: newProdPayload.stock,
-          image: newProdPayload.image,
-          gallery: galleryImages,
-          tags: tagsArray,
-          description: newProdPayload.description,
-          availableSizes: newProdPayload.available_sizes,
-          availableColors: newProdPayload.available_colors,
-          variants: productVariants,
-          material: newProdPayload.material,
-          durability: newProdPayload.durability,
-          brand: newProdPayload.brand,
-          isFeatured: newProdPayload.is_featured,
-          model: newProdPayload.model,
-          cpu: newProdPayload.cpu,
-          ram: newProdPayload.ram,
-          storage: newProdPayload.storage,
-          gpu: newProdPayload.gpu,
-          screenSize: newProdPayload.screen_size,
-          os: newProdPayload.os
-        };
-
-        if (typeof setProducts === 'function') {
-          setProducts(prev => editingProductId ? (prev || []).map(p => String(p.id) === String(editingProductId) ? localProdObject : p) : [localProdObject, ...(prev || [])]);
-        }
-        const wasEditing = Boolean(editingProductId);
-        resetProductEditor();
-        logActivity(`${wasEditing ? 'განახლდა' : 'დაემატა'} პროდუქტი: ${newProdPayload.name}`);
-        alert(wasEditing ? '✅ პროდუქტი სრულად განახლდა!' : '✅ პროდუქტი წარმატებით დაემატა!');
+      let savedProductRow = null;
+      if (editingProductId) {
+        // Do not overwrite checkout stock deductions with the editor's stale snapshot.
+        const updatePayload = { ...newProdPayload };
+        delete updatePayload.id;
+        delete updatePayload.stock;
+        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
+          method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
+        });
+        if (!updateResponse.ok) throw new Error(await updateResponse.text());
+        const updatedRows = await updateResponse.json();
+        if (!Array.isArray(updatedRows) || updatedRows.length !== 1) throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
+        savedProductRow = updatedRows[0];
       } else {
-        const err = await res.text();
-        alert('შეცდომა ბაზაში შენახვისას: ' + err);
+        const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
+          method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
+        });
+        if (!createResponse.ok) throw new Error(await createResponse.text());
+        await createResponse.json();
       }
-    } catch {
-      alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+      const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
+      const localProdObject = {
+        id: prodId, createdAt: existingProduct?.createdAt || new Date().toISOString(),
+        sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
+        vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
+        oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
+        stock: editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock,
+        image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
+        description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
+        availableColors: newProdPayload.available_colors, variants: productVariants,
+        material: newProdPayload.material, durability: newProdPayload.durability,
+        brand: newProdPayload.brand, isFeatured: newProdPayload.is_featured,
+        model: newProdPayload.model, cpu: newProdPayload.cpu, ram: newProdPayload.ram,
+        storage: newProdPayload.storage, gpu: newProdPayload.gpu,
+        screenSize: newProdPayload.screen_size, os: newProdPayload.os
+      };
+      if (typeof setProducts === 'function') {
+        setProducts(prev => editingProductId ? (prev || []).map(p => String(p.id) === String(editingProductId) ? localProdObject : p) : [localProdObject, ...(prev || [])]);
+      }
+      const wasEditing = Boolean(editingProductId);
+      resetProductEditor();
+      logActivity((wasEditing ? 'განახლდა' : 'დაემატა') + ' პროდუქტი: ' + newProdPayload.name);
+      alert(wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!');
+    } catch (error) {
+      alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
     }
   };
 
@@ -1044,45 +1134,98 @@ export default function AdminDashboardPro({
       alert('ექსპორტისთვის პროდუქტები არ არის.');
       return;
     }
-    let csvContent = "data:text/csv;charset=utf-8,ID,SKU,Name,Category,Price(GEL),Stock,Vendor\r\n";
-    products.forEach(p => {
-      const row = [p.id, p.sku || 'N/A', `"${p.name}"`, `"${p.category}"`, p.priceGEL, p.stock || 1, `"${p.vendor || 'GEOSTORE'}"`];
-      csvContent += row.join(",") + "\r\n";
-    });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `geostore_products_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportCsv(
+      `geostore_products_${Date.now()}.csv`,
+      ['ID', 'SKU', 'Name', 'Category', 'Price (GEL)', 'Stock', 'Vendor'],
+      products.map(p => [
+        p.id,
+        p.sku || 'N/A',
+        p.name,
+        p.category,
+        p.priceGEL,
+        p.stock ?? 0,
+        p.vendor || 'GEOSTORE'
+      ])
+    );
     logActivity('გადმოიწერა პროდუქტების CSV ექსპორტი');
   };
 
-  const handleApplyFlashSale = (e) => {
+  const handleApplyFlashSale = async (e) => {
     e.preventDefault();
-    const percent = Number(flashSaleForm.discountPercent);
-    if (!percent || percent <= 0) return;
 
-    if (typeof setProducts === 'function') {
-      setProducts(prev => (prev || []).map(p => {
-        if (flashSaleForm.category === 'ყველა' || p.category === flashSaleForm.category) {
-          const basePrice = p.oldPriceGEL ? p.oldPriceGEL : p.priceGEL;
-          const discountedPrice = Math.round(basePrice * (1 - percent / 100));
-          return {
-            ...p,
-            oldPriceGEL: basePrice,
-            priceGEL: discountedPrice
-          };
-        }
-        return p;
-      }));
+    const percent = Number(flashSaleForm.discountPercent);
+    const category = String(flashSaleForm.category || 'ყველა').trim();
+
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
+      alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
+      return;
     }
 
-    logActivity(`გააქტიურდა მასობრივი ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${flashSaleForm.category}`);
-    alert(`⚡ წარმატებით გააქტიურდა ${percent}%-იანი ფასდაკლება!`);
-    setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+    if (!category) {
+      alert('აირჩიეთ პროდუქტის კატეგორია.');
+      return;
+    }
+
+    if (typeof setProducts !== 'function') {
+      alert('პროდუქტების განახლება ამჟამად მიუწვდომელია. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return;
+    }
+
+    if (isApplyingFlashSale) return;
+    setIsApplyingFlashSale(true);
+
+    try {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_apply_flash_sale', {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_discount_percent: percent,
+          p_category: category
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
+      }
+
+      const updatedCount = Number(await response.json());
+      if (!Number.isInteger(updatedCount) || updatedCount < 0) {
+        throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
+      }
+
+      if (updatedCount === 0) {
+        alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა.');
+        return;
+      }
+
+      setProducts(prev => (prev || []).map(product => {
+        if (category !== 'ყველა' && product.category !== category) return product;
+
+        const currentPrice = Number(product.priceGEL ?? product.price_gel ?? 0);
+        const savedOldPrice = Number(product.oldPriceGEL ?? product.old_price_gel);
+        const basePrice = Number.isFinite(savedOldPrice) && savedOldPrice > currentPrice
+          ? savedOldPrice
+          : currentPrice;
+        const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
+
+        return {
+          ...product,
+          oldPriceGEL: basePrice,
+          priceGEL: discountedPrice
+        };
+      }));
+
+      logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
+      alert(`⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`);
+      setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+    } catch (error) {
+      console.error('Flash sale update failed:', error);
+      alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error?.message || 'ქსელის შეცდომა'));
+    } finally {
+      setIsApplyingFlashSale(false);
+    }
   };
 
   const handlePrintInvoice = (order) => {
@@ -1091,22 +1234,56 @@ export default function AdminDashboardPro({
       alert('გთხოვთ დაუშვათ Popup ფანჯრები ბრაუზერში.');
       return;
     }
+    // Prevent the invoice window from navigating the admin tab.
+    try { printWindow.opener = null; } catch {}
+
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]);
+
+    const safeImageSrc = (value) => {
+      const image = String(value ?? '').trim();
+      if (/^https:\/\//i.test(image)) return escapeHtml(image);
+      if (/^data:image\/(?:png|jpe?g|webp|gif);base64,[a-z0-9+/=]+$/i.test(image)) return escapeHtml(image);
+      return '';
+    };
+
+    const numericValue = (value) => {
+      const number = Number(value);
+      return Number.isFinite(number) && number >= 0 ? number : 0;
+    };
 
     const itemsRows = Array.isArray(order.items) && order.items.length > 0
-      ? order.items.map(item => `
-          <tr>
-            <td>${item.image ? `<img src="${item.image}" width="40" height="40" style="object-fit:contain; border-radius:8px;" />` : ''} ${item.name} ${item.selectedSize ? `(ზომა: ${item.selectedSize})` : ''} ${item.selectedColor ? `(ფერი: ${item.selectedColor})` : ''}</td>
-            <td>${item.quantity || 1}</td>
-            <td>${item.priceGEL || item.price || 0} ₾</td>
-            <td>${(item.priceGEL || item.price || 0) * (item.quantity || 1)} ₾</td>
-          </tr>
-        `).join('')
-      : `<tr><td>${order.itemSummary || 'პროდუქტები'}</td><td>1</td><td>${order.totalGEL} ₾</td><td>${order.totalGEL} ₾</td></tr>`;
+      ? order.items.map((item) => {
+          const imageSrc = safeImageSrc(item.image);
+          const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
+          const unitPrice = numericValue(item.priceGEL ?? item.price);
+          return `
+            <tr>
+              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : ''}</td>
+              <td>${quantity}</td>
+              <td>${unitPrice.toFixed(2)} ₾</td>
+              <td>${(unitPrice * quantity).toFixed(2)} ₾</td>
+            </tr>
+          `;
+        }).join('')
+      : `<tr><td>${escapeHtml(order.itemSummary || 'პროდუქტები')}</td><td>1</td><td>${numericValue(order.totalGEL).toFixed(2)} ₾</td><td>${numericValue(order.totalGEL).toFixed(2)} ₾</td></tr>`;
+
+    const formattedTotal = typeof formatPrice === 'function'
+      ? escapeHtml(formatPrice(order.totalGEL))
+      : `${numericValue(order.totalGEL).toFixed(2)} ₾`;
 
     const htmlContent = `
-      <html>
+      <!doctype html>
+      <html lang="ka">
         <head>
-          <title>ინვოისი #${order.id}</title>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>ინვოისი #${escapeHtml(order.id)}</title>
           <style>
             body { font-family: 'Noto Sans Georgian', sans-serif; padding: 30px; color: #111; }
             .header { display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
@@ -1122,19 +1299,19 @@ export default function AdminDashboardPro({
           <div class="header">
             <div>
               <div class="store-name">GEOSTORE</div>
-              <p>ონლაინ მარკეტფლეისი საქართველოში</p>
+              <p>ონლაინ მაღაზია</p>
             </div>
             <div style="text-align: right;">
-              <h2>შეკვეთა #${order.id}</h2>
-              <p>თარიღი: ${order.date} ${order.time || ''}</p>
+              <h2>შეკვეთა #${escapeHtml(order.id)}</h2>
+              <p>თარიღი: ${escapeHtml(order.date)} ${escapeHtml(order.time || '')}</p>
             </div>
           </div>
           <div class="order-info">
-            <p><b>მყიდველი:</b> ${order.customerName}</p>
-            <p><b>ტელეფონი:</b> ${order.phone}</p>
-            <p><b>ელ-ფოსტა:</b> ${order.user_email || 'მითითებული არ არის'}</p>
-            <p><b>მიტანის მისამართი:</b> ${order.address}</p>
-            <p><b>სტატუსი:</b> ${order.status || 'ახალი'}</p>
+            <p><b>მყიდველი:</b> ${escapeHtml(order.customerName)}</p>
+            <p><b>ტელეფონი:</b> ${escapeHtml(order.phone)}</p>
+            <p><b>ელ-ფოსტა:</b> ${escapeHtml(order.user_email || 'მითითებული არ არის')}</p>
+            <p><b>მიტანის მისამართი:</b> ${escapeHtml(order.address)}</p>
+            <p><b>სტატუსი:</b> ${escapeHtml(order.status || 'ახალი')}</p>
           </div>
           <table>
             <thead>
@@ -1150,12 +1327,13 @@ export default function AdminDashboardPro({
             </tbody>
           </table>
           <div class="total">
-            სულ გადასახდელი: ${typeof formatPrice === 'function' ? formatPrice(order.totalGEL) : order.totalGEL + ' ₾'}
+            სულ გადასახდელი: ${formattedTotal}
           </div>
         </body>
       </html>
     `;
 
+    printWindow.document.open();
     printWindow.document.write(htmlContent);
     printWindow.document.close();
     printWindow.focus();
@@ -1164,7 +1342,7 @@ export default function AdminDashboardPro({
       printWindow.close();
     }, 500);
 
-    logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${order.id}`);
+    logActivity(`დაიბეჭდა ინვოისი შეკვეთისთვის #${escapeHtml(order.id)}`);
   };
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
@@ -1387,6 +1565,10 @@ export default function AdminDashboardPro({
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     const existingOrder = (orders || []).find(order => order.id === orderId);
+    if (['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed'].includes(String(existingOrder?.status || '').trim().toLowerCase()) && newStatus !== existingOrder.status) {
+      alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
+      return;
+    }
     if (existingOrder?.status === 'გაუქმებული' && newStatus !== 'გაუქმებული') {
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
@@ -1538,20 +1720,20 @@ export default function AdminDashboardPro({
       alert('გადმოსაწერი შეკვეთები არ არის.');
       return;
     }
-    
-    let csvContent = "data:text/csv;charset=utf-8,ID,Date,Customer,Phone,Address,Total(GEL),Status\r\n";
-    orders.forEach(o => {
-      const row = [o.id, o.date, `"${o.customerName}"`, `"${o.phone}"`, `"${o.address}"`, o.totalGEL, o.status || 'ახალი'];
-      csvContent += row.join(",") + "\r\n";
-    });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `geostore_orders_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportCsv(
+      `geostore_orders_${Date.now()}.csv`,
+      ['ID', 'Date', 'Customer', 'Phone', 'Address', 'Total (GEL)', 'Status'],
+      orders.map(o => [
+        o.id,
+        o.date,
+        o.customerName,
+        o.phone,
+        o.address,
+        o.totalGEL,
+        o.status || 'ახალი'
+      ])
+    );
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
@@ -1728,9 +1910,19 @@ export default function AdminDashboardPro({
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
             <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
           </div>
-          <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
+              disabled={storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
+              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
+            >
+              {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
+            </button>
+            <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+            </div>
           </div>
         </div>
 
@@ -1751,6 +1943,17 @@ export default function AdminDashboardPro({
                 <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
               </button>
             </div>
+            {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
+              <div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
+                <strong className="block mb-1">ისტორიული შეკვეთების მონაცემების შენიშვნა</strong>
+                {financialOverview.deliveredOrdersMissingStatusDate > 0 && (
+                  <span className="block">{financialOverview.deliveredOrdersMissingStatusDate} ჩაბარებულ შეკვეთას სტატუსის ცვლილების თარიღი არ აქვს; პერიოდისთვის გამოყენებულია შეკვეთის შექმნის თარიღი.</span>
+                )}
+                {financialOverview.deliveredOrdersWithoutStockTracking > 0 && (
+                  <span className="block">{financialOverview.deliveredOrdersWithoutStockTracking} ჩაბარებულ შეკვეთაზე მარაგის ჩამოჭრის ჩანაწერი არ არსებობს; ეს ძველი შეკვეთები ფინანსურ ბრუნვაში რჩება, მაგრამ მარაგის ისტორია დადასტურებული არ არის.</span>
+                )}
+              </div>
+            )}
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-5">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
@@ -2053,9 +2256,13 @@ export default function AdminDashboardPro({
 
         {adminTab === 'staff' && (
           <div className="admin-staff space-y-6">
+            <div role="note" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs leading-6 text-amber-100">
+              <strong className="block mb-1">მნიშვნელოვანი: თანამშრომლების მართვა ჯერ რეალურ ავტორიზაციასთან დაკავშირებული არ არის.</strong>
+              ეს სია ინახება მხოლოდ ამ ბრაუზერის localStorage-ში. აქ დამატება, როლის ან მოდულების შეცვლა არ ქმნის Supabase ანგარიშს და არ ანიჭებს მონაცემებზე ან ადმინისტრატორის პანელზე წვდომას. სერვერზე დაცული მოქმედებები კვლავ მხოლოდ მთავარ ადმინისტრატორს შეუძლია.
+            </div>
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Users className="w-5 h-5 text-emerald-400" /> არსებული რეგისტრირებული მომხმარებლისთვის მენეჯერის უფლებების მინიჭება
+                <Users className="w-5 h-5 text-emerald-400" /> რეგისტრირებული მომხმარებლის ლოკალურ თანამშრომელთა სიაში დამატება
               </h3>
               <form onSubmit={handleAddExistingUserAsStaff} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <select 
@@ -2071,14 +2278,14 @@ export default function AdminDashboardPro({
                   ))}
                 </select>
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 px-4 rounded-2xl transition cursor-pointer shadow-lg">
-                  + მენეჯერად დანიშვნა
+                  + სიაში დამატება
                 </button>
               </form>
             </div>
 
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის ხელით შექმნა & დეტალური უფლებები (ACL)
+                <UserCog className="w-5 h-5 text-emerald-400" /> თანამშრომლის ლოკალური ჩანაწერი & სასურველი მოდულები
               </h3>
               <form onSubmit={handleAddStaff} className="admin-staff-create-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -2093,7 +2300,7 @@ export default function AdminDashboardPro({
                 </div>
 
                 <div className="admin-staff-permissions bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
-                  <span className="text-slate-400 font-bold block mb-2">მოდულებზე წვდომის უფლებები:</span>
+                  <span className="text-slate-400 font-bold block mb-2">სასურველი მოდულები (წვდომას არ ანიჭებს):</span>
                   <div className="admin-staff-permission-grid grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
                       { key: 'products', label: 'პროდუქტების მართვა' },
@@ -2122,12 +2329,12 @@ export default function AdminDashboardPro({
                   </div>
                 </div>
 
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ თანამშრომლის სისტემაში დამატება</button>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ლოკალურ სიაში დამატება</button>
               </form>
             </div>
 
             <div className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="admin-staff-list-title font-black text-white text-base">აქტიური თანამშრომლები და უფლებები ({staffList.length})</h3>
+              <h3 className="admin-staff-list-title font-black text-white text-base">ლოკალური თანამშრომელთა ჩანაწერები ({staffList.length})</h3>
               <div className="admin-staff-cards-list space-y-3">
                 {staffList.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
@@ -2338,10 +2545,10 @@ export default function AdminDashboardPro({
                           </button>
                         ) : (
                           <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={['გაგზავნილი', 'დასრულებული'].includes(o.status)} title={['გაგზავნილი', 'დასრულებული'].includes(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
                           </div>
                         )}
@@ -2453,6 +2660,7 @@ export default function AdminDashboardPro({
                 <div className="admin-order-note-controls flex gap-2">
                   <input 
                     type="text" 
+                    maxLength={5000}
                     placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
                     value={orderAdminNoteInput}
                     onChange={e => setOrderAdminNoteInput(e.target.value)}
@@ -2533,6 +2741,7 @@ export default function AdminDashboardPro({
                       <input 
                         type="text" 
                         placeholder="დაწერეთ პასუხი მომხმარებლისთვის..." 
+                        maxLength={4000}
                         value={replyInputs[t.id] !== undefined ? replyInputs[t.id] : ''}
                         onChange={e => setReplyInputs({...replyInputs, [t.id]: e.target.value})}
                         className="flex-1 bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
@@ -2601,7 +2810,8 @@ export default function AdminDashboardPro({
                   </div>
                   <div>
                     <label className="text-slate-400 font-bold block mb-1">მარაგი</label>
-                    <input type="number" placeholder="10" value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                    <input type="number" min="0" step="1" inputMode="numeric" placeholder="10" value={productForm.stock} disabled={Boolean(editingProductId)} onChange={e => setProductForm({...productForm, stock: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner disabled:opacity-60 disabled:cursor-not-allowed" />
+                    {editingProductId && <p className="mt-1 text-[11px] leading-relaxed text-amber-300">არსებული პროდუქტის მარაგი შეცვალეთ პროდუქტის სიაში — შეკვეთების ჩამოჭრა უსაფრთხოდ იქნება გათვალისწინებული.</p>}
                   </div>
                 </div>
 
@@ -2693,27 +2903,17 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <div className="admin-product-variants bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                <div className="admin-product-variants-notice bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-2">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
                     <Layers className="w-4 h-4" />
-                    <span>ვარიანტების ბილდერი (ინდივიდუალური ფასი & მარაგი)</span>
+                    <span>ინდივიდუალური ვარიანტები დროებით გამორთულია</span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1">
-                    <input type="text" placeholder="ვარიანტი (მაგ: შავი / 256GB)" value={newVarName} onChange={e => setNewVarName(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
-                    <input type="number" placeholder="ფასი (GEL)" value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
-                    <input type="number" placeholder="მარაგი" value={newVarStock} onChange={e => setNewVarStock(e.target.value)} className="bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white outline-none" />
-                    <button type="button" onClick={handleAddCustomVariant} className="bg-amber-500 text-slate-950 font-black py-3 rounded-xl cursor-pointer hover:bg-amber-400 transition">+ ვარიანტი</button>
-                  </div>
-                  {productVariants.length > 0 && (
-                    <div className="admin-product-variant-list space-y-2 pt-2">
-                      {productVariants.map(v => (
-                        <div key={v.id} className="admin-product-variant bg-slate-900 p-3 rounded-2xl border border-amber-500/20 flex justify-between items-center text-xs">
-                          <div><b className="text-white">{v.name}</b> <span className="text-emerald-400 font-bold ml-3">{v.priceGEL} ₾</span> <span className="text-slate-400 ml-2">(მარაგი: {v.stock})</span></div>
-                          <button type="button" onClick={() => handleRemoveCustomVariant(v.id)} className="text-rose-400 hover:text-rose-300 p-1"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    ვარიანტის ცალკე ფასისა და მარაგის სერვერული დამუშავება ჯერ დასრულებული არ არის.
+                    არსებული შენახული ვარიანტები შენარჩუნებულია, მაგრამ ახალი ვარიანტის ფასით შეკვეთის გაფორმება
+                    ხელახლა ჩაირთვება მხოლოდ მას შემდეგ, რაც შეკვეთა, მარაგის ჩამოჭრა, გაუქმება და აღდგენა
+                    ერთიანად იქნება დაცული სერვერზე.
+                  </p>
                 </div>
 
                 <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
@@ -2754,7 +2954,7 @@ export default function AdminDashboardPro({
                 {filteredProducts?.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="admin-product-identity flex items-center gap-3.5">
-                      <img src={p.image} alt="" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
+                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
@@ -2790,8 +2990,21 @@ export default function AdminDashboardPro({
                           step="1"
                           inputMode="numeric"
                           aria-label={`მარაგი: ${p.name}`}
-                          value={p.stock ?? 0}
-                          onChange={e => handleQuickUpdateProduct(p.id, 'stock', e.target.value)}
+                          value={stockDrafts[String(p.id)] ?? String(p.stock ?? 0)}
+                          onChange={e => setStockDrafts(prev => ({ ...prev, [String(p.id)]: e.target.value }))}
+                          onBlur={e => {
+                            const draft = stockDrafts[String(p.id)];
+                            if (draft === undefined) return;
+                            if (draft.trim() === '' || Number(draft) === Number(p.stock ?? 0)) {
+                              setStockDrafts(prev => { const next = { ...prev }; delete next[String(p.id)]; return next; });
+                              return;
+                            }
+                            handleQuickUpdateProduct(p.id, 'stock', draft);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                            if (e.key === 'Escape') setStockDrafts(prev => { const next = { ...prev }; delete next[String(p.id)]; return next; });
+                          }}
                           className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400"
                         />
                         <span className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -2830,8 +3043,8 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <button type="submit" className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
-                <Zap className="w-4 h-4" /> ფასდაკლების მასობრივად გააქტიურება
+              <button type="submit" disabled={isApplyingFlashSale} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+                <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
               </button>
             </form>
           </div>
@@ -2895,7 +3108,7 @@ export default function AdminDashboardPro({
                 {(bannersList || []).map(b => (
                   <div key={b.id} className="admin-banner-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs gap-3 shadow-inner">
                     <div className="flex items-center gap-3.5">
-                      <img src={b.image} alt="" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
+                      <img src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-black text-white text-sm">{b.title}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
@@ -2979,7 +3192,7 @@ export default function AdminDashboardPro({
                         <div className="flex justify-between items-center flex-wrap gap-3">
                           <div className="flex items-center gap-3">
                             {displayImage ? (
-                              <img src={displayImage} alt="" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
+                              <img src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
                               <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">No Img</div>
                             )}
@@ -3050,7 +3263,7 @@ export default function AdminDashboardPro({
                                   <div className="flex justify-between items-center text-xs gap-2">
                                     <div className="admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {subImg && <img src={subImg} alt="" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
+                                      {subImg && <img src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200">{sub.name}</span>
                                     </div>
 
@@ -3111,9 +3324,10 @@ export default function AdminDashboardPro({
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Tag className="w-5 h-5 text-emerald-400" /> ახალი კუპონის შექმნა
               </h3>
-              <form onSubmit={handleCreateCoupon} className="admin-coupon-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                <input type="text" placeholder="კოდი" required value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
-                <input type="number" placeholder="ფასდაკლება %" required value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+              <form onSubmit={handleCreateCoupon} className="admin-coupon-form grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
+                <input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
+                <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="1" max="100" step="0.01" value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" step="0.01" value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კუპონის დამატება</button>
               </form>
             </div>

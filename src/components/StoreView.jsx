@@ -3,13 +3,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
-  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Layers, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
+  Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
 export default function StoreView({
   currentLang = 'ka',
   siteSettings,
-  promoSlots,
   categories = [],
   selectedCategory,
   setSelectedCategory,
@@ -25,9 +24,9 @@ export default function StoreView({
   const activeProducts = initialFilteredProducts || [];
 
   const storeText = ({
-    ka: { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'ჭკვიანი ზომის შერჩევა', styleKicker: 'შეარჩიე შენი სტილი', viewCollection: 'კოლექციის ნახვა', limitedOffer: 'დროში შეზღუდული შეთავაზება', hurryDiscount: 'იჩქარეთ, ფასდაკლება იწურება!', hours: 'საათი', minutes: 'წუთი', seconds: 'წამი', discoverCollections: 'აღმოაჩინე კოლექციები', collectionIntro: 'შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი', navigation: 'ნავიგაცია:', publishReview: 'შეფასების და ფოტოს გამოქვეყნება', price: 'ფასი:', clear: 'გასუფთავება', noFilterResults: 'მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.', wishlistTitle: 'სურვილების სიაში დამატება', compareTitle: 'შედარებაში დამატება', discount: 'ფასდაკლება', viewDetails: 'დეტალურად ნახვა', productDetails: 'პროდუქტის დეტალური ხედი', vendor: 'მომწოდებელი:', variant: 'აირჩიეთ ინდივიდუალური ვარიანტი:', material: 'მასალა / შემადგენლობა', durability: 'მდგრადობა / მახასიათებელი', giftWrap: 'სასაჩუქრე პრემიუმ შეფუთვა', giftWrapInfo: 'ყუთი, ბაფთა და ბარათი (+5 ₾)', giftMessage: 'სასაჩუქრე ბარათის ტექსტი (უფასო):', giftPlaceholder: 'ჩაწერეთ თქვენი სურვილი...', vipWarranty: 'VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)', warrantyInfo: 'სრული დაცვა დაზიანებისგან (+15 ₾)', uploadPhoto: 'ატვირთეთ ფოტო:', photoSelected: 'ფოტო არჩეულია', noReviews: 'ამ პროდუქტზე ჯერ არ არის შეფასებები.', enterMeasurements: 'მიეთითეთ თქვენი პარამეტრები', height: 'თქვენი სიმაღლე (სმ):', weight: 'თქვენი წონა (კგ):', heightExample: 'მაგ: 178', weightExample: 'მაგ: 75', calculateSize: 'ზომის გამოთვლა და შერჩევა', sizeGuide: 'ზომების გიდი', sizeChart: 'ზომების ცხრილი', clothingSizes: 'ტანსაცმლის ზომები', chest: 'გულმკერდი', waist: 'წელი', understand: 'გასაგებია', subcategoryHint: 'აირჩიეთ სუბკატეგორია ▾', categoryHint: 'კატეგორიის ნახვა', subCount: 'სუბ' },
-    en: { allCategories: 'All categories', fullCollection: 'Full collection', subcategories: 'Subcategories for:', close: 'Close', allItems: 'All', sort: 'Sort:', defaultSort: 'Default', priceLow: 'Price: low to high ⬆', priceHigh: 'Price: high to low ⬇', nameSort: 'Name (A-Z)', chooseSize: 'Choose size', viewAdd: 'View & add', addToCart: 'Add to cart', sizePrompt: 'Choose a size (in-stock sizes only):', recommendedSize: 'Recommended size based on your measurements:', color: 'Color:', description: 'Product description:', defaultDescription: 'Premium product of excellent quality.', inStock: 'In stock:', available: 'Available', deliveryFit: '(fit can be checked on delivery)', reviews: 'Customer photo reviews', leaveReview: 'Leave a review and upload a photo:', rating: 'Rating:', yourName: 'Your name *', reviewPlaceholder: 'How did you like the product?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'Smart size selection', styleKicker: 'Find your style', viewCollection: 'Explore collection', limitedOffer: 'Limited-time offer', hurryDiscount: 'Hurry, the discount is ending!', hours: 'Hours', minutes: 'Minutes', seconds: 'Seconds', discoverCollections: 'Discover collections', collectionIntro: 'Curated collections — find your next favourite style', navigation: 'Navigation:', publishReview: 'Publish review and photo', price: 'Price:', clear: 'Clear', noFilterResults: 'No products match the selected filters.', wishlistTitle: 'Add to wishlist', compareTitle: 'Add to comparison', discount: 'Sale', viewDetails: 'View details', productDetails: 'Product details', vendor: 'Vendor:', variant: 'Choose a product option:', material: 'Material / composition', durability: 'Durability / features', giftWrap: 'Premium gift wrapping', giftWrapInfo: 'Box, ribbon and card (+5 ₾)', giftMessage: 'Gift card message (free):', giftPlaceholder: 'Write your message...', vipWarranty: 'VIP protection and extended warranty (+1 year)', warrantyInfo: 'Protection against damage (+15 ₾)', uploadPhoto: 'Upload a photo:', photoSelected: 'Photo selected', noReviews: 'There are no reviews for this product yet.', enterMeasurements: 'Enter your measurements', height: 'Your height (cm):', weight: 'Your weight (kg):', heightExample: 'e.g. 178', weightExample: 'e.g. 75', calculateSize: 'Calculate & select size', sizeGuide: 'Size guide', sizeChart: 'Size chart', clothingSizes: 'Clothing sizes', chest: 'Chest', waist: 'Waist', understand: 'Got it', subcategoryHint: 'Choose a subcategory ▾', categoryHint: 'View category', subCount: 'sub' }, ru: { allCategories: 'Все категории', fullCollection: 'Полная коллекция', subcategories: 'Подкатегории:', close: 'Закрыть', allItems: 'Все', sort: 'Сортировка:', defaultSort: 'По умолчанию', priceLow: 'Цена: по возрастанию ⬆', priceHigh: 'Цена: по убыванию ⬇', nameSort: 'Название (А-Я)', chooseSize: 'Выбрать размер', viewAdd: 'Посмотреть и добавить', addToCart: 'Добавить в корзину', sizePrompt: 'Выберите размер (только в наличии):', recommendedSize: 'Рекомендуемый размер по вашим параметрам:', color: 'Цвет:', description: 'Описание товара:', defaultDescription: 'Премиальный товар отличного качества.', inStock: 'В наличии:', available: 'Доступен', deliveryFit: '(можно проверить при доставке)', reviews: 'Фотоотзывы покупателей', leaveReview: 'Оставьте отзыв и загрузите фото:', rating: 'Оценка:', yourName: 'Ваше имя *', reviewPlaceholder: 'Как вам понравился товар?...', minPrice: 'Мин', maxPrice: 'Макс', smartSize: 'Подбор размера', styleKicker: 'Найди свой стиль', viewCollection: 'Смотреть коллекцию', limitedOffer: 'Предложение ограничено по времени', hurryDiscount: 'Поторопитесь, скидка скоро закончится!', hours: 'Часы', minutes: 'Минуты', seconds: 'Секунды', discoverCollections: 'Откройте коллекции', collectionIntro: 'Подборка направлений — найдите свой новый любимый стиль', navigation: 'Навигация:', publishReview: 'Опубликовать отзыв и фото', price: 'Цена:', clear: 'Очистить', noFilterResults: 'По выбранным фильтрам товары не найдены.', wishlistTitle: 'Добавить в избранное', compareTitle: 'Добавить к сравнению', discount: 'Скидка', viewDetails: 'Подробнее', productDetails: 'Информация о товаре', vendor: 'Поставщик:', variant: 'Выберите вариант товара:', material: 'Материал / состав', durability: 'Износостойкость / характеристики', giftWrap: 'Премиальная подарочная упаковка', giftWrapInfo: 'Коробка, лента и открытка (+5 ₾)', giftMessage: 'Текст подарочной открытки (бесплатно):', giftPlaceholder: 'Напишите пожелание...', vipWarranty: 'VIP-защита и расширенная гарантия (+1 год)', warrantyInfo: 'Полная защита от повреждений (+15 ₾)', uploadPhoto: 'Загрузить фото:', photoSelected: 'Фото выбрано', noReviews: 'Пока нет отзывов об этом товаре.', enterMeasurements: 'Укажите ваши параметры', height: 'Ваш рост (см):', weight: 'Ваш вес (кг):', heightExample: 'например, 178', weightExample: 'например, 75', calculateSize: 'Рассчитать и выбрать размер', sizeGuide: 'Таблица размеров', sizeChart: 'Таблица размеров', clothingSizes: 'Размеры одежды', chest: 'Грудь', waist: 'Талия', understand: 'Понятно', subcategoryHint: 'Выберите подкатегорию ▾', categoryHint: 'Смотреть категорию', subCount: 'подкат.' }
-  })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max' };
+    ka: { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'ჭკვიანი ზომის შერჩევა', styleKicker: 'შეარჩიე შენი სტილი', viewCollection: 'კოლექციის ნახვა', limitedOffer: 'დროში შეზღუდული შეთავაზება', hurryDiscount: 'იჩქარეთ, ფასდაკლება იწურება!', hours: 'საათი', minutes: 'წუთი', seconds: 'წამი', discoverCollections: 'აღმოაჩინე კოლექციები', collectionIntro: 'შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი', navigation: 'ნავიგაცია:', publishReview: 'შეფასების და ფოტოს გამოქვეყნება', price: 'ფასი:', clear: 'გასუფთავება', noFilterResults: 'მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.', wishlistTitle: 'სურვილების სიაში დამატება', compareTitle: 'შედარებაში დამატება', discount: 'ფასდაკლება', viewDetails: 'დეტალურად ნახვა', productDetails: 'პროდუქტის დეტალური ხედი', vendor: 'მომწოდებელი:', variant: 'აირჩიეთ ინდივიდუალური ვარიანტი:', material: 'მასალა / შემადგენლობა', durability: 'მდგრადობა / მახასიათებელი', giftWrap: 'სასაჩუქრე პრემიუმ შეფუთვა', giftWrapInfo: 'ყუთი, ბაფთა და ბარათი (+5 ₾)', giftMessage: 'სასაჩუქრე ბარათის ტექსტი (უფასო):', giftPlaceholder: 'ჩაწერეთ თქვენი სურვილი...', vipWarranty: 'VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)', warrantyInfo: 'სრული დაცვა დაზიანებისგან (+15 ₾)', uploadPhoto: 'ატვირთეთ ფოტო:', photoSelected: 'ფოტო არჩეულია', noReviews: 'ამ პროდუქტზე ჯერ არ არის შეფასებები.', enterMeasurements: 'მიეთითეთ თქვენი პარამეტრები', height: 'თქვენი სიმაღლე (სმ):', weight: 'თქვენი წონა (კგ):', heightExample: 'მაგ: 178', weightExample: 'მაგ: 75', calculateSize: 'ზომის გამოთვლა და შერჩევა', sizeGuide: 'ზომების გიდი', sizeChart: 'ზომების ცხრილი', clothingSizes: 'ტანსაცმლის ზომები', chest: 'გულმკერდი', waist: 'წელი', understand: 'გასაგებია', subcategoryHint: 'აირჩიეთ სუბკატეგორია ▾', categoryHint: 'კატეგორიის ნახვა', subCount: 'სუბ' },
+    en: { allCategories: 'All categories', fullCollection: 'Full collection', subcategories: 'Subcategories for:', close: 'Close', allItems: 'All', sort: 'Sort:', defaultSort: 'Default', priceLow: 'Price: low to high ⬆', priceHigh: 'Price: high to low ⬇', nameSort: 'Name (A-Z)', chooseSize: 'Choose size', viewAdd: 'View & add', addToCart: 'Add to cart', sizePrompt: 'Choose a size (in-stock sizes only):', recommendedSize: 'Recommended size based on your measurements:', color: 'Color:', description: 'Product description:', defaultDescription: 'Premium product of excellent quality.', inStock: 'In stock:', available: 'Available', outOfStock: 'Out of stock', deliveryFit: '(fit can be checked on delivery)', reviews: 'Customer photo reviews', leaveReview: 'Leave a review and upload a photo:', rating: 'Rating:', yourName: 'Your name *', reviewPlaceholder: 'How did you like the product?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'Smart size selection', styleKicker: 'Find your style', viewCollection: 'Explore collection', limitedOffer: 'Limited-time offer', hurryDiscount: 'Hurry, the discount is ending!', hours: 'Hours', minutes: 'Minutes', seconds: 'Seconds', discoverCollections: 'Discover collections', collectionIntro: 'Curated collections — find your next favourite style', navigation: 'Navigation:', publishReview: 'Publish review and photo', price: 'Price:', clear: 'Clear', noFilterResults: 'No products match the selected filters.', wishlistTitle: 'Add to wishlist', compareTitle: 'Add to comparison', discount: 'Sale', viewDetails: 'View details', productDetails: 'Product details', vendor: 'Vendor:', variant: 'Choose a product option:', material: 'Material / composition', durability: 'Durability / features', giftWrap: 'Premium gift wrapping', giftWrapInfo: 'Box, ribbon and card (+5 ₾)', giftMessage: 'Gift card message (free):', giftPlaceholder: 'Write your message...', vipWarranty: 'VIP protection and extended warranty (+1 year)', warrantyInfo: 'Protection against damage (+15 ₾)', uploadPhoto: 'Upload a photo:', photoSelected: 'Photo selected', noReviews: 'There are no reviews for this product yet.', enterMeasurements: 'Enter your measurements', height: 'Your height (cm):', weight: 'Your weight (kg):', heightExample: 'e.g. 178', weightExample: 'e.g. 75', calculateSize: 'Calculate & select size', sizeGuide: 'Size guide', sizeChart: 'Size chart', clothingSizes: 'Clothing sizes', chest: 'Chest', waist: 'Waist', understand: 'Got it', subcategoryHint: 'Choose a subcategory ▾', categoryHint: 'View category', subCount: 'sub' }, ru: { allCategories: 'Все категории', fullCollection: 'Полная коллекция', subcategories: 'Подкатегории:', close: 'Закрыть', allItems: 'Все', sort: 'Сортировка:', defaultSort: 'По умолчанию', priceLow: 'Цена: по возрастанию ⬆', priceHigh: 'Цена: по убыванию ⬇', nameSort: 'Название (А-Я)', chooseSize: 'Выбрать размер', viewAdd: 'Посмотреть и добавить', addToCart: 'Добавить в корзину', sizePrompt: 'Выберите размер (только в наличии):', recommendedSize: 'Рекомендуемый размер по вашим параметрам:', color: 'Цвет:', description: 'Описание товара:', defaultDescription: 'Премиальный товар отличного качества.', inStock: 'В наличии:', available: 'Доступен', outOfStock: 'Нет в наличии', deliveryFit: '(можно проверить при доставке)', reviews: 'Фотоотзывы покупателей', leaveReview: 'Оставьте отзыв и загрузите фото:', rating: 'Оценка:', yourName: 'Ваше имя *', reviewPlaceholder: 'Как вам понравился товар?...', minPrice: 'Мин', maxPrice: 'Макс', smartSize: 'Подбор размера', styleKicker: 'Найди свой стиль', viewCollection: 'Смотреть коллекцию', limitedOffer: 'Предложение ограничено по времени', hurryDiscount: 'Поторопитесь, скидка скоро закончится!', hours: 'Часы', minutes: 'Минуты', seconds: 'Секунды', discoverCollections: 'Откройте коллекции', collectionIntro: 'Подборка направлений — найдите свой новый любимый стиль', navigation: 'Навигация:', publishReview: 'Опубликовать отзыв и фото', price: 'Цена:', clear: 'Очистить', noFilterResults: 'По выбранным фильтрам товары не найдены.', wishlistTitle: 'Добавить в избранное', compareTitle: 'Добавить к сравнению', discount: 'Скидка', viewDetails: 'Подробнее', productDetails: 'Информация о товаре', vendor: 'Поставщик:', variant: 'Выберите вариант товара:', material: 'Материал / состав', durability: 'Износостойкость / характеристики', giftWrap: 'Премиальная подарочная упаковка', giftWrapInfo: 'Коробка, лента и открытка (+5 ₾)', giftMessage: 'Текст подарочной открытки (бесплатно):', giftPlaceholder: 'Напишите пожелание...', vipWarranty: 'VIP-защита и расширенная гарантия (+1 год)', warrantyInfo: 'Полная защита от повреждений (+15 ₾)', uploadPhoto: 'Загрузить фото:', photoSelected: 'Фото выбрано', noReviews: 'Пока нет отзывов об этом товаре.', enterMeasurements: 'Укажите ваши параметры', height: 'Ваш рост (см):', weight: 'Ваш вес (кг):', heightExample: 'например, 178', weightExample: 'например, 75', calculateSize: 'Рассчитать и выбрать размер', sizeGuide: 'Таблица размеров', sizeChart: 'Таблица размеров', clothingSizes: 'Размеры одежды', chest: 'Грудь', waist: 'Талия', understand: 'Понятно', subcategoryHint: 'Выберите подкатегорию ▾', categoryHint: 'Смотреть категорию', subCount: 'подкат.' }
+  })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max' };
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
@@ -38,7 +37,6 @@ export default function StoreView({
 
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('');
-  const [selectedCustomVariant, setSelectedCustomVariant] = useState(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   // 🌟 ჭკვიანი ზომის შერჩევის სახელმწიფო (Smart Size Recommender)
@@ -95,7 +93,7 @@ export default function StoreView({
 
   const handleOpenProduct = (prod) => {
     setSelectedProduct(prod);
-    setActiveImage(prod.image);
+    setActiveImage(prod.image || prod.gallery?.[0] || null);
     
     const defaultSizes = prod.availableSizes || ['S', 'M', 'L', 'XL'];
     setSelectedSize(defaultSizes[0] || 'M');
@@ -103,7 +101,6 @@ export default function StoreView({
     const defaultColors = prod.availableColors || ['შავი'];
     setSelectedColor(defaultColors[0] || '');
 
-    setSelectedCustomVariant(prod.variants && prod.variants.length > 0 ? prod.variants[0] : null);
 
     setIsGiftWrapped(false);
     setGiftMessage('');
@@ -276,7 +273,9 @@ export default function StoreView({
     return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
   };
 
-  const currentBasePrice = selectedCustomVariant ? selectedCustomVariant.priceGEL : (selectedProduct?.priceGEL || 0);
+  // The checkout RPC currently prices from the server catalogue row only.
+  // Never display or pass an unverified client-side custom-variant price.
+  const currentBasePrice = selectedProduct?.priceGEL || 0;
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -336,17 +335,17 @@ export default function StoreView({
               return (
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
-                    <img src={prod.image} alt="" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                    {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
                     <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
                   </div>
                   <div className="py-3 space-y-1.5">
                     <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
                     <div className="flex items-baseline gap-2">
                       <span className="text-amber-400 font-black text-sm">{formatPrice(prod.priceGEL)}</span>
-                      {prod.oldPriceGEL && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
+                      {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
                   </div>
-                  <button onClick={() => addToCart(prod)} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer">
+                  <button onClick={() => addToCart(prod)} disabled={Number(prod.stock ?? 0) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     კალათაში
                   </button>
                 </div>
@@ -573,7 +572,7 @@ export default function StoreView({
                   onClick={() => handleOpenProduct(prod)}
                   className="gs-product-media gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
-                  <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" />
+                  {prod.image ? <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
@@ -596,7 +595,7 @@ export default function StoreView({
                   </button>
 
                   <div className="gs-catalog-product-badges absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 z-10">
-                    {prod.oldPriceGEL && (
+                    {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && (
                       <span className="gs-catalog-sale-badge bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{storeText.discount}</span>
                     )}
                     {tagsArray.slice(0, 2).map((tag, idx) => (
@@ -619,7 +618,7 @@ export default function StoreView({
                   <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="gs-product-price gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
-                    {prod.oldPriceGEL && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
+                    {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
@@ -659,7 +658,7 @@ export default function StoreView({
                 
                 <div className="gs-product-gallery space-y-4">
                   <div className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
-                    <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" />
+                    {(activeImage || selectedProduct.image) ? <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
@@ -687,32 +686,8 @@ export default function StoreView({
                     <span className="text-xl sm:text-3xl font-black text-amber-400">
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
-                    {selectedProduct.oldPriceGEL && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                    {Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
-
-                  {selectedProduct.variants && selectedProduct.variants.length > 0 && (
-                    <div className="gs-product-variants space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/30">
-                      <span className="text-amber-400 font-bold block flex items-center gap-1.5">
-                        <Layers className="w-4 h-4" /> {storeText.variant}
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedProduct.variants.map(v => {
-                          const isSel = selectedCustomVariant?.id === v.id;
-                          return (
-                            <button
-                              key={v.id}
-                              type="button"
-                              onClick={() => setSelectedCustomVariant(v)}
-                              className={`gs-product-variant-option p-3 rounded-2xl text-left transition cursor-pointer border flex justify-between items-center ${isSel ? 'bg-amber-400 text-slate-950 border-amber-400 font-black shadow' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:border-amber-400/50'}`}
-                            >
-                              <span>{v.name}</span>
-                              <span className="font-black">{v.priceGEL} ₾</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
                   {(selectedProduct.material || selectedProduct.durability) && (
                     <div className="gs-product-detail-specs bg-[#121216] p-3.5 sm:p-4 rounded-3xl border border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -791,7 +766,7 @@ export default function StoreView({
                   )}
 
                   <div className="gs-product-option-card gs-product-option-card--gift bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
-                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
+                    <label className="flex items-center justify-between cursor-pointer">
                       <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
                           <Gift className="w-5 h-5" />
@@ -801,8 +776,8 @@ export default function StoreView({
                           <p className="text-[10px] text-slate-400">{storeText.giftWrapInfo}</p>
                         </div>
                       </div>
-                      <input type="checkbox" checked={isGiftWrapped} onClick={(e) => e.stopPropagation()} onChange={() => setIsGiftWrapped(!isGiftWrapped)} aria-label={storeText.giftWrap} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
-                    </div>
+                      <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} aria-label={storeText.giftWrap} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
+                    </label>
 
                     {isGiftWrapped && (
                       <div className="pt-2 animate-in fade-in">
@@ -812,6 +787,7 @@ export default function StoreView({
                         <textarea
                           rows="2"
                           placeholder={storeText.giftPlaceholder}
+                          aria-label={storeText.giftMessage}
                           value={giftMessage}
                           onChange={(e) => setGiftMessage(e.target.value)}
                           className="w-full bg-[#060608] border border-amber-500/30 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 text-xs resize-none shadow-inner"
@@ -820,7 +796,7 @@ export default function StoreView({
                     )}
                   </div>
 
-                  <div className="gs-product-option-card gs-product-option-card--warranty bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
+                  <label className="gs-product-option-card gs-product-option-card--warranty bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
                         <ShieldAlert className="w-5 h-5" />
@@ -830,8 +806,8 @@ export default function StoreView({
                         <p className="text-[10px] text-slate-400">{storeText.warrantyInfo}</p>
                       </div>
                     </div>
-                    <input type="checkbox" checked={hasVipWarranty} onClick={(e) => e.stopPropagation()} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
-                  </div>
+                    <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
+                  </label>
 
                   <div className="space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="text-amber-300 font-bold block text-sm">{storeText.description}</span>
@@ -840,7 +816,7 @@ export default function StoreView({
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                     <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{storeText.available}</b> {storeText.deliveryFit}</span>
+                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{Number(selectedProduct.stock ?? 0) > 0 ? Number(selectedProduct.stock) : storeText.outOfStock}</b> {Number(selectedProduct.stock) > 0 ? storeText.deliveryFit : ''}</span>
                   </div>
 
                   <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
@@ -927,23 +903,24 @@ export default function StoreView({
 
             <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
+                disabled={Number(selectedProduct.stock ?? 0) <= 0}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
-                  let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''}${selectedCustomVariant ? ` [ვარიანტი: ${selectedCustomVariant.name}]` : ''})`;
+                  let customName = `${selectedProduct.name} (${isCf ? `ზომა: ${selectedSize}` : ''}${selectedColor ? `, ფერი: ${selectedColor}` : ''})`;
                   if (isGiftWrapped) customName += ' + სასაჩუქრე შეფუთვა';
                   if (giftMessage.trim()) customName += ` [ბარათი: "${giftMessage}"]`;
                   if (hasVipWarranty) customName += ' + VIP გარანტია';
 
-                  addToCart({ 
+                  const added = addToCart({ 
                     ...selectedProduct, 
                     priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
                     name: customName,
                     selectedSize: isCf ? selectedSize : null,
                     selectedColor: selectedColor
                   }); 
-                  setSelectedProduct(null); 
+                  if (added !== false) setSelectedProduct(null); 
                 }} 
-                className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95"
+                className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
                 <span className="gs-modal-add-label">{storeText.addToCart}{isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}</span>

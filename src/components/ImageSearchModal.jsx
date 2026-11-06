@@ -150,7 +150,7 @@ export default function ImageSearchModal({
                 <div className="space-y-2.5">
                   {searchResults.map(p => (
                     <div key={p.id} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-inner">
-                      <img src={p.image} alt="" className="w-14 h-14 object-contain bg-slate-900 rounded-xl p-1 border border-slate-800 shrink-0" />
+                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-contain bg-slate-900 rounded-xl p-1 border border-slate-800 shrink-0" /> : <div className="w-14 h-14 bg-slate-900 rounded-xl border border-slate-800 shrink-0 flex items-center justify-center text-[8px] font-black text-emerald-400/60">GEO</div>}
                       <div className="flex-1 min-w-0">
                         <h5 className="font-bold text-white text-xs truncate">{p.name}</h5>
                         <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(p.priceGEL)}</p>

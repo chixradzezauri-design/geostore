@@ -82,6 +82,14 @@ export default function Header({
   const mainCategories = (categories || []).filter((category) => !category?.parentId);
   const categoryLabel = currentLang === 'en' ? 'Categories' : currentLang === 'ru' ? 'Категории' : 'კატეგორიები';
   const allCategoriesLabel = currentLang === 'en' ? 'All products' : currentLang === 'ru' ? 'Все товары' : 'ყველა პროდუქტი';
+  const menuToggleLabel = currentLang === 'en'
+    ? (menuOpen ? 'Close main menu' : 'Open main menu')
+    : currentLang === 'ru'
+      ? (menuOpen ? 'Закрыть главное меню' : 'Открыть главное меню')
+      : (menuOpen ? 'მენიუს დახურვა' : 'მთავარი მენიუს გახსნა');
+  const mainNavigationLabel = currentLang === 'en'
+    ? 'Main navigation'
+    : currentLang === 'ru' ? 'Главная навигация' : 'მთავარი ნავიგაცია';
   const categoryName = (category) => typeof category === 'string' ? category : (category?.name || '');
 
   return (
@@ -111,7 +119,7 @@ export default function Header({
           type="button"
           className="gs-menu-toggle"
           onClick={() => setMenuOpen((open) => !open)}
-          aria-label={menuOpen ? 'მენიუს დახურვა' : 'მთავარი მენიუს გახსნა'}
+          aria-label={menuToggleLabel}
           aria-expanded={menuOpen}
           aria-controls="geostore-main-menu"
         >
@@ -144,7 +152,7 @@ export default function Header({
       )}
 
       {menuOpen && (
-        <nav id="geostore-main-menu" className="gs-main-menu" aria-label="მთავარი ნავიგაცია">
+        <nav id="geostore-main-menu" className="gs-main-menu" aria-label={mainNavigationLabel}>
           <div className="gs-menu-heading">
             <div className="gs-menu-brand">
               <strong>GEOSTORE</strong>

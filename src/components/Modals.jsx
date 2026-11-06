@@ -1,9 +1,9 @@
-// src/components/Modals.jsx - Elite Gold Luxury Modals Edition with Real PIN & Passkeys Auth
+// src/components/Modals.jsx - GEOSTORE checkout, account and customer dialogs
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
-  Search, PackageCheck, Clock, Navigation, Map, KeyRound, Fingerprint, Bell, Sparkles, Tag 
+  Search, PackageCheck, Clock, Navigation, Map, Bell, Sparkles, Tag 
 } from 'lucide-react';
 
 export default function Modals({
@@ -39,9 +39,6 @@ export default function Modals({
   setSelectedRegion,
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   currentUser,
-  setCurrentUser,
-  usersList = [],
-  setUsersList,
   currentLang = 'ka'
 }) {
   const termsCopy = ({
@@ -101,12 +98,7 @@ export default function Modals({
       trackerFailed: 'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.',
       notifications: 'შეტყობინებების ცენტრი', totalNotifications: 'სულ შეტყობინება:',
       markRead: 'ყველას წაკითხულად მონიშვნა', noNotifications: 'ახალი შეტყობინებები არ არის.',
-      auth: 'ავტორიზაცია', register: 'რეგისტრაცია', pinLogin: 'PIN-კოდით შესვლა',
-      standard: 'სტანდარტული', pin: 'PIN-კოდი', pinRepeat: 'გაიმეორეთ PIN-კოდი',
-      pinSave: 'PIN-კოდის შენახვა', pinEnter: 'შესვლა PIN-კოდით', pinLabel: 'PIN-კოდი',
-      pinManage: 'მართეთ თქვენი PIN-კოდი:', pinChange: 'შეცვალეთ ან დააყენეთ PIN-კოდი:',
-      pinCreate: 'შექმენით პირადი PIN-კოდი:', pinPrompt: 'შეიყვანეთ თქვენი 4-ციფრიანი PIN-კოდი:',
-      pinCheck: 'უკვე გაქვთ PIN? შემოწმება', pinNew: 'ახალი PIN-კოდის შექმნა / შეცვლა',
+      auth: 'ავტორიზაცია', register: 'რეგისტრაცია',
       name: 'სახელი', yourName: 'თქვენი სახელი', password: 'პაროლი',
       login: 'შესვლა სისტემაში', finishRegister: 'რეგისტრაციის დასრულება',
       faceId: 'Face ID-ით / Passkey-ით შესვლა',
@@ -134,12 +126,7 @@ export default function Modals({
       trackerFailed: 'Order tracking is temporarily unavailable. Please try again later.',
       notifications: 'Notifications', totalNotifications: 'Total notifications:',
       markRead: 'Mark all as read', noNotifications: 'There are no new notifications.',
-      auth: 'Sign in', register: 'Create account', pinLogin: 'Sign in with PIN',
-      standard: 'Standard', pin: 'PIN code', pinRepeat: 'Confirm PIN code',
-      pinSave: 'Save PIN code', pinEnter: 'Continue with PIN', pinLabel: 'PIN code',
-      pinManage: 'Manage your PIN code:', pinChange: 'Set or change your PIN code:',
-      pinCreate: 'Create a personal PIN code:', pinPrompt: 'Enter your 4-digit PIN code:',
-      pinCheck: 'Already have a PIN? Verify', pinNew: 'Create / change PIN code',
+      auth: 'Sign in', register: 'Create account',
       name: 'Name', yourName: 'Your name', password: 'Password',
       login: 'Sign in', finishRegister: 'Complete registration',
       faceId: 'Continue with Face ID / Passkey',
@@ -167,12 +154,7 @@ export default function Modals({
       trackerFailed: 'Отслеживание заказа временно недоступно. Попробуйте позже.',
       notifications: 'Уведомления', totalNotifications: 'Всего уведомлений:',
       markRead: 'Отметить все как прочитанные', noNotifications: 'Новых уведомлений нет.',
-      auth: 'Вход', register: 'Регистрация', pinLogin: 'Вход по PIN-коду',
-      standard: 'Стандартный', pin: 'PIN-код', pinRepeat: 'Повторите PIN-код',
-      pinSave: 'Сохранить PIN-код', pinEnter: 'Войти по PIN-коду', pinLabel: 'PIN-код',
-      pinManage: 'Управление PIN-кодом:', pinChange: 'Установите или измените PIN-код:',
-      pinCreate: 'Создайте личный PIN-код:', pinPrompt: 'Введите ваш 4-значный PIN-код:',
-      pinCheck: 'Уже есть PIN? Проверить', pinNew: 'Создать / изменить PIN-код',
+      auth: 'Вход', register: 'Регистрация',
       name: 'Имя', yourName: 'Ваше имя', password: 'Пароль',
       login: 'Войти', finishRegister: 'Завершить регистрацию',
       faceId: 'Войти с Face ID / Passkey',
@@ -201,11 +183,6 @@ export default function Modals({
     notifications: 'შეტყობინებების ცენტრი', totalNotifications: 'სულ შეტყობინება:',
     markRead: 'ყველას წაკითხულად მონიშვნა', noNotifications: 'ახალი შეტყობინებები არ არის.',
     auth: 'ავტორიზაცია', register: 'რეგისტრაცია', pinLogin: 'PIN-კოდით შესვლა',
-    standard: 'სტანდარტული', pin: 'PIN-კოდი', pinRepeat: 'გაიმეორეთ PIN-კოდი',
-    pinSave: 'PIN-კოდის შენახვა', pinEnter: 'შესვლა PIN-კოდით', pinLabel: 'PIN-კოდი',
-    pinManage: 'მართეთ თქვენი PIN-კოდი:', pinChange: 'შეცვალეთ ან დააყენეთ PIN-კოდი:',
-    pinCreate: 'შექმენით პირადი PIN-კოდი:', pinPrompt: 'შეიყვანეთ თქვენი 4-ციფრიანი PIN-კოდი:',
-    pinCheck: 'უკვე გაქვთ PIN? შემოწმება', pinNew: 'ახალი PIN-კოდის შექმნა / შეცვლა',
     name: 'სახელი', yourName: 'თქვენი სახელი', password: 'პაროლი',
     login: 'შესვლა სისტემაში', finishRegister: 'რეგისტრაციის დასრულება',
     faceId: 'Face ID-ით / Passkey-ით შესვლა',
@@ -268,16 +245,10 @@ export default function Modals({
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
 
-  const [authSubMode, setAuthSubMode] = useState('standard');
-  const [pinCode, setPinCode] = useState('');
-  const [confirmPinCode, setConfirmPinCode] = useState('');
-  const [isPinSetupMode, setIsPinSetupMode] = useState(false);
-  const [pinError, setPinError] = useState('');
-  const [failedAttempts, setFailedAttempts] = useState(0);
 
   const handleSearchOrder = async (e) => {
     e.preventDefault();
-    const cleanId = searchOrderId.trim().toUpperCase().replace('#', '');
+    const cleanId = searchOrderId.trim().toUpperCase().replace(/^#+/, '');
     const cleanPhone = searchOrderPhone.trim();
 
     if (!cleanId || !cleanPhone) {
@@ -314,94 +285,6 @@ export default function Modals({
     return 15;
   };
 
-  const handlePinAuthSubmit = (e) => {
-    e.preventDefault();
-    if (failedAttempts >= 3) {
-      setPinError('მცდელობების ლიმიტი ამოწურულია. გთხოვთ გამოიყენოთ პაროლი.');
-      return;
-    }
-    if (pinCode.length < 4) {
-      setPinError('PIN-კოდი უნდა შედგებოდეს მინიმუმ 4 ციფრისგან.');
-      return;
-    }
-
-    if (currentUser) {
-      if (isPinSetupMode) {
-        if (pinCode !== confirmPinCode) {
-          setPinError('PIN-კოდები არ ემთხვევა ერთმანეთს!');
-          return;
-        }
-        const encodedPin = btoa(pinCode);
-        const updatedUser = { ...currentUser, pinHash: encodedPin };
-        setCurrentUser(updatedUser);
-        if (setUsersList) {
-          setUsersList(usersList.map(u => u.email === currentUser.email ? updatedUser : u));
-        }
-        alert('🎉 PIN-კოდი წარმატებით დაყენდა / განახლდა!');
-        setIsPinSetupMode(false);
-        setAuthSubMode('standard');
-        setPinCode('');
-        setConfirmPinCode('');
-        setIsAuthOpen(false);
-      } else {
-        if (currentUser.pinHash && currentUser.pinHash === btoa(pinCode)) {
-          alert('🔓 PIN-კოდი სწორია!');
-          setFailedAttempts(0);
-          setIsAuthOpen(false);
-          setPinCode('');
-        } else {
-          setFailedAttempts(prev => prev + 1);
-          setPinError(`არასწორი PIN-კოდი! დარჩენილი მცდელობა: ${3 - (failedAttempts + 1)}`);
-        }
-      }
-    } else {
-      const matchedUser = usersList.find(u => u.pinHash && u.pinHash === btoa(pinCode));
-      if (matchedUser) {
-        setCurrentUser(matchedUser);
-        alert(`🔓 წარმატებით შეხვედით როგორც ${matchedUser.name}!`);
-        setIsAuthOpen(false);
-        setPinCode('');
-        setFailedAttempts(0);
-      } else {
-        setFailedAttempts(prev => prev + 1);
-        setPinError('ვერ მოიძებნა ანგარიში ამ PIN-კოდით.');
-      }
-    }
-  };
-
-  const handleBiometricLogin = async () => {
-    if (!window.PublicKeyCredential) {
-      alert('თქვენი ბრაუზერი ან მოწყობილობა არ მხარს უჭერს Passkeys / Face ID ავტორიზაციას.');
-      return;
-    }
-    try {
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if (available) {
-        const assertion = await navigator.credentials.get({
-          publicKey: {
-            challenge: new Uint8Array([1,2,3,4,5,6,7,8]),
-            timeout: 60000,
-            userVerification: "required"
-          }
-        });
-        if (assertion) {
-          const passkeyUser = currentUser || usersList.find(u => u.hasPasskey) || usersList[0];
-          if (passkeyUser) {
-            setCurrentUser(passkeyUser);
-            alert(currentLang === 'en' ? `✅ Face ID / Touch ID verification successful (${passkeyUser.name})!` : currentLang === 'ru' ? `✅ Проверка Face ID / Touch ID прошла успешно (${passkeyUser.name})!` : `✅ Face ID / Touch ID ვერიფიკაცია წარმატებულია (${passkeyUser.name})!`);
-          } else {
-            alert(currentLang === 'en' ? '✅ Face ID verification successful. Please register.' : currentLang === 'ru' ? '✅ Проверка Face ID прошла успешно. Пожалуйста, зарегистрируйтесь.' : '✅ Face ID ვერიფიკაცია წარმატებულია, გთხოვთ გაიაროთ რეგისტრაცია.');
-          }
-          setIsAuthOpen(false);
-        }
-      } else {
-        alert(currentLang === 'en' ? 'Biometric sensor is unavailable on this device.' : currentLang === 'ru' ? 'Биометрический датчик недоступен на этом устройстве.' : 'ბიომეტრიული სენსორი ამ მოწყობილობაზე მიუწვდომელია.');
-      }
-    } catch {
-      alert(currentLang === 'en' ? 'Face ID sign-in was cancelled or failed.' : currentLang === 'ru' ? 'Вход по Face ID отменён или не выполнен.' : 'Face ID ავტორიზაცია გაუქმდა ან ვერ მოხერხდა.');
-    }
-  };
-
   return (
     <>
       {/* 1. შეკვეთის გაფორმების მოდალი */}
@@ -429,13 +312,13 @@ export default function Modals({
               </button>
             </header>
 
-            <form onSubmit={handlePlaceOrder} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+            <form onSubmit={handlePlaceOrder} aria-busy={isSubmittingOrder} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
               <div className="gs-checkout-contact-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="text" required autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
+                    <input type="text" required maxLength={100} autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
                       onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
@@ -445,7 +328,7 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.phone} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="tel" required autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
+                    <input type="tel" required maxLength={24} autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
                       onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
@@ -454,7 +337,7 @@ export default function Modals({
 
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.email} {!currentUser?.email && <span className="text-neutral-400">*</span>}</span>
-                <input type="email" required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
+                <input type="email" maxLength={254} required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
                   placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''}
                   onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white read-only:cursor-not-allowed read-only:opacity-65" />
@@ -478,7 +361,7 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.address} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <input type="text" required autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
+                  <input type="text" required maxLength={300} autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
                     onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
                     className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                 </span>
@@ -555,19 +438,19 @@ export default function Modals({
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
               </h3>
-              <button onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" aria-label={copy.close} onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSearchOrder} className="gs-order-tracker-form grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
               <div className="relative">
-                <input type="text" placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
-                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" required
+                <input type="text" aria-label={copy.orderCode} placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
+                  onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" maxLength={64} required
                   className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
                 <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
               </div>
-              <input type="tel" inputMode="tel" autoComplete="tel"
+              <input type="tel" aria-label={copy.orderPhone} inputMode="tel" autoComplete="tel" maxLength={24}
                 placeholder={copy.orderPhone} value={searchOrderPhone}
                 onChange={e => setSearchOrderPhone(e.target.value)} required
                 className="w-full bg-[#08080a] border border-amber-500/20 px-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
@@ -659,7 +542,7 @@ export default function Modals({
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Bell className="w-5 h-5 text-amber-400 animate-bounce" /> {copy.notifications}
               </h3>
-              <button onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" aria-label={copy.close} onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -667,7 +550,7 @@ export default function Modals({
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400 font-bold">{copy.totalNotifications} <b className="text-amber-400">{notifications.length}</b></span>
               {notifications.length > 0 && (
-                <button onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
+                <button type="button" onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
                   {copy.markRead}
                 </button>
               )}
@@ -694,168 +577,67 @@ export default function Modals({
               )}
             </div>
 
-            <button onClick={() => setIsNotificationsOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition shadow-lg shadow-amber-500/20 cursor-pointer text-xs">
+            <button type="button" onClick={() => setIsNotificationsOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition shadow-lg shadow-amber-500/20 cursor-pointer text-xs">
               {copy.close}
             </button>
           </div>
         </div>
       )}
 
-      {/* 4. ავტორიზაცია / რეგისტრაცია (PIN-კოდით და Face ID-ით რეალური მხარდაჭერით) */}
+      {/* 4. Supabase email/password sign-in and registration */}
       {isAuthOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
           <div className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Lock className="w-5 h-5 text-amber-400" /> 
-                {authSubMode === 'pin' ? copy.pinLogin : authMode === 'login' ? copy.auth : copy.register}
+                <Lock className="w-5 h-5 text-amber-400" />
+                {authMode === 'login' ? copy.auth : copy.register}
               </h3>
-              <button onClick={() => setIsAuthOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex gap-2 bg-[#121216] p-1.5 rounded-2xl border border-amber-500/20 text-[11px] font-bold">
-              <button 
-                type="button" 
-                onClick={() => { setAuthSubMode('standard'); setIsPinSetupMode(false); }}
-                className={`flex-1 py-2 rounded-xl transition cursor-pointer ${authSubMode === 'standard' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                {copy.standard}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setAuthSubMode('pin')}
-                className={`flex-1 py-2 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${authSubMode === 'pin' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
-              >
-                <KeyRound className="w-3.5 h-3.5" /> {copy.pin}
-              </button>
-            </div>
-
-            {authSubMode === 'pin' ? (
-              <form onSubmit={handlePinAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
-                <div className="bg-amber-500/10 p-3.5 rounded-2xl border border-amber-500/20 text-[11px] text-amber-300 space-y-1">
-                  <b>{currentUser ? (isPinSetupMode ? copy.pinChange : copy.pinManage) : (isPinSetupMode ? copy.pinCreate : copy.pinPrompt)}</b>
-                </div>
-
-                {pinError && <p className="text-rose-400 text-[11px] font-bold">{localizeMessage(pinError)}</p>}
-
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold" >{copy.pinLabel}</label>
-                  <input
-                    type="password"
-                    maxLength="6"
-                    required
-                    placeholder="••••"
-                    value={pinCode}
-                    onChange={e => setPinCode(e.target.value)}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
-                  />
-                </div>
-
-                {(isPinSetupMode || (currentUser && !currentUser.pinHash)) && (
+            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
+              {authMode === 'register' && (
+                <>
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-bold" >{copy.pinRepeat}</label>
-                    <input
-                      type="password"
-                      maxLength="6"
-                      required
-                      placeholder="••••"
-                      value={confirmPinCode}
-                      onChange={e => setConfirmPinCode(e.target.value)}
-                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-center text-lg tracking-widest text-amber-400 font-black outline-none focus:border-amber-400 shadow-inner"
-                    />
+                    <label htmlFor="geostore-auth-name" className="text-slate-300 font-bold">{copy.name}</label>
+                    <input id="geostore-auth-name" type="text" required maxLength={100} autoComplete="name" placeholder={copy.yourName} value={authForm.name}
+                      onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
+                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
-                )}
+                  <div className="space-y-1">
+                    <label htmlFor="geostore-auth-phone" className="text-slate-300 font-bold">{copy.phone}</label>
+                    <input id="geostore-auth-phone" type="tel" required maxLength={24} autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
+                      onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
+                      className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+                  </div>
+                </>
+              )}
 
-                <button type="submit" disabled={failedAttempts >= 3} className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
-                  {isPinSetupMode || (currentUser && !currentUser.pinHash) ? copy.pinSave : copy.pinEnter}
-                </button>
+              <div className="space-y-1">
+                <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
+                <input id="geostore-auth-email" type="email" maxLength={254} required autoComplete="email" placeholder="name@example.com" value={authForm.email}
+                  onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
+                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+              </div>
 
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsPinSetupMode(!isPinSetupMode)}
-                    className="text-slate-400 hover:text-amber-400 text-[11px] font-bold cursor-pointer underline"
-                  >
-                    {isPinSetupMode ? copy.pinCheck : copy.pinNew}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs animate-in fade-in">
-                {authMode === 'register' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-slate-300 font-bold" >{copy.name}</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder={copy.yourName}
-                        value={authForm.name}
-                        onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
-                        className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-slate-300 font-bold" >{copy.phone}</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="599 00 00 00"
-                        value={authForm.phone}
-                        onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
-                        className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                      />
-                    </div>
-                  </>
-                )}
+              <div className="space-y-1">
+                <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
+                <input id="geostore-auth-password" type="password" required autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                  onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
+                  className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold" >{copy.email}</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@example.com"
-                    value={authForm.email}
-                    onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-bold" >{copy.password}</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={authForm.password}
-                    onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
-                    className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all"
-                  />
-                </div>
-
-                <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-                  {authMode === 'login' ? copy.login : copy.finishRegister}
-                </button>
-
-                {authMode === 'login' && (
-                  <button 
-                    type="button"
-                    onClick={handleBiometricLogin}
-                    className="w-full bg-[#16161a] hover:bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black py-3 rounded-2xl transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
-                  >
-                    <Fingerprint className="w-4 h-4 text-amber-400" /> {copy.faceId}
-                  </button>
-                )}
-              </form>
-            )}
+              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
+                {authMode === 'login' ? copy.login : copy.finishRegister}
+              </button>
+            </form>
 
             <div className="text-center pt-2 border-t border-amber-500/20">
-              <button
-                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-                className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer"
-              >
+              <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer">
                 {authMode === 'login' ? copy.noAccount : copy.hasAccount}
               </button>
             </div>
@@ -914,17 +696,17 @@ export default function Modals({
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-amber-400" /> {currentLang === 'en' ? 'Warranty policy' : currentLang === 'ru' ? 'Гарантийные условия' : 'საგარანტიო წესები'}
               </h3>
-              <button onClick={() => setIsWarrantyOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" aria-label={copy.close} onClick={() => setIsWarrantyOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto space-y-4 text-xs text-slate-300 leading-relaxed pr-2 scrollbar-thin">
               <div className="space-y-2 bg-[#121216] p-4 rounded-2xl border border-amber-500/20">
-                <h4 className="font-black text-amber-300 text-sm">{currentLang === 'en' ? '1. Official warranty' : currentLang === 'ru' ? '1. Официальная гарантия' : '1. ოფიციალური გარანტია'}</h4>
-                <p>{currentLang === 'en' ? 'All electronics offered on GEOSTORE are covered by the manufacturer warranty.' : currentLang === 'ru' ? 'На всю электронику, представленную на GEOSTORE, распространяется гарантия производителя.' : 'GEOSTORE-ზე წარმოდგენილ ყველა ტექნიკაზე მოქმედებს ქარხნული გარანტია.'}</p>
+                <h4 className="font-black text-amber-300 text-sm">{currentLang === 'en' ? '1. Product-specific warranty' : currentLang === 'ru' ? '1. Гарантия конкретного товара' : '1. პროდუქტის ინდივიდუალური გარანტია'}</h4>
+                <p>{currentLang === 'en' ? 'Warranty availability, duration and service conditions depend on the individual product and are stated on its product page or confirmed by the seller before purchase. Do not assume that every item includes a manufacturer warranty.' : currentLang === 'ru' ? 'Наличие, срок и условия гарантии зависят от конкретного товара и указываются на его странице или подтверждаются продавцом до покупки. Не следует считать, что на каждый товар распространяется гарантия производителя.' : 'გარანტიის არსებობა, ვადა და მომსახურების პირობები დამოკიდებულია კონკრეტულ პროდუქტზე და მითითებულია მის გვერდზე ან შეძენამდე ზუსტდება გამყიდველთან. არ უნდა ვივარაუდოთ, რომ ყველა ნივთზე ქარხნული გარანტია მოქმედებს.'}</p>
               </div>
             </div>
-            <button onClick={() => setIsWarrantyOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
+            <button type="button" onClick={() => setIsWarrantyOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
               {currentLang === 'en' ? 'Understood' : currentLang === 'ru' ? 'Понятно' : 'გაგებულია'}
             </button>
           </div>
