@@ -2810,12 +2810,12 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'discounts' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
             </h3>
-            <form onSubmit={handleApplyFlashSale} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
+              <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold">ფასდაკლება პროცენტულად (%)</label>
                   <input type="number" placeholder="მაგ: 20" required value={flashSaleForm.discountPercent} onChange={e => setFlashSaleForm({...flashSaleForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -2830,7 +2830,7 @@ export default function AdminDashboardPro({
                   </select>
                 </div>
               </div>
-              <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
+              <button type="submit" className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Zap className="w-4 h-4" /> ფასდაკლების მასობრივად გააქტიურება
               </button>
             </form>
@@ -2965,7 +2965,7 @@ export default function AdminDashboardPro({
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და ფოტოების მართვა</h3>
-              <div className="space-y-4">
+              <div className="admin-category-tree space-y-4">
                 {mainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
                 ) : (
@@ -3041,14 +3041,14 @@ export default function AdminDashboardPro({
                         )}
 
                         {subCats.length > 0 && (
-                          <div className="pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-2">
+                          <div className="admin-subcategory-list pl-6 border-l-2 border-emerald-500/30 space-y-2 pt-2">
                             {subCats.map(sub => {
                               const isEditingSub = editingCatId === sub.id;
                               const subImg = sub.image || sub.img;
                               return (
-                                <div key={sub.id} className="bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/15 space-y-2">
+                                <div key={sub.id} className="admin-subcategory-card bg-slate-950 p-3.5 rounded-2xl border border-emerald-500/15 space-y-2">
                                   <div className="flex justify-between items-center text-xs gap-2">
-                                    <div className="flex items-center gap-2.5 flex-1">
+                                    <div className="admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                                       {subImg && <img src={subImg} alt="" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200">{sub.name}</span>
