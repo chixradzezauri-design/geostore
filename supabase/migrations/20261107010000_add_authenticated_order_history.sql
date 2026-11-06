@@ -59,6 +59,7 @@ CREATE OR REPLACE FUNCTION public.get_my_orders()
 RETURNS jsonb
 LANGUAGE sql
 STABLE
+SECURITY DEFINER
 SET search_path TO ''
 AS $function$
   SELECT private.get_my_orders();
