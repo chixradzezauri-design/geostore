@@ -438,19 +438,19 @@ export default function Modals({
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
               </h3>
-              <button onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" aria-label={copy.close} onClick={() => { setIsTrackerOpen(false); setTrackedOrder(null); setTrackerError(''); }} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSearchOrder} className="gs-order-tracker-form grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
               <div className="relative">
-                <input type="text" placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
+                <input type="text" aria-label={copy.orderCode} placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
                   onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" maxLength={64} required
                   className="w-full bg-[#08080a] border border-amber-500/20 pl-10 pr-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
                 <Search className="w-4 h-4 text-amber-400 absolute left-3.5 top-3.5" />
               </div>
-              <input type="tel" inputMode="tel" autoComplete="tel" maxLength={24}
+              <input type="tel" aria-label={copy.orderPhone} inputMode="tel" autoComplete="tel" maxLength={24}
                 placeholder={copy.orderPhone} value={searchOrderPhone}
                 onChange={e => setSearchOrderPhone(e.target.value)} required
                 className="w-full bg-[#08080a] border border-amber-500/20 px-4 py-3 rounded-2xl text-xs text-white outline-none focus:border-amber-400 shadow-inner" />
@@ -542,7 +542,7 @@ export default function Modals({
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Bell className="w-5 h-5 text-amber-400 animate-bounce" /> {copy.notifications}
               </h3>
-              <button onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" aria-label={copy.close} onClick={() => setIsNotificationsOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -550,7 +550,7 @@ export default function Modals({
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400 font-bold">{copy.totalNotifications} <b className="text-amber-400">{notifications.length}</b></span>
               {notifications.length > 0 && (
-                <button onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
+                <button type="button" onClick={markAllNotificationsAsRead} className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer">
                   {copy.markRead}
                 </button>
               )}
@@ -577,7 +577,7 @@ export default function Modals({
               )}
             </div>
 
-            <button onClick={() => setIsNotificationsOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition shadow-lg shadow-amber-500/20 cursor-pointer text-xs">
+            <button type="button" onClick={() => setIsNotificationsOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl transition shadow-lg shadow-amber-500/20 cursor-pointer text-xs">
               {copy.close}
             </button>
           </div>
@@ -602,14 +602,14 @@ export default function Modals({
               {authMode === 'register' && (
                 <>
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-bold">{copy.name}</label>
-                    <input type="text" required autoComplete="name" placeholder={copy.yourName} value={authForm.name}
+                    <label htmlFor="geostore-auth-name" className="text-slate-300 font-bold">{copy.name}</label>
+                    <input id="geostore-auth-name" type="text" required autoComplete="name" placeholder={copy.yourName} value={authForm.name}
                       onChange={e => setAuthForm({ ...authForm, name: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-bold">{copy.phone}</label>
-                    <input type="tel" required autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
+                    <label htmlFor="geostore-auth-phone" className="text-slate-300 font-bold">{copy.phone}</label>
+                    <input id="geostore-auth-phone" type="tel" required autoComplete="tel" placeholder="599 00 00 00" value={authForm.phone}
                       onChange={e => setAuthForm({ ...authForm, phone: e.target.value })}
                       className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                   </div>
@@ -617,15 +617,15 @@ export default function Modals({
               )}
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-bold">{copy.email}</label>
-                <input type="email" required autoComplete="email" placeholder="name@example.com" value={authForm.email}
+                <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
+                <input id="geostore-auth-email" type="email" required autoComplete="email" placeholder="name@example.com" value={authForm.email}
                   onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-300 font-bold">{copy.password}</label>
-                <input type="password" required autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
+                <input id="geostore-auth-password" type="password" required autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>
@@ -696,7 +696,7 @@ export default function Modals({
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-amber-400" /> {currentLang === 'en' ? 'Warranty policy' : currentLang === 'ru' ? 'Гарантийные условия' : 'საგარანტიო წესები'}
               </h3>
-              <button onClick={() => setIsWarrantyOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
+              <button type="button" aria-label={copy.close} onClick={() => setIsWarrantyOpen(false)} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -706,7 +706,7 @@ export default function Modals({
                 <p>{currentLang === 'en' ? 'Warranty availability, duration and service conditions depend on the individual product and are stated on its product page or confirmed by the seller before purchase. Do not assume that every item includes a manufacturer warranty.' : currentLang === 'ru' ? 'Наличие, срок и условия гарантии зависят от конкретного товара и указываются на его странице или подтверждаются продавцом до покупки. Не следует считать, что на каждый товар распространяется гарантия производителя.' : 'გარანტიის არსებობა, ვადა და მომსახურების პირობები დამოკიდებულია კონკრეტულ პროდუქტზე და მითითებულია მის გვერდზე ან შეძენამდე ზუსტდება გამყიდველთან. არ უნდა ვივარაუდოთ, რომ ყველა ნივთზე ქარხნული გარანტია მოქმედებს.'}</p>
               </div>
             </div>
-            <button onClick={() => setIsWarrantyOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
+            <button type="button" onClick={() => setIsWarrantyOpen(false)} className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs">
               {currentLang === 'en' ? 'Understood' : currentLang === 'ru' ? 'Понятно' : 'გაგებულია'}
             </button>
           </div>
