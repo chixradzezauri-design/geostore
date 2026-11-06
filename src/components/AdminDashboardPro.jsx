@@ -57,7 +57,6 @@ export default function AdminDashboardPro({
   handleAdminLogin,
   handleLogout,
   adminError,
-  proAnalytics,
   orders = [],
   setOrders,
   usersList = [],
