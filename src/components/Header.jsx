@@ -112,6 +112,30 @@ export default function Header({
         </button>
       </div>
 
+      {activeTab === 'store' && (
+        <div className="gs-header-search-row" role="search">
+          <label className="gs-header-search">
+            <Search aria-hidden="true" />
+            <input
+              type="search"
+              value={searchQuery || ''}
+              onChange={(event) => setSearchQuery?.(event.target.value)}
+              placeholder={t.searchPlaceholder || 'მოძებნე პროდუქტი'}
+              aria-label={t.searchPlaceholder || 'მოძებნე პროდუქტი'}
+            />
+          </label>
+          <button
+            type="button"
+            className="gs-header-image-search"
+            onClick={() => runAction(setIsImageSearchOpen)}
+            aria-label={currentLang === 'en' ? 'Search by photo' : currentLang === 'ru' ? 'Поиск по фото' : 'პროდუქტის ფოტოთი ძიება'}
+            title={currentLang === 'en' ? 'Search by photo' : currentLang === 'ru' ? 'Поиск по фото' : 'პროდუქტის ფოტოთი ძიება'}
+          >
+            <Camera aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
       {menuOpen && (
         <nav id="geostore-main-menu" className="gs-main-menu" aria-label="მთავარი ნავიგაცია">
           <div className="gs-menu-heading">
@@ -136,26 +160,6 @@ export default function Header({
             )}
           </div>
 
-          <div className="gs-menu-search-row">
-            <label className="gs-menu-search">
-              <Search aria-hidden="true" />
-              <input
-                type="search"
-                value={searchQuery || ''}
-                onChange={(event) => setSearchQuery?.(event.target.value)}
-                placeholder={t.searchPlaceholder || 'მოძებნე პროდუქტი'}
-              />
-            </label>
-            <button
-              type="button"
-              className="gs-menu-icon-action"
-              onClick={() => runAction(setIsImageSearchOpen)}
-              aria-label="პროდუქტის ფოტოთი ძიება"
-              title="პროდუქტის ფოტოთი ძიება"
-            >
-              <Camera aria-hidden="true" />
-            </button>
-          </div>
 
           <section className="gs-menu-section" aria-label="მაღაზია და ანგარიში">
             <p className="gs-menu-section-title">მაღაზია და ანგარიში</p>
@@ -180,6 +184,40 @@ export default function Header({
                 <ShieldCheck aria-hidden="true" /><span>ადმინისტრირება</span>
               </button>
             )}
+          </section>
+
+          <section className="gs-menu-section gs-menu-categories" aria-label={categoryLabel}>
+            <p className="gs-menu-section-title">{categoryLabel}</p>
+            <button
+              type="button"
+              className={'gs-menu-link gs-menu-category-link' + (selectedCategory === 'ყველა' ? ' is-active' : '')}
+              aria-pressed={selectedCategory === 'ყველა'}
+              onClick={() => {
+                if (typeof setSelectedCategory === 'function') setSelectedCategory('ყველა');
+                goTo('store');
+              }}
+            >
+              <Store aria-hidden="true" /><span>{allCategoriesLabel}</span>
+            </button>
+            {mainCategories.map((category, index) => {
+              const name = categoryName(category);
+              if (!name) return null;
+              return (
+                <button
+                  key={category?.id || name || index}
+                  type="button"
+                  className={'gs-menu-link gs-menu-category-link' + (selectedCategory === name ? ' is-active' : '')}
+                  aria-pressed={selectedCategory === name}
+                  onClick={() => {
+                    if (typeof setSelectedCategory === 'function') setSelectedCategory(name);
+                    goTo('store');
+                  }}
+                >
+                  <span className="gs-menu-category-dot" aria-hidden="true" />
+                  <span>{name}</span>
+                </button>
+              );
+            })}
           </section>
 
           <section className="gs-menu-section" aria-label="სერვისები">
