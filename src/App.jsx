@@ -1237,8 +1237,8 @@ export default function App() {
           alert(currentLang === 'en' ? 'Name must contain 2–100 characters.' : currentLang === 'ru' ? 'Имя должно содержать 2–100 символов.' : 'სახელი უნდა შეიცავდეს 2–100 სიმბოლოს.');
           return;
         }
-        const normalizedPhone = phone.replace(/\\D/g, '');
-        if (!/^\\d{9,15}$/.test(normalizedPhone)) {
+        const normalizedPhone = phone.replace(/\D/g, '');
+        if (!/^\d{9,15}$/.test(normalizedPhone)) {
           alert(currentLang === 'en' ? 'Phone number must contain 9–15 digits.' : currentLang === 'ru' ? 'Номер телефона должен содержать 9–15 цифр.' : 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.');
           return;
         }
