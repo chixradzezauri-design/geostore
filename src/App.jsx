@@ -863,12 +863,12 @@ export default function App() {
 
     if (availableStock <= 0) {
       showToast('პროდუქტი ამჟამად მარაგში არ არის.');
-      return;
+      return false;
     }
 
     if (alreadyInCart + requestedQuantity > availableStock) {
       showToast(`მარაგში დარჩენილია მხოლოდ ${Math.max(0, availableStock - alreadyInCart)} ცალი.`);
-      return;
+      return false;
     }
 
     setCart((prev) => {
@@ -889,6 +889,7 @@ export default function App() {
     });
 
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
+    return true;
   };
 
   const toggleWishlist = (product) => {
