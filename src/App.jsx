@@ -1164,8 +1164,9 @@ export default function App() {
 
   const addToCart = (product, quantity = 1) => {
     const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
-    const hasKnownStock = product.stock !== null && product.stock !== undefined && product.stock !== '';
-    const availableStock = hasKnownStock ? Math.max(0, Math.floor(Number(product.stock) || 0)) : null;
+    const parsedStock = Number(product.stock);
+    const hasKnownStock = product.stock !== null && product.stock !== undefined && product.stock !== '' && Number.isFinite(parsedStock);
+    const availableStock = hasKnownStock ? Math.max(0, Math.floor(parsedStock)) : null;
     const isSameCartVariant = (item) =>
       String(item.id) === String(product.id) &&
       (item.selectedSize || null) === (product.selectedSize || null) &&
