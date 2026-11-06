@@ -388,6 +388,7 @@ export default function App() {
   // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
   // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [storefrontDraftBusy, setStorefrontDraftBusy] = useState(false);
   const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
@@ -428,6 +429,32 @@ export default function App() {
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
+
+  useEffect(() => {
+    if (!adminLoggedIn) return undefined;
+    let active = true;
+    const loadStorefrontDraft = async () => {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config`,
+          { headers: await getSupabaseHeaders({ authenticated: true }) }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        const draft = rows?.[0]?.draft_config;
+        if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
+        if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
+        if (Array.isArray(draft.banners)) setBannersList(draft.banners);
+        if (draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings)) {
+          setSiteSettings(draft.siteSettings);
+        }
+      } catch (error) {
+        console.error('Storefront draft load error:', error);
+      }
+    };
+    loadStorefrontDraft();
+    return () => { active = false; };
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     let active = true;
@@ -587,6 +614,66 @@ export default function App() {
   const unreadNotificationsCount = useMemo(() => {
     return notifications.filter((n) => !n.read).length;
   }, [notifications]);
+
+  const handleSaveStorefrontDraft = async () => {
+    if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy) return;
+    setStorefrontDraftBusy(true);
+    const uploadedAssets = [];
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id || !isAuthorizedAdmin(session.user)) {
+        throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
+      }
+
+      const draftCategories = [];
+      for (let index = 0; index < (Array.isArray(categories) ? categories.length : 0); index += 1) {
+        const category = categories[index];
+        const image = category.image || category.img || '';
+        const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
+        draftCategories.push({ ...category, image: uploaded, img: uploaded });
+      }
+
+      const draftBanners = [];
+      for (let index = 0; index < (Array.isArray(bannersList) ? bannersList.length : 0); index += 1) {
+        const banner = bannersList[index];
+        const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
+        draftBanners.push({ ...banner, image });
+      }
+
+      const snapshot = {
+        categories: draftCategories,
+        banners: draftBanners,
+        siteSettings: siteSettings && typeof siteSettings === 'object' && !Array.isArray(siteSettings) ? siteSettings : {}
+      };
+      const savedAt = new Date().toISOString();
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+        {
+          method: 'POST',
+          headers: {
+            ...(await getSupabaseHeaders({ authenticated: true })),
+            Prefer: 'resolution=merge-duplicates,return=representation'
+          },
+          body: JSON.stringify({
+            config_key: 'storefront',
+            draft_config: snapshot,
+            updated_by: session.user.id,
+            draft_updated_at: savedAt
+          })
+        }
+      );
+      if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
+
+      setCategoriesList(draftCategories);
+      setBannersList(draftBanners);
+      alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
+    } catch (error) {
+      if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
+      alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+    } finally {
+      setStorefrontDraftBusy(false);
+    }
+  };
 
   const handlePublishStorefront = async () => {
     if (!adminLoggedIn || storefrontPublishBusy) return;
@@ -1998,6 +2085,8 @@ export default function App() {
             setCategoriesList={setCategoriesList}
             bannersList={bannersList || []}
             setBannersList={setBannersList}
+            onSaveStorefrontDraft={handleSaveStorefrontDraft}
+            storefrontDraftBusy={storefrontDraftBusy}
             onPublishStorefront={handlePublishStorefront}
             storefrontPublishBusy={storefrontPublishBusy}
             siteSettings={siteSettings}
