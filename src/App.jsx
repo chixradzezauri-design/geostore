@@ -2,17 +2,13 @@
 // GEOSTORE — Supabase Auth integration
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
 import StoreView from './components/StoreView';
-import AdminDashboardPro from './components/AdminDashboardPro';
 import AiAssistantModal from './components/AiAssistantModal';
-import ProductCompareModal from './components/ProductCompareModal';
 import Modals from './components/Modals';
-import ImageSearchModal from './components/ImageSearchModal';
-import AIDigitalWardrobe from './components/AIDigitalWardrobe';
 
 import {
   MessageSquare,
@@ -31,6 +27,12 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
+
+// Heavy, infrequently used screens are loaded only when the user opens them.
+const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
+const AIDigitalWardrobe = lazy(() => import('./components/AIDigitalWardrobe'));
+const ProductCompareModal = lazy(() => import('./components/ProductCompareModal'));
+const ImageSearchModal = lazy(() => import('./components/ImageSearchModal'));
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
@@ -1407,15 +1409,18 @@ export default function App() {
         )}
 
         {activeTab === 'wardrobe' && (
-          <AIDigitalWardrobe
-            products={products}
-            addToCart={addToCart}
-            formatPrice={formatPrice}
-          />
+          <Suspense fallback={null}>
+            <AIDigitalWardrobe
+              products={products}
+              addToCart={addToCart}
+              formatPrice={formatPrice}
+            />
+          </Suspense>
         )}
 
         {activeTab === 'admin' && (
-          <AdminDashboardPro
+          <Suspense fallback={null}>
+            <AdminDashboardPro
             adminLoggedIn={adminLoggedIn}
             setAdminLoggedIn={setAdminLoggedIn}
             adminLoginForm={
@@ -1449,7 +1454,8 @@ export default function App() {
             formatPrice={formatPrice}
             deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
-          />
+            />
+          </Suspense>
         )}
 
         {activeTab === 'wishlist' && (
@@ -2004,13 +2010,17 @@ export default function App() {
         setUsersList={setUsersList}
       />
 
-      <ImageSearchModal
-        isImageSearchOpen={isImageSearchOpen}
-        setIsImageSearchOpen={setIsImageSearchOpen}
-        products={products}
-        addToCart={addToCart}
-        formatPrice={formatPrice}
-      />
+      {isImageSearchOpen && (
+        <Suspense fallback={null}>
+          <ImageSearchModal
+            isImageSearchOpen={isImageSearchOpen}
+            setIsImageSearchOpen={setIsImageSearchOpen}
+            products={products}
+            addToCart={addToCart}
+            formatPrice={formatPrice}
+          />
+        </Suspense>
+      )}
 
       <AiAssistantModal
         currentLang={currentLang}
@@ -2027,14 +2037,18 @@ export default function App() {
         formatPrice={formatPrice}
       />
 
-      <ProductCompareModal
-        isComparisonOpen={isComparisonOpen}
-        setIsComparisonOpen={setIsComparisonOpen}
-        comparisonList={comparisonList}
-        setComparisonList={setComparisonList}
-        addToCart={addToCart}
-        formatPrice={formatPrice}
-      />
+      {isComparisonOpen && (
+        <Suspense fallback={null}>
+          <ProductCompareModal
+            isComparisonOpen={isComparisonOpen}
+            setIsComparisonOpen={setIsComparisonOpen}
+            comparisonList={comparisonList}
+            setComparisonList={setComparisonList}
+            addToCart={addToCart}
+            formatPrice={formatPrice}
+          />
+        </Suspense>
+      )}
 
       {showInstallModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
