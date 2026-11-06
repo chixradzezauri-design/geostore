@@ -682,7 +682,7 @@ export default function App() {
     let storefrontPublished = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
+      if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
 
       const publishedCategories = [];
       for (let index = 0; index < (Array.isArray(categories) ? categories.length : 0); index += 1) {
