@@ -1260,7 +1260,6 @@ export default function App() {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
       customer_name: customerName,
-      customerName: customerName,
       phone: customerPhone,
       address: `${customerAddress} (${regionText}, მიწოდება: ${Number(serverOrderResult.delivery_gel) || 0} ₾)`,
       user_email: orderUserEmail,
