@@ -268,7 +268,7 @@ export default function AdminDashboardPro({
 
   const safeCategories = React.useMemo(() => {
     try {
-      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '' }];
+      if (!Array.isArray(categoriesList)) return [{ id: 'c1', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null, image: '' }];
       return categoriesList.map((cat, idx) => {
         if (!cat) return null;
         if (typeof cat === 'string') {
@@ -288,7 +288,7 @@ export default function AdminDashboardPro({
         return null;
       }).filter(Boolean);
     } catch {
-      return [{ id: 'c1', name: 'სმარტფონები', icon: 'Smartphone', parentId: null, image: '', img: '' }];
+      return [{ id: 'c1', name: 'ტანსაცმელი', icon: 'Shirt', parentId: null, image: '', img: '' }];
     }
   }, [categoriesList]);
   
