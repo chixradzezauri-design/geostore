@@ -4301,3 +4301,52 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-banner-card{flex-wrap:wrap}
  .geostore-shell .admin-dashboard-pro .admin-category-card>div:first-child{flex-wrap:wrap}
 }
+
+/* Admin CRM, coupons and vendor panels: compact, overflow-safe responsive layout. */
+.geostore-shell .admin-dashboard-pro .admin-coupons-panel,
+.geostore-shell .admin-dashboard-pro .admin-vendors-panel,
+.geostore-shell .admin-dashboard-pro .admin-crm-panel,
+.geostore-shell .admin-dashboard-pro .admin-coupon-list,
+.geostore-shell .admin-dashboard-pro .admin-vendor-list,
+.geostore-shell .admin-dashboard-pro .admin-crm-list{min-width:0;max-width:100%;width:100%}
+.geostore-shell .admin-dashboard-pro .admin-coupon-form>*,
+.geostore-shell .admin-dashboard-pro .admin-vendor-form>*{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-coupon-form input,
+.geostore-shell .admin-dashboard-pro .admin-vendor-form input,
+.geostore-shell .admin-dashboard-pro .admin-crm-search input{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.geostore-shell .admin-dashboard-pro .admin-coupon-card,
+.geostore-shell .admin-dashboard-pro .admin-vendor-card,
+.geostore-shell .admin-dashboard-pro .admin-crm-user-card{min-width:0;max-width:100%;box-sizing:border-box}
+.geostore-shell .admin-dashboard-pro .admin-coupon-card>div,
+.geostore-shell .admin-dashboard-pro .admin-vendor-card>div{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-coupon-card h4,
+.geostore-shell .admin-dashboard-pro .admin-vendor-card h4,
+.geostore-shell .admin-dashboard-pro .admin-crm-user-card h4,
+.geostore-shell .admin-dashboard-pro .admin-crm-user-card p{overflow-wrap:anywhere;word-break:break-word}
+.geostore-shell .admin-dashboard-pro .admin-crm-search{min-width:0}
+.geostore-shell .admin-dashboard-pro .admin-crm-user-actions{min-width:0;max-width:100%}
+.geostore-shell .admin-dashboard-pro .admin-crm-user-actions button{min-height:38px}
+@media(max-width:640px){
+ .geostore-shell .admin-dashboard-pro .admin-coupons-panel,
+ .geostore-shell .admin-dashboard-pro .admin-vendors-panel{gap:12px!important}
+ .geostore-shell .admin-dashboard-pro .admin-coupons-panel>.bg-slate-900\/80,
+ .geostore-shell .admin-dashboard-pro .admin-vendors-panel>.bg-slate-900\/80,
+ .geostore-shell .admin-dashboard-pro .admin-crm-panel{padding:14px!important;border-radius:18px!important}
+ .geostore-shell .admin-dashboard-pro .admin-coupon-form,
+ .geostore-shell .admin-dashboard-pro .admin-vendor-form{grid-template-columns:minmax(0,1fr)!important;gap:9px!important}
+ .geostore-shell .admin-dashboard-pro .admin-coupon-form button,
+ .geostore-shell .admin-dashboard-pro .admin-vendor-form button{width:100%;min-height:44px}
+ .geostore-shell .admin-dashboard-pro .admin-coupon-list,
+ .geostore-shell .admin-dashboard-pro .admin-vendor-list{grid-template-columns:minmax(0,1fr)!important;gap:9px!important}
+ .geostore-shell .admin-dashboard-pro .admin-coupon-card,
+ .geostore-shell .admin-dashboard-pro .admin-vendor-card{padding:12px!important;border-radius:15px!important;gap:9px!important}
+ .geostore-shell .admin-dashboard-pro .admin-crm-search{width:100%!important}
+ .geostore-shell .admin-dashboard-pro .admin-crm-user-card{padding:13px!important;border-radius:16px!important}
+ .geostore-shell .admin-dashboard-pro .admin-crm-user-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;justify-content:stretch!important}
+ .geostore-shell .admin-dashboard-pro .admin-crm-user-actions button{width:100%;min-width:0;justify-content:center}
+}
+@media(max-width:380px){
+ .geostore-shell .admin-dashboard-pro .admin-crm-user-actions{grid-template-columns:minmax(0,1fr)!important}
+ .geostore-shell .admin-dashboard-pro .admin-coupon-card,
+ .geostore-shell .admin-dashboard-pro .admin-vendor-card{align-items:flex-start!important}
+}
