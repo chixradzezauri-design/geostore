@@ -139,7 +139,7 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
 const cleanupStorefrontUploads = async (uploadedAssets) => {
   const assets = Array.isArray(uploadedAssets) ? uploadedAssets : [];
   await Promise.allSettled(assets.map(async ({ path }) => {
-    const safePath = String(path || '').replace(/^\\/+/, '');
+    const safePath = String(path || '').replace(/^\/+/, '');
     const isManagedStorefrontPath =
       safePath.startsWith('storefront/categories/') ||
       safePath.startsWith('storefront/banners/');
