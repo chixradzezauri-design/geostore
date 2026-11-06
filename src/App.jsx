@@ -402,6 +402,8 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
 
   const [orders, setOrders] = useState([]);
+  const [myOrders, setMyOrders] = useState([]);
+  const [myOrdersLoading, setMyOrdersLoading] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
@@ -764,6 +766,109 @@ export default function App() {
       setStorefrontPublishBusy(false);
     }
   };
+
+  const fetchMyOrders = async () => {
+    if (!currentUser?.email) {
+      setMyOrders([]);
+      setMyOrdersLoading(false);
+      return;
+    }
+
+    setMyOrdersLoading(true);
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/get_my_orders`,
+        {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({})
+        }
+      );
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'შეკვეთების ისტორიის მიღება ვერ მოხერხდა.');
+      }
+
+      const rows = await response.json();
+      if (!Array.isArray(rows)) {
+        throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
+      }
+
+      setMyOrders(rows.map((o) => ({
+        id: o.id,
+        created_at: o.created_at || null,
+        date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : '',
+        customerName: o.customer_name || '',
+        user_email: currentUser.email,
+        phone: o.phone || '',
+        address: o.address || '',
+        totalGEL: Number(o.total_gel) || 0,
+        status: o.status || 'ახალი',
+        items: Array.isArray(o.items) ? o.items : [],
+        status_changed_at: o.status_changed_at || null
+      })));
+    } catch (error) {
+      console.error('My orders fetch error:', error);
+      showToast(currentLang === 'en'
+        ? 'Order history could not be loaded. Please try again.'
+        : currentLang === 'ru'
+          ? 'Не удалось загрузить историю заказов. Попробуйте еще раз.'
+          : 'შეკვეთების ისტორია ვერ ჩაიტვირთა. სცადეთ ხელახლა.');
+    } finally {
+      setMyOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    const loadOwnOrders = async () => {
+      if (!currentUser?.email) {
+        setMyOrders([]);
+        setMyOrdersLoading(false);
+        return;
+      }
+      setMyOrdersLoading(true);
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/get_my_orders`,
+          {
+            method: 'POST',
+            headers: await getSupabaseHeaders({ authenticated: true }),
+            body: JSON.stringify({})
+          }
+        );
+        if (!response.ok) {
+          const errorBody = await response.text().catch(() => '');
+          throw new Error(errorBody || 'შეკვეთების ისტორიის მიღება ვერ მოხერხდა.');
+        }
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
+        if (!active) return;
+        setMyOrders(rows.map((o) => ({
+          id: o.id,
+          created_at: o.created_at || null,
+          date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : '',
+          customerName: o.customer_name || '',
+          user_email: currentUser.email,
+          phone: o.phone || '',
+          address: o.address || '',
+          totalGEL: Number(o.total_gel) || 0,
+          status: o.status || 'ახალი',
+          items: Array.isArray(o.items) ? o.items : [],
+          status_changed_at: o.status_changed_at || null
+        })));
+      } catch (error) {
+        if (active) {
+          console.error('My orders fetch error:', error);
+          setMyOrders([]);
+        }
+      } finally {
+        if (active) setMyOrdersLoading(false);
+      }
+    };
+    void loadOwnOrders();
+    return () => { active = false; };
+  }, [currentUser?.email]);
 
   const fetchOrders = async () => {
     try {
@@ -2439,20 +2544,16 @@ export default function App() {
               </h3>
 
               <div className="space-y-3">
-                {orders.filter(
-                  (o) =>
-                    o.user_email === currentUser.email
-                ).length === 0 ? (
+                {myOrdersLoading ? (
+                  <p className="text-slate-500 text-xs py-6 text-center">
+                    {currentLang === 'en' ? 'Loading orders…' : currentLang === 'ru' ? 'Загрузка заказов…' : 'შეკვეთები იტვირთება…'}
+                  </p>
+                ) : myOrders.length === 0 ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
                     {t.noOrders}
                   </p>
                 ) : (
-                  orders
-                    .filter(
-                      (o) =>
-                        o.user_email === currentUser.email
-                    )
-                    .map((order) => (
+                  myOrders.map((order) => (
                       <div
                         key={order.id}
                         className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
