@@ -176,10 +176,13 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    // Do not poll private finance data until the server-verified admin session is active.
+    if (!adminLoggedIn) return undefined;
+
     fetchExpenses();
-    const interval = setInterval(fetchExpenses, 5000);
+    const interval = setInterval(fetchExpenses, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   const fetchAdminOrders = async () => {
     try {
@@ -211,10 +214,13 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    // Orders contain customer details; fetch and refresh them only for an authenticated admin.
+    if (!adminLoggedIn) return undefined;
+
     fetchAdminOrders();
-    const interval = setInterval(fetchAdminOrders, 4000);
+    const interval = setInterval(fetchAdminOrders, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adminLoggedIn]);
 
   const safeCategories = React.useMemo(() => {
     try {
