@@ -3074,7 +3074,7 @@ export default function AdminDashboardPro({
                 {(bannersList || []).map(b => (
                   <div key={b.id} className="admin-banner-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs gap-3 shadow-inner">
                     <div className="flex items-center gap-3.5">
-                      <img src={b.image} alt="" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
+                      <img src={b.image} alt="" loading="lazy" decoding="async" className="w-16 h-12 object-cover rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-black text-white text-sm">{b.title}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">{b.subtitle}</p>
@@ -3158,7 +3158,7 @@ export default function AdminDashboardPro({
                         <div className="flex justify-between items-center flex-wrap gap-3">
                           <div className="flex items-center gap-3">
                             {displayImage ? (
-                              <img src={displayImage} alt="" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
+                              <img src={displayImage} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover rounded-2xl border border-emerald-500/30 shrink-0 shadow-md" />
                             ) : (
                               <div className="w-14 h-14 bg-slate-900 rounded-2xl border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px] font-bold text-center">No Img</div>
                             )}
@@ -3229,7 +3229,7 @@ export default function AdminDashboardPro({
                                   <div className="flex justify-between items-center text-xs gap-2">
                                     <div className="admin-subcategory-identity flex items-center gap-2.5 flex-1">
                                       <CornerDownRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                      {subImg && <img src={subImg} alt="" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
+                                      {subImg && <img src={subImg} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-cover rounded-xl border border-emerald-500/20 shrink-0 shadow" />}
                                       <span className="font-bold text-slate-200">{sub.name}</span>
                                     </div>
 
