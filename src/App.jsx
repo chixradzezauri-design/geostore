@@ -1172,8 +1172,10 @@ export default function App() {
       (item.selectedSize || null) === (product.selectedSize || null) &&
       (item.selectedColor || null) === (product.selectedColor || null) &&
       (item.name || '') === (product.name || '');
+    // Stock is tracked per product (not per size/color), so all variants
+    // of the same product share one quantity limit.
     const existingQuantity = cart
-      .filter(isSameCartVariant)
+      .filter((item) => String(item.id) === String(product.id))
       .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
 
     if (availableStock !== null && (availableStock <= 0 || existingQuantity >= availableStock)) {
@@ -1190,7 +1192,7 @@ export default function App() {
     setCart((prev) => {
       const existing = prev.find(isSameCartVariant);
       const currentQuantity = prev
-        .filter(isSameCartVariant)
+        .filter((item) => String(item.id) === String(product.id))
         .reduce((sum, item) => sum + Math.max(1, Number(item.quantity) || 1), 0);
       const safeQuantity = availableStock === null
         ? requestedQuantity
