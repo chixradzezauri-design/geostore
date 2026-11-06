@@ -106,10 +106,10 @@ ON public.support_tickets
 FOR INSERT
 TO anon, authenticated
 WITH CHECK (
-  char_length(btrim(id)) BETWEEN 1 AND 100
+  char_length(btrim(id)) BETWEEN 1 AND 64
   AND char_length(btrim(customer_name)) BETWEEN 1 AND 100
-  AND char_length(btrim(message)) BETWEEN 1 AND 5000
-  AND char_length(coalesce(subject, '')) <= 160
+  AND char_length(btrim(message)) BETWEEN 1 AND 4000
+  AND char_length(coalesce(subject, '')) <= 150
   AND char_length(coalesce(email, '')) <= 254
   AND status = 'ღია'
   AND reply IS NULL
