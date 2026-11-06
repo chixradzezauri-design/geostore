@@ -2390,7 +2390,7 @@ export default function AdminDashboardPro({
               </div>
 
               {/* 1. მომხმარებლის სრული ინფორმაცია */}
-              <div className="bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
+              <div className="admin-order-customer bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
                 <h4 className="font-black text-emerald-400 text-sm mb-3">👤 მომხმარებლის სრული ინფორმაცია</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
                   <p>სახელი და გვარი: <b className="text-white">{selectedOrderForModal.customerName}</b></p>
@@ -2402,19 +2402,19 @@ export default function AdminDashboardPro({
               </div>
 
               {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
-              <div className="space-y-3">
+              <div className="admin-order-items-section space-y-3">
                 <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({Array.isArray(selectedOrderForModal.items) ? selectedOrderForModal.items.length : 1})</h4>
                 
                 <div className="space-y-3">
                   {Array.isArray(selectedOrderForModal.items) && selectedOrderForModal.items.length > 0 ? (
                     selectedOrderForModal.items.map((item, idx) => (
-                      <div key={idx} className="bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         {item.image ? (
                           <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
                           <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">No Img</div>
                         )}
-                        <div className="flex-1 space-y-1">
+                        <div className="admin-order-item-info flex-1 space-y-1">
                           <h5 className="font-black text-white text-sm">{item.name}</h5>
                           <div className="flex flex-wrap gap-2 text-[11px] text-slate-300">
                             {item.sku && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SKU: <b>{item.sku}</b></span>}
@@ -2423,7 +2423,7 @@ export default function AdminDashboardPro({
                             <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
                           </div>
                         </div>
-                        <div className="text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-900">
+                        <div className="admin-order-item-price text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-900">
                           <span className="text-slate-400 text-[10px]">ერთეულის ფასი: {item.priceGEL || item.price || 0} ₾</span>
                           <span className="font-black text-emerald-400 text-sm">{formatPrice ? formatPrice((item.priceGEL || item.price || 0) * (item.quantity || 1)) : ((item.priceGEL || item.price || 0) * (item.quantity || 1)) + ' ₾'}</span>
                         </div>
@@ -2438,18 +2438,17 @@ export default function AdminDashboardPro({
               </div>
 
               {/* 3. შეკვეთის ფინანსური დეტალები */}
-              <div className="bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
-                <h4 className="font-black text-emerald-400 text-sm mb-2">💳 ფინანსური დეტალები</h4>
-                <div className="flex justify-between text-slate-300"><span>გადახდის მეთოდი:</span><b className="text-white">ნაღდი ანგარიშსწორება / ონლაინ</b></div>
-                <div className="flex justify-between text-slate-300"><span>გადახდის სტატუსი:</span><b className="text-emerald-400">მოლოდინში / მიღებულია</b></div>
+              <div className="admin-order-financials bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
+                <h4 className="font-black text-emerald-400 text-sm mb-2">💳 შეკვეთის თანხა</h4>
+                <p className="text-slate-400 text-[11px] leading-relaxed">გადახდის მეთოდი და გადახდის სტატუსი ამ შეკვეთის მონაცემებში ხელმისაწვდომი არ არის.</p>
                 <div className="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800">
-                  <span>საბოლოო გადასახდელი თანხა:</span>
+                  <span>შეკვეთის ჯამი:</span>
                   <span className="text-emerald-400 text-lg">{formatPrice ? formatPrice(selectedOrderForModal.totalGEL) : selectedOrderForModal.totalGEL + ' ₾'}</span>
                 </div>
               </div>
 
               {/* 4. ადმინისტრატორის პირადი შენიშვნა */}
-              <div className="space-y-2">
+              <div className="admin-order-note-editor space-y-2">
                 <label className="text-slate-300 font-bold block">📝 ადმინისტრატორის პირადი შენიშვნა შეკვეთაზე:</label>
                 <div className="flex gap-2">
                   <input 
