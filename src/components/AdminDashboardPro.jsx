@@ -135,7 +135,8 @@ export default function AdminDashboardPro({
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productSearchQuery, setProductSearchQuery] = useState('');  const [quickProductDrafts, setQuickProductDrafts] = useState({});
+
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
@@ -971,6 +972,7 @@ export default function AdminDashboardPro({
         }));
       }
       if (field === 'stock') setStockDrafts(prev => { const next = { ...prev }; delete next[String(id)]; return next; });
+      setQuickProductDrafts(prev => { const next = { ...prev }; delete next[field + ':' + String(id)]; return next; });
     } catch (error) {
       alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
     }
@@ -2983,20 +2985,56 @@ export default function AdminDashboardPro({
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">COGS:</span>
                         <input 
-                          type="number" 
-                          value={p.purchaseCost !== undefined ? p.purchaseCost : (p.purchase_cost || 0)} 
-                          onChange={e => handleQuickUpdateProduct(p.id, 'purchaseCost', e.target.value)}
-                          className="w-20 bg-slate-950 border border-emerald-500/20 rounded-2xl p-2.5 text-cyan-400 font-black text-center outline-none shadow-inner" 
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={quickProductDrafts['purchaseCost:' + String(p.id)] ?? String(p.purchaseCost !== undefined ? p.purchaseCost : (p.purchase_cost ?? 0))}
+                          onChange={e => setQuickProductDrafts(prev => ({ ...prev, ['purchaseCost:' + String(p.id)]: e.target.value }))}
+                          onBlur={e => {
+                            const key = 'purchaseCost:' + String(p.id);
+                            const draft = quickProductDrafts[key];
+                            if (draft === undefined) return;
+                            if (draft.trim() === '' || Number(draft) === Number(p.purchaseCost ?? p.purchase_cost ?? 0)) {
+                              setQuickProductDrafts(prev => { const next = { ...prev }; delete next[key]; return next; });
+                              return;
+                            }
+                            handleQuickUpdateProduct(p.id, 'purchaseCost', draft);
+                          }}
+                          onKeyDown={e => {
+                            const key = 'purchaseCost:' + String(p.id);
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                            if (e.key === 'Escape') setQuickProductDrafts(prev => { const next = { ...prev }; delete next[key]; return next; });
+                          }}
+                          className="w-20 bg-slate-950 border border-emerald-500/20 rounded-2xl p-2.5 text-cyan-400 font-black text-center outline-none shadow-inner"
                         />
                       </div>
 
                       <div className="flex items-center gap-2">
                         <span className="text-slate-400 text-[11px]">ფასი:</span>
                         <input 
-                          type="number" 
-                          value={p.priceGEL} 
-                          onChange={e => handleQuickUpdateProduct(p.id, 'priceGEL', e.target.value)}
-                          className="w-24 bg-slate-950 border border-emerald-500/20 rounded-2xl p-2.5 text-emerald-400 font-black text-center outline-none shadow-inner" 
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={quickProductDrafts['priceGEL:' + String(p.id)] ?? String(p.priceGEL ?? p.price_gel ?? '')}
+                          onChange={e => setQuickProductDrafts(prev => ({ ...prev, ['priceGEL:' + String(p.id)]: e.target.value }))}
+                          onBlur={e => {
+                            const key = 'priceGEL:' + String(p.id);
+                            const draft = quickProductDrafts[key];
+                            if (draft === undefined) return;
+                            if (draft.trim() === '' || Number(draft) === Number(p.priceGEL ?? p.price_gel)) {
+                              setQuickProductDrafts(prev => { const next = { ...prev }; delete next[key]; return next; });
+                              return;
+                            }
+                            handleQuickUpdateProduct(p.id, 'priceGEL', draft);
+                          }}
+                          onKeyDown={e => {
+                            const key = 'priceGEL:' + String(p.id);
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                            if (e.key === 'Escape') setQuickProductDrafts(prev => { const next = { ...prev }; delete next[key]; return next; });
+                          }}
+                          className="w-24 bg-slate-950 border border-emerald-500/20 rounded-2xl p-2.5 text-emerald-400 font-black text-center outline-none shadow-inner"
                         />
                       </div>
 
