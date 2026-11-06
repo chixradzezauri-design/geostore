@@ -43,3 +43,32 @@ export const createSecureOrderId = (cryptoApi) => {
   cryptoApi.getRandomValues(randomBytes);
   return `ORD-${Array.from(randomBytes, (byte) => byte.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
 };
+
+
+/**
+ * Mirrors the server checkout calculation: coupon discount is rounded to
+ * two GEL decimal places before it is subtracted; delivery is added after.
+ */
+export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee }) => {
+  const rawSubtotal = Number(subtotal);
+  const safeSubtotal = Number.isFinite(rawSubtotal) ? Math.max(0, rawSubtotal) : 0;
+
+  const rawDiscountPercent = Number(discountPercent);
+  const safeDiscountPercent = Number.isFinite(rawDiscountPercent)
+    ? Math.min(100, Math.max(0, rawDiscountPercent))
+    : 0;
+
+  const rawDeliveryFee = Number(deliveryFee);
+  const safeDeliveryFee = Number.isFinite(rawDeliveryFee) ? Math.max(0, rawDeliveryFee) : 0;
+
+  const discountGEL = Math.round(
+    (safeSubtotal * safeDiscountPercent / 100 + Number.EPSILON) * 100
+  ) / 100;
+
+  return {
+    subtotalGEL: safeSubtotal,
+    discountGEL,
+    deliveryGEL: safeDeliveryFee,
+    totalGEL: Math.max(0, safeSubtotal - discountGEL) + safeDeliveryFee
+  };
+};
