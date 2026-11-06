@@ -838,3 +838,167 @@
   .geostore-fashion-store .gs-ai-add-button{margin-left:auto!important}
   .geostore-fashion-store .gs-ai-composer-area{padding-bottom:max(12px,env(safe-area-inset-bottom))!important}
 }
+
+/* Admin workspace — premium neutral system; data/actions remain unchanged */
+.geostore-shell:not(.geostore-fashion-store){
+  background:#f4f6f0!important;color:#2c3528!important;
+  font-family:Manrope,"Noto Sans Georgian",Arial,sans-serif!important;
+}
+.geostore-shell:not(.geostore-fashion-store)>main{
+  width:100%!important;max-width:1680px!important;min-width:0!important;
+  padding:18px clamp(12px,2.2vw,30px) 0!important;margin:0 auto!important;
+}
+.admin-dashboard-pro{
+  display:grid!important;grid-template-columns:minmax(230px,270px) minmax(0,1fr)!important;
+  align-items:start!important;gap:20px!important;width:100%!important;max-width:1600px!important;
+  min-width:0!important;margin:0 auto!important;padding:8px 0 60px!important;color:#2d3729!important;
+}
+.admin-dashboard-pro .admin-sidebar{
+  position:sticky!important;top:16px!important;display:flex!important;flex-direction:column!important;
+  gap:15px!important;width:100%!important;max-height:calc(100dvh - 32px)!important;overflow-y:auto!important;
+  padding:15px!important;border:1px solid #e1e6dc!important;border-radius:5px!important;
+  background:#fffefa!important;color:#30392c!important;box-shadow:0 7px 24px rgba(29,37,25,.055)!important;
+  backdrop-filter:none!important;
+}
+.admin-dashboard-pro .admin-sidebar-brand{align-items:center!important;padding:3px 2px 13px!important;border-color:#e6eae2!important}
+.admin-dashboard-pro .admin-sidebar-brand>div:first-child{
+  display:grid!important;place-items:center!important;width:38px!important;height:38px!important;
+  border:1px solid #dfe5d9!important;border-radius:3px!important;background:#273024!important;color:#fff!important;
+}
+.admin-dashboard-pro .admin-sidebar-brand h3{color:#273024!important;font:500 18px/1.1 Georgia,serif!important}
+.admin-dashboard-pro .admin-sidebar-brand p{color:#78836f!important;font-size:8px!important;letter-spacing:.12em!important}
+.admin-dashboard-pro .admin-sidebar>div:nth-child(2){display:grid!important;gap:4px!important}
+.admin-dashboard-pro .admin-nav-button{
+  min-width:0!important;min-height:39px!important;padding:8px 9px!important;border:1px solid transparent!important;
+  border-radius:3px!important;background:#f6f8f3!important;color:#53604c!important;
+  box-shadow:none!important;font-size:10px!important;font-weight:700!important;line-height:1.35!important;
+}
+.admin-dashboard-pro .admin-nav-button>div{min-width:0!important;gap:8px!important}
+.admin-dashboard-pro .admin-nav-button>div span{overflow-wrap:anywhere!important;text-align:left!important}
+.admin-dashboard-pro .admin-nav-button svg{width:15px!important;height:15px!important;flex:0 0 15px!important}
+.admin-dashboard-pro .admin-nav-button[class*="bg-emerald-500"]{
+  border-color:#273024!important;background:#273024!important;color:#fff!important;
+  box-shadow:0 4px 12px rgba(39,48,36,.12)!important;transform:none!important;
+}
+.admin-dashboard-pro .admin-nav-button[class*="bg-emerald-500"] svg{color:#e0d1b2!important}
+.admin-dashboard-pro .admin-sidebar>button:last-child{
+  min-height:40px!important;margin-top:3px!important;padding:9px 12px!important;border-radius:3px!important;
+  background:#fbf2ef!important;color:#945c50!important;border:1px solid #eedbd5!important;
+  font-size:10px!important;box-shadow:none!important;
+}
+.admin-dashboard-pro .admin-main-content{display:flex!important;flex-direction:column!important;gap:18px!important;min-width:0!important}
+.admin-dashboard-pro .admin-welcome-panel{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:15px!important;
+  min-width:0!important;padding:16px 18px!important;border:1px solid #e1e6dc!important;border-radius:5px!important;
+  background:#fffefa!important;color:#30392c!important;box-shadow:0 6px 20px rgba(29,37,25,.045)!important;
+  backdrop-filter:none!important;
+}
+.admin-dashboard-pro .admin-welcome-panel h2{color:#273024!important;font:500 20px/1.2 Georgia,serif!important}
+.admin-dashboard-pro .admin-welcome-panel p{color:#7a8474!important;font-size:10px!important}
+.admin-dashboard-pro .admin-connection-status{min-height:34px!important;padding:7px 10px!important;border:1px solid #e1e6dc!important;border-radius:3px!important;background:#f5f7f2!important}
+.admin-dashboard-pro .admin-connection-status span:last-child{color:#5d6c54!important;font-size:9px!important}
+.admin-dashboard-pro .admin-welcome-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:7px!important}
+.admin-dashboard-pro .admin-storefront-save,.admin-dashboard-pro .admin-storefront-publish{
+  min-height:36px!important;padding:8px 11px!important;border:1px solid #dfe5d9!important;border-radius:3px!important;
+  background:#f5f7f2!important;color:#4f5d47!important;font-size:9px!important;font-weight:800!important;
+}
+.admin-dashboard-pro .admin-storefront-publish{border-color:#273024!important;background:#273024!important;color:#fff!important}
+.admin-dashboard-pro .admin-analytics-toolbar,.admin-dashboard-pro .admin-analytics-card,
+.admin-dashboard-pro .admin-orders-panel,.admin-dashboard-pro .admin-products-panel,
+.admin-dashboard-pro .admin-support-panel,.admin-dashboard-pro .admin-staff-panel,
+.admin-dashboard-pro .admin-expenses,.admin-dashboard-pro .admin-profit-calculator,
+.admin-dashboard-pro .admin-ai-analyst,.admin-dashboard-pro .admin-banners,
+.admin-dashboard-pro .admin-category-manager{
+  border:1px solid #e2e7dd!important;border-radius:4px!important;background:#fffefa!important;
+  color:#30392c!important;box-shadow:0 5px 18px rgba(29,37,25,.04)!important;backdrop-filter:none!important;
+}
+.admin-dashboard-pro .admin-analytics-toolbar{padding:14px!important}
+.admin-dashboard-pro .admin-analytics-toolbar :where(h3,p){color:#3e4a38!important}
+.admin-dashboard-pro .admin-analytics-card{padding:16px!important}
+.admin-dashboard-pro .admin-analytics-card :where(p,span,small){color:#6c7764!important}
+.admin-dashboard-pro .admin-analytics-card :where(strong,b){color:#2c3828!important}
+.admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:11px!important}
+.admin-dashboard-pro .admin-profit-calculator,.admin-dashboard-pro .admin-expenses,
+.admin-dashboard-pro .admin-ai-analyst,.admin-dashboard-pro .admin-staff,
+.admin-dashboard-pro .admin-orders-panel,.admin-dashboard-pro .admin-support-panel,
+.admin-dashboard-pro .admin-products-panel,.admin-dashboard-pro .admin-discounts-panel,
+.admin-dashboard-pro .admin-banners,.admin-dashboard-pro .admin-category-manager{
+  min-width:0!important;padding:15px!important;
+}
+.admin-dashboard-pro :where([class*="bg-slate-950"],[class*="bg-slate-900"],[class*="bg-slate-800"]){
+  background:#fffefa!important;color:#30392c!important;
+}
+.admin-dashboard-pro :where([class*="text-white"],[class*="text-slate-100"],[class*="text-slate-200"],[class*="text-slate-300"]){
+  color:#30392c!important;
+}
+.admin-dashboard-pro :where([class*="text-slate-400"],[class*="text-slate-500"]){color:#7b8575!important}
+.admin-dashboard-pro :where([class*="border-emerald-500"],[class*="border-amber-500"]){border-color:#e1e6dc!important}
+.admin-dashboard-pro button[class*="bg-emerald-500"],.admin-dashboard-pro button[class*="bg-emerald-400"]{
+  border-color:#273024!important;background:#273024!important;color:#fff!important;box-shadow:none!important;
+}
+.admin-dashboard-pro button[class*="bg-emerald-500"] svg,.admin-dashboard-pro button[class*="bg-emerald-400"] svg{color:#e2d1af!important}
+.admin-dashboard-pro input,.admin-dashboard-pro select,.admin-dashboard-pro textarea{
+  min-width:0!important;max-width:100%!important;min-height:40px!important;padding:9px 11px!important;
+  border:1px solid #dfe5d9!important;border-radius:3px!important;background:#fffefa!important;
+  color:#30392c!important;box-shadow:none!important;font-size:11px!important;
+}
+.admin-dashboard-pro input::placeholder,.admin-dashboard-pro textarea::placeholder{color:#9aa293!important}
+.admin-dashboard-pro label{color:#66725e!important;font-size:10px!important;font-weight:700!important}
+.admin-dashboard-pro .admin-order-card,.admin-dashboard-pro .admin-product-row,
+.admin-dashboard-pro .admin-expense-row,.admin-dashboard-pro .admin-staff-card,
+.admin-dashboard-pro .admin-support-ticket,.admin-dashboard-pro .admin-banner-card,
+.admin-dashboard-pro .admin-category-card{
+  min-width:0!important;border:1px solid #e3e8de!important;border-radius:4px!important;
+  background:#fffefa!important;color:#30392c!important;box-shadow:none!important;
+}
+.admin-dashboard-pro .admin-order-card :where(p,span,small,b,strong),
+.admin-dashboard-pro .admin-product-row :where(p,span,small,b,strong),
+.admin-dashboard-pro .admin-support-ticket :where(p,span,small,b,strong){overflow-wrap:anywhere!important}
+.admin-dashboard-pro .admin-order-card-heading,.admin-dashboard-pro .admin-order-card-footer{
+  gap:9px!important;flex-wrap:wrap!important;border-color:#e7ebe3!important;
+}
+.admin-dashboard-pro .admin-order-status-badge{font-size:9px!important;border-radius:2px!important}
+.admin-dashboard-pro .admin-orders-toolbar,.admin-dashboard-pro .admin-orders-controls{
+  display:flex!important;flex-wrap:wrap!important;gap:8px!important;min-width:0!important;
+}
+.admin-dashboard-pro .admin-orders-search,.admin-dashboard-pro .admin-order-search{min-width:0!important;flex:1 1 180px!important}
+.admin-dashboard-pro .admin-orders-pagination{display:flex!important;flex-wrap:wrap!important;gap:6px!important;justify-content:center!important}
+.admin-dashboard-pro .admin-product-controls{display:flex!important;flex-wrap:wrap!important;gap:7px!important}
+.admin-dashboard-pro .admin-product-identity{min-width:0!important;overflow-wrap:anywhere!important}
+.admin-dashboard-pro .admin-product-gallery img{object-fit:cover!important;border-radius:3px!important}
+.admin-dashboard-pro .admin-order-detail-overlay{background:rgba(20,26,18,.65)!important;backdrop-filter:blur(7px)!important}
+.admin-dashboard-pro .admin-order-detail-modal{border:1px solid #e1e6dc!important;border-radius:5px!important;background:#fffefa!important;color:#30392c!important}
+.admin-dashboard-pro .admin-order-detail-header,.admin-dashboard-pro .admin-order-detail-footer{border-color:#e4e9df!important;background:#f8f9f5!important}
+.admin-dashboard-pro .admin-order-note-editor{border:1px solid #e1e6dc!important;border-radius:3px!important;background:#f6f8f3!important}
+.admin-dashboard-pro .admin-staff-permission-chip{border-radius:3px!important}
+@media(max-width:1050px){
+  .admin-dashboard-pro{grid-template-columns:minmax(210px,235px) minmax(0,1fr)!important;gap:14px!important}
+  .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  .geostore-shell:not(.geostore-fashion-store)>main{padding:12px 10px 0!important}
+  .admin-dashboard-pro{display:flex!important;flex-direction:column!important;gap:13px!important;padding:4px 0 50px!important}
+  .admin-dashboard-pro .admin-sidebar{
+    position:relative!important;top:auto!important;max-height:none!important;overflow:visible!important;
+    padding:11px!important;gap:10px!important;
+  }
+  .admin-dashboard-pro .admin-sidebar>div:nth-child(2){
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;
+  }
+  .admin-dashboard-pro .admin-nav-button{min-height:38px!important;padding:7px!important;font-size:9px!important}
+  .admin-dashboard-pro .admin-nav-button>div{gap:6px!important}
+  .admin-dashboard-pro .admin-nav-button>div span{font-size:9px!important;line-height:1.3!important}
+  .admin-dashboard-pro .admin-welcome-panel{align-items:stretch!important;flex-direction:column!important;padding:13px!important}
+  .admin-dashboard-pro .admin-welcome-panel h2{font-size:18px!important}
+  .admin-dashboard-pro .admin-welcome-actions{justify-content:flex-start!important}
+  .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  .admin-dashboard-pro .admin-analytics-card{padding:12px!important}
+  .admin-dashboard-pro .admin-orders-toolbar,.admin-dashboard-pro .admin-orders-controls{align-items:stretch!important}
+  .admin-dashboard-pro .admin-order-card{padding:11px!important}
+}
+@media(max-width:390px){
+  .admin-dashboard-pro .admin-sidebar>div:nth-child(2){grid-template-columns:1fr 1fr!important}
+  .admin-dashboard-pro .admin-nav-button{font-size:8px!important}
+  .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:1fr!important}
+  .admin-dashboard-pro .admin-storefront-save,.admin-dashboard-pro .admin-storefront-publish{flex:1 1 100%!important}
+}
