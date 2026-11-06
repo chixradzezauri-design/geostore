@@ -2552,7 +2552,7 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'products' && (
-          <div className="space-y-6">
+          <div className="admin-products-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -2605,7 +2605,7 @@ export default function AdminDashboardPro({
                   </div>
                 </div>
 
-                <div className="bg-slate-950 p-5 rounded-3xl border border-emerald-500/30 space-y-4 shadow-inner">
+                <div className="admin-product-attributes bg-slate-950 p-5 rounded-3xl border border-emerald-500/30 space-y-4 shadow-inner">
                   <h4 className="font-black text-amber-400 text-sm flex items-center gap-2">
                     <Sparkles className="w-4 h-4" /> 
                     <span>კატეგორიის მახასიათებლები: {productForm.category}</span>
@@ -2693,7 +2693,7 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <div className="bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                <div className="admin-product-variants bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
                     <Layers className="w-4 h-4" />
                     <span>ვარიანტების ბილდერი (ინდივიდუალური ფასი & მარაგი)</span>
@@ -2705,7 +2705,7 @@ export default function AdminDashboardPro({
                     <button type="button" onClick={handleAddCustomVariant} className="bg-amber-500 text-slate-950 font-black py-3 rounded-xl cursor-pointer hover:bg-amber-400 transition">+ ვარიანტი</button>
                   </div>
                   {productVariants.length > 0 && (
-                    <div className="space-y-2 pt-2">
+                    <div className="admin-product-variant-list space-y-2 pt-2">
                       {productVariants.map(v => (
                         <div key={v.id} className="admin-product-variant bg-slate-900 p-3 rounded-2xl border border-amber-500/20 flex justify-between items-center text-xs">
                           <div><b className="text-white">{v.name}</b> <span className="text-emerald-400 font-bold ml-3">{v.priceGEL} ₾</span> <span className="text-slate-400 ml-2">(მარაგი: {v.stock})</span></div>
@@ -2716,7 +2716,7 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <div className="space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
+                <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
                   <label className="text-slate-300 font-bold flex items-center gap-2 cursor-pointer">
                     <ImageIcon className="w-4 h-4 text-emerald-400" /> აირჩიეთ ფოტოები გალერეიდან:
                   </label>
@@ -2743,17 +2743,17 @@ export default function AdminDashboardPro({
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                <h3 className="font-black text-white text-base">ბაზაში არსებული პროდუქტები & COGS ({products?.length || 0})</h3>
-                <div className="relative w-full sm:w-72">
+                <h3 className="admin-product-inventory-title font-black text-white text-base">ბაზაში არსებული პროდუქტები & COGS ({products?.length || 0})</h3>
+                <div className="admin-product-search relative w-full sm:w-72">
                   <input type="text" placeholder="ძებნა პროდუქტებში..." value={productSearchQuery} onChange={e => setProductSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
                 </div>
               </div>
 
-              <div className="space-y-3.5">
+              <div className="admin-products-list space-y-3.5">
                 {filteredProducts?.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
-                    <div className="flex items-center gap-3.5">
+                    <div className="admin-product-identity flex items-center gap-3.5">
                       <img src={p.image} alt="" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" />
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
