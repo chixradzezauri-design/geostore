@@ -1163,23 +1163,28 @@ export default function App() {
   }, [orders, products]);
 
   const addToCart = (product, quantity = 1) => {
+    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+    const isSameCartVariant = (item) =>
+      String(item.id) === String(product.id) &&
+      (item.selectedSize || null) === (product.selectedSize || null) &&
+      (item.selectedColor || null) === (product.selectedColor || null) &&
+      (item.name || '') === (product.name || '');
+
     setCart((prev) => {
-      const existing = prev.find(
-        (item) => item.id === product.id
-      );
+      const existing = prev.find(isSameCartVariant);
 
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id
+          isSameCartVariant(item)
             ? {
                 ...item,
-                quantity: item.quantity + quantity
+                quantity: Math.max(1, Number(item.quantity) || 1) + requestedQuantity
               }
             : item
         );
       }
 
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, quantity: requestedQuantity }];
     });
 
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
