@@ -1,5 +1,6 @@
 // src/components/AIDigitalWardrobe.jsx - Full AI Digital Wardrobe & Personal Stylist
 import React, { useState, useEffect } from 'react';
+import { validateImageFile, isSafeImageUrl } from '../utils/imageSafety';
 import { 
   Sparkles, Shirt, Footprints, Camera, Plus, Trash2, Zap, CloudSun, 
   Calendar, Check, ShoppingBag, Eye, RefreshCw, Tag, Heart, ArrowRight, Layers
@@ -59,20 +60,29 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   }, [wardrobe]);
 
   // 📸 ფოტოს ატვირთვა Base64 ფორმატში
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewItem(prev => ({ ...prev, image: reader.result }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      await validateImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setNewItem(prev => ({ ...prev, image: reader.result }));
+      reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
+      reader.readAsDataURL(file);
+    } catch (error) {
+      alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+    }
   };
 
   // ➕ გარდერობში ახალი ნივთის დამატება
   const handleAddItem = (e) => {
     e.preventDefault();
     if (!newItem.name.trim()) return;
+    if (newItem.image && !String(newItem.image).startsWith('data:image/') && !isSafeImageUrl(newItem.image)) {
+      alert('ფოტოს ბმული უნდა იწყებოდეს http:// ან https:// მისამართით.');
+      return;
+    }
 
     const createdItem = {
       id: `w-${Date.now()}`,
@@ -368,7 +378,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
 
             <div className="space-y-1.5">
               <label className="text-slate-300 font-bold">ატვირთეთ ფოტო ან ჩასვით URL</label>
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-black hover:file:bg-emerald-400 cursor-pointer" />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageUpload} className="w-full text-slate-400 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-emerald-500 file:text-slate-950 file:font-black hover:file:bg-emerald-400 cursor-pointer" />
               <input type="text" placeholder="ან ფოტოს URL..." value={newItem.image} onChange={e => setNewItem({...newItem, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none focus:border-emerald-400 mt-2" />
             </div>
 
