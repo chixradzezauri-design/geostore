@@ -355,7 +355,9 @@ export default function AdminDashboardPro({
 
   useEffect(() => {
     fetchTickets();
-    const interval = setInterval(fetchTickets, 4000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchTickets();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
