@@ -16,8 +16,8 @@ test('groups repeated product lines only when size and color also match', () => 
 
   assert.deepEqual(result, [
     { id: '12', selected_size: 'L', selected_color: 'შავი', quantity: 1 },
-    { id: '12', selected_size: 'M', selected_color: 'შავი', quantity: 5 },
-    { id: '12', selected_size: 'M', selected_color: 'თეთრი', quantity: 4 }
+    { id: '12', selected_size: 'M', selected_color: 'თეთრი', quantity: 4 },
+    { id: '12', selected_size: 'M', selected_color: 'შავი', quantity: 5 }
   ]);
 });
 
