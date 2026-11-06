@@ -5707,3 +5707,69 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size: 9px !important;
   }
 }
+
+/* GEOSTORE — mobile support panel: keep heading visible and scroll the form */
+@media (max-width: 600px) {
+  .gs-floating-support {
+    max-width: calc(100vw - 24px);
+  }
+  .gs-floating-support .gs-support-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: min(370px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: min(68dvh, 600px) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 13px !important;
+    padding-bottom: max(13px, env(safe-area-inset-bottom)) !important;
+    overscroll-behavior: contain;
+  }
+  .gs-floating-support .gs-support-panel-heading {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+  .gs-floating-support .gs-support-heading-copy {
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+  }
+  .gs-floating-support .gs-support-form {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 2px max(2px, env(safe-area-inset-bottom)) !important;
+  }
+  .gs-floating-support .gs-support-field {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+  }
+  .gs-floating-support textarea.gs-support-field {
+    min-height: 84px !important;
+    max-height: 24dvh !important;
+    resize: vertical !important;
+  }
+  .gs-floating-support .gs-support-submit {
+    position: sticky;
+    bottom: 0;
+    flex: 0 0 auto !important;
+  }
+}
+@media (max-width: 360px) {
+  .gs-floating-support .gs-support-panel {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    padding: 11px !important;
+  }
+  .gs-floating-support .gs-support-panel-heading {
+    gap: 7px !important;
+  }
+  .gs-floating-support .gs-support-heading-copy strong {
+    font-size: 12px !important;
+    overflow-wrap: anywhere !important;
+  }
+}
