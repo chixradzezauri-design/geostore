@@ -1889,9 +1889,8 @@ export default function App() {
 
                 if (!name || !message) return;
 
-                const ticketId = `t-${Math.floor(
-                  1000 + Math.random() * 9000
-                )}`;
+                // Use a high-entropy identifier to avoid collisions with existing support tickets.
+                const ticketId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
                 try {
                   const response = await fetch(
