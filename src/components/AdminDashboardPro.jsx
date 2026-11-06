@@ -1065,6 +1065,27 @@ export default function AdminDashboardPro({
     if (!Number.isFinite(purchaseCost) || purchaseCost < 0) return alert('თვითღირებულება უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
     if (String(productForm.description || '').length > 5000) return alert('აღწერა მაქსიმუმ 5000 სიმბოლოს უნდა შეიცავდეს.');
     if (String(productForm.tags || '').length > 1000) return alert('ტეგების ველი ზედმეტად გრძელია.');
+    const normalizeProductOptions = (value, label) => {
+      if (!Array.isArray(value)) {
+        alert(`${label}: მონაცემები არასწორ ფორმატშია.`);
+        return null;
+      }
+      const options = value.map(item => String(item ?? '').trim()).filter(Boolean);
+      if (options.length > 30 || options.some(item => item.length > 40)) {
+        alert(`${label}: დასაშვებია მაქსიმუმ 30 ჩანაწერი, თითოეული არაუმეტეს 40 სიმბოლოსი.`);
+        return null;
+      }
+      const normalized = options.map(item => item.toLocaleLowerCase());
+      if (new Set(normalized).size !== normalized.length) {
+        alert(`${label}: ერთი და იგივე მნიშვნელობა ორჯერ არ უნდა იყოს მითითებული.`);
+        return null;
+      }
+      return options;
+    };
+    const availableSizes = normalizeProductOptions(productForm.availableSizes, 'ზომები');
+    if (availableSizes === null) return;
+    const availableColors = normalizeProductOptions(productForm.availableColors, 'ფერები');
+    if (availableColors === null) return;
     const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
     if (!Number.isFinite(originalPrice) || originalPrice < 0) return alert('ძველი ფასი უნდა იყოს სწორი, ნულზე არანაკლები რიცხვი.');
     if (originalPrice > 0 && originalPrice <= Number(productForm.priceGEL)) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
@@ -1106,8 +1127,8 @@ export default function AdminDashboardPro({
       gallery: galleryImages,
       tags: tagsArray,
       description: productForm.description || '',
-      available_sizes: productForm.availableSizes || [],
-      available_colors: productForm.availableColors || [],
+      available_sizes: availableSizes,
+      available_colors: availableColors,
       variants: productVariants,
       material: productForm.material || '',
       durability: productForm.durability || '',
