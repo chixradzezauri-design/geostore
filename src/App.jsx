@@ -767,58 +767,6 @@ export default function App() {
     }
   };
 
-  const fetchMyOrders = async () => {
-    if (!currentUser?.email) {
-      setMyOrders([]);
-      setMyOrdersLoading(false);
-      return;
-    }
-
-    setMyOrdersLoading(true);
-    try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/rpc/get_my_orders`,
-        {
-          method: 'POST',
-          headers: await getSupabaseHeaders({ authenticated: true }),
-          body: JSON.stringify({})
-        }
-      );
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => '');
-        throw new Error(errorBody || 'შეკვეთების ისტორიის მიღება ვერ მოხერხდა.');
-      }
-
-      const rows = await response.json();
-      if (!Array.isArray(rows)) {
-        throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
-      }
-
-      setMyOrders(rows.map((o) => ({
-        id: o.id,
-        created_at: o.created_at || null,
-        date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : '',
-        customerName: o.customer_name || '',
-        user_email: currentUser.email,
-        phone: o.phone || '',
-        address: o.address || '',
-        totalGEL: Number(o.total_gel) || 0,
-        status: o.status || 'ახალი',
-        items: Array.isArray(o.items) ? o.items : [],
-        status_changed_at: o.status_changed_at || null
-      })));
-    } catch (error) {
-      console.error('My orders fetch error:', error);
-      showToast(currentLang === 'en'
-        ? 'Order history could not be loaded. Please try again.'
-        : currentLang === 'ru'
-          ? 'Не удалось загрузить историю заказов. Попробуйте еще раз.'
-          : 'შეკვეთების ისტორია ვერ ჩაიტვირთა. სცადეთ ხელახლა.');
-    } finally {
-      setMyOrdersLoading(false);
-    }
-  };
-
   useEffect(() => {
     let active = true;
     const loadOwnOrders = async () => {
