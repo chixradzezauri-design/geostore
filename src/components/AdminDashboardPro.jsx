@@ -1659,8 +1659,8 @@ export default function AdminDashboardPro({
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
-      <div className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
-        <div className="flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
+      <div className="admin-sidebar w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
+        <div className="admin-sidebar-brand flex items-center gap-3.5 pb-4 border-b border-emerald-500/20">
           <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl shadow-inner">
             <Shield className="w-5 h-5 text-emerald-400" />
           </div>
@@ -1696,7 +1696,7 @@ export default function AdminDashboardPro({
               <button
                 key={tab.id}
                 onClick={() => setAdminTab(tab.id)}
-                className={`w-full px-3.5 sm:px-4 py-3 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${
+                className={`admin-nav-button w-full px-3.5 sm:px-4 py-3 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${
                   isActive 
                     ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-102' 
                     : 'bg-slate-950/60 text-slate-400 border border-emerald-500/10 hover:text-white hover:border-emerald-500/30'
@@ -1725,9 +1725,9 @@ export default function AdminDashboardPro({
       </div>
 
       {/* 🖥️ MAIN CONTENT AREA */}
-      <div className="flex-1 w-full space-y-6">
+      <div className="admin-main-content flex-1 w-full space-y-6">
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
+        <div className="admin-welcome-panel flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
             <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
