@@ -250,16 +250,16 @@ export default function Modals({
     return date;
   };
   const localizedStatus = (status) => {
-    const statuses = {
-      'ახალი': currentLang === 'en' ? 'New' : currentLang === 'ru' ? 'Новый' : 'ახალი',
-      'მუშავდება': currentLang === 'en' ? 'Processing' : currentLang === 'ru' ? 'В обработке' : 'მუშავდება',
-      'გაგზავნილი': currentLang === 'en' ? 'Shipped' : currentLang === 'ru' ? 'Отправлен' : 'გაგზავნილი',
-      'გზაშია': currentLang === 'en' ? 'On the way' : currentLang === 'ru' ? 'В пути' : 'გზაშია',
-      'დასრულებული': currentLang === 'en' ? 'Completed' : currentLang === 'ru' ? 'Завершён' : 'დასრულებული',
-      'ჩაბარებულია': currentLang === 'en' ? 'Delivered' : currentLang === 'ru' ? 'Доставлен' : 'ჩაბარებულია',
-      'გაუქმებული': currentLang === 'en' ? 'Cancelled' : currentLang === 'ru' ? 'Отменён' : 'გაუქმებული'
+    const key = String(status || '').trim().toLowerCase();
+    const labels = {
+      'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
+      'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
+      'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
+      'დასრულებული': ['დასრულებული', 'Completed', 'Завершён'], completed: ['დასრულებული', 'Completed', 'Завершён'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['დასრულებული', 'Completed', 'Завершён'],
+      'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
     };
-    return statuses[status] || status || (currentLang === 'en' ? 'New' : currentLang === 'ru' ? 'Новый' : 'ახალი');
+    const languageIndex = currentLang === 'en' ? 1 : currentLang === 'ru' ? 2 : 0;
+    return labels[key]?.[languageIndex] || status || labels.new[languageIndex];
   };
 
   const [searchOrderId, setSearchOrderId] = useState('');
@@ -306,10 +306,11 @@ export default function Modals({
   };
 
   const getStatusProgress = (status) => {
-    const s = (status || '').toLowerCase();
-    if (s.includes('ჩაბარებულია') || s.includes('დასრულებული')) return 100;
-    if (s.includes('გზაშია') || s.includes('კურიერთან')) return 75;
-    if (s.includes('მზადდება') || s.includes('მუშავდება')) return 40;
+    const s = String(status || '').trim().toLowerCase();
+    if (['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(s)) return 0;
+    if (['ჩაბარებულია', 'დასრულებული', 'delivered', 'completed', 'доставлен', 'завершён'].includes(s)) return 100;
+    if (['გზაშია', 'გაგზავნილი', 'კურიერთან', 'shipped', 'on the way', 'в пути', 'отправлен'].includes(s)) return 75;
+    if (['მზადდება', 'მუშავდება', 'processing', 'в обработке'].includes(s)) return 40;
     return 15;
   };
 
@@ -549,7 +550,7 @@ export default function Modals({
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
       {isTrackerOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--tracker fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="gs-commerce-dialog gs-commerce-dialog--tracker bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+          <div className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
@@ -559,7 +560,7 @@ export default function Modals({
               </button>
             </div>
 
-            <form onSubmit={handleSearchOrder} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+            <form onSubmit={handleSearchOrder} className="gs-order-tracker-form grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
               <div className="relative">
                 <input type="text" placeholder={`${copy.orderCode} (ORD-...)`} value={searchOrderId}
                   onChange={e => setSearchOrderId(e.target.value)} autoComplete="off" required
@@ -582,7 +583,7 @@ export default function Modals({
 
             {trackedOrder ? (
               <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
-                <div className="bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20 space-y-3">
+                <div className="gs-order-tracker-summary bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20 space-y-3">
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold block" >{copy.orderCode}</span>
@@ -609,7 +610,7 @@ export default function Modals({
                   </div>
                 </div>
 
-                <div className="space-y-3 bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20">
+                <div className="gs-order-tracker-progress space-y-3 bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20">
                   <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
                     <Clock className="w-4 h-4" /> {copy.deliveryProgress}
                   </h4>
