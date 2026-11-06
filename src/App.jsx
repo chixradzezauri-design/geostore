@@ -73,15 +73,13 @@ const DEFAULT_VENDORS = [
 
 const DEFAULT_PRODUCTS = [];
 
-const DEFAULT_COUPONS = [
-  { id: 'c1', code: 'GEOSTORE2026', discountPercent: 10, status: 'აქტიური' }
-];
+const DEFAULT_COUPONS = [];
 
 const DEFAULT_NOTIFICATIONS = [
   {
     id: 'n1',
     title: 'მოგესალმებით GEOSTORE-ში!',
-    message: 'ისარგებლეთ 10% ფასდაკლებით პრომო-კოდით: GEOSTORE2026',
+    message: 'აღმოაჩინეთ ტანსაცმლის, ფეხსაცმლისა და აქსესუარების ახალი კოლექცია.',
     date: 'დღეს',
     read: false
   },
@@ -656,11 +654,11 @@ export default function App() {
     fetchProductsFromDatabase();
 
     const interval = setInterval(() => {
-      if (adminLoggedIn) {
-        fetchOrders();
-      }
+      // Avoid background polling on hidden tabs and reduce unnecessary Supabase traffic.
+      if (document.visibilityState !== 'visible') return;
+      if (adminLoggedIn) fetchOrders();
       fetchProductsFromDatabase();
-    }, 4000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
@@ -1621,7 +1619,7 @@ export default function App() {
                       >
                         <input
                           type="text"
-                          placeholder="GEOSTORE2026"
+                          placeholder="პრომო-კოდი"
                           value={promoInput}
                           onChange={(e) =>
                             setPromoInput(e.target.value)
