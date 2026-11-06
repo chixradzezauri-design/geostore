@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { createSecureOrderId, groupCheckoutItems, isReusableCheckout } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout } from './utils/orderSafety';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1001,15 +1001,11 @@ export default function App() {
       : null;
   }, [appliedCoupon, cartSubtotalGEL]);
 
-  const cartTotalGEL = useMemo(() => {
-    const rawDiscount = Number(eligibleAppliedCoupon?.discountPercent);
-    const discountPercent = Number.isFinite(rawDiscount)
-      ? Math.min(100, Math.max(0, rawDiscount))
-      : 0;
-    const sub = cartSubtotalGEL - (cartSubtotalGEL * discountPercent) / 100;
-    const delivery = Number(currentDeliveryCost);
-    return Math.max(0, sub) + (Number.isFinite(delivery) ? Math.max(0, delivery) : 0);
-  }, [cartSubtotalGEL, eligibleAppliedCoupon, currentDeliveryCost]);
+  const cartTotalGEL = useMemo(() => calculateCheckoutTotals({
+    subtotal: cartSubtotalGEL,
+    discountPercent: eligibleAppliedCoupon?.discountPercent,
+    deliveryFee: currentDeliveryCost
+  }).totalGEL, [cartSubtotalGEL, eligibleAppliedCoupon, currentDeliveryCost]);
 
   const handleApplyCoupon = (e) => {
     e.preventDefault();
