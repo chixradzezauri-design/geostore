@@ -140,3 +140,25 @@ The anonymous role has intended access paths including public catalog/config rea
 ## Verification boundary
 
 This file is an inventory summary from read-only catalog queries. It is not a complete SQL dump, does not include every policy/function body, and is not proof that every historical migration source has been recovered.
+
+
+## RLS and privilege cross-check (second read-only pass)
+
+All 34 public RLS policies were enumerated. Key checks:
+- `products`: public SELECT policy is intentionally broad, but anonymous column SELECT grants are limited to catalog fields. The `purchase_cost` column is not granted to `anon` or as a SELECT column privilege to `authenticated`; admin product reads use the private admin-list RPC. Product INSERT/UPDATE/DELETE policies require both the trusted primary-admin UID and `app_metadata.role = 'admin'`.
+- `orders`: authenticated SELECT/UPDATE/DELETE policies require the trusted primary-admin UID and admin role. Guest order creation remains through the server checkout RPC; anonymous direct table INSERT is not granted.
+- `support_tickets`: public INSERT is deliberately allowed, but the policy enforces bounded ID/name/message/email/subject fields, initial status `ღია`, and `reply IS NULL`. Admin SELECT/UPDATE/DELETE policies require the primary-admin UID and admin role.
+- `messages`: authenticated access is restricted to the primary admin.
+- Coupon and delivery-fee public reads are limited by policies; coupon SELECT exposes active coupons or admin-visible rows. Writes require the primary admin.
+- Storefront config/media/version reads are restricted to published/public records or the primary admin; writes require the primary admin.
+
+Storage policy inventory:
+- Only three object policies were returned for the `storage.objects` table: primary-admin upload, update, and delete on `storefront-media`.
+- The bucket is public, so public object retrieval is provided by bucket visibility rather than an anonymous object SELECT policy.
+- No general anonymous upload/update/delete policy was found.
+
+Privilege interpretation:
+- Table/column GRANTs and RLS policies are separate layers. Some authenticated table-level privileges (including order DELETE) exist, but RLS restricts matching rows to the primary admin. Do not revoke or reshape these grants without checking the exact frontend/API operations and policies together.
+- Anonymous product column grants do not include `purchase_cost`; the sensitive cost field is not exposed through the public catalog SELECT path.
+
+This is a catalog-level policy/grant review, not an attempted penetration test or a browser-authenticated role simulation.
