@@ -824,6 +824,9 @@ export default function App() {
         }
       }
     } catch (error) {
+      // A failed authoritative fetch must not leave cached coupon eligibility active.
+      setCoupons([]);
+      setAppliedCoupon(null);
       console.error('Store pricing settings fetch error:', error);
     }
   };
