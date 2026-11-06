@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   calculateCheckoutTotals,
+  reconcileCartWithCatalog,
   createSecureOrderId,
   groupCheckoutItems,
   isReusableCheckout
@@ -102,4 +103,34 @@ test('clamps invalid discount and delivery values safely', () => {
     calculateCheckoutTotals({ subtotal: 50, discountPercent: 150, deliveryFee: -5 }),
     { subtotalGEL: 50, discountGEL: 50, deliveryGEL: 0, totalGEL: 0 }
   );
+});
+
+
+test('reconciles stale cart prices and stock against the latest catalogue', () => {
+  const result = reconcileCartWithCatalog(
+    [
+      { id: 'p1', name: 'Old name', priceGEL: 100, quantity: 2, selectedSize: 'M' },
+      { id: 'p1', name: 'Old name', priceGEL: 100, quantity: 1, selectedSize: 'L' },
+      { id: 'p2', name: 'Missing item', priceGEL: 25, quantity: 1 }
+    ],
+    [
+      { id: 'p1', name: 'Current name', price_gel: 110, stock: 2 }
+    ]
+  );
+
+  assert.equal(result.hasChanges, true);
+  assert.deepEqual(result.changes.map((change) => change.type), ['price', 'stock', 'price', 'unavailable']);
+  assert.equal(result.cartItems[0].priceGEL, 110);
+  assert.equal(result.cartItems[1].priceGEL, 110);
+  assert.equal(result.cartItems[0].stock, 2);
+  assert.equal(result.cartItems[2].priceGEL, 25);
+});
+
+test('does not report a change when cart price and aggregate stock are current', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p1', name: 'Current', priceGEL: 35, quantity: 2 }],
+    [{ id: 'p1', name: 'Current', price_gel: 35, stock: 2 }]
+  );
+  assert.equal(result.hasChanges, false);
+  assert.deepEqual(result.changes, []);
 });
