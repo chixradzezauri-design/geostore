@@ -653,7 +653,7 @@ export default function StoreView({
             <div className="gs-product-modal-body p-4 sm:p-7 overflow-y-auto space-y-6 scrollbar-thin pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
-                <div className="space-y-4">
+                <div className="gs-product-gallery space-y-4">
                   <div className="gs-product-detail-image flex items-center justify-center h-60 sm:h-80">
                     <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} className="max-h-full max-w-full object-contain drop-shadow-2xl" />
                   </div>
@@ -669,7 +669,7 @@ export default function StoreView({
                   )}
                 </div>
 
-                <div className="space-y-5 sm:space-y-6 text-xs w-full">
+                <div className="gs-product-info space-y-5 sm:space-y-6 text-xs w-full">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
@@ -687,7 +687,7 @@ export default function StoreView({
                   </div>
 
                   {selectedProduct.variants && selectedProduct.variants.length > 0 && (
-                    <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/30">
+                    <div className="gs-product-variants space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/30">
                       <span className="text-amber-400 font-bold block flex items-center gap-1.5">
                         <Layers className="w-4 h-4" /> {storeText.variant}
                       </span>
@@ -755,6 +755,7 @@ export default function StoreView({
                               key={size}
                               type="button"
                               onClick={() => setSelectedSize(size)}
+                              aria-pressed={selectedSize === size}
                               className={`gs-size-option px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
                             >
                               {size} 🟢
@@ -766,7 +767,7 @@ export default function StoreView({
                   )}
 
                   {((selectedProduct.availableColors && selectedProduct.availableColors.length > 0) || selectedProduct.colors) && (
-                    <div className="space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
+                    <div className="gs-color-selector space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
                       <span className="text-slate-300 font-bold block">{storeText.color} <b className="text-amber-400">{selectedColor}</b></span>
                       <div className="flex flex-wrap gap-2.5 w-full">
                         {(selectedProduct.availableColors || (selectedProduct.colors ? selectedProduct.colors.split(',').map(c => c.trim()) : [])).map(colName => (
@@ -774,7 +775,8 @@ export default function StoreView({
                             key={colName}
                             type="button"
                             onClick={() => setSelectedColor(colName)}
-                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === colName ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
+                            aria-pressed={selectedColor === colName}
+                            className={`gs-color-option flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === colName ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
                           >
                             <span className="w-3.5 h-3.5 rounded-full border border-amber-400/40 bg-amber-400/80"></span>
                             {colName}
@@ -784,7 +786,7 @@ export default function StoreView({
                     </div>
                   )}
 
-                  <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
+                  <div className="gs-product-option-card gs-product-option-card--gift bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 space-y-3">
                     <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsGiftWrapped(!isGiftWrapped)}>
                       <div className="flex items-center gap-3">
                         <div className={`p-2.5 rounded-2xl border ${isGiftWrapped ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
@@ -795,7 +797,7 @@ export default function StoreView({
                           <p className="text-[10px] text-slate-400">{storeText.giftWrapInfo}</p>
                         </div>
                       </div>
-                      <input type="checkbox" checked={isGiftWrapped} onChange={() => setIsGiftWrapped(!isGiftWrapped)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                      <input type="checkbox" checked={isGiftWrapped} onClick={(e) => e.stopPropagation()} onChange={() => setIsGiftWrapped(!isGiftWrapped)} aria-label={storeText.giftWrap} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
                     </div>
 
                     {isGiftWrapped && (
@@ -814,7 +816,7 @@ export default function StoreView({
                     )}
                   </div>
 
-                  <div className="bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
+                  <div className="gs-product-option-card gs-product-option-card--warranty bg-gradient-to-r from-amber-950/20 via-[#121216] to-amber-950/20 p-4 rounded-3xl border border-amber-500/30 flex items-center justify-between cursor-pointer" onClick={() => setHasVipWarranty(!hasVipWarranty)}>
                     <div className="flex items-center gap-3">
                       <div className={`p-2.5 rounded-2xl border ${hasVipWarranty ? 'bg-amber-400 text-slate-950 border-amber-400' : 'bg-[#08080a] text-amber-400 border-amber-500/30'}`}>
                         <ShieldAlert className="w-5 h-5" />
@@ -824,7 +826,7 @@ export default function StoreView({
                         <p className="text-[10px] text-slate-400">{storeText.warrantyInfo}</p>
                       </div>
                     </div>
-                    <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} className="w-4 h-4 accent-amber-400 cursor-pointer" />
+                    <input type="checkbox" checked={hasVipWarranty} onClick={(e) => e.stopPropagation()} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
                   </div>
 
                   <div className="space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
