@@ -3879,3 +3879,47 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-fashion-store .gs-menu-toggle{width:38px!important;height:38px!important;flex-basis:38px!important}
  .geostore-fashion-store .gs-menu-link{padding:9px!important;gap:8px!important}
 }
+
+
+/* Admin workspace mobile containment and dashboard card normalization */
+.geostore-fashion-store .admin-dashboard-shell,
+.geostore-fashion-store .admin-dashboard-pro,
+.geostore-fashion-store .admin-dashboard-content{width:100%!important;max-width:100%!important;min-width:0!important}
+.geostore-fashion-store .admin-dashboard-shell *,
+.geostore-fashion-store .admin-dashboard-pro *,
+.geostore-fashion-store .admin-dashboard-content *{min-width:0}
+.geostore-fashion-store .admin-dashboard-shell .grid,
+.geostore-fashion-store .admin-dashboard-pro .grid,
+.geostore-fashion-store .admin-dashboard-content .grid{align-items:stretch}
+.geostore-fashion-store .admin-dashboard-shell .grid> *,
+.geostore-fashion-store .admin-dashboard-pro .grid> *,
+.geostore-fashion-store .admin-dashboard-content .grid> *{width:auto!important;max-width:100%!important}
+.geostore-fashion-store .admin-dashboard-shell table,
+.geostore-fashion-store .admin-dashboard-pro table,
+.geostore-fashion-store .admin-dashboard-content table{width:100%!important;border-collapse:separate!important;border-spacing:0!important}
+.geostore-fashion-store .admin-dashboard-shell th,
+.geostore-fashion-store .admin-dashboard-shell td,
+.geostore-fashion-store .admin-dashboard-pro th,
+.geostore-fashion-store .admin-dashboard-pro td,
+.geostore-fashion-store .admin-dashboard-content th,
+.geostore-fashion-store .admin-dashboard-content td{overflow-wrap:anywhere!important;vertical-align:middle!important}
+@media(max-width:760px){
+ .geostore-fashion-store .admin-dashboard-shell,
+ .geostore-fashion-store .admin-dashboard-pro,
+ .geostore-fashion-store .admin-dashboard-content{padding:12px!important;border-radius:16px!important}
+ .geostore-fashion-store .admin-dashboard-shell .grid,
+ .geostore-fashion-store .admin-dashboard-pro .grid,
+ .geostore-fashion-store .admin-dashboard-content .grid{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ .geostore-fashion-store .admin-dashboard-shell [class*="p-5"],
+ .geostore-fashion-store .admin-dashboard-shell [class*="p-6"],
+ .geostore-fashion-store .admin-dashboard-pro [class*="p-5"],
+ .geostore-fashion-store .admin-dashboard-pro [class*="p-6"],
+ .geostore-fashion-store .admin-dashboard-content [class*="p-5"],
+ .geostore-fashion-store .admin-dashboard-content [class*="p-6"]{padding:13px!important}
+ .geostore-fashion-store .admin-dashboard-shell [class*="rounded-3xl"],
+ .geostore-fashion-store .admin-dashboard-pro [class*="rounded-3xl"],
+ .geostore-fashion-store .admin-dashboard-content [class*="rounded-3xl"]{border-radius:14px!important}
+ .geostore-fashion-store .admin-dashboard-shell button,
+ .geostore-fashion-store .admin-dashboard-pro button,
+ .geostore-fashion-store .admin-dashboard-content button{min-height:36px!important;line-height:1.35!important}
+}
