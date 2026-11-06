@@ -538,7 +538,13 @@ export default function AdminDashboardPro({
       return date >= from && date <= today;
     };
 
-    const periodOrders = (orders || []).filter(order => inPeriod(order.created_at || order.createdAt || order.date));
+    const periodOrders = (orders || []).filter(order => {
+      const delivered = !isCancelled(order) && isDelivered(order);
+      const reportingDate = delivered
+        ? (order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date)
+        : (order.created_at || order.createdAt || order.date);
+      return inPeriod(reportingDate);
+    });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
     const pipelineOrders = periodOrders.filter(order => !isCancelled(order) && !isDelivered(order));
     const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
@@ -622,7 +628,7 @@ export default function AdminDashboardPro({
     const trendBuckets = new Map();
     const useDailyTrend = analyticsPeriod === '30' || analyticsPeriod === '90';
     deliveredOrders.forEach(order => {
-      const date = parseDate(order.created_at || order.createdAt || order.date);
+      const date = parseDate(order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date);
       if (!date) return;
       const key = useDailyTrend
         ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
