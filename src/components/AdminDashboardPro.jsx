@@ -2640,6 +2640,7 @@ export default function AdminDashboardPro({
                 <div className="admin-order-note-controls flex gap-2">
                   <input 
                     type="text" 
+                    maxLength={5000}
                     placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
                     value={orderAdminNoteInput}
                     onChange={e => setOrderAdminNoteInput(e.target.value)}
