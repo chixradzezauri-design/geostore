@@ -20,7 +20,7 @@ export const validateProductVariants = (variants) => {
     seenIds.add(id);
 
     if (!Number.isFinite(price) || price < 0 || price > 1000000000 ||
-        !/^\\d+(?:\\.\\d{1,2})?$/.test(String(variant.priceGEL ?? variant.price_gel ?? '').trim())) {
+        !/^\d+(?:\.\d{1,2})?$/.test(String(variant.priceGEL ?? variant.price_gel ?? '').trim())) {
       return { valid: false, reason: 'price' };
     }
 
