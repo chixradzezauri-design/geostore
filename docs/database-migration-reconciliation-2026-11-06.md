@@ -159,3 +159,16 @@ A second direct read-only inspection was completed after the earlier reconciliat
 - `tests/databaseMigrationSafety.test.js` adds static regression checks for the new guards, variant uniqueness checks, admin stock RPC authorization/locking, and the UI's request-lock lifecycle.
 
 The migration and test files are saved on `design/neo-editorial-2026-11-07` only. No Supabase migration was applied, no live row was changed, and no Vercel build or deployment was triggered. The SQL migration has not yet been executed in a staging database; the new Node test has been added but the complete Node suite has not been run.
+
+
+### Customer order-history exposure confirmed in live catalog
+
+A fresh read-only `pg_get_functiondef('private.get_my_orders()')` confirms the live function returns `coalesce(o.items, '[]'::jsonb)` unchanged. The order item snapshot contains internal `purchase_cost`, `vendor`, and `category` fields, so those values are sent to authenticated customers even though the profile UI does not render them. The exact current `public.orders` row count is zero, so no existing order rows were exposed in this snapshot; the function is still unsafe for future orders.
+
+The staged `20261107200000_bind_order_ownership_to_auth_user_uuid.sql` addresses this by:
+- binding orders and notifications to immutable Auth UUIDs rather than mutable email strings;
+- returning only customer-facing order item fields from `private.get_my_orders()`;
+- excluding internal purchase cost, vendor, and category values;
+- preserving the public wrapper as SECURITY INVOKER while keeping the private implementation SECURITY DEFINER.
+
+A regression check was added to `tests/databaseMigrationSafety.test.js`. The live migration is still pending; do not deploy customer order-history code that expects `user_id` until the reviewed database migration has been applied.
