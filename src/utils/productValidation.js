@@ -4,6 +4,7 @@ export const validateProductVariants = (variants) => {
   }
 
   const seenIds = new Set();
+  const seenNames = new Set();
   for (const variant of variants) {
     if (!variant || typeof variant !== 'object' || Array.isArray(variant)) {
       return { valid: false, reason: 'shape' };
@@ -14,10 +15,12 @@ export const validateProductVariants = (variants) => {
     const price = Number(variant.priceGEL ?? variant.price_gel);
     const stock = Number(variant.stock);
 
-    if (!id || id.length > 80 || seenIds.has(id) || !name || name.length > 80) {
+    const normalizedName = name.toLocaleLowerCase();
+    if (!id || id.length > 80 || seenIds.has(id) || !name || name.length > 80 || seenNames.has(normalizedName)) {
       return { valid: false, reason: 'identity' };
     }
     seenIds.add(id);
+    seenNames.add(normalizedName);
 
     if (!Number.isFinite(price) || price < 0 || price > 1000000000 ||
         !/^\d+(?:\.\d{1,2})?$/.test(String(variant.priceGEL ?? variant.price_gel ?? '').trim())) {
