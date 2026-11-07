@@ -209,6 +209,7 @@ const getOrderStatusFilterKey = (status) => {
 export default function AdminDashboardPro({
   adminLoggedIn,
   setAdminLoggedIn,
+  adminSessionKey = '',
   adminLoginForm,
   setAdminLoginForm,
   handleAdminLogin,
@@ -350,7 +351,7 @@ export default function AdminDashboardPro({
       if (expensesSessionVersion.current === requestVersion) expensesSessionVersion.current += 1;
       clearInterval(interval);
     };
-  }, [adminLoggedIn]);
+  }, [adminLoggedIn, adminSessionKey]);
 
 
 
