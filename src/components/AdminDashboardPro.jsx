@@ -797,15 +797,10 @@ export default function AdminDashboardPro({
     const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
     const productById = new Map((products || []).map(product => [String(product.id), product]));
     const getOrderLineRevenue = (item) => {
-      const unitPrice = Math.max(0, Number(item?.priceGEL ?? item?.price) || 0);
-      const giftWrapFee = item?.gift_wrap === true
-        ? Math.max(0, Number(item?.gift_wrap_fee ?? 5) || 0)
-        : 0;
-      const vipWarrantyFee = item?.vip_warranty === true
-        ? Math.max(0, Number(item?.vip_warranty_fee ?? 15) || 0)
-        : 0;
+      // Server snapshots already include add-on fees in price; do not add them twice.
+      const unitPrice = Math.max(0, Number(item?.price ?? item?.priceGEL ?? item?.base_price) || 0);
       const quantity = Math.max(1, Number(item?.quantity) || 1);
-      return (unitPrice + giftWrapFee + vipWarrantyFee) * quantity;
+      return unitPrice * quantity;
     };
 
     let totalSalesRevenue = 0;
@@ -1757,14 +1752,9 @@ export default function AdminDashboardPro({
       ? safeOrderItems.map((item) => {
           const imageSrc = safeImageSrc(item.image);
           const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
-          const unitPrice = numericValue(item.priceGEL ?? item.price);
-          const giftWrapFee = item.gift_wrap === true
-            ? numericValue(item.gift_wrap_fee ?? 5)
-            : 0;
-          const vipWarrantyFee = item.vip_warranty === true
-            ? numericValue(item.vip_warranty_fee ?? 15)
-            : 0;
-          const lineTotal = (unitPrice + giftWrapFee + vipWarrantyFee) * quantity;
+          // Server order snapshots store price as the final unit price, including add-ons.
+          const unitPrice = numericValue(item.price ?? item.priceGEL ?? item.base_price);
+          const lineTotal = unitPrice * quantity;
           return `
             <tr>
               <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : '' } ${(item.customVariantName || item.custom_variant_name) ? `(ვარიანტი: ${escapeHtml(item.customVariantName || item.custom_variant_name)})` : ''} ${item.gift_wrap ? '(სასაჩუქრე შეფუთვა +5 ₾)' : ''} ${item.vip_warranty ? '(VIP გარანტია +15 ₾)' : ''} ${item.gift_message ? `<br/><small>სასაჩუქრე ტექსტი: ${escapeHtml(item.gift_message)}</small>` : ''}</td>
