@@ -398,3 +398,18 @@ This file is the durable handoff log for staged audit work. Add new findings and
 ### Scope
 - No checkout pricing, order RPC, idempotency, stock, auth, or RLS logic was changed.
 - Existing KA/EN/RU checkout labels and order tracking behavior were preserved.
+
+
+## Checkout confirmation responsive fix — 2026-11-07
+
+### Finding
+- The server-generated order reference uses the format `ORD-` plus 32 hexadecimal characters. The success modal rendered it in a full-width `code` element but did not enable line breaking. On narrow screens, a long unbroken code could overflow the confirmation panel and appear clipped/outside the modal.
+
+### Change saved
+- Added `min-w-0`, `max-w-full`, `overflow-hidden`, and responsive panel padding to the order-code panel.
+- Added `break-all` and `overflow-wrap:anywhere` to the code display so the complete reference stays inside the modal on narrow screens.
+- Preserved the full order ID, copy action, server confirmation check, and existing order flow. No checkout/database logic was changed.
+
+### Verification boundary
+- Re-read the updated JSX and confirmed the wrapping classes are present.
+- No local build, automated test, browser/device interaction, real order, Vercel build, or deployment was run in this stage.
