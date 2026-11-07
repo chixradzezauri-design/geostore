@@ -290,6 +290,7 @@ export default function AdminDashboardPro({
   });
 
   const [expenses, setExpenses] = useState([]);
+  const expensesSessionVersion = useRef(0);
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
   const expenseCreateLock = useRef(false);
   const expenseDeleteLocks = useRef(new Set());
@@ -306,23 +307,36 @@ export default function AdminDashboardPro({
     } catch {}
   }, [staffList]);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = async (requestVersion = expensesSessionVersion.current) => {
+    if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current) return;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setExpenses(data || []);
+      if (!res.ok) return;
+      const data = await res.json();
+      // A response started by a previous administrator session must never
+      // repopulate private finance data after logout or privilege revocation.
+      if (adminLoggedIn && requestVersion === expensesSessionVersion.current) {
+        setExpenses(Array.isArray(data) ? data : []);
       }
     } catch {}
   };
 
   useEffect(() => {
-    // Do not poll private finance data until the server-verified admin session is active.
-    if (!adminLoggedIn) return undefined;
+    const requestVersion = ++expensesSessionVersion.current;
+    if (!adminLoggedIn) {
+      setExpenses([]);
+      return () => {
+        if (expensesSessionVersion.current === requestVersion) expensesSessionVersion.current += 1;
+      };
+    }
 
-    fetchExpenses();
-    const interval = setInterval(fetchExpenses, 15000);
-    return () => clearInterval(interval);
+    // Do not poll private finance data until the server-verified admin session is active.
+    fetchExpenses(requestVersion);
+    const interval = setInterval(() => fetchExpenses(requestVersion), 15000);
+    return () => {
+      if (expensesSessionVersion.current === requestVersion) expensesSessionVersion.current += 1;
+      clearInterval(interval);
+    };
   }, [adminLoggedIn]);
 
 
@@ -522,34 +536,47 @@ export default function AdminDashboardPro({
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
+  const supportTicketsSessionVersion = useRef(0);
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (requestVersion = supportTicketsSessionVersion.current) => {
+    if (!adminLoggedIn || requestVersion !== supportTicketsSessionVersion.current) return;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setSupportTickets((data || []).map(t => ({
-          id: t.id,
-          customerName: t.customer_name,
-          email: t.email,
-          subject: t.subject,
-          message: t.message,
-          status: t.status || 'ღია',
-          reply: t.reply || '',
-          date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
-        })));
-      }
+      if (!res.ok) return;
+      const data = await res.json();
+      // Ignore late responses from a session that has already ended.
+      if (!adminLoggedIn || requestVersion !== supportTicketsSessionVersion.current) return;
+      setSupportTickets((Array.isArray(data) ? data : []).map(t => ({
+        id: t.id,
+        customerName: t.customer_name,
+        email: t.email,
+        subject: t.subject,
+        message: t.message,
+        status: t.status || 'ღია',
+        reply: t.reply || '',
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
+      })));
     } catch {}
   };
 
   useEffect(() => {
-    if (!adminLoggedIn) return undefined;
-    fetchTickets();
-    const interval = setInterval(fetchTickets, 15000);
-    return () => clearInterval(interval);
+    const requestVersion = ++supportTicketsSessionVersion.current;
+    if (!adminLoggedIn) {
+      setSupportTickets([]);
+      setReplyInputs({});
+      return () => {
+        if (supportTicketsSessionVersion.current === requestVersion) supportTicketsSessionVersion.current += 1;
+      };
+    }
+    fetchTickets(requestVersion);
+    const interval = setInterval(() => fetchTickets(requestVersion), 15000);
+    return () => {
+      if (supportTicketsSessionVersion.current === requestVersion) supportTicketsSessionVersion.current += 1;
+      clearInterval(interval);
+    };
   }, [adminLoggedIn]);
 
   useEffect(() => {
