@@ -613,8 +613,10 @@ export default function AdminDashboardPro({
   const [activityLogs, setActivityLogs] = useState([]);
   const [activityLogsLoading, setActivityLogsLoading] = useState(false);
   const [activityLogsError, setActivityLogsError] = useState('');
+  const activityLogsSessionVersion = useRef(0);
 
-  const fetchActivityLogs = async () => {
+  const fetchActivityLogs = async (requestVersion = activityLogsSessionVersion.current) => {
+    if (!adminLoggedIn || requestVersion !== activityLogsSessionVersion.current) return;
     setActivityLogsLoading(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
@@ -625,6 +627,7 @@ export default function AdminDashboardPro({
       if (!response.ok) throw new Error(await response.text());
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('აქტივობების ისტორიის ფორმატი არასწორია.');
+      if (!adminLoggedIn || requestVersion !== activityLogsSessionVersion.current) return;
       setActivityLogs(rows.map(log => ({
         id: String(log.id),
         action: log.action,
@@ -632,20 +635,30 @@ export default function AdminDashboardPro({
       })));
       setActivityLogsError('');
     } catch (error) {
-      setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      if (adminLoggedIn && requestVersion === activityLogsSessionVersion.current) {
+        setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      }
     } finally {
-      setActivityLogsLoading(false);
+      if (adminLoggedIn && requestVersion === activityLogsSessionVersion.current) {
+        setActivityLogsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    const requestVersion = ++activityLogsSessionVersion.current;
     if (!adminLoggedIn) {
       setActivityLogs([]);
       setActivityLogsError('');
       setActivityLogsLoading(false);
-      return;
+      return () => {
+        if (activityLogsSessionVersion.current === requestVersion) activityLogsSessionVersion.current += 1;
+      };
     }
-    fetchActivityLogs();
+    fetchActivityLogs(requestVersion);
+    return () => {
+      if (activityLogsSessionVersion.current === requestVersion) activityLogsSessionVersion.current += 1;
+    };
   }, [adminLoggedIn]);
 
   const logActivity = async (actionText) => {
