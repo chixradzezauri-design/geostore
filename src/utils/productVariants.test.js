@@ -51,4 +51,7 @@ test('fails closed for malformed custom variants instead of falling back to base
   assert.equal(getProductStartingPrice(product), null);
   assert.equal(getProductAvailableStock(product), 0);
   assert.equal(hasProductVariantOptions(product), true);
+  assert.equal(getCustomProductVariants({ variants: [{ id: 'v1', name: 'No price', priceGEL: null, stock: 2 }] }).length, 0);
+  assert.equal(getCustomProductVariants({ variants: [{ id: 'v1', name: 'No stock', priceGEL: 10, stock: null }] }).length, 0);
+  assert.equal(getProductStartingPrice({ priceGEL: null }), null);
 });

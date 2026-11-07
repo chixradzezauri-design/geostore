@@ -20,9 +20,15 @@ export const getCustomProductVariants = (product) => {
     if (!variant || typeof variant !== 'object' || Array.isArray(variant)) return [];
     const id = String(variant.id ?? '').trim();
     const name = String(variant.name ?? '').trim();
-    const priceGEL = Number(variant.priceGEL ?? variant.price_gel);
-    const stock = Number(variant.stock);
-    if (!id || id.length > 120 || !name || name.length > 80 || !Number.isFinite(priceGEL) || priceGEL < 0 || !Number.isSafeInteger(stock) || stock < 0) return [];
+    const rawPrice = variant.priceGEL ?? variant.price_gel;
+    const rawStock = variant.stock;
+    const priceGEL = Number(rawPrice);
+    const stock = Number(rawStock);
+    if (!id || id.length > 120 || !name || name.length > 80 ||
+        rawPrice == null || String(rawPrice).trim() === '' ||
+        rawStock == null || String(rawStock).trim() === '' ||
+        !Number.isFinite(priceGEL) || priceGEL < 0 ||
+        !Number.isSafeInteger(stock) || stock < 0) return [];
     return [{ ...variant, id, name, priceGEL, stock }];
   });
 };
@@ -41,7 +47,9 @@ export const getProductStartingPrice = (product) => {
     const prices = getCustomProductVariants(product).map(variant => variant.priceGEL);
     return prices.length ? Math.min(...prices) : null;
   }
-  const price = Number(product?.priceGEL ?? product?.price_gel);
+  const rawPrice = product?.priceGEL ?? product?.price_gel;
+  if (rawPrice == null || String(rawPrice).trim() === '') return null;
+  const price = Number(rawPrice);
   return Number.isFinite(price) && price >= 0 ? price : null;
 };
 export const hasProductVariantOptions = (product) => (

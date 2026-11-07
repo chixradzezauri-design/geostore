@@ -680,7 +680,7 @@ export default function StoreView({
                   </button>
 
                   <div className="gs-catalog-product-badges absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5 z-10">
-                    {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && (
+                    {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && (
                       <span className="gs-catalog-sale-badge bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 sm:px-3 py-1 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow">{storeText.discount}</span>
                     )}
                     {tagsArray.slice(0, 2).map((tag, idx) => (
@@ -771,7 +771,7 @@ export default function StoreView({
                     <span className="text-xl sm:text-3xl font-black text-amber-400">
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
-                    {Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
+                    {!hasCustomProductVariants(selectedProduct) && Number(selectedProduct.oldPriceGEL) > Number(selectedProduct.priceGEL) && <span className="text-slate-500 font-bold line-through text-sm sm:text-base">{formatPrice(selectedProduct.oldPriceGEL)}</span>}
                   </div>
 
                   {(selectedProduct.material || selectedProduct.durability) && (
@@ -1050,7 +1050,7 @@ export default function StoreView({
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="gs-modal-add-label">{storeText.addToCart}{getAvailableProductSizes(selectedProduct).length > 0 ? ` · ${selectedSize}` : ''}</span>
+                <span className="gs-modal-add-label">{storeText.addToCart}{selectedCustomVariant ? ` · ${selectedCustomVariant.name}` : getAvailableProductSizes(selectedProduct).length > 0 ? ` · ${selectedSize}` : ''}</span>
                 <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>
