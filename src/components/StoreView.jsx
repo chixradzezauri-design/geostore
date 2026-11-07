@@ -1010,6 +1010,7 @@ export default function StoreView({
                       </div>
                       <textarea 
                         placeholder={storeText.reviewPlaceholder} 
+                        maxLength={1200}
                         value={visibleReviewComment} 
                         onChange={e => setNewReviewComment(e.target.value)}
                         required
