@@ -103,10 +103,17 @@ BEGIN
           WHERE order_line.item ->> 'id' = v_existing.id
             AND coalesce(order_line.item ->> 'customVariantId',
                          order_line.item ->> 'custom_variant_id') = old_variant.item ->> 'id'
-            AND lower(trim(coalesce(o.status, ''))) NOT IN (
-              'გაუქმებული', 'დასრულებული', 'ჩაბარებულია',
-              'cancelled', 'canceled', 'completed', 'delivered',
-              'отменён', 'отменен', 'завершён', 'завершен', 'доставлен'
+            AND (
+              lower(trim(coalesce(o.status, ''))) NOT IN (
+                'გაუქმებული', 'დასრულებული', 'ჩაბარებულია',
+                'cancelled', 'canceled', 'completed', 'delivered',
+                'отменён', 'отменен', 'завершён', 'завершен', 'доставлен'
+              )
+              OR (
+                lower(trim(coalesce(o.status, ''))) IN ('გაუქმებული', 'cancelled', 'canceled', 'отменён', 'отменен')
+                AND o.stock_deducted_at IS NOT NULL
+                AND o.stock_restored_at IS NULL
+              )
             )
        )
   ) THEN
