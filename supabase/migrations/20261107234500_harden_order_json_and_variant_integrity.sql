@@ -281,6 +281,9 @@ BEGIN
   IF jsonb_typeof(coalesce(NEW.variants, '[]'::jsonb)) IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'პროდუქტის ვარიანტების მონაცემები არასწორია.';
   END IF;
+  IF jsonb_array_length(coalesce(NEW.variants, '[]'::jsonb)) > 50 THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტების რაოდენობა 50-ს არ უნდა აღემატებოდეს.';
+  END IF;
   IF EXISTS (
     SELECT 1
       FROM jsonb_array_elements(coalesce(NEW.variants, '[]'::jsonb)) AS e(item)
@@ -317,10 +320,157 @@ BEGIN
   LOOP
     IF jsonb_typeof(v_variant) IS DISTINCT FROM 'object'
        OR coalesce(trim(v_variant->>'id'), '') = ''
+       OR length(trim(coalesce(v_variant->>'id', ''))) > 80
        OR coalesce(trim(v_variant->>'name'), '') = ''
-       OR coalesce(v_variant->>'priceGEL', '') !~ '^[0-9]+(\.[0-9]{1,2})?$'
-       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+       OR length(trim(coalesce(v_variant->>'name', ''))) > 80
+       OR coalesce(v_variant->>'priceGEL', '') !~ '^[0-9]+(\.[0-9]{1,2})?
+    SELECT value INTO v_existing
+      FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
+     WHERE value->>'id' = v_variant->>'id'
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
+    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
+  END LOOP;
+  NEW.variants := v_result;
+  RETURN NEW;
+END;
+$function$
+
+;
+
+       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}
+    SELECT value INTO v_existing
+      FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
+     WHERE value->>'id' = v_variant->>'id'
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
+      END IF;
+      v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
+    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
+  END LOOP;
+  NEW.variants := v_result;
+  RETURN NEW;
+END;
+$function$
+
+;
+ THEN
       RAISE EXCEPTION 'პროდუქტის ვარიანტის სახელი, ფასი ან მარაგი არასწორია.';
+    END IF;
+    IF (v_variant->>'priceGEL')::numeric > 1000000000
+       OR (v_variant->>'stock')::integer > 1000000 THEN
+      RAISE EXCEPTION 'ვარიანტის ფასი ან მარაგი დასაშვებ ზღვარს აჭარბებს.';
+    END IF;
+    SELECT value INTO v_existing
+      FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
+     WHERE value->>'id' = v_variant->>'id'
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
+      END IF;
+      v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
+    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
+  END LOOP;
+  NEW.variants := v_result;
+  RETURN NEW;
+END;
+$function$
+
+;
+ THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
+      END IF;
+      IF (v_existing->>'stock')::integer > 1000000 THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგი დასაშვებ ზღვარს აჭარბებს.';
+      END IF;
+      v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
+    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
+  END LOOP;
+  NEW.variants := v_result;
+  RETURN NEW;
+END;
+$function$
+
+;
+
+       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}
+    SELECT value INTO v_existing
+      FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
+     WHERE value->>'id' = v_variant->>'id'
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
+      END IF;
+      v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
+    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
+  END LOOP;
+  NEW.variants := v_result;
+  RETURN NEW;
+END;
+$function$
+
+;
+ THEN
+      RAISE EXCEPTION 'პროდუქტის ვარიანტის სახელი, ფასი ან მარაგი არასწორია.';
+    END IF;
+    IF (v_variant->>'priceGEL')::numeric > 1000000000
+       OR (v_variant->>'stock')::integer > 1000000 THEN
+      RAISE EXCEPTION 'ვარიანტის ფასი ან მარაგი დასაშვებ ზღვარს აჭარბებს.';
     END IF;
     SELECT value INTO v_existing
       FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
