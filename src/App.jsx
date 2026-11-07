@@ -180,6 +180,65 @@ const DEFAULT_CATEGORIES = [
   { id: 'c3', name: 'აქსესუარები', icon: 'Sparkles', parentId: null }
 ];
 
+const validateStorefrontCategorySnapshot = (rawCategories, catalogProducts = []) => {
+  if (!Array.isArray(rawCategories) || rawCategories.length > 100) {
+    throw new Error('კატეგორიების სია არასწორია ან 100 კატეგორიაზე მეტია.');
+  }
+
+  const normalized = rawCategories.map((category, index) => {
+    if (typeof category === 'string') {
+      const name = category.trim();
+      return { id: `cat-legacy-${index}`, name, icon: 'Shirt', parentId: null, image: '', img: '' };
+    }
+    if (!category || typeof category !== 'object' || Array.isArray(category)) {
+      throw new Error('კატეგორიების სიაში აღმოჩნდა არასწორი ჩანაწერი.');
+    }
+    const image = typeof category.image === 'string' ? category.image : (typeof category.img === 'string' ? category.img : '');
+    return {
+      ...category,
+      id: String(category.id || `cat-legacy-${index}`).trim(),
+      name: String(category.name || '').trim(),
+      icon: String(category.icon || 'Shirt'),
+      parentId: category.parentId ? String(category.parentId) : null,
+      image,
+      img: image
+    };
+  });
+
+  const ids = new Set();
+  const names = new Set();
+  for (const category of normalized) {
+    const normalizedName = category.name.toLocaleLowerCase();
+    if (!category.id || category.id.length > 120 || ids.has(category.id)) {
+      throw new Error('კატეგორიის ID ცარიელია ან დუბლირებულია.');
+    }
+    if (category.name.length < 2 || category.name.length > 60 || names.has(normalizedName)) {
+      throw new Error('კატეგორიის სახელი უნდა იყოს 2-60 სიმბოლო და უნიკალური.');
+    }
+    ids.add(category.id);
+    names.add(normalizedName);
+  }
+
+  const rootIds = new Set(normalized.filter(category => !category.parentId).map(category => category.id));
+  for (const category of normalized) {
+    if (category.parentId && (!rootIds.has(category.parentId) || category.parentId === category.id)) {
+      throw new Error(`„${category.name}“ კატეგორიის მთავარი კატეგორია არასწორია. შეასწორეთ იერარქია და ხელახლა სცადეთ.`);
+    }
+  }
+
+  const categoryNames = new Set(normalized.map(category => category.name));
+  const missingProductCategories = [...new Set(
+    (Array.isArray(catalogProducts) ? catalogProducts : [])
+      .map(product => String(product?.category || '').trim())
+      .filter(name => name && !categoryNames.has(name))
+  )];
+  if (missingProductCategories.length) {
+    throw new Error(`არსებობს პროდუქტები, რომელთა კატეგორია აღარ არსებობს: ${missingProductCategories.slice(0, 5).join(', ')}. ჯერ გადაიტანეთ ეს პროდუქტები არსებულ კატეგორიებში.`);
+  }
+
+  return normalized;
+};
+
 const DEFAULT_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
   { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
@@ -647,9 +706,10 @@ export default function App() {
         throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
       }
 
+      const validatedCategories = validateStorefrontCategorySnapshot(categories, products);
       const draftCategories = [];
-      for (let index = 0; index < (Array.isArray(categories) ? categories.length : 0); index += 1) {
-        const category = categories[index];
+      for (let index = 0; index < validatedCategories.length; index += 1) {
+        const category = validatedCategories[index];
         const image = category.image || category.img || '';
         const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
         draftCategories.push({ ...category, image: uploaded, img: uploaded });
@@ -708,9 +768,10 @@ export default function App() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
 
+      const validatedCategories = validateStorefrontCategorySnapshot(categories, products);
       const publishedCategories = [];
-      for (let index = 0; index < (Array.isArray(categories) ? categories.length : 0); index += 1) {
-        const category = categories[index];
+      for (let index = 0; index < validatedCategories.length; index += 1) {
+        const category = validatedCategories[index];
         const image = category.image || category.img || '';
         const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
         publishedCategories.push({ ...category, image: uploaded, img: uploaded });
