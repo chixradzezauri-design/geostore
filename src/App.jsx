@@ -1738,7 +1738,7 @@ export default function App() {
       const rawPurchaseCost = catalogProduct?.purchaseCost ?? catalogProduct?.purchase_cost;
       const purchaseCost = rawPurchaseCost === null || rawPurchaseCost === undefined || rawPurchaseCost === ''
         ? null
-        : (Number.isFinite(Number(rawPurchaseCost)) && Number(rawPurchaseCost) > 0 ? Number(rawPurchaseCost) : null);
+        : (Number.isFinite(Number(rawPurchaseCost)) && Number(rawPurchaseCost) >= 0 ? Number(rawPurchaseCost) : null);
       return {
         id: item.id,
         name: item.name,
