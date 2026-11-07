@@ -33,7 +33,7 @@ begin
     raise exception 'მისამართი არასწორია.';
   end if;
 
-  if coalesce(new.user_email, 'guest') = 'guest' and
+  if lower(btrim(coalesce(new.user_email, 'guest'))) = 'guest' and
     (new.customer_email is null
       or length(new.customer_email) > 254
       or lower(btrim(new.customer_email)) !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$') then
