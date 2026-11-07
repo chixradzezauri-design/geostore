@@ -11,6 +11,7 @@ import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { resolveProductCreatedAt } from '../utils/productOrdering';
+import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -107,10 +108,25 @@ const deleteProductImages = async (imageUrls, productId) => {
   }).filter(Boolean))];
   if (!paths.length) return true;
   try {
+    // A product-owned Storage path can still be referenced by another product.
+    // Read the lightweight image references first and fail closed if this check fails.
+    const referenceResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?select=id,image,gallery`,
+      { headers: await getSupabaseHeaders() }
+    );
+    if (!referenceResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
+    const productRows = await referenceResponse.json();
+    if (!Array.isArray(productRows)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+    const referencedUrls = collectReferencedProductImageUrls(productRows, productId);
+    const safePaths = paths.filter(path => {
+      const canonicalUrl = publicPrefix + path.split('/').map(encodeURIComponent).join('/');
+      return !referencedUrls.has(canonicalUrl);
+    });
+    if (!safePaths.length) return true;
     const headers = await getSupabaseHeaders();
     delete headers.Prefer;
     const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${PRODUCT_IMAGE_BUCKET}`, {
-      method: 'DELETE', headers, body: JSON.stringify({ prefixes: paths })
+      method: 'DELETE', headers, body: JSON.stringify({ prefixes: safePaths })
     });
     if (!response.ok) throw new Error(await response.text());
     return true;
