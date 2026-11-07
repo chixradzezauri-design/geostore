@@ -763,3 +763,23 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - The public validation wrapper continues to call the same private function name, so its existing request-size, phone, item-count and payload validation contract is retained.
 - Direct EXECUTE on the renamed unchecked implementation is revoked from `PUBLIC`, `anon`, and `authenticated`; only the owner-checking private wrapper is callable by the public RPC wrapper.
 - The revised ownership migration passed a full PostgreSQL DDL dry run inside an explicit transaction ending in ROLLBACK. After rollback, the live database still has no `user_id` / `recipient_user_id` columns, no renamed private function, and migration history remains unchanged at `20261107160152`.
+
+
+## Fresh RLS and table-privilege review — 2026-11-07 evening
+
+### Read-only checks
+- Exact SQL counts: `public.orders = 0`, `public.products = 1`, `public.expenses = 1`, `public.order_notifications = 0`. This supersedes the older 21-order count in the previous stock audit; no stock correction/backfill was made.
+- All 11 public tables returned by the live catalog have RLS enabled.
+- Anonymous users have no table-level INSERT/UPDATE/DELETE privileges on the inspected public tables. They have no direct SELECT/INSERT on `public.orders`.
+- The storefront's public catalogue access uses column-level SELECT grants on `public.products`; `purchase_cost` is not selectable by anon or authenticated users.
+- Authenticated users have no direct INSERT on `public.orders`; customer order history is served through the restricted server-side RPC. The direct order SELECT policy is limited to the primary admin identity and admin app-metadata role.
+- `public.expenses` write access is constrained by an admin-only RLS policy. `public.products` writes are protected by the admin UID + app-metadata RLS policies.
+- `public.order_notifications` has RLS enabled and no policies or direct table privileges; notifications are accessed through restricted RPCs. The three private rate-limit/activity tables also have RLS enabled without policies and remain fail-closed.
+
+### Supabase advisor results
+- Security advisor: one actionable warning remains — **Leaked Password Protection is disabled**. This setting must be enabled by the project owner in Supabase Dashboard → Authentication → Settings / Password Security. I did not change authentication settings.
+- Security advisor also reports four RLS-enabled/no-policy INFO findings. These are the fail-closed tables described above, not public data exposure.
+- Performance advisor reports four unused indexes on storefront/notification tables. No indexes were dropped; current row counts and advisor output do not justify potentially destructive index removal.
+
+### Release boundary
+No database DDL, row data, authentication settings, Vercel builds, or deployments were changed during this review. The SQL and test corrections remain staged on the design branch.
