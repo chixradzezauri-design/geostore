@@ -402,7 +402,5 @@ GRANT EXECUTE ON FUNCTION public.admin_delete_product_if_version(text, bigint) T
 
 -- Retire legacy unversioned mutation endpoints so old clients cannot bypass
 -- the version-checked operations.
-REVOKE ALL ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.admin_delete_product(text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION private.admin_delete_product(text) FROM PUBLIC, anon, authenticated;
