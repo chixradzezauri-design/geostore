@@ -162,3 +162,28 @@ This file is the durable handoff log for staged audit work. Add new findings and
 
 - Read-only repository review and read-only SQL counts/length checks only.
 - No product rows or Storage objects changed; no migration, build, deployment, or automated tests executed.
+
+
+## Product sizes, colors, variants and checkout validation — 2026-11-07
+
+### Findings
+
+- The product loader previously substituted `['S', 'M', 'L', 'XL']` and `['შავი', 'თეთრი']` whenever the database values were NULL. This invented selectable options for products that had not actually declared them.
+- Fixed `src/App.jsx` mapping to accept only JSON arrays for `available_sizes` and `available_colors`; absent or malformed values now map to empty arrays. The existing `productVariants.js` normalizer already treats absent options as empty and does not invent choices.
+- Product detail selection uses the available options from the product record; cart insertion validates selected size/color against those options. No change was needed in the cart logic.
+- Live database inventory: 1 product; size, color and variants fields all have valid JSON array shapes. Live product stock is 45; its sizes are S/M/L/XL/XXL; colors and custom variants are empty. No product row was modified.
+- The live `private.create_order_with_stock(jsonb)` function currently does **not** validate selected size/color against the product's allowed arrays (verified directly from its live function definition).
+- The staged repository migration `20261106103325_preserve_order_item_variants.sql` contains server-side size/color validation and preserves the selected options in order snapshots, but it is not present in live Supabase migration history. Therefore this protection is staged only and is not yet active in production. Do not claim otherwise or test by placing a real order.
+- Checkout stock and price continue to be recomputed from locked server-side product rows in the live function; this stage did not alter that behavior.
+
+### Change saved
+
+- `src/App.jsx`: removed fabricated fallback size/color options; missing/non-array database values become empty arrays.
+- Commit: `87f88c3f90f325e81b0897e22dcf6995fe011983`.
+
+### Verification boundary
+
+- Re-read the committed source lines and confirmed the fallback removal.
+- Read-only database checks confirmed valid JSON array shapes for the single live product.
+- Read-only function inspection confirmed size/color enforcement is absent from the live function but present in the staged migration noted above.
+- No product/order data changed; no production SQL, migration, build, deployment, or automated tests executed.
