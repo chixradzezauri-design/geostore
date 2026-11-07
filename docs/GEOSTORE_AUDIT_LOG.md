@@ -373,3 +373,28 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - No real storefront config or version row was published or created during verification; both tables remain empty.
 - Existing draft-save, public published-config reads, category/banner behavior, and version-history read/restore UI were preserved.
 - No Vercel build or deployment was run.
+
+## 2026-11-07 — Checkout confirmation and order-code visibility
+
+### Findings
+- The order creation handler already validates the server RPC response against the generated idempotent `ORD-` order reference, then sets `orderConfirmation` with that full ID.
+- The checkout submit handler displayed a separate generic “order sending started” toast while the button itself already displayed the loading state. It also displayed a second success toast after the confirmation dialog was opened. These duplicate toast surfaces could distract from or visually overlap the actual confirmation.
+- The confirmation dialog had a long order reference, but its layout relied on utility classes and earlier CSS rules. A dedicated final code style makes the reference's wrapping and selection behavior explicit on narrow screens.
+
+### Implemented
+- Removed the redundant initial “sending” toast. The submit button remains the loading indicator and still disables repeat submission.
+- Removed the duplicate success toast. The order confirmation dialog is now the single success surface and continues to show the full server-confirmed order ID.
+- Rendered the code in a left-to-right code element with an accessible label, explicit full-width wrapping, selectable text, and a safe empty-state fallback.
+- Copy action now disables if no order ID exists and copies the exact order ID without the visual leading `#`; fallback still exposes the full code if clipboard access is unavailable.
+- Added dedicated responsive CSS so the success dialog and order-code panel cannot exceed viewport width, and the full 36-character `ORD-` code wraps instead of overflowing.
+
+### Verification
+- Re-fetched all three changed source files from the working branch and verified the handler still sets `orderConfirmation` from the validated server response.
+- Verified the redundant sending/success toast strings are absent from the order handler.
+- Verified the confirmation component has the left-to-right code element, empty-state fallback, disabled-copy guard, and dedicated responsive CSS.
+- Package scripts confirm tests run with `node --test` and production build with `vite build`; neither was run because there is no checked-out local working tree in this environment. No Vercel build/deploy was triggered.
+- No order or customer data was written to Supabase during this frontend-only stage.
+
+### Scope
+- No checkout pricing, order RPC, idempotency, stock, auth, or RLS logic was changed.
+- Existing KA/EN/RU checkout labels and order tracking behavior were preserved.
