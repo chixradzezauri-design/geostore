@@ -163,6 +163,17 @@ test('rounds coupon discount to cents before adding delivery, matching server ch
   );
 });
 
+test('matches PostgreSQL half-up discount rounding using integer basis points', () => {
+  assert.deepEqual(
+    calculateCheckoutTotals({ subtotal: 3.75, discountPercent: 34.8, deliveryFee: 0 }),
+    { subtotalGEL: 3.75, discountGEL: 1.31, deliveryGEL: 0, totalGEL: 2.44 }
+  );
+  assert.deepEqual(
+    calculateCheckoutTotals({ subtotal: 100.05, discountPercent: 10, deliveryFee: 10 }),
+    { subtotalGEL: 100.05, discountGEL: 10.01, deliveryGEL: 10, totalGEL: 100.04 }
+  );
+});
+
 test('keeps a zero-discount total and supports a full discount', () => {
   assert.equal(
     calculateCheckoutTotals({ subtotal: 100, discountPercent: 0, deliveryFee: 15 }).totalGEL,
