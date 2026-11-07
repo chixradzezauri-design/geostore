@@ -35,9 +35,14 @@ BEGIN
     CASE
       WHEN jsonb_typeof(o.items) = 'array' THEN
         coalesce((
-          SELECT jsonb_agg(entry.item - 'purchase_cost' - 'vendor' ORDER BY entry.ordinality)
+          SELECT jsonb_agg(
+            CASE WHEN jsonb_typeof(entry.item) = 'object'
+              THEN entry.item - 'purchase_cost' - 'vendor'
+              ELSE entry.item
+            END
+            ORDER BY entry.ordinality
+          )
           FROM jsonb_array_elements(o.items) WITH ORDINALITY AS entry(item, ordinality)
-          WHERE jsonb_typeof(entry.item) = 'object'
         ), '[]'::jsonb)
       ELSE '[]'::jsonb
     END,
