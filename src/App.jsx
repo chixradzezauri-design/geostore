@@ -2029,11 +2029,20 @@ export default function App() {
             : product;
         }));
         const changedNames = [...new Set(reconciliation.changes.map((change) => change.name).filter(Boolean))].slice(0, 3).join(', ');
+        const hasVariantChange = reconciliation.changes.some((change) =>
+          change.type === 'variant_size' || change.type === 'variant_color'
+        );
         const message = currentLang === 'en'
-          ? `The price or stock changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
+          ? hasVariantChange
+            ? `A selected size or color is no longer available for: ${changedNames}. Remove that item from your cart or choose an available option, then try again.`
+            : `The price or stock changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
           : currentLang === 'ru'
-            ? `Цена или наличие изменились для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
-            : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
+            ? hasVariantChange
+              ? `Выбранный размер или цвет больше недоступен для: ${changedNames}. Удалите товар из корзины или выберите доступный вариант, затем повторите заказ.`
+              : `Цена или наличие изменились для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
+            : hasVariantChange
+              ? `არჩეული ზომა ან ფერი აღარ არის ხელმისაწვდომი: ${changedNames}. წაშალეთ ეს ნივთი კალათიდან ან აირჩიეთ ხელმისაწვდომი ვარიანტი და სცადეთ თავიდან.`
+              : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
         setCheckoutError(message);
         showToast(message);
         setIsSubmittingOrder(false);
