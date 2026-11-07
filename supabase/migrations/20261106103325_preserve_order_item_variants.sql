@@ -138,7 +138,8 @@ begin
                                        'gift_message', grouped.gift_message)
                ELSE '{}'::jsonb END
           order by grouped.product_id, grouped.selected_size nulls first,
-                   grouped.selected_color nulls first, grouped.custom_variant_id nulls first
+                   grouped.selected_color nulls first, grouped.custom_variant_id nulls first,
+                   grouped.gift_wrap, grouped.vip_warranty, grouped.gift_message nulls first
         ),
         '[]'::jsonb
       )
