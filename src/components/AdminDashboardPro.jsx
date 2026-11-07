@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
-import { normalizeOrderItems } from '../utils/orderSafety';
+import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -733,7 +733,7 @@ export default function AdminDashboardPro({
     const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
-      const orderTotal = Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
+      const orderTotal = normalizeOrderTotal(order.totalGEL ?? order.total_gel);
       totalSalesRevenue += orderTotal;
       const rawItems = Array.isArray(order.items) ? order.items : [];
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
@@ -816,7 +816,7 @@ export default function AdminDashboardPro({
         ? date.toLocaleDateString('ka-GE', { day: '2-digit', month: 'short' })
         : date.toLocaleDateString('ka-GE', { month: 'short', year: '2-digit' });
       const current = trendBuckets.get(key) || { key, label, revenue: 0, orders: 0 };
-      current.revenue += Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
+      current.revenue += normalizeOrderTotal(order.totalGEL ?? order.total_gel);
       current.orders += 1;
       trendBuckets.set(key, current);
     });

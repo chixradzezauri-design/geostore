@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -999,7 +999,7 @@ export default function App() {
           user_email: currentUser.email,
           phone: o.phone || '',
           address: o.address || '',
-          totalGEL: Number(o.total_gel) || 0,
+          totalGEL: normalizeOrderTotal(o.total_gel),
           status: o.status || 'ახალი',
           items: normalizeOrderItems(o.items),
           status_changed_at: o.status_changed_at || null
@@ -1146,7 +1146,7 @@ export default function App() {
           user_email: o.customer_email || o.user_email || '',
           phone: o.phone || '',
           address: o.address || '',
-          totalGEL: Number(o.total_gel) || 0,
+          totalGEL: normalizeOrderTotal(o.total_gel),
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
           items,

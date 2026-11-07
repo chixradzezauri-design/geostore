@@ -1,5 +1,12 @@
 // Keep order payload normalization pure so malformed legacy rows cannot crash
 // customer history, admin details, or invoice rendering.
+// Normalize server order totals identically in customer history and admin finance.
+// Reject negative, malformed, NaN and infinite values before they reach the UI.
+export const normalizeOrderTotal = (value) => {
+  const total = Number(value);
+  return Number.isFinite(total) && total >= 0 ? total : 0;
+};
+
 export const normalizeOrderItems = (items) => (
   Array.isArray(items)
     ? items.filter((item) => item && typeof item === 'object' && !Array.isArray(item))

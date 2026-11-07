@@ -7,7 +7,8 @@ import {
   createSecureOrderId,
   groupCheckoutItems,
   isReusableCheckout,
-  normalizeOrderItems
+  normalizeOrderItems,
+  normalizeOrderTotal
 } from './orderSafety.js';
 
 test('groups identical product and option combinations', () => {
@@ -176,4 +177,13 @@ test('normalizes malformed legacy order item arrays without dropping valid lines
   assert.deepEqual(normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]), [valid, { id: 'p-2' }]);
   assert.deepEqual(normalizeOrderItems({ items: [] }), []);
   assert.deepEqual(normalizeOrderItems(null), []);
+});
+
+
+test('normalizes server order totals to finite nonnegative GEL values', () => {
+  assert.equal(normalizeOrderTotal('123.45'), 123.45);
+  assert.equal(normalizeOrderTotal(0), 0);
+  for (const value of [-1, NaN, Infinity, -Infinity, 'Infinity', 'not-money', null, undefined]) {
+    assert.equal(normalizeOrderTotal(value), 0);
+  }
 });
