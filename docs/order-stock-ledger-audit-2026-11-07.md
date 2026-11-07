@@ -22,9 +22,8 @@ Read-only audit of the live Supabase project. No order, product, stock, or migra
 
 Seven non-cancelled orders have no `stock_deducted_at` marker:
 
-- Six refer only to the currently existing product.
-- One is already completed and has no deduction marker.
-- One newer pending order, `ORD-8862`, contains two lines for `prod-2` (MacBook Air 15 M3, quantity 2) and one line for `prod-1793257789731`; `prod-2` no longer exists in the live product catalogue.
+- Six refer only to the currently existing product; this group includes one completed order.
+- The remaining order, `ORD-8862`, is pending and contains two units of `prod-2` (MacBook Air 15 M3) plus one unit of `prod-1793257789731`; `prod-2` no longer exists in the live product catalogue.
 
 The marker absence does not prove that stock was not deducted. These orders predate the marker-based workflow or were created by earlier paths. Do not backfill markers or restore/deduct stock for these rows without independent, trustworthy evidence.
 
