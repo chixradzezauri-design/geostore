@@ -546,3 +546,27 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Applied and recorded migrations `20261107085444_secure_support_intake_and_persist_admin_activity` and `20261107085535_return_http_429_for_support_rate_limits`.
 - Matching SQL files were saved on the maintenance branch. The GitHub migration files reflect the applied SQL, including the follow-up HTTP 429 behavior.
 - No customer tickets, order records, product records, or account data were changed by the tests. No local build, browser test, Vercel build, or deployment was run.
+
+
+## Storage and media security review — 2026-11-07
+
+### Live Storage inventory
+- Confirmed the only configured bucket is `storefront-media`, public for storefront image delivery, with a 5 MiB per-file limit and MIME allowlist `image/jpeg`, `image/png`, `image/webp`, `image/gif`.
+- Confirmed bucket-scoped Storage object policies allow INSERT/UPDATE/DELETE only to the authenticated primary administrator UID `1060de3d-d28a-45f8-9a64-5e0368cffc4b` with trusted `app_metadata.role='admin'`. No anon write/update/delete policies exist.
+- Public bucket reads are intentionally public; never store private documents, customer uploads, identity documents, or other sensitive files in this bucket.
+- Live inventory is empty: 0 Storage objects, 0 `storefront_media` metadata rows, 0 orphan objects, and 0 metadata rows without a corresponding object. No files or metadata were deleted.
+- One live product remains. Its main image is a valid JPEG data URL (133,771 bytes), and its one-item gallery references the same image. This remains compatible and untouched; moving it to Storage requires a separate verified migration and a backup/rollback plan.
+
+### Code review and correction
+- Reviewed product image upload, deletion, storefront category/banner upload, upload rollback cleanup, and media metadata handling.
+- Existing upload checks validate actual image signatures and enforce JPEG/PNG/WEBP/GIF and 5 MiB limits. Product gallery is capped at 10 images.
+- Replaced the product image object-name suffix based on `Math.random()` with 128 bits from `crypto.getRandomValues`. Upload now fails closed if a secure browser random generator is unavailable. This reduces collision/predictability risk without changing product paths, URL format, bucket, or compatibility.
+- Existing storefront upload paths already used cryptographically secure random bytes; cleanup preserves metadata if Storage deletion fails, avoiding untracked public objects.
+- No Storage policy changes or production object mutations were necessary.
+
+### Verification and release boundary
+- Re-queried bucket configuration, object inventory, metadata inventory, Storage RLS policies, and product image/gallery references after the code change.
+- Confirmed 1 authenticated primary-admin write/update/delete policy for the bucket and 0 anonymous write/update/delete policies.
+- Confirmed the product image and gallery remain unchanged; all live Storage and media metadata counts remain zero.
+- Supabase Storage documentation confirms public buckets serve objects publicly while write operations remain governed by Storage RLS policies; bucket-level file size and MIME restrictions are enforced by Storage.
+- No build, unit test runner, browser/device test, Vercel build, or deployment was run because no local checkout/CLI runtime is connected here. No production files or rows were changed.
