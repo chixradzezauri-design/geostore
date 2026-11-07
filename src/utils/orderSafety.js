@@ -11,7 +11,7 @@ export const normalizeOrderTotal = (value) => {
 // Use the last marker so address text cannot spoof the reporting fee.
 export const parseOrderDeliveryChargeGEL = (address, orderTotal) => {
   const total = normalizeOrderTotal(orderTotal);
-  const matches = [...String(address ?? '').matchAll(/მიწოდება:\\s*([\\d.,]+)\\s*₾/gi)];
+  const matches = [...String(address ?? '').matchAll(/მიწოდება:\s*([\d.,]+)\s*₾/gi)];
   if (!matches.length) return 0;
   const raw = Number(String(matches[matches.length - 1][1]).replace(',', '.'));
   if (!Number.isFinite(raw) || raw < 0) return 0;
