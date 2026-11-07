@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addProductToCart, removeProductFromCart } from '../src/utils/cartSafety.js';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity } from '../src/utils/cartSafety.js';
 
 const product = {
   id: 'p-1',
@@ -88,4 +88,26 @@ test('removes only the exact customized cart line', () => {
   const wrapped = { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M', quantity: 1 };
   const remaining = removeProductFromCart([plain, wrapped], wrapped);
   assert.deepEqual(remaining, [plain]);
+});
+
+test('updates cart quantity without exceeding shared stock across variants', () => {
+  const cart = [
+    { ...product, selectedSize: 'S', quantity: 2 },
+    { ...product, selectedSize: 'M', quantity: 1 }
+  ];
+  const rejected = updateProductCartQuantity(cart, cart[0], 3);
+  assert.equal(rejected.valid, false);
+  assert.equal(rejected.reason, 'limit');
+  assert.equal(rejected.cart, cart);
+  const reduced = updateProductCartQuantity(cart, cart[0], 1);
+  assert.equal(reduced.valid, true);
+  assert.equal(reduced.cart[0].quantity, 1);
+  assert.equal(reduced.cart[1].quantity, 1);
+});
+
+test('rejects invalid cart quantity updates and preserves the original cart', () => {
+  const cart = [{ ...product, selectedSize: 'M', quantity: 1 }];
+  assert.equal(updateProductCartQuantity(cart, cart[0], 0).reason, 'quantity');
+  assert.equal(updateProductCartQuantity(cart, cart[0], 1.5).reason, 'quantity');
+  assert.equal(cart[0].quantity, 1);
 });

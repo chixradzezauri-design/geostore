@@ -55,3 +55,31 @@ export const removeProductFromCart = (cart, product) => {
     Object.is(Number(item?.priceGEL ?? item?.price), price)
   ));
 };
+
+export const updateProductCartQuantity = (cart, product, requestedQuantity) => {
+  const currentCart = Array.isArray(cart) ? cart : [];
+  const quantity = Number(requestedQuantity);
+  if (!product?.id || !Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+    return { valid: false, reason: 'quantity', cart: currentCart };
+  }
+  const matchesLine = item =>
+    String(item?.id) === String(product.id) &&
+    String(item?.name ?? '') === String(product?.name ?? '') &&
+    (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
+    (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
+    Object.is(Number(item?.priceGEL ?? item?.price), Number(product?.priceGEL ?? product?.price));
+  const lineIndex = currentCart.findIndex(matchesLine);
+  if (lineIndex < 0) return { valid: false, reason: 'missing', cart: currentCart };
+  const stockValue = Number(product.stock ?? 0);
+  const stock = Number.isFinite(stockValue) ? Math.max(0, Math.floor(stockValue)) : 0;
+  const otherQuantity = currentCart.reduce((total, item, index) => {
+    if (index === lineIndex || String(item?.id) !== String(product.id)) return total;
+    const current = Number(item?.quantity);
+    return total + (Number.isInteger(current) && current > 0 ? current : 0);
+  }, 0);
+  if (otherQuantity + quantity > stock) {
+    return { valid: false, reason: 'limit', cart: currentCart, remaining: Math.max(0, stock - otherQuantity) };
+  }
+  const nextCart = currentCart.map((item, index) => index === lineIndex ? { ...item, quantity } : item);
+  return { valid: true, reason: null, cart: nextCart, remaining: Math.max(0, stock - otherQuantity - quantity) };
+};
