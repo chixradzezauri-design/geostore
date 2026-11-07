@@ -466,6 +466,9 @@ export default function AdminDashboardPro({
       return alert('მარაგის ცვლილება უნდა იყოს -1,000,000-დან +1,000,000-მდე და ნულისგან განსხვავებული.');
     }
 
+    if (!buildProductVersionFilter(productEditVersion.current)) {
+      return alert('პროდუქტის ვერსია არ არის განახლებული. განაახლეთ პროდუქტების სია და ხელახლა გახსენით პროდუქტი.');
+    }
     const lockKey = `variant-stock:${editingProductId}:${variantId}`;
     if (quickProductUpdateLocks.current.has(lockKey)) return;
     quickProductUpdateLocks.current.add(lockKey);
