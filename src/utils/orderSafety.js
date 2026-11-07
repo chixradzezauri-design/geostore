@@ -2,9 +2,14 @@
 // customer history, admin details, or invoice rendering.
 // Normalize server order totals identically in customer history and admin finance.
 // Reject negative, malformed, NaN and infinite values before they reach the UI.
+export const roundGEL = (value) => {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? Math.round((amount + Number.EPSILON) * 100) / 100 : 0;
+};
+
 export const normalizeOrderTotal = (value) => {
   const total = Number(value);
-  return Number.isFinite(total) && total >= 0 ? total : 0;
+  return Number.isFinite(total) && total >= 0 ? roundGEL(total) : 0;
 };
 
 // Checkout appends the authoritative fee after the customer's free-form address.
@@ -42,9 +47,9 @@ export const resolveOrderDeliveryChargeGEL = (order, orderTotal) => {
 
 export const calculateOrderLineRevenueGEL = (item) => {
   const rawPrice = Number(item?.price ?? item?.priceGEL ?? item?.base_price);
-  const unitPrice = Number.isFinite(rawPrice) ? Math.max(0, rawPrice) : 0;
+  const unitPrice = Number.isFinite(rawPrice) ? Math.max(0, roundGEL(rawPrice)) : 0;
   const quantity = normalizeOrderQuantity(item?.quantity);
-  return Math.round((unitPrice * quantity + Number.EPSILON) * 100) / 100;
+  return roundGEL(unitPrice * quantity);
 };
 
 export const normalizeOrderItems = (items) => (
