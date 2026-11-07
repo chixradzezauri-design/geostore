@@ -363,8 +363,9 @@ export default function Modals({
               <button
                 type="button"
                 aria-label={copy.close}
+                disabled={isSubmittingOrder}
                 onClick={() => setIsCheckoutOpen(false)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:bg-neutral-100 hover:text-black"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:bg-neutral-100 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <X className="h-4 w-4" />
               </button>
