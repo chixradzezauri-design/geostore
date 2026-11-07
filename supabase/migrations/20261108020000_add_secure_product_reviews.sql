@@ -31,7 +31,7 @@ CREATE POLICY product_reviews_public_read
 REVOKE ALL ON TABLE public.product_reviews FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.product_reviews TO anon, authenticated;
 
-CREATE OR REPLACE FUNCTION public.submit_product_review(
+CREATE OR REPLACE FUNCTION private.submit_product_review(
   p_product_id text,
   p_rating integer,
   p_comment text,
@@ -107,6 +107,26 @@ EXCEPTION
   WHEN unique_violation THEN
     RAISE EXCEPTION 'ამ პროდუქტზე შეფასება უკვე დატოვებული გაქვთ.';
 END;
+$function$;
+
+-- Keep the privileged implementation outside the exposed API schema.
+REVOKE ALL ON FUNCTION private.submit_product_review(text, integer, text, text) FROM PUBLIC, anon, authenticated;
+GRANT USAGE ON SCHEMA private TO authenticated;
+GRANT EXECUTE ON FUNCTION private.submit_product_review(text, integer, text, text) TO authenticated;
+
+-- Expose only an invoker wrapper through PostgREST.
+CREATE OR REPLACE FUNCTION public.submit_product_review(
+  p_product_id text,
+  p_rating integer,
+  p_comment text,
+  p_image_path text DEFAULT NULL
+)
+RETURNS public.product_reviews
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+  SELECT private.submit_product_review(p_product_id, p_rating, p_comment, p_image_path);
 $function$;
 
 REVOKE ALL ON FUNCTION public.submit_product_review(text, integer, text, text) FROM PUBLIC, anon, authenticated;
