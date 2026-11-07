@@ -2241,15 +2241,15 @@ export default function AdminDashboardPro({
     if (typeof setUsersList === 'function') {
       setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
     }
-    logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) ბლოკირების სტატუსი`);
+    logActivity(`შეიცვალა მხოლოდ CRM ჩანაწერის შეზღუდვის ნიშანი (ID: ${userId})`);
   };
 
   const handleDeleteUser = (userId, userName) => {
-    if (window.confirm(`ნამდვილად გსურთ მომხმარებლის "${userName || userId}" წაშლა სისტემიდან?`)) {
+    if (window.confirm(`წაიშლება მხოლოდ ამ მოწყობილობაზე შენახული CRM ჩანაწერი "${userName || userId}". Supabase Auth ანგარიში და შეკვეთები არ წაიშლება. გავაგრძელოთ?`)) {
       if (typeof setUsersList === 'function') {
         setUsersList(prev => (prev || []).filter(u => u.id !== userId && u.email !== userId));
       }
-      logActivity(`წაიშალა მომხმარებელი: ${userName || userId}`);
+      logActivity(`წაიშალა მხოლოდ ლოკალური CRM ჩანაწერი: ${userName || userId}`);
     }
   };
 
@@ -3997,13 +3997,16 @@ export default function AdminDashboardPro({
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-emerald-400" /> მრავალფუნქციური CRM მომხმარებლები ({usersList?.length || 0})
+                <Users className="w-5 h-5 text-emerald-400" /> CRM ჩანაწერები — ლოკალური სია ({usersList?.length || 0})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
                 <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
+            <p className="text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
+              ეს არის ძველი CRM სია, რომელიც ინახება მხოლოდ ამ მოწყობილობის ბრაუზერში. VIP/შეზღუდვის ნიშნები აქ მხოლოდ CRM ჩანაწერს ეხება — ისინი არ ცვლიან Supabase Auth ანგარიშის უფლებებს. ჩანაწერის წაშლა არ შლის რეალურ ანგარიშს, შეკვეთებს ან ბაზის მონაცემებს.
+            </p>
 
             <div className="admin-crm-list space-y-4">
               {(!filteredUsers || filteredUsers.length === 0) ? (
@@ -4020,7 +4023,7 @@ export default function AdminDashboardPro({
                           <div className="flex items-center gap-2.5 flex-wrap">
                             <h4 className="font-black text-white text-sm">{u.name}</h4>
                             {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
-                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">დაბლოკილი</span>}
+                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
                             {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
                           <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
@@ -4039,10 +4042,10 @@ export default function AdminDashboardPro({
                           <button 
                             onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
-                            title="ბლოკირება / განბლოკვა"
+                            title="მხოლოდ ლოკალური CRM ჩანაწერის ნიშანი; Auth ანგარიშს არ ბლოკავს"
                           >
                             {u.isBlocked ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
-                            {u.isBlocked ? 'განბლოკვა' : 'დაბლოკვა'}
+                            {u.isBlocked ? 'ნიშნის მოხსნა' : 'CRM-ში შეზღუდულად მონიშვნა'}
                           </button>
 
                           <button 
@@ -4064,7 +4067,7 @@ export default function AdminDashboardPro({
                           <button 
                             onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
-                            title="მომხმარებლის წაშლა"
+                            title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
