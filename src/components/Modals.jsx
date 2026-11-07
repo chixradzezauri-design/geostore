@@ -447,18 +447,25 @@ export default function Modals({
               <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">{copy.thankYou}</p>
               <div className="gs-order-code-panel mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
                 <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500" >{copy.orderCode}</span>
-                <strong className="mt-2 block break-all text-lg font-semibold tracking-[0.08em] text-neutral-950 sm:text-xl">#{orderConfirmation.id}</strong>
+                <code
+                  dir="ltr"
+                  aria-label={`${copy.orderCode}: ${orderConfirmation.id}`}
+                  className="gs-order-code-value mt-2 block w-full max-w-full rounded-lg px-1 py-2 text-center text-base font-bold text-neutral-950 sm:text-lg"
+                >{String(orderConfirmation.id || '').trim() ? `#${String(orderConfirmation.id).trim()}` : '—'}</code>
                 <button type="button"
+                  disabled={!String(orderConfirmation.id || '').trim()}
                   onClick={() => {
+                    const code = String(orderConfirmation.id || '').trim();
+                    if (!code) return;
                     if (navigator.clipboard?.writeText) {
-                      navigator.clipboard.writeText(orderConfirmation.id)
+                      navigator.clipboard.writeText(code)
                         .then(() => alert(copy.codeCopied))
-                        .catch(() => alert(copy.orderCode + ': ' + orderConfirmation.id));
+                        .catch(() => alert(copy.orderCode + ': ' + code));
                     } else {
-                      alert(copy.orderCode + ': ' + orderConfirmation.id);
+                      alert(copy.orderCode + ': ' + code);
                     }
                   }}
-                  className="mt-3 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white"
+                  className="mt-3 inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >{copy.copyCode}</button>
               </div>
               {orderConfirmation.email && (
