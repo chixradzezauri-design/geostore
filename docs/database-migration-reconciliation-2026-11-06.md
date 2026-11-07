@@ -209,3 +209,31 @@ The transaction was rolled back. Post-rollback checks confirmed no temporary pro
 ## Supabase advisor follow-up — 2026-11-07
 
 Latest advisor snapshot: no health findings; one security WARN remains for Auth leaked-password protection being disabled. The owner must enable it manually in Supabase Auth settings. The RLS-enabled/no-policy INFO findings are limited to private rate-limit/activity tables and public.order_notifications, which has no direct client SELECT privilege and is consumed through owner-filtered RPCs. No public SECURITY DEFINER functions or private SECURITY DEFINER functions with a non-empty search_path were found. Four currently-unused indexes were left intact because the project has very low traffic and their future use is not yet measurable. No live settings, indexes, grants, policies or rows were changed.
+
+
+## Final rollback-only verification update — 2026-11-07
+
+The staged migrations were re-fetched from the current design branch and reviewed together in timestamp order:
+- 20261107170000_integrate_custom_product_variants
+- 20261107200000_bind_order_ownership_to_auth_user_uuid
+- 20261107230000_admin_adjust_product_variant_stock
+- 20261107234500_harden_order_json_and_variant_integrity
+
+The ownership migration recreates the public SECURITY INVOKER checkout wrapper after renaming the private implementation, so its call resolves to the UUID-checking wrapper. The renamed unchecked implementation is revoked from PUBLIC, anon, authenticated and service_role; the owner-checking private wrapper and public validation wrapper are explicitly granted only to anon, authenticated and service_role.
+
+**11/11 transaction-level integration checks passed** against the live PostgreSQL schema, with all test changes rolled back:
+1. Admin variant restock adjusts only the selected variant.
+2. Non-admin inventory adjustment is rejected.
+3. Oversell is rejected.
+4. Stale product editor stock cannot overwrite live variant stock.
+5. Duplicate variant IDs are rejected.
+6. Case-insensitive duplicate variant names are rejected.
+7. Variant pricing, add-on pricing and stock deduction match the expected 260 GEL subtotal.
+8. Same-owner checkout retry is idempotent.
+9. Cross-account replay using the same email but another Auth UUID is rejected.
+10. Customer order history omits purchase cost, vendor and internal category.
+11. Cancellation, reactivation and cancellation after reactivation restore/deduct variant stock correctly.
+
+Post-rollback verification again found 0 orders, 0 audit products, no ownership columns, no unchecked private checkout function, no variant-stock RPC, and the same 67-version remote migration ledger (latest 20261107160152). No production data or schema was changed.
+
+Migration-history drift remains a separate release gate: do not run db push or migration repair until the older missing remote versions are classified. The live customer-history function still returns raw item JSON until the forward ownership/minimization migration is deliberately applied.
