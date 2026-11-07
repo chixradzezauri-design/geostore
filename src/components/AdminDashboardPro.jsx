@@ -14,6 +14,7 @@ import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productO
 import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
 import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
+import { hasProductMutationLock } from '../utils/productMutationSafety.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -412,6 +413,7 @@ export default function AdminDashboardPro({
   const productSaveLock = useRef(false);
   const productDeleteLocks = useRef(new Set());
   const quickProductUpdateLocks = useRef(new Set());
+  const isProductMutationBusy = (productId) => hasProductMutationLock(quickProductUpdateLocks.current, productId);
 
   const handleAddCustomVariant = (e) => {
     e.preventDefault();
@@ -455,7 +457,7 @@ export default function AdminDashboardPro({
   };
 
   const handleAdjustCustomVariantStock = async (variantId) => {
-    if (!editingProductId || productSaveLock.current) return;
+    if (!editingProductId || productSaveLock.current || productDeleteLocks.current.has(String(editingProductId)) || isProductMutationBusy(editingProductId)) return;
     const rawDelta = String(variantStockAdjustments[variantId] ?? '').trim();
     if (!/^[+-]?\d+$/.test(rawDelta)) return alert('მარაგის ცვლილება მიუთითეთ მთელი რიცხვით, მაგალითად +5 ან -2.');
     const delta = Number(rawDelta);
@@ -1329,6 +1331,7 @@ export default function AdminDashboardPro({
   const handleDeleteProduct = async (id) => {
     const productKey = String(id ?? '');
     if (!productKey || productDeleteLocks.current.has(productKey)) return;
+    if (productSaveLock.current || isProductMutationBusy(productKey)) return alert('პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
     productDeleteLocks.current.add(productKey);
     const productToDelete = (products || []).find(product => String(product.id) === String(id));
@@ -1356,6 +1359,7 @@ export default function AdminDashboardPro({
   const handleQuickUpdateProduct = async (id, field, value) => {
     const current = (products || []).find(p => String(p.id) === String(id));
     if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+    if (productSaveLock.current || productDeleteLocks.current.has(String(id)) || isProductMutationBusy(id)) return alert('ამ პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
     const columnByField = { priceGEL: 'price_gel', purchaseCost: 'purchase_cost', stock: 'stock' };
     const column = columnByField[field];
     if (!column) return;
@@ -1519,6 +1523,10 @@ export default function AdminDashboardPro({
     let newProdPayload;
 
     if (productSaveLock.current) return;
+    if (editingProductId && (productDeleteLocks.current.has(String(editingProductId)) || isProductMutationBusy(editingProductId))) {
+      alert('ამ პროდუქტზე მარაგის ან სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და შეინახეთ ხელახლა.');
+      return;
+    }
     productSaveLock.current = true;
     try {
       const sourceImages = selectedImages.length > 0 ? selectedImages : [];
