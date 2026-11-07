@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice } from './productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasValidProductOptionSelection } from './productVariants.js';
 
 test('normalizes configured size arrays without inventing fallback sizes', () => {
   assert.deepEqual(getAvailableProductSizes({ availableSizes: [' M ', '', 'L', 'M'] }), ['M', 'L']);
@@ -21,6 +21,28 @@ test('supports raw Supabase snake_case product fields', () => {
 
 test('prefers explicitly configured Supabase colors over legacy fallback', () => {
   assert.deepEqual(getAvailableProductColors({ availableColors: [], available_colors: ['Blue'], colors: ['Red'] }), ['Blue']);
+});
+
+test('requires every configured size, color, and custom variant before purchase', () => {
+  const product = {
+    availableSizes: ['S', 'M'],
+    availableColors: ['Black', 'White'],
+    variants: [{ id: 'v1', name: 'Standard', priceGEL: 20, stock: 2 }]
+  };
+  const complete = { size: 'M', color: 'Black', customVariantId: 'v1' };
+  assert.equal(hasValidProductOptionSelection(product, complete), true);
+  assert.equal(hasValidProductOptionSelection(product, { ...complete, size: '' }), false);
+  assert.equal(hasValidProductOptionSelection(product, { ...complete, color: 'Green' }), false);
+  assert.equal(hasValidProductOptionSelection(product, { ...complete, customVariantId: 'missing' }), false);
+});
+
+test('does not require options for products without configured variants', () => {
+  assert.equal(hasValidProductOptionSelection({ id: 'simple-product' }), true);
+});
+
+test('rejects out-of-stock custom variants before opening checkout', () => {
+  const product = { variants: [{ id: 'v1', name: 'Sold out', priceGEL: 10, stock: 0 }] };
+  assert.equal(hasValidProductOptionSelection(product, { customVariantId: 'v1' }), false);
 });
 
 test('detects only explicitly configured variant options', () => {
