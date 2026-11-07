@@ -11312,3 +11312,182 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     padding: 13px 16px;
   }
 }
+
+
+/* GEOSTORE — final commerce dialog consistency layer */
+.gs-commerce-overlay {
+  box-sizing: border-box;
+  isolation: isolate;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.gs-commerce-overlay *,
+.gs-commerce-overlay *::before,
+.gs-commerce-overlay *::after {
+  box-sizing: border-box;
+}
+.gs-commerce-dialog {
+  min-width: 0;
+  max-width: min(100%, 720px);
+  overflow-wrap: anywhere;
+  word-break: normal;
+  overscroll-behavior: contain;
+}
+.gs-commerce-dialog--checkout,
+.gs-commerce-dialog--success {
+  color: #29241f !important;
+  background: #fbfaf8 !important;
+  border: 1px solid #e8dfd5 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 28px 90px rgba(25,20,16,.28) !important;
+}
+.gs-checkout-header {
+  gap: 16px;
+  border-color: #e8dfd5 !important;
+  background: #fbfaf8;
+}
+.gs-checkout-header h3 {
+  color: #29241f !important;
+  font-family: Georgia, 'Noto Serif Georgian', serif;
+  font-weight: 500 !important;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.gs-checkout-header p {
+  line-height: 1.6;
+}
+.gs-checkout-form {
+  scrollbar-width: thin;
+  scrollbar-color: #c9b9a7 #f3eee8;
+  overscroll-behavior: contain;
+}
+.gs-checkout-form label {
+  min-width: 0;
+  color: #51463d;
+  line-height: 1.5;
+}
+.gs-checkout-form input,
+.gs-checkout-form select {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border-radius: 4px !important;
+  border-color: #e2d8ce !important;
+  background: #f6f2ed !important;
+  color: #29241f !important;
+  box-shadow: none !important;
+  line-height: 1.5;
+}
+.gs-checkout-form input::placeholder {
+  color: #9a8e82 !important;
+  opacity: 1;
+}
+.gs-checkout-form input:focus,
+.gs-checkout-form select:focus {
+  border-color: #88715b !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(136,113,91,.1) !important;
+  outline: none;
+}
+.gs-checkout-form input[readonly] {
+  background: #eee9e3 !important;
+  color: #766b60 !important;
+}
+.gs-checkout-error {
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+.gs-checkout-submit-area {
+  border-color: #e8dfd5 !important;
+}
+.gs-checkout-submit-area button,
+.gs-order-success-dialog > div > button:last-child {
+  min-height: 48px;
+  border-radius: 3px !important;
+  background: #29241f !important;
+  color: #fff !important;
+  letter-spacing: .025em;
+  box-shadow: none !important;
+}
+.gs-checkout-submit-area button:hover,
+.gs-order-success-dialog > div > button:last-child:hover {
+  background: #5b4b3e !important;
+}
+.gs-order-success-dialog {
+  max-width: min(100%, 440px) !important;
+  border-radius: 10px !important;
+}
+.gs-order-success-dialog > div {
+  min-width: 0;
+}
+.gs-order-success-dialog h3 {
+  color: #29241f !important;
+  font-family: Georgia, 'Noto Serif Georgian', serif;
+  font-weight: 500 !important;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.gs-order-code-panel {
+  border-color: #e5dbd1 !important;
+  background: #f5f1ec !important;
+}
+.gs-order-code-value {
+  color: #29241f !important;
+  font-size: clamp(14px, 3.5vw, 18px) !important;
+  letter-spacing: .035em;
+  line-height: 1.6 !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-all !important;
+}
+.gs-order-code-panel button {
+  min-height: 40px;
+  border-radius: 3px !important;
+  border-color: #d8cbbd !important;
+}
+.gs-commerce-overlay button:focus-visible,
+.gs-commerce-overlay input:focus-visible,
+.gs-commerce-overlay select:focus-visible {
+  outline: 2px solid #8b725d !important;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .gs-commerce-overlay--checkout {
+    align-items: flex-end !important;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  .gs-commerce-dialog--checkout {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(94dvh, 820px) !important;
+    border-radius: 12px 12px 6px 6px !important;
+  }
+  .gs-checkout-header {
+    padding: 15px 16px !important;
+  }
+  .gs-checkout-form {
+    padding: 15px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+    gap: 13px !important;
+  }
+  .gs-checkout-form input,
+  .gs-checkout-form select {
+    min-height: 46px;
+    font-size: 16px !important;
+  }
+  .gs-checkout-contact-grid {
+    gap: 12px !important;
+  }
+  .gs-order-success-dialog {
+    width: 100% !important;
+    max-width: 420px !important;
+    border-radius: 12px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-commerce-overlay *,
+  .gs-commerce-overlay *::before,
+  .gs-commerce-overlay *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
