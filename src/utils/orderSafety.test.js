@@ -28,6 +28,16 @@ test('accepts only non-negative GEL values with at most two decimal places', () 
   assert.equal(isValidGELAmount('100.01', { min: 0.01, max: 100 }), false);
 });
 
+test('GEL amount validation accepts valid integer and decimal amounts', () => {
+  assert.equal(isValidGELAmount('15'), true);
+  assert.equal(isValidGELAmount('15.5'), true);
+  assert.equal(isValidGELAmount('15.50'), true);
+  assert.equal(isValidGELAmount('0.01'), true);
+  assert.equal(isValidGELAmount('15.500'), false);
+  assert.equal(isValidGELAmount('15,50'), false);
+  assert.equal(isValidGELAmount('-15'), false);
+});
+
 test('cart subtotal uses the already-inclusive server-priced add-on line amount', () => {
   assert.equal(calculateCartSubtotalGEL([{
     priceGEL: 140,
