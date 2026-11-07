@@ -3,7 +3,7 @@
 Date: 2026-11-07
 Supabase project: `xmtnszxtnfxnrojionoa`
 Working branch: `maintenance/storefront-draft-save-2026-11-06`
-Reviewed branch commit: `8a95232c20351c9efe39aeea5d70a780c022f5e9`
+Reviewed branch commit: `20979426701cedcb19a4627847894866cc36c1fb`
 
 ## Current reconciliation status
 
@@ -86,13 +86,12 @@ Three branch-only migration files were removed from the working branch after liv
 - `20261107010000_add_authenticated_order_history.sql`: the live `private.get_my_orders()` already exists with a `RETURNS TABLE(...)` signature. The staged file attempts `CREATE OR REPLACE FUNCTION` with `RETURNS jsonb`, which PostgreSQL cannot apply as a return-type change. The live implementation must be reviewed and retained rather than overwritten.
 - `20261107030000_preserve_stock_on_admin_product_upsert.sql`: the live `private.admin_save_product(jsonb)` is intentionally insert-only to prevent ID collisions from overwriting existing product data. The staged file would replace it with an UPSERT. Although that version preserves stock, it reintroduces the previously fixed product-ID overwrite risk.
 
-- `20261106200000_prevent_completed_order_status_rollback.sql`: its three function bodies and the status-transition trigger are already present in the live database with equivalent behavior. Catalog output omits default `SECURITY INVOKER` and normalizes `SET search_path` syntax, but the executable logic matches. Its delete grant/policy restrictions are also already in place. Replaying it would only drop/recreate the existing trigger and replace the same functions.
+- `20261106200000_prevent_completed_order_status_rollback.sql`: its three function bodies and the status-transition trigger are already present in the live database with equivalent behavior. Catalog output omits default `SECURITY INVOKER` and normalizes `SET search_path` syntax; the executable logic matches. Its order-delete grant/policy restrictions are also already in place. Replaying it would only drop/recreate the existing trigger and replace equivalent functions.
 
 These deletions affect only unapplied files in the working branch; no production database objects or data were changed.
 
-## Branch-only migration conflict review continued
+## Remaining branch-only migration review
 
-- `20261106200000_prevent_completed_order_status_rollback.sql` overlaps the live `orders_guard_status_transition` trigger and the already hardened `private.guard_order_status_transition()` function. Do not replay it until a full function-body equivalence check is complete.
 - `20261106120000_validate_order_item_variants.sql` has no corresponding live trigger, but the only permitted order-creation path is the protected checkout RPC, which already checks selected sizes and colors against the product catalogue. Direct INSERT is not granted to `anon` or `authenticated`; keep this as optional defense-in-depth pending review.
 - `20261106210000_validate_checkout_input_on_order_insert.sql` has no corresponding live trigger, but direct INSERT is not granted to `anon` or `authenticated`, and the protected checkout RPC already validates customer name, phone, address, email, item shape, quantity, and selected options. Keep staged until its additional trigger checks are compared against the RPC to avoid duplicate or conflicting validation.
 - `20261106220000_harden_support_ticket_public_insert.sql` is a valid staged least-privilege improvement: it restricts anonymous INSERT to the five fields the browser sends. It is not applied because migration history remains unreconciled.
@@ -106,7 +105,7 @@ These deletions affect only unapplied files in the working branch; no production
 3. Do not run `supabase migration repair`, `supabase db push`, or `supabase db reset` while the source history and live schema have not been reconciled.
 4. Do not replay any of the 57 already-applied migrations.
 5. Recover exact original SQL where possible. For unrecoverable versions, use the catalogued live schema as a reviewed baseline; do not invent historical SQL.
-6. Keep the nine branch-only migrations staged until their effects are individually compared with the live catalog and routines.
+6. Keep the six remaining branch-only migrations staged until their effects are individually compared with the live catalog and routines.
 7. Once reconciliation is complete, add new forward-only migrations for verified security improvements; do not rewrite historical migration files.
 
 ## Next actions
