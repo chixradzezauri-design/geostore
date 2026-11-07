@@ -3,6 +3,7 @@
 // არსებული მაღაზიის ფუნქციები და დიზაინი შენარჩუნებულია.
 
 import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
+import { isValidProductCatalogueResponse } from './utils/productCatalogSafety';
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
@@ -1345,7 +1346,10 @@ export default function App() {
       }
 
       const data = await res.json();
-      if (Array.isArray(data)) {
+      if (!isValidProductCatalogueResponse(data)) {
+        throw new Error('პროდუქტების სიის მონაცემები არასწორია. არსებული სია შენარჩუნებულია; განაახლეთ გვერდი ან სცადეთ მოგვიანებით.');
+      }
+      {
         const formatted = data.map((p) => ({
           id: p.id,
           createdAt: p.created_at || null,
