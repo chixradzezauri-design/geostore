@@ -6,6 +6,7 @@ const root = new URL('../', import.meta.url);
 const read = (relativePath) => readFileSync(new URL(relativePath, root), 'utf8');
 
 const orderAndVariantMigration = read('supabase/migrations/20261107234500_harden_order_json_and_variant_integrity.sql');
+const variantIntegrationMigration = read('supabase/migrations/20261107170000_integrate_custom_product_variants.sql');
 const variantStockMigration = read('supabase/migrations/20261107230000_admin_adjust_product_variant_stock.sql');
 const adminDashboard = read('src/components/AdminDashboardPro.jsx');
 const orderOwnershipMigration = read('supabase/migrations/20261107200000_bind_order_ownership_to_auth_user_uuid.sql');
@@ -38,6 +39,22 @@ test('variant stock RPC checks admin identity, locks the product and matches exa
   assert.match(variantStockMigration, /v_new_stock < 0 OR v_new_stock > 1000000/);
   assert.match(variantStockMigration, /set_config\('geostore\.variant_stock_adjustment', 'on', true\)/);
   assert.match(variantStockMigration, /CREATE OR REPLACE FUNCTION public\.admin_adjust_product_variant_stock/);
+});
+
+test('custom variant checkout requires one exact catalogue match and stable idempotency ordering', () => {
+  assert.match(variantIntegrationMigration, /v_variant_count <> 1/);
+  assert.match(variantIntegrationMigration, /grouped\.custom_variant_id nulls first/);
+  assert.match(variantIntegrationMigration, /item->>'custom_variant_id', item->>'gift_wrap'/);
+  assert.match(variantIntegrationMigration, /z_validate_product_variant_identity/);
+});
+
+test('variant stock RPC returns only granted inventory columns and keeps both wrappers invoker-only', () => {
+  assert.match(variantStockMigration, /RETURNS jsonb/);
+  assert.match(variantStockMigration, /SELECT id, variants INTO v_product_id, v_variants/);
+  assert.match(variantStockMigration, /RETURNING p\.id, p\.variants INTO v_product_id, v_variants/);
+  assert.match(variantStockMigration, /RETURN jsonb_build_object\('id', v_product_id, 'variants', v_variants\)/);
+  assert.match(variantStockMigration, /LANGUAGE plpgsql\s+SECURITY INVOKER/);
+  assert.match(variantStockMigration, /LANGUAGE sql\s+SECURITY INVOKER/);
 });
 
 test('admin variant stock control calls the protected RPC and releases its request lock', () => {
