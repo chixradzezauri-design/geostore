@@ -366,6 +366,11 @@ $$;
 
 -- Expose implementation calls only to authenticated sessions; each function
 -- still verifies the exact primary-admin UUID and app_metadata role.
+REVOKE ALL ON FUNCTION private.admin_save_product(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_save_product(jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.admin_save_product(jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_save_product(jsonb) TO authenticated;
+
 REVOKE ALL ON FUNCTION private.touch_product_updated_at() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION private.admin_update_product(jsonb, bigint) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.admin_update_product(jsonb, bigint) FROM PUBLIC, anon;
