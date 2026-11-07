@@ -10463,3 +10463,118 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-cart-remove{padding:7px 8px!important;font-size:10px!important}
   .geostore-fashion-store .gs-cart-summary .gs-cart-totals>div:last-child>span{font-size:14px!important}
 }
+
+
+/* Neo Edition — account access and recovery dialog */
+.gs-commerce-dialog--account{
+  width:min(440px,100%)!important;
+  max-width:calc(100vw - 24px)!important;
+  max-height:min(92dvh,780px)!important;
+  overflow-y:auto!important;
+  padding:clamp(18px,4vw,30px)!important;
+  border:1px solid #e3ddd5!important;
+  border-radius:8px!important;
+  background:#fbfaf8!important;
+  color:#24272d!important;
+  box-shadow:0 24px 90px rgba(0,0,0,.24)!important;
+}
+.gs-commerce-dialog--account>div:first-child{
+  align-items:flex-start!important;
+  gap:14px!important;
+  padding-bottom:17px!important;
+  border-color:#e5dfd7!important;
+}
+.gs-commerce-dialog--account>div:first-child h3{
+  min-width:0!important;
+  color:#202329!important;
+  font:500 22px/1.25 Georgia,serif!important;
+  letter-spacing:-.02em!important;
+  overflow-wrap:anywhere!important;
+}
+.gs-commerce-dialog--account>div:first-child h3 svg{color:#345cff!important}
+.gs-commerce-dialog--account>div:first-child button{
+  width:38px!important;height:38px!important;
+  flex:0 0 38px!important;
+  border:1px solid #e1dbd3!important;
+  border-radius:4px!important;
+  background:#fff!important;
+  color:#555b64!important;
+}
+.gs-commerce-dialog--account form{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:16px!important;
+}
+.gs-commerce-dialog--account form>div{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+}
+.gs-commerce-dialog--account form label{
+  color:#555a62!important;
+  font-size:11px!important;
+  font-weight:700!important;
+}
+.gs-commerce-dialog--account form input{
+  width:100%!important;
+  min-width:0!important;
+  min-height:47px!important;
+  padding:12px 14px!important;
+  border:1px solid #ded8d0!important;
+  border-radius:4px!important;
+  background:#fff!important;
+  color:#24272d!important;
+  font-size:13px!important;
+  box-shadow:none!important;
+}
+.gs-commerce-dialog--account form input:focus{
+  border-color:#345cff!important;
+  outline:2px solid rgba(52,92,255,.12)!important;
+  outline-offset:1px!important;
+}
+.gs-commerce-dialog--account form p{
+  color:#747780!important;
+  font-size:10px!important;
+  line-height:1.65!important;
+}
+.gs-commerce-dialog--account form>button[type="submit"]{
+  min-height:49px!important;
+  margin-top:2px!important;
+  border:0!important;
+  border-radius:4px!important;
+  background:#202329!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:750!important;
+}
+.gs-commerce-dialog--account form>button[type="submit"]:hover{
+  background:#345cff!important;
+}
+.gs-commerce-dialog--account>div:last-child{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:13px!important;
+  padding-top:16px!important;
+  border-color:#e5dfd7!important;
+}
+.gs-commerce-dialog--account>div:last-child button{
+  color:#5f646d!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  line-height:1.5!important;
+}
+.gs-commerce-dialog--account>div:last-child button:hover{
+  color:#345cff!important;
+}
+@media(max-width:600px){
+  .gs-commerce-dialog--account{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:calc(100dvh - 20px)!important;
+    padding:20px!important;
+    border-radius:10px!important;
+  }
+  .gs-commerce-dialog--account form{gap:14px!important}
+}
