@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square, Eye, X 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, ChevronUp, ChevronDown, CornerDownRight, KeyRound, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square, Eye, X 
 } from 'lucide-react';
 
 import { createClient } from '@supabase/supabase-js';
@@ -315,6 +315,7 @@ export default function AdminDashboardPro({
         if (typeof cat === 'object') {
           const catImg = cat.image || cat.img || '';
           return {
+            ...cat,
             id: cat.id || `cat-obj-${idx}`,
             name: cat.name || 'კატეგორია',
             icon: cat.icon || 'Shirt',
@@ -932,91 +933,157 @@ export default function AdminDashboardPro({
     );
   }
 
-  const handleCategoryFileChange = (e, isEditing = false) => {
-    const file = e.target.files?.[0];
+  const persistCategoryList = (updatedCategories) => {
+    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
+    try {
+      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
+    } catch {
+      alert('კატეგორიები განახლდა მიმდინარე სესიაში, მაგრამ მოწყობილობის დროებით მეხსიერებაში შენახვა ვერ მოხერხდა. შეინახეთ მონახაზი Supabase-ში.');
+    }
+  };
+
+  const handleCategoryFileChange = async (e, isEditing = false) => {
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64Result = reader.result;
-      if (isEditing) {
-        setEditCatImage(base64Result);
-      } else {
-        setNewCatImage(base64Result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      await validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : '';
+        if (!result || !isValidImageDataUrl(result, MAX_PRODUCT_IMAGE_BYTES)) {
+          alert('ფოტოს შიგთავსის შემოწმება ვერ მოხერხდა. აირჩიეთ სწორი JPG, PNG, WEBP ან GIF.');
+          input.value = '';
+          return;
+        }
+        if (isEditing) setEditCatImage(result);
+        else setNewCatImage(result);
+      };
+      reader.onerror = () => {
+        alert('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
+        input.value = '';
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+      input.value = '';
+    }
   };
 
   const handleAddCategory = (e) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
-    const cleanName = newCatName.trim();
-    const catId = `cat-${Date.now()}`;
+    const cleanName = String(newCatName || '').trim();
+    if (cleanName.length < 2 || cleanName.length > 60) {
+      alert('კატეგორიის სახელი უნდა შეიცავდეს 2-დან 60 სიმბოლომდე.');
+      return;
+    }
+    if (safeCategories.some(category => category.name.trim().toLocaleLowerCase() === cleanName.toLocaleLowerCase())) {
+      alert('ასეთი სახელის კატეგორია უკვე არსებობს. კატეგორიის სახელები უნიკალური უნდა იყოს.');
+      return;
+    }
+    const parent = selectedParentId ? safeCategories.find(category => category.id === selectedParentId && !category.parentId) : null;
+    if (selectedParentId && !parent) {
+      alert('არჩეული მთავარი კატეგორია აღარ არსებობს. განაახლეთ არჩევანი.');
+      return;
+    }
+    const catId = typeof globalThis.crypto?.randomUUID === 'function'
+      ? `cat-${globalThis.crypto.randomUUID()}`
+      : `cat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const cleanImage = newCatImage.trim() || '';
-    
-    const newCatObj = { 
-      id: catId, 
-      name: cleanName, 
-      icon: newCatIcon, 
-      parentId: selectedParentId || null,
-      image: cleanImage, 
-      img: cleanImage 
+    const newCatObj = {
+      id: catId,
+      name: cleanName,
+      icon: newCatIcon,
+      parentId: parent?.id || null,
+      image: cleanImage,
+      img: cleanImage
     };
 
-    const updatedCategories = [...safeCategories, newCatObj];
-    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
-    try {
-      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
-    } catch {}
-
+    persistCategoryList([...safeCategories, newCatObj]);
     setNewCatName('');
     setNewCatImage('');
     setSelectedParentId('');
-    logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'} ფოტოთი: ${cleanName}`);
-    alert('✅ კატეგორია და მისი ატვირთული ფოტო წარმატებით დაემატა!');
+    logActivity(`დაემატა ${parent ? 'სუბკატეგორია' : 'მთავარი კატეგორია'}: ${cleanName}`);
+    alert('კატეგორია დაემატა. ცვლილების საიტზე შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო ვიზიტორებისთვის გამოსაჩენად — „გამოქვეყნება“.');
   };
 
   const handleSaveEditedCategory = (catId) => {
-    if (!editCatName.trim()) return;
-    const cleanImg = editCatImage.trim();
-
-    const updatedCategories = safeCategories.map(c => {
-      if (c.id === catId) {
-        return { 
-          ...c, 
-          name: editCatName.trim(), 
-          icon: editCatIcon, 
-          image: cleanImg, 
-          img: cleanImg 
-        };
+    const existing = safeCategories.find(category => category.id === catId);
+    const cleanName = String(editCatName || '').trim();
+    if (!existing) {
+      alert('კატეგორია ვეღარ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return;
+    }
+    if (cleanName.length < 2 || cleanName.length > 60) {
+      alert('კატეგორიის სახელი უნდა შეიცავდეს 2-დან 60 სიმბოლომდე.');
+      return;
+    }
+    if (safeCategories.some(category => category.id !== catId && category.name.trim().toLocaleLowerCase() === cleanName.toLocaleLowerCase())) {
+      alert('ასეთი სახელის კატეგორია უკვე არსებობს.');
+      return;
+    }
+    const oldName = String(existing.name || '').trim();
+    if (cleanName !== oldName) {
+      const assignedCount = (products || []).filter(product => String(product.category || '').trim() === oldName).length;
+      if (assignedCount > 0) {
+        alert(`კატეგორიაზე „${oldName}“ მიბმულია ${assignedCount} პროდუქტი. ჯერ გადაიტანეთ ეს პროდუქტები სხვა კატეგორიაში, შემდეგ შეცვალეთ სახელი, რათა პროდუქტები კატალოგიდან არ გაქრეს.`);
+        return;
       }
-      return c;
-    });
+    }
 
-    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
-    try {
-      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
-    } catch {}
-
+    const cleanImg = editCatImage.trim();
+    const updatedCategories = safeCategories.map(category => category.id === catId
+      ? { ...category, name: cleanName, icon: editCatIcon, image: cleanImg, img: cleanImg }
+      : category
+    );
+    persistCategoryList(updatedCategories);
     setEditingCatId(null);
     setEditCatName('');
     setEditCatImage('');
     logActivity(`განახლდა კატეგორია (ID: ${catId})`);
-    alert('✅ კატეგორია წარმატებით განახლდა!');
+    alert('კატეგორია განახლდა. შეინახეთ მონახაზი Supabase-ში, შემდეგ კი გამოაქვეყნეთ ცვლილება.');
   };
 
   const handleDeleteCategory = (targetId, targetName) => {
-    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${targetName}" წაშლა?`)) {
-      const updatedCategories = safeCategories.filter(c => c.id !== targetId && c.parentId !== targetId);
-
-      if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
-      try {
-        localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
-      } catch {}
-
-      logActivity(`წაიშალა კატეგორია: ${targetName}`);
+    const target = safeCategories.find(category => category.id === targetId);
+    if (!target) return;
+    const idsToDelete = new Set([targetId]);
+    if (!target.parentId) {
+      safeCategories.filter(category => category.parentId === targetId).forEach(category => idsToDelete.add(category.id));
     }
+    const namesToDelete = new Set(safeCategories.filter(category => idsToDelete.has(category.id)).map(category => category.name.trim()));
+    const assignedProducts = (products || []).filter(product => namesToDelete.has(String(product.category || '').trim()));
+    if (assignedProducts.length > 0) {
+      alert(`კატეგორიაზე „${targetName}“ ან მის ქვეკატეგორიაზე მიბმულია ${assignedProducts.length} პროდუქტი. წაშლა დაბლოკილია, რათა პროდუქტები კატალოგიდან არ დაიკარგოს. ჯერ გადაიტანეთ პროდუქტები სხვა კატეგორიაში.`);
+      return;
+    }
+    const childCount = idsToDelete.size - 1;
+    const confirmation = childCount > 0
+      ? `ნამდვილად გსურთ „${targetName}“-ისა და მისი ${childCount} ქვეკატეგორიის წაშლა? ეს ქმედება ვერ წაშლის პროდუქტებს.`
+      : `ნამდვილად გსურთ კატეგორიის „${targetName}“ წაშლა?`;
+    if (!window.confirm(confirmation)) return;
+
+    persistCategoryList(safeCategories.filter(category => !idsToDelete.has(category.id)));
+    logActivity(`წაიშალა კატეგორია: ${targetName}`);
+  };
+
+  const moveCategory = (categoryId, direction) => {
+    const current = safeCategories.findIndex(category => category.id === categoryId);
+    if (current < 0) return;
+    const parentId = safeCategories[current].parentId || null;
+    const siblingIndexes = safeCategories
+      .map((category, index) => ({ category, index }))
+      .filter(item => (item.category.parentId || null) === parentId)
+      .map(item => item.index);
+    const siblingPosition = siblingIndexes.indexOf(current);
+    const targetPosition = siblingPosition + direction;
+    if (targetPosition < 0 || targetPosition >= siblingIndexes.length) return;
+
+    const reordered = [...safeCategories];
+    const targetIndex = siblingIndexes[targetPosition];
+    [reordered[current], reordered[targetIndex]] = [reordered[targetIndex], reordered[current]];
+    persistCategoryList(reordered);
   };
 
   const handleDeleteProduct = async (id) => {
