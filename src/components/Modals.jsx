@@ -217,7 +217,7 @@ export default function Modals({
       processing: ['მუშავდება', 'processing', 'в обработке'],
       shipped: ['გაგზავნილი', 'shipped', 'отправлен', 'გზაშია', 'on the way', 'в пути'],
       completed: ['დასრულებული', 'completed', 'завершён'],
-      delivered: ['ჩაბარებულია', 'delivered', 'доставлен'],
+      delivered: ['დასრულებული', 'completed', 'завершён', 'ჩაბარებულია', 'delivered', 'доставлен'],
       cancelled: ['გაუქმებული', 'cancelled', 'canceled', 'отменён']
     };
     const key = Object.keys(groups).find((name) => groups[name].includes(raw)) || 'updated';
@@ -276,7 +276,7 @@ export default function Modals({
       'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
       'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
       'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
-      'დასრულებული': ['დასრულებული', 'Completed', 'Завершён'], completed: ['დასრულებული', 'Completed', 'Завершён'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['დასრულებული', 'Completed', 'Завершён'],
+      'დასრულებული': ['ჩაბარებულია', 'Delivered', 'Доставлен'], completed: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['ჩაბარებულია', 'Delivered', 'Доставлен'],
       'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
     };
     const languageIndex = currentLang === 'en' ? 1 : currentLang === 'ru' ? 2 : 0;
