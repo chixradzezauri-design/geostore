@@ -122,8 +122,8 @@ test('legacy catalogue card selectors are removed after migrating to semantic ca
 
 
 test('customer-facing pages share one centralized premium design-token palette', () => {
-  assert.match(css, /:root\\{[\\s\\S]*?--gs-page:#f7f4ef;[\\s\\S]*?--gs-surface:#fffdfa;[\\s\\S]*?--gs-ink:#302a24;[\\s\\S]*?--gs-accent:#80684f;/);
-  assert.match(css, /\\.gs-catalog-product-card\\{[\\s\\S]*?background:var\\(--gs-surface\\)!important;/);
-  assert.match(css, /\\.gs-product-compare-card\\{[\\s\\S]*?background:var\\(--gs-surface\\)!important;/);
-  assert.match(css, /\\.gs-wardrobe-summary,[\\s\\S]*?background:var\\(--gs-surface\\)!important;/);
+  assert.match(css, /:root\{[\s\S]*?--gs-page:#f7f4ef;[\s\S]*?--gs-surface:#fffdfa;[\s\S]*?--gs-ink:#302a24;[\s\S]*?--gs-accent:#80684f;/);
+  assert.match(css, /\.gs-catalog-product-card\{[\s\S]*?background:var\(--gs-surface\)!important;/);
+  assert.match(css, /\.gs-product-compare-card\{[\s\S]*?background:var\(--gs-surface\)!important;/);
+  assert.match(css, /\.gs-wardrobe-summary,[\s\S]*?background:var\(--gs-surface\)!important;/);
 });
