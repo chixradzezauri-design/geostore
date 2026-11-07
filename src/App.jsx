@@ -6,7 +6,7 @@ import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'rea
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
-import StoreView from './components/StoreView';
+const StoreView = lazy(() => import('./components/StoreView'));
 
 import {
   MessageSquare,
@@ -2378,6 +2378,13 @@ export default function App() {
 
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
+          <Suspense
+            fallback={(
+              <div role="status" aria-live="polite" className="w-full min-h-[40vh] flex items-center justify-center text-sm text-stone-500">
+                {currentLang === 'ka' ? 'მაღაზია იტვირთება...' : currentLang === 'ru' ? 'Магазин загружается...' : 'Loading store...'}
+              </div>
+            )}
+          >
           <StoreView
             currentLang={currentLang}
             siteSettings={siteSettings}
@@ -2393,6 +2400,7 @@ export default function App() {
             addToCart={addToCart}
             formatPrice={formatPrice}
           />
+          </Suspense>
         )}
 
         {activeTab === 'wardrobe' && (

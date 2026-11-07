@@ -623,3 +623,19 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - The npm audit workflow passed with zero high/critical advisories, and CodeQL completed successfully on commit `ecc1cdd66f0e95cd9394e7d94f49f8a5b518929c`.
 - The correction is committed for immediate CI re-test. Do not consider tests or production build passed until the new workflow run completes.
 - No Vercel deployment or production database changes were made.
+
+
+## Initial storefront bundle optimization — 2026-11-07
+
+### Finding
+- The first successful production build emitted a Rollup warning because the main JavaScript chunk was 559.22 kB minified (154.99 kB gzip), above the default 500 kB warning threshold.
+- The storefront view was statically imported into the root App even though other large screens were already lazy-loaded.
+
+### Correction
+- Changed the primary StoreView to a React lazy import, matching the existing lazy-loading strategy for the admin dashboard, wardrobe, compare, image search, assistant, and modal screens.
+- Wrapped the store view in a localized, accessible Suspense loading state (Georgian/English/Russian). No store functionality, data flow, route/tab behavior, or business logic was changed.
+- This should split the large storefront view from the root entry chunk. Confirm the resulting chunk sizes and build output in CI before claiming the warning is resolved.
+
+### Verification boundary
+- Prior commit `8a9e11213ec87681c142e92cdd8a14fb1e9ad703` passed 56/56 unit tests, production Vite build, npm audit (0 high/critical advisories), and CodeQL.
+- This lazy-loading adjustment requires its own CI test/build and CodeQL run. No Vercel deployment was performed.
