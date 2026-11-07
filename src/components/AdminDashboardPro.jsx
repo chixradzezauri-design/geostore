@@ -491,12 +491,15 @@ export default function AdminDashboardPro({
         throw new Error('სერვერმა ვარიანტის განახლებული მარაგი ვერ დაადასტურა.');
       }
 
+      if (savedProduct.version !== undefined && savedProduct.version !== null) {
+        productEditVersion.current = savedProduct.version;
+      }
       setProductVariants(prev => prev.map(variant => String(variant.id) === String(variantId)
         ? { ...variant, stock: Number(savedVariant.stock) }
         : variant));
       if (typeof setProducts === 'function') {
         setProducts(prev => (prev || []).map(product => String(product.id) === String(editingProductId)
-          ? { ...product, variants: savedProduct.variants }
+          ? { ...product, variants: savedProduct.variants, version: savedProduct.version ?? product.version, updated_at: savedProduct.updated_at ?? product.updated_at }
           : product));
       }
       setVariantStockAdjustments(prev => ({ ...prev, [variantId]: '' }));
@@ -1360,6 +1363,7 @@ export default function AdminDashboardPro({
   const handleQuickUpdateProduct = async (id, field, value) => {
     const current = (products || []).find(p => String(p.id) === String(id));
     if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+    if (String(editingProductId ?? '') === String(id)) return alert('ეს პროდუქტი ახლა რედაქტირების რეჟიმშია. ჯერ შეინახეთ ან გააუქმეთ რედაქტირება.');
     if (productSaveLock.current || productDeleteLocks.current.has(String(id)) || isProductMutationBusy(id)) return alert('ამ პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
     const columnByField = { priceGEL: 'price_gel', purchaseCost: 'purchase_cost', stock: 'stock' };
     const column = columnByField[field];
