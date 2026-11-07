@@ -18,6 +18,11 @@ test('CSV encoder neutralizes formulas after whitespace and control prefixes', (
   }
 });
 
+test('CSV encoder preserves negative numeric amounts as numeric cells', () => {
+  assert.equal(escapeCsvCell('-12.30'), '"-12.30"');
+  assert.ok(escapeCsvCell('-1+1').startsWith('"\''));
+});
+
 test('CSV encoder preserves safe numeric values and empty cells', () => {
   assert.equal(escapeCsvCell(123.45), '"123.45"');
   assert.equal(escapeCsvCell(null), '""');
