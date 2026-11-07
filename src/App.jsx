@@ -319,6 +319,7 @@ export default function App() {
   // Notifications are server-owned and scoped to the authenticated account.
   const [notifications, setNotifications] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState('');
 
   const [activeTab, setActiveTab] = useState('store');
 
@@ -881,6 +882,7 @@ export default function App() {
         const rows = await response.json();
         if (!Array.isArray(rows)) throw new Error('შეტყობინებების მონაცემები არასწორია.');
         if (!active) return;
+        setNotificationsError('');
         setNotifications(rows.map((n) => ({
           id: String(n.id),
           orderId: n.order_id,
@@ -895,6 +897,11 @@ export default function App() {
         if (active) {
           console.error('Order notifications fetch failed:', error);
           setNotifications([]);
+          setNotificationsError(currentLang === 'en'
+            ? 'Notifications are temporarily unavailable. Please try again shortly.'
+            : currentLang === 'ru'
+              ? 'Уведомления временно недоступны. Повторите попытку позже.'
+              : 'შეტყობინებები დროებით მიუწვდომელია. სცადეთ მოგვიანებით.');
         }
       } finally {
         if (active) setNotificationsLoading(false);
@@ -903,6 +910,7 @@ export default function App() {
 
     if (!currentUser?.email) {
       setNotifications([]);
+      setNotificationsError('');
       setNotificationsLoading(false);
       return () => { active = false; };
     }
@@ -2816,6 +2824,7 @@ export default function App() {
         setIsNotificationsOpen={setIsNotificationsOpen}
         notifications={notifications}
         notificationsLoading={notificationsLoading}
+        notificationsError={notificationsError}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
         orders={orders}
         lookupOrderForTracking={lookupOrderForTracking}
