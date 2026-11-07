@@ -1884,7 +1884,8 @@ export default function App() {
     orderSubmitLock.current = true;
     setIsSubmittingOrder(true);
     setCheckoutError('');
-    showToast('შეკვეთის გაგზავნა დაიწყო...');
+    // The submit button already shows the loading state; avoid a stale toast
+    // covering the order confirmation dialog after the server commits.
 
     const customerName = checkoutForm.name?.trim() || '';
     const customerPhone = checkoutForm.phone?.trim() || '';
@@ -2274,9 +2275,7 @@ export default function App() {
     setCart([]);
     setAppliedCoupon(null);
 
-    showToast(
-      `✅ შეკვეთა #${orderId} წარმატებით გაფორმდა!`
-    );
+    // The confirmation dialog is the single success surface and displays the full order code.
   };
 
   const filteredProducts = useMemo(() => {
