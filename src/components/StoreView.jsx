@@ -1,6 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
+import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions } from '../utils/productVariants.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -96,13 +97,10 @@ export default function StoreView({
     setSelectedProduct(prod);
     setActiveImage(prod.image || prod.gallery?.[0] || null);
     
-    const defaultSizes = prod.availableSizes || ['S', 'M', 'L', 'XL'];
-    setSelectedSize(defaultSizes[0] || 'M');
-
-    const parsedColors = Array.isArray(prod.availableColors)
-      ? prod.availableColors
-      : (typeof prod.colors === 'string' ? prod.colors.split(',').map(color => color.trim()).filter(Boolean) : []);
-    setSelectedColor(parsedColors[0] || '');
+    const availableSizes = getAvailableProductSizes(prod);
+    setSelectedSize(availableSizes[0] || '');
+    const availableColors = getAvailableProductColors(prod);
+    setSelectedColor(availableColors[0] || '');
 
 
     setIsGiftWrapped(false);
@@ -141,9 +139,10 @@ export default function StoreView({
       else rec = 'XXL';
     }
 
-    const available = selectedProduct?.availableSizes || ['S', 'M', 'L', 'XL'];
+    const available = getAvailableProductSizes(selectedProduct);
+    if (!available.length) return;
     if (!available.includes(rec)) {
-      rec = available[0] || 'M';
+      rec = available[0];
     }
 
     setSmartRecommendedSize(rec);
@@ -370,7 +369,7 @@ export default function StoreView({
                       {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
                   </div>
-                  <button onClick={() => addToCart(prod)} disabled={Number(prod.stock ?? 0) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button onClick={() => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod) : addToCart(prod))} disabled={Number(prod.stock ?? 0) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
@@ -769,7 +768,7 @@ export default function StoreView({
                       )}
 
                       <div className="flex flex-wrap gap-2 w-full">
-                        {(selectedProduct.availableSizes || ['S', 'M', 'L', 'XL']).map(size => {
+                        {getAvailableProductSizes(selectedProduct).map(size => {
                           return (
                             <button
                               key={size}
@@ -786,11 +785,11 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {((selectedProduct.availableColors && selectedProduct.availableColors.length > 0) || selectedProduct.colors) && (
+                  {getAvailableProductColors(selectedProduct).length > 0 && (
                     <div className="gs-color-selector space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
                       <span className="text-slate-300 font-bold block">{storeText.color} <b className="text-amber-400">{selectedColor}</b></span>
                       <div className="flex flex-wrap gap-2.5 w-full">
-                        {(selectedProduct.availableColors || (selectedProduct.colors ? selectedProduct.colors.split(',').map(c => c.trim()) : [])).map(colName => (
+                        {getAvailableProductColors(selectedProduct).map(colName => (
                           <button
                             key={colName}
                             type="button"
@@ -980,7 +979,7 @@ export default function StoreView({
                     ...selectedProduct, 
                     priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
                     name: customName,
-                    selectedSize: isCf ? selectedSize : null,
+                    selectedSize: isCf && selectedSize ? selectedSize : null,
                     selectedColor: selectedColor
                   }); 
                   if (added !== false) setSelectedProduct(null); 
