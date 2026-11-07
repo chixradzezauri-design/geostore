@@ -22,15 +22,17 @@ export const groupCheckoutItems = (items) => {
   (Array.isArray(items) ? items : []).forEach((item) => {
     const selectedSize = item?.selected_size || null;
     const selectedColor = item?.selected_color || null;
+    const customVariantId = String(item?.custom_variant_id ?? '').trim() || null;
     const giftWrap = item?.gift_wrap === true;
     const vipWarranty = item?.vip_warranty === true;
     const giftMessage = giftWrap ? String(item?.gift_message ?? '').trim().slice(0, 240) : '';
     const hasCustomization = giftWrap || vipWarranty || giftMessage.length > 0;
-    const key = JSON.stringify([String(item?.id), selectedSize, selectedColor, giftWrap, vipWarranty, giftMessage]);
+    const key = JSON.stringify([String(item?.id), selectedSize, selectedColor, customVariantId, giftWrap, vipWarranty, giftMessage]);
     const current = groupedItems.get(key) || {
       id: String(item?.id),
       selected_size: selectedSize,
       selected_color: selectedColor,
+      ...(customVariantId ? { custom_variant_id: customVariantId } : {}),
       quantity: 0
     };
     // Preserve the old fingerprint shape for ordinary orders.
@@ -115,13 +117,15 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
   const cart = Array.isArray(cartItems) ? cartItems : [];
   const catalog = Array.isArray(catalogProducts) ? catalogProducts : [];
   const byId = new Map(catalog.map((product) => [String(product?.id ?? ''), product]));
-  const requestedById = new Map();
+  const requestedByInventoryUnit = new Map();
 
   for (const item of cart) {
     const id = String(item?.id ?? '');
+    const customVariantId = String(item?.customVariantId ?? '').trim();
+    const key = JSON.stringify([id, customVariantId || null]);
     const quantity = Number(item?.quantity ?? 1);
     if (!id) continue;
-    requestedById.set(id, (requestedById.get(id) || 0) +
+    requestedByInventoryUnit.set(key, (requestedByInventoryUnit.get(key) || 0) +
       (Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1));
   }
 
@@ -133,12 +137,24 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       return item;
     }
 
-    const currentPrice = Number(product.price_gel);
-    const currentStock = Number(product.stock ?? 0);
+    const customVariantId = String(item?.customVariantId ?? '').trim();
+    const customVariant = customVariantId && Array.isArray(product.variants)
+      ? product.variants.find(variant => String(variant?.id ?? '') === customVariantId)
+      : null;
+    const hasCustomVariants = Array.isArray(product.variants) && product.variants.length > 0;
+    const currentPrice = customVariantId ? Number(customVariant?.priceGEL ?? customVariant?.price_gel) : Number(product.price_gel);
+    const currentStock = customVariantId ? Number(customVariant?.stock ?? 0) : Number(product.stock ?? 0);
     const safeStock = Number.isFinite(currentStock) ? Math.max(0, Math.floor(currentStock)) : 0;
     const oldPrice = Number(item?.basePriceGEL ?? item?.priceGEL ?? item?.price);
-    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0;
-
+    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0 && (!customVariantId || Boolean(customVariant));
+    if (hasCustomVariants && !customVariantId) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_custom_missing' });
+      return item;
+    }
+    if (customVariantId && !customVariant) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_custom_unavailable', selected: customVariantId });
+      return item;
+    }
     if (!hasValidPrice) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'invalid_price' });
       return item;
@@ -179,9 +195,11 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
     if (!Number.isFinite(oldPrice) || oldPrice !== currentPrice) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'price', oldValue: oldPrice, newValue: currentPrice });
     }
-    if ((requestedById.get(String(item?.id ?? '')) || 0) > safeStock) {
-      if (!changes.some((change) => String(change.id) === String(item?.id) && change.type === 'stock')) {
-        changes.push({ id: item?.id, name: product.name || item?.name || '', type: safeStock > 0 ? 'stock' : 'unavailable_stock', requested: requestedById.get(String(item?.id ?? '')) || 0, available: safeStock });
+    const inventoryKey = JSON.stringify([String(item?.id ?? ''), customVariantId || null]);
+    const requestedQuantity = requestedByInventoryUnit.get(inventoryKey) || 0;
+    if (requestedQuantity > safeStock) {
+      if (!changes.some((change) => String(change.id) === String(item?.id) && change.type === 'stock' && String(change.customVariantId || '') === customVariantId)) {
+        changes.push({ id: item?.id, customVariantId: customVariantId || null, name: product.name || item?.name || '', type: safeStock > 0 ? 'stock' : 'unavailable_stock', requested: requestedQuantity, available: safeStock });
       }
     }
 
@@ -190,7 +208,8 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       name: product.name || item.name,
       priceGEL: currentPrice + (item?.giftWrap === true ? 5 : 0) + (item?.vipWarranty === true ? 15 : 0),
       basePriceGEL: currentPrice,
-      stock: safeStock
+      stock: safeStock,
+      customVariantName: customVariant ? String(customVariant.name || '') : ''
     };
   });
 

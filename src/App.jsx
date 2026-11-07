@@ -31,7 +31,7 @@ import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwo
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner } from './utils/cartSafety';
-import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1613,6 +1613,8 @@ export default function App() {
 
     const selectedSize = String(product?.selectedSize || '').trim();
     const selectedColor = String(product?.selectedColor || '').trim();
+    const customVariantId = String(product?.customVariantId || '').trim();
+    const customVariant = customVariantId ? getCustomProductVariant(product, customVariantId) : null;
     const allowedSizes = getAvailableProductSizes(product);
     const allowedColors = getAvailableProductColors(product);
 
@@ -1624,13 +1626,24 @@ export default function App() {
       showToast('არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
       return false;
     }
+    if (customVariantId && (!customVariant || customVariant.stock <= 0)) {
+      showToast('არჩეული ვარიანტი აღარ არის ხელმისაწვდომი.');
+      return false;
+    }
+    if (Array.isArray(product?.variants) && product.variants.length > 0 && !customVariantId) {
+      showToast('შეკვეთამდე აირჩიეთ პროდუქტის ვარიანტი.');
+      return false;
+    }
 
     // Use the latest cart snapshot synchronously so rapid taps cannot
     // bypass stock limits before React has committed the previous update.
     const result = addProductToCart(cartRef.current, {
       ...product,
       selectedSize: selectedSize || null,
-      selectedColor: selectedColor || null
+      selectedColor: selectedColor || null,
+      customVariantId: customVariant?.id || null,
+      customVariantName: customVariant?.name || '',
+      stock: customVariant ? customVariant.stock : product.stock
     }, requestedQuantity);
 
     if (!result.valid) {
@@ -1652,9 +1665,10 @@ export default function App() {
 
   const changeCartQuantity = (item, nextQuantity) => {
     const currentProduct = products.find(product => String(product.id) === String(item.id));
+    const currentVariant = item.customVariantId ? getCustomProductVariant(currentProduct, item.customVariantId) : null;
     const result = updateProductCartQuantity(cartRef.current, {
       ...item,
-      stock: currentProduct?.stock ?? item.stock
+      stock: currentVariant ? currentVariant.stock : (currentProduct?.stock ?? item.stock)
     }, nextQuantity);
     if (!result.valid) {
       if (result.reason === 'limit') {
@@ -2122,6 +2136,8 @@ export default function App() {
         quantity: Number(quantity ?? 1),
         selected_size: item.selectedSize || null,
         selected_color: item.selectedColor || null,
+        custom_variant_id: item.customVariantId || null,
+        custom_variant_name: item.customVariantName || null,
         gift_wrap: item.giftWrap === true,
         vip_warranty: item.vipWarranty === true,
         gift_message: item.giftWrap === true ? String(item.giftMessage ?? '').trim().slice(0, 240) : '',
@@ -2444,7 +2460,7 @@ export default function App() {
       total_gel: safeConfirmedTotal,
       status: 'ახალი',
       itemSummary: confirmedItems.length > 0
-        ? confirmedItems.map((item) => `${item.name || 'პროდუქტი'} (x${item.quantity || 1})`).join(', ')
+        ? confirmedItems.map((item) => `${item.name || 'პროდუქტი'}${item.customVariantName ? ` — ${item.customVariantName}` : ''} (x${item.quantity || 1})`).join(', ')
         : 'პროდუქტები'
     };
 
@@ -2726,13 +2742,14 @@ export default function App() {
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={`${item.id}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}-${item.giftWrap ? 'gift' : ''}-${item.vipWarranty ? 'vip' : ''}-${item.giftMessage || ''}`}
+                      key={`${item.id}-${item.customVariantId || ''}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}-${item.giftWrap ? 'gift' : ''}-${item.vipWarranty ? 'vip' : ''}-${item.giftMessage || ''}`}
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
                         <h4 className="gs-cart-item-title font-bold text-xs text-white">
                           {item.name}
                         </h4>
+                        {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">ვარიანტი: {item.customVariantName}</p>}
 
                         {(item.selectedSize || item.selectedColor) && (
                           <p className="gs-cart-item-variant text-slate-400 text-[11px]">

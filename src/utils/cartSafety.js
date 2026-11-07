@@ -39,18 +39,21 @@ export const addProductToCart = (cart, product, quantity = 1) => {
   const productId = String(product.id);
   const size = String(product.selectedSize || '').trim() || null;
   const color = String(product.selectedColor || '').trim() || null;
+  const customVariantId = String(product.customVariantId || '').trim() || null;
   const sameProduct = item => String(item?.id) === productId;
+  const sameInventoryUnit = item => sameProduct(item) && (String(item?.customVariantId || '').trim() || null) === customVariantId;
   const sameLine = item =>
     sameProduct(item) &&
     (String(item?.selectedSize || '').trim() || null) === size &&
     (String(item?.selectedColor || '').trim() || null) === color &&
+    (String(item?.customVariantId || '').trim() || null) === customVariantId &&
     String(item?.name ?? '') === String(product?.name ?? '') &&
     (item?.giftWrap === true) === (product?.giftWrap === true) &&
     (item?.vipWarranty === true) === (product?.vipWarranty === true) &&
     String(item?.giftMessage ?? '') === String(product?.giftWrap === true ? product?.giftMessage ?? '' : '') &&
     Number(item?.priceGEL ?? item?.price) === Number(product?.priceGEL ?? product?.price);
   const alreadyInCart = currentCart
-    .filter(sameProduct)
+    .filter(sameInventoryUnit)
     .reduce((total, item) => {
       const itemQuantity = Number(item?.quantity);
       return total + (Number.isInteger(itemQuantity) && itemQuantity > 0 ? itemQuantity : 0);
@@ -73,6 +76,8 @@ export const addProductToCart = (cart, product, quantity = 1) => {
       giftMessage: product.giftWrap === true ? String(product.giftMessage ?? '').trim().slice(0, 240) : '',
       selectedSize: size,
       selectedColor: color,
+      customVariantId,
+      customVariantName: customVariantId ? String(product.customVariantName || '').trim().slice(0, 80) : '',
       quantity: requestedQuantity
     }];
 
@@ -88,6 +93,7 @@ export const removeProductFromCart = (cart, product) => {
     String(item?.name ?? '') === String(product?.name ?? '') &&
     (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
     (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
+    (String(item?.customVariantId || '').trim() || null) === (String(product?.customVariantId || '').trim() || null) &&
     (item?.giftWrap === true) === (product?.giftWrap === true) &&
     (item?.vipWarranty === true) === (product?.vipWarranty === true) &&
     String(item?.giftMessage ?? '') === String(product?.giftWrap === true ? product?.giftMessage ?? '' : '') &&
@@ -106,6 +112,7 @@ export const updateProductCartQuantity = (cart, product, requestedQuantity) => {
     String(item?.name ?? '') === String(product?.name ?? '') &&
     (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
     (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
+    (String(item?.customVariantId || '').trim() || null) === (String(product?.customVariantId || '').trim() || null) &&
     (item?.giftWrap === true) === (product?.giftWrap === true) &&
     (item?.vipWarranty === true) === (product?.vipWarranty === true) &&
     String(item?.giftMessage ?? '') === String(product?.giftWrap === true ? product?.giftMessage ?? '' : '') &&
@@ -115,7 +122,8 @@ export const updateProductCartQuantity = (cart, product, requestedQuantity) => {
   const stockValue = Number(product.stock ?? 0);
   const stock = Number.isFinite(stockValue) ? Math.max(0, Math.floor(stockValue)) : 0;
   const otherQuantity = currentCart.reduce((total, item, index) => {
-    if (index === lineIndex || String(item?.id) !== String(product.id)) return total;
+    if (index === lineIndex || String(item?.id) !== String(product.id) ||
+        (String(item?.customVariantId || '').trim() || null) !== (String(product?.customVariantId || '').trim() || null)) return total;
     const current = Number(item?.quantity);
     return total + (Number.isInteger(current) && current > 0 ? current : 0);
   }, 0);
@@ -166,6 +174,8 @@ export const sanitizeCartSnapshot = (value) => {
     for (const key of ['selectedSize', 'selectedColor']) {
       safeItem[key] = item[key] == null ? null : (String(item[key]).trim().slice(0, 100) || null);
     }
+    safeItem.customVariantId = item.customVariantId == null ? null : (String(item.customVariantId).trim().slice(0, 120) || null);
+    safeItem.customVariantName = safeItem.customVariantId ? String(item.customVariantName ?? '').trim().slice(0, 80) : '';
     return [safeItem];
   });
 };

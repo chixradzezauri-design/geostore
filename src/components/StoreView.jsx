@@ -1,7 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
-import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions } from '../utils/productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock } from '../utils/productVariants.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -40,6 +40,7 @@ export default function StoreView({
 
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('');
+  const [selectedCustomVariantId, setSelectedCustomVariantId] = useState('');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   // 🌟 ჭკვიანი ზომის შერჩევის სახელმწიფო (Smart Size Recommender)
@@ -102,6 +103,8 @@ export default function StoreView({
     setSelectedSize(availableSizes[0] || '');
     const availableColors = getAvailableProductColors(prod);
     setSelectedColor(availableColors[0] || '');
+    const customVariants = getCustomProductVariants(prod);
+    setSelectedCustomVariantId(customVariants.find(variant => variant.stock > 0)?.id || '');
 
 
     setIsGiftWrapped(false);
@@ -302,9 +305,11 @@ export default function StoreView({
     return 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=88';
   };
 
-  // The checkout RPC currently prices from the server catalogue row only.
-  // Never display or pass an unverified client-side custom-variant price.
-  const currentBasePrice = selectedProduct?.priceGEL || 0;
+  const selectedCustomVariant = selectedProduct ? getCustomProductVariant(selectedProduct, selectedCustomVariantId) : null;
+  const currentBasePrice = selectedCustomVariant?.priceGEL ?? selectedProduct?.priceGEL ?? 0;
+  const currentAvailableStock = selectedProduct && Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0
+    ? (selectedCustomVariant?.stock ?? 0)
+    : Number(selectedProduct?.stock ?? 0);
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -404,7 +409,7 @@ export default function StoreView({
                       {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
                   </div>
-                  <button onClick={() => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod) : addToCart(prod))} disabled={Number(prod.stock ?? 0) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                  <button onClick={() => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
                   </button>
                 </div>
@@ -781,6 +786,26 @@ export default function StoreView({
                     </div>
                   )}
 
+                  {getCustomProductVariants(selectedProduct).length > 0 && (
+                    <div className="gs-custom-variant-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-slate-200 font-bold">{storeText.variant}</span>
+                        <span className="text-amber-300 text-xs font-black">{selectedCustomVariant ? formatPrice(selectedCustomVariant.priceGEL) : ''}</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {getCustomProductVariants(selectedProduct).map(variant => (
+                          <button key={variant.id} type="button" disabled={variant.stock <= 0}
+                            onClick={() => setSelectedCustomVariantId(variant.id)}
+                            aria-pressed={selectedCustomVariantId === variant.id}
+                            className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-xs transition disabled:opacity-40 disabled:cursor-not-allowed ${selectedCustomVariantId === variant.id ? 'border-amber-400 bg-amber-500/10 text-amber-200' : 'border-amber-500/20 bg-[#08080a] text-slate-300'}`}>
+                            <span className="font-bold">{variant.name}</span>
+                            <span className="shrink-0 text-right"><b>{formatPrice(variant.priceGEL)}</b><small className="block text-slate-500">{variant.stock > 0 ? `${variant.stock} ც.` : storeText.outOfStock}</small></span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {getAvailableProductSizes(selectedProduct).length > 0 && (
                     <div className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
@@ -910,7 +935,7 @@ export default function StoreView({
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
                     <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" /> 
-                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{Number(selectedProduct.stock ?? 0) > 0 ? Number(selectedProduct.stock) : storeText.outOfStock}</b> {Number(selectedProduct.stock) > 0 ? storeText.deliveryFit : ''}</span>
+                    <span>{storeText.inStock} <b className="text-amber-400 font-black">{currentAvailableStock > 0 ? currentAvailableStock : storeText.outOfStock}</b> {currentAvailableStock > 0 ? storeText.deliveryFit : ''}</span>
                   </div>
 
                   <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
@@ -997,7 +1022,7 @@ export default function StoreView({
 
             <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
-                disabled={Number(selectedProduct.stock ?? 0) <= 0}
+                disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
 
@@ -1010,7 +1035,10 @@ export default function StoreView({
                     vipWarranty: hasVipWarranty === true,
                     giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 240) : '',
                     selectedSize: getAvailableProductSizes(selectedProduct).length > 0 && selectedSize ? selectedSize : null,
-                    selectedColor: selectedColor
+                    selectedColor: selectedColor,
+                    customVariantId: selectedCustomVariant?.id || null,
+                    customVariantName: selectedCustomVariant?.name || '',
+                    stock: selectedCustomVariant ? selectedCustomVariant.stock : selectedProduct.stock
                   }); 
                   if (added !== false) setSelectedProduct(null); 
                 }} 

@@ -390,6 +390,7 @@ export default function AdminDashboardPro({
       return alert('ვარიანტის მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     }
     if (productVariants.length >= 50) return alert('ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.');
+    if (productVariants.some(variant => String(variant.name || '').trim().toLocaleLowerCase() === name.toLocaleLowerCase())) return alert('ამ პროდუქტზე ასეთი ვარიანტის სახელი უკვე არსებობს.');
 
     const generatedVariantId = typeof globalThis.crypto?.randomUUID === 'function'
       ? `var-${globalThis.crypto.randomUUID()}`
@@ -3161,6 +3162,7 @@ export default function AdminDashboardPro({
                             {item.sku && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SKU: <b>{item.sku}</b></span>}
                             {item.selectedSize && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ზომა: <b>{item.selectedSize}</b></span>}
                             {item.selectedColor && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ფერი: <b>{item.selectedColor}</b></span>}
+                            {item.customVariantName && <span className="bg-slate-900 px-2 py-0.5 rounded border border-amber-500/30">ვარიანტი: <b>{item.customVariantName}</b></span>}
                             {item.gift_wrap === true && <span className="bg-amber-950/40 text-amber-200 px-2 py-0.5 rounded border border-amber-800/60">სასაჩუქრე შეფუთვა (+5 ₾)</span>}
                             {item.vip_warranty === true && <span className="bg-amber-950/40 text-amber-200 px-2 py-0.5 rounded border border-amber-800/60">VIP გარანტია (+15 ₾)</span>}
                             <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
@@ -3443,17 +3445,21 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <div className="admin-product-variants-notice bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-2">
-                  <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
-                    <Layers className="w-4 h-4" />
-                    <span>ინდივიდუალური ვარიანტები დროებით გამორთულია</span>
-                  </h4>
-                  <p className="text-slate-300 text-xs leading-relaxed">
-                    ვარიანტის ცალკე ფასისა და მარაგის სერვერული დამუშავება ჯერ დასრულებული არ არის.
-                    არსებული შენახული ვარიანტები შენარჩუნებულია, მაგრამ ახალი ვარიანტის ფასით შეკვეთის გაფორმება
-                    ხელახლა ჩაირთვება მხოლოდ მას შემდეგ, რაც შეკვეთა, მარაგის ჩამოჭრა, გაუქმება და აღდგენა
-                    ერთიანად იქნება დაცული სერვერზე.
-                  </p>
+                <div className="admin-product-variants-editor bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                  <h4 className="text-amber-400 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ინდივიდუალური ვარიანტები</h4>
+                  <p className="text-slate-400 text-xs leading-relaxed">თითოეულ ვარიანტს აქვს საკუთარი ფასი და მარაგი. შეკვეთისას ორივე სერვერზე მოწმდება.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <input value={newVarName} onChange={e => setNewVarName(e.target.value)} maxLength={80} placeholder="ვარიანტის სახელი" className="sm:col-span-2 min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} inputMode="decimal" placeholder="ფასი ₾" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input value={newVarStock} onChange={e => setNewVarStock(e.target.value)} inputMode="numeric" placeholder="მარაგი (ც.)" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <button type="button" onClick={() => handleAddCustomVariant({ preventDefault: () => {} })} className="sm:col-span-4 rounded-xl bg-amber-400 px-4 py-3 text-xs font-black text-slate-950">ვარიანტის დამატება</button>
+                  </div>
+                  {productVariants.length ? <div className="space-y-2">{productVariants.map(variant => (
+                    <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-3 text-xs">
+                      <div className="min-w-0"><b className="text-white">{variant.name}</b><span className="ml-2 text-amber-300">{Number(variant.priceGEL).toFixed(2)} ₾</span><span className="ml-2 text-slate-400">მარაგი: {variant.stock}</span></div>
+                      <button type="button" onClick={() => handleRemoveCustomVariant(variant.id)} className="rounded-lg bg-rose-500/10 px-3 py-2 font-bold text-rose-300">წაშლა</button>
+                    </div>
+                  ))}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
                 </div>
 
                 <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
