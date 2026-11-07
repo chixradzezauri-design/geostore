@@ -147,13 +147,21 @@ const getOrderStatusClasses = (status) => {
     case 'გაგზავნილი':
     case 'გზაშია':
     case 'shipped':
+    case 'on the way':
+    case 'отправлен':
+    case 'в пути':
       return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/40';
     case 'დასრულებული':
     case 'ჩაბარებულია':
     case 'delivered':
+    case 'completed':
+    case 'доставлен':
+    case 'завершён':
       return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
     case 'გაუქმებული':
     case 'cancelled':
+    case 'canceled':
+    case 'отменён':
       return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
     default:
       return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
@@ -167,6 +175,16 @@ const isShippedOrderStatus = (status) =>
   ['გაგზავნილი', 'გზაშია', 'shipped', 'on the way', 'отправлен', 'в пути'].includes(normalizeOrderStatus(status));
 const isCancelledOrderStatus = (status) =>
   ['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(normalizeOrderStatus(status));
+
+const getOrderStatusFilterKey = (status) => {
+  if (isDeliveredOrderStatus(status)) return 'დასრულებული';
+  if (isShippedOrderStatus(status)) return 'გაგზავნილი';
+  if (isCancelledOrderStatus(status)) return 'გაუქმებული';
+  const normalized = normalizeOrderStatus(status);
+  if (['ახალი', 'new'].includes(normalized)) return 'ახალი';
+  if (['მუშავდება', 'processing', 'в обработке'].includes(normalized)) return 'მუშავდება';
+  return String(status || '');
+};
 
 export default function AdminDashboardPro({
   adminLoggedIn,
@@ -2301,7 +2319,11 @@ export default function AdminDashboardPro({
       String(o.customerName ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
       String(o.phone ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase());
 
-    const matchesStatus = orderStatusFilter === 'ყველა' || o.status === orderStatusFilter;
+    // Legacy English/Russian status values must appear in the same filter
+    // bucket as their Georgian equivalents, rather than disappearing from
+    // filtered lists even though tracking recognizes them.
+    const matchesStatus = orderStatusFilter === 'ყველა' ||
+      getOrderStatusFilterKey(o.status) === orderStatusFilter;
     return matchesSearch && matchesStatus;
   }).sort((a, b) => {
     const aTime = Date.parse(a.status_changed_at || '') || Date.parse(a.created_at || '') || 0;
@@ -3055,10 +3077,10 @@ export default function AdminDashboardPro({
                           )
                         ) : (
                           <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status)} title={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
                           </div>
                         )}
