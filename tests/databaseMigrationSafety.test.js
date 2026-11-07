@@ -77,3 +77,14 @@ test('customer order history returns an allowlisted item payload without interna
     assert.ok(!historyFunction.includes(`'${privateField}'`), `internal field leaked: ${privateField}`);
   }
 });
+
+test('public checkout wrapper is rebound after private UUID-ownership function rename', () => {
+  const renameAt = orderOwnershipMigration.indexOf('ALTER FUNCTION private.create_order_with_stock(jsonb)');
+  const wrapperAt = orderOwnershipMigration.indexOf('CREATE OR REPLACE FUNCTION public.create_order_with_stock(p_order jsonb)');
+  const revokeUncheckedAt = orderOwnershipMigration.indexOf('REVOKE ALL ON FUNCTION private.create_order_with_stock_unchecked(jsonb)');
+  assert.ok(renameAt >= 0 && wrapperAt > renameAt && revokeUncheckedAt > wrapperAt);
+  const wrapperEnd = orderOwnershipMigration.indexOf('REVOKE ALL ON FUNCTION public.create_order_with_stock(jsonb)', wrapperAt);
+  const publicWrapper = orderOwnershipMigration.slice(wrapperAt, wrapperEnd);
+  assert.match(publicWrapper, /RETURN private\.create_order_with_stock\(p_order\);/);
+  assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION public\.create_order_with_stock\(jsonb\) TO anon, authenticated, service_role/);
+});
