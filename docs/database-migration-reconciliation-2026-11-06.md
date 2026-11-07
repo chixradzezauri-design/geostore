@@ -137,3 +137,25 @@ Staged corrections:
 - Apply these in timestamp order only after migration-history reconciliation. The admin stock-adjustment UI must not be deployed before its RPC migration is applied.
 
 Both staged migrations were executed together against the live schema inside an explicit BEGIN ... ROLLBACK transaction. PostgreSQL accepted the DDL and function definitions. A post-rollback read-only query confirmed that the new RPCs and validator trigger were not persisted. No live migration, product row, order, or stock value was changed.
+
+
+## Fresh live reconciliation addendum — 2026-11-07 evening
+
+A second direct read-only inspection was completed after the earlier reconciliation notes. The current live migration ledger still reports 67 applied versions, latest `20261107160152_minimize_customer_order_history_payload`. Exact SQL counts now return 0 rows in `public.orders`, 1 in `public.products`, 1 in `public.expenses`, and 0 in `public.order_notifications`. The sole product has base stock 61 and an empty `variants` array. This exact count supersedes the older 21-order snapshot in the previous order-stock audit; no stock changes or historical backfills are justified by that stale snapshot.
+
+### Additional live function/trigger review
+
+- The live checkout function already contains server-side custom variant pricing and stock deduction, plus server-calculated gift-wrap and VIP-warranty fees. The live product trigger already preserves variant stock and blocks deletion/reuse of variants referenced by historical order items.
+- The live trigger does not reject duplicate variant IDs or case-insensitive duplicate variant names.
+- Live cancellation and reactivation functions still combine JSON array-type validation with `jsonb_array_length` in one Boolean `OR` expression. The validation has been split in the new forward-only migration to avoid relying on expression short-circuit evaluation.
+- The live migration ledger does not list the custom-variant integration migration or the admin variant stock RPC migration, even though several related custom-variant functions/triggers are already present in the live catalog. Treat this as migration-history/schema drift; compare definitions and object ownership before applying any overlapping migration.
+- The admin dashboard calls `public.admin_adjust_product_variant_stock`, but that RPC is not yet present in the live database. The UI must not be deployed until the reviewed RPC migration is applied.
+- Security advisor output reports four RLS-enabled tables with no policies: three private rate-limit/activity tables and `public.order_notifications`. These currently fail closed under RLS; access to notifications is via restricted RPCs. The advisor also reports leaked-password protection disabled, which requires enabling in Supabase Auth settings.
+- Performance advisor reports four unused indexes on low-volume storefront/notification tables. No index was removed because an unused-index warning alone is not enough evidence to remove potentially useful indexes.
+
+### New staged forward-only work
+
+- `20261107234500_harden_order_json_and_variant_integrity.sql` updates the live cancellation/reactivation function definitions with separate JSON array-type and array-length checks, and extends the existing stock-preservation trigger to reject duplicate variant IDs and case-insensitive duplicate names.
+- `tests/databaseMigrationSafety.test.js` adds static regression checks for the new guards, variant uniqueness checks, admin stock RPC authorization/locking, and the UI's request-lock lifecycle.
+
+The migration and test files are saved on `design/neo-editorial-2026-11-07` only. No Supabase migration was applied, no live row was changed, and no Vercel build or deployment was triggered. The SQL migration has not yet been executed in a staging database; the new Node test has been added but the complete Node suite has not been run.
