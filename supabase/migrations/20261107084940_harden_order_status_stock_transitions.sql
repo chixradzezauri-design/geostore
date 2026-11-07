@@ -1,10 +1,10 @@
 -- Enforce order status transitions and stock ledger invariants at the database boundary.
 
 CREATE OR REPLACE FUNCTION private.admin_update_order_status(p_order_id text, p_new_status text)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
 AS $function$
 declare
   v_order public.orders%rowtype;
@@ -79,27 +79,40 @@ begin
       raise exception 'ერთი პროდუქტის ჯამური რაოდენობა 100-ს არ უნდა აღემატებოდეს.';
     end if;
 
+    perform set_config('geostore.variant_stock_adjustment', 'on', true);
     for v_item in
       select item->>'id' as product_id,
+             nullif(trim(item->>'customVariantId'), '') as custom_variant_id,
              sum((item->>'quantity')::integer)::integer as quantity
         from jsonb_array_elements(v_order.items) as e(item)
-       group by item->>'id'
-       order by item->>'id'
+       group by item->>'id', nullif(trim(item->>'customVariantId'), '')
+       order by item->>'id', nullif(trim(item->>'customVariantId'), '')
     loop
-      if coalesce(trim(v_item.product_id), '') = ''
-         or v_item.quantity is null
-         or v_item.quantity <= 0 then
+      if coalesce(trim(v_item.product_id), '') = '' or v_item.quantity is null or v_item.quantity <= 0 then
         raise exception 'შეკვეთის პროდუქტის ID ან რაოდენობა არასწორია.';
       end if;
 
-      update public.products
-         set stock = coalesce(stock, 0) + v_item.quantity
-       where id = v_item.product_id;
+      if v_item.custom_variant_id is null then
+        update public.products set stock = coalesce(stock, 0) + v_item.quantity
+         where id = v_item.product_id;
+      else
+        update public.products p
+           set variants = (
+             select jsonb_agg(
+               case when element->>'id' = v_item.custom_variant_id
+                 then jsonb_set(element, '{stock}', to_jsonb((element->>'stock')::integer + v_item.quantity), true)
+                 else element end
+               order by ordinality
+             )
+             from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end)
+               with ordinality as variant_rows(element, ordinality)
+           )
+         where p.id = v_item.product_id
+           and exists (select 1 from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end) element where element->>'id' = v_item.custom_variant_id);
+      end if;
 
       get diagnostics v_updated = row_count;
-      if v_updated <> 1 then
-        raise exception 'მარაგის აღდგენა ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id;
-      end if;
+      if v_updated <> 1 then raise exception 'მარაგის აღდგენა ვერ მოხერხდა პროდუქტისთვის ან ვარიანტისთვის: %', v_item.product_id; end if;
     end loop;
 
     update public.orders
@@ -121,10 +134,9 @@ $function$;
 -- The dedicated reactivation RPC remains supported only with fresh password auth
 -- and an atomic stock-restoration reversal.
 CREATE OR REPLACE FUNCTION private.guard_order_status_transition()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = ''
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
 AS $function$
 DECLARE
   v_password_auth_time bigint;
@@ -185,10 +197,10 @@ EXECUTE FUNCTION private.guard_order_status_transition();
 -- This mirrors checkout/cancellation limits so malformed legacy JSON cannot
 -- hide negative quantities or inflate a product's stock deduction.
 CREATE OR REPLACE FUNCTION private.admin_reactivate_cancelled_order(p_order_id text)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
 AS $function$
 declare
   v_order public.orders%rowtype;
@@ -260,21 +272,37 @@ begin
     raise exception 'ერთი პროდუქტის ჯამური რაოდენობა 100-ს არ უნდა აღემატებოდეს.';
   end if;
 
+  perform set_config('geostore.variant_stock_adjustment', 'on', true);
   for v_item in
     select item->>'id' as product_id,
+           nullif(trim(item->>'customVariantId'), '') as custom_variant_id,
            sum((item->>'quantity')::integer)::integer as quantity
       from jsonb_array_elements(v_order.items) as e(item)
-     group by item->>'id'
-     order by item->>'id'
+     group by item->>'id', nullif(trim(item->>'customVariantId'), '')
+     order by item->>'id', nullif(trim(item->>'customVariantId'), '')
   loop
-    update public.products
-       set stock = coalesce(stock, 0) - v_item.quantity
-     where id = v_item.product_id
-       and coalesce(stock, 0) >= v_item.quantity;
+    if v_item.custom_variant_id is null then
+      update public.products set stock = coalesce(stock, 0) - v_item.quantity
+       where id = v_item.product_id and coalesce(stock, 0) >= v_item.quantity;
+    else
+      update public.products p
+         set variants = (
+           select jsonb_agg(
+             case when element->>'id' = v_item.custom_variant_id
+               then jsonb_set(element, '{stock}', to_jsonb((element->>'stock')::integer - v_item.quantity), true)
+               else element end
+             order by ordinality
+           )
+           from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end)
+             with ordinality as variant_rows(element, ordinality)
+         )
+       where p.id = v_item.product_id
+         and exists (select 1 from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end) element where element->>'id' = v_item.custom_variant_id and coalesce((element->>'stock')::integer, 0) >= v_item.quantity);
+    end if;
 
     get diagnostics v_updated = row_count;
     if v_updated <> 1 then
-      raise exception 'მარაგში აღარ არის საკმარისი რაოდენობა პროდუქტისთვის: %', v_item.product_id;
+      raise exception 'მარაგში აღარ არის საკმარისი რაოდენობა პროდუქტისთვის ან ვარიანტისთვის: %', v_item.product_id;
     end if;
   end loop;
 
