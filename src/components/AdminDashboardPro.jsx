@@ -3534,7 +3534,7 @@ export default function AdminDashboardPro({
               </h3>
               <form onSubmit={handleAddCategory} className="admin-category-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <input type="text" placeholder="სახელწოდება *" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" placeholder="სახელწოდება *" required maxLength={60} value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
                     <option value="">📁 მთავარი კატეგორია (Parent)</option>
                     {mainCategories.map(cat => (
@@ -3558,7 +3558,7 @@ export default function AdminDashboardPro({
                   </label>
                   <input 
                     type="file" 
-                    accept="image/*" 
+                    accept="image/jpeg,image/png,image/webp,image/gif" 
                     onChange={e => handleCategoryFileChange(e, false)} 
                     className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" 
                   />
@@ -3609,6 +3609,8 @@ export default function AdminDashboardPro({
                           </div>
 
                           <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => moveCategory(parentCat.id, -1)} disabled={mainCategories[0]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ზემოთ აწევა" aria-label={`კატეგორიის ${parentCat.name} ზემოთ აწევა`}><ChevronUp className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => moveCategory(parentCat.id, 1)} disabled={mainCategories[mainCategories.length - 1]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ქვემოთ ჩამოწევა" aria-label={`კატეგორიის ${parentCat.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-4 h-4" /></button>
                             {!isEditingParent && (
                               <button 
                                 onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(displayImage || ''); }} 
@@ -3629,7 +3631,7 @@ export default function AdminDashboardPro({
                               <div>
                                 <label className="text-slate-400 text-[10px] block mb-1">სახელწოდება</label>
                                 <input 
-                                  type="text" 
+                                  type="text" maxLength={60}
                                   value={editCatName} 
                                   onChange={e => setEditCatName(e.target.value)} 
                                   className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
@@ -3639,7 +3641,7 @@ export default function AdminDashboardPro({
                                 <label className="text-slate-400 text-[10px] block mb-1">ატვირთეთ ახალი ფოტო კომპიუტერიდან</label>
                                 <input 
                                   type="file" 
-                                  accept="image/*" 
+                                  accept="image/jpeg,image/png,image/webp,image/gif" 
                                   onChange={e => handleCategoryFileChange(e, true)} 
                                   className="w-full text-slate-400 text-[10px] file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                 />
@@ -3672,6 +3674,8 @@ export default function AdminDashboardPro({
                                     </div>
 
                                     <div className="flex items-center gap-1.5">
+                                      <button type="button" onClick={() => moveCategory(sub.id, -1)} disabled={subCats[0]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ზემოთ აწევა" aria-label={`სუბკატეგორიის ${sub.name} ზემოთ აწევა`}><ChevronUp className="w-3.5 h-3.5" /></button>
+                                      <button type="button" onClick={() => moveCategory(sub.id, 1)} disabled={subCats[subCats.length - 1]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ქვემოთ ჩამოწევა" aria-label={`სუბკატეგორიის ${sub.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-3.5 h-3.5" /></button>
                                       {!isEditingSub && (
                                         <button 
                                           onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(subImg || ''); }} 
@@ -3689,7 +3693,7 @@ export default function AdminDashboardPro({
                                     <div className="bg-slate-900 p-3 rounded-xl border border-amber-500/30 space-y-2.5 animate-in fade-in">
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <input 
-                                          type="text" 
+                                          type="text" maxLength={60}
                                           value={editCatName} 
                                           onChange={e => setEditCatName(e.target.value)} 
                                           placeholder="სახელი"
@@ -3697,7 +3701,7 @@ export default function AdminDashboardPro({
                                         />
                                         <input 
                                           type="file" 
-                                          accept="image/*" 
+                                          accept="image/jpeg,image/png,image/webp,image/gif" 
                                           onChange={e => handleCategoryFileChange(e, true)} 
                                           className="w-full text-slate-400 text-[10px] file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                         />
