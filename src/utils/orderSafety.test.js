@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   calculateCartSubtotalGEL,
   calculateCheckoutTotals,
+  calculateOrderLineRevenueGEL,
   reconcileCartWithCatalog,
   createSecureOrderId,
   groupCheckoutItems,
@@ -13,6 +14,24 @@ import {
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
+
+test('uses the final server-priced unit amount without double-counting paid add-ons', () => {
+  assert.equal(calculateOrderLineRevenueGEL({
+    price: 140,
+    base_price: 120,
+    gift_wrap: true,
+    vip_warranty: true,
+    quantity: 2
+  }), 280);
+  assert.equal(calculateOrderLineRevenueGEL({
+    priceGEL: 100,
+    base_price: 90,
+    gift_wrap: true,
+    quantity: 1
+  }), 100);
+  assert.equal(calculateOrderLineRevenueGEL({ price: -5, quantity: 2 }), 0);
+  assert.equal(calculateOrderLineRevenueGEL({ price: 'invalid', quantity: 0 }), 0);
+});
 
 test('groups identical product and option combinations', () => {
   assert.deepEqual(
