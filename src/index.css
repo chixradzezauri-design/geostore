@@ -10948,3 +10948,37 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .admin-delivery-fee-fields { grid-template-columns:minmax(0,1fr)!important; }
  .admin-settings-panel button { width:100%; justify-content:center; }
 }
+
+
+/* Admin promotions, coupons, vendors and audit trail */
+.admin-discounts-panel,.admin-coupons-panel,.admin-vendors-panel { min-width:0; display:grid; gap:clamp(14px,2.2vw,22px)!important; }
+.admin-discounts-panel,.admin-coupons-panel>div,.admin-vendors-panel>div { border-color:rgba(148,163,184,.17)!important; border-radius:clamp(17px,2.2vw,24px)!important; padding:clamp(14px,2.4vw,24px)!important; background:linear-gradient(145deg,rgba(23,25,29,.97),rgba(12,14,17,.98))!important; box-shadow:0 14px 38px rgba(0,0,0,.18)!important; }
+.admin-discounts-panel h3,.admin-coupons-panel h3,.admin-vendors-panel h3 { min-width:0; line-height:1.55!important; letter-spacing:-.015em; }
+.admin-flash-sale-form,.admin-coupon-form,.admin-vendor-form { min-width:0; gap:10px!important; }
+.admin-flash-sale-fields { gap:12px!important; }
+.admin-flash-sale-form label { display:block; line-height:1.55!important; }
+.admin-flash-sale-form input,.admin-flash-sale-form select,.admin-coupon-form input,.admin-vendor-form input { width:100%; min-width:0; min-height:44px; border-radius:11px!important; border-color:rgba(148,163,184,.2)!important; background:#101216!important; padding:10px 12px!important; font-size:13px!important; }
+.admin-flash-sale-form button,.admin-coupon-form button,.admin-vendor-form button { min-height:44px; min-width:0; border-radius:11px!important; padding:10px 14px!important; font-size:11px!important; line-height:1.45!important; }
+.admin-coupon-list,.admin-vendor-list { gap:10px!important; }
+.admin-coupon-card,.admin-vendor-card { min-width:0; gap:10px!important; border-radius:14px!important; padding:13px!important; border-color:rgba(148,163,184,.15)!important; background:rgba(10,12,15,.65)!important; }
+.admin-coupon-card>div,.admin-vendor-card>div:first-child { min-width:0; }
+.admin-coupon-card h4,.admin-vendor-card h4 { overflow-wrap:anywhere; font-size:13px!important; line-height:1.5!important; }
+.admin-coupon-card p,.admin-vendor-card p { line-height:1.55!important; overflow-wrap:anywhere; }
+.admin-coupon-card>button,.admin-vendor-card button { min-width:35px; min-height:35px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px!important; flex:0 0 auto; }
+.admin-vendor-card>div:last-child { min-width:0; flex-wrap:wrap; justify-content:flex-end; gap:7px!important; }
+.admin-vendor-card>div:last-child>span { max-width:100%; white-space:normal; overflow-wrap:anywhere; text-align:center; }
+.admin-discounts-panel .admin-flash-sale-submit { max-width:100%; white-space:normal; }
+.admin-discounts-panel+div { min-width:0; }
+.admin-discounts-panel h3 svg,.admin-coupons-panel h3 svg,.admin-vendors-panel h3 svg { flex:0 0 auto; }
+.admin-discounts-panel~div { min-width:0; }
+.admin-discounts-panel~div>div { min-width:0; }
+.admin-discounts-panel~div .space-y-3>div { min-width:0; border-radius:13px!important; border-color:rgba(148,163,184,.15)!important; background:rgba(10,12,15,.65)!important; padding:12px!important; }
+@media(max-width:639px) {
+ .admin-discounts-panel,.admin-coupons-panel,.admin-vendors-panel { gap:13px!important; }
+ .admin-discounts-panel,.admin-coupons-panel>div,.admin-vendors-panel>div { padding:13px!important; border-radius:17px!important; }
+ .admin-discounts-panel h3,.admin-coupons-panel h3,.admin-vendors-panel h3 { align-items:flex-start!important; font-size:12px!important; }
+ .admin-flash-sale-fields,.admin-coupon-form,.admin-vendor-form { grid-template-columns:minmax(0,1fr)!important; }
+ .admin-flash-sale-form button,.admin-coupon-form button,.admin-vendor-form button { width:100%; justify-content:center; }
+ .admin-coupon-card,.admin-vendor-card { align-items:flex-start!important; }
+ .admin-vendor-card>div:last-child { justify-content:flex-start; }
+}
