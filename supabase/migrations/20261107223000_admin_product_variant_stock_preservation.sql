@@ -195,3 +195,67 @@ $$;
 REVOKE ALL ON FUNCTION private.admin_update_product(jsonb) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.admin_update_product(jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_update_product(jsonb) TO authenticated;
+
+
+-- Apply an inventory delta to one saved variant under a product-row lock.
+-- This allows restocking without accepting stale absolute stock values from the editor.
+CREATE OR REPLACE FUNCTION private.admin_adjust_product_variant_stock(
+  p_product_id text,
+  p_variant_id text,
+  p_delta integer
+)
+RETURNS public.products
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_jwt jsonb := (SELECT auth.jwt());
+  v_product public.products;
+BEGIN
+  IF COALESCE(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
+     OR auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid THEN
+    RAISE EXCEPTION 'Not authorized to adjust product inventory' USING ERRCODE = '42501';
+  END IF;
+
+  IF NULLIF(trim(p_product_id), '') IS NULL
+     OR NULLIF(trim(p_variant_id), '') IS NULL
+     OR p_delta IS NULL OR p_delta = 0
+     OR p_delta < -1000000 OR p_delta > 1000000 THEN
+    RAISE EXCEPTION 'Invalid variant stock adjustment' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT * INTO v_product
+    FROM public.products
+   WHERE id = p_product_id
+   FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Product not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  UPDATE public.products
+     SET variants = private.adjust_product_variant_stock(variants, p_variant_id, p_delta)
+   WHERE id = p_product_id
+   RETURNING * INTO v_product;
+
+  RETURN v_product;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_adjust_product_variant_stock(
+  p_product_id text,
+  p_variant_id text,
+  p_delta integer
+)
+RETURNS public.products
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT private.admin_adjust_product_variant_stock(p_product_id, p_variant_id, p_delta);
+$$;
+
+REVOKE ALL ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer) TO authenticated;
