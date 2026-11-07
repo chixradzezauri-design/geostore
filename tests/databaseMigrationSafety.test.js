@@ -8,6 +8,7 @@ const read = (relativePath) => readFileSync(new URL(relativePath, root), 'utf8')
 const orderAndVariantMigration = read('supabase/migrations/20261107234500_harden_order_json_and_variant_integrity.sql');
 const variantStockMigration = read('supabase/migrations/20261107230000_admin_adjust_product_variant_stock.sql');
 const adminDashboard = read('src/components/AdminDashboardPro.jsx');
+const orderOwnershipMigration = read('supabase/migrations/20261107200000_bind_order_ownership_to_auth_user_uuid.sql');
 
 test('order cancellation and reactivation validate JSON array type before array length', () => {
   const typeGuards = orderAndVariantMigration.match(
@@ -44,4 +45,18 @@ test('admin variant stock control calls the protected RPC and releases its reque
   assert.match(adminDashboard, /quickProductUpdateLocks\.current\.add\(lockKey\)/);
   assert.match(adminDashboard, /quickProductUpdateLocks\.current\.delete\(lockKey\)/);
   assert.match(adminDashboard, /const isSavedVariant = Boolean\(editingProductId/);
+});
+
+test('customer order history returns an allowlisted item payload without internal cost/vendor fields', () => {
+  const start = orderOwnershipMigration.indexOf('CREATE FUNCTION private.get_my_orders()');
+  const end = orderOwnershipMigration.indexOf('REVOKE ALL ON FUNCTION private.get_my_orders()', start);
+  assert.ok(start >= 0 && end > start);
+  const historyFunction = orderOwnershipMigration.slice(start, end);
+  assert.match(historyFunction, /WHERE o\.user_id = auth\.uid\(\)/);
+  for (const allowedField of ['id', 'name', 'price', 'quantity', 'selectedSize', 'selectedColor', 'customVariantId', 'customVariantName', 'addon_total', 'gift_wrap', 'vip_warranty', 'gift_message']) {
+    assert.ok(historyFunction.includes(`'${allowedField}'`), `missing allowed field: ${allowedField}`);
+  }
+  for (const privateField of ['purchase_cost', 'vendor', 'category']) {
+    assert.ok(!historyFunction.includes(`'${privateField}'`), `internal field leaked: ${privateField}`);
+  }
 });
