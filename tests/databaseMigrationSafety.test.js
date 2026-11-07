@@ -86,5 +86,8 @@ test('public checkout wrapper is rebound after private UUID-ownership function r
   const wrapperEnd = orderOwnershipMigration.indexOf('REVOKE ALL ON FUNCTION public.create_order_with_stock(jsonb)', wrapperAt);
   const publicWrapper = orderOwnershipMigration.slice(wrapperAt, wrapperEnd);
   assert.match(publicWrapper, /RETURN private\.create_order_with_stock\(p_order\);/);
+  assert.doesNotMatch(publicWrapper, /SECURITY DEFINER/);
+  assert.match(orderOwnershipMigration, /REVOKE ALL ON FUNCTION private\.create_order_with_stock_unchecked\(jsonb\) FROM PUBLIC, anon, authenticated, service_role/);
+  assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION private\.create_order_with_stock\(jsonb\) TO anon, authenticated, service_role/);
   assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION public\.create_order_with_stock\(jsonb\) TO anon, authenticated, service_role/);
 });
