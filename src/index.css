@@ -8106,6 +8106,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 
  
 /* GEOSTORE maintenance: compact, consistent catalog cards and responsive controls */
+@media(max-width:767px){
 .geostore-shell .geostore-storefront .gs-editorial-category-grid,
 .geostore-shell .geostore-storefront .gs-catalog-category-grid{
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
@@ -8212,6 +8213,8 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .geostore-storefront .gs-catalog-current-price{font-size:13px!important}
  .geostore-shell .geostore-storefront .gs-price-filter{grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr)!important}
  .geostore-shell .geostore-storefront .gs-price-filter>button{grid-column:1/-1;justify-self:end}
+}
+
 }
 
 /* GEOSTORE maintenance: product-detail modal responsive polish */
