@@ -2628,8 +2628,10 @@ export default function App() {
       if (canPersistFingerprint) {
         try {
           const pendingStoreKey = 'geostore.pendingCheckout.v3';
-          const currentStore = window.localStorage.getItem(pendingStoreKey) ||
-            window.localStorage.getItem('geostore.pendingCheckout.v2') || '';
+          const currentStore = mergePendingCheckoutStores(
+            window.localStorage.getItem(pendingStoreKey) || '',
+            window.localStorage.getItem('geostore.pendingCheckout.v2') || ''
+          );
           window.localStorage.setItem(
             pendingStoreKey,
             upsertPendingCheckoutEntry(currentStore, pendingEntry)
@@ -2749,8 +2751,10 @@ export default function App() {
     if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
     try {
       const pendingStoreKey = 'geostore.pendingCheckout.v3';
-      const currentStore = window.localStorage.getItem(pendingStoreKey) ||
-        window.localStorage.getItem('geostore.pendingCheckout.v2') || '';
+      const currentStore = mergePendingCheckoutStores(
+        window.localStorage.getItem(pendingStoreKey) || '',
+        window.localStorage.getItem('geostore.pendingCheckout.v2') || ''
+      );
       const nextStore = removePendingCheckoutEntry(currentStore, orderId);
       if (nextStore) window.localStorage.setItem(pendingStoreKey, nextStore);
       else window.localStorage.removeItem(pendingStoreKey);
