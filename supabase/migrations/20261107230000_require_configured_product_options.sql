@@ -1,7 +1,7 @@
 -- Require configured size/color options on the server, not only in the browser.
 -- Built from the currently deployed private.create_order_with_stock definition.
 -- Staged only: reconcile migration history before applying to the live database.
-CREATE OR REPLACE FUNCTION private.create_order_with_stock(p_order jsonb)
+CREATE OR REPLACE FUNCTION private.create_order_with_stock_unchecked(p_order jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
