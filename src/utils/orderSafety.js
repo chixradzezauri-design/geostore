@@ -95,7 +95,7 @@ export const createSecureOrderId = (cryptoApi) => {
  */
 export const isValidGELAmount = (value, { min = 0, max = 1000000000 } = {}) => {
   const raw = String(value ?? '').trim();
-  if (!/^\\d+(?:\\.\\d{1,2})?$/.test(raw)) return false;
+  if (!/^\d+(?:\.\d{1,2})?$/.test(raw)) return false;
   const amount = Number(raw);
   return Number.isFinite(amount) && amount >= min && amount <= max;
 };
