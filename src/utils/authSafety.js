@@ -5,3 +5,8 @@ export const isAuthRestoreCurrent = ({ mounted, restoreVersion, currentVersion }
   Number.isInteger(currentVersion) &&
   restoreVersion === currentVersion
 );
+
+/** Prevents private checkout results from crossing authenticated identities. */
+export const isSameAuthOwner = (activeOwnerId, submittedOwnerId) => (
+  String(activeOwnerId ?? '') === String(submittedOwnerId ?? '')
+);
