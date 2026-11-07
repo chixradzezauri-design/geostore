@@ -21,6 +21,7 @@ import {
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
+  roundGEL,
   parseOrderDeliveryChargeGEL,
   resolveOrderDeliveryChargeGEL,
   validateOrderCreationResponse,
@@ -672,4 +673,13 @@ test('prefers v3 version of duplicate fingerprint while merging legacy store', (
   const current = upsertPendingCheckoutEntry('', currentEntry, 1_050);
   const merged = mergePendingCheckoutStores(current, legacy, 1_100);
   assert.deepEqual(parsePendingCheckoutEntries(merged, 1_100), [currentEntry]);
+});
+
+
+test('GEL values are rounded consistently to tetri', () => {
+  assert.equal(roundGEL(0.1 + 0.2), 0.3);
+  assert.equal(roundGEL(12.345), 12.35);
+  assert.equal(roundGEL(12.344), 12.34);
+  assert.equal(normalizeOrderTotal('12.345'), 12.35);
+  assert.equal(calculateOrderLineRevenueGEL({ price: 1.005, quantity: 3 }), 3.03);
 });
