@@ -23,7 +23,7 @@ test('catalogue card styles are isolated from the product detail information pan
   assert.match(storeView, /className="gs-catalog-product-grid/);
   assert.match(storeView, /className="gs-catalog-product-info/);
   assert.match(storeView, /className="gs-product-detail-info/);
-  assert.doesNotMatch(storeView, /\\bgs-product-(?:grid|card|media|title|price|action|card-action)(?![\\w-])/);
+  assert.doesNotMatch(storeView, /\bgs-product-(?:grid|card|media|title|price|action|card-action)(?![\w-])/);
   assert.match(css, /\.gs-product-detail-info\{display:flex!important;flex-direction:column!important;/);
 });
 
