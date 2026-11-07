@@ -57,21 +57,29 @@ begin
 
     for v_item in
       select item->>'id' as product_id,
+             nullif(trim(coalesce(item->>'customVariantId', item->>'custom_variant_id')), '') as custom_variant_id,
              sum((item->>'quantity')::integer)::integer as quantity
         from jsonb_array_elements(v_order.items) as e(item)
-       group by item->>'id'
-       order by item->>'id'
+       group by item->>'id',
+                nullif(trim(coalesce(item->>'customVariantId', item->>'custom_variant_id')), '')
+       order by item->>'id',
+                nullif(trim(coalesce(item->>'customVariantId', item->>'custom_variant_id')), '')
     loop
       if coalesce(trim(v_item.product_id), '') = ''
          or v_item.quantity is null
-         or v_item.quantity <= 0 then
+         or v_item.quantity <= 0
+         or v_item.quantity > 1000000 then
         raise exception 'შეკვეთის პროდუქტის ID ან რაოდენობა არასწორია.';
       end if;
-
-      update public.products
-         set stock = coalesce(stock, 0) + v_item.quantity
-       where id = v_item.product_id;
-
+      if v_item.custom_variant_id is not null then
+        update public.products
+           set variants = private.adjust_product_variant_stock(variants, v_item.custom_variant_id, v_item.quantity)
+         where id = v_item.product_id;
+      else
+        update public.products
+           set stock = coalesce(stock, 0) + v_item.quantity
+         where id = v_item.product_id;
+      end if;
       get diagnostics v_updated = row_count;
       if v_updated <> 1 then
         raise exception 'მარაგის აღდგენა ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id;
