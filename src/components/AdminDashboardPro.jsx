@@ -495,18 +495,69 @@ export default function AdminDashboardPro({
     return () => { active = false; };
   }, [adminLoggedIn, storefrontPublishBusy]);
 
-  const [activityLogs, setActivityLogs] = useState([
-    { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
-    { id: 'l2', action: 'სისტემის მონაცემები წარმატებით ჩაიტვირთა', time: new Date().toLocaleTimeString('ka-GE') }
-  ]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [activityLogsLoading, setActivityLogsLoading] = useState(false);
+  const [activityLogsError, setActivityLogsError] = useState('');
+
+  const fetchActivityLogs = async () => {
+    setActivityLogsLoading(true);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_limit: 100 })
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error('აქტივობების ისტორიის ფორმატი არასწორია.');
+      setActivityLogs(rows.map(log => ({
+        id: String(log.id),
+        action: log.action,
+        time: log.created_at ? new Date(log.created_at).toLocaleString('ka-GE') : ''
+      })));
+      setActivityLogsError('');
+    } catch (error) {
+      setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+    } finally {
+      setActivityLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      setActivityLogs([]);
+      setActivityLogsError('');
+      setActivityLogsLoading(false);
+      return;
+    }
+    fetchActivityLogs();
+  }, [adminLoggedIn]);
 
   const logActivity = (actionText) => {
-    const newLog = {
-      id: `log-${Date.now()}`,
-      action: actionText,
-      time: new Date().toLocaleTimeString('ka-GE') + ' (' + new Date().toLocaleDateString('ka-GE') + ')'
-    };
-    setActivityLogs(prev => [newLog, ...(prev || [])]);
+    const action = String(actionText || '').trim().slice(0, 500);
+    if (!action) return;
+
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
+      method: 'POST',
+      headers: getSupabaseHeaders(),
+      body: JSON.stringify({ p_action: action })
+    })
+      .then(async response => {
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        const saved = Array.isArray(rows) ? rows[0] : rows;
+        if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
+        setActivityLogs(prev => [{
+          id: String(saved.id),
+          action: saved.action,
+          time: saved.created_at ? new Date(saved.created_at).toLocaleString('ka-GE') : ''
+        }, ...(prev || [])].slice(0, 100));
+        setActivityLogsError('');
+      })
+      .catch(error => {
+        setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
+        console.error('GEOSTORE admin activity log write failed:', error);
+      });
   };
 
   const handleAddStaff = (e) => {
@@ -3528,10 +3579,15 @@ export default function AdminDashboardPro({
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
             </h3>
             <div className="space-y-3">
+              {activityLogsLoading && <p className="text-xs text-slate-400">აქტივობების ისტორია იტვირთება...</p>}
+              {activityLogsError && <p role="alert" className="text-xs text-amber-300 break-words">{activityLogsError}</p>}
+              {!activityLogsLoading && activityLogs.length === 0 && !activityLogsError && (
+                <p className="text-xs text-slate-400">შენახული აქტივობები ჯერ არ არის.</p>
+              )}
               {activityLogs.map(log => (
                 <div key={log.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
-                  <span className="font-bold text-slate-200">{log.action}</span>
-                  <span className="text-slate-500 text-[10px]">{log.time}</span>
+                  <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
+                  <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
               ))}
             </div>
