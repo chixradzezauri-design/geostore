@@ -927,7 +927,10 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
+    let requestInFlight = false;
     const loadOwnOrders = async () => {
+      if (!currentUser?.email || requestInFlight) return;
+      requestInFlight = true;
       if (!currentUser?.email) {
         setMyOrders([]);
         setMyOrdersError('');
@@ -955,7 +958,9 @@ export default function App() {
         setMyOrders(rows.map((o) => ({
           id: o.id,
           created_at: o.created_at || null,
-          date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : '',
+          date: o.created_at
+            ? new Date(o.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
+            : '',
           customerName: o.customer_name || '',
           user_email: currentUser.email,
           phone: o.phone || '',
@@ -976,6 +981,7 @@ export default function App() {
               : 'შეკვეთების ისტორია დროებით მიუწვდომელია. სცადეთ მოგვიანებით.');
         }
       } finally {
+        requestInFlight = false;
         if (active) setMyOrdersLoading(false);
       }
     };
