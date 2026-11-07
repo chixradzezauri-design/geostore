@@ -21,8 +21,10 @@ export const hasProductMutationLock = (locks, productId) => {
  * captured when the product editor was opened.
  */
 export const buildProductVersionFilter = (version) => {
-  if (typeof version !== 'string' || !version.trim()) return null;
-  const timestamp = Date.parse(version);
-  if (!Number.isFinite(timestamp)) return null;
-  return `updated_at=eq.${encodeURIComponent(version)}`;
+  if (!(typeof version === 'number' || typeof version === 'string')) return null;
+  const value = String(version).trim();
+  if (!/^\\d+$/.test(value)) return null;
+  const numeric = Number(value);
+  if (!Number.isSafeInteger(numeric) || numeric < 1) return null;
+  return `version=eq.${encodeURIComponent(value)}`;
 };
