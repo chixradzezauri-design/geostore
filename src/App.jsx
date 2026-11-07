@@ -29,7 +29,7 @@ import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReu
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot } from './utils/cartSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -478,10 +478,11 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [cart, setCart] = useState(() =>
-    sanitizeCartSnapshot(loadSafeStorage('geostore_cart', []))
+    sanitizeCartSnapshot(loadSafeStorage('geostore_cart:guest', loadSafeStorage('geostore_cart', [])))
   );
 
   const cartRef = useRef(cart);
+  const activeCartOwnerRef = useRef({ initialized: false, userId: null });
   useEffect(() => {
     cartRef.current = cart;
   }, [cart]);
@@ -647,6 +648,26 @@ export default function App() {
       // არაფერია გასაკეთებელი.
     }
 
+    const activateCartOwner = (userId) => {
+      const nextOwnerId = userId || null;
+      const activeOwner = activeCartOwnerRef.current;
+      if (activeOwner.initialized && String(activeOwner.userId ?? '') === String(nextOwnerId ?? '')) return;
+      try {
+        const switched = switchCartStorageOwner({
+          storage: window.localStorage,
+          previousOwnerId: activeOwner.userId,
+          nextOwnerId,
+          currentCart: cartRef.current,
+          isInitial: !activeOwner.initialized
+        });
+        cartRef.current = switched.cart;
+        setCart(switched.cart);
+        activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
+      } catch (error) {
+        console.error('Cart owner switch failed:', error);
+      }
+    };
+
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -660,6 +681,7 @@ export default function App() {
 
       const authUser = session?.user || null;
       const authorizedAdmin = isAuthorizedAdmin(authUser);
+      activateCartOwner(authUser?.id || null);
       setCurrentUser(normalizeAuthUser(authUser));
       setAdminLoggedIn(authorizedAdmin);
       // Route verified administrator accounts directly to the dashboard.
@@ -683,6 +705,7 @@ export default function App() {
         if (mounted) {
           const authUser = data?.user || null;
           const authorizedAdmin = isAuthorizedAdmin(authUser);
+          activateCartOwner(authUser?.id || null);
           setCurrentUser(normalizeAuthUser(authUser));
           setAdminLoggedIn(authorizedAdmin);
           setActiveTab((current) =>
@@ -695,6 +718,7 @@ export default function App() {
         if (mounted) {
           // Fail closed if the server cannot verify the restored session.
           // Clear every privilege-related UI state, not only the profile.
+          activateCartOwner(null);
           setCurrentUser(null);
           setAdminLoggedIn(false);
           setActiveTab((current) => current === 'admin' ? 'store' : current);
@@ -1390,10 +1414,11 @@ export default function App() {
   }, [vendorsList]);
 
   useEffect(() => {
+    if (authLoading || !activeCartOwnerRef.current.initialized) return;
     try {
-      localStorage.setItem('geostore_cart', JSON.stringify(cart));
+      localStorage.setItem(getCartStorageKey(currentUser?.id || null), JSON.stringify(sanitizeCartSnapshot(cart)));
     } catch {}
-  }, [cart]);
+  }, [cart, currentUser?.id, authLoading]);
 
   useEffect(() => {
     try {
