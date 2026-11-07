@@ -3178,6 +3178,7 @@ export default function App() {
 
                   <button
                     onClick={() => {
+                      setQuickBuyProduct(null);
                       setCheckoutError('');
                       setIsCheckoutOpen(true);
                     }}
