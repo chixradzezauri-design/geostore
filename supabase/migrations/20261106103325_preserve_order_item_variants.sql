@@ -194,6 +194,8 @@ begin
               where nullif(trim(item->>'selected_size'), '') is not null
                  or nullif(trim(item->>'selected_color'), '') is not null
                  or nullif(trim(item->>'custom_variant_id'), '') is not null
+                 or coalesce((item->>'gift_wrap')::boolean, false)
+                 or coalesce((item->>'vip_warranty')::boolean, false)
             )
           )
         )
