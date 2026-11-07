@@ -181,7 +181,7 @@ test('isolates guest and authenticated carts across sign-in and sign-out', () =>
     storage,
     previousOwnerId: 'user-b',
     nextOwnerId: 'user-a',
-    currentCart: [{ ...product, quantity: 4 }]
+    currentCart: [{ ...product, quantity: 1 }]
   });
   assert.equal(backToA.cart[0].quantity, 3);
   const backToGuest = switchCartStorageOwner({
