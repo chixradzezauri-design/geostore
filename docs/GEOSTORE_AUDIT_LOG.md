@@ -300,3 +300,39 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Re-fetched the changed App/Admin/StoreView files and confirmed the banner validation runs in both draft and publish paths; settings validation runs in both paths; normalized settings are passed into the draft snapshot; banners are passed into and rendered by StoreView; version reads are gated by admin state; and restore loads only into the draft editor.
 - Read-only live database checks only. No production data, schema, policies, Storage objects, or migration history changed.
 - No local compile, automated tests, browser interaction test, Vercel build, or deployment was run. These must be part of the final consolidated verification stage.
+
+
+## Storefront publish atomicity and version-history security review — 2026-11-07
+
+### Verified live findings
+
+- The current frontend still publishes in two HTTP requests: first an upsert to `storefront_config`, then an insert to `storefront_versions`. The UI reports the partial-success case honestly, but the database does not guarantee that a published config always has a matching history record.
+- The primary administrator is consistently identified by immutable Auth UID `1060de3d-d28a-45f8-9a64-5e0368cffc4b` plus trusted `app_metadata.role = 'admin'`. Do not replace this with email-only checks or user-editable `user_metadata`.
+- Live RLS policies on both storefront tables use this UID and trusted app_metadata role.
+- `storefront_versions` currently grants the authenticated role SELECT, INSERT, UPDATE, and DELETE, with RLS limiting all four to the primary admin. The frontend UI only needs SELECT and INSERT. This means the history is admin-only but not append-only at the database layer.
+- `storefront_config` currently grants authenticated SELECT, INSERT, UPDATE, and DELETE under primary-admin policies. Draft save still needs authenticated INSERT/UPDATE. A publish RPC should own the published snapshot + version write; draft-save behavior must remain intact.
+- `storefront_versions` schema: UUID id, config_key text, snapshot JSONB, optional version_label, optional created_by UUID, created_at timestamp.
+- `storefront_config` schema: config_key text, draft_config JSONB, published_config JSONB nullable, is_published boolean, draft_updated_at timestamp, published_at nullable timestamp, updated_by nullable UUID.
+- Live migration history ends at `20261106110051`; no storefront transaction function exists.
+
+### Correct target design
+
+- Add one database transaction function that validates the snapshot shape, checks both `auth.uid()` against the immutable primary-admin UID and `auth.jwt()->'app_metadata'->>'role' = 'admin'`, then upserts the draft/published config and inserts the version row in the same PostgreSQL transaction. Set `created_by` and `updated_by` from `auth.uid()`, never from client input.
+- Keep the privileged implementation in the non-exposed `private` schema with `SECURITY DEFINER`, an empty `search_path`, and fully schema-qualified table/function references. Expose only a narrowly granted authenticated RPC wrapper (or otherwise use the project's established private-RPC pattern); revoke execution from PUBLIC and anon.
+- Make `storefront_versions` append-only for browser clients: revoke authenticated UPDATE and DELETE table grants and remove those policies; keep authenticated SELECT. INSERT should be performed only by the transaction function, not direct browser REST.
+- Do not remove draft-save capability or weaken existing RLS. Preserve the public read of published config.
+- After the migration, verify both positive and negative authorization cases, verify a forced failure rolls back both writes, run Supabase security/performance advisors, and test the frontend RPC path before any deploy.
+
+### Why this change was not applied in this stage
+
+- The active execution environment has neither a Supabase CLI binary nor a checked-out local repository. The Supabase skill explicitly requires creating a new migration with `supabase migration new` before adding a migration; it also requires CLI help/version discovery and local migration-list verification.
+- No migration filename was fabricated, no direct production DDL was executed, and no existing production data/policies/migrations were modified.
+- This is an environment/workflow blocker, not a code fix. The SQL migration and frontend RPC switch must be completed together when a verified CLI/local checkout is available; changing only the frontend would break publishing, while applying untracked production DDL would leave the repository unreproducible.
+
+### Verification
+
+- Re-read live schema columns, RLS policies, and grants separately for both storefront tables.
+- Re-read the frontend publish implementation and verified the two-request consistency gap remains.
+- Rechecked live migration history.
+- Consulted current Supabase Database Functions and RLS documentation and the 2026 changelog. The current CLI v3 behavior is local-by-default and confirms hosted changes; no relevant database-function breaking change was found.
+- No production database changes, GitHub source-code changes, build, automated tests, browser test, or deployment were performed in this stage.
