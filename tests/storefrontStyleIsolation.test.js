@@ -127,3 +127,16 @@ test('customer-facing pages share one centralized premium design-token palette',
   assert.match(css, /\.gs-product-compare-card\{[\s\S]*?background:var\(--gs-surface\)!important;/);
   assert.match(css, /\.gs-wardrobe-summary,[\s\S]*?background:var\(--gs-surface\)!important;/);
 });
+
+test('mobile floating assistance controls collapse to a non-obstructive stacked icon dock', () => {
+  const dockMarker = 'GEOSTORE — compact floating assistance controls for small screens';
+  const dockStart = css.lastIndexOf(dockMarker);
+  assert.ok(dockStart >= 0);
+  const dockStyles = css.slice(dockStart);
+  assert.match(dockStyles, /@media\s*\(max-width:\s*640px\)/);
+  assert.match(dockStyles, /\.gs-floating-ai[\s\S]*?bottom:\s*calc\(72px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(dockStyles, /\.gs-floating-support[\s\S]*?bottom:\s*calc\(12px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(dockStyles, /\.gs-floating-action-copy,[\s\S]*?display:\s*none!important;/);
+  assert.match(dockStyles, /\.gs-floating-action-arrow[\s\S]*?display:\s*none!important;/);
+  assert.match(dockStyles, /width:\s*48px!important;[\s\S]*?height:\s*48px!important;[\s\S]*?border-radius:\s*50%!important;/);
+});
