@@ -34,7 +34,7 @@ export default function StoreView({
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
 
-  const [sortBy, setSortBy] = useState('default');
+  const [sortBy, setSortBy] = useState('price-asc');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
