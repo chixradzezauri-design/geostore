@@ -30,7 +30,7 @@ import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutIte
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock } from './utils/cartSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 
@@ -490,12 +490,16 @@ export default function App() {
   }, [cart]);
 
   const [wishlist, setWishlist] = useState(() =>
-    loadSafeStorage('geostore_wishlist', [])
+    sanitizeProductCollection(loadSafeStorage('geostore_wishlist:guest', loadSafeStorage('geostore_wishlist', [])), 100)
   );
-
+  const wishlistRef = useRef(wishlist);
   const [comparisonList, setComparisonList] = useState(() =>
-    loadSafeStorage('geostore_comparison', [])
+    sanitizeProductCollection(loadSafeStorage('geostore_comparison:guest', loadSafeStorage('geostore_comparison', [])), 4)
   );
+  const comparisonListRef = useRef(comparisonList);
+
+  useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
+  useEffect(() => { comparisonListRef.current = comparisonList; }, [comparisonList]);
 
   const [promoInput, setPromoInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -674,12 +678,39 @@ export default function App() {
         });
         cartRef.current = switched.cart;
         setCart(switched.cart);
+
+        const switchedWishlist = switchUserScopedCollectionOwner({
+          storage: window.localStorage, baseKey: 'geostore_wishlist',
+          previousOwnerId: activeOwner.userId, nextOwnerId,
+          currentItems: wishlistRef.current, isInitial: !activeOwner.initialized, maxItems: 100
+        });
+        wishlistRef.current = switchedWishlist.items;
+        setWishlist(switchedWishlist.items);
+
+        const switchedComparison = switchUserScopedCollectionOwner({
+          storage: window.localStorage, baseKey: 'geostore_comparison',
+          previousOwnerId: activeOwner.userId, nextOwnerId,
+          currentItems: comparisonListRef.current, isInitial: !activeOwner.initialized, maxItems: 4
+        });
+        comparisonListRef.current = switchedComparison.items;
+        setComparisonList(switchedComparison.items);
+
+        // Personal checkout details must not carry over to another account.
+        if (activeOwner.initialized && String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
+          setCheckoutForm({ name: '', phone: '', email: '', address: '' });
+          setAppliedCoupon(null);
+          setPromoInput('');
+        }
         activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
       } catch (error) {
         // Fail closed: never persist the outgoing owner's cart under a new account.
         console.error('Cart owner switch failed:', error);
         cartRef.current = [];
         setCart([]);
+        wishlistRef.current = [];
+        setWishlist([]);
+        comparisonListRef.current = [];
+        setComparisonList([]);
         activeCartOwnerRef.current = { initialized: false, userId: null };
       }
     };
@@ -1470,22 +1501,26 @@ export default function App() {
   }, [cart, currentUser?.id, authLoading]);
 
   useEffect(() => {
+    const activeOwner = activeCartOwnerRef.current;
+    if (!canPersistCartForOwner({ authLoading, activeOwner, currentUserId: currentUser?.id })) return;
     try {
       localStorage.setItem(
-        'geostore_wishlist',
-        JSON.stringify(wishlist)
+        getUserScopedCollectionStorageKey('geostore_wishlist', activeOwner.userId),
+        JSON.stringify(sanitizeProductCollection(wishlist, 100))
       );
     } catch {}
-  }, [wishlist]);
+  }, [wishlist, currentUser?.id, authLoading]);
 
   useEffect(() => {
+    const activeOwner = activeCartOwnerRef.current;
+    if (!canPersistCartForOwner({ authLoading, activeOwner, currentUserId: currentUser?.id })) return;
     try {
       localStorage.setItem(
-        'geostore_comparison',
-        JSON.stringify(comparisonList)
+        getUserScopedCollectionStorageKey('geostore_comparison', activeOwner.userId),
+        JSON.stringify(sanitizeProductCollection(comparisonList, 4))
       );
     } catch {}
-  }, [comparisonList]);
+  }, [comparisonList, currentUser?.id, authLoading]);
 
   useEffect(() => {
     try {
@@ -2032,6 +2067,11 @@ export default function App() {
       setCurrentUser(null);
       setAdminLoggedIn(false);
       setOrders([]);
+      setMyOrders([]);
+      setCheckoutForm({ name: '', phone: '', email: '', address: '' });
+      setAuthForm({ name: '', phone: '', email: '', password: '' });
+      setAppliedCoupon(null);
+      setPromoInput('');
       setActiveTab('store');
 
       showToast(currentLang === 'en' ? 'Signed out successfully.' : currentLang === 'ru' ? 'Вы успешно вышли из аккаунта.' : 'ანგარიშიდან წარმატებით გამოხვედით.');

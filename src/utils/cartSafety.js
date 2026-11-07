@@ -236,6 +236,50 @@ export const canPersistCartForOwner = ({ authLoading, activeOwner, currentUserId
  * Resolve quantity-edit stock only from the current catalogue record.
  * Persisted cart stock is a display snapshot and must never authorize an increase.
  */
+
+/** User-scoped local collections (wishlist/comparison) never cross account boundaries. */
+export const sanitizeProductCollection = (value, maxItems = 100) => {
+  if (!Array.isArray(value)) return [];
+  const limit = Number.isSafeInteger(maxItems) ? Math.max(0, Math.min(100, maxItems)) : 100;
+  const seen = new Set();
+  return value.slice(0, limit).filter((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+    const id = String(item.id ?? '').trim();
+    if (!id || id.length > 160 || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+};
+
+export const getUserScopedCollectionStorageKey = (baseKey, userId) => (
+  `${String(baseKey)}:${userId ? `user:${encodeURIComponent(String(userId))}` : 'guest'}`
+);
+
+/** Migrate old global lists to guest storage and isolate each account's lists. */
+export const switchUserScopedCollectionOwner = ({
+  storage, baseKey, legacyKey = baseKey, previousOwnerId = null,
+  nextOwnerId = null, currentItems = [], isInitial = false, maxItems = 100
+}) => {
+  if (!storage || !baseKey) throw new Error('Collection storage is unavailable.');
+  const nextKey = getUserScopedCollectionStorageKey(baseKey, nextOwnerId);
+  const guestKey = getUserScopedCollectionStorageKey(baseKey, null);
+  if (isInitial) {
+    const legacyValue = storage.getItem(legacyKey);
+    if (legacyValue && !storage.getItem(guestKey)) storage.setItem(guestKey, legacyValue);
+  } else if (String(previousOwnerId ?? '') !== String(nextOwnerId ?? '')) {
+    const previousKey = getUserScopedCollectionStorageKey(baseKey, previousOwnerId);
+    storage.setItem(previousKey, JSON.stringify(sanitizeProductCollection(currentItems, maxItems)));
+  }
+  let nextItems = [];
+  const saved = storage.getItem(nextKey);
+  if (saved) {
+    try { nextItems = sanitizeProductCollection(JSON.parse(saved), maxItems); }
+    catch { nextItems = []; }
+  }
+  storage.setItem(nextKey, JSON.stringify(nextItems));
+  return { items: nextItems, storageKey: nextKey };
+};
+
 export const getCurrentCartItemStock = (product, item) => {
   if (!product || !item?.id || String(product.id) !== String(item.id)) return 0;
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, getCurrentCartItemStock } from '../src/utils/cartSafety.js';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from '../src/utils/cartSafety.js';
 
 const product = {
   id: 'p-1',
@@ -308,4 +308,56 @@ test('quantity edits fail closed when a selected custom variant is missing or ma
   assert.equal(getCurrentCartItemStock(malformed, line), 0);
   assert.equal(getCurrentCartItemStock(valid, line), 3);
   assert.equal(getCurrentCartItemStock({ ...product, variants: [{ id: 'v-small', stock: 3 }] }, { ...line, customVariantId: null }), 0);
+});
+
+
+test('isolates wishlist and comparison collections between guest and signed-in accounts', () => {
+  const values = new Map([
+    ['geostore_wishlist', JSON.stringify([{ id: 'legacy-wish', name: 'Legacy wish' }])],
+    ['geostore_comparison', JSON.stringify([{ id: 'legacy-compare', name: 'Legacy compare' }])]
+  ]);
+  const storage = {
+    getItem: key => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, String(value))
+  };
+  const guestWishlist = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', nextOwnerId: null, isInitial: true
+  });
+  const guestComparison = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_comparison', nextOwnerId: null, isInitial: true, maxItems: 4
+  });
+  assert.equal(guestWishlist.items[0].id, 'legacy-wish');
+  assert.equal(guestComparison.items[0].id, 'legacy-compare');
+
+  const userA = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: null,
+    nextOwnerId: 'user-a', currentItems: guestWishlist.items
+  });
+  assert.deepEqual(userA.items, []);
+  const userB = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: 'user-a',
+    nextOwnerId: 'user-b', currentItems: [{ id: 'user-a-wish', name: 'A only' }]
+  });
+  assert.deepEqual(userB.items, []);
+  const backToA = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: 'user-b',
+    nextOwnerId: 'user-a', currentItems: [{ id: 'user-b-wish', name: 'B only' }]
+  });
+  assert.equal(backToA.items[0].id, 'user-a-wish');
+  const backToGuest = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: 'user-a',
+    nextOwnerId: null, currentItems: [{ id: 'updated-a-wish', name: 'A update' }]
+  });
+  assert.equal(backToGuest.items[0].id, 'legacy-wish');
+  assert.equal(JSON.parse(values.get('geostore_wishlist:user:user-a'))[0].id, 'updated-a-wish');
+  assert.equal(JSON.parse(values.get('geostore_wishlist:user:user-b'))[0].id, 'user-b-wish');
+});
+
+test('scoped product collections discard malformed and duplicate entries and enforce limits', () => {
+  assert.deepEqual(sanitizeProductCollection([
+    null, 'invalid', { id: '' }, { id: 'p1' }, { id: 'p1', name: 'duplicate' },
+    { id: 'p2' }, { id: 'p3' }
+  ], 2), [{ id: 'p1' }, { id: 'p2' }]);
+  assert.equal(getUserScopedCollectionStorageKey('geostore_wishlist', null), 'geostore_wishlist:guest');
+  assert.equal(getUserScopedCollectionStorageKey('geostore_wishlist', 'user/a'), 'geostore_wishlist:user:user%2Fa');
 });
