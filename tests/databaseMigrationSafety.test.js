@@ -9,6 +9,7 @@ const orderAndVariantMigration = read('supabase/migrations/20261107234500_harden
 const variantIntegrationMigration = read('supabase/migrations/20261107170000_integrate_custom_product_variants.sql');
 const variantStockMigration = read('supabase/migrations/20261107230000_admin_adjust_product_variant_stock.sql');
 const adminDashboard = read('src/components/AdminDashboardPro.jsx');
+const storeViewSource = read('src/components/StoreView.jsx');
 const orderOwnershipMigration = read('supabase/migrations/20261107200000_bind_order_ownership_to_auth_user_uuid.sql');
 const orderNoteGrantMigration = read('supabase/migrations/20261107241000_revoke_direct_order_note_column_update.sql');
 
@@ -104,4 +105,9 @@ test('order ownership migration contains no orphaned duplicate checkout SQL tail
 test('direct admin-note column writes are revoked in favor of the validated RPC', () => {
   assert.match(orderNoteGrantMigration, /REVOKE UPDATE \(admin_note\) ON TABLE public\.orders FROM authenticated/);
   assert.match(adminDashboard, /\/rest\/v1\/rpc\/admin_save_order_note/);
+});
+
+test('storefront defaults to ascending available price and never sorts the parent product array in place', () => {
+  assert.match(storeViewSource, /const \[sortBy, setSortBy\] = useState\('price-asc'\)/);
+  assert.match(storeViewSource, /let result = \[\.\.\.activeProducts\]/);
 });
