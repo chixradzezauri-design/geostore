@@ -69,7 +69,16 @@ const STOREFRONT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedAssets) => {
   const value = String(imageData || '').trim();
-  if (!value.startsWith('data:')) return value;
+  if (!value.startsWith('data:')) {
+    if (!value) return '';
+    try {
+      const parsedUrl = new URL(value, window.location.origin);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Unsupported image URL protocol');
+      return parsedUrl.href;
+    } catch {
+      throw new Error('კატეგორიის ან ბანერის ფოტოს ბმული არასწორია. გამოიყენეთ HTTP ან HTTPS მისამართი.');
+    }
+  }
 
   const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
   if (!match) throw new Error('კატეგორიის ან ბანერის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
