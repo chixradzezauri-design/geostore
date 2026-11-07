@@ -14,7 +14,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
-import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, resolveOrderDeliveryChargeGEL, roundGEL } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, resolveOrderDeliveryChargeGEL, roundGEL, deduplicateOrdersById } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
@@ -881,7 +881,8 @@ export default function AdminDashboardPro({
       return date >= from && date <= today;
     };
 
-    const periodOrders = (orders || []).filter(order => {
+    const uniqueOrders = deduplicateOrdersById(orders);
+    const periodOrders = uniqueOrders.filter(order => {
       const delivered = !isCancelled(order) && isDelivered(order);
       const reportingDate = delivered
         ? (order.status_changed_at || order.statusChangedAt || order.created_at || order.createdAt || order.date)
