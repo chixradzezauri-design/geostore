@@ -228,3 +228,12 @@ Static checks confirm unique migration version numbers and balanced function del
 - Storage object writes are not public: INSERT, UPDATE, and DELETE policies are scoped to `bucket_id='storefront-media'`, the exact primary admin Auth UUID, and `app_metadata.role='admin'`. UPDATE has both `USING` and `WITH CHECK`. No anon upload/update/delete policy exists.
 - The app uploads with `x-upsert: false`, so it does not rely on broader overwrite permissions. Product and storefront image cleanup also targets the same bucket.
 - No Storage policy change was required in this review. Public read is a deliberate storefront requirement; private admin writes remain restricted.
+
+
+### Product admin RPC contract review (2026-11-08)
+
+- Compared the staged optimistic-version migration's PostgREST RPC names and argument names against the current AdminDashboardPro call sites. The create call uses `admin_save_product(p_product)`; full edit uses `admin_update_product(p_product, p_expected_version)`; variant stock uses `admin_adjust_product_variant_stock(p_product_id, p_variant_id, p_delta, p_expected_version)`; and delete uses `admin_delete_product_if_version(p_product_id, p_expected_version)`. The payload keys and scalar types align with the staged SQL signatures.
+- The editor expects update RPC results as a one-row array, creation as either a single row or array, stock adjustment as a row/object, and delete as boolean. The staged SQL return types match these expectations: SETOF products for update, products for create/stock, and boolean for delete. The update and stock functions also return the trigger-updated revision fields.
+- Quick inline product edits still use REST PATCH with both product ID and expected-version filters. The staged BEFORE UPDATE trigger increments the revision on every update, and the editor requires exactly one returned row. This is compatible with the existing column-level product write policy; the versioned RPCs cover full editor updates, variant stock changes, and deletes.
+- Static review did not find an RPC-name/argument/return-shape mismatch in these product mutation paths. This is not PostgreSQL execution: no Supabase test branch was created (previously declined due to hourly cost), and the migration remains unapplied. A coordinated migration is still required before the storefront requests `updated_at/version` or the admin uses the versioned endpoints.
+- No live products, orders, or schema were modified; no Vercel build/deploy was started.
