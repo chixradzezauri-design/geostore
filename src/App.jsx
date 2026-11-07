@@ -664,7 +664,11 @@ export default function App() {
         setCart(switched.cart);
         activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
       } catch (error) {
+        // Fail closed: never persist the outgoing owner's cart under a new account.
         console.error('Cart owner switch failed:', error);
+        cartRef.current = [];
+        setCart([]);
+        activeCartOwnerRef.current = { initialized: false, userId: null };
       }
     };
 
@@ -1414,9 +1418,17 @@ export default function App() {
   }, [vendorsList]);
 
   useEffect(() => {
-    if (authLoading || !activeCartOwnerRef.current.initialized) return;
+    const activeOwner = activeCartOwnerRef.current;
+    if (
+      authLoading ||
+      !activeOwner.initialized ||
+      String(activeOwner.userId ?? '') !== String(currentUser?.id ?? '')
+    ) return;
     try {
-      localStorage.setItem(getCartStorageKey(currentUser?.id || null), JSON.stringify(sanitizeCartSnapshot(cart)));
+      localStorage.setItem(
+        getCartStorageKey(activeOwner.userId),
+        JSON.stringify(sanitizeCartSnapshot(cart))
+      );
     } catch {}
   }, [cart, currentUser?.id, authLoading]);
 
