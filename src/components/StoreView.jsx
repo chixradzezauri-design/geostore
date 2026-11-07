@@ -1,7 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
-import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants } from '../utils/productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasValidProductOptionSelection } from '../utils/productVariants.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -316,6 +316,12 @@ export default function StoreView({
   const currentAvailableStock = selectedProduct && Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0
     ? (selectedCustomVariant?.stock ?? 0)
     : Number(selectedProduct?.stock ?? 0);
+  const canPurchaseSelectedProduct = Boolean(selectedProduct) && currentAvailableStock > 0 &&
+    hasValidProductOptionSelection(selectedProduct, {
+      size: selectedSize,
+      color: selectedColor,
+      customVariantId: selectedCustomVariantId
+    });
 
   const buildSelectedProductSnapshot = () => ({
     ...selectedProduct,
@@ -1047,7 +1053,7 @@ export default function StoreView({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
+                  disabled={!canPurchaseSelectedProduct}
                   onClick={() => {
                     const added = addToCart(buildSelectedProductSnapshot());
                     if (added !== false) setSelectedProduct(null);
@@ -1060,7 +1066,7 @@ export default function StoreView({
                 </button>
                 <button
                   type="button"
-                  disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
+                  disabled={!canPurchaseSelectedProduct}
                   onClick={() => {
                     onQuickBuy?.(buildSelectedProductSnapshot());
                     setSelectedProduct(null);
