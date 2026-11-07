@@ -9,8 +9,6 @@ ALTER TABLE public.products
 -- two new, non-sensitive revision fields required by storefront reconciliation.
 GRANT SELECT (updated_at, version) ON TABLE public.products TO anon, authenticated;
 
--- The storefront catalogue reads these non-sensitive revision tokens.
-GRANT SELECT (updated_at, version) ON public.products TO anon, authenticated;
 
 CREATE OR REPLACE FUNCTION private.touch_product_updated_at()
 RETURNS trigger
