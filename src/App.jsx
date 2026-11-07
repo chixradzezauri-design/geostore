@@ -867,48 +867,33 @@ export default function App() {
         banners: publishedBanners,
         siteSettings: validateStorefrontSiteSettings(siteSettings)
       };
-      const publishedAt = new Date().toISOString();
-      const configResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+      const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
+      const publishResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/publish_storefront_config`,
         {
           method: 'POST',
-          headers: {
-            ...(await getSupabaseHeaders({ authenticated: true })),
-            Prefer: 'resolution=merge-duplicates,return=representation'
-          },
+          headers: await getSupabaseHeaders({ authenticated: true }),
           body: JSON.stringify({
-            config_key: 'storefront',
-            draft_config: snapshot,
-            published_config: snapshot,
-            is_published: true,
-            updated_by: session.user.id,
-            draft_updated_at: publishedAt,
-            published_at: publishedAt
+            p_snapshot: snapshot,
+            p_version_label: versionLabel
           })
         }
       );
-      if (!configResponse.ok) throw new Error('საიტის კონფიგურაციის შენახვა ვერ მოხერხდა: ' + (await configResponse.text()));
+      if (!publishResponse.ok) {
+        throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + (await publishResponse.text()));
+      }
+      // The database transaction has committed both the published config
+      // and its immutable history row. Do not clean up referenced uploads
+      // if response parsing or a later UI update fails.
       storefrontPublished = true;
-
-      const versionResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_versions`, {
-        method: 'POST',
-        headers: await getSupabaseHeaders({ authenticated: true }),
-        body: JSON.stringify({
-          config_key: 'storefront',
-          snapshot,
-          version_label: `გამოქვეყნება ${new Date(publishedAt).toLocaleString('ka-GE')}`,
-          created_by: session.user.id
-        })
-      });
-      if (!versionResponse.ok) {
-        console.error('Storefront version snapshot save failed:', await versionResponse.text());
+      const publishResult = await publishResponse.json();
+      if (!publishResult?.version_id) {
+        throw new Error('საიტი გამოქვეყნდა, თუმცა ვერსიის დადასტურების პასუხი ვერ მივიღეთ. განაახლეთ ისტორიის სია.');
       }
 
       setCategoriesList(publishedCategories);
       setBannersList(publishedBanners);
-      alert(versionResponse.ok
-        ? 'საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიაც შეინახა.'
-        : 'საიტის ცვლილებები გამოქვეყნდა, თუმცა ვერსიის ისტორიის ჩანაწერი ვერ შეინახა.');
+      alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
     } catch (error) {
       if (!storefrontPublished && uploadedAssets.length) {
         await cleanupStorefrontUploads(uploadedAssets);
