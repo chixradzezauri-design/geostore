@@ -477,7 +477,8 @@ export default function AdminDashboardPro({
         body: JSON.stringify({
           p_product_id: String(editingProductId),
           p_variant_id: String(variantId),
-          p_delta: delta
+          p_delta: delta,
+          p_expected_version: Number(productEditVersion.current)
         })
       });
       if (!response.ok) throw new Error(await response.text());
@@ -1339,10 +1340,14 @@ export default function AdminDashboardPro({
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
     productDeleteLocks.current.add(productKey);
     const productToDelete = (products || []).find(product => String(product.id) === String(id));
+    const expectedVersion = productToDelete?.version;
+    if (!buildProductVersionFilter(expectedVersion)) {
+      return alert('პროდუქტის ვერსია არ არის განახლებული. ჯერ განაახლეთ პროდუქტების სია და შემდეგ წაშალეთ.');
+    }
     try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product', {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product_if_version', {
         method: 'POST', headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_product_id: String(id) })
+        body: JSON.stringify({ p_product_id: String(id), p_expected_version: Number(expectedVersion) })
       });
       if (!res.ok) throw new Error(await res.text());
       if (await res.json() !== true) throw new Error('პროდუქტი ვერ წაიშალა ან აღარ არსებობს.');
@@ -1378,9 +1383,11 @@ export default function AdminDashboardPro({
     if (quickProductUpdateLocks.current.has(updateKey)) return;
     quickProductUpdateLocks.current.add(updateKey);
     const currentValue = current[column] ?? current[field];
+    const versionFilter = buildProductVersionFilter(current.version);
+    if (!versionFilter) return alert('პროდუქტის ვერსია არ არის განახლებული. განაახლეთ სია და სცადეთ ხელახლა.');
     const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + compareFilter, {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + versionFilter + '&' + compareFilter, {
         method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify({ [column]: val })
       });
       if (!response.ok) throw new Error(await response.text());
