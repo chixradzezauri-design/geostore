@@ -854,6 +854,7 @@ export default function App() {
   };
 
   const [toastMessage, setToastMessage] = useState('');
+  const notificationsReadLock = useRef(false);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -862,8 +863,13 @@ export default function App() {
 
   const markAllNotificationsAsRead = async () => {
     const requestOwnerId = currentUser?.id;
-    if (!requestOwnerId || String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId) ||
+    if (notificationsReadLock.current || !requestOwnerId ||
+        String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId) ||
         notificationsLoading || !notifications.some((n) => !n.read)) return;
+
+    // A ref lock prevents rapid taps from sending duplicate write RPCs
+    // before React has a chance to render the updated notification state.
+    notificationsReadLock.current = true;
     try {
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/mark_my_order_notifications_read`,
@@ -884,6 +890,8 @@ export default function App() {
       if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
       console.error('Mark notifications read failed:', error);
       showToast(currentLang === 'en' ? 'Could not update notifications.' : currentLang === 'ru' ? 'Не удалось обновить уведомления.' : 'შეტყობინებების განახლება ვერ მოხერხდა.');
+    } finally {
+      notificationsReadLock.current = false;
     }
   };
 
