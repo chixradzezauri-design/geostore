@@ -622,12 +622,15 @@ export default function App() {
     const loadStorefrontDraft = async () => {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config`,
-          { headers: await getSupabaseHeaders({ authenticated: true }) }
+          `${SUPABASE_URL}/rest/v1/rpc/get_storefront_draft`,
+          {
+            method: 'POST',
+            headers: await getSupabaseHeaders({ authenticated: true }),
+            body: '{}'
+          }
         );
         if (!response.ok) throw new Error(await response.text());
-        const rows = await response.json();
-        const draft = rows?.[0]?.draft_config;
+        const draft = await response.json();
         if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
         if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
         if (Array.isArray(draft.banners)) setBannersList(draft.banners);
@@ -959,7 +962,7 @@ export default function App() {
           method: 'POST',
           headers: {
             ...(await getSupabaseHeaders({ authenticated: true })),
-            Prefer: 'resolution=merge-duplicates,return=representation'
+            Prefer: 'resolution=merge-duplicates,return=minimal'
           },
           body: JSON.stringify({
             config_key: 'storefront',
