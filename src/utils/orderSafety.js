@@ -28,6 +28,18 @@ export const normalizeOrderQuantity = (value) => {
 
 // Server order snapshots already store the final unit price (including add-ons).
 // Prefer that authoritative total and never add the same fees a second time.
+export const resolveOrderDeliveryChargeGEL = (order, orderTotal) => {
+  const total = normalizeOrderTotal(orderTotal);
+  const serverValue = order?.deliveryGEL ?? order?.delivery_gel ?? order?.checkout_result?.delivery_gel;
+  if (serverValue !== null && serverValue !== undefined && serverValue !== '') {
+    const parsed = Number(serverValue);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      return Math.min(total, Math.round((parsed + Number.EPSILON) * 100) / 100);
+    }
+  }
+  return parseOrderDeliveryChargeGEL(order?.address, total);
+};
+
 export const calculateOrderLineRevenueGEL = (item) => {
   const rawPrice = Number(item?.price ?? item?.priceGEL ?? item?.base_price);
   const unitPrice = Number.isFinite(rawPrice) ? Math.max(0, rawPrice) : 0;
