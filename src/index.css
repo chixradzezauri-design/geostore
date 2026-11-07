@@ -10673,3 +10673,41 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-analytics-card>p:nth-child(2){font-size:22px!important}
 }
 @media(max-width:380px){.geostore-shell .admin-dashboard-pro .admin-analytics-kpis{grid-template-columns:minmax(0,1fr)!important}}
+
+
+/* Neo Edition — product editor and inventory refinement */
+.geostore-shell .admin-dashboard-pro .admin-products-panel{display:flex!important;flex-direction:column!important;gap:16px!important;min-width:0!important}
+.geostore-shell .admin-dashboard-pro .admin-products-panel>div{min-width:0!important;padding:clamp(14px,2.4vw,24px)!important;border:1px solid #dedbd5!important;border-radius:8px!important;background:#f7f5f1!important;color:#25272b!important;box-shadow:0 6px 22px rgba(25,27,31,.045)!important}
+.geostore-shell .admin-dashboard-pro .admin-products-panel h3,.geostore-shell .admin-dashboard-pro .admin-products-panel h4{color:#25272b!important;line-height:1.5!important}
+.geostore-shell .admin-dashboard-pro .admin-products-panel h3{font-size:14px!important}
+.geostore-shell .admin-dashboard-pro .admin-products-panel h4{font-size:12px!important}
+.geostore-shell .admin-dashboard-pro .admin-products-panel label{display:block!important;margin-bottom:6px!important;color:#6f737a!important;font-size:10px!important;font-weight:750!important;line-height:1.6!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form{display:flex!important;flex-direction:column!important;gap:14px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form>div{min-width:0!important;padding:14px!important;border:1px solid #e4e0da!important;border-radius:6px!important;background:#fff!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form input:not([type=file]),.geostore-shell .admin-dashboard-pro .admin-product-form select,.geostore-shell .admin-dashboard-pro .admin-product-form textarea{width:100%!important;min-width:0!important;min-height:43px!important;padding:10px 12px!important;border:1px solid #dedbd5!important;border-radius:4px!important;background:#fbfaf8!important;color:#25272b!important;font-size:11px!important;line-height:1.5!important;box-shadow:none!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form input:focus,.geostore-shell .admin-dashboard-pro .admin-product-form select:focus,.geostore-shell .admin-dashboard-pro .admin-product-form textarea:focus{border-color:#345cff!important;outline:2px solid rgba(52,92,255,.12)!important;outline-offset:1px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-attributes,.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-variants-editor,.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-gallery{border-color:#e4e0da!important;background:#f3f0eb!important;box-shadow:none!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-attributes h4,.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-variants-editor h4{color:#30333a!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-variants-editor p,.geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-gallery label{color:#777a81!important;font-size:10px!important;line-height:1.65!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form input[type=file]{display:block!important;width:100%!important;max-width:100%!important;padding:10px!important;border:1px dashed #d7d2ca!important;border-radius:5px!important;background:#fff!important;color:#737780!important;font-size:10px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form button{min-height:42px!important;padding:10px 13px!important;border-radius:4px!important;font-size:10px!important;line-height:1.5!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form button[type=submit]{min-height:48px!important;background:#25272b!important;color:#fff!important;box-shadow:none!important}
+.geostore-shell .admin-dashboard-pro .admin-product-form button[type=submit]:hover{background:#345cff!important}
+.geostore-shell .admin-dashboard-pro .admin-product-inventory-title{color:#25272b!important;font-size:14px!important;line-height:1.5!important}
+.geostore-shell .admin-dashboard-pro .admin-product-search input{min-height:42px!important;padding:10px 12px 10px 38px!important;border:1px solid #dedbd5!important;border-radius:5px!important;background:#fff!important;color:#25272b!important;font-size:11px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-search svg{color:#777a81!important}
+.geostore-shell .admin-dashboard-pro .admin-products-list{gap:9px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-row{display:flex!important;align-items:center!important;gap:14px!important;min-width:0!important;padding:13px!important;border:1px solid #e3dfd9!important;border-radius:6px!important;background:#fff!important;box-shadow:none!important}
+.geostore-shell .admin-dashboard-pro .admin-product-identity{min-width:0!important;flex:1 1 220px!important;gap:11px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-identity img,.geostore-shell .admin-dashboard-pro .admin-product-identity>div{width:58px!important;height:58px!important;flex:0 0 58px!important;padding:0!important;border:1px solid #e4e0da!important;border-radius:4px!important;background:#f3f0eb!important}
+.geostore-shell .admin-dashboard-pro .admin-product-identity h4{color:#25272b!important;font-size:11px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+.geostore-shell .admin-dashboard-pro .admin-product-identity p{color:#777a81!important;font-size:9px!important;line-height:1.6!important;overflow-wrap:anywhere!important}
+.geostore-shell .admin-dashboard-pro .admin-product-controls{min-width:0!important;gap:8px!important}
+.geostore-shell .admin-dashboard-pro .admin-product-controls input{min-height:37px!important;width:76px!important;padding:7px!important;border:1px solid #dedbd5!important;border-radius:4px!important;background:#fbfaf8!important;color:#25272b!important;font-size:10px!important}
+@media(max-width:760px){
+ .geostore-shell .admin-dashboard-pro .admin-products-panel>div{padding:13px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-form>div{padding:11px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-row{align-items:stretch!important;flex-direction:column!important;gap:11px!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-identity{flex:0 1 auto!important}
+ .geostore-shell .admin-dashboard-pro .admin-product-controls{width:100%!important;justify-content:flex-start!important;flex-wrap:wrap!important}
+}
