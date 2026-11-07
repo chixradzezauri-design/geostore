@@ -231,6 +231,7 @@ export default function AdminDashboardPro({
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
+  const orderStatusUpdateLocks = useRef(new Set());
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
   const ORDERS_PER_PAGE = 5;
@@ -2033,9 +2034,17 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    const existingOrder = (orders || []).find(order => String(order.id) === String(orderId));
-    const currentStatus = normalizeOrderStatus(existingOrder?.status);
+    const orderKey = String(orderId ?? '');
+    if (!orderKey || orderStatusUpdateLocks.current.has(orderKey)) return;
+
+    const existingOrder = (orders || []).find(order => String(order.id) === orderKey);
+    if (!existingOrder) {
+      alert('შეკვეთა სიაში აღარ არის. განაახლეთ შეკვეთების სია და სცადეთ თავიდან.');
+      return;
+    }
+    const currentStatus = normalizeOrderStatus(existingOrder.status);
     const nextStatus = normalizeOrderStatus(newStatus);
+    if (!nextStatus || currentStatus === nextStatus) return;
 
     if (isDeliveredOrderStatus(currentStatus) && !isDeliveredOrderStatus(nextStatus)) {
       alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
@@ -2052,6 +2061,9 @@ export default function AdminDashboardPro({
       return;
     }
 
+    // Lock per order before awaiting the network: fast repeated taps must not
+    // race multiple status RPCs or duplicate stock-restoration side effects.
+    orderStatusUpdateLocks.current.add(orderKey);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_order_status`, {
         method: 'POST',
@@ -2069,16 +2081,16 @@ export default function AdminDashboardPro({
 
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(orderId) ? { ...order, status: newStatus } : order
+          String(order.id) === orderKey ? { ...order, status: newStatus } : order
         ));
       }
       setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(orderId) ? { ...prev, status: newStatus } : prev
+        prev && String(prev.id) === orderKey ? { ...prev, status: newStatus } : prev
       );
 
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
+        const updatedLocal = localOrders.map(o => String(o.id) === orderKey ? { ...o, status: newStatus } : o);
         localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
       } catch {}
 
@@ -2086,6 +2098,8 @@ export default function AdminDashboardPro({
       alert(`✅ შეკვეთის #${orderId} სტატუსი წარმატებით განახლდა: ${newStatus}`);
     } catch (error) {
       alert(error.message || 'ქსელის შეცდომა სტატუსის შეცვლისას');
+    } finally {
+      orderStatusUpdateLocks.current.delete(orderKey);
     }
   };
 
