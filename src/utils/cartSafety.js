@@ -42,3 +42,16 @@ export const addProductToCart = (cart, product, quantity = 1) => {
 
   return { valid: true, reason: null, cart: nextCart, remaining: remaining - requestedQuantity };
 };
+
+export const removeProductFromCart = (cart, product) => {
+  const currentCart = Array.isArray(cart) ? cart : [];
+  if (!product?.id) return currentCart;
+  const price = Number(product?.priceGEL ?? product?.price);
+  return currentCart.filter(item => !(
+    String(item?.id) === String(product.id) &&
+    String(item?.name ?? '') === String(product?.name ?? '') &&
+    (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
+    (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
+    Number(item?.priceGEL ?? item?.price) === price
+  ));
+};
