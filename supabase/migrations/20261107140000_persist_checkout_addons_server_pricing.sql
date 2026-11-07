@@ -367,6 +367,7 @@ BEGIN
         OR coalesce(length(item->>'selected_color'), 0) > 60
         OR (item ? 'gift_wrap' AND jsonb_typeof(item->'gift_wrap') IS DISTINCT FROM 'boolean')
         OR (item ? 'vip_warranty' AND jsonb_typeof(item->'vip_warranty') IS DISTINCT FROM 'boolean')
+        OR (item ? 'gift_message' AND jsonb_typeof(item->'gift_message') NOT IN ('string', 'null'))
         OR coalesce(length(item->>'gift_message'), 0) > 240
         OR (nullif(trim(item->>'gift_message'), '') IS NOT NULL AND item->'gift_wrap' IS DISTINCT FROM 'true'::jsonb)
   ) THEN

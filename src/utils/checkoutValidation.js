@@ -44,6 +44,20 @@ export const validateCheckoutItems = (items) => {
       return { valid: false, reason: 'variant' };
     }
 
+    const giftWrap = item?.gift_wrap ?? false;
+    const vipWarranty = item?.vip_warranty ?? false;
+    const rawGiftMessage = item?.gift_message;
+    const giftMessage = rawGiftMessage == null ? '' : rawGiftMessage;
+    if (
+      typeof giftWrap !== 'boolean' ||
+      typeof vipWarranty !== 'boolean' ||
+      typeof giftMessage !== 'string' ||
+      giftMessage.length > 240 ||
+      (giftMessage.trim().length > 0 && !giftWrap)
+    ) {
+      return { valid: false, reason: 'addons' };
+    }
+
     const nextTotal = (totalsByProduct.get(id) || 0) + quantity;
     if (nextTotal > 100) return { valid: false, reason: 'quantity' };
     totalsByProduct.set(id, nextTotal);

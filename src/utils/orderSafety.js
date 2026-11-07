@@ -22,14 +22,23 @@ export const groupCheckoutItems = (items) => {
   (Array.isArray(items) ? items : []).forEach((item) => {
     const selectedSize = item?.selected_size || null;
     const selectedColor = item?.selected_color || null;
-    const key = JSON.stringify([String(item?.id), selectedSize, selectedColor]);
+    const giftWrap = item?.gift_wrap === true;
+    const vipWarranty = item?.vip_warranty === true;
+    const giftMessage = giftWrap ? String(item?.gift_message ?? '').trim().slice(0, 240) : '';
+    const hasCustomization = giftWrap || vipWarranty || giftMessage.length > 0;
+    const key = JSON.stringify([String(item?.id), selectedSize, selectedColor, giftWrap, vipWarranty, giftMessage]);
     const current = groupedItems.get(key) || {
       id: String(item?.id),
       selected_size: selectedSize,
       selected_color: selectedColor,
       quantity: 0
     };
-
+    // Preserve the old fingerprint shape for ordinary orders.
+    if (hasCustomization) {
+      current.gift_wrap = giftWrap;
+      current.vip_warranty = vipWarranty;
+      current.gift_message = giftMessage || null;
+    }
     current.quantity += Number(item?.quantity) || 0;
     groupedItems.set(key, current);
   });

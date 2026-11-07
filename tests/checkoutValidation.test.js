@@ -70,6 +70,21 @@ test('rejects excessively long selected variants', () => {
   ]), { valid: false, reason: 'variant' });
 });
 
+test('validates structured gift wrap and VIP warranty options', () => {
+  assert.deepEqual(validateCheckoutItems([{
+    id: 'p1', quantity: 1, gift_wrap: true, vip_warranty: true, gift_message: 'Happy birthday'
+  }]), { valid: true });
+  assert.deepEqual(validateCheckoutItems([{
+    id: 'p1', quantity: 1, gift_wrap: false, gift_message: 'not allowed'
+  }]), { valid: false, reason: 'addons' });
+  assert.deepEqual(validateCheckoutItems([{
+    id: 'p1', quantity: 1, gift_wrap: 'true'
+  }]), { valid: false, reason: 'addons' });
+  assert.deepEqual(validateCheckoutItems([{
+    id: 'p1', quantity: 1, gift_wrap: true, gift_message: 'x'.repeat(241)
+  }]), { valid: false, reason: 'addons' });
+});
+
 test('translates known checkout errors and safely falls back for unknown errors', () => {
   assert.equal(
     getCheckoutErrorMessage('ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.', 'en'),

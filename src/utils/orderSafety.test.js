@@ -21,6 +21,25 @@ test('groups identical product and option combinations', () => {
   );
 });
 
+test('includes paid add-ons in checkout fingerprints while keeping plain-order shape stable', () => {
+  const grouped = groupCheckoutItems([
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1 },
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 2, gift_wrap: true, gift_message: 'Happy birthday', vip_warranty: true },
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1, gift_wrap: true, gift_message: 'Happy birthday', vip_warranty: true },
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1, vip_warranty: true }
+  ]);
+  assert.equal(grouped.length, 3);
+  const plain = grouped.find(item => item.gift_wrap === undefined && item.vip_warranty === undefined);
+  const wrapped = grouped.find(item => item.gift_wrap === true);
+  const vipOnly = grouped.find(item => item.vip_warranty === true && item.gift_wrap === false);
+  assert.deepEqual(plain, { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1 });
+  assert.equal(wrapped.quantity, 3);
+  assert.equal(wrapped.gift_message, 'Happy birthday');
+  assert.equal(wrapped.vip_warranty, true);
+  assert.equal(vipOnly.quantity, 1);
+  assert.equal(vipOnly.gift_message, null);
+});
+
 test('keeps different sizes and colors as separate order lines', () => {
   assert.equal(
     groupCheckoutItems([
