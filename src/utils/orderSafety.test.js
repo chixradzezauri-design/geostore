@@ -6,6 +6,7 @@ import {
   isValidGELAmount,
   calculateCheckoutTotals,
   calculateOrderLineRevenueGEL,
+  normalizeOrderQuantity,
   reconcileCartWithCatalog,
   classifyCartReconciliationChanges,
   createSecureOrderId,
@@ -107,6 +108,13 @@ test('uses the final server-priced unit amount without double-counting paid add-
   }), 100);
   assert.equal(calculateOrderLineRevenueGEL({ price: -5, quantity: 2 }), 0);
   assert.equal(calculateOrderLineRevenueGEL({ price: 'invalid', quantity: 0 }), 0);
+  assert.equal(calculateOrderLineRevenueGEL({ price: 25, quantity: 0 }), 0);
+  assert.equal(calculateOrderLineRevenueGEL({ price: 25, quantity: -2 }), 0);
+  assert.equal(calculateOrderLineRevenueGEL({ price: 25, quantity: 1.5 }), 0);
+  assert.equal(calculateOrderLineRevenueGEL({ price: 25 }), 25);
+  assert.equal(normalizeOrderQuantity('3'), 3);
+  assert.equal(normalizeOrderQuantity('0'), 0);
+  assert.equal(normalizeOrderQuantity('1.5'), 0);
 });
 
 test('groups identical product and option combinations', () => {
