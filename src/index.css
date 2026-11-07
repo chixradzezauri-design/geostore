@@ -8598,3 +8598,74 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-fashion-store .geostore-storefront .gs-catalog-product-card,
  .geostore-fashion-store .geostore-storefront .gs-catalog-product-image{transition:none!important}
 }
+
+/* GEOSTORE — compact floating assistance controls for small screens */
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-ai,
+  .geostore-fashion-store .gs-floating-support {
+    right: max(12px, env(safe-area-inset-right)) !important;
+    width: 48px !important;
+    max-width: 48px !important;
+  }
+  .geostore-fashion-store .gs-floating-ai {
+    bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+  }
+  .geostore-fashion-store .gs-floating-support {
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+  .geostore-fashion-store .gs-floating-action {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    place-items: center !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 5px 18px rgba(28,22,17,.18) !important;
+  }
+  .geostore-fashion-store .gs-floating-action-copy,
+  .geostore-fashion-store .gs-floating-action-arrow {
+    display: none !important;
+  }
+  .geostore-fashion-store .gs-floating-action-icon {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    flex: 0 0 22px !important;
+    border-radius: 50% !important;
+  }
+  .geostore-fashion-store .gs-floating-action-icon > svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+  .geostore-fashion-store .gs-floating-sparkle {
+    width: 10px !important;
+    height: 10px !important;
+  }
+  .geostore-fashion-store .gs-support-online-dot {
+    position: absolute !important;
+    top: 1px !important;
+    right: 1px !important;
+    width: 10px !important;
+    height: 10px !important;
+    border: 2px solid #fffdfa !important;
+    box-sizing: content-box !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-panel {
+    right: 0 !important;
+    bottom: calc(100% + 12px) !important;
+    width: min(360px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+@media (max-width: 360px) {
+  .geostore-fashion-store .gs-floating-ai,
+  .geostore-fashion-store .gs-floating-support {
+    right: max(10px, env(safe-area-inset-right)) !important;
+  }
+}
