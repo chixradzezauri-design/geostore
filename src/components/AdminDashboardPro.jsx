@@ -1839,12 +1839,16 @@ export default function AdminDashboardPro({
         return;
       }
     }
+    if ((Array.isArray(bannersList) ? bannersList.length : 0) >= 20) {
+      alert('ერთდროულად მაქსიმუმ 20 აქტიური ბანერის შენახვა შეიძლება.');
+      return;
+    }
     const newB = {
-      id: `b-${Date.now()}`,
-      ...bannerForm,
+      id: `b-${window.crypto?.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)}`,
       title,
       subtitle,
-      image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
+      image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200',
+      link: String(bannerForm.link || '').trim()
     };
     if (typeof setBannersList === 'function') {
       setBannersList(prev => [...(prev || []), newB]);
