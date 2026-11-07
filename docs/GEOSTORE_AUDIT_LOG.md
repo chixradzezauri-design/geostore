@@ -755,3 +755,11 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - A post-rollback read-only check confirmed the new private/public RPCs and validator trigger do not persist. The migration ledger remained unchanged; no live data or stock was modified.
 - GitHub refetches confirmed saved file contents. The new Node test was added but the full Node test suite was not run. No production build, browser QA, Vercel build, deployment, or live migration was run.
 - Do not deploy the admin stock-adjustment UI before applying 20261107170000 and then 20261107230000 after migration-history reconciliation.
+
+
+### Idempotent checkout replay ownership hardening — 2026-11-07
+- Further review found that the new UUID ownership migration also needed to bind idempotent checkout replays. The inner checkout function can return an existing order snapshot before an INSERT trigger runs; checking only the email would not enforce the new immutable UUID ownership model.
+- Added a private wrapper around the existing checkout implementation. It validates the returned order ID against `orders.user_id` and `auth.uid()` before allowing either a new-order result or replay result to leave the RPC.
+- The public validation wrapper continues to call the same private function name, so its existing request-size, phone, item-count and payload validation contract is retained.
+- Direct EXECUTE on the renamed unchecked implementation is revoked from `PUBLIC`, `anon`, and `authenticated`; only the owner-checking private wrapper is callable by the public RPC wrapper.
+- The revised ownership migration passed a full PostgreSQL DDL dry run inside an explicit transaction ending in ROLLBACK. After rollback, the live database still has no `user_id` / `recipient_user_id` columns, no renamed private function, and migration history remains unchanged at `20261107160152`.
