@@ -204,3 +204,8 @@ All four pending migrations (20261107170000, 20261107200000, 20261107230000, 202
 - Variant stock RPC increment, oversell rejection, stale-editor stock preservation, duplicate ID/name rejection, cancellation restore-once, and protected reactivation/re-deduction all passed.
 
 The transaction was rolled back. Post-rollback checks confirmed no temporary product/order rows, RPCs, validator trigger, or orders.user_id column remained. The live migration ledger and production data were unchanged. Node regression tests were updated but not run; no staging database migration, production migration, browser QA, build, or deployment was performed.
+
+
+## Supabase advisor follow-up — 2026-11-07
+
+Latest advisor snapshot: no health findings; one security WARN remains for Auth leaked-password protection being disabled. The owner must enable it manually in Supabase Auth settings. The RLS-enabled/no-policy INFO findings are limited to private rate-limit/activity tables and public.order_notifications, which has no direct client SELECT privilege and is consumed through owner-filtered RPCs. No public SECURITY DEFINER functions or private SECURITY DEFINER functions with a non-empty search_path were found. Four currently-unused indexes were left intact because the project has very low traffic and their future use is not yet measurable. No live settings, indexes, grants, policies or rows were changed.
