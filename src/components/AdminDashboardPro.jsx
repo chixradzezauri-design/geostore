@@ -671,8 +671,8 @@ export default function AdminDashboardPro({
         if (hasSnapshotCost) itemCost = Number(snapshotCost);
         else if (isEstimatedCost) {
           itemCost = Number(currentCost);
-          estimatedCogsItems += 1;
-        } else unknownCogsItems += 1;
+          estimatedCogsItems += quantity;
+        } else unknownCogsItems += quantity;
         if (itemCost !== null) totalCogs += itemCost * quantity;
 
         const productKey = String(item.id || item.product_id || item.name || 'unknown-product');
@@ -2346,7 +2346,7 @@ export default function AdminDashboardPro({
                   </div>
                 ))}
                 {financialOverview.unknownCogsItems > 0 && <p className="text-amber-300 text-[10px]">თვითღირებულება უცნობია {financialOverview.unknownCogsItems} შეკვეთის/პროდუქტის ჩანაწერზე.</p>}
-                {financialOverview.estimatedCogsItems > 0 && <p className="text-amber-300 text-[10px]">ძველი შეკვეთების {financialOverview.estimatedCogsItems} პოზიციაზე გამოყენებულია პროდუქტის მიმდინარე თვითღირებულება და არა გაყიდვის დღის ისტორიული ფასი.</p>}
+                {financialOverview.estimatedCogsItems > 0 && <p className="text-amber-300 text-[10px]">ძველი შეკვეთების {financialOverview.estimatedCogsItems} ერთეულზე გამოყენებულია პროდუქტის მიმდინარე თვითღირებულება და არა გაყიდვის დღის ისტორიული ფასი.</p>}
               </div>
               <div className="bg-slate-900/80 border border-rose-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-rose-500/20 pb-3">
