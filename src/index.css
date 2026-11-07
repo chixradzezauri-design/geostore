@@ -8701,6 +8701,9 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   max-width:100%!important;
 }
 @media(max-width:767px){
+  .geostore-fashion-store .gs-product-modal-body input:not([type="checkbox"]):not([type="file"]),
+  .geostore-fashion-store .gs-product-modal-body select,
+  .geostore-fashion-store .gs-product-modal-body textarea,
   .geostore-fashion-store .gs-product-option-card--gift textarea,
   .geostore-fashion-store .gs-product-review-field,
   .geostore-fashion-store .gs-product-review-rating-select,
