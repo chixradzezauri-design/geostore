@@ -867,7 +867,17 @@ export default function AdminDashboardPro({
       today.setHours(23, 59, 59, 999);
       const from = new Date();
       from.setHours(0, 0, 0, 0);
-      from.setDate(from.getDate() - days + 1);
+      if (analyticsPeriod === '365') {
+        // "Last 12 months" is a calendar interval, not a fixed 365-day span.
+        // Clamp leap-day/month-end dates to the last valid day of the target month.
+        const originalDay = from.getDate();
+        from.setDate(1);
+        from.setFullYear(from.getFullYear() - 1);
+        const lastTargetDay = new Date(from.getFullYear(), from.getMonth() + 1, 0).getDate();
+        from.setDate(Math.min(originalDay, lastTargetDay));
+      } else {
+        from.setDate(from.getDate() - days + 1);
+      }
       return date >= from && date <= today;
     };
 
