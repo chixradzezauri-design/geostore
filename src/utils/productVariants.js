@@ -16,7 +16,8 @@ export const getAvailableProductColors = (product) => normalizeOptions(
 
 export const getCustomProductVariants = (product) => {
   const raw = Array.isArray(product?.variants) ? product.variants : [];
-  return raw.flatMap((variant) => {
+  if (raw.length > 50) return [];
+  const normalized = raw.flatMap((variant) => {
     if (!variant || typeof variant !== 'object' || Array.isArray(variant)) return [];
     const id = String(variant.id ?? '').trim();
     const name = String(variant.name ?? '').trim();
@@ -24,13 +25,22 @@ export const getCustomProductVariants = (product) => {
     const rawStock = variant.stock;
     const priceGEL = Number(rawPrice);
     const stock = Number(rawStock);
-    if (!id || id.length > 120 || !name || name.length > 80 ||
+    if (!id || id.length > 80 || !name || name.length > 80 ||
         rawPrice == null || String(rawPrice).trim() === '' ||
         rawStock == null || String(rawStock).trim() === '' ||
         !Number.isFinite(priceGEL) || priceGEL < 0 ||
         !Number.isSafeInteger(stock) || stock < 0) return [];
     return [{ ...variant, id, name, priceGEL, stock }];
   });
+  const ids = new Set();
+  const names = new Set();
+  for (const variant of normalized) {
+    const normalizedName = variant.name.toLocaleLowerCase();
+    if (ids.has(variant.id) || names.has(normalizedName)) return [];
+    ids.add(variant.id);
+    names.add(normalizedName);
+  }
+  return normalized;
 };
 export const getAvailableCustomProductVariants = (product) => getCustomProductVariants(product).filter(v => v.stock > 0);
 export const getCustomProductVariant = (product, variantId) => getCustomProductVariants(product).find(v => v.id === String(variantId ?? '').trim()) || null;
