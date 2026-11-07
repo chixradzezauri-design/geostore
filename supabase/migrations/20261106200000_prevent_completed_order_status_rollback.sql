@@ -50,9 +50,11 @@ begin
      and v_order.status <> 'გაუქმებული'
      and v_order.stock_deducted_at is not null
      and v_order.stock_restored_at is null then
-    if jsonb_typeof(coalesce(v_order.items, '[]'::jsonb)) <> 'array'
-       or jsonb_array_length(coalesce(v_order.items, '[]'::jsonb)) = 0 then
-      raise exception 'შეკვეთის პროდუქტების სია ცარიელია ან არასწორია.';
+    if jsonb_typeof(coalesce(v_order.items, '[]'::jsonb)) is distinct from 'array' then
+      raise exception 'შეკვეთის პროდუქტების სია არასწორია.';
+    end if;
+    if jsonb_array_length(coalesce(v_order.items, '[]'::jsonb)) = 0 then
+      raise exception 'შეკვეთის პროდუქტების სია ცარიელია.';
     end if;
 
     for v_item in
