@@ -267,8 +267,13 @@ export const validateOrderCreationResponse = (serverResult, expectedOrderId) => 
   if (receivedId !== expectedId) return { valid: false, reason: 'order_id_mismatch' };
 
   const totals = ['subtotal_gel', 'discount_gel', 'delivery_gel', 'total_gel']
-    .map((field) => Number(serverResult?.[field]));
-  if (totals.some((value) => !Number.isFinite(value) || value < 0)) {
+    .map((field) => {
+      const value = serverResult?.[field];
+      return typeof value === 'number' && Number.isFinite(value) && value >= 0
+        ? value
+        : NaN;
+    });
+  if (totals.some((value) => !Number.isFinite(value))) {
     return { valid: false, reason: 'invalid_totals' };
   }
   const [subtotal, discount, delivery, total] = totals;
