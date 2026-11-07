@@ -549,9 +549,15 @@ export default function App() {
   const productsFetchLock = useRef(false);
   const productsFetchQueued = useRef(false);
   const productsAccessEpoch = useRef(0);
-  const adminAccessRef = useRef(adminLoggedIn);
-  if (adminAccessRef.current !== adminLoggedIn) {
-    adminAccessRef.current = adminLoggedIn;
+  // Scope privileged catalogue responses to the exact verified admin identity,
+  // not merely the boolean "admin logged in" state. Switching between admin
+  // accounts must invalidate requests started by the previous identity.
+  const adminAccessKey = adminLoggedIn
+    ? String(currentUser?.id || 'admin-identity-pending')
+    : 'no-admin-access';
+  const adminAccessRef = useRef(adminAccessKey);
+  if (adminAccessRef.current !== adminAccessKey) {
+    adminAccessRef.current = adminAccessKey;
     productsAccessEpoch.current += 1;
   }
   const [storefrontDraftBusy, setStorefrontDraftBusy] = useState(false);
