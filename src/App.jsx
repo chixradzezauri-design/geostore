@@ -1579,6 +1579,12 @@ export default function App() {
     return true;
   };
 
+  const removeFromCart = (item) => {
+    const nextCart = removeProductFromCart(cartRef.current, item);
+    cartRef.current = nextCart;
+    setCart(nextCart);
+  };
+
   const toggleWishlist = (product) => {
     setWishlist((prev) => {
       const exists = prev.some(
@@ -2653,16 +2659,7 @@ export default function App() {
                       </div>
 
                       <button
-                        onClick={() =>
-                          setCart((prev) =>
-                            prev.filter((c) => !(
-                              c.id === item.id &&
-                              c.name === item.name &&
-                              (c.selectedSize || null) === (item.selectedSize || null) &&
-                              (c.selectedColor || null) === (item.selectedColor || null)
-                            ))
-                          )
-                        }
+                        onClick={() => removeFromCart(item)}
                         aria-label={currentLang === 'en' ? `Remove ${item.name} from cart` : currentLang === 'ru' ? `Удалить ${item.name} из корзины` : `წაშალე ${item.name} კალათიდან`}
                         className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                       >
