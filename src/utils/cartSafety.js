@@ -83,3 +83,32 @@ export const updateProductCartQuantity = (cart, product, requestedQuantity) => {
   const nextCart = currentCart.map((item, index) => index === lineIndex ? { ...item, quantity } : item);
   return { valid: true, reason: null, cart: nextCart, remaining: Math.max(0, stock - otherQuantity - quantity) };
 };
+
+
+/**
+ * Validates the browser-persisted cart before it enters React state.
+ * Prices and stock are display snapshots only; checkout refreshes them
+ * from the server before creating an order.
+ */
+export const sanitizeCartSnapshot = (value) => {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 100).flatMap((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    const id = String(item.id ?? '').trim();
+    const name = String(item.name ?? '').trim();
+    const quantity = Number(item.quantity);
+    const price = Number(item.priceGEL ?? item.price);
+    if (!id || id.length > 160 || !name || name.length > 300) return [];
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) return [];
+    if (!Number.isFinite(price) || price < 0) return [];
+    const safeItem = { ...item, id, name, quantity, priceGEL: price };
+    if (item.stock !== undefined) {
+      const stock = Number(item.stock);
+      safeItem.stock = Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0;
+    }
+    for (const key of ['selectedSize', 'selectedColor']) {
+      safeItem[key] = item[key] == null ? null : (String(item[key]).trim().slice(0, 100) || null);
+    }
+    return [safeItem];
+  });
+};

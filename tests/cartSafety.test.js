@@ -111,3 +111,40 @@ test('rejects invalid cart quantity updates and preserves the original cart', ()
   assert.equal(updateProductCartQuantity(cart, cart[0], 1.5).reason, 'quantity');
   assert.equal(cart[0].quantity, 1);
 });
+
+
+test('sanitizes persisted cart snapshots and keeps valid product variants', () => {
+  const saved = [
+    { ...product, selectedSize: ' M ', selectedColor: ' Black ', quantity: '2', priceGEL: '120' },
+    null,
+    { ...product, id: '', quantity: 1 },
+    { ...product, quantity: 0 },
+    { ...product, quantity: 1.5 },
+    { ...product, quantity: 1, priceGEL: 'not-a-price' },
+    { ...product, quantity: 101 },
+    'not-an-item'
+  ];
+  const result = sanitizeCartSnapshot(saved);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].id, 'p-1');
+  assert.equal(result[0].quantity, 2);
+  assert.equal(result[0].priceGEL, 120);
+  assert.equal(result[0].selectedSize, 'M');
+  assert.equal(result[0].selectedColor, 'Black');
+});
+
+test('returns an empty cart for malformed snapshots and caps oversized snapshots', () => {
+  assert.deepEqual(sanitizeCartSnapshot({ items: [] }), []);
+  assert.deepEqual(sanitizeCartSnapshot(null), []);
+  const oversized = Array.from({ length: 105 }, (_, index) => ({
+    ...product,
+    id: `p-${index}`,
+    quantity: 1
+  }));
+  assert.equal(sanitizeCartSnapshot(oversized).length, 100);
+});
+
+test('normalizes invalid saved stock to zero without trusting it for checkout', () => {
+  const [item] = sanitizeCartSnapshot([{ ...product, stock: 'bad', quantity: 1 }]);
+  assert.equal(item.stock, 0);
+});

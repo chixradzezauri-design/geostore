@@ -29,7 +29,7 @@ import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReu
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { addProductToCart } from './utils/cartSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -478,7 +478,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [cart, setCart] = useState(() =>
-    loadSafeStorage('geostore_cart', [])
+    sanitizeCartSnapshot(loadSafeStorage('geostore_cart', []))
   );
 
   const cartRef = useRef(cart);
