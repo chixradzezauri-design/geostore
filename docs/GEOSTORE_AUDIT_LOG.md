@@ -874,3 +874,13 @@ The entire test transaction was rolled back. A post-rollback query confirmed tha
 - Read-only function catalog audit found zero SECURITY DEFINER functions in public and zero private SECURITY DEFINER functions without an empty search_path.
 - Column/table privilege checks confirmed anon and authenticated cannot SELECT products.purchase_cost; anon can read public product price; anon cannot SELECT orders; authenticated order SELECT is constrained by the primary-admin-only RLS policy; expenses are admin-only under RLS; order_notifications has no direct SELECT privilege.
 - No security setting, schema, index, row or permission was changed during this advisor/privilege audit.
+
+
+## Storefront price sorting and variant option accuracy — 2026-11-07
+
+- Storefront default sort is now price ascending, so the catalogue opens from the lowest price upward.
+- Custom-variant starting price now uses the cheapest in-stock variant when any are available; if all variants are out of stock, it falls back to the lowest configured price so the product can still display its price alongside its stock state.
+- Size and color normalization now falls back to raw Supabase snake_case/legacy fields when normalized frontend arrays are present but contain no usable values.
+- The storefront filtering/sorting pipeline already clones activeProducts before sorting; this was rechecked and a regression assertion was added to guard against future in-place mutation of App state.
+- Added utility tests for empty normalized size/color fallback, lowest in-stock variant pricing, and all-out-of-stock fallback. Added a source regression assertion for the storefront default sort and immutable list handling.
+- Node tests were not executed, and no browser QA/build/deploy was run.
