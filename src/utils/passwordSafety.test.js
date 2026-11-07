@@ -31,7 +31,7 @@ test('checks HIBP using only the five-character hash prefix', async () => {
     requestOptions = options;
     return {
       ok: true,
-      text: async () => 'A61E4C9B93F3F0682250B6CF8331B7EE68FD8:42\r\n'
+      text: async () => '1E4C9B93F3F0682250B6CF8331B7EE68FD8:42\r\n'
     };
   };
   const result = await checkPwnedPassword('password', { cryptoApi: webcrypto, fetchImpl });
