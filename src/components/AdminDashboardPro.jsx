@@ -472,6 +472,7 @@ export default function AdminDashboardPro({
       setStorefrontVersionsLoading(false);
       return () => { active = false; };
     }
+    if (storefrontPublishBusy) return () => { active = false; };
     const loadStorefrontVersions = async () => {
       setStorefrontVersionsLoading(true);
       setStorefrontVersionsError('');
@@ -492,7 +493,7 @@ export default function AdminDashboardPro({
     };
     loadStorefrontVersions();
     return () => { active = false; };
-  }, [adminLoggedIn]);
+  }, [adminLoggedIn, storefrontPublishBusy]);
 
   const [activityLogs, setActivityLogs] = useState([
     { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
