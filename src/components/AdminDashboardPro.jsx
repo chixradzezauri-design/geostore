@@ -1561,10 +1561,11 @@ export default function AdminDashboardPro({
         const updatePayload = { ...newProdPayload };
         delete updatePayload.id;
         delete updatePayload.stock;
+        const updateHeaders = await getSupabaseHeaders();
         productWriteState = 'unknown';
         const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
           method: 'PATCH',
-          headers: await getSupabaseHeaders(),
+          headers: updateHeaders,
           body: JSON.stringify(updatePayload)
         });
         if (!updateResponse.ok) {
@@ -1578,9 +1579,10 @@ export default function AdminDashboardPro({
         }
         savedProductRow = updatedRows[0];
       } else {
+        const createHeaders = await getSupabaseHeaders();
         productWriteState = 'unknown';
         const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
-          method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
+          method: 'POST', headers: createHeaders, body: JSON.stringify({ p_product: newProdPayload })
         });
         if (!createResponse.ok) {
           productWriteState = 'rejected';
