@@ -2723,6 +2723,17 @@ export default function App() {
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
+    // Publish the committed empty cart synchronously before releasing the
+    // cross-tab checkout lock, so a waiting tab cannot submit its stale copy.
+    try {
+      const completedOwner = activeCartOwnerRef.current;
+      if (canPersistCartForOwner({ authLoading, activeOwner: completedOwner, currentUserId: currentUser?.id })) {
+        window.localStorage.setItem(getCartStorageKey(completedOwner.userId), '[]');
+      }
+    } catch {
+      // The next tab still rechecks its cart snapshot; storage failures fail closed there.
+    }
+    cartRef.current = [];
     setCart([]);
     setAppliedCoupon(null);
 
