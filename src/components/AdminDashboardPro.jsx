@@ -317,7 +317,7 @@ export default function AdminDashboardPro({
           return {
             ...cat,
             id: cat.id || `cat-obj-${idx}`,
-            name: cat.name || 'კატეგორია',
+            name: String(cat.name || 'კატეგორია'),
             icon: cat.icon || 'Shirt',
             parentId: cat.parentId || null,
             image: catImg,
@@ -959,6 +959,7 @@ export default function AdminDashboardPro({
         }
         if (isEditing) setEditCatImage(result);
         else setNewCatImage(result);
+        input.value = '';
       };
       reader.onerror = () => {
         alert('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
