@@ -26,7 +26,9 @@ BEGIN
   END IF;
 
   IF NULLIF(trim(p_product_id), '') IS NULL
+     OR length(trim(p_product_id)) > 64
      OR NULLIF(trim(p_variant_id), '') IS NULL
+     OR length(trim(p_variant_id)) > 80
      OR p_delta IS NULL OR p_delta = 0
      OR p_delta < -1000000 OR p_delta > 1000000 THEN
     RAISE EXCEPTION 'Invalid variant stock adjustment' USING ERRCODE = '22023';
@@ -62,8 +64,8 @@ BEGIN
     FROM jsonb_array_elements(v_variants) AS e(item)
    WHERE item ->> 'id' = p_variant_id;
 
-  IF v_current_stock IS NULL THEN
-    RAISE EXCEPTION 'Variant stock is invalid' USING ERRCODE = '22023';
+  IF v_current_stock IS NULL OR v_current_stock > 1000000 THEN
+    RAISE EXCEPTION 'Variant stock is invalid or exceeds the allowed limit' USING ERRCODE = '22023';
   END IF;
 
   v_new_stock := v_current_stock + p_delta;
