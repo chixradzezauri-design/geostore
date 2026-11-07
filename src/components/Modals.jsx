@@ -681,10 +681,10 @@ export default function Modals({
                 {authMode === 'register' && (
                   <p className="text-[11px] leading-relaxed text-slate-400">
                     {currentLang === 'en'
-                      ? 'Use 12+ characters with uppercase and lowercase letters, a number and a symbol. Avoid common passwords.'
+                      ? 'Use 12+ mixed characters. GEOSTORE also checks known breached passwords without sending the password itself.'
                       : currentLang === 'ru'
-                        ? 'Используйте не менее 12 символов: заглавные и строчные буквы, цифру и символ. Не используйте распространённые пароли.'
-                        : 'გამოიყენეთ მინიმუმ 12 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. მოერიდეთ გავრცელებულ პაროლებს.'}
+                        ? 'Используйте не менее 12 символов разных типов. GEOSTORE также проверяет известные утечки, не отправляя сам пароль.'
+                        : 'გამოიყენეთ მინიმუმ 12 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. GEOSTORE ასევე ამოწმებს ცნობილ გაჟონვებში მოხვედრას ისე, რომ პაროლი არ იგზავნება.'}
                   </p>
                 )}
               </div>
