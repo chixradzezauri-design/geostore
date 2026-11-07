@@ -228,3 +228,7 @@ export const validateOrderCreationResponse = (serverResult, expectedOrderId) => 
   if (receivedId !== expectedId) return { valid: false, reason: 'order_id_mismatch' };
   return { valid: true, orderId: receivedId };
 };
+
+
+// Keep every field required by the pre-checkout cart reconciliation in one tested selection.
+export const CHECKOUT_CATALOG_SELECT = 'id,name,price_gel,stock,available_sizes,available_colors,variants';

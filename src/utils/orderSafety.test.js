@@ -9,7 +9,8 @@ import {
   isReusableCheckout,
   normalizeOrderItems,
   normalizeOrderTotal,
-  validateOrderCreationResponse
+  validateOrderCreationResponse,
+  CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
 
 test('groups identical product and option combinations', () => {
@@ -284,4 +285,11 @@ test('rejects missing, malformed, or mismatched checkout order IDs', () => {
     valid: false,
     reason: 'invalid_expected_id'
   });
+});
+
+
+test('checkout catalogue selection includes custom variants for live cart reconciliation', () => {
+  for (const field of ['id', 'name', 'price_gel', 'stock', 'available_sizes', 'available_colors', 'variants']) {
+    assert.ok(CHECKOUT_CATALOG_SELECT.split(',').includes(field), `missing ${field}`);
+  }
 });

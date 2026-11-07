@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -2211,7 +2211,7 @@ export default function App() {
       // customer-facing stale-cart guard; the SQL RPC still rechecks price
       // and stock under row locks and remains the source of truth.
       const catalogueResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/products?select=id,name,price_gel,stock,available_sizes,available_colors`,
+        `${SUPABASE_URL}/rest/v1/products?select=${CHECKOUT_CATALOG_SELECT}`,
         { headers: await getSupabaseHeaders() }
       );
       if (!catalogueResponse.ok) {
