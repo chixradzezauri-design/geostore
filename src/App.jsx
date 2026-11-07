@@ -536,6 +536,7 @@ export default function App() {
 
   const [orders, setOrders] = useState([]);
   const adminOrdersFetchLock = useRef(false);
+  const adminOrdersSessionActive = useRef(false);
   const [myOrders, setMyOrders] = useState([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(false);
   const [myOrdersError, setMyOrdersError] = useState('');
@@ -1085,7 +1086,7 @@ export default function App() {
 
   const fetchOrders = async () => {
     // Prevent overlapping 15-second refreshes from applying stale order snapshots.
-    if (!adminLoggedIn || adminOrdersFetchLock.current) return;
+    if (!adminOrdersSessionActive.current || adminOrdersFetchLock.current) return;
     adminOrdersFetchLock.current = true;
     try {
       const res = await fetch(
@@ -1100,7 +1101,7 @@ export default function App() {
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
       // Do not restore private admin data after logout while a request is pending.
-      if (!adminLoggedIn) return;
+      if (!adminOrdersSessionActive.current) return;
       setOrders(data.map((o) => {
         const items = normalizeOrderItems(o.items);
         return {
@@ -1328,15 +1329,18 @@ export default function App() {
     document.addEventListener('visibilitychange', refreshProductsWhenVisible);
 
     if (!adminLoggedIn) {
+      adminOrdersSessionActive.current = false;
       return () => document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     }
 
+    adminOrdersSessionActive.current = true;
     // Keep the existing admin order refresh cadence without repeatedly
     // downloading the full public catalogue.
     fetchOrders();
     const interval = setInterval(fetchOrders, 15000);
 
     return () => {
+      adminOrdersSessionActive.current = false;
       clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
