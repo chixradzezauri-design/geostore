@@ -64,7 +64,14 @@ const uploadProductImage = async (imageData, productId, index) => {
   const bytes = new Uint8Array(binary.length);
   for (let offset = 0; offset < binary.length; offset += 1) bytes[offset] = binary.charCodeAt(offset);
 
-  const path = `products/${encodeURIComponent(String(productId))}/${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}.${PRODUCT_IMAGE_TYPES[mimeType]}`;
+  if (!window.crypto?.getRandomValues) {
+    throw new Error('უსაფრთხო ფოტოს ატვირთვისთვის ბრაუზერის კრიპტოგრაფიული ფუნქცია მიუწვდომელია.');
+  }
+  const randomBytes = new Uint8Array(16);
+  window.crypto.getRandomValues(randomBytes);
+  const randomSuffix = Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  const safeProductId = encodeURIComponent(String(productId));
+  const path = `products/${safeProductId}/${Date.now()}-${index}-${randomSuffix}.${PRODUCT_IMAGE_TYPES[mimeType]}`;
   const headers = await getSupabaseHeaders();
   delete headers.Prefer;
   headers['Content-Type'] = mimeType;
