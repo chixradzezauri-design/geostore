@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseOrderTrackingMessage } from './orderTrackingMessage.js';
 
-const orderCode = \`ORD-\${'A1B2C3D4'.repeat(4)}\`;
+const orderCode = `ORD-${'A1B2C3D4'.repeat(4)}`;
 
 test('parses order code and international phone while masking the phone in chat text', () => {
-  const result = parseOrderTrackingMessage(\`Track \${orderCode} +995 555 123 456\`);
+  const result = parseOrderTrackingMessage(`Track ${orderCode} +995 555 123 456`);
   assert.equal(result.orderIntent, true);
   assert.equal(result.orderCode, orderCode);
   assert.equal(result.phone, '995555123456');
   assert.equal(result.phoneIsValid, true);
-  assert.equal(result.safeUserText, \`Track \${orderCode} •••••••••\`);
+  assert.equal(result.safeUserText, `Track ${orderCode} •••••••••`);
   assert.equal(result.safeUserText.includes('555 123 456'), false);
 });
 
