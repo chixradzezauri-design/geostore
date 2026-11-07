@@ -91,3 +91,11 @@ test('public checkout wrapper is rebound after private UUID-ownership function r
   assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION private\.create_order_with_stock\(jsonb\) TO anon, authenticated, service_role/);
   assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION public\.create_order_with_stock\(jsonb\) TO anon, authenticated, service_role/);
 });
+
+test('order ownership migration contains no orphaned duplicate checkout SQL tail', () => {
+  assert.equal((orderOwnershipMigration.match(/CREATE OR REPLACE FUNCTION private\\.get_my_order_notifications\\(\\)/g) || []).length, 1);
+  assert.equal((orderOwnershipMigration.match(/CREATE OR REPLACE FUNCTION private\\.mark_my_order_notifications_read\\(\\)/g) || []).length, 1);
+  assert.equal((orderOwnershipMigration.match(/CREATE OR REPLACE FUNCTION public\\.create_order_with_stock\\(p_order jsonb\\)/g) || []).length, 1);
+  assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION private\\.mark_my_order_notifications_read\\(\\) TO authenticated;\\s*$/);
+  assert.doesNotMatch(orderOwnershipMigration, /^\\s+THEN\\s*\\n\\s+RAISE EXCEPTION 'შეკვეთის იდენტიფიკატორი არასწორია\\.'/m);
+});
