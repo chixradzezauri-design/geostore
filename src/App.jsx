@@ -400,15 +400,24 @@ export default function App() {
 
   const t = translations[currentLang] || translations.ka;
 
-  const [siteSettings, setSiteSettings] = useState(() =>
-    loadSafeStorage('geostore_site_settings', {
-      storeName: 'GEOSTORE',
-      topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი',
-      heroTitle: 'მრავალვენდერიანი მარკეტფლეისი საუკეთესო შეთავაზებებით',
-      heroSubtitle:
-        'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
-    })
-  );
+  const [siteSettings, setSiteSettings] = useState(() => {
+    const saved = loadSafeStorage('geostore_site_settings', DEFAULT_SITE_SETTINGS);
+    const settings = {
+      ...DEFAULT_SITE_SETTINGS,
+      ...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {})
+    };
+    // Replace only the exact legacy technology-marketplace defaults; preserve user edits.
+    if (settings.topBarText === 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი') {
+      settings.topBarText = DEFAULT_SITE_SETTINGS.topBarText;
+    }
+    if (/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(settings.heroTitle || '')) {
+      settings.heroTitle = DEFAULT_SITE_SETTINGS.heroTitle;
+    }
+    if (/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(settings.heroSubtitle || '')) {
+      settings.heroSubtitle = DEFAULT_SITE_SETTINGS.heroSubtitle;
+    }
+    return settings;
+  });
 
   const [deliveryFees, setDeliveryFees] = useState(() =>
     loadSafeStorage('geostore_delivery_fees', {
