@@ -1341,12 +1341,12 @@ export default function AdminDashboardPro({
     if (!productKey || productDeleteLocks.current.has(productKey)) return;
     if (productSaveLock.current || isProductMutationBusy(productKey)) return alert('პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
-    productDeleteLocks.current.add(productKey);
     const productToDelete = (products || []).find(product => String(product.id) === String(id));
     const expectedVersion = productToDelete?.version;
     if (!buildProductVersionFilter(expectedVersion)) {
       return alert('პროდუქტის ვერსია არ არის განახლებული. ჯერ განაახლეთ პროდუქტების სია და შემდეგ წაშალეთ.');
     }
+    productDeleteLocks.current.add(productKey);
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product_if_version', {
         method: 'POST', headers: await getSupabaseHeaders(),
