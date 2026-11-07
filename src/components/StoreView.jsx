@@ -616,8 +616,8 @@ export default function StoreView({
             onChange={e => setSortBy(e.target.value)}
             className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
-            <option value="default">{storeText.defaultSort}</option>
             <option value="price-asc">{storeText.priceLow}</option>
+            <option value="default">{storeText.defaultSort}</option>
             <option value="price-desc">{storeText.priceHigh}</option>
             <option value="name-asc">{storeText.nameSort}</option>
           </select>
