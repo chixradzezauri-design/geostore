@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, buildCheckoutFingerprintPayload, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, mergePendingCheckoutStores, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, buildCheckoutFingerprintPayload, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, mergePendingCheckoutStores, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, classifyCartReconciliationChanges, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -2445,22 +2445,30 @@ export default function App() {
           };
         }));
         const changedNames = [...new Set(reconciliation.changes.map((change) => change.name).filter(Boolean))].slice(0, 3).join(', ');
-        const hasVariantChange = reconciliation.changes.some((change) =>
-          ['variant_size', 'variant_color', 'variant_size_missing', 'variant_color_missing',
-            'variant_custom_missing', 'variant_custom_unavailable'].includes(change.type) ||
-          (['price', 'stock'].includes(change.type) && Boolean(change.customVariantId))
-        );
+        const reconciliationIssue = classifyCartReconciliationChanges(reconciliation.changes);
         const message = currentLang === 'en'
-          ? hasVariantChange
-            ? `A selected size or color is no longer available for: ${changedNames}. Remove that item from your cart or choose an available option, then try again.`
-            : `The price or stock changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
+          ? reconciliationIssue === 'unavailable'
+            ? `A product or selected variant is no longer available or has invalid pricing: ${changedNames}. Remove it from your cart before trying again.`
+            : reconciliationIssue === 'options'
+              ? `A selected size or color is no longer available for: ${changedNames}. Choose an available option, then try again.`
+              : reconciliationIssue === 'stock'
+                ? `There is not enough stock for: ${changedNames}. Reduce the quantity and try again.`
+                : `The price changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
           : currentLang === 'ru'
-            ? hasVariantChange
-              ? `Выбранный размер или цвет больше недоступен для: ${changedNames}. Удалите товар из корзины или выберите доступный вариант, затем повторите заказ.`
-              : `Цена или наличие изменились для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
-            : hasVariantChange
-              ? `არჩეული ზომა ან ფერი აღარ არის ხელმისაწვდომი: ${changedNames}. წაშალეთ ეს ნივთი კალათიდან ან აირჩიეთ ხელმისაწვდომი ვარიანტი და სცადეთ თავიდან.`
-              : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
+            ? reconciliationIssue === 'unavailable'
+              ? `Товар или выбранный вариант больше недоступен либо имеет неверную цену: ${changedNames}. Удалите его из корзины и повторите попытку.`
+              : reconciliationIssue === 'options'
+                ? `Выбранный размер или цвет больше недоступен для: ${changedNames}. Выберите доступный вариант и повторите попытку.`
+                : reconciliationIssue === 'stock'
+                  ? `Недостаточно товара на складе: ${changedNames}. Уменьшите количество и повторите попытку.`
+                  : `Цена изменилась для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
+            : reconciliationIssue === 'unavailable'
+              ? `პროდუქტი ან არჩეული ვარიანტი აღარ არის ხელმისაწვდომი ან ფასი არასწორია: ${changedNames}. შეკვეთის გასაგრძელებლად წაშალეთ იგი კალათიდან.`
+              : reconciliationIssue === 'options'
+                ? `არჩეული ზომა ან ფერი აღარ არის ხელმისაწვდომი: ${changedNames}. აირჩიეთ ხელმისაწვდომი ვარიანტი და სცადეთ თავიდან.`
+                : reconciliationIssue === 'stock'
+                  ? `მარაგი საკმარისი არ არის: ${changedNames}. შეამცირეთ რაოდენობა და სცადეთ თავიდან.`
+                  : `შეიცვალა ფასი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
         setCheckoutError(message);
         showToast(message);
         setIsSubmittingOrder(false);
