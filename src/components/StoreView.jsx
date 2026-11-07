@@ -86,6 +86,7 @@ export default function StoreView({
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewImage, setNewReviewImage] = useState(null);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -212,63 +213,87 @@ export default function StoreView({
 
   const handleAddReview = async (e, productId) => {
     e.preventDefault();
-    if (!currentUser?.id || !reviewsReady || !newReviewComment.trim()) return;
+    if (isSubmittingReview || !currentUser?.id || !reviewsReady || !newReviewComment.trim()) return;
 
+    setIsSubmittingReview(true);
     let imagePath = null;
-    if (newReviewImage instanceof File) {
-      const extension = newReviewImage.type === 'image/png' ? 'png' : newReviewImage.type === 'image/webp' ? 'webp' : 'jpg';
-      const nonce = globalThis.crypto?.randomUUID?.() || Date.now().toString(36);
-      const fileName = currentUser.id + '/' + productId + '/' + nonce + '.' + extension;
-      const { error: uploadError } = await supabase.storage
-        .from('product-review-images')
-        .upload(fileName, newReviewImage, { contentType: newReviewImage.type, upsert: false });
-      if (uploadError) {
-        alert(uploadError.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
-        return;
+    const cleanupReviewImage = async () => {
+      if (!imagePath) return;
+      const uploadedPath = imagePath;
+      imagePath = null;
+      try {
+        const { error: cleanupError } = await supabase.storage
+          .from('product-review-images')
+          .remove([uploadedPath]);
+        if (cleanupError) console.error('Review image cleanup failed:', cleanupError);
+      } catch (cleanupError) {
+        console.error('Review image cleanup failed:', cleanupError);
       }
-      imagePath = fileName;
-    }
-
-    const { data, error } = await supabase.rpc('submit_product_review', {
-      p_product_id: String(productId),
-      p_rating: Math.min(5, Math.max(1, Number(newReviewRating) || 5)),
-      p_comment: newReviewComment.trim().slice(0, 1200),
-      p_image_path: imagePath
-    });
-
-    if (error) {
-      if (imagePath) await supabase.storage.from('product-review-images').remove([imagePath]);
-      alert(error.message || 'შეფასების გამოქვეყნება ვერ მოხერხდა.');
-      return;
-    }
-
-    const savedReview = Array.isArray(data) ? data[0] : data;
-    if (!savedReview?.id) {
-      if (imagePath) await supabase.storage.from('product-review-images').remove([imagePath]);
-      alert('შეფასება ვერ დადასტურდა. სცადეთ ხელახლა.');
-      return;
-    }
-    const reviewObj = {
-      id: savedReview.id,
-      author: savedReview.author_label || 'GEOSTORE customer',
-      comment: savedReview.comment,
-      rating: savedReview.rating,
-      image: savedReview.image_path
-        ? supabase.storage.from('product-review-images').getPublicUrl(savedReview.image_path).data.publicUrl
-        : null,
-      verifiedPurchase: savedReview.verified_purchase === true,
-      date: new Date(savedReview.created_at).toLocaleDateString(
-        currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka-GE'
-      )
     };
 
-    setAllReviews(prev => ({
-      ...prev,
-      [productId]: [reviewObj, ...(prev[productId] || [])]
-    }));
-    setNewReviewComment('');
-    setNewReviewRating(5);
-    setNewReviewImage(null);
+    try {
+      if (newReviewImage instanceof File) {
+        const extension = newReviewImage.type === 'image/png' ? 'png' : newReviewImage.type === 'image/webp' ? 'webp' : 'jpg';
+        const nonce = globalThis.crypto?.randomUUID?.() || Date.now().toString(36);
+        const fileName = currentUser.id + '/' + productId + '/' + nonce + '.' + extension;
+        const { error: uploadError } = await supabase.storage
+          .from('product-review-images')
+          .upload(fileName, newReviewImage, { contentType: newReviewImage.type, upsert: false });
+        if (uploadError) {
+          alert(uploadError.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+          return;
+        }
+        imagePath = fileName;
+      }
+
+      const { data, error } = await supabase.rpc('submit_product_review', {
+        p_product_id: String(productId),
+        p_rating: Math.min(5, Math.max(1, Number(newReviewRating) || 5)),
+        p_comment: newReviewComment.trim().slice(0, 1200),
+        p_image_path: imagePath
+      });
+
+      if (error) {
+        await cleanupReviewImage();
+        alert(error.message || 'შეფასების გამოქვეყნება ვერ მოხერხდა.');
+        return;
+      }
+
+      const savedReview = Array.isArray(data) ? data[0] : data;
+      if (!savedReview?.id) {
+        await cleanupReviewImage();
+        alert('შეფასება ვერ დადასტურდა. სცადეთ ხელახლა.');
+        return;
+      }
+
+      const reviewObj = {
+        id: savedReview.id,
+        author: savedReview.author_label || 'GEOSTORE customer',
+        comment: savedReview.comment,
+        rating: savedReview.rating,
+        image: savedReview.image_path
+          ? supabase.storage.from('product-review-images').getPublicUrl(savedReview.image_path).data.publicUrl
+          : null,
+        verifiedPurchase: savedReview.verified_purchase === true,
+        date: new Date(savedReview.created_at).toLocaleDateString(
+          currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka-GE'
+        )
+      };
+
+      setAllReviews(prev => ({
+        ...prev,
+        [productId]: [reviewObj, ...(prev[productId] || [])]
+      }));
+      setNewReviewComment('');
+      setNewReviewRating(5);
+      setNewReviewImage(null);
+    } catch (error) {
+      await cleanupReviewImage();
+      console.error('Product review submission failed:', error);
+      alert(error?.message || 'შეფასების გამოქვეყნება ვერ მოხერხდა. სცადეთ ხელახლა.');
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   const mainCategories = useMemo(() => {
@@ -1047,13 +1072,14 @@ export default function StoreView({
                       <MessageSquare className="w-4 h-4 text-amber-400" /> {storeText.reviews} ({(visibleReviews[selectedProduct.id] || []).length})
                     </h3>
 
-                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
+                    <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} aria-busy={isSubmittingReview} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
                       <span className="text-amber-300 font-bold block text-xs">{storeText.leaveReview}</span>
                       <div className="gs-product-review-rating flex gap-2 items-center">
                         <span className="text-slate-400">{storeText.rating}</span>
                         <select 
                           value={newReviewRating} 
-                          onChange={e => setNewReviewRating(Number(e.target.value))}
+                          disabled={isSubmittingReview}
+                          onChange={e => setNewReviewRating(Number(e.target.value))
                           className="gs-product-review-rating-select bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
                         >
                           <option value="5">⭐⭐⭐⭐⭐ (5)</option>
@@ -1072,6 +1098,7 @@ export default function StoreView({
                         placeholder={storeText.reviewPlaceholder} 
                         maxLength={1200}
                         value={visibleReviewComment} 
+                        disabled={isSubmittingReview}
                         onChange={e => setNewReviewComment(e.target.value)}
                         required
                         rows="2"
@@ -1081,13 +1108,13 @@ export default function StoreView({
                       <div className="gs-product-review-upload flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                         <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
-                          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleReviewImageChange} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp" disabled={isSubmittingReview} onChange={handleReviewImageChange} className="hidden" />
                         </label>
                         {visibleReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
 
-                      <button type="submit" disabled={!currentUser?.id || !reviewsReady || !newReviewComment.trim()} className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                        {storeText.publishReview}
+                      <button type="submit" disabled={!currentUser?.id || !reviewsReady || !newReviewComment.trim() || isSubmittingReview} className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        {isSubmittingReview ? (currentLang === 'en' ? 'Publishing…' : currentLang === 'ru' ? 'Публикация…' : 'ქვეყნდება…') : storeText.publishReview}
                       </button>
                     </form>
 
