@@ -2147,7 +2147,7 @@ export default function AdminDashboardPro({
       return;
     }
     logActivity('მზადდება საიტის პარამეტრების მონახაზის შენახვა');
-    await onSaveStorefrontDraft();
+    await onSaveStorefrontDraft(normalized);
   };
 
   const filteredUsers = (usersList || []).filter(u => 
