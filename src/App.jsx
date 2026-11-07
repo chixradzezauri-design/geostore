@@ -535,6 +535,7 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
 
   const [orders, setOrders] = useState([]);
+  const adminOrdersFetchLock = useRef(false);
   const [myOrders, setMyOrders] = useState([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(false);
   const [myOrdersError, setMyOrdersError] = useState('');
@@ -1083,45 +1084,50 @@ export default function App() {
   }, [currentUser?.email, currentLang]);
 
   const fetchOrders = async () => {
+    // Prevent overlapping 15-second refreshes from applying stale order snapshots.
+    if (!adminLoggedIn || adminOrdersFetchLock.current) return;
+    adminOrdersFetchLock.current = true;
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
         { headers: await getSupabaseHeaders({ authenticated: true }) }
       );
-
-      if (res.ok) {
-        const data = await res.json();
-
-        setOrders(
-          data.map((o) => {
-            const items = normalizeOrderItems(o.items);
-            return ({
-            id: o.id,
-            created_at: o.created_at || null,
-            date: o.created_at
-              ? new Date(o.created_at).toLocaleDateString('ka-GE')
-              : 'დღეს',
-            time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
-            customerName: o.customer_name,
-            user_email: o.customer_email || o.user_email || '',
-            phone: o.phone,
-            address: o.address,
-            totalGEL: Number(o.total_gel) || 0,
-            status: o.status || 'ახალი',
-            adminNote: o.admin_note || '',
-            items,
-            stock_deducted_at: o.stock_deducted_at || null,
-            stock_restored_at: o.stock_restored_at || null,
-            status_changed_at: o.status_changed_at || null,
-            itemSummary: items.length > 0
-              ? items.map((i) => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ')
-              : 'პროდუქტები'
-          });
-          })
-        );
+      if (!res.ok) {
+        const errorBody = await res.text().catch(() => '');
+        throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
       }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
+      // Do not restore private admin data after logout while a request is pending.
+      if (!adminLoggedIn) return;
+      setOrders(data.map((o) => {
+        const items = normalizeOrderItems(o.items);
+        return {
+          id: o.id,
+          created_at: o.created_at || null,
+          date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+          time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
+          customerName: o.customer_name || '',
+          user_email: o.customer_email || o.user_email || '',
+          phone: o.phone || '',
+          address: o.address || '',
+          totalGEL: Number(o.total_gel) || 0,
+          status: o.status || 'ახალი',
+          adminNote: o.admin_note || '',
+          items,
+          stock_deducted_at: o.stock_deducted_at || null,
+          stock_restored_at: o.stock_restored_at || null,
+          status_changed_at: o.status_changed_at || null,
+          itemSummary: items.length > 0
+            ? items.map((i) => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ')
+            : 'პროდუქტები'
+        };
+      }));
     } catch (error) {
       console.error('Orders fetch error:', error);
+    } finally {
+      adminOrdersFetchLock.current = false;
     }
   };
 
