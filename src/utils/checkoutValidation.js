@@ -11,7 +11,7 @@ export const validateCheckoutContact = ({ name, phone, email, address, requireEm
   if (cleanName.length < 2 || cleanName.length > 100 || hasControlCharacters(cleanName)) {
     return { valid: false, field: 'name' };
   }
-  if (hasControlCharacters(phoneInput) || !/^\\+?[0-9()\\s-]+$/.test(rawPhone) || !/^\\d{9,15}$/.test(phoneDigits)) {
+  if (hasControlCharacters(phoneInput) || !/^\+?[0-9()\s-]+$/.test(rawPhone) || !/^\d{9,15}$/.test(phoneDigits)) {
     return { valid: false, field: 'phone' };
   }
   if (cleanAddress.length < 3 || cleanAddress.length > 300 || hasControlCharacters(cleanAddress)) {
