@@ -14,7 +14,9 @@ export const addProductToCart = (cart, product, quantity = 1) => {
   const sameLine = item =>
     sameProduct(item) &&
     (String(item?.selectedSize || '').trim() || null) === size &&
-    (String(item?.selectedColor || '').trim() || null) === color;
+    (String(item?.selectedColor || '').trim() || null) === color &&
+    String(item?.name ?? '') === String(product?.name ?? '') &&
+    Number(item?.priceGEL ?? item?.price) === Number(product?.priceGEL ?? product?.price);
   const alreadyInCart = currentCart
     .filter(sameProduct)
     .reduce((total, item) => {
