@@ -865,7 +865,7 @@ export default function App() {
       const snapshot = {
         categories: publishedCategories,
         banners: publishedBanners,
-        siteSettings: siteSettings && typeof siteSettings === 'object' && !Array.isArray(siteSettings) ? siteSettings : {}
+        siteSettings: validateStorefrontSiteSettings(siteSettings)
       };
       const publishedAt = new Date().toISOString();
       const configResponse = await fetch(
