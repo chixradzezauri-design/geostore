@@ -9,7 +9,7 @@
   body {
     background-color: #030712; /* dark workspace outside the light storefront */
     color: #f8fafc;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Manrope', 'Noto Sans Georgian', sans-serif;
     overflow-x: hidden;
   }
 }
