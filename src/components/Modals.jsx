@@ -216,7 +216,7 @@ export default function Modals({
       received: ['ახალი', 'new', 'новый'],
       processing: ['მუშავდება', 'processing', 'в обработке'],
       shipped: ['გაგზავნილი', 'shipped', 'отправлен', 'გზაშია', 'on the way', 'в пути'],
-      completed: ['დასრულებული', 'completed', 'завершён'],
+      completed: [],
       delivered: ['დასრულებული', 'completed', 'завершён', 'ჩაბარებულია', 'delivered', 'доставлен'],
       cancelled: ['გაუქმებული', 'cancelled', 'canceled', 'отменён']
     };
