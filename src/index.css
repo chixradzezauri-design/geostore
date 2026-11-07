@@ -58,17 +58,17 @@ html,body,#root{width:100%;min-width:0;max-width:100%;margin:0}
 html{scroll-behavior:smooth}
 .geostore-fashion-store{width:100%;min-width:0;max-width:100%;overflow-x:clip;background:#f7f4ef!important;color:#29231f!important}
 .geostore-fashion-store>div,.geostore-fashion-store main{min-width:0}
-.geostore-fashion-store header{width:100%;max-width:none;background:rgba(250,248,245,.97)!important;color:#29231f!important;border:0!important;border-bottom:1px solid #e7e0d8!important;box-shadow:0 3px 18px rgba(40,31,23,.06)!important;backdrop-filter:blur(18px)!important;overflow:visible!important}
-.geostore-fashion-store header>div:first-child{min-height:26px;padding:6px 12px;background:#29241f!important;color:#f8f5f0!important;font-size:9px!important;font-weight:600!important;letter-spacing:.13em!important}
-.geostore-fashion-store header>div:first-child *{color:#fff!important}
-.geostore-fashion-store header .max-w-7xl{width:100%;max-width:1440px;min-height:72px;padding:10px clamp(14px,3vw,42px)!important;gap:12px!important;align-items:center!important}
-.geostore-fashion-store header [class*="text-white"],.geostore-fashion-store header [class*="text-slate-"]{color:#29231f!important}
-.geostore-fashion-store header [class*="bg-[#121216]"],.geostore-fashion-store header [class*="bg-[#0c0c0e]"]{background:#f2ede7!important;border-color:#e6ded5!important}
-.geostore-fashion-store header [class*="border-amber-"]{border-color:#e6ded5!important}
-.geostore-fashion-store header [class*="text-amber-"]{color:#65564a!important}
-.geostore-fashion-store header button{border-radius:3px!important;box-shadow:none!important}
-.geostore-fashion-store header button[class*="bg-amber-"],.geostore-fashion-store header button[class*="bg-gradient"]{background:#29241f!important;color:#fff!important;border-color:#29241f!important}
-.geostore-fashion-store header input{min-height:40px!important;background:#f1ede8!important;border:1px solid #e5ddd4!important;color:#29231f!important;border-radius:2px!important;box-shadow:none!important}
+.geostore-fashion-store .gs-site-header{width:100%;max-width:none;background:rgba(250,248,245,.97)!important;color:#29231f!important;border:0!important;border-bottom:1px solid #e7e0d8!important;box-shadow:0 3px 18px rgba(40,31,23,.06)!important;backdrop-filter:blur(18px)!important;overflow:visible!important}
+.geostore-fashion-store .gs-site-header>div:first-child{min-height:26px;padding:6px 12px;background:#29241f!important;color:#f8f5f0!important;font-size:9px!important;font-weight:600!important;letter-spacing:.13em!important}
+.geostore-fashion-store .gs-site-header>div:first-child *{color:#fff!important}
+.geostore-fashion-store .gs-site-header .max-w-7xl{width:100%;max-width:1440px;min-height:72px;padding:10px clamp(14px,3vw,42px)!important;gap:12px!important;align-items:center!important}
+.geostore-fashion-store .gs-site-header [class*="text-white"],.geostore-fashion-store .gs-site-header [class*="text-slate-"]{color:#29231f!important}
+.geostore-fashion-store .gs-site-header [class*="bg-[#121216]"],.geostore-fashion-store .gs-site-header [class*="bg-[#0c0c0e]"]{background:#f2ede7!important;border-color:#e6ded5!important}
+.geostore-fashion-store .gs-site-header [class*="border-amber-"]{border-color:#e6ded5!important}
+.geostore-fashion-store .gs-site-header [class*="text-amber-"]{color:#65564a!important}
+.geostore-fashion-store .gs-site-header button{border-radius:3px!important;box-shadow:none!important}
+.geostore-fashion-store .gs-site-header button[class*="bg-amber-"],.geostore-fashion-store .gs-site-header button[class*="bg-gradient"]{background:#29241f!important;color:#fff!important;border-color:#29241f!important}
+.geostore-fashion-store .gs-site-header input{min-height:40px!important;background:#f1ede8!important;border:1px solid #e5ddd4!important;color:#29231f!important;border-radius:2px!important;box-shadow:none!important}
 .geostore-fashion-store .gs-brand-lockup{display:flex;align-items:center;gap:10px;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;min-width:0;transition:transform .2s ease}
 .geostore-fashion-store .gs-brand-monogram{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border:1px solid #9a8066;outline:1px solid rgba(154,128,102,.3);outline-offset:3px;border-radius:50%;background:linear-gradient(145deg,#3a3028,#211c18);color:#f5eee5;font:400 26px/1 Georgia,serif;letter-spacing:-.08em}
 .geostore-fashion-store .gs-brand-wordmark{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -121,7 +121,7 @@ html{scroll-behavior:smooth}
 .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group p[class*="text-amber-"]{color:#29231f!important;font-size:17px!important;font-weight:700!important}
 .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group button:last-child{width:calc(100% - 28px)!important;min-height:42px!important;margin:0 14px 14px!important;padding:12px!important;border:0!important;border-radius:0!important;background:#29231f!important;color:#fff!important;font-size:10px!important;letter-spacing:.07em}
 .geostore-fashion-store .geostore-storefront .grid:has(>div.group)>div.group button:last-child:hover{background:#665548!important}
-.geostore-fashion-store .geostore-storefront button:focus-visible,.geostore-fashion-store header button:focus-visible,.geostore-fashion-store header input:focus-visible,.geostore-fashion-store .gs-category-card:focus-visible{outline:2px solid #8b725d!important;outline-offset:3px!important}
+.geostore-fashion-store .geostore-storefront button:focus-visible,.geostore-fashion-store .gs-site-header button:focus-visible,.geostore-fashion-store .gs-site-header input:focus-visible,.geostore-fashion-store .gs-category-card:focus-visible{outline:2px solid #8b725d!important;outline-offset:3px!important}
 .geostore-fashion-store .geostore-storefront footer{background:#25211e!important;color:#eee!important;border:0!important}
 .geostore-fashion-store .geostore-storefront footer *{color:#eee!important}
 .geostore-fashion-store .geostore-admin-shortcut,.geostore-fashion-store .geostore-wardrobe-shortcut{max-width:1440px!important}
@@ -133,7 +133,7 @@ html{scroll-behavior:smooth}
 @media(max-width:700px){
  .geostore-fashion-store>main{padding:14px 12px 0!important}
  .geostore-fashion-store .geostore-storefront{gap:28px!important;padding-bottom:48px!important}
- .geostore-fashion-store header .max-w-7xl{min-height:60px!important;padding:9px 12px!important;gap:8px!important}
+ .geostore-fashion-store .gs-site-header .max-w-7xl{min-height:60px!important;padding:9px 12px!important;gap:8px!important}
  .geostore-fashion-store .gs-brand-monogram{width:36px;height:36px;flex-basis:36px;font-size:22px}
  .geostore-fashion-store .gs-brand-name{font-size:15px;letter-spacing:.1em}
  .geostore-fashion-store .gs-brand-caption{font-size:7px;letter-spacing:.16em}
@@ -616,12 +616,12 @@ html{scroll-behavior:smooth}
 .geostore-fashion-store h4 {
   text-wrap: balance;
 }
-.geostore-fashion-store header {
+.geostore-fashion-store .gs-site-header {
   background: rgba(250, 248, 245, .97) !important;
   border-bottom: 1px solid var(--gs-line) !important;
   box-shadow: 0 4px 22px rgba(41, 36, 31, .045) !important;
 }
-.geostore-fashion-store header > div:first-child {
+.geostore-fashion-store .gs-site-header > div:first-child {
   min-height: 28px;
   padding: 7px 14px !important;
   background: var(--gs-accent-dark) !important;
@@ -631,7 +631,7 @@ html{scroll-behavior:smooth}
   letter-spacing: .075em !important;
   line-height: 1.45 !important;
 }
-.geostore-fashion-store header .max-w-7xl {
+.geostore-fashion-store .gs-site-header .max-w-7xl {
   min-height: 72px;
   gap: clamp(8px, 1.5vw, 18px) !important;
 }
@@ -644,7 +644,7 @@ html{scroll-behavior:smooth}
 .geostore-fashion-store .gs-brand-caption {
   font-size: 8px !important; letter-spacing: .19em !important;
 }
-.geostore-fashion-store header button,
+.geostore-fashion-store .gs-site-header button,
 .geostore-fashion-store .geostore-storefront button {
   transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease !important;
 }
@@ -793,7 +793,7 @@ html{scroll-behavior:smooth}
     gap: 26px !important;
     padding-bottom: 46px !important;
   }
-  .geostore-fashion-store header .max-w-7xl {
+  .geostore-fashion-store .gs-site-header .max-w-7xl {
     min-height: 62px !important;
     padding: 9px 12px !important;
   }
