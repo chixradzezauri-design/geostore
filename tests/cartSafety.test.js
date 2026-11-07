@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity } from '../src/utils/cartSafety.js';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot } from '../src/utils/cartSafety.js';
 
 const product = {
   id: 'p-1',
