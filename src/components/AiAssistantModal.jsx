@@ -4,6 +4,7 @@ import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, Refresh
 
 import { supabase } from '../supabaseClient';
 import { parseOrderTrackingMessage } from '../utils/orderTrackingMessage';
+import { readWardrobeItems } from '../utils/wardrobeStorage';
 
 // 🔤 ქართული და ინგლისური სინონიმებისა და სტილისტური ტერმინების გაფართოებული ლექსიკონი
 const SYNONYMS = {
@@ -29,7 +30,8 @@ export default function AiAssistantModal({
   deliveryFees = { tbilisi: 0, bigCities: 10, other: 15 },
   addToCart,
   formatPrice,
-  currentLang = 'ka'
+  currentLang = 'ka',
+  userId = null
 }) {
   const uiText = ({
     ka: {
@@ -82,13 +84,7 @@ export default function AiAssistantModal({
   });
 
   const getInitialGreeting = () => {
-    let wardrobeCount = 0;
-    try {
-      const savedWardrobe = localStorage.getItem('geostore_digital_wardrobe');
-      if (savedWardrobe) {
-        wardrobeCount = JSON.parse(savedWardrobe).length;
-      }
-    } catch {}
+    const wardrobeCount = readWardrobeItems(userId)?.length || 0;
 
     if (selectedProduct) {
       return {
@@ -120,7 +116,7 @@ export default function AiAssistantModal({
     } else {
       setPendingOrderCode('');
     }
-  }, [isAiAssistantOpen, selectedProduct]);
+  }, [isAiAssistantOpen, selectedProduct, userId]);
 
   // Keep the assistant keyboard-dismissable without changing its chat or shopping flow.
   useEffect(() => {
@@ -256,11 +252,7 @@ export default function AiAssistantModal({
 
     // 2. ციფრული გარდერობი და სტილისტი
     if (query.includes('გარდერობ') || query.includes('ლუქი') || query.includes('რა მოვუხდინო') || query.includes('ჩემი ტანსაცმელ')) {
-      let userWardrobe = [];
-      try {
-        const saved = localStorage.getItem('geostore_digital_wardrobe');
-        if (saved) userWardrobe = JSON.parse(saved);
-      } catch {}
+      const userWardrobe = readWardrobeItems(userId) || [];
 
       if (userWardrobe.length === 0) {
         return {

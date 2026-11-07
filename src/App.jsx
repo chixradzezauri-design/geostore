@@ -2934,6 +2934,8 @@ export default function App() {
         {activeTab === 'wardrobe' && (
           <Suspense fallback={null}>
             <AIDigitalWardrobe
+              key={currentUser?.id || 'guest'}
+              userId={currentUser?.id || null}
               products={products}
               addToCart={addToCart}
               formatPrice={formatPrice}
@@ -3618,6 +3620,7 @@ export default function App() {
       {hasLoadedAiAssistant && (
         <Suspense fallback={null}>
           <AiAssistantModal
+        userId={currentUser?.id || null}
         currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}

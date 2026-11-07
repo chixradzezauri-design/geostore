@@ -1,40 +1,37 @@
 // src/components/AIDigitalWardrobe.jsx - Full AI Digital Wardrobe & Personal Stylist
 import React, { useState, useEffect } from 'react';
 import { validateImageFile, isSafeImageUrl, isValidImageDataUrl } from '../utils/imageSafety';
+import { readWardrobeItems, writeWardrobeItems } from '../utils/wardrobeStorage';
 import { 
   Sparkles, Shirt, Footprints, Camera, Plus, Trash2, Zap, CloudSun, 
   Calendar, Check, ShoppingBag, Eye, RefreshCw, Tag, Heart, ArrowRight, Layers
 } from 'lucide-react';
 
-export default function AIDigitalWardrobe({ products = [], addToCart, formatPrice }) {
-  // 🌟 მომხმარებლის გარდერობის სახელმწიფო (Local Storage ინტეგრაციით)
-  const [wardrobe, setWardrobe] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_digital_wardrobe');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 'w1',
-          name: 'შავი ქურთუკი',
-          category: 'ტანსაცმელი',
-          subCategory: 'ქურთუკი',
-          color: 'შავი',
-          season: 'ზამთარი / შემოდგომა',
-          image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600'
-        },
-        {
-          id: 'w2',
-          name: 'თეთრი სპორტული ბოტასი',
-          category: 'ფეხსაცმელი',
-          subCategory: 'ბოტასი',
-          color: 'თეთრი',
-          season: 'ყველა სეზონი',
-          image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=600'
-        }
-      ];
-    } catch {
-      return [];
-    }
-  });
+const DEFAULT_WARDROBE_ITEMS = [
+  {
+    id: 'w1',
+    name: 'შავი ქურთუკი',
+    category: 'ტანსაცმელი',
+    subCategory: 'ქურთუკი',
+    color: 'შავი',
+    season: 'ზამთარი / შემოდგომა',
+    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600'
+  },
+  {
+    id: 'w2',
+    name: 'თეთრი სპორტული ბოტასი',
+    category: 'ფეხსაცმელი',
+    subCategory: 'ბოტასი',
+    color: 'თეთრი',
+    season: 'ყველა სეზონი',
+    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=600'
+  }
+];
+
+export default function AIDigitalWardrobe({ userId = null, products = [], addToCart, formatPrice }) {
+  // Each account has a separate local wardrobe. The legacy unscoped key is
+  // intentionally not imported because its original owner cannot be verified.
+  const [wardrobe, setWardrobe] = useState(() => readWardrobeItems(userId) ?? DEFAULT_WARDROBE_ITEMS);
 
   // 🌟 ახალი ნივთის დამატების ფორმის სახელმწიფო
   const [newItem, setNewItem] = useState({
@@ -54,10 +51,8 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
   const [generatedOutfit, setGeneratedOutfit] = useState(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('geostore_digital_wardrobe', JSON.stringify(wardrobe));
-    } catch {}
-  }, [wardrobe]);
+    writeWardrobeItems(userId, wardrobe);
+  }, [wardrobe, userId]);
 
   // 📸 ფოტოს ატვირთვა Base64 ფორმატში
   const handleImageUpload = async (e) => {
