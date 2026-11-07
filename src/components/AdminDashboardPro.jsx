@@ -115,6 +115,18 @@ const deleteProductImages = async (imageUrls, productId) => {
   }).filter(Boolean))];
   if (!paths.length) return true;
   try {
+    // Order rows keep immutable product snapshots. Until historical order-image
+    // references can be checked precisely, retain product media whenever any
+    // order exists so deleting/editing a product cannot break order history.
+    const orderReferenceResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/orders?select=id&limit=1`,
+      { headers: await getSupabaseHeaders() }
+    );
+    if (!orderReferenceResponse.ok) throw new Error('შეკვეთების ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
+    const orderReferenceRows = await orderReferenceResponse.json();
+    if (!Array.isArray(orderReferenceRows)) throw new Error('შეკვეთების სია არასწორია.');
+    if (orderReferenceRows.length > 0) return false;
+
     // A product-owned Storage path can still be referenced by another product.
     // Read the lightweight image references first and fail closed if this check fails.
     const referenceResponse = await fetch(
