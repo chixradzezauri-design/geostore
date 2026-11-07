@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { validateRegistrationPassword, checkPwnedPassword } from './passwordSafety.js';
 
-test('rejects passwords shorter than 12 characters', () => {
+test('rejects passwords shorter than 10 characters', () => {
   assert.deepEqual(validateRegistrationPassword('Aa1!short'), { valid: false, reason: 'length' });
+  assert.deepEqual(validateRegistrationPassword('Aa1!shortX'), { valid: true });
 });
 
 test('requires mixed character types', () => {
