@@ -1,3 +1,11 @@
+// Keep order payload normalization pure so malformed legacy rows cannot crash
+// customer history, admin details, or invoice rendering.
+export const normalizeOrderItems = (items) => (
+  Array.isArray(items)
+    ? items.filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    : []
+);
+
 // Pure checkout safety helpers. Kept separate so Node's built-in test runner
 // can verify retry and item-grouping rules without browser or Supabase access.
 
