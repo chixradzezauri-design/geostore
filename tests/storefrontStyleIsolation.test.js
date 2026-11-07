@@ -52,7 +52,10 @@ test('order confirmation code uses responsive wrapping styles on its actual code
   assert.match(css, /\.gs-order-code-value\{[^}]*overflow-wrap:anywhere!important;/s);
 });
 
-test('mobile category imagery and dark catalogue controls retain readable contrast', () => {
+test('mobile category imagery and the catalogue filter panel retain readable contrast', () => {
   assert.match(css, /\.gs-editorial-category-card \.gs-category-photo\{\s*opacity:1!important;/s);
-  assert.match(css, /\.gs-catalog-controls \.gs-price-filter>div:first-child,[\s\S]*?color:#e8ded2!important;/);
+  const finalFilterTheme = css.slice(css.lastIndexOf('GEOSTORE maintenance: unify catalogue filters'));
+  assert.match(finalFilterTheme, /\.gs-catalog-controls\{[^}]*background:#f7f4ef!important;/s);
+  assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter>div:first-child,[\s\S]*?color:#66594d!important;/);
+  assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter input,[\s\S]*?background:#fffdfa!important;/);
 });
