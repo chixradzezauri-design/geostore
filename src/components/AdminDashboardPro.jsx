@@ -186,6 +186,7 @@ const getOrderStatusClasses = (status) => {
     case 'cancelled':
     case 'canceled':
     case 'отменён':
+    case 'отменен':
       return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
     default:
       return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
@@ -198,7 +199,7 @@ const isDeliveredOrderStatus = (status) =>
 const isShippedOrderStatus = (status) =>
   ['გაგზავნილი', 'გზაშია', 'shipped', 'on the way', 'отправлен', 'в пути'].includes(normalizeOrderStatus(status));
 const isCancelledOrderStatus = (status) =>
-  ['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(normalizeOrderStatus(status));
+  ['გაუქმებული', 'cancelled', 'canceled', 'отменён', 'отменен'].includes(normalizeOrderStatus(status));
 
 const getOrderStatusFilterKey = (status) => {
   if (isDeliveredOrderStatus(status)) return 'დასრულებული';
