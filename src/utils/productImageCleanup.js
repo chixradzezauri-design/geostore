@@ -1,21 +1,36 @@
+export const normalizeProductImageList = (image, gallery) => {
+  let galleryItems = gallery;
+  if (typeof galleryItems === 'string') {
+    try {
+      const parsed = JSON.parse(galleryItems);
+      galleryItems = Array.isArray(parsed) ? parsed : [galleryItems];
+    } catch {
+      galleryItems = galleryItems.trim() ? [galleryItems] : [];
+    }
+  }
+  const candidates = [
+    ...(Array.isArray(galleryItems) ? galleryItems : []),
+    image
+  ];
+  return [...new Set(candidates
+    .filter(value => typeof value === 'string')
+    .map(value => value.trim())
+    .filter(Boolean))];
+};
+
 export const collectReferencedProductImageUrls = (products, excludedProductId) => {
   const referenced = new Set();
   if (!Array.isArray(products)) return referenced;
 
   for (const product of products) {
     if (!product || String(product.id) === String(excludedProductId)) continue;
-    const urls = [
-      product.image,
-      ...(Array.isArray(product.gallery) ? product.gallery : [])
-    ];
-    for (const url of urls) {
-      if (typeof url === 'string' && url.trim()) referenced.add(url.trim());
+    for (const url of normalizeProductImageList(product.image, product.gallery)) {
+      referenced.add(url);
     }
   }
 
   return referenced;
 };
-
 
 /**
  * Only delete newly uploaded images when the product write is known not to
