@@ -692,7 +692,7 @@ export default function Modals({
 
               {authMode !== 'reset-request' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' || authMode === 'reset-password' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                 {authMode === 'register' && (
