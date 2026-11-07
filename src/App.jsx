@@ -28,6 +28,7 @@ import { translations } from './utils/translations';
 import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
+import { addProductToCart } from './utils/cartSafety';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -341,6 +342,11 @@ export default function App() {
   const [cart, setCart] = useState(() =>
     loadSafeStorage('geostore_cart', [])
   );
+
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
 
   const [wishlist, setWishlist] = useState(() =>
     loadSafeStorage('geostore_wishlist', [])
@@ -1340,6 +1346,7 @@ export default function App() {
       showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
       return false;
     }
+
     const selectedSize = String(product?.selectedSize || '').trim();
     const selectedColor = String(product?.selectedColor || '').trim();
     const allowedSizes = Array.isArray(product?.availableSizes)
@@ -1358,52 +1365,27 @@ export default function App() {
       return false;
     }
 
-    const rawAvailableStock = Number(product?.stock ?? 0);
-    const availableStock = Number.isFinite(rawAvailableStock) ? Math.max(0, Math.floor(rawAvailableStock)) : 0;
-    // A product can have multiple clothing sizes/colors in one cart.
-    // Keep each selected variant as a separate line, while enforcing stock
-    // against the total quantity of the underlying product across all variants.
-    const sameProduct = (item) => String(item.id) === String(product.id);
-    const sameCartLine = (item) =>
-      sameProduct(item) &&
-      (String(item.selectedSize || '').trim() || null) === (selectedSize || null) &&
-      (String(item.selectedColor || '').trim() || null) === (selectedColor || null);
-    const alreadyInCart = cart
-      .filter(sameProduct)
-      .reduce((total, item) => total + Math.max(0, Math.floor(Number(item.quantity) || 0)), 0);
+    // Use the latest cart snapshot synchronously so rapid taps cannot
+    // bypass stock limits before React has committed the previous update.
+    const result = addProductToCart(cartRef.current, {
+      ...product,
+      selectedSize: selectedSize || null,
+      selectedColor: selectedColor || null
+    }, requestedQuantity);
 
-    if (availableStock <= 0) {
-      showToast('პროდუქტი ამჟამად მარაგში არ არის.');
-      return false;
-    }
-
-    if (alreadyInCart + requestedQuantity > availableStock) {
-      showToast(`მარაგში დარჩენილია მხოლოდ ${Math.max(0, availableStock - alreadyInCart)} ცალი.`);
-      return false;
-    }
-
-    setCart((prev) => {
-      const existing = prev.find(sameCartLine);
-
-      if (existing) {
-        return prev.map((item) =>
-          sameCartLine(item)
-            ? {
-                ...item,
-                quantity: item.quantity + requestedQuantity
-              }
-            : item
-        );
+    if (!result.valid) {
+      if (result.reason === 'stock') {
+        showToast('პროდუქტი ამჟამად მარაგში არ არის.');
+      } else if (result.reason === 'limit') {
+        showToast(`მარაგში დარჩენილია მხოლოდ ${result.remaining} ცალი.`);
+      } else {
+        showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
       }
+      return false;
+    }
 
-      return [...prev, {
-        ...product,
-        selectedSize: selectedSize || null,
-        selectedColor: selectedColor || null,
-        quantity: requestedQuantity
-      }];
-    });
-
+    cartRef.current = result.cart;
+    setCart(result.cart);
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
     return true;
   };
