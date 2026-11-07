@@ -67,6 +67,22 @@ export const getProductStartingPrice = (product) => {
   const price = Number(rawPrice);
   return Number.isFinite(price) && price >= 0 ? price : null;
 };
+export const hasValidProductOptionSelection = (product, selection = {}) => {
+  const sizes = getAvailableProductSizes(product);
+  const colors = getAvailableProductColors(product);
+  const size = String(selection.size ?? '').trim();
+  const color = String(selection.color ?? '').trim();
+
+  if (sizes.length > 0 && (!size || !sizes.includes(size))) return false;
+  if (colors.length > 0 && (!color || !colors.includes(color))) return false;
+
+  if (hasCustomProductVariants(product)) {
+    const variant = getCustomProductVariant(product, selection.customVariantId);
+    if (!variant || variant.stock < 1) return false;
+  }
+  return true;
+};
+
 export const hasProductVariantOptions = (product) => (
   getAvailableProductSizes(product).length > 0 || getAvailableProductColors(product).length > 0 || hasCustomProductVariants(product)
 );
