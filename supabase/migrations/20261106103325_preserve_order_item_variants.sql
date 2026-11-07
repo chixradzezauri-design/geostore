@@ -1,5 +1,36 @@
 -- Preserve selected product variants in server-created order snapshots.
 -- This migration is staged only; reconcile the live migration history before applying.
+-- Atomic stock adjustment for one custom variant.
+CREATE OR REPLACE FUNCTION private.adjust_product_variant_stock(p_variants jsonb, p_variant_id text, p_delta integer)
+RETURNS jsonb LANGUAGE plpgsql IMMUTABLE SET search_path TO ''
+AS $variant_stock$
+DECLARE v_count integer; v_stock integer; v_result jsonb;
+BEGIN
+  IF p_variant_id IS NULL OR length(trim(p_variant_id)) NOT BETWEEN 1 AND 80
+     OR p_delta IS NULL OR abs(p_delta) > 1000000 THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტის მონაცემები არასწორია.';
+  END IF;
+  IF jsonb_typeof(p_variants) IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტების სია არასწორია.';
+  END IF;
+  IF jsonb_array_length(p_variants) > 50 THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტების რაოდენობა დასაშვებ ზღვარს აჭარბებს.';
+  END IF;
+  SELECT count(*) INTO v_count FROM jsonb_array_elements(p_variants) e(item) WHERE item->>'id' = p_variant_id;
+  IF v_count <> 1 THEN RAISE EXCEPTION 'არჩეული პროდუქტის ვარიანტი ვერ მოიძებნა ან დუბლირებულია.'; END IF;
+  SELECT CASE WHEN coalesce(item->>'stock', '') ~ '^[0-9]{1,7}$' THEN (item->>'stock')::integer ELSE NULL END
+    INTO v_stock FROM jsonb_array_elements(p_variants) e(item) WHERE item->>'id' = p_variant_id;
+  IF v_stock IS NULL OR v_stock + p_delta NOT BETWEEN 0 AND 1000000 THEN
+    RAISE EXCEPTION 'არჩეული ვარიანტის მარაგი არასაკმარისია ან არასწორია.';
+  END IF;
+  SELECT coalesce(jsonb_agg(CASE WHEN item->>'id' = p_variant_id
+    THEN jsonb_set(item, '{stock}', to_jsonb(v_stock + p_delta), true) ELSE item END ORDER BY ordinal), '[]'::jsonb)
+    INTO v_result FROM jsonb_array_elements(p_variants) WITH ORDINALITY e(item, ordinal);
+  RETURN v_result;
+END;
+$variant_stock$;
+REVOKE ALL ON FUNCTION private.adjust_product_variant_stock(jsonb, text, integer) FROM PUBLIC;
+
 CREATE OR REPLACE FUNCTION private.create_order_with_stock(p_order jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -26,6 +57,10 @@ declare
   v_existing public.orders%rowtype;
   v_result jsonb;
   v_request jsonb;
+  v_variant_name text;
+  v_variant_price numeric;
+  v_variant_stock integer;
+  v_variant_count integer;
 begin
   if p_order is null or jsonb_typeof(p_order) <> 'object' then
     raise exception 'შეკვეთის მონაცემები არასწორია.';
@@ -58,6 +93,8 @@ begin
           end
        or length(coalesce(item->>'selected_size', '')) > 40
        or length(coalesce(item->>'selected_color', '')) > 60
+       or length(coalesce(item->>'custom_variant_id', '')) > 80
+       or (item ? 'custom_variant_id' and jsonb_typeof(item->'custom_variant_id') <> 'string')
   ) then
     raise exception 'პროდუქტის ID, რაოდენობა, ზომა ან ფერი არასწორია.';
   end if;
@@ -86,6 +123,7 @@ begin
             'id', grouped.product_id,
             'selected_size', grouped.selected_size,
             'selected_color', grouped.selected_color,
+            'custom_variant_id', grouped.custom_variant_id,
             'quantity', grouped.quantity
           )
           order by grouped.product_id, grouped.selected_size nulls first, grouped.selected_color nulls first
@@ -97,12 +135,14 @@ begin
           item->>'id' as product_id,
           nullif(trim(item->>'selected_size'), '') as selected_size,
           nullif(trim(item->>'selected_color'), '') as selected_color,
+          nullif(trim(item->>'custom_variant_id'), '') as custom_variant_id,
           sum((item->>'quantity')::integer)::integer as quantity
         from jsonb_array_elements(p_order->'items') e(item)
         group by
           item->>'id',
           nullif(trim(item->>'selected_size'), ''),
-          nullif(trim(item->>'selected_color'), '')
+          nullif(trim(item->>'selected_color'), ''),
+          nullif(trim(item->>'custom_variant_id'), '')
       ) grouped
     ),
     'coupon_code', v_coupon_code,
@@ -131,6 +171,7 @@ begin
               from jsonb_array_elements(p_order->'items') e(item)
               where nullif(trim(item->>'selected_size'), '') is not null
                  or nullif(trim(item->>'selected_color'), '') is not null
+                 or nullif(trim(item->>'custom_variant_id'), '') is not null
             )
           )
         )
@@ -147,70 +188,89 @@ begin
   end if;
   select fee_gel into v_delivery from public.store_delivery_fees where region = v_region;
   if not found then raise exception 'მიწოდების საფასური ვერ მოიძებნა.'; end if;
-  for v_item in
-    select item->>'id' as product_id, sum((item->>'quantity')::integer)::integer as quantity
-      from jsonb_array_elements(p_order->'items') e(item)
-     group by item->>'id' order by item->>'id'
-  loop
-    if coalesce(trim(v_item.product_id), '') = '' or v_item.quantity is null or v_item.quantity <= 0 or v_item.quantity > 100 then
-      raise exception 'პროდუქტის ID ან რაოდენობა არასწორია.';
-    end if;
-    select id, name, price_gel, stock, purchase_cost, vendor, category into v_product
-      from public.products where id = v_item.product_id for update;
-    if not found then raise exception 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; end if;
-    if coalesce(v_product.stock, 0) < v_item.quantity then
-      raise exception 'პროდუქტი აღარ არის საკმარისი რაოდენობით მარაგში: %', v_item.product_id;
-    end if;
-    v_price := v_product.price_gel;
-    if v_price is null or v_price < 0 then raise exception 'პროდუქტის ფასი არასწორია.'; end if;
-    v_subtotal := v_subtotal + (v_price * v_item.quantity);
-  end loop;
+  -- Lock catalogue rows in stable order, then validate stock pools separately.
+  FOR v_item IN
+    SELECT DISTINCT item->>'id' AS product_id FROM jsonb_array_elements(p_order->'items') e(item) ORDER BY item->>'id'
+  LOOP
+    PERFORM 1 FROM public.products WHERE id = v_item.product_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; END IF;
+  END LOOP;
+  FOR v_item IN
+    SELECT item->>'id' AS product_id, nullif(trim(item->>'custom_variant_id'), '') AS custom_variant_id,
+           sum((item->>'quantity')::integer)::integer AS quantity
+      FROM jsonb_array_elements(p_order->'items') e(item)
+     GROUP BY item->>'id', nullif(trim(item->>'custom_variant_id'), '')
+     ORDER BY item->>'id', nullif(trim(item->>'custom_variant_id'), '')
+  LOOP
+    SELECT id, name, price_gel, stock, purchase_cost, vendor, category, variants INTO v_product
+      FROM public.products WHERE id = v_item.product_id;
+    IF NOT FOUND THEN RAISE EXCEPTION 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; END IF;
+    IF v_item.custom_variant_id IS NOT NULL THEN
+      IF CASE
+        WHEN jsonb_typeof(coalesce(v_product.variants, '[]'::jsonb)) = 'array'
+          THEN jsonb_array_length(coalesce(v_product.variants, '[]'::jsonb)) > 50
+        ELSE TRUE
+      END THEN
+        RAISE EXCEPTION 'პროდუქტის ვარიანტების მონაცემები არასწორია.';
+      END IF;
+      SELECT count(*) INTO v_variant_count FROM jsonb_array_elements(coalesce(v_product.variants, '[]'::jsonb)) e(item)
+       WHERE item->>'id' = v_item.custom_variant_id;
+      IF v_variant_count <> 1 THEN RAISE EXCEPTION 'არჩეული პროდუქტის ვარიანტი ვერ მოიძებნა ან დუბლირებულია.'; END IF;
+      SELECT item->>'name',
+             CASE WHEN coalesce(item->>'priceGEL', item->>'price_gel', '') ~ '^[0-9]+([.][0-9]{1,2})?$'
+                  THEN coalesce(item->>'priceGEL', item->>'price_gel')::numeric ELSE NULL END,
+             CASE WHEN coalesce(item->>'stock', '') ~ '^[0-9]{1,7}$' THEN (item->>'stock')::integer ELSE NULL END
+        INTO v_variant_name, v_variant_price, v_variant_stock
+        FROM jsonb_array_elements(v_product.variants) e(item) WHERE item->>'id' = v_item.custom_variant_id;
+      IF coalesce(trim(v_variant_name), '') = '' OR v_variant_price IS NULL OR v_variant_price < 0
+         OR v_variant_stock IS NULL OR v_variant_stock < v_item.quantity THEN
+        RAISE EXCEPTION 'არჩეული ვარიანტის ფასი ან მარაგი არასწორია ან არასაკმარისია.';
+      END IF;
+      v_subtotal := v_subtotal + (v_variant_price * v_item.quantity);
+    ELSE
+      IF coalesce(v_product.stock, 0) < v_item.quantity THEN RAISE EXCEPTION 'პროდუქტი აღარ არის საკმარისი რაოდენობით მარაგში: %', v_item.product_id; END IF;
+      IF v_product.price_gel IS NULL OR v_product.price_gel < 0 THEN RAISE EXCEPTION 'პროდუქტის ფასი არასწორია.'; END IF;
+      v_subtotal := v_subtotal + (v_product.price_gel * v_item.quantity);
+    END IF;
+  END LOOP;
 
-  -- Keep each size/color as a separate order line. Product price and cost
-  -- still come exclusively from the locked server-side catalogue row.
-  for v_item in
-    select
-      item->>'id' as product_id,
-      (item->>'quantity')::integer as quantity,
-      nullif(trim(item->>'selected_size'), '') as selected_size,
-      nullif(trim(item->>'selected_color'), '') as selected_color
-    from jsonb_array_elements(p_order->'items') e(item)
-    order by item->>'id', item->>'selected_size', item->>'selected_color'
-  loop
-    select id, name, price_gel, purchase_cost, vendor, category, available_sizes, available_colors into v_product
-      from public.products where id = v_item.product_id;
-    if not found then raise exception 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; end if;
-    if v_item.selected_size is not null and case
-      when jsonb_typeof(coalesce(v_product.available_sizes, '[]'::jsonb)) = 'array' then not exists (
-        select 1 from jsonb_array_elements_text(coalesce(v_product.available_sizes, '[]'::jsonb)) as allowed(value)
-        where allowed.value = v_item.selected_size
-      )
-      else true
-    end then
-      raise exception 'არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.';
-    end if;
-    if v_item.selected_color is not null and case
-      when jsonb_typeof(coalesce(v_product.available_colors, '[]'::jsonb)) = 'array' then not exists (
-        select 1 from jsonb_array_elements_text(coalesce(v_product.available_colors, '[]'::jsonb)) as allowed(value)
-        where allowed.value = v_item.selected_color
-      )
-      else true
-    end then
-      raise exception 'არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.';
-    end if;
+  -- Snapshot selected variant identity and server-owned price for each order line.
+  FOR v_item IN
+    SELECT item->>'id' AS product_id, (item->>'quantity')::integer AS quantity,
+           nullif(trim(item->>'selected_size'), '') AS selected_size,
+           nullif(trim(item->>'selected_color'), '') AS selected_color,
+           nullif(trim(item->>'custom_variant_id'), '') AS custom_variant_id
+      FROM jsonb_array_elements(p_order->'items') e(item)
+     ORDER BY item->>'id', item->>'custom_variant_id', item->>'selected_size', item->>'selected_color'
+  LOOP
+    SELECT id, name, price_gel, purchase_cost, vendor, category, available_sizes, available_colors, variants
+      INTO v_product FROM public.products WHERE id = v_item.product_id;
+    IF NOT FOUND THEN RAISE EXCEPTION 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; END IF;
+    IF v_item.selected_size IS NOT NULL AND CASE
+      WHEN jsonb_typeof(coalesce(v_product.available_sizes, '[]'::jsonb)) = 'array' THEN NOT EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(coalesce(v_product.available_sizes, '[]'::jsonb)) allowed(value) WHERE allowed.value = v_item.selected_size
+      ) ELSE TRUE END THEN RAISE EXCEPTION 'არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.'; END IF;
+    IF v_item.selected_color IS NOT NULL AND CASE
+      WHEN jsonb_typeof(coalesce(v_product.available_colors, '[]'::jsonb)) = 'array' THEN NOT EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(coalesce(v_product.available_colors, '[]'::jsonb)) allowed(value) WHERE allowed.value = v_item.selected_color
+      ) ELSE TRUE END THEN RAISE EXCEPTION 'არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.'; END IF;
+    v_price := v_product.price_gel;
+    v_variant_name := NULL;
+    IF v_item.custom_variant_id IS NOT NULL THEN
+      SELECT item->>'name', coalesce(item->>'priceGEL', item->>'price_gel')::numeric
+        INTO v_variant_name, v_price
+        FROM jsonb_array_elements(coalesce(v_product.variants, '[]'::jsonb)) e(item) WHERE item->>'id' = v_item.custom_variant_id;
+      IF NOT FOUND OR v_price IS NULL OR v_price < 0 THEN RAISE EXCEPTION 'არჩეული ვარიანტი აღარ არის ხელმისაწვდომი.'; END IF;
+    END IF;
     v_line := jsonb_build_object(
-      'id', v_product.id,
-      'name', v_product.name,
-      'price', v_product.price_gel,
-      'quantity', v_item.quantity,
-      'selectedSize', v_item.selected_size,
-      'selectedColor', v_item.selected_color,
-      'purchase_cost', v_product.purchase_cost,
-      'vendor', v_product.vendor,
-      'category', v_product.category
+      'id', v_product.id, 'name', v_product.name, 'price', v_price, 'quantity', v_item.quantity,
+      'selectedSize', v_item.selected_size, 'selectedColor', v_item.selected_color,
+      'customVariantId', v_item.custom_variant_id, 'customVariantName', v_variant_name,
+      'purchase_cost', v_product.purchase_cost, 'vendor', v_product.vendor, 'category', v_product.category
     );
     v_items := v_items || jsonb_build_array(v_line);
-  end loop;
+  END LOOP;
+
   if v_coupon_code <> '' then
     select discount_percent, min_order_gel into v_coupon from public.store_coupons where code = v_coupon_code and active = true;
     if not found then raise exception 'კუპონი არასწორია ან აღარ არის აქტიური.'; end if;
@@ -218,15 +278,31 @@ begin
     v_discount := round(v_subtotal * v_coupon.discount_percent / 100, 2);
   end if;
   v_total := greatest(0, v_subtotal - v_discount) + v_delivery;
-  for v_item in
-    select item->>'id' as product_id, sum((item->>'quantity')::integer)::integer as quantity
-      from jsonb_array_elements(v_items) e(item) group by item->>'id' order by item->>'id'
-  loop
-    update public.products set stock = coalesce(stock, 0) - v_item.quantity
-     where id = v_item.product_id and coalesce(stock, 0) >= v_item.quantity;
-    get diagnostics v_updated = row_count;
-    if v_updated <> 1 then raise exception 'მარაგის განახლება ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id; end if;
-  end loop;
+  -- Standard stock and custom variant stock are independent inventory pools.
+  FOR v_item IN
+    SELECT item->>'id' AS product_id, sum((item->>'quantity')::integer)::integer AS quantity
+      FROM jsonb_array_elements(v_items) e(item)
+     WHERE nullif(trim(item->>'customVariantId'), '') IS NULL
+     GROUP BY item->>'id' ORDER BY item->>'id'
+  LOOP
+    UPDATE public.products SET stock = coalesce(stock, 0) - v_item.quantity
+     WHERE id = v_item.product_id AND coalesce(stock, 0) >= v_item.quantity;
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN RAISE EXCEPTION 'მარაგის განახლება ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id; END IF;
+  END LOOP;
+  FOR v_item IN
+    SELECT item->>'id' AS product_id, item->>'customVariantId' AS custom_variant_id,
+           sum((item->>'quantity')::integer)::integer AS quantity
+      FROM jsonb_array_elements(v_items) e(item)
+     WHERE nullif(trim(item->>'customVariantId'), '') IS NOT NULL
+     GROUP BY item->>'id', item->>'customVariantId' ORDER BY item->>'id', item->>'customVariantId'
+  LOOP
+    UPDATE public.products SET variants = private.adjust_product_variant_stock(variants, v_item.custom_variant_id, -v_item.quantity)
+     WHERE id = v_item.product_id;
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN RAISE EXCEPTION 'ვარიანტის მარაგის განახლება ვერ მოხერხდა პროდუქტისთვის: %', v_item.product_id; END IF;
+  END LOOP;
+
   v_result := jsonb_build_object('order_id', v_order_id, 'stock_deducted', true, 'items', v_items,
     'subtotal_gel', v_subtotal, 'discount_gel', v_discount, 'delivery_gel', v_delivery, 'total_gel', v_total);
   insert into public.orders(id, customer_name, phone, address, user_email, customer_email, items,
