@@ -348,6 +348,17 @@ test('reconciles selected custom variant price and stock against the current cat
   assert.equal(result.cartItems[0].stock, 1);
 });
 
+test('reconciles snake_case custom variant prices accepted by the server RPC', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p-variant', name: 'Pack', priceGEL: 20, basePriceGEL: 20, quantity: 1, customVariantId: 'v-small' }],
+    [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 10, variants: [{ id: 'v-small', name: 'Small pack', price_gel: 24.5, stock: 3 }] }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['price']);
+  assert.equal(result.cartItems[0].basePriceGEL, 24.5);
+  assert.equal(result.cartItems[0].priceGEL, 24.5);
+  assert.equal(result.cartItems[0].stock, 3);
+});
+
 test('requires a custom variant selection when the catalogue defines custom variants', () => {
   const result = reconcileCartWithCatalog(
     [{ id: 'p-variant', name: 'Pack', priceGEL: 20, quantity: 1 }],
