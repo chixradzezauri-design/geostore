@@ -2329,6 +2329,10 @@ export default function App() {
       return;
     }
 
+    const confirmedItems = normalizeOrderItems(
+      Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder
+    );
+    const confirmedTotal = Number(serverOrderResult.total_gel);
     const newOrderObj = {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
@@ -2336,13 +2340,13 @@ export default function App() {
       phone: customerPhone,
       address: `${customerAddress} (${regionText}, მიწოდება: ${Number(serverOrderResult.delivery_gel) || 0} ₾)`,
       user_email: orderUserEmail,
-      items: Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder,
-      totalGEL: Number(serverOrderResult.total_gel),
-      total_gel: Number(serverOrderResult.total_gel),
+      items: confirmedItems,
+      totalGEL: Number.isFinite(confirmedTotal) ? confirmedTotal : 0,
+      total_gel: Number.isFinite(confirmedTotal) ? confirmedTotal : 0,
       status: 'ახალი',
-      itemSummary: (Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder)
-        .map((i) => `${i.name} (x${i.quantity})`)
-        .join(', ')
+      itemSummary: confirmedItems.length > 0
+        ? confirmedItems.map((item) => `${item.name || 'პროდუქტი'} (x${item.quantity || 1})`).join(', ')
+        : 'პროდუქტები'
     };
 
     setOrders((prev) => [
