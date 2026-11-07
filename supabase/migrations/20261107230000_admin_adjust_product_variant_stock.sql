@@ -7,14 +7,15 @@ CREATE OR REPLACE FUNCTION private.admin_adjust_product_variant_stock(
   p_variant_id text,
   p_delta integer
 )
-RETURNS public.products
+RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY INVOKER
 SET search_path = ''
 AS $function$
 DECLARE
   v_jwt jsonb := (SELECT auth.jwt());
-  v_product public.products;
+  v_product_id text;
+  v_variants jsonb;
   v_variant_count integer;
   v_current_stock integer;
   v_new_stock integer;
@@ -31,7 +32,7 @@ BEGIN
     RAISE EXCEPTION 'Invalid variant stock adjustment' USING ERRCODE = '22023';
   END IF;
 
-  SELECT * INTO v_product
+  SELECT id, variants INTO v_product_id, v_variants
     FROM public.products
    WHERE id = p_product_id
    FOR UPDATE;
@@ -40,12 +41,12 @@ BEGIN
     RAISE EXCEPTION 'Product not found' USING ERRCODE = 'P0002';
   END IF;
 
-  IF jsonb_typeof(v_product.variants) IS DISTINCT FROM 'array' THEN
+  IF jsonb_typeof(v_variants) IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'Product variants are invalid' USING ERRCODE = '22023';
   END IF;
 
   SELECT count(*) INTO v_variant_count
-    FROM jsonb_array_elements(v_product.variants) AS e(item)
+    FROM jsonb_array_elements(v_variants) AS e(item)
    WHERE item ->> 'id' = p_variant_id;
 
   IF v_variant_count <> 1 THEN
@@ -81,17 +82,17 @@ BEGIN
          END
          ORDER BY ordinality
        )
-       FROM jsonb_array_elements(p.variants)
+       FROM jsonb_array_elements(v_variants)
          WITH ORDINALITY AS variant_rows(element, ordinality)
      )
    WHERE p.id = p_product_id
-   RETURNING * INTO v_product;
+   RETURNING p.id, p.variants INTO v_product_id, v_variants;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Product inventory update failed' USING ERRCODE = 'P0002';
   END IF;
 
-  RETURN v_product;
+  RETURN jsonb_build_object('id', v_product_id, 'variants', v_variants);
 END;
 $function$;
 
@@ -100,7 +101,7 @@ CREATE OR REPLACE FUNCTION public.admin_adjust_product_variant_stock(
   p_variant_id text,
   p_delta integer
 )
-RETURNS public.products
+RETURNS jsonb
 LANGUAGE sql
 SECURITY INVOKER
 SET search_path = ''
