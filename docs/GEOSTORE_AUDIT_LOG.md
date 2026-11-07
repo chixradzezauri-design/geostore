@@ -832,3 +832,15 @@ The entire test transaction was rolled back. A post-rollback query confirmed tha
 - The PostgreSQL transaction-level integration test passed for admin variant stock adjustment, oversell rejection, stale-editor preservation, duplicate rejection, cancellation idempotency and reactivation.
 - The Node database migration safety tests were extended but not executed. Browser QA, full Node suite, production build, Vercel build/deploy and live migration application remain outstanding.
 - The public stock RPC returns only id and variants, avoiding SELECT privileges on internal product columns; both RPC wrappers are SECURITY INVOKER and the private implementation checks admin UID and app_metadata role.
+
+
+## Order ownership migration syntax repair and full account-isolation test — 2026-11-07
+
+- A combined migration dry-run caught an orphaned duplicate SQL block in 20261107200000_bind_order_ownership_to_auth_user_uuid.sql. It began with a bare THEN after the notification grants and duplicated the checkout/order-history/notification function bodies. The migration was truncated after its first complete function set; the resulting file now has exactly one public checkout wrapper and one private notification-read function pair.
+- Re-ran all four staged migrations together: 20261107170000, 20261107200000, 20261107230000 and 20261107234500. PostgreSQL accepted the combined DDL inside BEGIN ... ROLLBACK.
+- Authenticated functional test verified the order insert trigger binds user_id to auth.uid() without accepting a browser-supplied owner field.
+- Customer history returned only the authenticated user's order and preserved selected variant display fields while excluding purchase_cost, vendor and category.
+- A different authenticated UUID received zero orders and zero notifications, and could not mark the owner's notifications read. The actual owner could read and mark their own notifications.
+- The same transaction also passed variant stock adjustment, oversell rejection, stale-editor stock preservation, duplicate ID/name rejection, cancellation restore-once, and protected reactivation/re-deduction checks.
+- The transaction was rolled back. Post-rollback verification confirmed both temporary products, the temporary order, new RPC/validator objects, and the orders.user_id column were absent. No production schema or data changed.
+- Regression coverage was added to tests/databaseMigrationSafety.test.js for the malformed duplicate SQL tail and the new variant RPC contracts. The Node test file was not executed; only the SQL integration test ran.
