@@ -585,7 +585,7 @@ export default function StoreView({
             aria-label={storeText.maxPrice}
             value={maxPrice}
             onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            className="w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
             <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
