@@ -7,13 +7,20 @@ export const normalizeOrderTotal = (value) => {
   return Number.isFinite(total) && total >= 0 ? total : 0;
 };
 
+// Missing legacy quantities default to one; explicitly invalid/non-positive quantities
+// contribute zero rather than silently inventing a sale.
+export const normalizeOrderQuantity = (value) => {
+  if (value === null || value === undefined || value === '') return 1;
+  const quantity = Number(value);
+  return Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0;
+};
+
 // Server order snapshots already store the final unit price (including add-ons).
 // Prefer that authoritative total and never add the same fees a second time.
 export const calculateOrderLineRevenueGEL = (item) => {
   const rawPrice = Number(item?.price ?? item?.priceGEL ?? item?.base_price);
   const unitPrice = Number.isFinite(rawPrice) ? Math.max(0, rawPrice) : 0;
-  const rawQuantity = Number(item?.quantity ?? 1);
-  const quantity = Number.isFinite(rawQuantity) ? Math.max(1, rawQuantity) : 1;
+  const quantity = normalizeOrderQuantity(item?.quantity);
   return Math.round((unitPrice * quantity + Number.EPSILON) * 100) / 100;
 };
 
