@@ -240,3 +240,37 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Re-read category CRUD, file validation, and reorder handlers after the final changes.
 - Read-only Supabase check: 1 live product; its category is `ტანსაცმელი`; no product/category mismatch in the built-in default categories. No `storefront_config` or `storefront_versions` rows exist yet.
 - No production database changes, Storage writes, migrations, tests, build, or deployment were performed. Full compile/runtime verification remains pending.
+
+
+## Storefront banners, site settings and draft/publish workflow — 2026-11-07
+
+### Findings and fixes saved
+
+- Found that the admin could create and save banner records, but `App.jsx` did not pass the banner list to `StoreView`; the public storefront therefore never rendered published banners. Added a responsive featured-banner section to the customer storefront, limited to the first four configured banners.
+- Banner destination links are rendered as external links only when their parsed protocol is HTTP or HTTPS; new tabs use `noopener noreferrer`. Unsafe protocols are not rendered as clickable links.
+- Added a shared save/publish boundary validator for banner snapshots: array shape, maximum 20 banners, unique non-empty IDs, required title, bounded title/subtitle lengths, and valid HTTP(S) destination links.
+- The admin banner creator now enforces the 20-banner limit and uses `crypto.randomUUID()` where available, with a collision-resistant fallback, instead of timestamp-only IDs.
+- Found that the global settings form only wrote to this device's localStorage while its success message implied a completed save. It now sends normalized settings through the authenticated Supabase draft-save callback. The callback accepts the normalized settings directly so the snapshot does not capture stale React state from the same event tick.
+- Added editable hero title and subtitle fields (120/240 character limits) and bounded the store name (2–60) and announcement bar (160). Both draft-save and publish validate and normalize the full settings object, filling missing legacy fields with fashion-store defaults.
+- Replaced only the exact legacy technology-marketplace default copy during initial load; custom user-entered copy is preserved.
+- Storefront image references now accept only HTTP(S) URLs or supported validated image data URLs before Storage upload/persistence. This closes a malformed/unsafe URL path for both banners and categories.
+- Draft and publish continue to upload inline image data to the existing private-write/public-read Storage bucket, and cleanup of newly uploaded assets remains tied to failed config writes. Existing published images are not automatically deleted.
+
+### Commits
+
+- `2c48415891846ad09eba769b14545b30e49fb315` — banner/site settings validation at draft/publish boundary.
+- `4bb7092d80a41b47edea8494206130bfdde9a5bb` — settings saved through Supabase draft callback.
+- `675dbc281a5011b0b8f098a8f6b3dc690379ab08` — public storefront banner rendering.
+- `081e6b39f7fe3626582051110b274de6dc56b8ea` — safe storefront image URL validation.
+- `ffe32538838c2c06442c6d971f696e68bb4b9973` — banner count and ID hardening.
+- `6d6b5d7520546ca0e00b085f86492d0b27597fea` and `bfd426e79fb567e508348e083a96cfaa137cd7a8` — pass normalized settings into the same draft snapshot.
+- `e0e3e2fbb7b808d64cb23578abcb72572b41e71e` — fashion-focused legacy defaults.
+- `263103d3b55ffe0c95f6533da578adff5f26547f` — store-name input length bound.
+
+### Live state and verification boundary
+
+- Read-only live SQL recheck: `storefront_config` rows for key `storefront` = 0; `storefront_versions` rows = 0; `storefront_media` metadata rows = 0; `storefront-media` Storage objects = 0. No production database rows, Storage objects, migrations, or policies were changed.
+- Re-fetched the three changed source files from the work branch and checked for the banner validator, draft settings override, admin-to-draft callback, public banner rendering, safe external-link protocol checks, hero fields, and 20-banner limit. All these targeted source-presence checks passed.
+- No local compile, automated test suite, browser interaction test, Vercel build, or deployment was run. Full runtime verification remains pending and must be completed in the final consolidated verification stage.
+- The previously recorded non-atomic publish/version-history gap remains open: config publish and version insertion are still separate requests. This stage did not pretend to fix it or change production schema.
+- Version-history listing/restore UI, safe old-media garbage collection, and server-side support-ticket throttling also remain open from earlier stages.
