@@ -167,3 +167,11 @@ Static checks confirm unique migration version numbers and balanced function del
 - This mismatch allowed crafted values such as `Guest` or ` guest ` to take the non-guest validation branch even though the ownership trigger classified them as guest orders. That could bypass the guest email-required check.
 - Updated `20261106210000_validate_checkout_input_on_order_insert.sql` to normalize with `lower(btrim(coalesce(new.user_email, 'guest')))` before deciding whether the guest email requirement applies.
 - Staged SQL only; no live database write was made. The trigger's complete behavior still needs PostgreSQL execution testing before release.
+
+
+## Follow-up: order transition stock-cast safety and live trigger drift
+
+- Read-only inspection of live `orders` / `products` triggers confirmed that the production database currently has the legacy guest-email trigger and status/notification triggers, but does not yet have the staged immutable Auth UUID ownership trigger, strict checkout-input trigger, or selected size/color validation trigger. The staged changes are therefore still required for the coordinated release; no live DDL was run.
+- The cancellation/reactivation SQL used regex predicates alongside integer casts in `AND` conditions. PostgreSQL does not promise left-to-right evaluation of boolean predicates, so malformed historical JSON stock could still raise during a cast. Updated `20261107234500_harden_order_json_and_variant_integrity.sql` to put each cast behind a `CASE WHEN` regex guard for both cancellation restoration caps and reactivation stock availability.
+- The live `private.create_order_with_stock(jsonb)` function remains a `SECURITY DEFINER` function with an empty search path and currently permits guest checkout via the anon role. The immutable UUID owner-binding wrapper is staged but not live yet. Guest access is intentional for checkout; the wrapper must be deployed with the complete validated trigger sequence before treating ownership isolation as complete.
+- No real orders, stock values, or production schema were changed. Static review only; PostgreSQL execution tests are still required.
