@@ -2232,15 +2232,19 @@ export default function App() {
         return;
       }
       try {
-        const storedCart = parseStoredCartSnapshot(
-          window.localStorage.getItem(getCartStorageKey(activeOwner.userId))
-        );
-        const currentCartSnapshot = JSON.stringify(sanitizeCartSnapshot(cart));
-        if (JSON.stringify(storedCart) !== currentCartSnapshot) {
+        // Quick Buy is independent of the shopping cart; validating or
+        // replacing the cart here would couple two separate purchase flows.
+        if (!quickBuyProduct) {
+          const storedCart = parseStoredCartSnapshot(
+            window.localStorage.getItem(getCartStorageKey(activeOwner.userId))
+          );
+          const currentCartSnapshot = JSON.stringify(sanitizeCartSnapshot(cart));
+          if (JSON.stringify(storedCart) !== currentCartSnapshot) {
           cartRef.current = storedCart;
           setCart(storedCart);
-          setCheckoutError('კალათა სხვა ჩანართში შეიცვალა. გადაამოწმეთ კალათა და ხელახლა სცადეთ.');
-          return;
+            setCheckoutError('კალათა სხვა ჩანართში შეიცვალა. გადაამოწმეთ კალათა და ხელახლა სცადეთ.');
+            return;
+          }
         }
       } catch {
         setCheckoutError('კალათის უსაფრთხოდ გადამოწმება ვერ მოხერხდა. განაახლეთ გვერდი და სცადეთ თავიდან.');
@@ -2723,18 +2727,20 @@ export default function App() {
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
-    // Publish the committed empty cart synchronously before releasing the
-    // cross-tab checkout lock, so a waiting tab cannot submit its stale copy.
-    try {
-      const completedOwner = activeCartOwnerRef.current;
-      if (canPersistCartForOwner({ authLoading, activeOwner: completedOwner, currentUserId: currentUser?.id })) {
-        window.localStorage.setItem(getCartStorageKey(completedOwner.userId), '[]');
+    if (!quickBuyProduct) {
+      // Publish the committed empty cart synchronously before releasing the
+      // cross-tab checkout lock, so a waiting tab cannot submit its stale copy.
+      try {
+        const completedOwner = activeCartOwnerRef.current;
+        if (canPersistCartForOwner({ authLoading, activeOwner: completedOwner, currentUserId: currentUser?.id })) {
+          window.localStorage.setItem(getCartStorageKey(completedOwner.userId), '[]');
+        }
+      } catch {
+        // The next tab still rechecks its cart snapshot; storage failures fail closed there.
       }
-    } catch {
-      // The next tab still rechecks its cart snapshot; storage failures fail closed there.
+      cartRef.current = [];
+      setCart([]);
     }
-    cartRef.current = [];
-    setCart([]);
     setAppliedCoupon(null);
 
     // The confirmation dialog is the single success surface and displays the full order code.
