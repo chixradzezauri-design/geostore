@@ -240,6 +240,22 @@ test('does not merge different custom product variants into one order line', () 
   ]);
 });
 
+test('keeps paid add-ons attached to the exact custom variant in checkout fingerprints', () => {
+  const grouped = groupCheckoutItems([
+    { id: 'p-variant', custom_variant_id: 'v-small', quantity: 1, gift_wrap: true, vip_warranty: true, gift_message: 'Gift' },
+    { id: 'p-variant', custom_variant_id: 'v-small', quantity: 2, gift_wrap: true, vip_warranty: true, gift_message: 'Gift' },
+    { id: 'p-variant', custom_variant_id: 'v-large', quantity: 1, gift_wrap: true, vip_warranty: true, gift_message: 'Gift' }
+  ]);
+  assert.equal(grouped.length, 2);
+  assert.equal(grouped[0].custom_variant_id, 'v-large');
+  assert.equal(grouped[0].quantity, 1);
+  assert.equal(grouped[1].custom_variant_id, 'v-small');
+  assert.equal(grouped[1].quantity, 3);
+  assert.equal(grouped[1].gift_wrap, true);
+  assert.equal(grouped[1].vip_warranty, true);
+  assert.equal(grouped[1].gift_message, 'Gift');
+});
+
 test('reconciles selected custom variant price and stock against the current catalogue', () => {
   const result = reconcileCartWithCatalog(
     [{ id: 'p-variant', name: 'Pack', priceGEL: 20, basePriceGEL: 20, quantity: 2, customVariantId: 'v-small', customVariantName: 'Small pack' }],
