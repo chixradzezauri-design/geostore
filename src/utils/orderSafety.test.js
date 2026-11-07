@@ -130,12 +130,17 @@ test('normalizes missing option values consistently', () => {
   );
 });
 
-test('accepts only a matching fingerprint and a valid secure order ID for retry', () => {
-  const entry = { fingerprint: 'digest-123', orderId: `ORD-${'A'.repeat(32)}` };
-  assert.equal(isReusableCheckout(entry, 'digest-123'), true);
-  assert.equal(isReusableCheckout(entry, 'different-digest'), false);
-  assert.equal(isReusableCheckout({ ...entry, orderId: 'ORD-not-valid' }, 'digest-123'), false);
-  assert.equal(isReusableCheckout(entry, ''), false);
+test('reuses only matching secure pending checkouts within the 24-hour recovery window', () => {
+  const now = 1_800_000_000_000;
+  const entry = { fingerprint: 'digest-123', orderId: `ORD-${'A'.repeat(32)}`, createdAt: now };
+  assert.equal(isReusableCheckout(entry, 'digest-123', now), true);
+  assert.equal(isReusableCheckout({ ...entry, createdAt: now - PENDING_CHECKOUT_TTL_MS }, 'digest-123', now), true);
+  assert.equal(isReusableCheckout({ ...entry, createdAt: now - PENDING_CHECKOUT_TTL_MS - 1 }, 'digest-123', now), false);
+  assert.equal(isReusableCheckout({ ...entry, createdAt: now + 1 }, 'digest-123', now), false);
+  assert.equal(isReusableCheckout({ ...entry, createdAt: undefined }, 'digest-123', now), false);
+  assert.equal(isReusableCheckout(entry, 'different-digest', now), false);
+  assert.equal(isReusableCheckout({ ...entry, orderId: 'ORD-not-valid' }, 'digest-123', now), false);
+  assert.equal(isReusableCheckout(entry, '', now), false);
 });
 
 test('creates a 128-bit uppercase hexadecimal order ID', () => {
