@@ -2,8 +2,8 @@
 
 Date: 2026-11-07
 Supabase project: `xmtnszxtnfxnrojionoa`
-Working branch: `maintenance/storefront-draft-save-2026-11-06`
-Reviewed branch commit: `284511356901059dcaa19ece3a0e1d90d29b2eb8`
+Working branch: `design/neo-editorial-2026-11-07`
+Reviewed branch commit: `2406f0ca32695ab40998a708b4b57924c520d0f9`
 
 ## Reconciliation baseline snapshot — 2026-11-06
 
