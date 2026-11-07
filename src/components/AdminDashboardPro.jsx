@@ -1449,6 +1449,14 @@ export default function AdminDashboardPro({
   };
 
   const handleEditProduct = (p) => {
+    if (editingProductId && isProductMutationBusy(editingProductId)) {
+      alert('მიმდინარე პროდუქტის ვარიანტის მარაგი ჯერ ახლდება. დაელოდეთ დასრულებას და შემდეგ შეცვალეთ პროდუქტი.');
+      return;
+    }
+    if (isProductMutationBusy(p?.id)) {
+      alert('ამ პროდუქტის მარაგი ახლა ახლდება. დაელოდეთ დასრულებას და შემდეგ გახსენით რედაქტირება.');
+      return;
+    }
     productEditVersion.current = p.version ?? null;
     setEditingProductId(String(p.id));
     setProductForm({
@@ -1470,6 +1478,10 @@ export default function AdminDashboardPro({
   };
 
   const resetProductEditor = () => {
+    if (editingProductId && isProductMutationBusy(editingProductId)) {
+      alert('ვარიანტის მარაგის განახლება ჯერ სრულდება. რედაქტირების გაუქმებამდე დაელოდეთ დასრულებას.');
+      return;
+    }
     productEditVersion.current = null;
     setEditingProductId(null);
     setProductForm(productFormInitial);
