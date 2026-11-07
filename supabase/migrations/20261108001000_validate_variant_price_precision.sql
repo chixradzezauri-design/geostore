@@ -1490,7 +1490,7 @@ begin
     raise exception 'შეკვეთის დადასტურებული თანხა არასწორია.';
   end if;
   if (p_order->>'total_gel')::numeric < 0
-     or (p_order->>'total_gel')::numeric > 101000000000 then
+     or (p_order->>'total_gel')::numeric > 90071992547409.91 then
     raise exception 'შეკვეთის დადასტურებული თანხა დასაშვებ ზღვარს სცდება.';
   end if;
 
