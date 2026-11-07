@@ -92,7 +92,7 @@ This confirms that migration version history alone cannot establish whether a mi
 
 ### Storefront draft-field exposure
 
-The live ACL query confirmed that `anon` currently has table-level SELECT on both `public.storefront_config` and `public.storefront_media`. The live row policy restricts which rows are visible, but the column privileges still expose `draft_config` on a published storefront row and `created_by` in public media metadata. The column-restriction migration now revokes table SELECT from both `PUBLIC` and `anon` before granting only the published config/media columns. This fix is staged and **not yet applied to production**.
+The live ACL query confirmed that both `anon` and `authenticated` currently have table-level SELECT on `public.storefront_config` and `public.storefront_media`. The row policies restrict rows, but any visitor who can see a published row can also read the `draft_config` field; signed-in non-admins can do so as well. The `created_by` administrator UUID is also readable from public media metadata. The migration now revokes table SELECT from `PUBLIC`, `anon`, and `authenticated`, grants only safe published metadata columns, and adds an admin-verified `public.get_storefront_draft()` RPC. `src/App.jsx` now loads drafts through that RPC and saves with `return=minimal`. These changes are staged and **not yet applied to production**.
 
 ### Migration replacement ordering
 
