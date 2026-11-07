@@ -1600,15 +1600,17 @@ export default function AdminDashboardPro({
       if (editingProductId) {
         // The database trigger preserves live base and variant stock while
         // this metadata update is based on the editor's potentially stale snapshot.
-        const updatePayload = { ...newProdPayload };
-        delete updatePayload.id;
+        const updatePayload = { ...newProdPayload, id: String(prodId) };
         delete updatePayload.stock;
         const updateHeaders = await getSupabaseHeaders();
         productWriteState = 'unknown';
-        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)) + '&' + productVersionFilter, {
-          method: 'PATCH',
+        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_update_product', {
+          method: 'POST',
           headers: updateHeaders,
-          body: JSON.stringify(updatePayload)
+          body: JSON.stringify({
+            p_product: updatePayload,
+            p_expected_version: Number(productEditVersion.current)
+          })
         });
         if (!updateResponse.ok) {
           productWriteState = 'rejected';
