@@ -8758,3 +8758,25 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size:10px!important;
   }
 }
+
+
+/* GEOSTORE maintenance: keep product photography proportions consistent on mobile.
+   Earlier legacy rules assigned fixed heights at narrow breakpoints, overriding the
+   4:5 media ratio and producing uneven image areas across phone widths. */
+@media(max-width:767px){
+  .geostore-shell .geostore-storefront .gs-catalog-product-media{
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    aspect-ratio:4/5!important;
+    padding:8px!important;
+  }
+}
+@media(max-width:360px){
+  .geostore-shell .geostore-storefront .gs-catalog-product-media{
+    height:auto!important;
+    min-height:0!important;
+    aspect-ratio:4/5!important;
+    padding:7px!important;
+  }
+}
