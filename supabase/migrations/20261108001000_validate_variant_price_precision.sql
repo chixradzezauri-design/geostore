@@ -24,7 +24,7 @@ BEGIN
     RAISE EXCEPTION 'A product may contain at most 50 variants.' USING ERRCODE = '22023';
   END IF;
 
-  FOR v_variant IN SELECT value FROM jsonb_array_elements(NEW.variants) AS rows(value)
+  FOR v_variant IN SELECT value FROM jsonb_array_elements(NEW.variants) AS variant_row(value)
   LOOP
     IF jsonb_typeof(v_variant) IS DISTINCT FROM 'object' THEN
       RAISE EXCEPTION 'Product variant must be a JSON object.' USING ERRCODE = '22023';
