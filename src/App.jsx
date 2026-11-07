@@ -2394,6 +2394,19 @@ export default function App() {
 
       if (sessionError) throw sessionError;
 
+      // The authenticated identity may change while getSession() is pending.
+      // Do not silently rebind the outgoing cart/form snapshot to a new account.
+      const sessionOwnerId = session?.user?.id || null;
+      if (
+        !isSameAuthOwner(orderOwnerId, sessionOwnerId) ||
+        !isSameAuthOwner(activeCartOwnerRef.current.userId, orderOwnerId)
+      ) {
+        setCheckoutError('ანგარიში შეიცვალა შეკვეთის მომზადებისას. განაახლეთ გვერდი და ხელახლა გადაამოწმეთ კალათა.');
+        setIsSubmittingOrder(false);
+        orderSubmitLock.current = false;
+        return;
+      }
+
       const orderSession = session?.access_token && session?.user?.email ? session : null;
       orderOwnerId = orderSession?.user?.id || null;
 
