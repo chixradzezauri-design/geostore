@@ -176,6 +176,12 @@ revoke all on function private.admin_delete_product_if_version(text,bigint) from
 revoke all on function public.admin_delete_product_if_version(text,bigint) from public, anon;
 grant execute on function public.admin_delete_product_if_version(text,bigint) to authenticated;
 
+-- Retire the legacy unversioned delete route so stale clients cannot bypass
+-- the compare-and-delete contract.
+revoke all on function public.admin_delete_product(text) from public, anon, authenticated;
+revoke all on function private.admin_delete_product(text) from public, anon, authenticated;
+
+
      or (p_product ->> 'price_gel')::numeric < 0
      or (p_product ->> 'price_gel')::numeric > 1000000000 then
     raise exception 'Invalid product update payload' using errcode = '22023';
