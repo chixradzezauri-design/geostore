@@ -531,6 +531,7 @@ export default function App() {
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
 
   const [authForm, setAuthForm] = useState({
     name: '',
@@ -1855,6 +1856,7 @@ export default function App() {
     if (authMode === 'reset-request') {
       if (authSubmitLock.current) return;
       authSubmitLock.current = true;
+      setAuthSubmitting(true);
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: 'https://geostore.vercel.app/'
@@ -1871,6 +1873,7 @@ export default function App() {
         alert(currentLang === 'en' ? 'Could not send the reset email. Please try again later.' : currentLang === 'ru' ? 'Не удалось отправить письмо. Попробуйте позже.' : 'აღდგენის წერილის გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
       } finally {
         authSubmitLock.current = false;
+        setAuthSubmitting(false);
       }
       return;
     }
@@ -1883,6 +1886,7 @@ export default function App() {
     // Prevent duplicate Supabase auth requests from rapid taps or repeated submits.
     if (authSubmitLock.current) return;
     authSubmitLock.current = true;
+    setAuthSubmitting(true);
 
     try {
       if (authMode === 'reset-password') {
@@ -2093,6 +2097,7 @@ export default function App() {
       }
     } finally {
       authSubmitLock.current = false;
+      setAuthSubmitting(false);
     }
   };
 
@@ -3323,6 +3328,7 @@ export default function App() {
         authForm={authForm}
         setAuthForm={setAuthForm}
         handleAuthSubmit={handleAuthSubmit}
+        authSubmitting={authSubmitting}
         isTermsOpen={isTermsOpen}
         setIsTermsOpen={setIsTermsOpen}
         isWarrantyOpen={isWarrantyOpen}
