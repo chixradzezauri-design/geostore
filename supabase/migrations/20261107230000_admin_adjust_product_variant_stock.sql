@@ -59,7 +59,7 @@ BEGIN
     ELSE NULL
   END
     INTO v_current_stock
-    FROM jsonb_array_elements(v_product.variants) AS e(item)
+    FROM jsonb_array_elements(v_variants) AS e(item)
    WHERE item ->> 'id' = p_variant_id;
 
   IF v_current_stock IS NULL THEN
