@@ -737,6 +737,17 @@ export default function AdminDashboardPro({
     ).length;
     const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
     const productById = new Map((products || []).map(product => [String(product.id), product]));
+    const getOrderLineRevenue = (item) => {
+      const unitPrice = Math.max(0, Number(item?.priceGEL ?? item?.price) || 0);
+      const giftWrapFee = item?.gift_wrap === true
+        ? Math.max(0, Number(item?.gift_wrap_fee ?? 5) || 0)
+        : 0;
+      const vipWarrantyFee = item?.vip_warranty === true
+        ? Math.max(0, Number(item?.vip_warranty_fee ?? 15) || 0)
+        : 0;
+      const quantity = Math.max(1, Number(item?.quantity) || 1);
+      return (unitPrice + giftWrapFee + vipWarrantyFee) * quantity;
+    };
 
     let totalSalesRevenue = 0;
     let totalDeliveryRevenue = 0;
@@ -755,7 +766,7 @@ export default function AdminDashboardPro({
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const lineGross = items.reduce((sum, item) => sum + (Math.max(0, Number(item.priceGEL ?? item.price) || 0) * Math.max(1, Number(item.quantity) || 1)), 0);
+      const lineGross = items.reduce((sum, item) => sum + getOrderLineRevenue(item), 0);
       const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
       const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
       const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
@@ -773,7 +784,7 @@ export default function AdminDashboardPro({
         const productId = item.id ?? item.product_id;
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = Math.max(1, Number(item.quantity) || 1);
-        const itemGross = Math.max(0, Number(item.priceGEL ?? item.price) || 0) * quantity;
+        const itemGross = getOrderLineRevenue(item);
         const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
