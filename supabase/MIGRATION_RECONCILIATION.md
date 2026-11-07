@@ -151,3 +151,11 @@ Static checks confirm unique migration version numbers and balanced function del
 - Ran the isolated Node test file for `src/utils/productImageCleanup.js` and `src/utils/productImageCleanup.test.js` against the exact current branch contents.
 - Result: 5 tests passed, 0 failed. This covers image reference collection, malformed gallery handling, cleanup only after a known rejected/not-started write, and retention when order history exists.
 - This was a focused helper test only; it is not the full project test suite, a Vite production build, or browser/device QA.
+
+
+## Follow-up: close the direct order UPDATE path
+
+- A live read-only privilege check confirmed that `authenticated` had no table-level UPDATE on `public.orders`, but still had effective column-level UPDATE on `admin_note`. Anonymous users had no such access.
+- The application reads orders for the authenticated primary-admin session and writes order notes/status only through validated RPCs; no direct REST PATCH to `orders` was found in `App.jsx` or `AdminDashboardPro.jsx`.
+- Hardened `20261107241000_revoke_direct_order_note_column_update.sql` to revoke table-level UPDATE and the `admin_note` column-level UPDATE from `PUBLIC`, `anon`, and `authenticated`. This prevents future broad grants from restoring direct client-side order mutation.
+- This remains staged only. Live read-only preflight still reports `authenticated` can update `orders.admin_note` until the migration is applied in the coordinated release. No production database changes were made.
