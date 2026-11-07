@@ -489,17 +489,31 @@ export default function App() {
     cartRef.current = cart;
   }, [cart]);
 
-  const [wishlist, setWishlist] = useState(() =>
+  const [wishlist, setWishlistState] = useState(() =>
     sanitizeProductCollection(loadSafeStorage('geostore_wishlist:guest', loadSafeStorage('geostore_wishlist', [])), 100)
   );
   const wishlistRef = useRef(wishlist);
-  const [comparisonList, setComparisonList] = useState(() =>
+  const setWishlist = (nextValue) => {
+    const nextItems = sanitizeProductCollection(
+      typeof nextValue === 'function' ? nextValue(wishlistRef.current) : nextValue,
+      100
+    );
+    wishlistRef.current = nextItems;
+    setWishlistState(nextItems);
+  };
+
+  const [comparisonList, setComparisonListState] = useState(() =>
     sanitizeProductCollection(loadSafeStorage('geostore_comparison:guest', loadSafeStorage('geostore_comparison', [])), 4)
   );
   const comparisonListRef = useRef(comparisonList);
-
-  useEffect(() => { wishlistRef.current = wishlist; }, [wishlist]);
-  useEffect(() => { comparisonListRef.current = comparisonList; }, [comparisonList]);
+  const setComparisonList = (nextValue) => {
+    const nextItems = sanitizeProductCollection(
+      typeof nextValue === 'function' ? nextValue(comparisonListRef.current) : nextValue,
+      4
+    );
+    comparisonListRef.current = nextItems;
+    setComparisonListState(nextItems);
+  };
 
   const [promoInput, setPromoInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
