@@ -2008,7 +2008,7 @@ export default function App() {
       // customer-facing stale-cart guard; the SQL RPC still rechecks price
       // and stock under row locks and remains the source of truth.
       const catalogueResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/products?select=id,name,price_gel,stock`,
+        `${SUPABASE_URL}/rest/v1/products?select=id,name,price_gel,stock,available_sizes,available_colors`,
         { headers: await getSupabaseHeaders() }
       );
       if (!catalogueResponse.ok) {
