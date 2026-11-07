@@ -2500,29 +2500,20 @@ export default function App() {
     // The confirmation dialog is the single success surface and displays the full order code.
   };
 
+  // Category and subcategory filtering belongs to StoreView, which has the
+  // parent/child category tree. Filtering by the parent name here first would
+  // discard products assigned to its subcategories before StoreView can include them.
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const matchesCategory =
-        selectedCategory === t.allCategories ||
-        selectedCategory === 'ყველა' ||
-        p.category === selectedCategory;
-
       const matchesVendor =
         selectedVendorFilter === t.allVendors ||
         selectedVendorFilter === 'ყველა' ||
         p.vendor === selectedVendorFilter;
 
-      const matchesSearch = matchesProductSearch(p, searchQuery);
-
-      return (
-        matchesCategory &&
-        matchesVendor &&
-        matchesSearch
-      );
+      return matchesVendor && matchesProductSearch(p, searchQuery);
     });
   }, [
     products,
-    selectedCategory,
     selectedVendorFilter,
     searchQuery,
     t
