@@ -570,3 +570,37 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Confirmed the product image and gallery remain unchanged; all live Storage and media metadata counts remain zero.
 - Supabase Storage documentation confirms public buckets serve objects publicly while write operations remain governed by Storage RLS policies; bucket-level file size and MIME restrictions are enforced by Storage.
 - No build, unit test runner, browser/device test, Vercel build, or deployment was run because no local checkout/CLI runtime is connected here. No production files or rows were changed.
+
+
+## Dependency, build pipeline, and frontend bootstrap audit — 2026-11-07
+
+### Critical build configuration finding and correction
+- The repository had `src/index.css` containing Tailwind directives (`@tailwind base/components/utilities`) and extensive JSX utility classes, but no `postcss.config.*` or `tailwind.config.*` file existed. The HTML also had a leftover Tailwind CDN comment but no CDN script.
+- Added `postcss.config.js` to run the installed local Tailwind 3 and Autoprefixer plugins.
+- Added `tailwind.config.js` with explicit scanning of `index.html` and all JS/TS/JSX/TSX source files under `src`.
+- This is a build-pipeline correction: without these configuration files, Vite had no configured Tailwind PostCSS plugin to expand the directives and generate the utility CSS used throughout the application. Build output still needs to be verified in a real build before release.
+
+### Runtime compatibility
+- Vercel discontinued Node.js 20 for new builds/functions in October 2026 and now offers Node 26 as the default, with Node 24 and 22 available.
+- Pinned `engines.node` to `24.x` in `package.json` and synchronized the root package metadata in `package-lock.json`. Node 24 is the conservative supported runtime choice; this avoids accidentally jumping to the newly-defaulted Node 26 while keeping compatibility with supported Supabase JS runtimes.
+- Did not change dependency versions or major framework versions without a reproducible local install/build and regression test environment.
+
+### Dependency integrity and advisory review
+- Lockfile version 3 contains 195 package entries. All resolved tarballs use the npm registry and all resolved packages have integrity hashes.
+- Only two packages declare install scripts: `esbuild` (expected platform binary setup) and optional `fsevents`. No Git, file, or alternate-host package sources were found.
+- Two duplicated transitive package names (`glob-parent` and `picomatch`) resolve to multiple versions; retained because dependency consumers may require different compatible majors.
+- Reviewed the pinned versions of React/React DOM 18.3.1, Vite 6.4.5, PostCSS 8.5.32, Tailwind 3.4.19, and Supabase JS 2.109.0 against current public advisories. Vite 6.4.5 includes the October 2026 v6 security fixes; PostCSS 8.5.32 is beyond the published affected ranges; no direct React 18.3.1 or React DOM 18.3.1 advisory was identified for this client-only app. React Server Components advisories do not map to the current client-only Vite architecture.
+- Supabase JS 2.109.0 is behind current releases; its later 2.110 line dropped Node 20 support. The selected Node 24 runtime is compatible, but a dependency refresh (including Supabase JS and the older Lucide icon package) remains a separately testable maintenance task. No semver/lockfile mismatch was introduced by this stage.
+
+### Frontend bootstrap cleanup
+- Removed legacy `no-cache/no-store` HTML meta directives that conflicted with the actual HTTP cache policy already defined in `vercel.json`: HTML revalidation and immutable caching for hashed assets.
+- Removed the stale Tailwind CDN comment; Tailwind is now configured as a local build dependency.
+- Removed duplicate inline font/scrollbar CSS from `index.html` and aligned the global body font with the Manrope + Noto Sans Georgian font stack already loaded in the document head. This fixes the previous cascade override where `src/index.css` replaced the intended font stack with system fonts.
+- Kept React StrictMode enabled. Its development-only effect replays are intentional and are not grounds to disable it; any actual duplicate network side effects need targeted effect cleanup, not removing StrictMode.
+
+### Verification boundaries
+- Re-fetched all changed files and verified package.json and package-lock root Node engine declarations both equal `24.x`; confirmed the new PostCSS/Tailwind configs exist and the old cache meta tags are absent.
+- Static lockfile inspection: 195 packages, no non-npm tarball sources, no missing integrity hashes, two expected install-script packages.
+- Public advisory sources reviewed include the official Vite advisory list, React advisories, PostCSS advisories, Supabase JS changelog/runtime support, and Vercel's Node version documentation.
+- No npm install, `npm audit`, `npm audit signatures`, `npm test`, Vite build, browser test, or Vercel deployment was run. The connected environment does not provide the project's local Node/npm runtime. Do not represent this stage as a verified successful build.
+- No production database, Storage object, order, product, or customer record was changed.
