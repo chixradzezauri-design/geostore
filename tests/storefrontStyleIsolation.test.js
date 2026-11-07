@@ -8,8 +8,8 @@ const storeView = readFileSync(new URL('../src/components/StoreView.jsx', import
 const aiAssistant = readFileSync(new URL('../src/components/AiAssistantModal.jsx', import.meta.url), 'utf8');
 
 test('storefront navigation styles do not leak into the AI assistant header', () => {
-  assert.doesNotMatch(css, /\\.geostore-fashion-store\\s+header\\b/);
-  assert.match(css, /\\.gs-ai-header\\s*\\{[^}]*background:\\s*#29241f/s);
+  assert.doesNotMatch(css, /\.geostore-fashion-store\s+header\b/);
+  assert.match(css, /\.gs-ai-header\s*\{[^}]*background:\s*#29241f/s);
   assert.match(header, /gs-site-header/);
   assert.match(aiAssistant, /className="gs-ai-header"/);
 });
