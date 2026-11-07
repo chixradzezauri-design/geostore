@@ -36,7 +36,6 @@ export default function Modals({
   notificationsLoading = false,
   notificationsError = '',
   markAllNotificationsAsRead,
-  orders = [],
   lookupOrderForTracking,
   selectedRegion,
   setSelectedRegion,
@@ -301,7 +300,11 @@ export default function Modals({
         : copy.trackerInvalidPhone);
       return;
     }
-    if (typeof lookupOrderForTracking !== 'function' || isSearchingOrder) return;
+    if (isSearchingOrder) return;
+    if (typeof lookupOrderForTracking !== 'function') {
+      setTrackerError(copy.trackerFailed);
+      return;
+    }
     const { orderId: cleanId, phone: cleanPhone } = normalizedLookup;
 
     setIsSearchingOrder(true);
@@ -309,7 +312,11 @@ export default function Modals({
     setTrackerError('');
     try {
       const found = await lookupOrderForTracking(cleanId, cleanPhone);
-      if (!found) {
+      if (found?.rateLimited === true) {
+        setTrackerError(copy.trackerRateLimited);
+        return;
+      }
+      if (!found || typeof found !== 'object' || !found.id) {
         setTrackerError('შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.');
         return;
       }
@@ -527,7 +534,7 @@ export default function Modals({
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold block" >{copy.orderCode}</span>
-                      <b className="text-amber-400 text-sm font-black">#{trackedOrder.id}</b>
+                      <b className="text-amber-400 text-sm font-black break-all">#{trackedOrder.id}</b>
                     </div>
                     <span className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold">
                       🟢 {localizedStatus(trackedOrder.status)}
@@ -545,7 +552,7 @@ export default function Modals({
                     </div>
                     <div className="col-span-2">
                       <span className="text-slate-500 text-[10px] block" >{copy.items}</span>
-                      <b className="text-slate-200">{trackedOrder.itemSummary || copy.products}</b>
+                      <b className="text-slate-200 break-words [overflow-wrap:anywhere]">{trackedOrder.itemSummary || copy.products}</b>
                     </div>
                   </div>
                 </div>
