@@ -2927,6 +2927,7 @@ export default function App() {
             addToCart={addToCart}
             onQuickBuy={handleQuickBuy}
             formatPrice={formatPrice}
+            currentUser={currentUser}
           />
           </Suspense>
         )}

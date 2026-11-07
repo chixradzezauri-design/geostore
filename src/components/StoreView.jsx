@@ -23,7 +23,8 @@ export default function StoreView({
   toggleComparison,
   addToCart,
   onQuickBuy,
-  formatPrice
+  formatPrice,
+  currentUser = null
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -78,17 +79,30 @@ export default function StoreView({
     return () => clearInterval(timer);
   }, []);
 
-  const [allReviews, setAllReviews] = useState(() => {
-    try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
-  });
-  const [newReviewAuthor, setNewReviewAuthor] = useState('');
+  const reviewStorageKey = currentUser?.id
+    ? `geostore_product_reviews:user:${currentUser.id}`
+    : 'geostore_product_reviews:guest';
+  const [allReviews, setAllReviews] = useState({});
+  const [reviewsLoadedFor, setReviewsLoadedFor] = useState(null);
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewImage, setNewReviewImage] = useState('');
 
   useEffect(() => {
-    try { localStorage.setItem('geostore_product_reviews', JSON.stringify(allReviews)); } catch {}
-  }, [allReviews]);
+    let loaded = {};
+    try {
+      const saved = localStorage.getItem(reviewStorageKey);
+      const parsed = saved ? JSON.parse(saved) : {};
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) loaded = parsed;
+    } catch {}
+    setAllReviews(loaded);
+    setReviewsLoadedFor(reviewStorageKey);
+  }, [reviewStorageKey]);
+
+  useEffect(() => {
+    if (reviewsLoadedFor !== reviewStorageKey) return;
+    try { localStorage.setItem(reviewStorageKey, JSON.stringify(allReviews)); } catch {}
+  }, [allReviews, reviewStorageKey, reviewsLoadedFor]);
 
   // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი
   const isClothingOrFootwear = (prod) => {
@@ -118,7 +132,6 @@ export default function StoreView({
     setUserHeight('');
     setUserWeight('');
     setUserFootLength('');
-    setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
     setNewReviewImage('');
@@ -161,15 +174,16 @@ export default function StoreView({
 
   const handleAddReview = (e, productId) => {
     e.preventDefault();
-    if (!newReviewAuthor.trim() || !newReviewComment.trim()) return;
+    if (!currentUser?.id || !newReviewComment.trim()) return;
 
     const reviewObj = {
       id: `rev-${Date.now()}`,
-      author: newReviewAuthor.trim(),
-      comment: newReviewComment.trim(),
-      rating: Number(newReviewRating),
+      userId: currentUser.id,
+      author: String(currentUser.name || currentUser.email || 'GEOSTORE customer').trim().slice(0, 80),
+      comment: newReviewComment.trim().slice(0, 1200),
+      rating: Math.min(5, Math.max(1, Number(newReviewRating) || 5)),
       image: newReviewImage || null,
-      date: new Date().toLocaleDateString('ka-GE')
+      date: new Date().toLocaleDateString(currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka-GE')
     };
 
     setAllReviews(prev => {
@@ -978,14 +992,11 @@ export default function StoreView({
                           <option value="1">⭐ (1)</option>
                         </select>
                       </div>
-                      <input 
-                        type="text" 
-                        placeholder={storeText.yourName} 
-                        value={newReviewAuthor} 
-                        onChange={e => setNewReviewAuthor(e.target.value)}
-                        required
-                        className="gs-product-review-field w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-white outline-none focus:border-amber-400"
-                      />
+                      <div className="gs-product-review-field w-full bg-[#060608] border border-amber-500/20 p-3 rounded-2xl text-slate-300 text-xs" aria-live="polite">
+                        {currentUser?.id
+                          ? (currentUser.name || currentUser.email || 'GEOSTORE customer')
+                          : (currentLang === 'en' ? 'Sign in to leave a review.' : currentLang === 'ru' ? 'Войдите, чтобы оставить отзыв.' : 'შეფასების დასატოვებლად შედით თქვენს ანგარიშში.')}
+                      </div>
                       <textarea 
                         placeholder={storeText.reviewPlaceholder} 
                         value={newReviewComment} 
@@ -1003,7 +1014,7 @@ export default function StoreView({
                         {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
 
-                      <button type="submit" className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer">
+                      <button type="submit" disabled={!currentUser?.id || !newReviewComment.trim()} className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                         {storeText.publishReview}
                       </button>
                     </form>
