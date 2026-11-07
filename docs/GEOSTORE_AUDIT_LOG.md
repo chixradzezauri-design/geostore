@@ -793,3 +793,19 @@ No database DDL, row data, authentication settings, Vercel builds, or deployment
 - Staged `20261107200000_bind_order_ownership_to_auth_user_uuid.sql` replaces email-based ownership with immutable `auth.uid()` ownership and constructs an explicit customer-facing item allowlist. It excludes `purchase_cost`, `vendor`, and `category`.
 - Added a static regression test that verifies the staged customer-history function uses `user_id = auth.uid()`, contains the allowed display fields, and omits internal cost/vendor/category fields.
 - The migration remains unapplied until the live migration history and schema drift are reconciled. Do not deploy the corresponding app changes ahead of the database migration.
+
+
+### Transactional end-to-end database verification — 2026-11-07
+- Ran both staged database migrations together against the connected PostgreSQL 17 project inside one explicit transaction, then rolled the transaction back.
+- Within that transaction, created a disposable product with a custom variant and submitted a test order through the public checkout RPC.
+- **7/7 integration checks passed:**
+  1. Variant price plus gift-wrap/VIP fees produced the expected 240 GEL subtotal; base stock remained 10 and variant stock fell from 3 to 1.
+  2. Same-owner checkout retry returned an idempotent replay and did not deduct stock a second time.
+  3. A different Auth UUID using the same email could not replay the first user's order.
+  4. Customer order history retained the required item fields while excluding purchase cost, vendor and internal category.
+  5. Cancellation restored the exact variant stock from 1 to 3.
+  6. Admin reactivation deducted the same variant stock from 3 to 1.
+  7. Cancellation after reactivation restored stock once, back to 3.
+- The test exercised the real public RPC wrappers, ownership trigger, order notification trigger, status-transition guard, stock-preservation trigger, and reactivation password-auth timestamp check.
+- After ROLLBACK, verified: 0 orders, 0 audit test products, no new ownership columns, no renamed unchecked function, and remote migration history unchanged at `20261107160152`.
+- This is transactional integration verification only. No persistent product/order data or production schema was changed.
