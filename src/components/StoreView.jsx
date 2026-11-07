@@ -206,7 +206,6 @@ export default function StoreView({
       };
     });
 
-    setNewReviewAuthor('');
     setNewReviewComment('');
     setNewReviewRating(5);
     setNewReviewImage('');
