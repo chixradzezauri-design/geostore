@@ -2321,13 +2321,24 @@ export default function App() {
         if (!quickBuyProduct) setCart(reconciliation.cartItems);
         setProducts((previous) => previous.map((product) => {
           const current = latestCatalogue.find((entry) => String(entry.id) === String(product.id));
-          return current
-            ? { ...product, name: current.name || product.name, priceGEL: Number(current.price_gel), stock: Math.max(0, Math.floor(Number(current.stock) || 0)) }
-            : product;
+          if (!current) return product;
+          const latestPrice = Number(current.price_gel);
+          const latestStock = Number(current.stock);
+          return {
+            ...product,
+            name: current.name || product.name,
+            priceGEL: Number.isFinite(latestPrice) && latestPrice >= 0 ? latestPrice : product.priceGEL,
+            stock: Number.isFinite(latestStock) ? Math.max(0, Math.floor(latestStock)) : 0,
+            variants: Array.isArray(current.variants) ? current.variants : product.variants,
+            availableSizes: Array.isArray(current.available_sizes) ? current.available_sizes : product.availableSizes,
+            availableColors: Array.isArray(current.available_colors) ? current.available_colors : product.availableColors
+          };
         }));
         const changedNames = [...new Set(reconciliation.changes.map((change) => change.name).filter(Boolean))].slice(0, 3).join(', ');
         const hasVariantChange = reconciliation.changes.some((change) =>
-          change.type === 'variant_size' || change.type === 'variant_color'
+          ['variant_size', 'variant_color', 'variant_size_missing', 'variant_color_missing',
+            'variant_custom_missing', 'variant_custom_unavailable'].includes(change.type) ||
+          (change.type === 'stock' && Boolean(change.customVariantId))
         );
         const message = currentLang === 'en'
           ? hasVariantChange
