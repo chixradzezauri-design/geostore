@@ -15,6 +15,7 @@ import {
   parsePendingCheckoutEntries,
   removePendingCheckoutEntry,
   upsertPendingCheckoutEntry,
+  mergePendingCheckoutStores,
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
@@ -581,4 +582,31 @@ test('drops expired and malformed entries while retaining the 24-hour retry wind
   const malformed = { fingerprint: 'bad', orderId: 'not-an-order-id', createdAt: now };
   const raw = JSON.stringify({ version: 3, entries: [fresh, expired, malformed] });
   assert.deepEqual(parsePendingCheckoutEntries(raw, now), [fresh]);
+});
+
+test('merges legacy pending retry with existing v3 entries without losing either', () => {
+  const legacy = JSON.stringify(pendingEntry('legacy-fingerprint', 'A', 1_000));
+  const current = upsertPendingCheckoutEntry(
+    '',
+    pendingEntry('current-fingerprint', 'B', 1_100),
+    1_100
+  );
+
+  const merged = mergePendingCheckoutStores(current, legacy, 1_100);
+  assert.deepEqual(
+    parsePendingCheckoutEntries(merged, 1_100).map((entry) => entry.fingerprint),
+    ['legacy-fingerprint', 'current-fingerprint']
+  );
+  assert.equal(
+    findReusablePendingCheckout(merged, 'legacy-fingerprint', 1_100).orderId,
+    pendingEntry('legacy-fingerprint', 'A').orderId
+  );
+});
+
+test('prefers v3 version of duplicate fingerprint while merging legacy store', () => {
+  const legacy = JSON.stringify(pendingEntry('same-fingerprint', 'A', 1_000));
+  const currentEntry = pendingEntry('same-fingerprint', 'B', 1_050);
+  const current = upsertPendingCheckoutEntry('', currentEntry, 1_050);
+  const merged = mergePendingCheckoutStores(current, legacy, 1_100);
+  assert.deepEqual(parsePendingCheckoutEntries(merged, 1_100), [currentEntry]);
 });
