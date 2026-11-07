@@ -13,6 +13,7 @@ import { validateProductVariants } from '../utils/productValidation';
 import { resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { createSecureId } from '../utils/secureId.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -40,6 +41,11 @@ const getSupabaseHeaders = async () => {
 const PRODUCT_IMAGE_BUCKET = 'storefront-media';
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PRODUCT_GALLERY_IMAGES = 10;
+const createAdminId = (prefix) => {
+  try { return createSecureId(prefix); }
+  catch (error) { console.error('GEOSTORE secure identifier generation failed:', error); return null; }
+};
+const secureIdError = 'უსაფრთხო იდენტიფიკატორის შექმნა ვერ მოხერხდა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.';
 const PRODUCT_IMAGE_TYPES = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -392,9 +398,8 @@ export default function AdminDashboardPro({
     if (productVariants.length >= 50) return alert('ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.');
     if (productVariants.some(variant => String(variant.name || '').trim().toLocaleLowerCase() === name.toLocaleLowerCase())) return alert('ამ პროდუქტზე ასეთი ვარიანტის სახელი უკვე არსებობს.');
 
-    const generatedVariantId = typeof globalThis.crypto?.randomUUID === 'function'
-      ? `var-${globalThis.crypto.randomUUID()}`
-      : `var-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const generatedVariantId = createAdminId('var');
+    if (!generatedVariantId) return alert(secureIdError);
     const varObj = {
       id: generatedVariantId,
       name,
@@ -580,8 +585,10 @@ export default function AdminDashboardPro({
   const handleAddStaff = (e) => {
     e.preventDefault();
     if (!staffForm.name || !staffForm.email) return;
+    const staffId = createAdminId('st');
+    if (!staffId) return alert(secureIdError);
     const newStaffMember = {
-      id: `st-${Date.now()}`,
+      id: staffId,
       name: staffForm.name.trim(),
       email: staffForm.email.trim(),
       role: staffForm.role,
@@ -614,8 +621,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const staffId = createAdminId('st');
+    if (!staffId) return alert(secureIdError);
     const newStaffMember = {
-      id: `st-${Date.now()}`,
+      id: staffId,
       name: targetUser.name || 'მომხმარებელი',
       email: targetUser.email || 'user@geostore.ge',
       role: 'მენეჯერი',
@@ -969,8 +978,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const expenseId = createAdminId('exp');
+    if (!expenseId) return alert(secureIdError);
     const newExp = {
-      id: `exp-${Date.now()}`,
+      id: expenseId,
       category,
       amount,
       date: expenseForm.date,
@@ -1090,9 +1101,8 @@ export default function AdminDashboardPro({
       alert('არჩეული მთავარი კატეგორია აღარ არსებობს. განაახლეთ არჩევანი.');
       return;
     }
-    const catId = typeof globalThis.crypto?.randomUUID === 'function'
-      ? `cat-${globalThis.crypto.randomUUID()}`
-      : `cat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const catId = createAdminId('cat');
+    if (!catId) return alert(secureIdError);
     const cleanImage = newCatImage.trim() || '';
     const newCatObj = {
       id: catId,
@@ -1359,7 +1369,12 @@ export default function AdminDashboardPro({
       };
       return alert(variantErrors[variantsValidation.reason] || 'პროდუქტის ვარიანტების შემოწმება ვერ მოხერხდა.');
     }
-    const prodId = editingProductId || `prod-${Date.now()}`;
+    const prodId = editingProductId || createAdminId('prod');
+    if (!prodId) return alert(secureIdError);
+    const newProductSku = editingProductId
+      ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null)
+      : createAdminId('GEO');
+    if (!editingProductId && !newProductSku) return alert(secureIdError);
     let galleryImages = [];
     let newlyUploadedImages = [];
     let newProdPayload;
@@ -1382,7 +1397,7 @@ export default function AdminDashboardPro({
       const mainImage = galleryImages[0] || null;
       newProdPayload = {
       id: prodId,
-      sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: newProductSku,
       name: productName,
       category: String(productForm.category).trim(),
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
@@ -1794,8 +1809,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const couponId = createAdminId('c');
+    if (!couponId) return alert(secureIdError);
     const newC = {
-      id: `c-${Date.now()}`,
+      id: couponId,
       code,
       discountPercent,
       minOrderGEL,
@@ -1911,8 +1928,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const vendorId = createAdminId('v');
+    if (!vendorId) return alert(secureIdError);
     const newV = {
-      id: `v-${Date.now()}`,
+      id: vendorId,
       name: vendorName,
       commission,
       status: 'აქტიური'
@@ -1956,8 +1975,10 @@ export default function AdminDashboardPro({
       alert('ერთდროულად მაქსიმუმ 20 აქტიური ბანერის შენახვა შეიძლება.');
       return;
     }
+    const bannerId = createAdminId('b');
+    if (!bannerId) return alert(secureIdError);
     const newB = {
-      id: `b-${window.crypto?.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)}`,
+      id: bannerId,
       title,
       subtitle,
       image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200',
@@ -1993,8 +2014,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const notificationId = createAdminId('notif');
+    if (!notificationId) return alert(secureIdError);
     const newNotification = {
-      id: `notif-${Date.now()}`,
+      id: notificationId,
       title,
       message,
       date: new Date().toLocaleDateString('ka-GE')
