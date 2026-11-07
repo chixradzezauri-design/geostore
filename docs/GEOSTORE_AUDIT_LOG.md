@@ -639,3 +639,26 @@ This file is the durable handoff log for staged audit work. Add new findings and
 ### Verification boundary
 - Prior commit `8a9e11213ec87681c142e92cdd8a14fb1e9ad703` passed 56/56 unit tests, production Vite build, npm audit (0 high/critical advisories), and CodeQL.
 - This lazy-loading adjustment requires its own CI test/build and CodeQL run. No Vercel deployment was performed.
+
+
+## Final static-analysis review and secure identifier hardening — 2026-11-07
+
+### Final CI status before this change
+- Build check run `42358531404`: passed; 56/56 tests passed; Vite production build completed.
+- Dependency security audit run `42358531443`: passed.
+- CodeQL run `42358531419`: completed successfully.
+- CodeQL successful completion confirms analysis workflow completed; it is not by itself a claim of zero repository alerts.
+
+### Additional code review
+- Reviewed AdminDashboardPro hook ordering: all React hooks are called unconditionally at component top level before render; no conditional hook-order violation found in the inspected component.
+- Verified admin data request helper uses the current Supabase session access token when available and falls back to the public anon key only without a session.
+- Found remaining `Math.random()` fallbacks in admin-generated variant IDs, category IDs, product SKUs, and banner IDs. These identifiers are not authentication credentials, but the fallbacks could collide and were inconsistent with the secure-random policy used elsewhere.
+
+### Correction
+- Added one shared 128-bit `crypto.getRandomValues` identifier generator.
+- Replaced all remaining `Math.random()` identifier fallbacks in AdminDashboardPro.
+- If secure browser randomness is unavailable, variant/category creation fails with a clear message; product/banner creation is caught by their existing save error handling. No weak random fallback remains.
+
+### Verification boundary
+- This change requires a new CI run. Do not treat it as tested until 56+ tests, production build, dependency audit and CodeQL complete on the new commit.
+- Static source review only; no interactive mobile/desktop browser test or Vercel deployment was performed.

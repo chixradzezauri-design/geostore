@@ -20,6 +20,17 @@ const getLocalDateInputValue = () => {
   return `${year}-${month}-${day}`;
 };
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
+const createSecureId = (prefix) => {
+  const cryptoApi = globalThis.crypto;
+  if (!cryptoApi || typeof cryptoApi.getRandomValues !== 'function') {
+    throw new Error('უსაფრთხო ID-ის შესაქმნელად ბრაუზერის კრიპტოგრაფიული ფუნქცია მიუწვდომელია. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
+  }
+  const bytes = new Uint8Array(16);
+  cryptoApi.getRandomValues(bytes);
+  const suffix = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `${prefix}-${suffix}`;
+};
+
 
 const getSupabaseHeaders = async () => {
   const {
@@ -381,9 +392,13 @@ export default function AdminDashboardPro({
     }
     if (productVariants.length >= 50) return alert('ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.');
 
-    const generatedVariantId = typeof globalThis.crypto?.randomUUID === 'function'
-      ? `var-${globalThis.crypto.randomUUID()}`
-      : `var-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    let generatedVariantId;
+    try {
+      generatedVariantId = createSecureId('var');
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
     const varObj = {
       id: generatedVariantId,
       name,
@@ -1079,9 +1094,13 @@ export default function AdminDashboardPro({
       alert('არჩეული მთავარი კატეგორია აღარ არსებობს. განაახლეთ არჩევანი.');
       return;
     }
-    const catId = typeof globalThis.crypto?.randomUUID === 'function'
-      ? `cat-${globalThis.crypto.randomUUID()}`
-      : `cat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    let catId;
+    try {
+      catId = createSecureId('cat');
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
     const cleanImage = newCatImage.trim() || '';
     const newCatObj = {
       id: catId,
@@ -1371,7 +1390,7 @@ export default function AdminDashboardPro({
       const mainImage = galleryImages[0] || null;
       newProdPayload = {
       id: prodId,
-      sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : createSecureId('GEO'),
       name: productName,
       category: String(productForm.category).trim(),
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
@@ -1935,7 +1954,7 @@ export default function AdminDashboardPro({
       return;
     }
     const newB = {
-      id: `b-${window.crypto?.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)}`,
+      id: createSecureId('b'),
       title,
       subtitle,
       image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200',
