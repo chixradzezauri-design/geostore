@@ -187,3 +187,39 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Read-only database checks confirmed valid JSON array shapes for the single live product.
 - Read-only function inspection confirmed size/color enforcement is absent from the live function but present in the staged migration noted above.
 - No product/order data changed; no production SQL, migration, build, deployment, or automated tests executed.
+
+
+## Category hierarchy, persistence, media and product-reference audit — 2026-11-07
+
+### Live state reviewed (read-only)
+
+- `public.storefront_config` currently has no row for `config_key='storefront'`; `public.storefront_versions` has no rows. Therefore there is no server-saved draft/published category snapshot yet. The storefront currently falls back to the built-in category list until the administrator saves a draft and publishes it.
+- The one live product is assigned to category `ტანსაცმელი`, which matches the built-in default root category. No product row or category data was changed.
+- The earlier Storage inventory remains empty; category images are uploaded to `storefront-media` only when the administrator saves/publishes the storefront snapshot.
+
+### Bugs found and fixed in admin category manager
+
+- Category rename previously changed only the category list, leaving product rows with the old category name. Such products could disappear from category filters. Rename is now blocked while products still use the old name; move those products first.
+- Category deletion previously removed the category and its direct children without checking whether products used any of those names. Deletion is now blocked if products are assigned to the target category or its child categories.
+- Category creation/editing now rejects blank/too-short/overlong names and duplicate names (case-insensitive). New subcategories must reference an existing root category; category IDs use `crypto.randomUUID()` when available, with a collision-resistant fallback.
+- Reordering controls now allow moving root categories and sibling subcategories up/down. Array order is retained by the existing App state/localStorage effect and by the existing storefront draft/publish snapshot pipeline.
+- Category image selection now accepts only JPEG/PNG/WEBP/GIF and reuses the existing `validateImageFile` / `isValidImageDataUrl` checks, including real file signature and 5 MiB maximum. FileReader failures and invalid files are surfaced instead of silently ignored.
+- Legacy category object properties are preserved during admin normalization; category names are normalized to strings to avoid malformed legacy values causing `.trim()` runtime errors.
+- Category add/edit notices now explicitly tell the administrator that changes must be saved to the Supabase draft and published before visitors see them.
+
+### Changes committed
+
+- `src/components/AdminDashboardPro.jsx` category validation, safe edit/delete, image checks, ordering controls, legacy normalization.
+- Commits:
+  - `20e423cb37681e76efd4300371a12b404b932da5`
+  - `ae4710219d729d5dc2db51882a953a458abe7be8`
+  - `9fe8cabbb6b9ea91c45af212f9fb7ae46bb18f69`
+
+### Verification boundary / remaining limitations
+
+- Re-read the committed category handlers and UI diff; checked live product/category references and the absence of a saved storefront config row.
+- No production rows, Storage objects, migrations, or policies changed.
+- No local automated tests, build, deployment, or interactive browser test executed in this session. Do not represent this stage as fully end-to-end tested.
+- Reordering persists in the current category array/localStorage immediately, but server durability requires the existing explicit “Save storefront draft” action; visitor visibility requires “Publish”.
+- Publish still writes `storefront_config` and `storefront_versions` in separate requests. The previously logged non-atomic version-history gap remains open and was not modified in this category-focused stage.
+- A future hardening step should validate the full category tree and product-category references again at the save/publish boundary, not only in the admin UI.
