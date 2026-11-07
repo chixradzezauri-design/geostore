@@ -31,7 +31,12 @@ BEGIN
         'address', o.address,
         'total_gel', o.total_gel,
         'status', o.status,
-        'items', coalesce(o.items, '[]'::jsonb),
+        -- Never expose internal purchase_cost values to customer accounts.
+        'items', coalesce((
+          SELECT jsonb_agg(item.value - 'purchase_cost' ORDER BY item.ordinality)
+          FROM jsonb_array_elements(coalesce(o.items, '[]'::jsonb))
+            WITH ORDINALITY AS item(value, ordinality)
+        ), '[]'::jsonb),
         'status_changed_at', o.status_changed_at
       )
       ORDER BY o.created_at DESC, o.id ASC
