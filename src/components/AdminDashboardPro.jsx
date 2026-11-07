@@ -305,6 +305,8 @@ export default function AdminDashboardPro({
 
   const [expenses, setExpenses] = useState([]);
   const expensesSessionVersion = useRef(0);
+  const expensesAdminSessionRef = useRef(adminSessionKey);
+  expensesAdminSessionRef.current = adminSessionKey;
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
   const expenseCreateLock = useRef(false);
   const expenseDeleteLocks = useRef(new Set());
@@ -1117,7 +1119,7 @@ export default function AdminDashboardPro({
     const requestAdminSessionKey = adminSessionKey;
     try {
       const headers = await getSupabaseHeaders();
-      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
+      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== expensesAdminSessionRef.current) return;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
         headers,
@@ -1125,7 +1127,7 @@ export default function AdminDashboardPro({
       });
 
       if (res.ok) {
-        if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
+        if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== expensesAdminSessionRef.current) return;
         setExpenses(prev => [newExp, ...prev]);
         setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
@@ -1153,14 +1155,14 @@ export default function AdminDashboardPro({
     const requestAdminSessionKey = adminSessionKey;
     try {
       const headers = await getSupabaseHeaders();
-      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
+      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== expensesAdminSessionRef.current) return;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(expenseKey)}`, {
         method: 'DELETE',
         headers
       });
 
       if (res.ok) {
-        if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
+        if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== expensesAdminSessionRef.current) return;
         setExpenses(prev => prev.filter(e => String(e.id) !== expenseKey));
         logActivity(`წაიშალა ხარჯი (ID: ${expenseKey})`);
         alert('✅ ხარჯი წარმატებით წაიშალა!');
