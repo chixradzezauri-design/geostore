@@ -92,8 +92,35 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $function$
-  SELECT o.id, o.created_at, o.total_gel, o.status,
-         coalesce(o.items, '[]'::jsonb), o.status_changed_at
+  SELECT
+    o.id,
+    o.created_at,
+    o.total_gel,
+    o.status,
+    coalesce((
+      SELECT jsonb_agg(
+        jsonb_strip_nulls(jsonb_build_object(
+          'id', item.value -> 'id',
+          'name', item.value -> 'name',
+          'price', item.value -> 'price',
+          'quantity', item.value -> 'quantity',
+          'selectedSize', item.value -> 'selectedSize',
+          'selectedColor', item.value -> 'selectedColor',
+          'customVariantId', item.value -> 'customVariantId',
+          'customVariantName', item.value -> 'customVariantName',
+          'addon_total', item.value -> 'addon_total',
+          'gift_wrap', item.value -> 'gift_wrap',
+          'vip_warranty', item.value -> 'vip_warranty',
+          'gift_message', item.value -> 'gift_message'
+        ))
+        ORDER BY item.ordinality
+      )
+      FROM jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array'
+          THEN o.items ELSE '[]'::jsonb END
+      ) WITH ORDINALITY AS item(value, ordinality)
+    ), '[]'::jsonb) AS items,
+    o.status_changed_at
   FROM public.orders AS o
   WHERE o.user_id = auth.uid()
   ORDER BY o.created_at DESC, o.id DESC;
