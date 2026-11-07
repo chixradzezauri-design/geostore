@@ -1113,14 +1113,19 @@ export default function AdminDashboardPro({
 
     // Lock synchronously before the first await to prevent duplicate inserts.
     expenseCreateLock.current = true;
+    const requestVersion = expensesSessionVersion.current;
+    const requestAdminSessionKey = adminSessionKey;
     try {
+      const headers = await getSupabaseHeaders();
+      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
-        headers: await getSupabaseHeaders(),
+        headers,
         body: JSON.stringify(newExp)
       });
 
       if (res.ok) {
+        if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
         setExpenses(prev => [newExp, ...prev]);
         setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
@@ -1144,13 +1149,18 @@ export default function AdminDashboardPro({
     if (!window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
 
     expenseDeleteLocks.current.add(expenseKey);
+    const requestVersion = expensesSessionVersion.current;
+    const requestAdminSessionKey = adminSessionKey;
     try {
+      const headers = await getSupabaseHeaders();
+      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(expenseKey)}`, {
         method: 'DELETE',
-        headers: await getSupabaseHeaders()
+        headers
       });
 
       if (res.ok) {
+        if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current || requestAdminSessionKey !== adminSessionKey) return;
         setExpenses(prev => prev.filter(e => String(e.id) !== expenseKey));
         logActivity(`წაიშალა ხარჯი (ID: ${expenseKey})`);
         alert('✅ ხარჯი წარმატებით წაიშალა!');
