@@ -781,7 +781,7 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {isClothingOrFootwear(selectedProduct) && (
+                  {getAvailableProductSizes(selectedProduct).length > 0 && (
                     <div className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="text-slate-300 font-bold">{storeText.sizePrompt} <b className="text-amber-400">{selectedSize}</b></span>
@@ -1009,7 +1009,7 @@ export default function StoreView({
                     giftWrap: isGiftWrapped === true,
                     vipWarranty: hasVipWarranty === true,
                     giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 240) : '',
-                    selectedSize: isCf && selectedSize ? selectedSize : null,
+                    selectedSize: getAvailableProductSizes(selectedProduct).length > 0 && selectedSize ? selectedSize : null,
                     selectedColor: selectedColor
                   }); 
                   if (added !== false) setSelectedProduct(null); 
@@ -1017,7 +1017,7 @@ export default function StoreView({
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="gs-modal-add-label">{storeText.addToCart}{isClothingOrFootwear(selectedProduct) ? ` · ${selectedSize}` : ''}</span>
+                <span className="gs-modal-add-label">{storeText.addToCart}{getAvailableProductSizes(selectedProduct).length > 0 ? ` · ${selectedSize}` : ''}</span>
                 <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>
