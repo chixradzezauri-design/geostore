@@ -433,3 +433,19 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Confirmed updated source and test text was saved on the maintenance branch.
 - Could not run Node tests, local build, or browser checkout in the current environment.
 - No production order, stock, product, or customer data was changed. No Vercel build/deployment was run.
+
+
+## Support intake and admin activity-log audit — 2026-11-07
+
+### Findings
+- Public support intake currently creates a cryptographically random ticket ID in the browser and submits only customer name, optional email/subject, and message. Browser bounds are 100/254/150/4000 characters; database constraints independently enforce these limits.
+- Supabase RLS/privileges restrict public callers to INSERT; ticket SELECT/UPDATE/DELETE remains admin-only. Public callers cannot set status or reply through the validated INSERT policy.
+- No server-side rate limit or abuse throttle is present for support ticket creation. A browser-only cooldown would be bypassable and is not represented as a security fix.
+- Admin ticket polling refreshes every 15 seconds while the admin panel is open.
+- The admin activity log is currently component state seeded with two sample entries; actions append only in memory. It is not a durable audit trail and resets on reload. The label “Audit Logs” can therefore overstate its persistence.
+- Ticket replies are saved to the database, but the UI explicitly tells admins they are not emailed to the customer. No email delivery integration was found in this path.
+
+### Safety decision
+- No frontend-only anti-spam shim or localStorage pseudo-audit log was added; neither would provide server-side enforcement or durable audit evidence.
+- Proper completion requires a database-backed rate-limit mechanism for anonymous ticket intake and a protected, append-only admin activity table/write path. These are separate schema changes and need careful migration + authorization tests.
+- No ticket, order, or customer data was changed. No build or deployment was run.
