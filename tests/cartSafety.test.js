@@ -63,8 +63,8 @@ test('keeps different product IDs independent', () => {
 });
 
 test('keeps separately customized gift and warranty options as distinct cart lines', () => {
-  const plain = addToCart([], { ...product, name: 'Test jacket (Size: M)', selectedSize: 'M' }, 1);
-  const wrapped = addToCart(plain.cart, {
+  const plain = addProductToCart([], { ...product, name: 'Test jacket (Size: M)', selectedSize: 'M' }, 1);
+  const wrapped = addProductToCart(plain.cart, {
     ...product,
     name: 'Test jacket (Size: M) + Premium gift wrapping',
     priceGEL: 125,
@@ -77,8 +77,8 @@ test('keeps separately customized gift and warranty options as distinct cart lin
 });
 
 test('merges customized lines only when their name and price also match', () => {
-  const first = addToCart([], { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
-  const second = addToCart(first.cart, { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
+  const first = addProductToCart([], { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
+  const second = addProductToCart(first.cart, { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
   assert.equal(second.cart.length, 1);
   assert.equal(second.cart[0].quantity, 2);
 });
