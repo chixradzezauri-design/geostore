@@ -183,3 +183,12 @@ Static checks confirm unique migration version numbers and balanced function del
 - Rewrote both checks with explicit CASE guards. Numeric casts now occur only after the input matches the supported non-negative GEL decimal format; malformed input is rejected through the intended validation path.
 - Static review confirms the migration has balanced dollar-quoted function delimiters and three explicit CASE guards in its input-validation / stock-update logic.
 - The migration remains staged. No production schema or product data was changed; PostgreSQL execution tests and coordinated release are still pending.
+
+## Follow-up: harden product creation RPC before optimistic-concurrency release
+
+- Live function inspection confirmed `admin_save_product(jsonb)` is the existing insert-only product creation endpoint. It checks the exact primary-admin Auth UUID and `app_metadata.role`, and its public wrapper is not executable by anon.
+- Found that the old implementation cast untrusted `price_gel` and `stock` JSON text directly to numeric/integer. Malformed values could raise raw cast errors instead of controlled validation failures. The endpoint also needed consistent bounds for old price and purchase cost.
+- Updated the staged product-version migration to replace the private creation function and its public SECURITY INVOKER wrapper. It preserves exact-admin authorization and INSERT-only behavior (ID collisions cannot become updates), validates price/old-price/cost/stock before numeric casts, and explicitly retains authenticated-only execution.
+- Also corrected the generated old-price/purchase-cost regex escaping in the versioned update function so the decimal separator is matched correctly.
+- Static checks: function dollar-quote delimiters balanced; the migration includes the creation RPC, public wrapper, explicit authorization check, and authenticated-only grants. This has not been run against PostgreSQL.
+- Production preflight still shows the version columns and versioned RPCs are absent. No live database rows or schema were changed.
