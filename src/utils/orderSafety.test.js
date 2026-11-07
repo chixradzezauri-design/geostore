@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   calculateCartSubtotalGEL,
+  isValidGELAmount,
   calculateCheckoutTotals,
   calculateOrderLineRevenueGEL,
   reconcileCartWithCatalog,
@@ -14,6 +15,28 @@ import {
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
+
+test('accepts only non-negative GEL values with at most two decimal places', () => {
+  for (const value of ['0', '10', '10.5', '10.50', 0, 10.25, '1000000000.00']) {
+    assert.equal(isValidGELAmount(value), true, String(value));
+  }
+  for (const value of ['', '-1', '1.001', '1,25', '1e2', '1000000000.01', null, undefined]) {
+    assert.equal(isValidGELAmount(value), false, String(value));
+  }
+  assert.equal(isValidGELAmount('0.01', { min: 0.01, max: 100 }), true);
+  assert.equal(isValidGELAmount('0', { min: 0.01, max: 100 }), false);
+  assert.equal(isValidGELAmount('100.01', { min: 0.01, max: 100 }), false);
+});
+
+test('cart subtotal uses the already-inclusive server-priced add-on line amount', () => {
+  assert.equal(calculateCartSubtotalGEL([{
+    priceGEL: 140,
+    basePriceGEL: 120,
+    giftWrap: true,
+    vipWarranty: true,
+    quantity: 2
+  }]), 280);
+});
 
 test('uses the final server-priced unit amount without double-counting paid add-ons', () => {
   assert.equal(calculateOrderLineRevenueGEL({
