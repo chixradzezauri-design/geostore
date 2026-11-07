@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addProductToCart } from '../src/utils/cartSafety.js';
+import { addProductToCart, removeProductFromCart } from '../src/utils/cartSafety.js';
 
 const product = {
   id: 'p-1',
@@ -81,4 +81,11 @@ test('merges customized lines only when their name and price also match', () => 
   const second = addProductToCart(first.cart, { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
   assert.equal(second.cart.length, 1);
   assert.equal(second.cart[0].quantity, 2);
+});
+
+test('removes only the exact customized cart line', () => {
+  const plain = { ...product, name: 'Test jacket', selectedSize: 'M', quantity: 1 };
+  const wrapped = { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M', quantity: 1 };
+  const remaining = removeProductFromCart([plain, wrapped], wrapped);
+  assert.deepEqual(remaining, [plain]);
 });
