@@ -518,3 +518,31 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - In one transaction, locked orders and products, restored those 16 proven-deducted units, then deleted all 21 test orders. No product row was missing; no foreign-key dependencies referenced `public.orders`.
 - Post-cleanup verification: `public.orders` count = 0; product stock = 61 (was 45); pending stock restorations = 0; cancelled orders = 0.
 - No non-order customer, product, account, or settings data was deleted. No build or deployment was run.
+
+
+## Support anti-spam and persistent admin audit trail — 2026-11-07
+
+### Support intake protection
+- Added a database trigger on `public.support_tickets` that reads the trusted request IP from the PostgREST `X-Forwarded-For` request header and stores only SHA-256 hashes of the IP/email keys, never raw IP addresses or email addresses in the limiter table.
+- Enforced at most 5 support submissions per IP in 15 minutes and at most 3 submissions per normalized email in 60 minutes. Advisory transaction locks serialize concurrent attempts per key so parallel submissions cannot bypass the counters.
+- Old rate-limit rows older than 24 hours are purged during accepted submissions. If the gateway supplies no usable IP for an anonymous request, the submission fails closed with a temporary-unavailable response rather than silently disabling the limit.
+- Rate-limit responses use PostgREST's documented `PGRST` response mechanism with HTTP 429. The customer-facing support form now shows a localized retry-later message in KA/EN/RU.
+
+### Persistent administrator activity log
+- Replaced fabricated component-only seed entries with database-backed activity records. Existing `logActivity` call sites now write through a protected RPC and the admin logs tab loads the latest 100 persisted records.
+- Added private `admin_activity_log` storage and private SECURITY DEFINER read/write implementations. Both validate the primary administrator Auth UID and trusted `app_metadata.role='admin'`; public wrappers are SECURITY INVOKER, have empty search_path, and are executable only by authenticated users.
+- The activity table has RLS enabled and no direct client grants. There are no update/delete RPCs or client grants, so the application-facing audit interface is append-only.
+- The two internal tables are in the private schema and are not exposed as public Data API tables.
+
+### Verification
+- Rollback-only support tests accepted five same-IP submissions, rejected the sixth with SQLSTATE `PGRST` and HTTP status 429, accepted three same-email submissions from distinct IPs, and rejected the fourth with HTTP 429.
+- Rollback-only admin audit tests inserted and read a record as the primary-admin JWT and confirmed a non-admin JWT cannot insert or read.
+- Verified no test tickets, rate-limit entries, or audit records persisted after rollback.
+- Verified RLS enabled on both private tables; anon has no direct table access or audit RPC access; authenticated has no direct table access but can call the admin wrappers; private functions use SECURITY DEFINER with empty search_path.
+- Security Advisor reports the existing leaked-password-protection warning plus INFO-only notices that the private tables have RLS enabled without policies. This is intentional: the tables have no direct client grants, and all access is through narrowly scoped protected functions.
+- Three pre-existing support tickets remain untouched. Orders remain at 0 and the product stock remains 61.
+
+### Migration tracking and release boundary
+- Applied and recorded migrations `20261107085444_secure_support_intake_and_persist_admin_activity` and `20261107085535_return_http_429_for_support_rate_limits`.
+- Matching SQL files were saved on the maintenance branch. The GitHub migration files reflect the applied SQL, including the follow-up HTTP 429 behavior.
+- No customer tickets, order records, product records, or account data were changed by the tests. No local build, browser test, Vercel build, or deployment was run.
