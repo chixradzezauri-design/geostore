@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION private.admin_adjust_product_variant_stock(
 )
 RETURNS public.products
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = ''
 AS $function$
 DECLARE
