@@ -662,3 +662,26 @@ This file is the durable handoff log for staged audit work. Add new findings and
 ### Verification boundary
 - This change requires a new CI run. Do not treat it as tested until 56+ tests, production build, dependency audit and CodeQL complete on the new commit.
 - Static source review only; no interactive mobile/desktop browser test or Vercel deployment was performed.
+
+
+## Re-run verification and stylesheet maintainability review — 2026-11-07
+
+### CI results for secure identifier commit `20e5f62b957d40fad0931413765f09370555b385`
+- Build check run `42358761193`: completed successfully.
+- `npm ci`: passed.
+- Automated tests: 56 passed, 0 failed.
+- Vite production build: passed; no large-chunk warning was emitted in the captured build log.
+- Dependency audit run `42358761153`: passed; `npm audit` reported **0 vulnerabilities** (not merely zero high/critical).
+- CodeQL run `42358761151`: completed successfully.
+- This records successful workflow completion, not a claim that no CodeQL alerts exist; alert inventory was not available through the connected GitHub actions interface.
+
+### Additional maintainability review
+- `src/index.css` is approximately 402 kB and contains about 2,488 top-level selector/media-rule matches in a static scan.
+- Many storefront and modal selectors are redefined repeatedly (e.g. product modal, product info, category cards, filter panel, footer links) across multiple media breakpoints.
+- The Vite build parses the stylesheet successfully, but repeated overrides increase cascade complexity and make visual regressions harder to reason about.
+- No CSS rules were deleted or merged in this pass: without an interactive browser and visual regression snapshots, collapsing repeated rules could change specificity/order and reintroduce the mobile layout problems reported by the user.
+
+### Next work item
+- Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
+- Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
+- No Vercel deployment or production database changes were made.
