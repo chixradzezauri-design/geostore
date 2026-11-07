@@ -251,3 +251,21 @@ A fresh live-catalog comparison confirms the following six older branch migratio
 - 20261107020000_add_order_status_notifications: superseded by the later applied notification migrations. Live order insert/status triggers, the order_notifications table and authenticated notification RPCs already exist. Do not replay this older email-based implementation over the newer notification code or the staged UUID-owner migration.
 
 These findings classify the SQL effects, not the migration ledger. The remote database still has 67 applied versions while several earlier repository migration versions are absent from the remote ledger. Do not use db push or migration repair until the exact historical versions and their superseding migrations are reconciled in a controlled plan.
+
+
+## Catalog-level verification of the 20 missing historical sources — 2026-11-07
+
+The original SQL files remain unrecovered, so their exact historical text must not be recreated from guesswork. A read-only live-catalog audit nevertheless confirmed the corresponding schema/security outcomes:
+
+- Product cost: public.products.purchase_cost exists; anon/authenticated have no SELECT privilege on that column. Product write RLS is restricted to the configured primary-admin UUID plus app_metadata.role=admin.
+- Order checkout: customer_email, admin_note and status_changed_at exist. anon/authenticated have no direct INSERT or UPDATE privilege on public.orders; checkout goes through the validated RPC.
+- Order tracking: public lookup wrapper is SECURITY INVOKER; its private implementation is SECURITY DEFINER and rate-limited. The public result is limited to tracking fields, not raw contact/address columns.
+- Support tickets: anon INSERT is column-limited to id, customer_name, email, subject and message; it cannot write status, reply or created_at.
+- Product integrity: live check constraints cover selling/old price, purchase cost, stock and JSON-array shape/limits.
+- Flash sales: the live admin function validates discount range/precision, rounds the new price, skips custom-variant products and avoids applying a sale price that is not lower.
+- Order notifications: the table, insert/status triggers and authenticated RPC functions are present. The live table has RLS enabled with no direct policies; access is through the RPC layer.
+- Storefront Studio: storefront_config, storefront_media and storefront_versions exist with RLS enabled; published-config/public-media reads are separated from primary-admin write/version access. The storefront-media bucket exists and its upload/update/delete policies are primary-admin-only.
+
+This proves the current live feature outcomes, not the provenance or exact content of the missing historical SQL files. The remaining migration-ledger mismatch therefore still needs a controlled history-repair plan; no migration repair or db push was run.
+
+Separate active release item: the current live customer order-history function still returns raw item JSON, which can include internal purchase_cost/vendor/category fields. The forward Auth UUID ownership migration now projects an allowlist and passed the rollback-only integration checks, but it has not been applied to the live database.
