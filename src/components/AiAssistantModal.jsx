@@ -136,7 +136,7 @@ export default function AiAssistantModal({
       // Request only public catalog columns; purchase_cost must remain private.
       const { data, error } = await supabase
         .from('products')
-        .select('id,sku,name,category,vendor,price_gel,old_price_gel,stock,image,tags,available_sizes,available_colors,description,material,durability')
+        .select('id,sku,name,category,vendor,price_gel,old_price_gel,stock,image,tags,available_sizes,available_colors,variants,description,material,durability')
         .order('created_at', { ascending: false });
       if (error) throw error;
       if (data && data.length > 0) {
@@ -147,18 +147,26 @@ export default function AiAssistantModal({
               else parsedTags = String(p.tags).split(',').map(t => t.trim());
             }
 
-            let parsedSizes = ['S', 'M', 'L', 'XL'];
+            let parsedSizes = [];
             if (p.available_sizes) {
               if (Array.isArray(p.available_sizes)) parsedSizes = p.available_sizes;
               else parsedSizes = String(p.available_sizes).split(',').map(s => s.trim());
             }
 
-            let parsedColors = ['შავი', 'თეთრი'];
+            let parsedColors = [];
             if (p.available_colors) {
               if (Array.isArray(p.available_colors)) parsedColors = p.available_colors;
               else parsedColors = String(p.available_colors).split(',').map(c => c.trim());
             }
 
+            let parsedVariants = [];
+            if (Array.isArray(p.variants)) parsedVariants = p.variants;
+            else if (typeof p.variants === 'string') {
+              try {
+                const decoded = JSON.parse(p.variants);
+                if (Array.isArray(decoded)) parsedVariants = decoded;
+              } catch {}
+            }
             return {
               id: p.id,
               sku: p.sku || 'N/A',
@@ -172,6 +180,7 @@ export default function AiAssistantModal({
               tags: parsedTags,
               availableSizes: parsedSizes,
               availableColors: parsedColors,
+              variants: parsedVariants,
               description: p.description || '',
               material: p.material || '',
               durability: p.durability || ''
@@ -215,6 +224,14 @@ export default function AiAssistantModal({
     const query = (localizedPromptAliases[rawQuery.toLowerCase()] || rawQuery).toLowerCase();
     const words = query.split(/\s+/).filter(w => w.length > 0);
     const sourceProducts = currentProductsList && currentProductsList.length > 0 ? currentProductsList : (liveProducts.length > 0 ? liveProducts : products);
+    const availableVariants = (product) => (Array.isArray(product?.variants) ? product.variants : [])
+      .filter(variant => variant && variant.priceGEL !== null && variant.priceGEL !== undefined &&
+        variant.priceGEL !== '' && Number.isFinite(Number(variant.priceGEL)) &&
+        Number(variant.priceGEL) > 0 && Number(variant.stock) > 0);
+    const hasAvailableStock = (product) => Number(product?.stock) > 0 || availableVariants(product).length > 0;
+    const matchesBudget = (product, budget) =>
+      (Number(product?.stock) > 0 && Number(product?.priceGEL) > 0 && Number(product.priceGEL) <= budget) ||
+      availableVariants(product).some(variant => Number(variant.priceGEL) <= budget);
 
     // 1. სალამი და ზოგადი საუბარი
     if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello')) {
@@ -276,7 +293,7 @@ export default function AiAssistantModal({
     // 4. ფასდაკლებები და აქციები
     const isDiscountQuery = SYNONYMS.discount.some(w => query.includes(w));
     if (isDiscountQuery) {
-      const sales = sourceProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
+      const sales = sourceProducts.filter(p => hasAvailableStock(p) && p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return {
         text: `🔥 მიმდინარე სპეციალური ფასდაკლებები და აქციები (${sales.length} ნივთი):`,
         products: sales.length > 0 ? sales.slice(0, 4) : sourceProducts.slice(0, 4)
@@ -316,67 +333,62 @@ export default function AiAssistantModal({
       });
     }
 
-    let filtered = [...sourceProducts];
+    let filtered = sourceProducts.filter(hasAvailableStock);
 
     if (matchedCategoryNames.length > 0) {
       filtered = filtered.filter(p => {
-        const pCatLower = (p.category || '').toLowerCase();
+        const pCatLower = String(p.category || '').toLowerCase();
         return matchedCategoryNames.some(catName => pCatLower.includes(catName.toLowerCase()));
       });
     }
 
-    // 7. ბიუჯეტი, ფერი და ზომა
+    // ბიუჯეტი, ფერი და ზომა მოწმდება რეალურ, მარაგში არსებულ მონაცემებზე.
     const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel|₾)/);
     const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
-
     const colorKeywords = ['შავი', 'თეთრი', 'წითელი', 'ლურჯი', 'მწვანე', 'ყვითელი', 'ნაცრისფერი', 'ვერცხლისფერი', 'ოქროსფერი', 'ტიტანი'];
     const foundColor = colorKeywords.find(c => query.includes(c));
-
-    const sizeKeywords = ['s', 'm', 'l', 'xl', 'xxl', '39', '40', '41', '42', '43', '44'];
+    const sizeKeywords = ['xxl', 'xl', 's', 'm', 'l', '39', '40', '41', '42', '43', '44'];
     const foundSize = sizeKeywords.find(s => query.split(/\b/).includes(s));
 
-    if (maxBudget) {
-      filtered = filtered.filter(p => p.priceGEL <= maxBudget);
-    }
+    if (maxBudget !== null) filtered = filtered.filter(p => matchesBudget(p, maxBudget));
 
     if (foundColor) {
       filtered = filtered.filter(p => {
-        const colStr = (p.availableColors || []).join(' ').toLowerCase();
-        const nameStr = p.name.toLowerCase();
-        return colStr.includes(foundColor) || nameStr.includes(foundColor);
+        const variantNames = availableVariants(p).map(variant => String(variant.name || '')).join(' ');
+        const colors = [...(Array.isArray(p.availableColors) ? p.availableColors : []), variantNames].join(' ').toLowerCase();
+        return colors.includes(foundColor) || String(p.name || '').toLowerCase().includes(foundColor);
       });
     }
 
     if (foundSize) {
       filtered = filtered.filter(p => {
-        const sizes = (p.availableSizes || []).map(s => String(s).toLowerCase());
-        return sizes.includes(foundSize);
+        const sizes = (Array.isArray(p.availableSizes) ? p.availableSizes : []).map(s => String(s).toLowerCase());
+        const variantNames = availableVariants(p).map(variant => String(variant.name || '').toLowerCase());
+        return sizes.includes(foundSize) || variantNames.some(name => name.split(/[^a-z0-9]+/).includes(foundSize));
       });
     }
 
     const searchWords = words.filter(w => !w.match(/\d+/) && !['ლარამდე', 'ლარი', 'გთხოვ', 'მაჩვენე', 'მინდა', 'შემირჩიე'].includes(w));
-    
-    if (searchWords.length > 0 && matchedCategoryNames.length === 0 && !maxBudget && !foundColor && !foundSize) {
-      filtered = sourceProducts.filter(p => {
-        const pName = p.name.toLowerCase();
-        const pCat = p.category.toLowerCase();
-        const pDesc = p.description.toLowerCase();
-        const pTags = (p.tags || []).map(t => t.toLowerCase());
-
+    if (searchWords.length > 0 && matchedCategoryNames.length === 0 && maxBudget === null && !foundColor && !foundSize) {
+      filtered = filtered.filter(p => {
+        const pName = String(p.name || '').toLowerCase();
+        const pCat = String(p.category || '').toLowerCase();
+        const pDesc = String(p.description || '').toLowerCase();
+        const pTags = (Array.isArray(p.tags) ? p.tags : []).map(t => String(t).toLowerCase());
         return searchWords.some(w => pName.includes(w) || pCat.includes(w) || pDesc.includes(w) || pTags.some(t => t.includes(w)));
       });
     }
 
     if (filtered.length > 0) {
       return {
-        text: `✨ კატეგორიებისა და მოთხოვნის შესაბამისად ნაპოვნია საუკეთესო პროდუქტები (${filtered.length} ვარიანტი):`,
+        text: `✨ მოთხოვნის შესაბამისად ნაპოვნია ${filtered.length} ხელმისაწვდომი პროდუქტი:`,
         products: filtered.slice(0, 4)
       };
     }
 
     return {
-      text: `🤔 ზუსტი დამთხვევა ვერ მოიძებნა, თუმცა გთავაზობთ ჩვენი პრემიუმ კატალოგის ტოპ პროდუქტებს:`,
-      products: sourceProducts.slice(0, 3)
+      text: '🤔 ამ მოთხოვნასთან შესაბამისი, მარაგში არსებული პროდუქტი ვერ მოიძებნა. სცადეთ სხვა ზომა, ფერი ან უფრო მაღალი ბიუჯეტი.',
+      products: []
     };
   };
 
@@ -433,8 +445,12 @@ export default function AiAssistantModal({
       const count = text.match(/\\((\\d+) ვარიანტი\\)/)?.[1] || result.products?.length || 0;
       return { ...result, text: t(`✨ Found ${count} matching product option(s) based on your request:`, `✨ По вашему запросу найдено подходящих вариантов: ${count}:`) };
     }
-    if (text.startsWith('🤔 ზუსტი დამთხვევა ვერ მოიძებნა')) {
-      return { ...result, text: t('🤔 I couldn’t find an exact match, but here are some top picks from our premium catalog:', '🤔 Точное совпадение не найдено, но вот несколько популярных товаров из нашего премиального каталога:') };
+    if (text.startsWith('🤔 ამ მოთხოვნასთან შესაბამისი')) {
+      return { ...result, text: t('🤔 No matching in-stock product was found. Try another size, color or a higher budget.', '🤔 Подходящий товар в наличии не найден. Попробуйте другой размер, цвет или увеличьте бюджет.') };
+    }
+    if (text.startsWith('✨ მოთხოვნის შესაბამისად ნაპოვნია')) {
+      const count = text.match(/(\d+)/)?.[1] || result.products?.length || 0;
+      return { ...result, text: t(`✨ Found ${count} matching in-stock product(s):`, `✨ Найдено подходящих товаров в наличии: ${count}:`) };
     }
     return result;
   };
