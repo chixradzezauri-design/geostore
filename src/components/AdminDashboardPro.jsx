@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
-import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, parseOrderDeliveryChargeGEL } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
@@ -889,8 +889,7 @@ export default function AdminDashboardPro({
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
       const lineGross = items.reduce((sum, item) => sum + calculateOrderLineRevenueGEL(item), 0);
-      const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
-      const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
+      const deliveryCharge = parseOrderDeliveryChargeGEL(order.address, orderTotal);
       const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
       totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
       totalProductRevenue += productNetRevenue;
@@ -899,6 +898,13 @@ export default function AdminDashboardPro({
         const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
         incomeTotals.set(label, (incomeTotals.get(label) || 0) + orderTotal);
         unknownCogsItems += 1;
+        return;
+      }
+      if (productNetRevenue > 0 && lineGross <= 0) {
+        const label = 'პროდუქტის შემოსავალი — განაწილება ვერ ხერხდება';
+        incomeTotals.set(label, (incomeTotals.get(label) || 0) + productNetRevenue);
+        unknownCogsItems += 1;
+        if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + deliveryCharge);
         return;
       }
 
