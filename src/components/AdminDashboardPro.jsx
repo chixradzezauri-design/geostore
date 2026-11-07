@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
+import { resolveProductCreatedAt } from '../utils/productOrdering';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -1432,7 +1433,7 @@ export default function AdminDashboardPro({
         }
       }
       const localProdObject = {
-        id: prodId, createdAt: existingProduct?.createdAt || new Date().toISOString(),
+        id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
         oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
