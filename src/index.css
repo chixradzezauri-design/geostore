@@ -8158,7 +8158,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   min-width:0!important;overflow:hidden!important;border-radius:15px!important;
   padding:0!important;box-shadow:0 8px 25px rgba(0,0,0,.18)!important;
 }
-.geostore-shell .geostore-storefront .gs-catalog-product-media{
+.geostore-fashion-store .gs-catalog-product-media{
   height:clamp(155px,28vw,260px)!important;min-width:0!important;
   padding:10px!important;background:#111110!important;
 }
@@ -8200,14 +8200,14 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .geostore-storefront .gs-sort-control{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important}
  .geostore-shell .geostore-storefront .gs-sort-select{width:100%!important}
  .geostore-shell .geostore-storefront .gs-editorial-category-card{height:122px!important}
- .geostore-shell .geostore-storefront .gs-catalog-product-media{height:clamp(145px,43vw,205px)!important}
+ .geostore-fashion-store .gs-catalog-product-media{height:clamp(145px,43vw,205px)!important}
 }
 @media(max-width:360px){
  .geostore-shell .geostore-storefront .gs-editorial-category-grid,
  .geostore-shell .geostore-storefront .gs-catalog-category-grid{gap:8px!important}
  .geostore-shell .geostore-storefront .gs-editorial-category-card{height:112px!important;padding:9px!important;border-radius:12px!important}
  .geostore-shell .geostore-storefront .gs-catalog-product-grid{gap:8px!important}
- .geostore-shell .geostore-storefront .gs-catalog-product-media{height:138px!important;padding:7px!important}
+ .geostore-fashion-store .gs-catalog-product-media{height:138px!important;padding:7px!important}
  .geostore-shell .geostore-storefront .gs-catalog-product-info{padding:9px!important}
  .geostore-shell .geostore-storefront .gs-catalog-product-title{font-size:11px!important}
  .geostore-shell .geostore-storefront .gs-catalog-current-price{font-size:13px!important}
@@ -8764,7 +8764,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
    Earlier legacy rules assigned fixed heights at narrow breakpoints, overriding the
    4:5 media ratio and producing uneven image areas across phone widths. */
 @media(max-width:767px){
-  .geostore-shell .geostore-storefront .gs-catalog-product-media{
+  .geostore-fashion-store .gs-catalog-product-media{
     width:100%!important;
     height:auto!important;
     min-height:0!important;
@@ -8773,7 +8773,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   }
 }
 @media(max-width:360px){
-  .geostore-shell .geostore-storefront .gs-catalog-product-media{
+  .geostore-fashion-store .gs-catalog-product-media{
     height:auto!important;
     min-height:0!important;
     aspect-ratio:4/5!important;
