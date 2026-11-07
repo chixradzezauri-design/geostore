@@ -235,7 +235,7 @@ export default function StoreView({
       if (newReviewImage instanceof File) {
         const extension = newReviewImage.type === 'image/png' ? 'png' : newReviewImage.type === 'image/webp' ? 'webp' : 'jpg';
         const nonce = globalThis.crypto?.randomUUID?.() || Date.now().toString(36);
-        const fileName = currentUser.id + '/' + productId + '/' + nonce + '.' + extension;
+        const fileName = String(productId) + '/' + nonce + '.' + extension;
         const { error: uploadError } = await supabase.storage
           .from('product-review-images')
           .upload(fileName, newReviewImage, { contentType: newReviewImage.type, upsert: false });
