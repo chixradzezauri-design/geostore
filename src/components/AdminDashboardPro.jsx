@@ -1427,7 +1427,16 @@ export default function AdminDashboardPro({
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
         });
         if (!createResponse.ok) throw new Error(await createResponse.text());
-        await createResponse.json();
+        const createdResult = await createResponse.json();
+        savedProductRow = Array.isArray(createdResult) ? createdResult[0] : createdResult;
+        if (
+          !savedProductRow ||
+          typeof savedProductRow !== 'object' ||
+          String(savedProductRow.id ?? '') !== String(prodId) ||
+          !savedProductRow.created_at
+        ) {
+          throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
+        }
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
       let imageCleanupWarning = false;
