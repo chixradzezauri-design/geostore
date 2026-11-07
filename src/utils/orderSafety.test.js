@@ -6,7 +6,8 @@ import {
   reconcileCartWithCatalog,
   createSecureOrderId,
   groupCheckoutItems,
-  isReusableCheckout
+  isReusableCheckout,
+  normalizeOrderItems
 } from './orderSafety.js';
 
 test('groups identical product and option combinations', () => {
@@ -167,4 +168,12 @@ test('accepts currently offered cart variants from snake_case catalogue fields',
     ]
   );
   assert.equal(result.hasChanges, false);
+});
+
+
+test('normalizes malformed legacy order item arrays without dropping valid lines', () => {
+  const valid = { id: 'p-1', name: 'Jacket', quantity: 1 };
+  assert.deepEqual(normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]), [valid, { id: 'p-2' }]);
+  assert.deepEqual(normalizeOrderItems({ items: [] }), []);
+  assert.deepEqual(normalizeOrderItems(null), []);
 });
