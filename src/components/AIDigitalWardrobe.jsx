@@ -7,31 +7,13 @@ import {
   Calendar, Check, ShoppingBag, Eye, RefreshCw, Tag, Heart, ArrowRight, Layers
 } from 'lucide-react';
 
-const DEFAULT_WARDROBE_ITEMS = [
-  {
-    id: 'w1',
-    name: 'შავი ქურთუკი',
-    category: 'ტანსაცმელი',
-    subCategory: 'ქურთუკი',
-    color: 'შავი',
-    season: 'ზამთარი / შემოდგომა',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=600'
-  },
-  {
-    id: 'w2',
-    name: 'თეთრი სპორტული ბოტასი',
-    category: 'ფეხსაცმელი',
-    subCategory: 'ბოტასი',
-    color: 'თეთრი',
-    season: 'ყველა სეზონი',
-    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=600'
-  }
-];
+const DEFAULT_WARDROBE_ITEMS = [];
 
 export default function AIDigitalWardrobe({ userId = null, products = [], addToCart, formatPrice }) {
   // Each account has a separate local wardrobe. The legacy unscoped key is
   // intentionally not imported because its original owner cannot be verified.
   const [wardrobe, setWardrobe] = useState(() => readWardrobeItems(userId) ?? DEFAULT_WARDROBE_ITEMS);
+  const [wardrobeStorageError, setWardrobeStorageError] = useState('');
 
   // 🌟 ახალი ნივთის დამატების ფორმის სახელმწიფო
   const [newItem, setNewItem] = useState({
@@ -51,7 +33,8 @@ export default function AIDigitalWardrobe({ userId = null, products = [], addToC
   const [generatedOutfit, setGeneratedOutfit] = useState(null);
 
   useEffect(() => {
-    writeWardrobeItems(userId, wardrobe);
+    const saved = writeWardrobeItems(userId, wardrobe);
+    setWardrobeStorageError(saved ? '' : 'გარდერობის შენახვა ვერ მოხერხდა. მოწყობილობის მეხსიერება შეიძლება სავსე იყოს ან შენახვა დაბლოკილი იყოს; ცვლილებები გვერდის დახურვის შემდეგ შეიძლება დაიკარგოს.');
   }, [wardrobe, userId]);
 
   // 📸 ფოტოს ატვირთვა Base64 ფორმატში
@@ -189,6 +172,12 @@ export default function AIDigitalWardrobe({ userId = null, products = [], addToC
           </div>
         </div>
       </div>
+
+      {wardrobeStorageError && (
+        <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs leading-relaxed text-rose-200">
+          {wardrobeStorageError}
+        </p>
+      )}
 
       {/* 🤖 AI STYLIST GENERATOR SECTION */}
       <div className="gs-wardrobe-generator bg-slate-900/80 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl">

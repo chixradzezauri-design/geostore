@@ -1,4 +1,4 @@
-const FOOTWEAR_TERMS = ['ფეხსაცმელ', 'ბოტას', 'კედ', 'ბათინკ', 'shoe', 'sneaker', 'boot'];
+const FOOTWEAR_TERMS = ['ფეხსაცმელ', 'ბოტას', 'კედ', 'ბათინკ', 'shoe', 'sneaker', 'boot', 'footwear', 'sandal', 'slipper', 'обув', 'кроссов', 'ботин'];
 
 const CLOTHING_SIZE_RANK = {
   XXS: 0,

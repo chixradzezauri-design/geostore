@@ -104,6 +104,18 @@ export default function StoreView({
     try { localStorage.setItem(reviewStorageKey, JSON.stringify(allReviews)); } catch {}
   }, [allReviews, reviewStorageKey, reviewsLoadedFor]);
 
+  // Never carry a review draft or image from one account into another.
+  useEffect(() => {
+    setNewReviewComment('');
+    setNewReviewRating(5);
+    setNewReviewImage('');
+  }, [reviewStorageKey]);
+
+  const reviewsReady = reviewsLoadedFor === reviewStorageKey;
+  const visibleReviews = reviewsReady ? allReviews : {};
+  const visibleReviewComment = reviewsReady ? newReviewComment : '';
+  const visibleReviewImage = reviewsReady ? newReviewImage : '';
+
   // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი
   const isClothingOrFootwear = (prod) => {
     if (!prod) return false;
@@ -174,7 +186,7 @@ export default function StoreView({
 
   const handleAddReview = (e, productId) => {
     e.preventDefault();
-    if (!currentUser?.id || !newReviewComment.trim()) return;
+    if (!currentUser?.id || !reviewsReady || !newReviewComment.trim()) return;
 
     const reviewObj = {
       id: `rev-${Date.now()}`,
@@ -672,7 +684,7 @@ export default function StoreView({
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
-            const prodReviews = allReviews[prod.id] || [];
+            const prodReviews = visibleReviews[prod.id] || [];
             const avgRating = prodReviews.length > 0 
               ? (prodReviews.reduce((acc, r) => acc + r.rating, 0) / prodReviews.length).toFixed(1) 
               : '—';
@@ -973,7 +985,7 @@ export default function StoreView({
 
                   <div className="gs-product-reviews space-y-4 pt-4 border-t border-amber-500/20">
                     <h3 className="gs-product-reviews-heading text-sm font-black text-white flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-amber-400" /> {storeText.reviews} ({(allReviews[selectedProduct.id] || []).length})
+                      <MessageSquare className="w-4 h-4 text-amber-400" /> {storeText.reviews} ({(visibleReviews[selectedProduct.id] || []).length})
                     </h3>
 
                     <form onSubmit={(e) => handleAddReview(e, selectedProduct.id)} className="gs-product-review-form bg-[#121216] p-4 rounded-3xl border border-amber-500/20 space-y-3">
@@ -999,7 +1011,7 @@ export default function StoreView({
                       </div>
                       <textarea 
                         placeholder={storeText.reviewPlaceholder} 
-                        value={newReviewComment} 
+                        value={visibleReviewComment} 
                         onChange={e => setNewReviewComment(e.target.value)}
                         required
                         rows="2"
@@ -1011,19 +1023,19 @@ export default function StoreView({
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
                           <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} className="hidden" />
                         </label>
-                        {newReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
+                        {visibleReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
 
-                      <button type="submit" disabled={!currentUser?.id || !newReviewComment.trim()} className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                      <button type="submit" disabled={!currentUser?.id || !reviewsReady || !newReviewComment.trim()} className="gs-product-review-submit w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                         {storeText.publishReview}
                       </button>
                     </form>
 
                     <div className="gs-product-review-list space-y-3 pt-2">
-                      {(!allReviews[selectedProduct.id] || allReviews[selectedProduct.id].length === 0) ? (
+                      {!reviewsReady ? null : (!visibleReviews[selectedProduct.id] || visibleReviews[selectedProduct.id].length === 0) ? (
                         <p className="text-slate-500 text-xs text-center py-4">{storeText.noReviews}</p>
                       ) : (
-                        allReviews[selectedProduct.id].map(rev => (
+                        visibleReviews[selectedProduct.id].map(rev => (
                           <div key={rev.id} className="gs-product-review-card bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
                             <div className="gs-product-review-card-header flex justify-between items-center">
                               <b className="gs-product-review-author text-white text-xs">{rev.author}</b>

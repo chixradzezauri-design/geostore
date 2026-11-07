@@ -4,6 +4,8 @@ import { estimateProductSize, isFootwearProduct } from './sizeRecommendation.js'
 
 test('footwear size estimate uses foot length rather than height', () => {
   assert.equal(isFootwearProduct({ category: 'ფეხსაცმელი' }), true);
+  assert.equal(isFootwearProduct({ category: 'Обувь' }), true);
+  assert.equal(isFootwearProduct({ category: 'Кроссовки' }), true);
   assert.equal(estimateProductSize({
     product: { category: 'ფეხსაცმელი' },
     heightCm: 190,
