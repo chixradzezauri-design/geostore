@@ -8357,3 +8357,28 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .gs-commerce-overlay--tracker .gs-order-tracker-summary .grid-cols-2{gap:9px!important;font-size:11px!important}
  .gs-commerce-overlay--tracker .gs-order-tracker-progress .grid-cols-4{gap:5px!important;font-size:8px!important}
 }
+
+
+/* GEOSTORE maintenance: account dialog responsive refinement */
+.gs-commerce-dialog--account{box-sizing:border-box!important;min-width:0!important;max-width:min(440px,100%)!important;max-height:min(90dvh,760px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;border-radius:20px!important;gap:clamp(14px,2vw,22px)!important}
+.gs-commerce-dialog--account>div:first-child{min-width:0!important;gap:10px!important}
+.gs-commerce-dialog--account form{min-width:0!important;gap:15px!important}
+.gs-commerce-dialog--account form>div{min-width:0!important;gap:6px!important}
+.gs-commerce-dialog--account form label{font-size:11px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+.gs-commerce-dialog--account form input{box-sizing:border-box!important;min-width:0!important;max-width:100%!important;width:100%!important;min-height:46px!important;padding:12px 13px!important;border-radius:11px!important;font-size:13px!important;line-height:1.4!important}
+.gs-commerce-dialog--account form button{min-height:48px!important;padding:12px 14px!important;border-radius:12px!important;line-height:1.4!important;overflow-wrap:anywhere!important}
+.gs-commerce-dialog--account>div:last-child{min-width:0!important;padding-top:12px!important}
+.gs-commerce-dialog--account>div:last-child button{max-width:100%!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+@media(max-width:600px){
+ .fixed.inset-0:has(.gs-commerce-dialog--account){align-items:flex-start!important;padding:7px!important;padding-top:max(7px,env(safe-area-inset-top))!important;padding-bottom:max(7px,env(safe-area-inset-bottom))!important}
+ .gs-commerce-dialog--account{width:100%!important;max-width:100%!important;max-height:calc(100dvh - 14px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;padding:15px!important;border-radius:15px!important;margin:auto 0!important}
+ .gs-commerce-dialog--account form{gap:13px!important}
+ .gs-commerce-dialog--account form input{min-height:44px!important;font-size:16px!important}
+}
+@media(max-width:360px){
+ .gs-commerce-dialog--account{padding:12px!important}
+ .gs-commerce-dialog--account>div:first-child h3{font-size:14px!important;line-height:1.35!important}
+ .gs-commerce-dialog--account form label{font-size:10px!important}
+ .gs-commerce-dialog--account form input{padding:11px!important}
+ .gs-commerce-dialog--account form button{font-size:11px!important}
+}
