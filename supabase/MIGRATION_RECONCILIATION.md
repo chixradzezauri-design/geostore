@@ -145,3 +145,9 @@ Static checks confirm unique migration version numbers and balanced function del
 - That could cause the catch handler to delete newly uploaded images even though the database update may already reference them.
 - Removed the incorrect state downgrade. An HTTP-successful write remains `committed`; if its returned row cannot be validated, the UI now tells the admin to refresh and verify the product while retaining the uploaded media.
 - Existing `productImageCleanup.test.js` already asserts that `committed` and `unknown` writes must retain uploaded images. Test execution is still pending.
+
+## Product media cleanup regression check
+
+- Ran the isolated Node test file for `src/utils/productImageCleanup.js` and `src/utils/productImageCleanup.test.js` against the exact current branch contents.
+- Result: 5 tests passed, 0 failed. This covers image reference collection, malformed gallery handling, cleanup only after a known rejected/not-started write, and retention when order history exists.
+- This was a focused helper test only; it is not the full project test suite, a Vite production build, or browser/device QA.
