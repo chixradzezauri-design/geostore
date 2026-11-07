@@ -458,7 +458,7 @@ export default function AdminDashboardPro({
   };
 
   const handleAdjustCustomVariantStock = async (variantId) => {
-    if (!editingProductId || productSaveLock.current || productDeleteLocks.current.has(String(editingProductId)) || isProductMutationBusy(editingProductId)) return;
+    if (isApplyingFlashSale || !editingProductId || productSaveLock.current || productDeleteLocks.current.has(String(editingProductId)) || isProductMutationBusy(editingProductId)) return;
     const rawDelta = String(variantStockAdjustments[variantId] ?? '').trim();
     if (!/^[+-]?\d+$/.test(rawDelta)) return alert('მარაგის ცვლილება მიუთითეთ მთელი რიცხვით, მაგალითად +5 ან -2.');
     const delta = Number(rawDelta);
@@ -1339,7 +1339,7 @@ export default function AdminDashboardPro({
   const handleDeleteProduct = async (id) => {
     const productKey = String(id ?? '');
     if (!productKey || productDeleteLocks.current.has(productKey)) return;
-    if (productSaveLock.current || isProductMutationBusy(productKey)) return alert('პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
+    if (isApplyingFlashSale || productSaveLock.current || isProductMutationBusy(productKey)) return alert('პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
     const productToDelete = (products || []).find(product => String(product.id) === String(id));
     const expectedVersion = productToDelete?.version;
@@ -1372,7 +1372,7 @@ export default function AdminDashboardPro({
     const current = (products || []).find(p => String(p.id) === String(id));
     if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
     if (String(editingProductId ?? '') === String(id)) return alert('ეს პროდუქტი ახლა რედაქტირების რეჟიმშია. ჯერ შეინახეთ ან გააუქმეთ რედაქტირება.');
-    if (productSaveLock.current || productDeleteLocks.current.has(String(id)) || isProductMutationBusy(id)) return alert('ამ პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
+    if (isApplyingFlashSale || productSaveLock.current || productDeleteLocks.current.has(String(id)) || isProductMutationBusy(id)) return alert('ამ პროდუქტზე სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და სცადეთ თავიდან.');
     const columnByField = { priceGEL: 'price_gel', purchaseCost: 'purchase_cost', stock: 'stock' };
     const column = columnByField[field];
     if (!column) return;
@@ -1559,7 +1559,7 @@ export default function AdminDashboardPro({
     let productWriteState = 'not-started';
     let newProdPayload;
 
-    if (productSaveLock.current) return;
+    if (isApplyingFlashSale || productSaveLock.current) return;
     if (editingProductId && (productDeleteLocks.current.has(String(editingProductId)) || isProductMutationBusy(editingProductId))) {
       alert('ამ პროდუქტზე მარაგის ან სხვა ცვლილება სრულდება. დაელოდეთ დასრულებას და შეინახეთ ხელახლა.');
       return;
@@ -1764,6 +1764,10 @@ export default function AdminDashboardPro({
     }
 
     if (isApplyingFlashSale) return;
+    if (productSaveLock.current || productDeleteLocks.current.size > 0 || quickProductUpdateLocks.current.size > 0) {
+      alert('პროდუქტებზე სხვა ცვლილებები სრულდება. დაელოდეთ დასრულებას და შემდეგ გაუშვით ფლეშ-აქცია.');
+      return;
+    }
     setIsApplyingFlashSale(true);
 
     try {
