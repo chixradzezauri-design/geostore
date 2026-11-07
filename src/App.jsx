@@ -29,7 +29,7 @@ import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, cr
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { isAuthRestoreCurrent, isSameAuthOwner } from './utils/authSafety';
+import { isAuthRestoreCurrent, isSameAuthOwner, isCheckoutOwnerConsistent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, parseStoredCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
