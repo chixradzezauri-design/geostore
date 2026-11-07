@@ -4,15 +4,17 @@ const normalizeOptions = (values) => {
 };
 
 // Accept both normalized frontend keys and raw Supabase/PostgREST keys.
-export const getAvailableProductSizes = (product) => normalizeOptions(
-  product?.availableSizes ?? product?.available_sizes
-);
+export const getAvailableProductSizes = (product) => {
+  const normalized = normalizeOptions(product?.availableSizes);
+  return normalized.length ? normalized : normalizeOptions(product?.available_sizes);
+};
 
-export const getAvailableProductColors = (product) => normalizeOptions(
-  (product?.availableColors?.length ? product.availableColors : undefined) ??
-  (product?.available_colors?.length ? product.available_colors : undefined) ??
-  product?.colors
-);
+export const getAvailableProductColors = (product) => {
+  const normalized = normalizeOptions(product?.availableColors);
+  if (normalized.length) return normalized;
+  const raw = normalizeOptions(product?.available_colors);
+  return raw.length ? raw : normalizeOptions(product?.colors);
+};
 
 export const getCustomProductVariants = (product) => {
   const raw = Array.isArray(product?.variants) ? product.variants : [];
@@ -54,7 +56,10 @@ export const getProductAvailableStock = (product) => {
 
 export const getProductStartingPrice = (product) => {
   if (Array.isArray(product?.variants) && product.variants.length > 0) {
-    const prices = getCustomProductVariants(product).map(variant => variant.priceGEL);
+    const variants = getCustomProductVariants(product);
+    const availableVariants = variants.filter(variant => variant.stock > 0);
+    const priceSource = availableVariants.length ? availableVariants : variants;
+    const prices = priceSource.map(variant => variant.priceGEL);
     return prices.length ? Math.min(...prices) : null;
   }
   const rawPrice = product?.priceGEL ?? product?.price_gel;
