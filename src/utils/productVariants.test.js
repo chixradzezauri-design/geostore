@@ -67,3 +67,36 @@ test('fails closed when custom variants contain duplicate IDs or names', () => {
     { id: 'v2', name: ' small ', priceGEL: 20, stock: 3 }
   ] }), []);
 });
+
+test('falls back to raw Supabase size/color fields when normalized fields contain no usable values', () => {
+  assert.deepEqual(getAvailableProductSizes({
+    availableSizes: [' ', ''],
+    available_sizes: ['S', 'M']
+  }), ['S', 'M']);
+  assert.deepEqual(getAvailableProductColors({
+    availableColors: [' '],
+    available_colors: ['Blue', 'White'],
+    colors: ['Red']
+  }), ['Blue', 'White']);
+});
+
+test('starting price uses the cheapest in-stock custom variant when one is available', () => {
+  const product = {
+    variants: [
+      { id: 'v1', name: 'Unavailable cheap option', priceGEL: 10, stock: 0 },
+      { id: 'v2', name: 'Available option', priceGEL: 20, stock: 3 },
+      { id: 'v3', name: 'Available premium option', priceGEL: 35, stock: 1 }
+    ]
+  };
+  assert.equal(getProductStartingPrice(product), 20);
+});
+
+test('starting price falls back to configured variant prices when every variant is out of stock', () => {
+  const product = {
+    variants: [
+      { id: 'v1', name: 'Unavailable cheap option', priceGEL: 10, stock: 0 },
+      { id: 'v2', name: 'Unavailable expensive option', priceGEL: 20, stock: 0 }
+    ]
+  };
+  assert.equal(getProductStartingPrice(product), 10);
+});
