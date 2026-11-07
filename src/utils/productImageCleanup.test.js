@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages } from './productImageCleanup.js';
+import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from './productImageCleanup.js';
 
 test('collects image and gallery URLs from other products only', () => {
   const referenced = collectReferencedProductImageUrls([
@@ -34,4 +34,12 @@ test('cleans newly uploaded images only when the product write is known not to h
   assert.equal(shouldCleanupUploadedProductImages('rejected'), true);
   assert.equal(shouldCleanupUploadedProductImages('unknown'), false);
   assert.equal(shouldCleanupUploadedProductImages('committed'), false);
+});
+
+
+test('retains product images whenever order history exists', () => {
+  assert.equal(shouldRetainProductImagesForOrderHistory([]), false);
+  assert.equal(shouldRetainProductImagesForOrderHistory([{ id: 'order-1' }]), true);
+  assert.equal(shouldRetainProductImagesForOrderHistory([{ id: 'order-1' }, { id: 'order-2' }]), true);
+  assert.equal(shouldRetainProductImagesForOrderHistory(null), false);
 });
