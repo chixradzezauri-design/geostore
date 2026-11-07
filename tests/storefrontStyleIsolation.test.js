@@ -69,7 +69,7 @@ test('image search and product comparison use the shared editorial modal theme',
   assert.match(imageSearch, /gs-image-search-dialog/);
   assert.match(productCompare, /gs-product-compare-overlay/);
   assert.match(productCompare, /gs-product-compare-card/);
-  assert.match(css, /\.gs-image-search-dialog\{[^}]*background:#fffdfa!important;/s);
+  assert.match(css, /\.gs-image-search-dialog,\s*\.gs-product-compare-dialog,\s*\.gs-wardrobe-add-form\{[^}]*background:#fffdfa!important;/s);
   assert.match(css, /\.gs-product-compare-card\{[^}]*background:#fffdfa!important;/s);
 });
 
