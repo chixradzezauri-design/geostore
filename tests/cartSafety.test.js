@@ -167,14 +167,14 @@ test('isolates guest and authenticated carts across sign-in and sign-out', () =>
     storage,
     previousOwnerId: null,
     nextOwnerId: 'user-a',
-    currentCart: [{ ...product, quantity: 3 }]
+    currentCart: guest.cart
   });
   assert.deepEqual(userA.cart, []);
   const userB = switchCartStorageOwner({
     storage,
     previousOwnerId: 'user-a',
     nextOwnerId: 'user-b',
-    currentCart: [{ ...product, quantity: 1 }]
+    currentCart: [{ ...product, quantity: 3 }]
   });
   assert.deepEqual(userB.cart, []);
   const backToA = switchCartStorageOwner({
