@@ -523,6 +523,15 @@ export default function App() {
   // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
   // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  // Serialize catalogue refreshes and discard results from a previous admin session.
+  const productsFetchLock = useRef(false);
+  const productsFetchQueued = useRef(false);
+  const productsAccessEpoch = useRef(0);
+  const adminAccessRef = useRef(adminLoggedIn);
+  if (adminAccessRef.current !== adminLoggedIn) {
+    adminAccessRef.current = adminLoggedIn;
+    productsAccessEpoch.current += 1;
+  }
   const [storefrontDraftBusy, setStorefrontDraftBusy] = useState(false);
   const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
   const storefrontSaveLock = useRef(false);
@@ -1166,9 +1175,19 @@ export default function App() {
   };
 
   const fetchProductsFromDatabase = async () => {
+    if (productsFetchLock.current) {
+      // Coalesce overlapping triggers into one fresh follow-up request.
+      productsFetchQueued.current = true;
+      return;
+    }
+
+    productsFetchLock.current = true;
+    const requestAccessEpoch = productsAccessEpoch.current;
+    const requestAdminLoggedIn = adminAccessRef.current;
+
     try {
       let res;
-      if (adminLoggedIn) {
+      if (requestAdminLoggedIn) {
         const requestAdminProducts = async () => fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_products`, {
           method: 'POST',
           headers: await getSupabaseHeaders({ authenticated: true }),
@@ -1262,11 +1281,23 @@ export default function App() {
           return rightTime - leftTime || String(left.id ?? '').localeCompare(String(right.id ?? ''));
         });
 
+        // Never let an old auth session or superseded request replace fresh catalogue data.
+        if (
+          requestAccessEpoch !== productsAccessEpoch.current ||
+          productsFetchQueued.current
+        ) return;
+
         // The products state persistence effect below owns the local cache write.
         setProducts(formatted);
       }
     } catch (error) {
       console.error('Products fetch error:', error);
+    } finally {
+      productsFetchLock.current = false;
+      if (productsFetchQueued.current) {
+        productsFetchQueued.current = false;
+        void fetchProductsFromDatabase();
+      }
     }
   };
 
