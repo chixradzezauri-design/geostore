@@ -1,5 +1,6 @@
 -- GEOSTORE: enforce variant price precision and support both stored key spellings.
--- Reconciled staging migration. Apply only after the full migration history review.
+-- The checkout implementation updates the unchecked function so the immutable
+-- auth-owner wrapper created by 20261107200000 remains in place.
 
 CREATE OR REPLACE FUNCTION private.preserve_product_variant_stock()
  RETURNS trigger
@@ -17,6 +18,26 @@ BEGIN
   END IF;
   IF jsonb_typeof(coalesce(NEW.variants, '[]'::jsonb)) IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'პროდუქტის ვარიანტების მონაცემები არასწორია.';
+  END IF;
+  IF jsonb_array_length(coalesce(NEW.variants, '[]'::jsonb)) > 50 THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტების რაოდენობა 50-ს არ უნდა აღემატებოდეს.';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+      FROM jsonb_array_elements(coalesce(NEW.variants, '[]'::jsonb)) AS e(item)
+     GROUP BY item->>'id'
+    HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'ვარიანტის ID დუბლირებულია.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+      FROM jsonb_array_elements(coalesce(NEW.variants, '[]'::jsonb)) AS e(item)
+     GROUP BY lower(trim(coalesce(item->>'name', '')))
+    HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'ვარიანტის სახელი დუბლირებულია.';
   END IF;
   FOR v_removed IN
     SELECT old_variant FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb)) old_variant
@@ -37,71 +58,80 @@ BEGIN
   LOOP
     IF jsonb_typeof(v_variant) IS DISTINCT FROM 'object'
        OR coalesce(trim(v_variant->>'id'), '') = ''
+       OR length(trim(coalesce(v_variant->>'id', ''))) > 80
        OR coalesce(trim(v_variant->>'name'), '') = ''
+       OR length(trim(coalesce(v_variant->>'name', ''))) > 80
        OR coalesce(nullif(v_variant->>'priceGEL', ''), nullif(v_variant->>'price_gel', ''), '') !~ '^[0-9]+(\.[0-9]{1,2})?
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path TO ''
-AS $trigger$
-DECLARE
-  v_variant jsonb;
-  v_price_text text;
-  v_stock_text text;
-  v_price numeric;
-  v_stock integer;
-BEGIN
-  IF NEW.variants IS NULL THEN
-    RETURN NEW;
-  END IF;
-
-  IF jsonb_typeof(NEW.variants) IS DISTINCT FROM 'array' THEN
-    RAISE EXCEPTION 'Product variants must be a JSON array.' USING ERRCODE = '22023';
-  END IF;
-  IF jsonb_array_length(NEW.variants) > 50 THEN
-    RAISE EXCEPTION 'A product may contain at most 50 variants.' USING ERRCODE = '22023';
-  END IF;
-
-  FOR v_variant IN SELECT value FROM jsonb_array_elements(NEW.variants) AS variant_row(value)
-  LOOP
-    IF jsonb_typeof(v_variant) IS DISTINCT FROM 'object' THEN
-      RAISE EXCEPTION 'Product variant must be a JSON object.' USING ERRCODE = '22023';
+       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+      RAISE EXCEPTION 'პროდუქტის ვარიანტის სახელი, ფასი ან მარაგი არასწორია.';
     END IF;
-
-    v_price_text := coalesce(nullif(v_variant->>'priceGEL', ''), nullif(v_variant->>'price_gel', ''));
-    IF v_price_text IS NULL OR v_price_text !~ '^\d+(\.\d{1,2})?$' THEN
-      RAISE EXCEPTION 'Variant price must be a non-negative GEL amount with at most two decimal places.' USING ERRCODE = '22023';
+    IF (v_variant->>'priceGEL')::numeric > 1000000000
+       OR (v_variant->>'stock')::integer > 1000000 THEN
+      RAISE EXCEPTION 'ვარიანტის ფასი ან მარაგი დასაშვებ ზღვარს აჭარბებს.';
     END IF;
-    v_price := v_price_text::numeric;
-    IF v_price < 0 OR v_price > 1000000000 OR v_price <> round(v_price, 2) THEN
-      RAISE EXCEPTION 'Variant price is outside the supported GEL range.' USING ERRCODE = '22023';
+    SELECT value INTO v_existing
+      FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
+     WHERE value->>'id' = v_variant->>'id'
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
+      END IF;
+      IF (v_existing->>'stock')::integer > 1000000 THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგი დასაშვებ ზღვარს აჭარბებს.';
+      END IF;
+      v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
     END IF;
-
-    v_stock_text := coalesce(v_variant->>'stock', '');
-    IF v_stock_text !~ '^\d{1,7}$' THEN
-      RAISE EXCEPTION 'Variant stock must be a whole number.' USING ERRCODE = '22023';
-    END IF;
-    v_stock := v_stock_text::integer;
-    IF v_stock < 0 OR v_stock > 1000000 THEN
-      RAISE EXCEPTION 'Variant stock is outside the supported range.' USING ERRCODE = '22023';
-    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
   END LOOP;
-
+  NEW.variants := v_result;
   RETURN NEW;
 END;
-$trigger$;
-
-DROP TRIGGER IF EXISTS products_validate_variant_prices ON public.products;
-CREATE TRIGGER products_validate_variant_prices
-BEFORE INSERT OR UPDATE OF variants ON public.products
-FOR EACH ROW
-EXECUTE FUNCTION private.validate_product_variant_prices();
-
-CREATE OR REPLACE FUNCTION private.create_order_with_stock(p_order jsonb)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
+$function$
+       OR coalesce(v_variant->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+      RAISE EXCEPTION 'პროდუქტის ვარიანტის სახელი, ფასი ან მარაგი არასწორია.';
+    END IF;
+    IF (v_variant->>'priceGEL')::numeric > 1000000000
+       OR (v_variant->>'stock')::integer > 1000000 THEN
+      RAISE EXCEPTION 'ვარიანტის ფასი ან მარაგი დასაშვებ ზღვარს აჭარბებს.';
+    END IF;
+    SELECT value INTO v_existing
+      FROM jsonb_array_elements(coalesce(OLD.variants, '[]'::jsonb))
+     WHERE value->>'id' = v_variant->>'id'
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      IF coalesce(v_existing->>'stock', '') !~ '^[0-9]{1,7}$' THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგის ჩანაწერი არასწორია.';
+      END IF;
+      IF (v_existing->>'stock')::integer > 1000000 THEN
+        RAISE EXCEPTION 'არსებული ვარიანტის მარაგი დასაშვებ ზღვარს აჭარბებს.';
+      END IF;
+      v_variant := jsonb_set(v_variant, '{stock}', to_jsonb((v_existing->>'stock')::integer), true);
+    ELSE
+      IF EXISTS (
+        SELECT 1 FROM public.orders o
+        CROSS JOIN LATERAL jsonb_array_elements(coalesce(o.items, '[]'::jsonb)) item
+        WHERE item->>'id' = NEW.id AND item->>'customVariantId' = v_variant->>'id'
+      ) THEN
+        RAISE EXCEPTION 'ამ ვარიანტის ID შეკვეთების ისტორიაში უკვე გამოიყენება.';
+      END IF;
+    END IF;
+    v_result := v_result || jsonb_build_array(v_variant);
+    v_existing := NULL;
+  END LOOP;
+  NEW.variants := v_result;
+  RETURN NEW;
+END;
+$function$
 
 REVOKE ALL ON FUNCTION private.preserve_product_variant_stock() FROM PUBLIC, anon, authenticated;
 
@@ -165,7 +195,7 @@ BEFORE INSERT OR UPDATE OF variants ON public.products
 FOR EACH ROW
 EXECUTE FUNCTION private.validate_product_variant_prices();
 
-CREATE OR REPLACE FUNCTION private.create_order_with_stock(p_order jsonb)
+CREATE OR REPLACE FUNCTION private.create_order_with_stock_unchecked(p_order jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
