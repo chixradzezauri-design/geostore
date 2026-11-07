@@ -44,7 +44,6 @@ SET search_path = ''
 AS $function$
 DECLARE
   v_uid uuid := auth.uid();
-  v_email text := lower(btrim(coalesce(auth.jwt() ->> 'email', '')));
   v_label text;
   v_verified boolean := false;
   v_review public.product_reviews%rowtype;
@@ -80,7 +79,11 @@ BEGIN
     RAISE EXCEPTION 'შეფასებების დღიური ლიმიტი ამოიწურა.';
   END IF;
 
-  v_label := coalesce(nullif(split_part(v_email, '@', 1), ''), 'GEOSTORE customer');
+  v_label := coalesce(
+    nullif(left(btrim(coalesce(auth.jwt() -> 'user_metadata' ->> 'full_name', '')), 80), ''),
+    nullif(left(btrim(coalesce(auth.jwt() -> 'user_metadata' ->> 'name', '')), 80), ''),
+    'GEOSTORE customer'
+  );
   SELECT EXISTS (
     SELECT 1
     FROM public.orders o
@@ -135,7 +138,7 @@ CREATE POLICY product_review_images_owner_insert
   WITH CHECK (
     bucket_id = 'product-review-images'
     AND (storage.foldername(name))[1] = auth.uid()::text
-    AND array_length(storage.foldername(name), 1) >= 3
+    AND array_length(storage.foldername(name), 1) >= 2
   );
 
 DROP POLICY IF EXISTS product_review_images_owner_delete ON storage.objects;
