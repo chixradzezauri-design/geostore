@@ -105,3 +105,28 @@ This file is the durable handoff log for staged audit work. Add new findings and
 
 - Read-only Supabase schema, policy, constraint, and row-count queries only.
 - No production schema/data changes, no Storage object deletion, no code changes to storefront behavior, no build/deploy, and no automated tests executed.
+
+
+## Storage inventory and server-side remediation readiness — 2026-11-07
+
+### Verified live Storage state
+
+- The only bucket is `storefront-media`; it is public for delivery of storefront images, has a 5 MiB file-size limit, and allows JPEG, PNG, WEBP, and GIF.
+- A direct read-only count of `storage.objects` for this bucket returned **0 objects / 0 bytes**.
+- `public.storefront_media` currently contains **0 metadata rows**.
+- Storage object mutation policies are restricted to `authenticated` and require both the primary administrator UID and trusted `app_metadata.role='admin'`. INSERT, UPDATE (including WITH CHECK), and DELETE were individually verified.
+- No Storage object deletion or policy change was performed.
+
+### Server-side capability check
+
+- Supabase currently reports **zero deployed Edge Functions** for this project.
+- No `supabase/functions` source directory was found in the inspected repository search results.
+- Therefore, there is no existing deployed Edge Function to reuse for support-ticket throttling or transactional storefront publishing. A frontend-only rate limiter would not provide meaningful abuse protection and was deliberately not added.
+- A transactional publish/version RPC and server-side ticket throttling require a properly scaffolded, reviewed, versioned Supabase migration and Edge Function (or a DB-backed rate-limit implementation). The current connected tools do not provide a verified local Supabase CLI workflow to create and test these artifacts under the skill's required migration-generation process.
+
+### Result
+
+- The Storage inventory is clean at this point: no bucket objects and no metadata records exist to reconcile or delete.
+- Existing bucket write policies are appropriately restricted; the public bucket setting is intentional for public storefront image URLs and is not equivalent to public write access.
+- Server-side remediation is blocked on establishing the correct local Supabase CLI / function deployment workflow. Do not replace it with client-only security controls or deploy unreviewed SQL.
+- No production changes, migration application, function deployment, code behavior changes, build, or deploy were made.
