@@ -709,3 +709,22 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - The complete Node test suite, production build, and browser QA were not run on these latest commits. No live Supabase migration was applied.
 - Latest GitHub commit status reports Vercel failure with the build-rate-limit upgrade URL. No additional Vercel build/deploy was initiated.
 - Continue with the staged Auth UUID ownership migration review and migration-history reconciliation before any production database change.
+
+
+## Customer order-history data minimization — 2026-11-07
+
+### Security finding
+- The live `private.get_my_orders()` function filtered rows by the signed-in user's email, but returned `o.items` unchanged.
+- The server-side order snapshot includes internal fields such as `purchase_cost`, `vendor`, and `category`; returning the raw JSON to a customer exposes internal business data.
+- The staged Auth UUID ownership migration initially repeated the same raw-item return, which would have carried the leak into the new UUID-based ownership path.
+
+### Correction
+- Updated staged `20261107200000_bind_order_ownership_to_auth_user_uuid.sql` to return an explicit item allowlist only: product ID/name, final unit price, quantity, selected size/color, selected custom variant identity/name, add-on total and customer-selected gift/warranty fields.
+- Internal `purchase_cost`, `vendor`, and internal category fields are excluded from customer history.
+- Malformed non-array legacy `items` values safely return an empty item list rather than raising an array expansion error.
+- The customer profile UI only reads item name, custom variant name and quantity from this payload, so the reduced payload preserves its current requirements.
+
+### Verification
+- Both staged SQL migrations (`20261107170000_integrate_custom_product_variants` and `20261107200000_bind_order_ownership_to_auth_user_uuid`) were executed inside explicit transactions ending in ROLLBACK. PostgreSQL accepted the DDL/function definitions; no schema changes were retained.
+- Confirmed after rollback that `orders.user_id` and `order_notifications.recipient_user_id` do not exist yet and the remote migration history remains at `20261107160152`.
+- No production migration was applied. The raw-item exposure remains in the live database until the reviewed forward migration is deliberately applied.
