@@ -1,389 +1,301 @@
 -- Cross-session optimistic concurrency for all admin product mutations.
--- This migration is staged only; reconcile migration history before applying.
+-- Staged only: reconcile the complete migration history before applying.
 
-alter table public.products
-  add column if not exists updated_at timestamptz not null default pg_catalog.now(),
-  add column if not exists version bigint not null default 1;
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT pg_catalog.now(),
+  ADD COLUMN IF NOT EXISTS version bigint NOT NULL DEFAULT 1;
 
--- The storefront catalogue query is public; these revision fields are non-sensitive.
-grant select (updated_at, version) on public.products to anon, authenticated;
+-- The storefront catalogue reads these non-sensitive revision tokens.
+GRANT SELECT (updated_at, version) ON public.products TO anon, authenticated;
 
-create or replace function private.touch_product_updated_at()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  new.updated_at := pg_catalog.now();
-  new.version := old.version + 1;
-  return new;
-end;
+CREATE OR REPLACE FUNCTION private.touch_product_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.updated_at := pg_catalog.now();
+  NEW.version := OLD.version + 1;
+  RETURN NEW;
+END;
 $$;
 
-drop trigger if exists touch_product_updated_at on public.products;
-create trigger touch_product_updated_at
-before update on public.products
-for each row execute function private.touch_product_updated_at();
+DROP TRIGGER IF EXISTS touch_product_updated_at ON public.products;
+CREATE TRIGGER touch_product_updated_at
+BEFORE UPDATE ON public.products
+FOR EACH ROW
+EXECUTE FUNCTION private.touch_product_updated_at();
 
 
-create or replace function private.admin_update_product(
+CREATE OR REPLACE FUNCTION private.admin_update_product(
   p_product jsonb,
   p_expected_version bigint
 )
-returns setof public.products
-language plpgsql
-security definer
-set search_path = ''
-as $
-declare
-  v_jwt jsonb := (select auth.jwt());
+RETURNS SETOF public.products
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_jwt jsonb := (SELECT auth.jwt());
   v_patch public.products;
   v_product public.products;
   v_product_id text;
-begin
-  if coalesce(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
-     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
-    raise exception 'Not authorized to update products' using errcode = '42501';
-  end if;
+  v_price numeric;
+BEGIN
+  IF COALESCE(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
+     OR auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid THEN
+    RAISE EXCEPTION 'Not authorized to update products' USING ERRCODE = '42501';
+  END IF;
 
-  v_product_id := nullif(trim(p_product ->> 'id'), '');
-  if p_product is null or v_product_id is null
-     or p_expected_version is null or p_expected_version < 1
-     or nullif(trim(p_product ->> 'name'), '') is null
-     or coalesce(p_product ->> 'price_gel', '') !~ '^[0-9]+(\.[0-9]{1,2})?
-  p_product_id text,
-  p_variant_id text,
-  p_delta integer,
-  p_expected_version bigint
-)
-returns public.products
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_jwt jsonb := (select auth.jwt());
-  v_product public.products;
-  v_variant_count integer;
-begin
-  if coalesce(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
-     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
-    raise exception 'Not authorized to adjust product variant stock' using errcode = '42501';
-  end if;
-  if coalesce(trim(p_product_id), '') = ''
-     or coalesce(trim(p_variant_id), '') = ''
-     or p_delta is null or p_delta = 0
-     or p_delta < -1000000 or p_delta > 1000000
-     or p_expected_version is null or p_expected_version < 1 then
-    raise exception 'Invalid variant stock adjustment' using errcode = '22023';
-  end if;
+  IF p_product IS NULL OR jsonb_typeof(p_product) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'Invalid product update payload' USING ERRCODE = '22023';
+  END IF;
 
-  select count(*) into v_variant_count
-  from public.products p
-  cross join lateral jsonb_array_elements(coalesce(p.variants, '[]'::jsonb)) v
-  where p.id = p_product_id and v->>'id' = p_variant_id;
+  v_product_id := NULLIF(trim(p_product ->> 'id'), '');
+  IF v_product_id IS NULL
+     OR p_expected_version IS NULL OR p_expected_version < 1
+     OR NULLIF(trim(p_product ->> 'name'), '') IS NULL
+     OR COALESCE(p_product ->> 'price_gel', '') !~ '^[0-9]+(\.[0-9]{1,2})?$' THEN
+    RAISE EXCEPTION 'Invalid product update payload' USING ERRCODE = '22023';
+  END IF;
 
-  if v_variant_count <> 1 then
-    raise exception 'Variant not found or duplicated' using errcode = 'P0002';
-  end if;
+  v_price := (p_product ->> 'price_gel')::numeric;
+  IF v_price < 0 OR v_price > 1000000000 OR v_price <> round(v_price, 2) THEN
+    RAISE EXCEPTION 'Product price is outside the supported GEL range' USING ERRCODE = '22023';
+  END IF;
 
-  perform pg_catalog.set_config('geostore.variant_stock_adjustment', 'on', true);
-  update public.products p
-  set variants = (
-    select jsonb_agg(
-      case when v->>'id' = p_variant_id
-        then jsonb_set(v, '{stock}', to_jsonb((v->>'stock')::integer + p_delta), true)
-        else v
-      end order by ord
-    )
-    from jsonb_array_elements(p.variants) with ordinality as e(v, ord)
-  )
-  where p.id = p_product_id
-    and p.version = p_expected_version
-    and exists (
-      select 1 from jsonb_array_elements(p.variants) v
-      where v->>'id' = p_variant_id
-        and coalesce(v->>'stock', '') ~ '^[0-9]{1,7}$'
-        and (v->>'stock')::integer + p_delta between 0 and 1000000
-    )
-  returning p.* into v_product;
+  IF NULLIF(p_product ->> 'old_price_gel', '') IS NOT NULL
+     AND (
+       p_product ->> 'old_price_gel' !~ '^[0-9]+(\.[0-9]{1,2})?$'
+       OR (p_product ->> 'old_price_gel')::numeric <= v_price
+       OR (p_product ->> 'old_price_gel')::numeric > 1000000000
+     ) THEN
+    RAISE EXCEPTION 'Invalid old product price' USING ERRCODE = '22023';
+  END IF;
 
-  if not found then
-    raise exception 'Product or variant changed. Refresh and retry.' using errcode = '40001';
-  end if;
-  return v_product;
-end;
+  IF NULLIF(p_product ->> 'purchase_cost', '') IS NOT NULL
+     AND (
+       p_product ->> 'purchase_cost' !~ '^[0-9]+(\.[0-9]{1,2})?$'
+       OR (p_product ->> 'purchase_cost')::numeric < 0
+       OR (p_product ->> 'purchase_cost')::numeric > 1000000000
+     ) THEN
+    RAISE EXCEPTION 'Invalid product purchase cost' USING ERRCODE = '22023';
+  END IF;
+
+  v_patch := jsonb_populate_record(NULL::public.products, p_product);
+
+  UPDATE public.products AS p
+     SET sku = v_patch.sku,
+         name = v_patch.name,
+         category = v_patch.category,
+         brand = v_patch.brand,
+         vendor = v_patch.vendor,
+         price_gel = v_patch.price_gel,
+         old_price_gel = v_patch.old_price_gel,
+         purchase_cost = v_patch.purchase_cost,
+         image = v_patch.image,
+         description = v_patch.description,
+         available_sizes = COALESCE(v_patch.available_sizes, '[]'::jsonb),
+         available_colors = COALESCE(v_patch.available_colors, '[]'::jsonb),
+         gallery = COALESCE(v_patch.gallery, '[]'::jsonb),
+         variants = COALESCE(v_patch.variants, '[]'::jsonb),
+         tags = COALESCE(v_patch.tags, '[]'::jsonb),
+         material = v_patch.material,
+         durability = v_patch.durability,
+         model = v_patch.model,
+         cpu = v_patch.cpu,
+         ram = v_patch.ram,
+         storage = v_patch.storage,
+         gpu = v_patch.gpu,
+         screen_size = v_patch.screen_size,
+         os = v_patch.os,
+         is_featured = COALESCE(v_patch.is_featured, false)
+   WHERE p.id = v_product_id
+     AND p.version = p_expected_version
+  RETURNING p.* INTO v_product;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Product changed in another session. Refresh and retry.' USING ERRCODE = '40001';
+  END IF;
+
+  RETURN NEXT v_product;
+  RETURN;
+END;
 $$;
 
-create or replace function public.admin_adjust_product_variant_stock(
-  p_product_id text,
-  p_variant_id text,
-  p_delta integer,
-  p_expected_version bigint
-)
-returns public.products
-language sql
-security invoker
-set search_path = ''
-as $$
-  select private.admin_adjust_product_variant_stock(
-    p_product_id, p_variant_id, p_delta, p_expected_version
-  );
-$$;
-
-create or replace function private.admin_delete_product_if_version(
-  p_product_id text,
-  p_expected_version bigint
-)
-returns boolean
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_jwt jsonb := (select auth.jwt());
-  v_deleted integer;
-begin
-  if coalesce(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
-     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
-    raise exception 'Not authorized to delete products' using errcode = '42501';
-  end if;
-  if coalesce(trim(p_product_id), '') = ''
-     or p_expected_version is null or p_expected_version < 1 then
-    raise exception 'Invalid product deletion request' using errcode = '22023';
-  end if;
-  delete from public.products
-  where id = p_product_id and version = p_expected_version;
-  get diagnostics v_deleted = row_count;
-  return v_deleted = 1;
-end;
-$$;
-
-create or replace function public.admin_delete_product_if_version(
-  p_product_id text,
-  p_expected_version bigint
-)
-returns boolean
-language sql
-security invoker
-set search_path = ''
-as $$
-  select private.admin_delete_product_if_version(p_product_id, p_expected_version);
-$$;
-
-revoke all on function private.admin_adjust_product_variant_stock(text,text,integer,bigint) from public, anon, authenticated;
-revoke all on function public.admin_adjust_product_variant_stock(text,text,integer,bigint) from public, anon;
-grant execute on function public.admin_adjust_product_variant_stock(text,text,integer,bigint) to authenticated;
-
-revoke all on function private.admin_delete_product_if_version(text,bigint) from public, anon, authenticated;
-revoke all on function public.admin_delete_product_if_version(text,bigint) from public, anon;
-grant execute on function public.admin_delete_product_if_version(text,bigint) to authenticated;
-
--- Keep implementation functions private and callable only through guarded wrappers.
-grant usage on schema private to authenticated;
-grant execute on function private.admin_update_product(jsonb,bigint) to authenticated;
-grant execute on function private.admin_adjust_product_variant_stock(text,text,integer,bigint) to authenticated;
-grant execute on function private.admin_delete_product_if_version(text,bigint) to authenticated;
-
--- Retire the legacy non-versioned variant stock route as well.
-revoke all on function public.admin_adjust_product_variant_stock(text,text,integer) from public, anon, authenticated;
-revoke all on function private.admin_adjust_product_variant_stock(text,text,integer) from public, anon, authenticated;
-
--- Prevent stale clients from bypassing version-checked product deletion.
-revoke all on function public.admin_delete_product(text) from public, anon, authenticated;
-revoke all on function private.admin_delete_product(text) from public, anon, authenticated;
-
-
-revoke all on function private.touch_product_updated_at() from public, anon, authenticated;
-
-
-     or (p_product ->> 'price_gel')::numeric < 0
-     or (p_product ->> 'price_gel')::numeric > 1000000000 then
-    raise exception 'Invalid product update payload' using errcode = '22023';
-  end if;
-
-  v_patch := jsonb_populate_record(null::public.products, p_product);
-
-  update public.products p
-  set sku = v_patch.sku,
-      name = v_patch.name,
-      category = v_patch.category,
-      brand = v_patch.brand,
-      vendor = v_patch.vendor,
-      price_gel = v_patch.price_gel,
-      old_price_gel = v_patch.old_price_gel,
-      purchase_cost = v_patch.purchase_cost,
-      image = v_patch.image,
-      description = v_patch.description,
-      available_sizes = coalesce(v_patch.available_sizes, '[]'::jsonb),
-      available_colors = coalesce(v_patch.available_colors, '[]'::jsonb),
-      gallery = coalesce(v_patch.gallery, '[]'::jsonb),
-      variants = coalesce(v_patch.variants, '[]'::jsonb),
-      tags = coalesce(v_patch.tags, '[]'::jsonb),
-      material = v_patch.material,
-      durability = v_patch.durability,
-      model = v_patch.model,
-      cpu = v_patch.cpu,
-      ram = v_patch.ram,
-      storage = v_patch.storage,
-      gpu = v_patch.gpu,
-      screen_size = v_patch.screen_size,
-      os = v_patch.os,
-      is_featured = coalesce(v_patch.is_featured, false)
-  where p.id = v_product_id
-    and p.version = p_expected_version
-  returning p.* into v_product;
-
-  if not found then
-    raise exception 'Product changed in another session. Refresh and retry.' using errcode = '40001';
-  end if;
-
-  return next v_product;
-  return;
-end;
-$;
-
-create or replace function public.admin_update_product(
+CREATE OR REPLACE FUNCTION public.admin_update_product(
   p_product jsonb,
   p_expected_version bigint
 )
-returns setof public.products
-language sql
-security invoker
-set search_path = ''
-as $
-  select * from private.admin_update_product(p_product, p_expected_version);
-$;
-
-revoke all on function private.admin_update_product(jsonb,bigint) from public, anon, authenticated;
-revoke all on function public.admin_update_product(jsonb,bigint) from public, anon;
-grant execute on function public.admin_update_product(jsonb,bigint) to authenticated;
-
-create or replace function private.admin_adjust_product_variant_stock(
-  p_product_id text,
-  p_variant_id text,
-  p_delta integer,
-  p_expected_version bigint
-)
-returns public.products
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_jwt jsonb := (select auth.jwt());
-  v_product public.products;
-  v_variant_count integer;
-begin
-  if coalesce(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
-     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
-    raise exception 'Not authorized to adjust product variant stock' using errcode = '42501';
-  end if;
-  if coalesce(trim(p_product_id), '') = ''
-     or coalesce(trim(p_variant_id), '') = ''
-     or p_delta is null or p_delta = 0
-     or p_delta < -1000000 or p_delta > 1000000
-     or p_expected_version is null or p_expected_version < 1 then
-    raise exception 'Invalid variant stock adjustment' using errcode = '22023';
-  end if;
-
-  select count(*) into v_variant_count
-  from public.products p
-  cross join lateral jsonb_array_elements(coalesce(p.variants, '[]'::jsonb)) v
-  where p.id = p_product_id and v->>'id' = p_variant_id;
-
-  if v_variant_count <> 1 then
-    raise exception 'Variant not found or duplicated' using errcode = 'P0002';
-  end if;
-
-  perform pg_catalog.set_config('geostore.variant_stock_adjustment', 'on', true);
-  update public.products p
-  set variants = (
-    select jsonb_agg(
-      case when v->>'id' = p_variant_id
-        then jsonb_set(v, '{stock}', to_jsonb((v->>'stock')::integer + p_delta), true)
-        else v
-      end order by ord
-    )
-    from jsonb_array_elements(p.variants) with ordinality as e(v, ord)
-  )
-  where p.id = p_product_id
-    and p.version = p_expected_version
-    and exists (
-      select 1 from jsonb_array_elements(p.variants) v
-      where v->>'id' = p_variant_id
-        and coalesce(v->>'stock', '') ~ '^[0-9]{1,7}$'
-        and (v->>'stock')::integer + p_delta between 0 and 1000000
-    )
-  returning p.* into v_product;
-
-  if not found then
-    raise exception 'Product or variant changed. Refresh and retry.' using errcode = '40001';
-  end if;
-  return v_product;
-end;
+RETURNS SETOF public.products
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+  SELECT * FROM private.admin_update_product(p_product, p_expected_version);
 $$;
 
-create or replace function public.admin_adjust_product_variant_stock(
+
+CREATE OR REPLACE FUNCTION private.admin_adjust_product_variant_stock(
   p_product_id text,
   p_variant_id text,
   p_delta integer,
   p_expected_version bigint
 )
-returns public.products
-language sql
-security definer
-set search_path = ''
-as $$
-  select private.admin_adjust_product_variant_stock(
+RETURNS public.products
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_jwt jsonb := (SELECT auth.jwt());
+  v_product public.products;
+  v_variant_count integer;
+BEGIN
+  IF COALESCE(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
+     OR auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid THEN
+    RAISE EXCEPTION 'Not authorized to adjust product variant stock' USING ERRCODE = '42501';
+  END IF;
+
+  IF COALESCE(trim(p_product_id), '') = ''
+     OR COALESCE(trim(p_variant_id), '') = ''
+     OR p_delta IS NULL OR p_delta = 0
+     OR p_delta < -1000000 OR p_delta > 1000000
+     OR p_expected_version IS NULL OR p_expected_version < 1 THEN
+    RAISE EXCEPTION 'Invalid variant stock adjustment' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT count(*)
+    INTO v_variant_count
+    FROM public.products AS p
+    CROSS JOIN LATERAL jsonb_array_elements(COALESCE(p.variants, '[]'::jsonb)) AS v
+   WHERE p.id = p_product_id
+     AND v ->> 'id' = p_variant_id;
+
+  IF v_variant_count <> 1 THEN
+    RAISE EXCEPTION 'Variant not found or duplicated' USING ERRCODE = 'P0002';
+  END IF;
+
+  PERFORM pg_catalog.set_config('geostore.variant_stock_adjustment', 'on', true);
+
+  UPDATE public.products AS p
+     SET variants = (
+       SELECT jsonb_agg(
+         CASE WHEN v ->> 'id' = p_variant_id
+           THEN jsonb_set(v, '{stock}', to_jsonb((v ->> 'stock')::integer + p_delta), true)
+           ELSE v
+         END
+         ORDER BY ord
+       )
+       FROM jsonb_array_elements(p.variants) WITH ORDINALITY AS e(v, ord)
+     )
+   WHERE p.id = p_product_id
+     AND p.version = p_expected_version
+     AND EXISTS (
+       SELECT 1
+         FROM jsonb_array_elements(p.variants) AS v
+        WHERE v ->> 'id' = p_variant_id
+          AND CASE
+                WHEN COALESCE(v ->> 'stock', '') ~ '^[0-9]{1,7}$'
+                  THEN (v ->> 'stock')::integer + p_delta BETWEEN 0 AND 1000000
+                ELSE false
+              END
+     )
+  RETURNING p.* INTO v_product;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Product or variant changed. Refresh and retry.' USING ERRCODE = '40001';
+  END IF;
+
+  RETURN v_product;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_adjust_product_variant_stock(
+  p_product_id text,
+  p_variant_id text,
+  p_delta integer,
+  p_expected_version bigint
+)
+RETURNS public.products
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+  SELECT private.admin_adjust_product_variant_stock(
     p_product_id, p_variant_id, p_delta, p_expected_version
   );
 $$;
 
-create or replace function private.admin_delete_product_if_version(
+
+CREATE OR REPLACE FUNCTION private.admin_delete_product_if_version(
   p_product_id text,
   p_expected_version bigint
 )
-returns boolean
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_jwt jsonb := (select auth.jwt());
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_jwt jsonb := (SELECT auth.jwt());
   v_deleted integer;
-begin
-  if coalesce(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
-     or auth.uid() is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid then
-    raise exception 'Not authorized to delete products' using errcode = '42501';
-  end if;
-  if coalesce(trim(p_product_id), '') = ''
-     or p_expected_version is null or p_expected_version < 1 then
-    raise exception 'Invalid product deletion request' using errcode = '22023';
-  end if;
-  delete from public.products
-  where id = p_product_id and version = p_expected_version;
-  get diagnostics v_deleted = row_count;
-  return v_deleted = 1;
-end;
+BEGIN
+  IF COALESCE(v_jwt -> 'app_metadata' ->> 'role', '') <> 'admin'
+     OR auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid THEN
+    RAISE EXCEPTION 'Not authorized to delete products' USING ERRCODE = '42501';
+  END IF;
+
+  IF COALESCE(trim(p_product_id), '') = ''
+     OR p_expected_version IS NULL OR p_expected_version < 1 THEN
+    RAISE EXCEPTION 'Invalid product deletion request' USING ERRCODE = '22023';
+  END IF;
+
+  DELETE FROM public.products
+   WHERE id = p_product_id
+     AND version = p_expected_version;
+
+  GET DIAGNOSTICS v_deleted = ROW_COUNT;
+  RETURN v_deleted = 1;
+END;
 $$;
 
-create or replace function public.admin_delete_product_if_version(
+CREATE OR REPLACE FUNCTION public.admin_delete_product_if_version(
   p_product_id text,
   p_expected_version bigint
 )
-returns boolean
-language sql
-security definer
-set search_path = ''
-as $$
-  select private.admin_delete_product_if_version(p_product_id, p_expected_version);
+RETURNS boolean
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+  SELECT private.admin_delete_product_if_version(p_product_id, p_expected_version);
 $$;
 
-revoke all on function private.admin_adjust_product_variant_stock(text,text,integer,bigint) from public, anon, authenticated;
-revoke all on function public.admin_adjust_product_variant_stock(text,text,integer,bigint) from public, anon;
-grant execute on function public.admin_adjust_product_variant_stock(text,text,integer,bigint) to authenticated;
 
-revoke all on function private.admin_delete_product_if_version(text,bigint) from public, anon, authenticated;
-revoke all on function public.admin_delete_product_if_version(text,bigint) from public, anon;
-grant execute on function public.admin_delete_product_if_version(text,bigint) to authenticated;
+-- Expose implementation calls only to authenticated sessions; each function
+-- still verifies the exact primary-admin UUID and app_metadata role.
+REVOKE ALL ON FUNCTION private.touch_product_updated_at() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION private.admin_update_product(jsonb, bigint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_update_product(jsonb, bigint) FROM PUBLIC, anon;
+GRANT USAGE ON SCHEMA private TO authenticated;
+GRANT EXECUTE ON FUNCTION private.admin_update_product(jsonb, bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_update_product(jsonb, bigint) TO authenticated;
+
+REVOKE ALL ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer, bigint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer, bigint) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer, bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer, bigint) TO authenticated;
+
+REVOKE ALL ON FUNCTION private.admin_delete_product_if_version(text, bigint) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_delete_product_if_version(text, bigint) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.admin_delete_product_if_version(text, bigint) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_delete_product_if_version(text, bigint) TO authenticated;
+
+-- Retire legacy unversioned mutation endpoints so old clients cannot bypass
+-- the version-checked operations.
+REVOKE ALL ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.admin_delete_product(text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION private.admin_delete_product(text) FROM PUBLIC, anon, authenticated;
