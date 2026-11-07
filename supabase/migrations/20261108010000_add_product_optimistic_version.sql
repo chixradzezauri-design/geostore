@@ -66,20 +66,22 @@ BEGIN
   END IF;
 
   IF NULLIF(p_product ->> 'old_price_gel', '') IS NOT NULL
-     AND (
-       p_product ->> 'old_price_gel' !~ '^[0-9]+(\.[0-9]{1,2})?$'
-       OR (p_product ->> 'old_price_gel')::numeric <= v_price
-       OR (p_product ->> 'old_price_gel')::numeric > 1000000000
-     ) THEN
+     AND CASE
+       WHEN p_product ->> 'old_price_gel' ~ '^[0-9]+(\\.[0-9]{1,2})?$'
+         THEN (p_product ->> 'old_price_gel')::numeric <= v_price
+           OR (p_product ->> 'old_price_gel')::numeric > 1000000000
+       ELSE true
+     END THEN
     RAISE EXCEPTION 'Invalid old product price' USING ERRCODE = '22023';
   END IF;
 
   IF NULLIF(p_product ->> 'purchase_cost', '') IS NOT NULL
-     AND (
-       p_product ->> 'purchase_cost' !~ '^[0-9]+(\.[0-9]{1,2})?$'
-       OR (p_product ->> 'purchase_cost')::numeric < 0
-       OR (p_product ->> 'purchase_cost')::numeric > 1000000000
-     ) THEN
+     AND CASE
+       WHEN p_product ->> 'purchase_cost' ~ '^[0-9]+(\\.[0-9]{1,2})?$'
+         THEN (p_product ->> 'purchase_cost')::numeric < 0
+           OR (p_product ->> 'purchase_cost')::numeric > 1000000000
+       ELSE true
+     END THEN
     RAISE EXCEPTION 'Invalid product purchase cost' USING ERRCODE = '22023';
   END IF;
 
