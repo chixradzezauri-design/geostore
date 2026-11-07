@@ -1695,8 +1695,16 @@ export default function App() {
     const allowedSizes = getAvailableProductSizes(product);
     const allowedColors = getAvailableProductColors(product);
 
+    if (allowedSizes.length > 0 && !selectedSize) {
+      showToast('კალათაში დამატებამდე აირჩიეთ პროდუქტის ზომა.');
+      return false;
+    }
     if (selectedSize && !allowedSizes.includes(selectedSize)) {
       showToast('არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
+      return false;
+    }
+    if (allowedColors.length > 0 && !selectedColor) {
+      showToast('კალათაში დამატებამდე აირჩიეთ პროდუქტის ფერი.');
       return false;
     }
     if (selectedColor && !allowedColors.includes(selectedColor)) {
