@@ -382,6 +382,7 @@ export default function AdminDashboardPro({
   const [newVarName, setNewVarName] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
   const [newVarStock, setNewVarStock] = useState('');
+  const [variantStockAdjustments, setVariantStockAdjustments] = useState({});
   const productSaveLock = useRef(false);
   const productDeleteLocks = useRef(new Set());
   const quickProductUpdateLocks = useRef(new Set());
@@ -420,6 +421,64 @@ export default function AdminDashboardPro({
 
   const handleRemoveCustomVariant = (id) => {
     setProductVariants(prev => prev.filter(v => v.id !== id));
+    setVariantStockAdjustments(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const handleAdjustCustomVariantStock = async (variantId) => {
+    if (!editingProductId || productSaveLock.current) return;
+    const rawDelta = String(variantStockAdjustments[variantId] ?? '').trim();
+    if (!/^-?\\d+$/.test(rawDelta)) return alert('მარაგის ცვლილება მიუთითეთ მთელი რიცხვით, მაგალითად +5 ან -2.');
+    const delta = Number(rawDelta);
+    if (!Number.isSafeInteger(delta) || delta === 0 || delta < -1000000 || delta > 1000000) {
+      return alert('მარაგის ცვლილება უნდა იყოს -1,000,000-დან +1,000,000-მდე და ნულისგან განსხვავებული.');
+    }
+
+    const lockKey = `variant-stock:${editingProductId}:${variantId}`;
+    if (quickProductUpdateLocks.current.has(lockKey)) return;
+    quickProductUpdateLocks.current.add(lockKey);
+
+    try {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_adjust_product_variant_stock', {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_product_id: String(editingProductId),
+          p_variant_id: String(variantId),
+          p_delta: delta
+        })
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      const savedProduct = Array.isArray(result) ? result[0] : result;
+      const savedVariant = Array.isArray(savedProduct?.variants)
+        ? savedProduct.variants.find(variant => String(variant?.id) === String(variantId))
+        : null;
+      if (!savedProduct || String(savedProduct.id ?? '') !== String(editingProductId) ||
+          !savedVariant || !Number.isSafeInteger(Number(savedVariant.stock)) || Number(savedVariant.stock) < 0) {
+        throw new Error('სერვერმა ვარიანტის განახლებული მარაგი ვერ დაადასტურა.');
+      }
+
+      setProductVariants(prev => prev.map(variant => String(variant.id) === String(variantId)
+        ? { ...variant, stock: Number(savedVariant.stock) }
+        : variant));
+      if (typeof setProducts === 'function') {
+        setProducts(prev => (prev || []).map(product => String(product.id) === String(editingProductId)
+          ? { ...product, variants: savedProduct.variants }
+          : product));
+      }
+      setVariantStockAdjustments(prev => ({ ...prev, [variantId]: '' }));
+      logActivity(`შეიცვალა ვარიანტის მარაგი: ${savedVariant.name || variantId} (${delta > 0 ? '+' : ''}${delta})`);
+      alert('ვარიანტის მარაგი წარმატებით განახლდა.');
+    } catch (error) {
+      console.error('Variant stock adjustment failed:', error);
+      alert('ვარიანტის მარაგის განახლება ვერ მოხერხდა: ' + (error?.message || 'ქსელის შეცდომა'));
+    } finally {
+      quickProductUpdateLocks.current.delete(lockKey);
+    }
   };
 
   const handleCategoryChange = (catName) => {
@@ -1342,6 +1401,7 @@ export default function AdminDashboardPro({
     });
     setSelectedImages(p.gallery?.length ? p.gallery : (p.image ? [p.image] : []));
     setProductVariants(Array.isArray(p.variants) ? p.variants : []);
+    setVariantStockAdjustments({});
     document.getElementById('geostore-product-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -1350,6 +1410,7 @@ export default function AdminDashboardPro({
     setProductForm(productFormInitial);
     setSelectedImages([]);
     setProductVariants([]);
+    setVariantStockAdjustments({});
   };
 
   const handleSaveProduct = async (e) => {
@@ -3547,12 +3608,43 @@ export default function AdminDashboardPro({
                     <input value={newVarStock} onChange={e => setNewVarStock(e.target.value)} inputMode="numeric" placeholder="მარაგი (ც.)" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
                     <button type="button" onClick={() => handleAddCustomVariant({ preventDefault: () => {} })} className="sm:col-span-4 rounded-xl bg-amber-400 px-4 py-3 text-xs font-black text-slate-950">ვარიანტის დამატება</button>
                   </div>
-                  {productVariants.length ? <div className="space-y-2">{productVariants.map(variant => (
-                    <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-3 text-xs">
-                      <div className="min-w-0"><b className="text-white">{variant.name}</b><span className="ml-2 text-amber-300">{Number(variant.priceGEL).toFixed(2)} ₾</span><span className="ml-2 text-slate-400">მარაგი: {variant.stock}</span></div>
-                      <button type="button" onClick={() => handleRemoveCustomVariant(variant.id)} className="rounded-lg bg-rose-500/10 px-3 py-2 font-bold text-rose-300">წაშლა</button>
-                    </div>
-                  ))}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
+                  {productVariants.length ? <div className="space-y-2">{productVariants.map(variant => {
+                    const isSavedVariant = Boolean(editingProductId && (products || []).some(product =>
+                      String(product.id) === String(editingProductId) &&
+                      Array.isArray(product.variants) &&
+                      product.variants.some(saved => String(saved?.id) === String(variant.id))
+                    ));
+                    return (
+                      <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-3 text-xs">
+                        <div className="min-w-0"><b className="text-white">{variant.name}</b><span className="ml-2 text-amber-300">{Number(variant.priceGEL).toFixed(2)} ₾</span><span className="ml-2 text-slate-400">მარაგი: {variant.stock}</span></div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {isSavedVariant && (
+                            <>
+                              <input
+                                type="number"
+                                step="1"
+                                min="-1000000"
+                                max="1000000"
+                                inputMode="numeric"
+                                value={variantStockAdjustments[variant.id] ?? ''}
+                                onChange={event => setVariantStockAdjustments(prev => ({ ...prev, [variant.id]: event.target.value }))}
+                                placeholder="+/- ც."
+                                aria-label={`მარაგის ცვლილება — ${variant.name}`}
+                                className="w-20 min-w-0 rounded-lg border border-emerald-500/20 bg-slate-950 px-2 py-2 text-center text-white outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleAdjustCustomVariantStock(variant.id)}
+                                disabled={!String(variantStockAdjustments[variant.id] ?? '').trim()}
+                                className="rounded-lg bg-emerald-500/10 px-3 py-2 font-bold text-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+                              >მარაგის შეცვლა</button>
+                            </>
+                          )}
+                          <button type="button" onClick={() => handleRemoveCustomVariant(variant.id)} className="rounded-lg bg-rose-500/10 px-3 py-2 font-bold text-rose-300">წაშლა</button>
+                        </div>
+                      </div>
+                    );
+                  })}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
                 </div>
 
                 <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
