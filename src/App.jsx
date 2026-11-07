@@ -394,7 +394,8 @@ export default function App() {
 
   const [currentLang, setCurrLang] = useState(() => {
     try {
-      return localStorage.getItem('geostore_lang') || 'ka';
+      const savedLanguage = localStorage.getItem('geostore_lang');
+      return ['ka', 'en', 'ru'].includes(savedLanguage) ? savedLanguage : 'ka';
     } catch {
       return 'ka';
     }
