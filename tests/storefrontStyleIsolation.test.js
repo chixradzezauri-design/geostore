@@ -31,6 +31,12 @@ test('flash-sale layout rules do not capture category tiles', () => {
   assert.match(css, /\.gs-flash-sale-section\s*>\s*\.grid/);
 });
 
+test('mobile product-detail form controls use an iOS-safe text size', () => {
+  const mobileRule = css.split('@media(max-width:767px){').slice(1).find(block => block.includes('.gs-product-modal-body input'));
+  assert.ok(mobileRule);
+  assert.match(mobileRule, /font-size:16px!important/);
+});
+
 test('wishlist markup and styles use the shared customer storefront theme', () => {
   assert.match(app, /gs-wishlist-page/);
   assert.match(app, /gs-wishlist-card/);
