@@ -1638,7 +1638,7 @@ export default function AdminDashboardPro({
           const unitPrice = numericValue(item.priceGEL ?? item.price);
           return `
             <tr>
-              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : '' } ${item.gift_wrap ? '(სასაჩუქრე შეფუთვა +5 ₾)' : ''} ${item.vip_warranty ? '(VIP გარანტია +15 ₾)' : ''} ${item.gift_message ? `<br/><small>სასაჩუქრე ტექსტი: ${escapeHtml(item.gift_message)}</small>` : ''}</td>
+              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : '' } ${item.customVariantName ? `(ვარიანტი: ${escapeHtml(item.customVariantName)})` : ''} ${item.gift_wrap ? '(სასაჩუქრე შეფუთვა +5 ₾)' : ''} ${item.vip_warranty ? '(VIP გარანტია +15 ₾)' : ''} ${item.gift_message ? `<br/><small>სასაჩუქრე ტექსტი: ${escapeHtml(item.gift_message)}</small>` : ''}</td>
               <td>${quantity}</td>
               <td>${unitPrice.toFixed(2)} ₾</td>
               <td>${(unitPrice * quantity).toFixed(2)} ₾</td>
