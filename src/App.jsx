@@ -2223,6 +2223,30 @@ export default function App() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
+    // Web Locks serialize checkout submissions across same-origin tabs. The
+    // existing in-tab ref remains the fallback for browsers without Web Locks.
+    const executeCheckout = async () => {
+      const activeOwner = activeCartOwnerRef.current;
+      if (!canPersistCartForOwner({ authLoading, activeOwner, currentUserId: currentUser?.id })) {
+        setCheckoutError('ანგარიშის შემოწმება ჯერ სრულდება. სცადეთ რამდენიმე წამში.');
+        return;
+      }
+      try {
+        const storedCart = parseStoredCartSnapshot(
+          window.localStorage.getItem(getCartStorageKey(activeOwner.userId))
+        );
+        const currentCartSnapshot = JSON.stringify(sanitizeCartSnapshot(cart));
+        if (JSON.stringify(storedCart) !== currentCartSnapshot) {
+          cartRef.current = storedCart;
+          setCart(storedCart);
+          setCheckoutError('კალათა სხვა ჩანართში შეიცვალა. გადაამოწმეთ კალათა და ხელახლა სცადეთ.');
+          return;
+        }
+      } catch {
+        setCheckoutError('კალათის უსაფრთხოდ გადამოწმება ვერ მოხერხდა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+        return;
+      }
+
     // Synchronous lock prevents rapid double taps before React rerenders.
     if (orderSubmitLock.current) return;
     orderSubmitLock.current = true;
@@ -2703,6 +2727,12 @@ export default function App() {
     setAppliedCoupon(null);
 
     // The confirmation dialog is the single success surface and displays the full order code.
+    };
+
+    if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+      return navigator.locks.request('geostore-checkout-submit', { mode: 'exclusive' }, executeCheckout);
+    }
+    return executeCheckout();
   };
 
   // Category and subcategory filtering belongs to StoreView, which has the
