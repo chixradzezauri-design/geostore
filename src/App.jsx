@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, buildCheckoutFingerprintPayload, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -2240,8 +2240,8 @@ export default function App() {
           );
           const currentCartSnapshot = JSON.stringify(sanitizeCartSnapshot(cart));
           if (JSON.stringify(storedCart) !== currentCartSnapshot) {
-          cartRef.current = storedCart;
-          setCart(storedCart);
+            cartRef.current = storedCart;
+            setCart(storedCart);
             setCheckoutError('კალათა სხვა ჩანართში შეიცვალა. გადაამოწმეთ კალათა და ხელახლა სცადეთ.');
             return;
           }
@@ -2539,18 +2539,19 @@ export default function App() {
         throw new Error('შეკვეთისთვის საჭიროა სწორი ელ-ფოსტა.');
       }
 
-      // Keep one idempotency key for the same checkout payload across retries
-      // and page reloads. Only a SHA-256 digest (never contact details) is persisted.
-      const checkoutFingerprintPayload = {
-        customer_name: customerName,
+      // Keep one idempotency key for the same checkout payload and auth owner
+      // across retries/reloads. Only a digest is persisted; it is not plaintext PII.
+      const checkoutFingerprintPayload = buildCheckoutFingerprintPayload({
+        ownerId: orderOwnerId,
+        customerName,
         phone: customerPhone,
         address: customerAddress,
-        user_email: orderSession?.user?.email || 'guest',
-        customer_email: orderUserEmail.toLowerCase(),
-        items: groupCheckoutItems(itemsToOrder),
-        coupon_code: (eligibleAppliedCoupon?.code || '').trim().toUpperCase(),
-        delivery_region: selectedRegion
-      };
+        userEmail: orderSession?.user?.email || 'guest',
+        customerEmail: orderUserEmail,
+        items: itemsToOrder,
+        couponCode: eligibleAppliedCoupon?.code,
+        deliveryRegion: selectedRegion
+      });
       const fingerprintSource = JSON.stringify(checkoutFingerprintPayload);
       let checkoutFingerprint = fingerprintSource;
       let canPersistFingerprint = false;
