@@ -15,6 +15,7 @@ import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCle
 import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
+import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -326,15 +327,24 @@ export default function AdminDashboardPro({
   const fetchExpenses = async (requestVersion = expensesSessionVersion.current) => {
     if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current) return;
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
+      const headers = await getSupabaseHeaders();
+      if (!adminLoggedIn || requestVersion !== expensesSessionVersion.current) return;
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers });
       if (!res.ok) return;
       const data = await res.json();
+      // Never replace trusted finance state with a malformed or partial payload.
+      if (!isValidExpenseCatalogueResponse(data)) {
+        console.error('Expense catalogue response rejected: malformed finance data.');
+        return;
+      }
       // A response started by a previous administrator session must never
       // repopulate private finance data after logout or privilege revocation.
       if (adminLoggedIn && requestVersion === expensesSessionVersion.current) {
-        setExpenses(Array.isArray(data) ? data : []);
+        setExpenses(data);
       }
-    } catch {}
+    } catch (error) {
+      console.error('Expense catalogue refresh failed:', error);
+    }
   };
 
   useEffect(() => {
