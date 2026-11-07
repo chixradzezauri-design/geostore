@@ -533,31 +533,30 @@ export default function AdminDashboardPro({
     fetchActivityLogs();
   }, [adminLoggedIn]);
 
-  const logActivity = (actionText) => {
+  const logActivity = async (actionText) => {
     const action = String(actionText || '').trim().slice(0, 500);
     if (!action) return;
 
-    fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
-      method: 'POST',
-      headers: getSupabaseHeaders(),
-      body: JSON.stringify({ p_action: action })
-    })
-      .then(async response => {
-        if (!response.ok) throw new Error(await response.text());
-        const rows = await response.json();
-        const saved = Array.isArray(rows) ? rows[0] : rows;
-        if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
-        setActivityLogs(prev => [{
-          id: String(saved.id),
-          action: saved.action,
-          time: saved.created_at ? new Date(saved.created_at).toLocaleString('ka-GE') : ''
-        }, ...(prev || [])].slice(0, 100));
-        setActivityLogsError('');
-      })
-      .catch(error => {
-        setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
-        console.error('GEOSTORE admin activity log write failed:', error);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_action: action })
       });
+      if (!response.ok) throw new Error(await response.text());
+      const rows = await response.json();
+      const saved = Array.isArray(rows) ? rows[0] : rows;
+      if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
+      setActivityLogs(prev => [{
+        id: String(saved.id),
+        action: saved.action,
+        time: saved.created_at ? new Date(saved.created_at).toLocaleString('ka-GE') : ''
+      }, ...(prev || [])].slice(0, 100));
+      setActivityLogsError('');
+    } catch (error) {
+      setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
+      console.error('GEOSTORE admin activity log write failed:', error);
+    }
   };
 
   const handleAddStaff = (e) => {
