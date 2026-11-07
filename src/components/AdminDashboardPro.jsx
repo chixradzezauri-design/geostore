@@ -11,7 +11,7 @@ import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
-import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
+import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
 import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
@@ -1463,7 +1463,7 @@ export default function AdminDashboardPro({
       availableColors: p.availableColors || p.available_colors || [],
       isFeatured: Boolean(p.isFeatured ?? p.is_featured)
     });
-    setSelectedImages(p.gallery?.length ? p.gallery : (p.image ? [p.image] : []));
+    setSelectedImages(normalizeProductImageList(p.image, p.gallery));
     setProductVariants(Array.isArray(p.variants) ? p.variants : []);
     setVariantStockAdjustments({});
     document.getElementById('geostore-product-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1662,8 +1662,7 @@ export default function AdminDashboardPro({
       let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
         const previousImages = [...new Set([
-          ...(Array.isArray(existingProduct.gallery) ? existingProduct.gallery : []),
-          existingProduct.image
+          ...normalizeProductImageList(existingProduct.image, existingProduct.gallery)
         ].filter(Boolean))];
         const removedImages = previousImages.filter(url => !galleryImages.includes(url));
         if (removedImages.length > 0) {
