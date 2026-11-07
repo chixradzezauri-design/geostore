@@ -10982,3 +10982,50 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .admin-coupon-card,.admin-vendor-card { align-items:flex-start!important; }
  .admin-vendor-card>div:last-child { justify-content:flex-start; }
 }
+
+
+/* Admin AI analyst, customer support and broadcast composer */
+.admin-ai-analyst,.admin-support-panel { min-width:0; border-color:rgba(148,163,184,.17)!important; border-radius:clamp(17px,2.2vw,24px)!important; padding:clamp(14px,2.4vw,24px)!important; background:linear-gradient(145deg,rgba(23,25,29,.97),rgba(12,14,17,.98))!important; box-shadow:0 14px 38px rgba(0,0,0,.18)!important; }
+.admin-ai-analyst h3,.admin-support-panel h3 { min-width:0; line-height:1.55!important; letter-spacing:-.015em; }
+.admin-ai-chat { min-width:0; max-height:min(440px,58vh)!important; padding:clamp(12px,2vw,18px)!important; border-radius:16px!important; background:#0b0d10!important; border-color:rgba(148,163,184,.16)!important; overscroll-behavior:contain; }
+.admin-ai-message { min-width:0; }
+.admin-ai-bubble { min-width:0; max-width:min(88%,680px)!important; padding:11px 14px!important; border-radius:14px!important; line-height:1.65!important; font-size:12px!important; overflow-wrap:anywhere; white-space:pre-wrap; }
+.admin-ai-composer { min-width:0; align-items:stretch; gap:9px!important; }
+.admin-ai-composer input { min-width:0; min-height:46px; padding:11px 13px!important; border-radius:11px!important; background:#101216!important; border-color:rgba(148,163,184,.2)!important; font-size:13px!important; }
+.admin-ai-composer button { min-height:46px; padding:10px 17px!important; border-radius:11px!important; font-size:11px!important; white-space:nowrap; }
+.admin-support-list { min-width:0; gap:12px!important; }
+.admin-support-ticket { min-width:0; padding:clamp(12px,2vw,18px)!important; border-radius:15px!important; border-color:rgba(148,163,184,.16)!important; background:rgba(10,12,15,.68)!important; }
+.admin-support-ticket-header { min-width:0; }
+.admin-support-ticket-meta { min-width:0; gap:8px 11px!important; }
+.admin-support-ticket-meta>* { min-width:0; overflow-wrap:anywhere; }
+.admin-support-ticket-controls { min-width:0; }
+.admin-support-status-actions { max-width:100%; flex-wrap:wrap; border-radius:11px!important; padding:4px!important; gap:3px!important; }
+.admin-support-status-actions button { min-height:32px; padding:6px 9px!important; line-height:1.35!important; }
+.admin-support-ticket-content { min-width:0; line-height:1.65!important; overflow-wrap:anywhere; }
+.admin-support-ticket-message { min-width:0; padding:12px!important; border-radius:12px!important; line-height:1.7!important; overflow-wrap:anywhere; white-space:pre-wrap; }
+.admin-support-ticket-reply { min-width:0; padding:12px!important; border-radius:12px!important; line-height:1.65!important; overflow-wrap:anywhere; }
+.admin-support-reply-form { min-width:0; }
+.admin-support-reply-form input { min-width:0; min-height:44px; padding:10px 12px!important; border-radius:11px!important; font-size:13px!important; }
+.admin-support-reply-form button { min-height:44px; border-radius:11px!important; padding:10px 15px!important; }
+.admin-support-panel h3 svg,.admin-ai-analyst h3 svg { flex:0 0 auto; }
+.admin-support-panel>div>p { line-height:1.7!important; }
+.admin-support-panel button { max-width:100%; }
+.admin-support-panel button:focus-visible,.admin-ai-analyst button:focus-visible { outline:2px solid #a3e635; outline-offset:3px; }
+.admin-support-panel+div,.admin-ai-analyst+div { min-width:0; }
+.admin-ai-analyst~div { min-width:0; }
+.admin-ai-analyst~div form { min-width:0; }
+.admin-ai-analyst~div input,.admin-ai-analyst~div textarea { min-width:0; max-width:100%; }
+@media(max-width:639px) {
+ .admin-ai-analyst,.admin-support-panel { padding:13px!important; border-radius:17px!important; }
+ .admin-ai-analyst h3,.admin-support-panel h3 { align-items:flex-start!important; font-size:12px!important; }
+ .admin-ai-composer { flex-direction:column; }
+ .admin-ai-composer button { width:100%; justify-content:center; }
+ .admin-ai-bubble { max-width:94%!important; }
+ .admin-support-ticket-header { align-items:stretch!important; }
+ .admin-support-ticket-controls { width:100%; align-items:stretch!important; }
+ .admin-support-status-actions { flex:1 1 auto; }
+ .admin-support-status-actions button { flex:1 1 auto; }
+ .admin-support-reply-form { flex-direction:column; }
+ .admin-support-reply-form button { width:100%; }
+ .admin-support-ticket-meta { align-items:flex-start!important; }
+}
