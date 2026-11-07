@@ -1355,10 +1355,10 @@ export default function AdminDashboardPro({
       if (!res.ok) throw new Error(await res.text());
       if (await res.json() !== true) throw new Error('პროდუქტი სხვა ადმინისტრატორმა შეცვალა ან უკვე წაიშალა. განაახლეთ სია და სცადეთ თავიდან.');
       if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => String(p.id) !== String(id)));
-      const productImages = [
-        ...(Array.isArray(productToDelete?.gallery) ? productToDelete.gallery : []),
-        productToDelete?.image
-      ].filter(Boolean);
+      const productImages = normalizeProductImageList(
+        productToDelete?.image,
+        productToDelete?.gallery
+      );
       const imagesCleaned = await deleteProductImages(productImages, id);
       logActivity('წაიშალა პროდუქტი ბაზიდან (ID: ' + id + ')');
       alert(imagesCleaned
