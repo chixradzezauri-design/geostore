@@ -1681,12 +1681,19 @@ export default function AdminDashboardPro({
           const imageSrc = safeImageSrc(item.image);
           const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
           const unitPrice = numericValue(item.priceGEL ?? item.price);
+          const giftWrapFee = item.gift_wrap === true
+            ? numericValue(item.gift_wrap_fee ?? 5)
+            : 0;
+          const vipWarrantyFee = item.vip_warranty === true
+            ? numericValue(item.vip_warranty_fee ?? 15)
+            : 0;
+          const lineTotal = (unitPrice + giftWrapFee + vipWarrantyFee) * quantity;
           return `
             <tr>
               <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : '' } ${(item.customVariantName || item.custom_variant_name) ? `(ვარიანტი: ${escapeHtml(item.customVariantName || item.custom_variant_name)})` : ''} ${item.gift_wrap ? '(სასაჩუქრე შეფუთვა +5 ₾)' : ''} ${item.vip_warranty ? '(VIP გარანტია +15 ₾)' : ''} ${item.gift_message ? `<br/><small>სასაჩუქრე ტექსტი: ${escapeHtml(item.gift_message)}</small>` : ''}</td>
               <td>${quantity}</td>
               <td>${unitPrice.toFixed(2)} ₾</td>
-              <td>${(unitPrice * quantity).toFixed(2)} ₾</td>
+              <td>${lineTotal.toFixed(2)} ₾</td>
             </tr>
           `;
         }).join('')
