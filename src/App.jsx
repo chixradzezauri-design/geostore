@@ -537,6 +537,7 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const adminOrdersFetchLock = useRef(false);
   const adminOrdersSessionActive = useRef(false);
+  const adminOrdersSessionVersion = useRef(0);
   const [myOrders, setMyOrders] = useState([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(false);
   const [myOrdersError, setMyOrdersError] = useState('');
@@ -1087,6 +1088,7 @@ export default function App() {
   const fetchOrders = async () => {
     // Prevent overlapping 15-second refreshes from applying stale order snapshots.
     if (!adminOrdersSessionActive.current || adminOrdersFetchLock.current) return;
+    const requestSessionVersion = adminOrdersSessionVersion.current;
     adminOrdersFetchLock.current = true;
     try {
       const res = await fetch(
@@ -1101,7 +1103,7 @@ export default function App() {
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
       // Do not restore private admin data after logout while a request is pending.
-      if (!adminOrdersSessionActive.current) return;
+      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
       setOrders(data.map((o) => {
         const items = normalizeOrderItems(o.items);
         return {
@@ -1330,10 +1332,12 @@ export default function App() {
 
     if (!adminLoggedIn) {
       adminOrdersSessionActive.current = false;
+      adminOrdersSessionVersion.current += 1;
       return () => document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     }
 
     adminOrdersSessionActive.current = true;
+    adminOrdersSessionVersion.current += 1;
     // Keep the existing admin order refresh cadence without repeatedly
     // downloading the full public catalogue.
     fetchOrders();
@@ -1341,6 +1345,7 @@ export default function App() {
 
     return () => {
       adminOrdersSessionActive.current = false;
+      adminOrdersSessionVersion.current += 1;
       clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
