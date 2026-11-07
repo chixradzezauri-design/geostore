@@ -4480,7 +4480,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .gs-checkout-error{overflow-wrap:anywhere;word-break:break-word}
 .gs-order-success-dialog{min-width:0;max-width:calc(100vw - 24px)}
 .gs-order-code-panel{min-width:0;max-width:100%;overflow:hidden}
-.gs-order-code-panel strong{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.45}
+.gs-order-code-value{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.45}
 @media(max-width:640px){
  .geostore-fashion-store .gs-cart-layout{gap:16px!important}
  .geostore-fashion-store .gs-cart-content-grid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
@@ -4500,13 +4500,13 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .gs-order-success-dialog{margin-top:auto!important;margin-bottom:auto!important;border-radius:20px!important}
  .gs-order-success-dialog>div{padding:22px 17px!important}
  .gs-order-code-panel{padding:14px!important}
- .gs-order-code-panel strong{font-size:clamp(14px,4vw,18px)!important;letter-spacing:.035em!important}
+ .gs-order-code-value{font-size:clamp(14px,4vw,18px)!important;letter-spacing:.035em!important}
 }
 @media(max-width:360px){
  .geostore-fashion-store .gs-cart-summary form{grid-template-columns:minmax(0,1fr)!important}
  .geostore-fashion-store .gs-cart-summary form button{width:100%}
  .gs-checkout-header h3{font-size:16px!important}
- .gs-order-code-panel strong{font-size:13px!important;letter-spacing:0!important}
+ .gs-order-code-value{font-size:13px!important;letter-spacing:0!important}
 }
 
 
@@ -5627,7 +5627,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     box-sizing: border-box !important;
   }
 
-  .gs-order-code-panel strong {
+  .gs-order-code-value {
     display: block !important;
     max-width: 100% !important;
     overflow-wrap: anywhere !important;
@@ -6453,7 +6453,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   min-width:0!important;
   max-width:100%!important;
 }
-.geostore-fashion-store .gs-order-code-panel strong,
+.geostore-fashion-store .gs-order-code-value,
 .geostore-fashion-store .gs-order-tracker-summary b{
   display:block!important;
   min-width:0!important;
@@ -6485,7 +6485,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-order-code-panel{
     padding:14px!important;
   }
-  .geostore-fashion-store .gs-order-code-panel strong{
+  .geostore-fashion-store .gs-order-code-value{
     font-size:15px!important;
     letter-spacing:.025em!important;
   }
@@ -7454,7 +7454,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   border-radius:12px!important;
   background:#f8f5f0!important;
 }
-.geostore-fashion-store .gs-order-code-panel strong{
+.geostore-fashion-store .gs-order-code-value{
   font-size:clamp(14px,4vw,19px)!important;
   letter-spacing:.035em!important;
   font-variant-numeric:tabular-nums!important;
@@ -8393,7 +8393,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .gs-order-success-dialog>div{box-sizing:border-box!important;min-width:0!important}
 .gs-order-success-dialog h3,.gs-order-success-dialog p{max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important}
 .gs-order-success-dialog .gs-order-code-panel{box-sizing:border-box!important;min-width:0!important;max-width:100%!important;padding:clamp(12px,3vw,20px)!important}
-.gs-order-success-dialog .gs-order-code-panel strong{display:block!important;max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important;line-height:1.45!important;font-size:clamp(13px,4vw,20px)!important;letter-spacing:clamp(.01em,.5vw,.08em)!important}
+.gs-order-success-dialog .gs-order-code-value{display:block!important;max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important;line-height:1.45!important;font-size:clamp(13px,4vw,20px)!important;letter-spacing:clamp(.01em,.5vw,.08em)!important}
 .gs-order-success-dialog button{box-sizing:border-box!important;max-width:100%!important;min-height:44px!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.4!important}
 @media(max-width:600px){
  .gs-commerce-overlay--success{align-items:flex-start!important;padding:7px!important;padding-top:max(7px,env(safe-area-inset-top))!important;padding-bottom:max(7px,env(safe-area-inset-bottom))!important}
@@ -8406,7 +8406,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 @media(max-width:360px){
  .gs-order-success-dialog>div{padding:14px 11px 11px!important}
  .gs-order-success-dialog .gs-order-code-panel{padding:11px!important}
- .gs-order-success-dialog .gs-order-code-panel strong{font-size:12px!important;letter-spacing:0!important}
+ .gs-order-success-dialog .gs-order-code-value{font-size:12px!important;letter-spacing:0!important}
  .gs-order-success-dialog p{font-size:11px!important;line-height:1.55!important}
 }
 
