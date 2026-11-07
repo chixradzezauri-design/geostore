@@ -28,3 +28,22 @@ ALTER TABLE public.store_coupons
     AND min_order_gel <= 1000000000
     AND min_order_gel = round(min_order_gel, 2)
   );
+
+-- Product prices are also read directly by the checkout RPC. Keep base and
+-- comparison prices in the same two-decimal unit used by the storefront.
+ALTER TABLE public.products
+  ADD CONSTRAINT products_price_gel_cent_precision_check
+  CHECK (
+    price_gel >= 0
+    AND price_gel <= 1000000000
+    AND price_gel = round(price_gel, 2)
+  ),
+  ADD CONSTRAINT products_old_price_gel_cent_precision_check
+  CHECK (
+    old_price_gel IS NULL
+    OR (
+      old_price_gel >= 0
+      AND old_price_gel <= 1000000000
+      AND old_price_gel = round(old_price_gel, 2)
+    )
+  );
