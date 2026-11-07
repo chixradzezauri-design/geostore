@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
-import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -796,13 +796,6 @@ export default function AdminDashboardPro({
     ).length;
     const periodExpenses = (expenses || []).filter(expense => inPeriod(expense.date || expense.created_at || expense.createdAt));
     const productById = new Map((products || []).map(product => [String(product.id), product]));
-    const getOrderLineRevenue = (item) => {
-      // Server snapshots already include add-on fees in price; do not add them twice.
-      const unitPrice = Math.max(0, Number(item?.price ?? item?.priceGEL ?? item?.base_price) || 0);
-      const quantity = Math.max(1, Number(item?.quantity) || 1);
-      return unitPrice * quantity;
-    };
-
     let totalSalesRevenue = 0;
     let totalDeliveryRevenue = 0;
     let totalProductRevenue = 0;
@@ -820,7 +813,7 @@ export default function AdminDashboardPro({
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const lineGross = items.reduce((sum, item) => sum + getOrderLineRevenue(item), 0);
+      const lineGross = items.reduce((sum, item) => sum + calculateOrderLineRevenueGEL(item), 0);
       const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
       const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
       const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
@@ -838,7 +831,7 @@ export default function AdminDashboardPro({
         const productId = item.id ?? item.product_id;
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = Math.max(1, Number(item.quantity) || 1);
-        const itemGross = getOrderLineRevenue(item);
+        const itemGross = calculateOrderLineRevenueGEL(item);
         const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
