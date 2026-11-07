@@ -95,6 +95,10 @@ begin
        or length(coalesce(item->>'selected_color', '')) > 60
        or length(coalesce(item->>'custom_variant_id', '')) > 80
        or (item ? 'custom_variant_id' and jsonb_typeof(item->'custom_variant_id') <> 'string')
+       or (item ? 'gift_wrap' and jsonb_typeof(item->'gift_wrap') <> 'boolean')
+       or (item ? 'vip_warranty' and jsonb_typeof(item->'vip_warranty') <> 'boolean')
+       or (item ? 'gift_message' and jsonb_typeof(item->'gift_message') <> 'string')
+       or length(coalesce(item->>'gift_message', '')) > 240
   ) then
     raise exception 'პროდუქტის ID, რაოდენობა, ზომა ან ფერი არასწორია.';
   end if;
@@ -123,10 +127,18 @@ begin
             'id', grouped.product_id,
             'selected_size', grouped.selected_size,
             'selected_color', grouped.selected_color,
-            'custom_variant_id', grouped.custom_variant_id,
             'quantity', grouped.quantity
           )
-          order by grouped.product_id, grouped.selected_size nulls first, grouped.selected_color nulls first
+          || CASE WHEN grouped.custom_variant_id IS NOT NULL
+               THEN jsonb_build_object('custom_variant_id', grouped.custom_variant_id)
+               ELSE '{}'::jsonb END
+          || CASE WHEN grouped.gift_wrap OR grouped.vip_warranty
+               THEN jsonb_build_object('gift_wrap', grouped.gift_wrap,
+                                       'vip_warranty', grouped.vip_warranty,
+                                       'gift_message', grouped.gift_message)
+               ELSE '{}'::jsonb END
+          order by grouped.product_id, grouped.selected_size nulls first,
+                   grouped.selected_color nulls first, grouped.custom_variant_id nulls first
         ),
         '[]'::jsonb
       )
@@ -136,13 +148,21 @@ begin
           nullif(trim(item->>'selected_size'), '') as selected_size,
           nullif(trim(item->>'selected_color'), '') as selected_color,
           nullif(trim(item->>'custom_variant_id'), '') as custom_variant_id,
+          coalesce((item->>'gift_wrap')::boolean, false) as gift_wrap,
+          coalesce((item->>'vip_warranty')::boolean, false) as vip_warranty,
+          CASE WHEN coalesce((item->>'gift_wrap')::boolean, false)
+            THEN nullif(left(trim(coalesce(item->>'gift_message', '')), 240), '') ELSE NULL END as gift_message,
           sum((item->>'quantity')::integer)::integer as quantity
         from jsonb_array_elements(p_order->'items') e(item)
         group by
           item->>'id',
           nullif(trim(item->>'selected_size'), ''),
           nullif(trim(item->>'selected_color'), ''),
-          nullif(trim(item->>'custom_variant_id'), '')
+          nullif(trim(item->>'custom_variant_id'), ''),
+          coalesce((item->>'gift_wrap')::boolean, false),
+          coalesce((item->>'vip_warranty')::boolean, false),
+          CASE WHEN coalesce((item->>'gift_wrap')::boolean, false)
+            THEN nullif(left(trim(coalesce(item->>'gift_message', '')), 240), '') ELSE NULL END
       ) grouped
     ),
     'coupon_code', v_coupon_code,
@@ -197,7 +217,10 @@ begin
   END LOOP;
   FOR v_item IN
     SELECT item->>'id' AS product_id, nullif(trim(item->>'custom_variant_id'), '') AS custom_variant_id,
-           sum((item->>'quantity')::integer)::integer AS quantity
+           sum((item->>'quantity')::integer)::integer AS quantity,
+           sum((item->>'quantity')::integer *
+             (CASE WHEN coalesce((item->>'gift_wrap')::boolean, false) THEN 5 ELSE 0 END +
+              CASE WHEN coalesce((item->>'vip_warranty')::boolean, false) THEN 15 ELSE 0 END))::numeric AS addons_total
       FROM jsonb_array_elements(p_order->'items') e(item)
      GROUP BY item->>'id', nullif(trim(item->>'custom_variant_id'), '')
      ORDER BY item->>'id', nullif(trim(item->>'custom_variant_id'), '')
@@ -226,11 +249,11 @@ begin
          OR v_variant_stock IS NULL OR v_variant_stock < v_item.quantity THEN
         RAISE EXCEPTION 'არჩეული ვარიანტის ფასი ან მარაგი არასწორია ან არასაკმარისია.';
       END IF;
-      v_subtotal := v_subtotal + (v_variant_price * v_item.quantity);
+      v_subtotal := v_subtotal + (v_variant_price * v_item.quantity) + coalesce(v_item.addons_total, 0);
     ELSE
       IF coalesce(v_product.stock, 0) < v_item.quantity THEN RAISE EXCEPTION 'პროდუქტი აღარ არის საკმარისი რაოდენობით მარაგში: %', v_item.product_id; END IF;
       IF v_product.price_gel IS NULL OR v_product.price_gel < 0 THEN RAISE EXCEPTION 'პროდუქტის ფასი არასწორია.'; END IF;
-      v_subtotal := v_subtotal + (v_product.price_gel * v_item.quantity);
+      v_subtotal := v_subtotal + (v_product.price_gel * v_item.quantity) + coalesce(v_item.addons_total, 0);
     END IF;
   END LOOP;
 
@@ -239,7 +262,11 @@ begin
     SELECT item->>'id' AS product_id, (item->>'quantity')::integer AS quantity,
            nullif(trim(item->>'selected_size'), '') AS selected_size,
            nullif(trim(item->>'selected_color'), '') AS selected_color,
-           nullif(trim(item->>'custom_variant_id'), '') AS custom_variant_id
+           nullif(trim(item->>'custom_variant_id'), '') AS custom_variant_id,
+           coalesce((item->>'gift_wrap')::boolean, false) AS gift_wrap,
+           coalesce((item->>'vip_warranty')::boolean, false) AS vip_warranty,
+           CASE WHEN coalesce((item->>'gift_wrap')::boolean, false)
+             THEN nullif(left(trim(coalesce(item->>'gift_message', '')), 240), '') ELSE NULL END AS gift_message
       FROM jsonb_array_elements(p_order->'items') e(item)
      ORDER BY item->>'id', item->>'custom_variant_id', item->>'selected_size', item->>'selected_color'
   LOOP
@@ -266,6 +293,10 @@ begin
       'id', v_product.id, 'name', v_product.name, 'price', v_price, 'quantity', v_item.quantity,
       'selectedSize', v_item.selected_size, 'selectedColor', v_item.selected_color,
       'customVariantId', v_item.custom_variant_id, 'customVariantName', v_variant_name,
+      'gift_wrap', v_item.gift_wrap, 'vip_warranty', v_item.vip_warranty,
+      'gift_message', v_item.gift_message,
+      'gift_wrap_fee', CASE WHEN v_item.gift_wrap THEN 5 ELSE 0 END,
+      'vip_warranty_fee', CASE WHEN v_item.vip_warranty THEN 15 ELSE 0 END,
       'purchase_cost', v_product.purchase_cost, 'vendor', v_product.vendor, 'category', v_product.category
     );
     v_items := v_items || jsonb_build_array(v_line);
