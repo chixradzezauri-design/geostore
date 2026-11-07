@@ -15,3 +15,14 @@ export const hasProductMutationLock = (locks, productId) => {
   }
   return false;
 };
+
+/**
+ * Build a PostgREST compare-and-swap filter from the exact database version
+ * captured when the product editor was opened.
+ */
+export const buildProductVersionFilter = (version) => {
+  if (typeof version !== 'string' || !version.trim()) return null;
+  const timestamp = Date.parse(version);
+  if (!Number.isFinite(timestamp)) return null;
+  return `updated_at=eq.${encodeURIComponent(version)}`;
+};
