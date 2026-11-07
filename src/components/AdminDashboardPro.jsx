@@ -2009,7 +2009,7 @@ export default function AdminDashboardPro({
     const currentStatus = normalizeOrderStatus(existingOrder?.status);
     const nextStatus = normalizeOrderStatus(newStatus);
 
-    if (isDeliveredOrderStatus(currentStatus) && nextStatus !== currentStatus) {
+    if (isDeliveredOrderStatus(currentStatus) && !isDeliveredOrderStatus(nextStatus)) {
       alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
       return;
     }
