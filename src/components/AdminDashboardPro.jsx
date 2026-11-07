@@ -2359,6 +2359,7 @@ export default function AdminDashboardPro({
       alert('შეკვეთა სიაში აღარ არის. განაახლეთ შეკვეთების სია და სცადეთ თავიდან.');
       return;
     }
+    const requestSessionKey = adminSessionKey;
     const currentStatus = normalizeOrderStatus(existingOrder.status);
     const nextStatus = normalizeOrderStatus(newStatus);
     if (!nextStatus || currentStatus === nextStatus) return;
@@ -2396,9 +2397,13 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
+      // A successful response from an older admin session must not mutate
+      // the state of a newly signed-in session.
+      if (!adminLoggedIn || adminSessionKey !== requestSessionKey) return;
+
       const statusChangedAt = new Date().toISOString();
       const applyConfirmedOrderStatus = (order) => {
-        if (String(order.id) !== orderKey) return order;
+        if (String(order.id) !== orderKey || normalizeOrderStatus(order.status) !== currentStatus) return order;
         const nextOrder = {
           ...order,
           status: newStatus,
@@ -2440,6 +2445,10 @@ export default function AdminDashboardPro({
     event.preventDefault();
     if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
 
+    const reactivationOrderId = String(reactivationOrder.id);
+    const reactivationSessionKey = adminSessionKey;
+    if (!adminLoggedIn || orderStatusUpdateLocks.current.has(reactivationOrderId)) return;
+    orderStatusUpdateLocks.current.add(reactivationOrderId);
     setIsReactivatingOrder(true);
     setReactivationError('');
     try {
@@ -2493,16 +2502,21 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
+      // Do not let a response from a previous admin session overwrite
+      // the current dashboard, or replace an order refreshed by another admin.
+      if (!adminLoggedIn || adminSessionKey !== reactivationSessionKey) return;
+
       const reactivatedAt = new Date().toISOString();
-      const applyReactivatedOrder = (order) => String(order.id) === String(reactivationOrder.id)
-        ? {
-            ...order,
-            status: 'ახალი',
-            stock_deducted_at: reactivatedAt,
-            stock_restored_at: null,
-            status_changed_at: reactivatedAt
-          }
-        : order;
+      const applyReactivatedOrder = (order) =>
+        String(order.id) === reactivationOrderId && isCancelledOrderStatus(order.status)
+          ? {
+              ...order,
+              status: 'ახალი',
+              stock_deducted_at: reactivatedAt,
+              stock_restored_at: null,
+              status_changed_at: reactivatedAt
+            }
+          : order;
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(applyReactivatedOrder));
       }
@@ -2519,6 +2533,7 @@ export default function AdminDashboardPro({
     } catch (error) {
       setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
     } finally {
+      orderStatusUpdateLocks.current.delete(reactivationOrderId);
       setIsReactivatingOrder(false);
     }
   };
