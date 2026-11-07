@@ -508,3 +508,13 @@ This file is the durable handoff log for staged audit work. Add new findings and
 ### Release boundary
 - Canonical migration source added to the maintenance branch at `supabase/migrations/20261107084940_harden_order_status_stock_transitions.sql`.
 - No real customer orders or stock were changed by verification; no build or deployment was run.
+
+
+## Authorized test-order cleanup and stock reconciliation — 2026-11-07
+
+- User explicitly confirmed that all existing orders were test orders and authorized deleting them.
+- Preflight found 21 orders total: 14 with stock-deduction markers, one already marked restored, and 7 legacy orders with no deduction marker. The 7 legacy orders predated the stock automation rollout (their timestamps are before the 2026-11-02 18:01 UTC stock automation migration), so they were not credited back to stock.
+- The 13 orders with an un-restored stock-deduction marker contained 16 units for product `prod-1793257789731`. All item JSON/IDs/quantities were validated before cleanup.
+- In one transaction, locked orders and products, restored those 16 proven-deducted units, then deleted all 21 test orders. No product row was missing; no foreign-key dependencies referenced `public.orders`.
+- Post-cleanup verification: `public.orders` count = 0; product stock = 61 (was 45); pending stock restorations = 0; cancelled orders = 0.
+- No non-order customer, product, account, or settings data was deleted. No build or deployment was run.
