@@ -696,3 +696,23 @@ test('financial order deduplication keeps the newest snapshot per order ID', () 
   assert.equal(result[1].id, 'ORD-2');
   assert.deepEqual(deduplicateOrdersById(null), []);
 });
+
+
+test('deduplication respects later cancellation and reactivation audit timestamps', () => {
+  const cancelled = {
+    id: 'ORD-STATUS-1', status: 'გაუქმებული',
+    updated_at: '2026-03-01T10:00:00Z', status_changed_at: '2026-03-01T10:00:00Z'
+  };
+  const reactivated = {
+    id: 'ORD-STATUS-1', status: 'ახალი',
+    updated_at: '2026-03-01T09:00:00Z', status_changed_at: '2026-03-02T10:00:00Z'
+  };
+  assert.equal(deduplicateOrdersById([reactivated, cancelled])[0].status, 'ახალი');
+  assert.equal(deduplicateOrdersById([cancelled, reactivated])[0].status, 'ახალი');
+});
+
+test('deduplication uses the last snapshot only when audit timestamps tie', () => {
+  const first = { id: 'ORD-TIE-1', status: 'გაუქმებული', updated_at: '2026-03-01T10:00:00Z' };
+  const last = { id: 'ORD-TIE-1', status: 'ახალი', updated_at: '2026-03-01T10:00:00Z' };
+  assert.equal(deduplicateOrdersById([first, last])[0].status, 'ახალი');
+});
