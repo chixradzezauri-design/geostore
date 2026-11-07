@@ -172,7 +172,7 @@ export default function StoreView({
     setUserFootLength('');
     setNewReviewComment('');
     setNewReviewRating(5);
-    setNewReviewImage('');
+    setNewReviewImage(null);
   };
 
   const handleCalculateSmartSize = (e) => {
@@ -201,40 +201,74 @@ export default function StoreView({
     if (!file) return;
     try {
       await validateImageFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setNewReviewImage(reader.result);
-      reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
-      reader.readAsDataURL(file);
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        throw new Error('გამოიყენეთ JPG, PNG ან WebP ფოტო მაქსიმუმ 5 MB ზომით.');
+      }
+      setNewReviewImage(file);
     } catch (error) {
       alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
     }
   };
 
-  const handleAddReview = (e, productId) => {
+  const handleAddReview = async (e, productId) => {
     e.preventDefault();
     if (!currentUser?.id || !reviewsReady || !newReviewComment.trim()) return;
 
-    const reviewObj = {
-      id: `rev-${Date.now()}`,
-      userId: currentUser.id,
-      author: String(currentUser.name || currentUser.email || 'GEOSTORE customer').trim().slice(0, 80),
-      comment: newReviewComment.trim().slice(0, 1200),
-      rating: Math.min(5, Math.max(1, Number(newReviewRating) || 5)),
-      image: newReviewImage || null,
-      date: new Date().toLocaleDateString(currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka-GE')
-    };
+    let imagePath = null;
+    if (newReviewImage instanceof File) {
+      const extension = newReviewImage.type === 'image/png' ? 'png' : newReviewImage.type === 'image/webp' ? 'webp' : 'jpg';
+      const nonce = globalThis.crypto?.randomUUID?.() || Date.now().toString(36);
+      const fileName = currentUser.id + '/' + productId + '/' + nonce + '.' + extension;
+      const { error: uploadError } = await supabase.storage
+        .from('product-review-images')
+        .upload(fileName, newReviewImage, { contentType: newReviewImage.type, upsert: false });
+      if (uploadError) {
+        alert(uploadError.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+        return;
+      }
+      imagePath = fileName;
+    }
 
-    setAllReviews(prev => {
-      const currentProdReviews = prev[productId] || [];
-      return {
-        ...prev,
-        [productId]: [reviewObj, ...currentProdReviews]
-      };
+    const { data, error } = await supabase.rpc('submit_product_review', {
+      p_product_id: String(productId),
+      p_rating: Math.min(5, Math.max(1, Number(newReviewRating) || 5)),
+      p_comment: newReviewComment.trim().slice(0, 1200),
+      p_image_path: imagePath
     });
 
+    if (error) {
+      if (imagePath) await supabase.storage.from('product-review-images').remove([imagePath]);
+      alert(error.message || 'შეფასების გამოქვეყნება ვერ მოხერხდა.');
+      return;
+    }
+
+    const savedReview = Array.isArray(data) ? data[0] : data;
+    if (!savedReview?.id) {
+      if (imagePath) await supabase.storage.from('product-review-images').remove([imagePath]);
+      alert('შეფასება ვერ დადასტურდა. სცადეთ ხელახლა.');
+      return;
+    }
+    const reviewObj = {
+      id: savedReview.id,
+      author: savedReview.author_label || 'GEOSTORE customer',
+      comment: savedReview.comment,
+      rating: savedReview.rating,
+      image: savedReview.image_path
+        ? supabase.storage.from('product-review-images').getPublicUrl(savedReview.image_path).data.publicUrl
+        : null,
+      verifiedPurchase: savedReview.verified_purchase === true,
+      date: new Date(savedReview.created_at).toLocaleDateString(
+        currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka-GE'
+      )
+    };
+
+    setAllReviews(prev => ({
+      ...prev,
+      [productId]: [reviewObj, ...(prev[productId] || [])]
+    }));
     setNewReviewComment('');
     setNewReviewRating(5);
-    setNewReviewImage('');
+    setNewReviewImage(null);
   };
 
   const mainCategories = useMemo(() => {
@@ -1065,6 +1099,7 @@ export default function StoreView({
                           <div key={rev.id} className="gs-product-review-card bg-[#141418] p-4 rounded-2xl border border-amber-500/15 space-y-2.5 shadow-inner">
                             <div className="gs-product-review-card-header flex justify-between items-center">
                               <b className="gs-product-review-author text-white text-xs">{rev.author}</b>
+                              {rev.verifiedPurchase && <span className="text-[9px] text-emerald-400 font-bold">{currentLang === 'en' ? 'Verified purchase' : currentLang === 'ru' ? 'Покупка подтверждена' : 'შეძენა დადასტურებულია'}</span>}
                               <span className="text-[10px] text-slate-500">{rev.date}</span>
                             </div>
                             <div className="gs-product-review-stars flex items-center gap-1 text-amber-400 text-xs" aria-label={`${rev.rating} / 5`}>
