@@ -242,13 +242,16 @@ export const sanitizeProductCollection = (value, maxItems = 100) => {
   if (!Array.isArray(value)) return [];
   const limit = Number.isSafeInteger(maxItems) ? Math.max(0, Math.min(100, maxItems)) : 100;
   const seen = new Set();
-  return value.slice(0, limit).filter((item) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+  const result = [];
+  for (const item of value) {
+    if (result.length >= limit) break;
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
     const id = String(item.id ?? '').trim();
-    if (!id || id.length > 160 || seen.has(id)) return false;
+    if (!id || id.length > 160 || seen.has(id)) continue;
     seen.add(id);
-    return true;
-  });
+    result.push(item);
+  }
+  return result;
 };
 
 export const getUserScopedCollectionStorageKey = (baseKey, userId) => (
