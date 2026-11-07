@@ -382,6 +382,9 @@ export default function AdminDashboardPro({
   const [newVarName, setNewVarName] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
   const [newVarStock, setNewVarStock] = useState('');
+  const productSaveLock = useRef(false);
+  const productDeleteLocks = useRef(new Set());
+  const quickProductUpdateLocks = useRef(new Set());
 
   const handleAddCustomVariant = (e) => {
     e.preventDefault();
@@ -1214,7 +1217,10 @@ export default function AdminDashboardPro({
   };
 
   const handleDeleteProduct = async (id) => {
+    const productKey = String(id ?? '');
+    if (!productKey || productDeleteLocks.current.has(productKey)) return;
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
+    productDeleteLocks.current.add(productKey);
     const productToDelete = (products || []).find(product => String(product.id) === String(id));
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product', {
@@ -1234,6 +1240,7 @@ export default function AdminDashboardPro({
         ? '✅ პროდუქტი და მისი ატვირთული ფოტოები წარმატებით წაიშალა!'
         : 'პროდუქტი წაიშალა, მაგრამ ზოგი ფოტო Storage-დან ვერ წაიშალა. პროდუქტი აღარ ჩანს მაღაზიაში; დარჩენილი ფოტოების გასუფთავება ცალკე იქნება საჭირო.');
     } catch (error) { alert('წაშლა ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
+    finally { productDeleteLocks.current.delete(productKey); }
   };
 
   const handleQuickUpdateProduct = async (id, field, value) => {
@@ -1248,6 +1255,9 @@ export default function AdminDashboardPro({
     if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
+    const updateKey = field + ':' + String(id);
+    if (quickProductUpdateLocks.current.has(updateKey)) return;
+    quickProductUpdateLocks.current.add(updateKey);
     const currentValue = current[column] ?? current[field];
     const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
@@ -1275,6 +1285,8 @@ export default function AdminDashboardPro({
       setQuickProductDrafts(prev => { const next = { ...prev }; delete next[field + ':' + String(id)]; return next; });
     } catch (error) {
       alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
+    } finally {
+      quickProductUpdateLocks.current.delete(updateKey);
     }
   };
   const handleImageChange = async (e) => {
@@ -1337,8 +1349,8 @@ export default function AdminDashboardPro({
     if (!String(productForm.category || '').trim() || String(productForm.category).trim().length > 80) return alert('აირჩიეთ სწორი კატეგორია (მაქსიმუმ 80 სიმბოლო).');
     const priceValue = Number(productForm.priceGEL);
     if (!Number.isFinite(priceValue) || String(productForm.priceGEL).trim() === '' || priceValue < 0 || priceValue > 1000000000 || !/^\d+(?:\.\d{1,2})?$/.test(String(productForm.priceGEL).trim())) return alert('ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
-    const purchaseCost = productForm.purchaseCost === '' ? 0 : Number(productForm.purchaseCost);
-    if (!Number.isFinite(purchaseCost) || purchaseCost < 0 || purchaseCost > 1000000000 || (productForm.purchaseCost !== '' && !/^\d+(?:\.\d{1,2})?$/.test(String(productForm.purchaseCost).trim()))) return alert('თვითღირებულება უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
+    const purchaseCost = String(productForm.purchaseCost ?? '').trim() === '' ? null : Number(productForm.purchaseCost);
+    if (purchaseCost !== null && (!Number.isFinite(purchaseCost) || purchaseCost < 0 || purchaseCost > 1000000000 || !/^\d+(?:\.\d{1,2})?$/.test(String(productForm.purchaseCost).trim()))) return alert('თვითღირებულება უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
     if (String(productForm.description || '').length > 5000) return alert('აღწერა მაქსიმუმ 5000 სიმბოლოს უნდა შეიცავდეს.');
     if (String(productForm.tags || '').length > 1000) return alert('ტეგების ველი ზედმეტად გრძელია.');
     const normalizeProductOptions = (value, label) => {
@@ -1393,6 +1405,8 @@ export default function AdminDashboardPro({
     let newlyUploadedImages = [];
     let newProdPayload;
 
+    if (productSaveLock.current) return;
+    productSaveLock.current = true;
     try {
       const sourceImages = selectedImages.length > 0 ? selectedImages : [];
       if (sourceImages.length === 0 && !editingProductId) {
@@ -1510,6 +1524,8 @@ export default function AdminDashboardPro({
     } catch (error) {
       if (newlyUploadedImages.length > 0) await deleteProductImages(newlyUploadedImages, prodId);
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
+    } finally {
+      productSaveLock.current = false;
     }
   };
 
