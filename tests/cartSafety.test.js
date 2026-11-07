@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner } from '../src/utils/cartSafety.js';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, getCurrentCartItemStock } from '../src/utils/cartSafety.js';
 
 const product = {
   id: 'p-1',
@@ -289,4 +289,23 @@ test('keeps custom product variants as separate inventory units in the cart', ()
   const remaining = removeProductFromCart(large.cart, large.cart[0]);
   assert.equal(remaining.length, 1);
   assert.equal(remaining[0].customVariantId, 'v-large');
+});
+
+
+test('quantity edits use only live catalogue stock, never stale cart snapshots', () => {
+  const savedLine = { ...product, quantity: 1, stock: 20 };
+  assert.equal(getCurrentCartItemStock(null, savedLine), 0);
+  assert.equal(getCurrentCartItemStock({ ...product, id: 'different' }, savedLine), 0);
+  assert.equal(getCurrentCartItemStock({ ...product, stock: 2 }, savedLine), 2);
+});
+
+test('quantity edits fail closed when a selected custom variant is missing or malformed', () => {
+  const line = { ...product, customVariantId: 'v-small', quantity: 1, stock: 50 };
+  const missing = { ...product, variants: [{ id: 'v-large', stock: 8 }] };
+  const malformed = { ...product, variants: [{ id: 'v-small', stock: 'unknown' }] };
+  const valid = { ...product, variants: [{ id: 'v-small', stock: 3 }] };
+  assert.equal(getCurrentCartItemStock(missing, line), 0);
+  assert.equal(getCurrentCartItemStock(malformed, line), 0);
+  assert.equal(getCurrentCartItemStock(valid, line), 3);
+  assert.equal(getCurrentCartItemStock({ ...product, variants: [{ id: 'v-small', stock: 3 }] }, { ...line, customVariantId: null }), 0);
 });

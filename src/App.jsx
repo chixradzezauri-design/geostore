@@ -30,7 +30,7 @@ import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutIte
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner } from './utils/cartSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 
@@ -1671,7 +1671,9 @@ export default function App() {
     const currentVariant = item.customVariantId ? getCustomProductVariant(currentProduct, item.customVariantId) : null;
     const result = updateProductCartQuantity(cartRef.current, {
       ...item,
-      stock: currentVariant ? currentVariant.stock : (currentProduct?.stock ?? item.stock)
+      // Never trust the stock snapshot stored in localStorage when the live
+      // product or selected custom variant has disappeared from the catalogue.
+      stock: getCurrentCartItemStock(currentProduct, item)
     }, nextQuantity);
     if (!result.valid) {
       if (result.reason === 'limit') {

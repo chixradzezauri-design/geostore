@@ -230,3 +230,27 @@ export const canPersistCartForOwner = ({ authLoading, activeOwner, currentUserId
   activeOwner?.initialized === true &&
   String(activeOwner.userId ?? '') === String(currentUserId ?? '')
 );
+
+
+/**
+ * Resolve quantity-edit stock only from the current catalogue record.
+ * Persisted cart stock is a display snapshot and must never authorize an increase.
+ */
+export const getCurrentCartItemStock = (product, item) => {
+  if (!product || !item?.id || String(product.id) !== String(item.id)) return 0;
+
+  const customVariantId = String(item.customVariantId ?? '').trim();
+  if (customVariantId) {
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    const variant = variants.find(entry => String(entry?.id ?? '').trim() === customVariantId);
+    const stock = Number(variant?.stock);
+    return Number.isSafeInteger(stock) && stock >= 0 ? stock : 0;
+  }
+
+  // Products configured with custom variants cannot use the aggregate/base
+  // product stock as a fallback when the cart line has no valid variant ID.
+  if (Array.isArray(product.variants) && product.variants.length > 0) return 0;
+
+  const stock = Number(product.stock);
+  return Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0;
+};
