@@ -305,7 +305,7 @@ begin
     v_user_email, v_customer_email, v_items, v_total, 'ახალი', now(), v_result, v_request);
   return v_result;
 end;
-$function$
+$function$;
 
 
 
