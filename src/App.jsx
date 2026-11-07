@@ -711,6 +711,15 @@ export default function App() {
 
         // Personal checkout details must not carry over to another account.
         if (activeOwner.initialized && String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
+          // Customer-private data must disappear immediately on account changes,
+          // before the next profile/notification requests finish loading.
+          setMyOrders([]);
+          setMyOrdersError('');
+          setMyOrdersLoading(false);
+          setNotifications([]);
+          setNotificationsError('');
+          setNotificationsLoading(false);
+          setIsNotificationsOpen(false);
           setCheckoutForm({ name: '', phone: '', email: '', address: '' });
           setAppliedCoupon(null);
           setPromoInput('');
@@ -844,7 +853,9 @@ export default function App() {
   };
 
   const markAllNotificationsAsRead = async () => {
-    if (!currentUser?.email || notificationsLoading || !notifications.some((n) => !n.read)) return;
+    const requestOwnerId = currentUser?.id;
+    if (!requestOwnerId || String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId) ||
+        notificationsLoading || !notifications.some((n) => !n.read)) return;
     try {
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/mark_my_order_notifications_read`,
@@ -858,6 +869,7 @@ export default function App() {
         const errorBody = await response.text().catch(() => '');
         throw new Error(errorBody || 'შეტყობინებების განახლება ვერ მოხერხდა.');
       }
+      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
     } catch (error) {
@@ -1017,8 +1029,11 @@ export default function App() {
   useEffect(() => {
     let active = true;
     let requestInFlight = false;
+    const requestOwnerId = currentUser?.id || null;
+    const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
+      String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
     const loadOwnOrders = async () => {
-      if (!currentUser?.email) {
+      if (!currentUser?.id || !currentUser?.email) {
         setMyOrders([]);
         setMyOrdersError('');
         setMyOrdersLoading(false);
@@ -1042,7 +1057,7 @@ export default function App() {
         }
         const rows = await response.json();
         if (!Array.isArray(rows)) throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
-        if (!active) return;
+        if (!isCurrentOwner()) return;
         setMyOrdersError('');
         setMyOrders(rows.map((o) => ({
           id: o.id,
@@ -1060,7 +1075,7 @@ export default function App() {
           status_changed_at: o.status_changed_at || null
         })));
       } catch (error) {
-        if (active) {
+        if (isCurrentOwner()) {
           console.error('My orders fetch error:', error);
           setMyOrders([]);
           setMyOrdersError(currentLang === 'en'
@@ -1071,11 +1086,11 @@ export default function App() {
         }
       } finally {
         requestInFlight = false;
-        if (active) setMyOrdersLoading(false);
+        if (isCurrentOwner()) setMyOrdersLoading(false);
       }
     };
 
-    if (!currentUser?.email) {
+    if (!currentUser?.id || !currentUser?.email) {
       setMyOrders([]);
       setMyOrdersError('');
       setMyOrdersLoading(false);
@@ -1095,13 +1110,16 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [currentUser?.email, activeTab, currentLang]);
+  }, [currentUser?.id, currentUser?.email, activeTab, currentLang]);
 
   useEffect(() => {
     let active = true;
     let requestInFlight = false;
+    const requestOwnerId = currentUser?.id || null;
+    const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
+      String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
     const loadNotifications = async () => {
-      if (!currentUser?.email) {
+      if (!currentUser?.id || !currentUser?.email) {
         setNotifications([]);
         setNotificationsLoading(false);
         return;
@@ -1124,7 +1142,7 @@ export default function App() {
         }
         const rows = await response.json();
         if (!Array.isArray(rows)) throw new Error('შეტყობინებების მონაცემები არასწორია.');
-        if (!active) return;
+        if (!isCurrentOwner()) return;
         setNotificationsError('');
         setNotifications(rows.map((n) => ({
           id: String(n.id),
@@ -1137,7 +1155,7 @@ export default function App() {
           readAt: n.read_at || null
         })));
       } catch (error) {
-        if (active) {
+        if (isCurrentOwner()) {
           console.error('Order notifications fetch failed:', error);
           setNotifications([]);
           setNotificationsError(currentLang === 'en'
@@ -1148,11 +1166,11 @@ export default function App() {
         }
       } finally {
         requestInFlight = false;
-        if (active) setNotificationsLoading(false);
+        if (isCurrentOwner()) setNotificationsLoading(false);
       }
     };
 
-    if (!currentUser?.email) {
+    if (!currentUser?.id || !currentUser?.email) {
       setNotifications([]);
       setNotificationsError('');
       setNotificationsLoading(false);
@@ -1169,7 +1187,7 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [currentUser?.email, currentLang]);
+  }, [currentUser?.id, currentUser?.email, currentLang]);
 
   const fetchOrders = async () => {
     // Prevent overlapping 15-second refreshes from applying stale order snapshots.
