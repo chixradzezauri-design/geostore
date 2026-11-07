@@ -2551,16 +2551,34 @@ export default function AdminDashboardPro({
 
     exportCsv(
       `geostore_orders_${Date.now()}.csv`,
-      ['ID', 'Date', 'Customer', 'Phone', 'Address', 'Total (GEL)', 'Status'],
-      orders.map(o => [
-        o.id,
-        o.date,
-        o.customerName,
-        o.phone,
-        o.address,
-        o.totalGEL,
-        o.status || 'ახალი'
-      ])
+      ['ID', 'Date', 'Customer', 'Email', 'Phone', 'Address', 'Items', 'Product total (GEL)', 'Delivery (GEL)', 'Order total (GEL)', 'Status'],
+      orders.map(o => {
+        const delivery = Number(o.deliveryGEL);
+        const total = Number(o.totalGEL);
+        const hasDelivery = o.deliveryGEL !== null && o.deliveryGEL !== undefined &&
+          Number.isFinite(delivery) && delivery >= 0 && Number.isFinite(total) && total >= delivery;
+        const items = normalizeOrderItems(o.items).map(item => {
+          const details = [
+            item.selectedSize ? `ზომა: ${item.selectedSize}` : '',
+            item.selectedColor ? `ფერი: ${item.selectedColor}` : '',
+            item.customVariantName || item.custom_variant_name || ''
+          ].filter(Boolean).join(', ');
+          return `${item.name || 'პროდუქტი'} ×${Math.max(1, Math.floor(Number(item.quantity) || 1))}${details ? ` (${details})` : ''}`;
+        }).join(' | ') || o.itemSummary || '';
+        return [
+          o.id,
+          o.created_at || o.date,
+          o.customerName,
+          o.user_email,
+          o.phone,
+          o.address,
+          items,
+          hasDelivery ? (total - delivery).toFixed(2) : '',
+          hasDelivery ? delivery.toFixed(2) : '',
+          Number.isFinite(total) ? total.toFixed(2) : o.totalGEL,
+          o.status || 'ახალი'
+        ];
+      })
     );
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
