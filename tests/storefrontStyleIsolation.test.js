@@ -114,3 +114,8 @@ test('retired catalogue information selectors are removed after style isolation'
   assert.doesNotMatch(storeView, /gs-product-info/);
   assert.doesNotMatch(css, /\.gs-product-info\b/);
 });
+
+test('legacy catalogue card selectors are removed after migrating to semantic card classes', () => {
+  assert.doesNotMatch(storeView, /\bgs-product-(?:grid|card|media|title|price|action|card-action)\b/);
+  assert.doesNotMatch(css, /\.gs-product-(?:grid|card|media|title|price|action|card-action)(?![\\w-])/);
+});
