@@ -87,3 +87,20 @@ test('product comparison uses variant-aware prices and actual available stock', 
   assert.doesNotMatch(productCompare, /prod\.stock\s*\|\|\s*1/);
 });
 
+
+ 
+test('mobile navigation retains login and registration inside the hamburger menu', () => {
+  assert.match(header, /<nav id="geostore-main-menu"/);
+  assert.match(header, /<div className="gs-menu-auth">/);
+  assert.match(header, /openAuth\('login'\)/);
+  assert.match(header, /openAuth\('register'\)/);
+  const mobileMenuStyles = css.slice(css.lastIndexOf('@media(max-width:640px)'));
+  assert.match(mobileMenuStyles, /\.gs-menu-auth\{[\s\S]*?display:grid!important;/);
+});
+
+test('mobile footer policy links use a compact responsive layout', () => {
+  assert.match(app, /className="geostore-footer-links/);
+  const footerStyles = css.slice(css.lastIndexOf('GEOSTORE — compact footer and floating assistance dock'));
+  assert.match(footerStyles, /\.geostore-footer-links\{[\s\S]*?display:grid!important;/);
+  assert.match(footerStyles, /grid-template-columns:1fr!important/);
+});
