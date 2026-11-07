@@ -267,7 +267,11 @@ export default function StoreView({
   }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang]);
 
   const flashSaleProducts = useMemo(() => {
-    return activeProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL).slice(0, 4);
+    return activeProducts.filter(p => {
+      const oldPrice = Number(p?.oldPriceGEL);
+      const currentPrice = Number(p?.priceGEL);
+      return Number.isFinite(oldPrice) && Number.isFinite(currentPrice) && oldPrice > currentPrice;
+    }).slice(0, 4);
   }, [activeProducts]);
 
   const getCategoryIcon = (catName) => {
