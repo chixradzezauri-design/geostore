@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -1093,7 +1093,9 @@ export default function App() {
         const data = await res.json();
 
         setOrders(
-          data.map((o) => ({
+          data.map((o) => {
+            const items = normalizeOrderItems(o.items);
+            return ({
             id: o.id,
             created_at: o.created_at || null,
             date: o.created_at
@@ -1107,16 +1109,15 @@ export default function App() {
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
             adminNote: o.admin_note || '',
-            items: Array.isArray(o.items) ? o.items : [],
+            items,
             stock_deducted_at: o.stock_deducted_at || null,
             stock_restored_at: o.stock_restored_at || null,
             status_changed_at: o.status_changed_at || null,
-            itemSummary: Array.isArray(o.items)
-              ? o.items
-                  .map((i) => `${i.name} (x${i.quantity})`)
-                  .join(', ')
+            itemSummary: items.length > 0
+              ? items.map((i) => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ')
               : 'პროდუქტები'
-          }))
+          });
+          })
         );
       }
     } catch (error) {
