@@ -5,7 +5,12 @@ import { parseStoredCartSnapshot } from './cartSafety.js';
 
 test('parses a valid cart snapshot for cross-tab synchronization', () => {
   const snapshot = [{ id: 'product-1', name: 'Coat', quantity: 2, priceGEL: 49.9 }];
-  assert.deepEqual(parseStoredCartSnapshot(JSON.stringify(snapshot)), snapshot);
+  const parsed = parseStoredCartSnapshot(JSON.stringify(snapshot));
+  assert.equal(parsed.length, 1);
+  assert.equal(parsed[0].id, 'product-1');
+  assert.equal(parsed[0].quantity, 2);
+  assert.equal(parsed[0].priceGEL, 49.9);
+  assert.equal(parsed[0].giftWrap, false);
 });
 
 test('fails closed for removed, malformed, or non-array cart storage values', () => {
