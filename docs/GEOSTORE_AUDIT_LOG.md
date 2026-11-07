@@ -604,3 +604,22 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Public advisory sources reviewed include the official Vite advisory list, React advisories, PostCSS advisories, Supabase JS changelog/runtime support, and Vercel's Node version documentation.
 - No npm install, `npm audit`, `npm audit signatures`, `npm test`, Vite build, browser test, or Vercel deployment was run. The connected environment does not provide the project's local Node/npm runtime. Do not represent this stage as a verified successful build.
 - No production database, Storage object, order, product, or customer record was changed.
+
+
+## CI failure investigation and stale-cart compatibility fix — 2026-11-07
+
+### Reproduced CI finding
+- GitHub Actions run `42358214019` installed dependencies successfully, then ran 55 Node tests: 54 passed and 1 failed. The production build step was correctly skipped because the test step failed.
+- Failure: `src/utils/orderSafety.test.js`, "reconciles stale cart prices and stock against the latest catalogue". Legacy catalogue fixture omitted the optional `available_sizes` and `available_colors` fields, but the reconciliation helper treated missing fields as explicit empty option lists and incorrectly flagged previously selected sizes.
+- This was a real compatibility bug in the stale-cart guard, not a reason to weaken the test.
+
+### Correction
+- Updated `reconcileCartWithCatalog` to distinguish absent legacy variant fields from explicitly configured option arrays.
+- When the catalogue omits a variant field entirely, it no longer invalidates a selected size/color based on missing metadata.
+- When the catalogue explicitly supplies an empty array, the selection is still rejected as unavailable. Non-empty configured lists continue to enforce exact option matching.
+- Added a regression test for explicitly empty size/color arrays; retained the original stale-price/stock test unchanged.
+
+### Verification boundary
+- The npm audit workflow passed with zero high/critical advisories, and CodeQL completed successfully on commit `ecc1cdd66f0e95cd9394e7d94f49f8a5b518929c`.
+- The correction is committed for immediate CI re-test. Do not consider tests or production build passed until the new workflow run completes.
+- No Vercel deployment or production database changes were made.

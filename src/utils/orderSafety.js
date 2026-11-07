@@ -135,10 +135,20 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
           ? product.colors.map((value) => String(value ?? '').trim()).filter(Boolean)
           : [];
 
-    if (selectedSize && !sizeOptions.includes(selectedSize)) {
+    // Older catalogue rows may not expose variant columns at all. In that
+    // legacy case, do not invalidate a cart selection based on missing data.
+    // An explicitly supplied empty array is different: it means no options
+    // are currently offered and must invalidate any selected option.
+    const hasSizeConfiguration = Array.isArray(product.available_sizes) ||
+      Array.isArray(product.availableSizes);
+    const hasColorConfiguration = Array.isArray(product.available_colors) ||
+      Array.isArray(product.availableColors) ||
+      Array.isArray(product.colors);
+
+    if (selectedSize && hasSizeConfiguration && !sizeOptions.includes(selectedSize)) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_size', selected: selectedSize });
     }
-    if (selectedColor && !colorOptions.includes(selectedColor)) {
+    if (selectedColor && hasColorConfiguration && !colorOptions.includes(selectedColor)) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_color', selected: selectedColor });
     }
 

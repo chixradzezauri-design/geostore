@@ -149,6 +149,14 @@ test('flags cart variants that are no longer offered by the latest catalogue', (
   assert.equal(result.hasChanges, true);
 });
 
+test('rejects selected variants when catalogue explicitly configures no options', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p1', name: 'Jacket', priceGEL: 120, quantity: 1, selectedSize: 'M', selectedColor: 'Black' }],
+    [{ id: 'p1', name: 'Jacket', price_gel: 120, stock: 4, available_sizes: [], available_colors: [] }]
+  );
+  assert.deepEqual(result.changes.map((change) => change.type), ['variant_size', 'variant_color']);
+});
+
 test('accepts currently offered cart variants from snake_case catalogue fields', () => {
   const result = reconcileCartWithCatalog(
     [
