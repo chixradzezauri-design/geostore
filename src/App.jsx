@@ -1041,7 +1041,7 @@ export default function App() {
     const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
       String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
     const loadOwnOrders = async () => {
-      if (!currentUser?.id || !currentUser?.email) {
+      if (!currentUser?.id) {
         setMyOrders([]);
         setMyOrdersError('');
         setMyOrdersLoading(false);
@@ -1098,7 +1098,7 @@ export default function App() {
       }
     };
 
-    if (!currentUser?.id || !currentUser?.email) {
+    if (!currentUser?.id) {
       setMyOrders([]);
       setMyOrdersError('');
       setMyOrdersLoading(false);
@@ -1118,7 +1118,7 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [currentUser?.id, currentUser?.email, activeTab, currentLang]);
+  }, [currentUser?.id, activeTab, currentLang]);
 
   useEffect(() => {
     let active = true;
@@ -1127,7 +1127,7 @@ export default function App() {
     const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
       String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
     const loadNotifications = async () => {
-      if (!currentUser?.id || !currentUser?.email) {
+      if (!currentUser?.id) {
         setNotifications([]);
         setNotificationsLoading(false);
         return;
@@ -1178,7 +1178,7 @@ export default function App() {
       }
     };
 
-    if (!currentUser?.id || !currentUser?.email) {
+    if (!currentUser?.id) {
       setNotifications([]);
       setNotificationsError('');
       setNotificationsLoading(false);
@@ -1195,7 +1195,7 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [currentUser?.id, currentUser?.email, currentLang]);
+  }, [currentUser?.id, currentLang]);
 
   const fetchOrders = async () => {
     // Prevent overlapping 15-second refreshes from applying stale order snapshots.
