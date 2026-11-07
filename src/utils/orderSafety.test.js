@@ -10,6 +10,7 @@ import {
   createSecureOrderId,
   groupCheckoutItems,
   isReusableCheckout,
+  PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
   validateOrderCreationResponse,
