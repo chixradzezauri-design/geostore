@@ -2122,14 +2122,28 @@ export default function AdminDashboardPro({
     alert('✅ მომხმარებლის მონაცემები წარმატებით განახლდა!');
   };
 
-  const handleSaveSettings = (e) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
-    if (typeof setSiteSettings === 'function') {
-      setSiteSettings(siteSettings);
+    const normalized = {
+      ...siteSettings,
+      storeName: String(siteSettings?.storeName || '').trim(),
+      topBarText: String(siteSettings?.topBarText || '').trim(),
+      heroTitle: String(siteSettings?.heroTitle || '').trim(),
+      heroSubtitle: String(siteSettings?.heroSubtitle || '').trim()
+    };
+    if (normalized.storeName.length < 2 || normalized.storeName.length > 60 ||
+        normalized.topBarText.length > 160 || normalized.heroTitle.length > 120 ||
+        normalized.heroSubtitle.length > 240) {
+      alert('შეამოწმეთ ველების სიგრძე: მაღაზიის სახელი 2–60, ზედა ზოლი 160, მთავარი სათაური 120, აღწერა 240 სიმბოლო.');
+      return;
     }
-    try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch {}
-    logActivity('განახლდა საიტის გლობალური პარამეტრები');
-    alert('საიტის პარამეტრები წარმატებით განახლდა!');
+    if (typeof setSiteSettings === 'function') setSiteSettings(normalized);
+    if (typeof onSaveStorefrontDraft !== 'function') {
+      alert('Supabase-ის მონახაზის შენახვა მიუწვდომელია. ცვლილებები დარჩება მხოლოდ ამ მოწყობილობაზე.');
+      return;
+    }
+    logActivity('მზადდება საიტის პარამეტრების მონახაზის შენახვა');
+    await onSaveStorefrontDraft();
   };
 
   const filteredUsers = (usersList || []).filter(u => 
@@ -3956,8 +3970,16 @@ export default function AdminDashboardPro({
                   <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
-                  <input type="text" value={siteSettings.topBarText} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (მაქს. 160)</label>
+                  <input type="text" maxLength={160} value={siteSettings?.topBarText || ''} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 font-bold">მთავარი სათაური (მაქს. 120)</label>
+                  <input type="text" maxLength={120} value={siteSettings?.heroTitle || ''} onChange={e => setSiteSettings({...siteSettings, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 font-bold">მთავარი აღწერა (მაქს. 240)</label>
+                  <textarea maxLength={240} rows={3} value={siteSettings?.heroSubtitle || ''} onChange={e => setSiteSettings({...siteSettings, heroSubtitle: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner resize-y" />
                 </div>
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
                   პარამეტრების შენახვა
