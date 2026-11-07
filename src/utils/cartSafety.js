@@ -52,6 +52,6 @@ export const removeProductFromCart = (cart, product) => {
     String(item?.name ?? '') === String(product?.name ?? '') &&
     (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
     (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
-    Number(item?.priceGEL ?? item?.price) === price
+    Object.is(Number(item?.priceGEL ?? item?.price), price)
   ));
 };
