@@ -640,7 +640,7 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
         </div>
       ) : (
-        <div className="gs-product-grid gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
+        <div className="gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
@@ -651,11 +651,11 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <article key={prod.id} className="gs-product-card gs-catalog-product-card group flex flex-col">
+              <article key={prod.id} className="gs-catalog-product-card group flex flex-col">
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
-                  className="gs-product-media gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
+                  className="gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
                   {prod.image ? <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
@@ -693,15 +693,15 @@ export default function StoreView({
                   </div>
                 </div>
 
-                <div className="gs-product-info gs-catalog-product-info py-3 sm:py-4 space-y-2.5">
+                <div className="gs-catalog-product-info py-3 sm:py-4 space-y-2.5">
                   <div className="gs-catalog-product-meta flex items-center justify-between">
                     <span className="gs-catalog-vendor text-[10px] text-amber-400/90 font-bold uppercase tracking-wider bg-[#16161a] px-2.5 py-1 rounded-lg border border-amber-500/20">{prod.vendor || 'GEOSTORE'}</span>
                     <div className="gs-catalog-rating flex items-center gap-1 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 text-[10px] font-bold text-amber-300">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
-                  <div className="gs-product-price gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
+                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
@@ -709,7 +709,7 @@ export default function StoreView({
 
                 <button 
                   onClick={() => handleOpenProduct(prod)} 
-                  className="gs-product-action gs-product-card-action gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
+                  className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd}
                 </button>
@@ -757,7 +757,7 @@ export default function StoreView({
                   )}
                 </div>
 
-                <div className="gs-product-info space-y-5 sm:space-y-6 text-xs w-full">
+                <div className="gs-product-detail-info min-w-0 space-y-5 sm:space-y-6 text-xs w-full">
                   <div className="gs-product-detail-heading space-y-2">
                     <div className="gs-product-detail-meta flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
