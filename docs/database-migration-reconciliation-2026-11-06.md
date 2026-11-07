@@ -3,16 +3,16 @@
 Date: 2026-11-07
 Supabase project: `xmtnszxtnfxnrojionoa`
 Working branch: `maintenance/storefront-draft-save-2026-11-06`
-Reviewed branch commit: `20979426701cedcb19a4627847894866cc36c1fb`
+Reviewed branch commit: `284511356901059dcaa19ece3a0e1d90d29b2eb8`
 
 ## Current reconciliation status
 
-- Supabase remote migration ledger: **57 applied versions**.
-- Working branch: **43 SQL migration files**.
-- Exact version-and-name matches: **37**.
+- Supabase remote migration ledger: **58 applied versions**.
+- Working branch: **44 SQL migration files**.
+- Exact version-and-name matches: **38**.
 - Remote applied versions with no exact matching source file in the working branch: **20**.
 - Branch files not present in the remote migration ledger: **6**.
-- The migration `20261107110746_enforce_nonnegative_product_stock` is applied remotely and its exact source file is present in the branch.
+- The migrations `20261107110746_enforce_nonnegative_product_stock` and `20261107115218_persist_checkout_addons_server_pricing` are applied remotely and their exact source files are present in the branch.
 - Three exact historical source files were recovered from the original Git object history/known source branches and restored without executing them again:
   - `20261103044438_add_idempotent_checkout_replay.sql`
   - `20261103044704_validate_checkout_idempotency_payload.sql`
@@ -54,7 +54,7 @@ Reviewed branch commit: `20979426701cedcb19a4627847894866cc36c1fb`
 
 ## Read-only live schema inventory
 
-The live catalog was queried across `public` and `private` schemas. Counts at this snapshot:
+The live catalog was queried across `public` and `private` schemas before the checkout add-on migration. Counts at that snapshot:
 
 | Catalog object | Count |
 | --- | ---: |
@@ -71,7 +71,7 @@ The live catalog was queried across `public` and `private` schemas. Counts at th
 | Extensions | 5 |
 | Storage buckets | 1 |
 
-All public tables remain RLS-enabled based on the preceding security audit. No live schema mutation, migration repair, database push, reset, or test-data cleanup was performed in this reconciliation step.
+All public tables remain RLS-enabled based on the preceding security audit. The initial reconciliation inventory was read-only. After that snapshot, the forward-only checkout add-on migration `20261107115218_persist_checkout_addons_server_pricing` was applied; its transactional verification rolled back all test orders and stock changes. Current order count remains zero.
 
 ## Confirmed support-intake permission detail
 
@@ -103,7 +103,7 @@ These deletions affect only unapplied files in the working branch; no production
 1. Do not create placeholder/no-op migrations for missing versions.
 2. Do not rename a similar migration to impersonate a missing version unless the original SQL is recovered and equivalence is independently verified.
 3. Do not run `supabase migration repair`, `supabase db push`, or `supabase db reset` while the source history and live schema have not been reconciled.
-4. Do not replay any of the 57 already-applied migrations.
+4. Do not replay any of the 58 already-applied migrations.
 5. Recover exact original SQL where possible. For unrecoverable versions, use the catalogued live schema as a reviewed baseline; do not invent historical SQL.
 6. Keep the six remaining branch-only migrations staged until their effects are individually compared with the live catalog and routines.
 7. Once reconciliation is complete, add new forward-only migrations for verified security improvements; do not rewrite historical migration files.
@@ -115,7 +115,7 @@ These deletions affect only unapplied files in the working branch; no production
 3. Keep the verified support INSERT least-privilege migration staged until history reconciliation is complete.
 4. Validate and prepare the flash-sale rounding fix and product data constraints for a safe forward-only migration.
 5. Decide whether order-status notifications are a wanted feature before adding their table/functions; no live notification table currently exists.
-6. Run CI/security checks after the source reconciliation commit. Do not trigger a Vercel production deployment until the consolidated release is approved.
+6. Run CI/security checks after the latest source changes. Do not trigger a Vercel production deployment until the consolidated release is approved.
 
 ## Deployment rule
 
