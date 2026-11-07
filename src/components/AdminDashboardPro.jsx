@@ -896,6 +896,7 @@ export default function AdminDashboardPro({
     let totalCogs = 0;
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
+    let unallocatedProductRevenue = 0;
     const incomeTotals = new Map();
     const productProfitTotals = new Map();
     const vendorProfitTotals = new Map();
@@ -917,6 +918,7 @@ export default function AdminDashboardPro({
         // Keep legacy product revenue and the delivery fee in separate buckets
         // so the income-source breakdown reconciles to the order total.
         if (productNetRevenue > 0) {
+          unallocatedProductRevenue += productNetRevenue;
           const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
           incomeTotals.set(label, (incomeTotals.get(label) || 0) + productNetRevenue);
         }
@@ -927,6 +929,7 @@ export default function AdminDashboardPro({
         return;
       }
       if (productNetRevenue > 0 && lineGross <= 0) {
+        unallocatedProductRevenue += productNetRevenue;
         const label = 'პროდუქტის შემოსავალი — განაწილება ვერ ხერხდება';
         incomeTotals.set(label, (incomeTotals.get(label) || 0) + productNetRevenue);
         unknownCogsItems += 1;
@@ -944,6 +947,7 @@ export default function AdminDashboardPro({
           // Preserve the revenue share in the income-source reconciliation,
           // but never attribute malformed quantities to product/vendor profit.
           if (allocatedRevenue > 0) {
+            unallocatedProductRevenue += allocatedRevenue;
             const label = 'პროდუქტის შემოსავალი — რაოდენობა არასწორია';
             incomeTotals.set(label, (incomeTotals.get(label) || 0) + allocatedRevenue);
           }
@@ -1034,14 +1038,21 @@ export default function AdminDashboardPro({
       deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
-      estimatedCogsItems, unknownCogsItems,
+      estimatedCogsItems, unknownCogsItems, unallocatedProductRevenue,
       averageOrderValue: deliveredOrders.length ? totalSalesRevenue / deliveredOrders.length : 0,
       incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
-      productProfitability: Array.from(productProfitTotals.values()).map(item => ({
+      productProfitability: [
+        ...Array.from(productProfitTotals.values()).map(item => ({
         ...item,
         grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
         margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
-      })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
+        })),
+        ...(unallocatedProductRevenue > 0 ? [{
+          key: '__unallocated__', name: 'განაწილების გარეშე / ისტორიული პროდუქტი', vendor: 'უცნობია', category: 'უცნობია',
+          quantity: 0, revenue: unallocatedProductRevenue, cogs: 0, unknownCostItems: Math.max(1, unknownCogsItems), estimatedCostItems: 0,
+          grossProfit: null, margin: null
+        }] : [])
+      ].sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       vendorProfitability: Array.from(vendorProfitTotals.values()).map(item => ({
         ...item,
         productCount: item.productCount.size,
