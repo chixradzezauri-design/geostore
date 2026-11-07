@@ -73,6 +73,45 @@ CREATE TRIGGER orders_bind_auth_user_before_insert
 BEFORE INSERT ON public.orders
 FOR EACH ROW EXECUTE FUNCTION private.bind_order_to_auth_user();
 
+-- Bind idempotent checkout replay to the immutable Auth UUID too.
+-- The original implementation remains the source of validation/pricing/stock logic;
+-- this wrapper checks ownership before returning either a new or replayed result.
+ALTER FUNCTION private.create_order_with_stock(jsonb)
+  RENAME TO create_order_with_stock_unchecked;
+
+CREATE FUNCTION private.create_order_with_stock(p_order jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_result jsonb;
+  v_order_id text;
+  v_owner_id uuid;
+BEGIN
+  v_result := private.create_order_with_stock_unchecked(p_order);
+  v_order_id := nullif(v_result ->> 'order_id', '');
+  IF v_order_id IS NULL THEN
+    RAISE EXCEPTION 'შეკვეთის მფლობელის დადასტურება ვერ მოხერხდა.';
+  END IF;
+
+  SELECT user_id INTO v_owner_id
+    FROM public.orders
+   WHERE id = v_order_id;
+
+  IF NOT FOUND OR v_owner_id IS DISTINCT FROM auth.uid() THEN
+    RAISE EXCEPTION 'შეკვეთის იდენტიფიკატორი სხვა მომხმარებლის შეკვეთას ეკუთვნის.';
+  END IF;
+
+  RETURN v_result;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION private.create_order_with_stock_unchecked(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION private.create_order_with_stock(jsonb) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION private.create_order_with_stock(jsonb) TO anon, authenticated;
+
 -- Customer order history is now keyed exclusively by auth.uid(), not mutable email.
 -- Drop wrappers first because PostgreSQL cannot change a RETURNS TABLE signature in place.
 DROP FUNCTION IF EXISTS public.get_my_orders();
