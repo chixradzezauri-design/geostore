@@ -2944,6 +2944,7 @@ export default function App() {
           <Suspense fallback={null}>
             <AdminDashboardPro
             adminLoggedIn={adminLoggedIn}
+            adminSessionKey={adminLoggedIn ? currentUser?.id || '' : ''}
             setAdminLoggedIn={setAdminLoggedIn}
             adminLoginForm={
               adminLoginForm || {
