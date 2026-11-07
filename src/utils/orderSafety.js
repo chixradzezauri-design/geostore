@@ -212,10 +212,14 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       Array.isArray(product.availableColors) ||
       Array.isArray(product.colors);
 
-    if (selectedSize && hasSizeConfiguration && !sizeOptions.includes(selectedSize)) {
+    if (hasSizeConfiguration && sizeOptions.length > 0 && !selectedSize) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_size_missing' });
+    } else if (selectedSize && hasSizeConfiguration && !sizeOptions.includes(selectedSize)) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_size', selected: selectedSize });
     }
-    if (selectedColor && hasColorConfiguration && !colorOptions.includes(selectedColor)) {
+    if (hasColorConfiguration && colorOptions.length > 0 && !selectedColor) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_color_missing' });
+    } else if (selectedColor && hasColorConfiguration && !colorOptions.includes(selectedColor)) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_color', selected: selectedColor });
     }
 
