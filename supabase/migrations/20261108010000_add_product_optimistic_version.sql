@@ -95,7 +95,7 @@ create or replace function public.admin_adjust_product_variant_stock(
 )
 returns public.products
 language sql
-security invoker
+security definer
 set search_path = ''
 as $$
   select private.admin_adjust_product_variant_stock(
@@ -137,7 +137,7 @@ create or replace function public.admin_delete_product_if_version(
 )
 returns boolean
 language sql
-security invoker
+security definer
 set search_path = ''
 as $$
   select private.admin_delete_product_if_version(p_product_id, p_expected_version);
