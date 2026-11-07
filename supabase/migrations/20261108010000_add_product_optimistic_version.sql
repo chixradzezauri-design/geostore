@@ -5,6 +5,10 @@ ALTER TABLE public.products
   ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT pg_catalog.now(),
   ADD COLUMN IF NOT EXISTS version bigint NOT NULL DEFAULT 1;
 
+-- The public catalogue already uses column-level SELECT grants. Expose the
+-- two new, non-sensitive revision fields required by storefront reconciliation.
+GRANT SELECT (updated_at, version) ON TABLE public.products TO anon, authenticated;
+
 -- The storefront catalogue reads these non-sensitive revision tokens.
 GRANT SELECT (updated_at, version) ON public.products TO anon, authenticated;
 
