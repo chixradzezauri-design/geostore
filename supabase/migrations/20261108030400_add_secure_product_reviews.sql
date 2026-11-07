@@ -74,7 +74,7 @@ BEGIN
     OR split_part(p_image_path, '/', 1) IS DISTINCT FROM p_product_id
     OR p_image_path !~ '^[^/]+/[^/]+$'
     OR p_image_path LIKE '%..%'
-    OR p_image_path LIKE '%\\%'
+    OR position(chr(92) in p_image_path) > 0
   ) THEN
     RAISE EXCEPTION 'შეფასების ფოტოს მისამართი არასწორია.';
   END IF;
