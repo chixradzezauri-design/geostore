@@ -336,3 +336,40 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Rechecked live migration history.
 - Consulted current Supabase Database Functions and RLS documentation and the 2026 changelog. The current CLI v3 behavior is local-by-default and confirms hosted changes; no relevant database-function breaking change was found.
 - No production database changes, GitHub source-code changes, build, automated tests, browser test, or deployment were performed in this stage.
+
+## 2026-11-07 — Atomic storefront publish made available
+
+### Root cause correction
+- The previous stage incorrectly treated the missing local Supabase CLI and local checkout as a hard blocker. The connected Supabase MCP supports schema migrations directly, and GitHub file operations are available; no end-user plan upgrade or local CLI installation is required for this change.
+- Current Supabase CLI v3 is local-by-default and requires explicit remote targeting for hosted commands. This change used the authenticated Supabase migration interface rather than an unverified shell/CLI path.
+
+### Implemented
+- Added `private.publish_storefront_config(jsonb,text)`, a narrowly scoped `SECURITY DEFINER` transaction function with empty `search_path` and fully qualified table references.
+- The function checks both the immutable primary-admin Auth UID and trusted `app_metadata.role = 'admin'`; it does not trust client-supplied user IDs.
+- Server-side validation bounds snapshot size, category/banner counts and fields, required JSON sections, duplicate category/banner IDs, and site-setting lengths.
+- The function updates `storefront_config` draft + published snapshots and inserts the matching `storefront_versions` row in the same PostgreSQL transaction.
+- Added the exposed `public.publish_storefront_config` `SECURITY INVOKER` RPC wrapper; execute is granted only to authenticated callers. The private implementation is not exposed as a PostgREST schema.
+- Removed authenticated direct INSERT/UPDATE/DELETE permissions and corresponding write policies from `storefront_versions`. Authenticated admin SELECT remains. Version history is now append-only for browser clients.
+- Updated `src/App.jsx` to call the single RPC instead of issuing separate REST writes. Draft-save remains on its existing path.
+- Added ambiguous-network-outcome protection: if the publish request was sent but the browser cannot determine whether it committed, newly uploaded images are retained instead of being deleted while they may already be referenced by a committed publish.
+
+### Migration records and repository files
+- Live Supabase migration `20261107083528_atomic_storefront_publish_and_append_only_versions`.
+- Live Supabase migration `20261107083600_validate_storefront_publish_snapshot_shape` tightens required JSON key checks using `IS DISTINCT FROM` to prevent SQL NULL semantics from bypassing validation.
+- Matching SQL files are saved under `supabase/migrations/` on branch `maintenance/storefront-draft-save-2026-11-06`.
+- App source and migration SQL are saved on the same branch. No production Vercel deployment was triggered.
+
+### Verification
+- Verified the private implementation is `SECURITY DEFINER` with empty `search_path`; public wrapper is `SECURITY INVOKER`.
+- Verified anon cannot execute either function; authenticated can execute the public wrapper and the private implementation it delegates to.
+- Verified authenticated cannot INSERT/UPDATE/DELETE `storefront_versions`, but can SELECT; only the admin SELECT RLS policy remains.
+- Positive RPC path executed with a simulated trusted admin JWT inside an explicit transaction, then rolled back. Confirmed live `storefront_config` and `storefront_versions` row counts remained zero.
+- Negative authorization and malformed/missing-snapshot checks were rejected as expected.
+- Re-ran Supabase advisors: the only security warning remains the existing leaked-password-protection setting; performance advisor still reports the same three unused-index INFO findings. No indexes were removed.
+- Source inspection confirms the publish handler uses the RPC and no longer performs a separate direct insert into `storefront_versions`.
+- A forced mid-transaction trigger-failure test and full browser interaction/build were not run. PostgreSQL transaction semantics provide all-or-nothing behavior; a real admin publish should still be exercised in the final pre-deploy verification.
+
+### Scope and data safety
+- No real storefront config or version row was published or created during verification; both tables remain empty.
+- Existing draft-save, public published-config reads, category/banner behavior, and version-history read/restore UI were preserved.
+- No Vercel build or deployment was run.
