@@ -2907,9 +2907,18 @@ export default function App() {
                   );
 
                   if (!response.ok) {
-                    throw new Error(
-                      'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.'
-                    );
+                    if (response.status === 429) {
+                      throw new Error(currentLang === 'en'
+                        ? 'Too many support requests. Please try again later.'
+                        : currentLang === 'ru'
+                          ? 'Слишком много обращений. Попробуйте позже.'
+                          : 'ძალიან ბევრი მოთხოვნა გაიგზავნა. გთხოვთ, სცადოთ მოგვიანებით.');
+                    }
+                    throw new Error(currentLang === 'en'
+                      ? 'Could not send the support request. Please try again later.'
+                      : currentLang === 'ru'
+                        ? 'Не удалось отправить обращение. Попробуйте позже.'
+                        : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
                   }
 
                   alert(currentLang === 'en'
