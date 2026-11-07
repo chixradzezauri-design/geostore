@@ -1395,9 +1395,13 @@ export default function AdminDashboardPro({
       if (typeof setProducts === 'function') {
         setProducts(prev => (prev || []).map(p => {
           if (String(p.id) !== String(id)) return p;
-          if (field === 'priceGEL') return { ...p, priceGEL: savedValue, price_gel: savedValue };
-          if (field === 'purchaseCost') return { ...p, purchaseCost: savedValue, purchase_cost: savedValue };
-          return { ...p, stock: savedValue };
+          const revision = {
+            version: savedRows[0].version ?? p.version,
+            updated_at: savedRows[0].updated_at ?? p.updated_at
+          };
+          if (field === 'priceGEL') return { ...p, ...revision, priceGEL: savedValue, price_gel: savedValue };
+          if (field === 'purchaseCost') return { ...p, ...revision, purchaseCost: savedValue, purchase_cost: savedValue };
+          return { ...p, ...revision, stock: savedValue };
         }));
       }
       if (field === 'stock') setStockDrafts(prev => { const next = { ...prev }; delete next[String(id)]; return next; });
