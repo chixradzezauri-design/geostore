@@ -10,6 +10,10 @@ import {
   createSecureOrderId,
   groupCheckoutItems,
   isReusableCheckout,
+  findReusablePendingCheckout,
+  parsePendingCheckoutEntries,
+  removePendingCheckoutEntry,
+  upsertPendingCheckoutEntry,
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
@@ -498,4 +502,61 @@ test('rounds subtotal and delivery to exact tetri before discount calculation', 
     }),
     { subtotalGEL: 0.3, discountGEL: 0.03, deliveryGEL: 0.3, totalGEL: 0.57 }
   );
+});
+
+
+const pendingEntry = (fingerprint, suffix, createdAt = 1_000) => ({
+  fingerprint,
+  orderId: `ORD-${suffix.repeat(32)}`,
+  createdAt
+});
+
+test('migrates a valid legacy single pending checkout entry', () => {
+  const legacy = JSON.stringify(pendingEntry('fingerprint-a', 'A'));
+  assert.deepEqual(parsePendingCheckoutEntries(legacy, 1_000), [pendingEntry('fingerprint-a', 'A')]);
+  assert.equal(
+    findReusablePendingCheckout(legacy, 'fingerprint-a', 1_000).orderId,
+    pendingEntry('fingerprint-a', 'A').orderId
+  );
+});
+
+test('keeps multiple different checkout fingerprints without overwriting prior retries', () => {
+  const first = pendingEntry('fingerprint-a', 'A');
+  const second = pendingEntry('fingerprint-b', 'B', 1_100);
+  const withFirst = upsertPendingCheckoutEntry('', first, 1_100);
+  const withBoth = upsertPendingCheckoutEntry(withFirst, second, 1_100);
+  assert.deepEqual(
+    parsePendingCheckoutEntries(withBoth, 1_100).map((saved) => saved.fingerprint),
+    ['fingerprint-a', 'fingerprint-b']
+  );
+  assert.equal(findReusablePendingCheckout(withBoth, 'fingerprint-a', 1_100).orderId, first.orderId);
+  assert.equal(findReusablePendingCheckout(withBoth, 'fingerprint-b', 1_100).orderId, second.orderId);
+});
+
+test('updating one fingerprint does not erase another checkout entry', () => {
+  const first = pendingEntry('fingerprint-a', 'A');
+  const second = pendingEntry('fingerprint-b', 'B');
+  const initial = upsertPendingCheckoutEntry(upsertPendingCheckoutEntry('', first, 1_000), second, 1_000);
+  const refreshedFirst = { ...first, orderId: pendingEntry('fingerprint-a', 'C').orderId, createdAt: 1_050 };
+  const updated = upsertPendingCheckoutEntry(initial, refreshedFirst, 1_050);
+  assert.equal(findReusablePendingCheckout(updated, 'fingerprint-a', 1_050).orderId, refreshedFirst.orderId);
+  assert.equal(findReusablePendingCheckout(updated, 'fingerprint-b', 1_050).orderId, second.orderId);
+});
+
+test('removes only the confirmed order and preserves other pending checkouts', () => {
+  const first = pendingEntry('fingerprint-a', 'A');
+  const second = pendingEntry('fingerprint-b', 'B');
+  const initial = upsertPendingCheckoutEntry(upsertPendingCheckoutEntry('', first, 1_000), second, 1_000);
+  const remaining = removePendingCheckoutEntry(initial, first.orderId, 1_000);
+  assert.equal(findReusablePendingCheckout(remaining, 'fingerprint-a', 1_000), null);
+  assert.equal(findReusablePendingCheckout(remaining, 'fingerprint-b', 1_000).orderId, second.orderId);
+});
+
+test('drops expired and malformed entries while retaining the 24-hour retry window', () => {
+  const now = 50_000_000;
+  const fresh = pendingEntry('fresh', 'A', now - PENDING_CHECKOUT_TTL_MS);
+  const expired = pendingEntry('expired', 'B', now - PENDING_CHECKOUT_TTL_MS - 1);
+  const malformed = { fingerprint: 'bad', orderId: 'not-an-order-id', createdAt: now };
+  const raw = JSON.stringify({ version: 3, entries: [fresh, expired, malformed] });
+  assert.deepEqual(parsePendingCheckoutEntries(raw, now), [fresh]);
 });
