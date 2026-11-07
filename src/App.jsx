@@ -1395,6 +1395,8 @@ export default function App() {
     if (!adminLoggedIn) {
       adminOrdersSessionActive.current = false;
       adminOrdersSessionVersion.current += 1;
+      // Never retain private administrator order snapshots after access is lost.
+      setOrders([]);
       return () => document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     }
 
@@ -2036,6 +2038,8 @@ export default function App() {
       }
 
       setCurrentUser(null);
+      setAdminLoggedIn(false);
+      setOrders([]);
       setActiveTab('store');
 
       showToast(currentLang === 'en' ? 'Signed out successfully.' : currentLang === 'ru' ? 'Вы успешно вышли из аккаунта.' : 'ანგარიშიდან წარმატებით გამოხვედით.');
