@@ -783,3 +783,13 @@ This file is the durable handoff log for staged audit work. Add new findings and
 
 ### Release boundary
 No database DDL, row data, authentication settings, Vercel builds, or deployments were changed during this review. The SQL and test corrections remain staged on the design branch.
+
+
+## Customer order-history payload security — refreshed verification
+
+- Re-read the live `private.get_my_orders()` definition directly from PostgreSQL. It currently returns `coalesce(o.items, '[]'::jsonb)` without filtering item keys.
+- The server-side order snapshot includes internal fields such as `purchase_cost`, `vendor`, and `category`. The customer profile currently displays only a subset, but the full JSON payload is sent to the authenticated browser. This is a data-minimization/security defect in the live function.
+- Exact live order count is currently zero, so no existing order-item payload was exposed in this snapshot. The defect would affect future authenticated order-history requests once orders exist.
+- Staged `20261107200000_bind_order_ownership_to_auth_user_uuid.sql` replaces email-based ownership with immutable `auth.uid()` ownership and constructs an explicit customer-facing item allowlist. It excludes `purchase_cost`, `vendor`, and `category`.
+- Added a static regression test that verifies the staged customer-history function uses `user_id = auth.uid()`, contains the allowed display fields, and omits internal cost/vendor/category fields.
+- The migration remains unapplied until the live migration history and schema drift are reconciled. Do not deploy the corresponding app changes ahead of the database migration.
