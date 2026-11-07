@@ -23,5 +23,5 @@ test('catalogue card styles are isolated from the product detail information pan
 });
 
 test('customer tabs share the storefront theme while admin stays separate', () => {
-  assert.match(app, /activeTab !== 'admin'\\s*\\?\\s*'geostore-fashion-store'/);
+  assert.match(app, /activeTab !== 'admin'\s*\?\s*'geostore-fashion-store'/);
 });
