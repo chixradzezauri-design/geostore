@@ -25,6 +25,13 @@ test('rejects malformed variants and duplicate IDs', () => {
   ]).reason, 'identity');
 });
 
+test('rejects duplicate variant names regardless of case or surrounding whitespace', () => {
+  assert.equal(validateProductVariants([
+    { id: 'v1', name: 'Small', priceGEL: 10, stock: 1 },
+    { id: 'v2', name: ' small ', priceGEL: 12, stock: 2 }
+  ]).reason, 'identity');
+});
+
 test('rejects invalid prices and stock values', () => {
   for (const priceGEL of [-1, 'NaN', '1.999', 1000000001]) {
     assert.equal(validateProductVariants([
