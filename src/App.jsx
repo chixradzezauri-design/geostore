@@ -859,12 +859,15 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
+    let requestInFlight = false;
     const loadNotifications = async () => {
       if (!currentUser?.email) {
         setNotifications([]);
         setNotificationsLoading(false);
         return;
       }
+      if (requestInFlight) return;
+      requestInFlight = true;
       setNotificationsLoading(true);
       try {
         const response = await fetch(
@@ -904,6 +907,7 @@ export default function App() {
               : 'შეტყობინებები დროებით მიუწვდომელია. სცადეთ მოგვიანებით.');
         }
       } finally {
+        requestInFlight = false;
         if (active) setNotificationsLoading(false);
       }
     };
