@@ -2485,7 +2485,7 @@ export default function App() {
       let storedPendingCheckout = null;
       if (canPersistFingerprint) {
         try {
-          storedPendingCheckout = JSON.parse(window.sessionStorage.getItem('geostore.pendingCheckout') || 'null');
+          storedPendingCheckout = JSON.parse(window.localStorage.getItem('geostore.pendingCheckout.v2') || 'null');
         } catch {
           storedPendingCheckout = null;
         }
@@ -2500,10 +2500,17 @@ export default function App() {
         orderId = createSecureOrderId(window.crypto);
       }
 
-      pendingCheckoutRef.current = { fingerprint: checkoutFingerprint, orderId };
+      // Persist only a one-way payload digest and the random order ID. This
+      // survives closing/reopening the tab, but expires after 24 hours.
+      const pendingEntry = reusableCheckout || {
+        fingerprint: checkoutFingerprint,
+        orderId,
+        createdAt: Date.now()
+      };
+      pendingCheckoutRef.current = pendingEntry;
       if (canPersistFingerprint) {
         try {
-          window.sessionStorage.setItem('geostore.pendingCheckout', JSON.stringify(pendingCheckoutRef.current));
+          window.localStorage.setItem('geostore.pendingCheckout.v2', JSON.stringify(pendingEntry));
         } catch {
           // In-memory retry protection remains active if browser storage is unavailable.
         }
@@ -2601,8 +2608,8 @@ export default function App() {
     setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: safeConfirmedTotal });
     if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
     try {
-      const savedPendingCheckout = JSON.parse(window.sessionStorage.getItem('geostore.pendingCheckout') || 'null');
-      if (savedPendingCheckout?.orderId === orderId) window.sessionStorage.removeItem('geostore.pendingCheckout');
+      const savedPendingCheckout = JSON.parse(window.localStorage.getItem('geostore.pendingCheckout.v2') || 'null');
+      if (savedPendingCheckout?.orderId === orderId) window.localStorage.removeItem('geostore.pendingCheckout.v2');
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
