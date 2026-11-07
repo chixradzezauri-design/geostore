@@ -21,7 +21,7 @@ export default function AiAssistantModal({
   products = [],
   categories = [],
   vendorsList = [],
-  orders = [],
+  lookupOrderForTracking,
   coupons = [],
   siteSettings = {},
   selectedProduct = null,
@@ -269,32 +269,14 @@ export default function AiAssistantModal({
       };
     }
 
-    // 3. შეკვეთის ტრეკინგი
-    const orderMatch = query.match(/ord[-\s]?\d+/i) || query.match(/#?\d{4,}/);
-    if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი')) {
-      if (orderMatch) {
-        const orderIdClean = orderMatch[0].toUpperCase().replace(/\s+/g, '');
-        const foundOrder = (orders || []).find(o => o.id?.toUpperCase().includes(orderIdClean));
-        
-        if (foundOrder) {
-          return {
-            text: `📦 შეკვეთა #${foundOrder.id}:\n• მიმღები: ${foundOrder.customerName}\n• თარიღი: ${foundOrder.date}\n• თანხა: ${formatPrice(foundOrder.totalGEL)}\n• სტატუსი: 🟢 ${foundOrder.status || 'ახალი'}`,
-            products: []
-          };
-        } else {
-          return {
-            text: `🔍 შეკვეთა კოდით "${orderMatch[0].toUpperCase()}" ვერ მოიძებნა ბაზაში.`,
-            products: []
-          };
-        }
-      } else {
-        return {
-          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მომწეროთ შეკვეთის უნიკალური ნომერი (მაგ: ORD-1025)! 📦',
-          products: []
-        };
-      }
+    // 3. შეკვეთის ტრეკინგი ხორციელდება დაცული RPC-ით და მოითხოვს შეკვეთის კოდსა და ტელეფონს.
+    if (query.includes('შეკვეთ') || query.includes('სტატუს') || /order|tracking|заказ|статус/.test(query)) {
+      return {
+        text: 'შეკვეთის შესამოწმებლად გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...) და შეკვეთისას მითითებული ტელეფონის ნომერი ერთ შეტყობინებაში.',
+        products: [],
+        requiresOrderLookup: true
+      };
     }
-
     // 4. ფასდაკლებები და აქციები
     const isDiscountQuery = SYNONYMS.discount.some(w => query.includes(w));
     if (isDiscountQuery) {
@@ -461,27 +443,88 @@ export default function AiAssistantModal({
   };
 
   const handleSendMessage = async (textToSend) => {
-    const queryText = textToSend || inputMessage;
-    if (!queryText.trim()) return;
+    const queryText = String(textToSend || inputMessage).trim();
+    if (!queryText) return;
 
     const userMsg = { id: `u-${Date.now()}`, sender: 'user', text: queryText };
     setMessages(prev => [...prev, userMsg]);
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    const refreshedProducts = await fetchLiveProducts();
+    const orderCodeMatch = queryText.match(/\\bORD[-\\s]?[A-Z0-9_-]{4,60}\\b/i);
+    const isOrderQuery = Boolean(orderCodeMatch) ||
+      /შეკვეთ|სტატუს|order|tracking|заказ|статус/i.test(queryText);
 
-    setTimeout(() => {
+    if (isOrderQuery) {
+      let replyText = '';
+      const orderCode = orderCodeMatch?.[0].replace(/\\s+/g, '').toUpperCase() || '';
+      const phoneText = orderCodeMatch
+        ? queryText.replace(orderCodeMatch[0], ' ')
+        : queryText;
+      const phoneCandidates = phoneText.match(/\\+?\\d[\\d\\s().-]{7,}\\d/g) || [];
+      const phone = phoneCandidates
+        .map(value => value.replace(/\\D/g, ''))
+        .find(value => value.length >= 9 && value.length <= 15);
+
+      if (!orderCode) {
+        replyText = 'შეკვეთის მოსაძებნად ჯერ გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...).';
+      } else if (!phone) {
+        replyText = 'კოდი მივიღე. ახლა იმავე შეტყობინებაში ან ახალ შეტყობინებაში მიუთითეთ შეკვეთისას გამოყენებული ტელეფონის ნომერი (9–15 ციფრი). ხელახლა გამოგზავნეთ კოდიც.';
+      } else if (typeof lookupOrderForTracking !== 'function') {
+        replyText = 'შეკვეთის უსაფრთხო ძიება ამჟამად მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით ან გამოიყენოთ შეკვეთის ტრეკინგის გვერდი.';
+      } else {
+        try {
+          const order = await lookupOrderForTracking(orderCode, phone);
+          if (order?.rateLimited === true) {
+            replyText = 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.';
+          } else if (!order || typeof order !== 'object' || !order.id) {
+            replyText = 'მითითებული კოდითა და ტელეფონის ნომრით შეკვეთა ვერ მოიძებნა. გადაამოწმეთ ორივე მონაცემი.';
+          } else {
+            const total = formatPrice(Number(order.totalGEL) || 0);
+            replyText = [
+              `📦 შეკვეთა #${order.id}`,
+              `• თარიღი: ${order.date || '—'}`,
+              `• თანხა: ${total}`,
+              `• სტატუსი: ${order.status || 'ახალი'}`,
+              `• ნივთები: ${order.itemSummary || 'პროდუქტები'}`
+            ].join('\\n');
+          }
+        } catch (error) {
+          replyText = error?.message === 'ORDER_TRACKING_RATE_LIMITED'
+            ? 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.'
+            : 'შეკვეთის შემოწმება ამჟამად ვერ მოხერხდა. გადაამოწმეთ მონაცემები და მოგვიანებით სცადეთ.';
+        }
+      }
+
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: replyText,
+        recommendedProducts: []
+      }]);
+      setIsTyping(false);
+      return;
+    }
+
+    try {
+      const refreshedProducts = await fetchLiveProducts();
       const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
-      const aiMsg = {
+      setMessages(prev => [...prev, {
         id: `ai-${Date.now()}`,
         sender: 'ai',
         text: aiResult.text,
         recommendedProducts: aiResult.products
-      };
-      setMessages(prev => [...prev, aiMsg]);
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: 'მოთხოვნის დამუშავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელახლა.',
+        recommendedProducts: []
+      }]);
+    } finally {
       setIsTyping(false);
-    }, 400);
+    }
   };
 
   return (

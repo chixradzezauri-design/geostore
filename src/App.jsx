@@ -3302,7 +3302,7 @@ export default function App() {
         products={products}
         categories={categories}
         vendorsList={vendorsList}
-        orders={orders}
+        lookupOrderForTracking={lookupOrderForTracking}
         coupons={coupons}
         siteSettings={siteSettings}
         deliveryFees={deliveryFees}
