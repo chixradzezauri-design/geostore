@@ -434,6 +434,9 @@ export default function AdminDashboardPro({
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [replyInputs, setReplyInputs] = useState({});
+  const [storefrontVersions, setStorefrontVersions] = useState([]);
+  const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
+  const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
   const fetchTickets = async () => {
     try {
@@ -459,6 +462,36 @@ export default function AdminDashboardPro({
     fetchTickets();
     const interval = setInterval(fetchTickets, 15000);
     return () => clearInterval(interval);
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
+    let active = true;
+    if (!adminLoggedIn) {
+      setStorefrontVersions([]);
+      setStorefrontVersionsError('');
+      setStorefrontVersionsLoading(false);
+      return () => { active = false; };
+    }
+    const loadStorefrontVersions = async () => {
+      setStorefrontVersionsLoading(true);
+      setStorefrontVersionsError('');
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_versions?config_key=eq.storefront&select=id,snapshot,version_label,created_at&order=created_at.desc&limit=20`,
+          { headers: await getSupabaseHeaders() }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('ვერსიების ისტორიის ფორმატი არასწორია.');
+        if (active) setStorefrontVersions(rows);
+      } catch (error) {
+        if (active) setStorefrontVersionsError(error.message || 'ვერსიების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      } finally {
+        if (active) setStorefrontVersionsLoading(false);
+      }
+    };
+    loadStorefrontVersions();
+    return () => { active = false; };
   }, [adminLoggedIn]);
 
   const [activityLogs, setActivityLogs] = useState([
@@ -2124,6 +2157,22 @@ export default function AdminDashboardPro({
     setEditUserNotes('');
     logActivity(`განახლდა CRM მონაცემები მომხმარებლისთვის (ID: ${userId})`);
     alert('✅ მომხმარებლის მონაცემები წარმატებით განახლდა!');
+  };
+
+  const handleRestoreStorefrontVersion = (version) => {
+    if (!adminLoggedIn || !version?.snapshot || typeof version.snapshot !== 'object' || Array.isArray(version.snapshot)) return;
+    const snapshot = version.snapshot;
+    if (!Array.isArray(snapshot.categories) || !Array.isArray(snapshot.banners) ||
+        !snapshot.siteSettings || typeof snapshot.siteSettings !== 'object' || Array.isArray(snapshot.siteSettings)) {
+      alert('ამ ვერსიის მონაცემები არასრულია და უსაფრთხოდ ვერ აღდგება.');
+      return;
+    }
+    const label = String(version.version_label || version.created_at || 'არჩეული ვერსია');
+    if (!window.confirm(`გსურთ „${label}“-ის ჩატვირთვა მონახაზში? გამოქვეყნება ავტომატურად არ მოხდება.`)) return;
+    if (typeof setCategoriesList === 'function') setCategoriesList(snapshot.categories);
+    if (typeof setBannersList === 'function') setBannersList(snapshot.banners);
+    if (typeof setSiteSettings === 'function') setSiteSettings(snapshot.siteSettings);
+    alert('ვერსია ჩაიტვირთა რედაქტორში. ცვლილებების შესანახად დააჭირეთ „მონახაზის შენახვას“, ხოლო საიტზე გამოსაჩენად ცალკე გამოაქვეყნეთ.');
   };
 
   const handleSaveSettings = async (e) => {
@@ -3989,6 +4038,32 @@ export default function AdminDashboardPro({
                   პარამეტრების შენახვა
                 </button>
               </form>
+              <div className="border-t border-emerald-500/20 pt-5 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-bold text-white">გამოქვეყნების ვერსიების ისტორია</h4>
+                  <button type="button" onClick={() => setStorefrontVersionsError('ისტორიის განახლებისთვის ხელახლა გახსენით ადმინისტრატორის პარამეტრები.')} className="text-[10px] font-bold text-emerald-300 underline">ისტორიის სტატუსი</button>
+                </div>
+                {storefrontVersionsLoading ? (
+                  <p className="text-xs text-slate-400">ვერსიები იტვირთება…</p>
+                ) : storefrontVersionsError ? (
+                  <p role="alert" className="text-xs text-rose-300">{storefrontVersionsError}</p>
+                ) : storefrontVersions.length === 0 ? (
+                  <p className="text-xs text-slate-400">შენახული გამოქვეყნების ვერსიები ჯერ არ არსებობს.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {storefrontVersions.map(version => (
+                      <div key={version.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-950/70 p-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white break-words">{version.version_label || 'გამოქვეყნების ვერსია'}</p>
+                          <p className="text-[10px] text-slate-400">{version.created_at ? new Date(version.created_at).toLocaleString('ka-GE') : ''}</p>
+                        </div>
+                        <button type="button" onClick={() => handleRestoreStorefrontVersion(version)} className="shrink-0 rounded-lg border border-emerald-400/40 px-3 py-2 text-[10px] font-bold text-emerald-300 hover:bg-emerald-500/10">მონახაზში აღდგენა</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] leading-5 text-slate-500">აღდგენა მხოლოდ რედაქტორში ჩატვირთავს ძველ ვერსიას. ის ავტომატურად არ გამოქვეყნდება და არსებულ ისტორიას არ წაშლის.</p>
+              </div>
             </div>
           </div>
         )}
