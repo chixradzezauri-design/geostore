@@ -119,6 +119,17 @@ export const findReusablePendingCheckout = (rawValue, fingerprint, now = Date.no
     .find((entry) => isReusableCheckout(entry, fingerprint, now)) || null
 );
 
+/** Merge the current multi-entry store with the legacy single-entry slot. */
+export const mergePendingCheckoutStores = (primaryRaw, legacyRaw, now = Date.now()) => {
+  const merged = new Map();
+  [...parsePendingCheckoutEntries(legacyRaw, now), ...parsePendingCheckoutEntries(primaryRaw, now)]
+    .forEach((entry) => merged.set(entry.fingerprint, entry));
+  const entries = Array.from(merged.values())
+    .sort((left, right) => left.createdAt - right.createdAt)
+    .slice(-MAX_PENDING_CHECKOUT_ENTRIES);
+  return entries.length ? JSON.stringify({ version: 3, entries }) : '';
+};
+
 /** Synchronous read/modify/write payload; localStorage operations run atomically per JS task. */
 export const upsertPendingCheckoutEntry = (rawValue, entry, now = Date.now()) => {
   const entries = parsePendingCheckoutEntries(rawValue, now)
