@@ -29,7 +29,7 @@ import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, cr
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
-import { isAuthRestoreCurrent } from './utils/authSafety';
+import { isAuthRestoreCurrent, isSameAuthOwner } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
@@ -725,6 +725,11 @@ export default function App() {
           setCheckoutForm({ name: '', phone: '', email: '', address: '' });
           setAppliedCoupon(null);
           setPromoInput('');
+          // A confirmation or open checkout belongs to the outgoing identity.
+          // Never leave its private order code visible after an account switch.
+          setOrderConfirmation(null);
+          setIsCheckoutOpen(false);
+          setCheckoutError('');
         }
         activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
       } catch (error) {
@@ -2286,6 +2291,7 @@ export default function App() {
 
     let orderUserEmail = 'guest';
     let serverOrderResult = null;
+    let orderOwnerId = null;
     // Keep the order ID in the outer scope: it is needed after the RPC succeeds.
     let orderId = '';
 
@@ -2300,6 +2306,7 @@ export default function App() {
       if (sessionError) throw sessionError;
 
       const orderSession = session?.access_token && session?.user?.email ? session : null;
+      orderOwnerId = orderSession?.user?.id || null;
 
       // Refresh the public catalogue immediately before checkout. This is a
       // customer-facing stale-cart guard; the SQL RPC still rechecks price
@@ -2558,10 +2565,26 @@ export default function App() {
       }
       orderId = orderConfirmationCheck.orderId;
     } catch (err) {
+      // An auth change can happen while the RPC is in flight. Do not expose
+      // the outgoing account's checkout error inside the newly active account.
+      if (!isSameAuthOwner(activeCartOwnerRef.current.userId, orderOwnerId)) {
+        setIsSubmittingOrder(false);
+        orderSubmitLock.current = false;
+        return;
+      }
       console.error('Order submission failed:', err);
       const message = getCheckoutErrorMessage(err, currentLang);
       setCheckoutError(message);
       showToast(message);
+      setIsSubmittingOrder(false);
+      orderSubmitLock.current = false;
+      return;
+    }
+
+    // The server may have committed under the previous session while the
+    // customer signed out or switched accounts. Keep the retry key, but do
+    // not show that private order snapshot to the currently active identity.
+    if (!isSameAuthOwner(activeCartOwnerRef.current.userId, orderOwnerId)) {
       setIsSubmittingOrder(false);
       orderSubmitLock.current = false;
       return;
