@@ -74,7 +74,11 @@ BEFORE INSERT ON public.orders
 FOR EACH ROW EXECUTE FUNCTION private.bind_order_to_auth_user();
 
 -- Customer order history is now keyed exclusively by auth.uid(), not mutable email.
-CREATE OR REPLACE FUNCTION private.get_my_orders()
+-- Drop wrappers first because PostgreSQL cannot change a RETURNS TABLE signature in place.
+DROP FUNCTION IF EXISTS public.get_my_orders();
+DROP FUNCTION IF EXISTS private.get_my_orders();
+
+CREATE FUNCTION private.get_my_orders()
 RETURNS TABLE (
   id text,
   created_at timestamptz,
@@ -98,7 +102,7 @@ $function$;
 REVOKE ALL ON FUNCTION private.get_my_orders() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION private.get_my_orders() TO authenticated;
 
-CREATE OR REPLACE FUNCTION public.get_my_orders()
+CREATE FUNCTION public.get_my_orders()
 RETURNS TABLE (
   id text,
   created_at timestamptz,
