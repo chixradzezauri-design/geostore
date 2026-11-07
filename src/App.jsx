@@ -929,14 +929,14 @@ export default function App() {
     let active = true;
     let requestInFlight = false;
     const loadOwnOrders = async () => {
-      if (!currentUser?.email || requestInFlight) return;
-      requestInFlight = true;
       if (!currentUser?.email) {
         setMyOrders([]);
         setMyOrdersError('');
         setMyOrdersLoading(false);
         return;
       }
+      if (requestInFlight) return;
+      requestInFlight = true;
       setMyOrdersLoading(true);
       try {
         const response = await fetch(
