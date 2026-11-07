@@ -15,3 +15,12 @@ export const collectReferencedProductImageUrls = (products, excludedProductId) =
 
   return referenced;
 };
+
+
+/**
+ * Only delete newly uploaded images when the product write is known not to
+ * have committed. A lost network response is ambiguous, so retain files to
+ * avoid persisting product rows that point at deleted images.
+ */
+export const shouldCleanupUploadedProductImages = (writeState) =>
+  writeState === 'not-started' || writeState === 'rejected';
