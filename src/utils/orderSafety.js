@@ -224,7 +224,14 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
     }
 
     if (!Number.isFinite(oldPrice) || oldPrice !== currentPrice) {
-      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'price', oldValue: oldPrice, newValue: currentPrice });
+      changes.push({
+        id: item?.id,
+        customVariantId: customVariantId || null,
+        name: product.name || item?.name || '',
+        type: 'price',
+        oldValue: oldPrice,
+        newValue: currentPrice
+      });
     }
     const inventoryKey = JSON.stringify([String(item?.id ?? ''), customVariantId || null]);
     const requestedQuantity = requestedByInventoryUnit.get(inventoryKey) || 0;
