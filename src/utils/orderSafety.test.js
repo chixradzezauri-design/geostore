@@ -363,6 +363,10 @@ test('rejects incomplete, negative, or internally inconsistent server totals', (
     valid: false,
     reason: 'invalid_totals'
   });
+  assert.deepEqual(validateOrderCreationResponse({ ...valid, delivery_gel: null }, orderId), {
+    valid: false,
+    reason: 'invalid_totals'
+  });
   assert.deepEqual(validateOrderCreationResponse({ ...valid, total_gel: 94.99 }, orderId), {
     valid: false,
     reason: 'inconsistent_totals'
