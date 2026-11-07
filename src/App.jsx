@@ -30,7 +30,7 @@ import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutIte
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent, isSameAuthOwner } from './utils/authSafety';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, parseStoredCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 
@@ -1557,6 +1557,53 @@ export default function App() {
       );
     } catch {}
   }, [cart, currentUser?.id, authLoading]);
+
+  // Keep already-open tabs in sync without ever reading another account's key.
+  useEffect(() => {
+    const handleStorage = (event) => {
+      const activeOwner = activeCartOwnerRef.current;
+      if (!canPersistCartForOwner({
+        authLoading,
+        activeOwner,
+        currentUserId: currentUser?.id
+      })) return;
+
+      const cartKey = getCartStorageKey(activeOwner.userId);
+      const wishlistKey = getUserScopedCollectionStorageKey('geostore_wishlist', activeOwner.userId);
+      const comparisonKey = getUserScopedCollectionStorageKey('geostore_comparison', activeOwner.userId);
+      if (event.key === null) {
+        cartRef.current = [];
+        setCart([]);
+        wishlistRef.current = [];
+        setWishlist([]);
+        comparisonListRef.current = [];
+        setComparisonList([]);
+        return;
+      }
+      if (event.key === cartKey) {
+        const nextCart = parseStoredCartSnapshot(event.newValue);
+        cartRef.current = nextCart;
+        setCart(nextCart);
+      } else if (event.key === wishlistKey) {
+        const nextItems = sanitizeProductCollection(
+          (() => { try { return JSON.parse(event.newValue || '[]'); } catch { return []; } })(),
+          100
+        );
+        wishlistRef.current = nextItems;
+        setWishlist(nextItems);
+      } else if (event.key === comparisonKey) {
+        const nextItems = sanitizeProductCollection(
+          (() => { try { return JSON.parse(event.newValue || '[]'); } catch { return []; } })(),
+          4
+        );
+        comparisonListRef.current = nextItems;
+        setComparisonList(nextItems);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [currentUser?.id, authLoading]);
 
   useEffect(() => {
     const activeOwner = activeCartOwnerRef.current;
