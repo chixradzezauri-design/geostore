@@ -29,6 +29,7 @@ import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReu
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
+import { isAuthRestoreCurrent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
 
@@ -640,6 +641,7 @@ export default function App() {
   // Supabase Auth: სესიის აღდგენა და ცვლილებების მოსმენა.
   useEffect(() => {
     let mounted = true;
+    let authEventVersion = 0;
 
     // ძველი localStorage მომხმარებლის მონაცემი აღარ გამოიყენება.
     try {
@@ -676,6 +678,7 @@ export default function App() {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      authEventVersion += 1;
 
       if (event === 'PASSWORD_RECOVERY') {
         setAuthForm((current) => ({ ...current, email: session?.user?.email || current.email, password: '' }));
@@ -697,6 +700,7 @@ export default function App() {
     });
 
     const restoreSession = async () => {
+      const restoreVersion = authEventVersion;
       try {
         // getUser() ამოწმებს მომხმარებელს Supabase Auth სერვერზე;
         // მხოლოდ სანდო app_metadata.role='admin' ანიჭებს პანელზე წვდომას.
@@ -706,7 +710,7 @@ export default function App() {
           throw error;
         }
 
-        if (mounted) {
+        if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
           const authUser = data?.user || null;
           const authorizedAdmin = isAuthorizedAdmin(authUser);
           activateCartOwner(authUser?.id || null);
@@ -717,9 +721,8 @@ export default function App() {
           );
         }
       } catch (error) {
-        console.error('Supabase session restore error:', error);
-
-        if (mounted) {
+        if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
+          console.error('Supabase session restore error:', error);
           // Fail closed if the server cannot verify the restored session.
           // Clear every privilege-related UI state, not only the profile.
           activateCartOwner(null);
@@ -728,7 +731,7 @@ export default function App() {
           setActiveTab((current) => current === 'admin' ? 'store' : current);
         }
       } finally {
-        if (mounted) {
+        if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
           setAuthLoading(false);
         }
       }
