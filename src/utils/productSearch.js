@@ -2,10 +2,10 @@ const normalizeSearchValue = (value) => String(value ?? '')
   .normalize('NFKC')
   .toLocaleLowerCase()
   .normalize('NFD')
-  .replace(/[\\u0300-\\u036f]/g, '')
-  .replace(/[^\\p{L}\\p{N}]+/gu, ' ')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^\p{L}\p{N}]+/gu, ' ')
   .trim()
-  .replace(/\\s+/g, ' ');
+  .replace(/\s+/g, ' ');
 
 const collectSearchableValues = (product) => {
   if (!product || typeof product !== 'object') return [];
