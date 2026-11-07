@@ -970,7 +970,7 @@ export default function App() {
           address: o.address || '',
           totalGEL: Number(o.total_gel) || 0,
           status: o.status || 'ახალი',
-          items: Array.isArray(o.items) ? o.items : [],
+          items: normalizeOrderItems(o.items),
           status_changed_at: o.status_changed_at || null
         })));
       } catch (error) {
