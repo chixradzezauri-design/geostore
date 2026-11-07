@@ -3971,7 +3971,7 @@ export default function AdminDashboardPro({
               <form onSubmit={handleSaveSettings} className="admin-global-settings-form space-y-4 text-xs">
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
-                  <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" maxLength={60} value={siteSettings?.storeName || 'GEOSTORE'} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (მაქს. 160)</label>
