@@ -93,6 +93,13 @@ export const createSecureOrderId = (cryptoApi) => {
  * Mirrors the server checkout calculation: coupon discount is rounded to
  * two GEL decimal places before it is subtracted; delivery is added after.
  */
+export const isValidGELAmount = (value, { min = 0, max = 1000000000 } = {}) => {
+  const raw = String(value ?? '').trim();
+  if (!/^\\d+(?:\\.\\d{1,2})?$/.test(raw)) return false;
+  const amount = Number(raw);
+  return Number.isFinite(amount) && amount >= min && amount <= max;
+};
+
 export const calculateCartSubtotalGEL = (items) => {
   const lines = Array.isArray(items) ? items : [];
   const totalCents = lines.reduce((sum, item) => {
