@@ -1606,7 +1606,10 @@ export default function AdminDashboardPro({
           throw new Error('პროდუქტი სხვა ადმინისტრატორმა ან სხვა ჩანართმა შეცვალა. თქვენი ცვლილებები არ შენახულა — განაახლეთ სია, ხელახლა გახსენით პროდუქტი და სცადეთ თავიდან.');
         }
         savedProductRow = updatedRows[0];
-        productEditVersion.current = savedProductRow.updated_at || null;
+        if (!buildProductVersionFilter(savedProductRow.updated_at)) {
+          throw new Error('პროდუქტი განახლდა, მაგრამ სერვერმა ვერსიის ნომერი არ დააბრუნა. განაახლეთ პროდუქტების სია ხელახლა რედაქტირებამდე.');
+        }
+        productEditVersion.current = savedProductRow.updated_at;
       } else {
         const createHeaders = await getSupabaseHeaders();
         productWriteState = 'unknown';
@@ -1624,7 +1627,8 @@ export default function AdminDashboardPro({
           !savedProductRow ||
           typeof savedProductRow !== 'object' ||
           String(savedProductRow.id ?? '') !== String(prodId) ||
-          !savedProductRow.created_at
+          !savedProductRow.created_at ||
+          !buildProductVersionFilter(savedProductRow.updated_at)
         ) {
           throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
         }
@@ -1642,7 +1646,7 @@ export default function AdminDashboardPro({
         }
       }
       const localProdObject = {
-        id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
+        id: prodId, updated_at: savedProductRow?.updated_at || null, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
         oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
