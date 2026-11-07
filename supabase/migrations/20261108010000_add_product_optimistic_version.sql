@@ -185,6 +185,10 @@ grant execute on function private.admin_update_product(jsonb,bigint) to authenti
 grant execute on function private.admin_adjust_product_variant_stock(text,text,integer,bigint) to authenticated;
 grant execute on function private.admin_delete_product_if_version(text,bigint) to authenticated;
 
+-- Retire the legacy non-versioned variant stock route as well.
+revoke all on function public.admin_adjust_product_variant_stock(text,text,integer) from public, anon, authenticated;
+revoke all on function private.admin_adjust_product_variant_stock(text,text,integer) from public, anon, authenticated;
+
 -- Prevent stale clients from bypassing version-checked product deletion.
 revoke all on function public.admin_delete_product(text) from public, anon, authenticated;
 revoke all on function private.admin_delete_product(text) from public, anon, authenticated;
