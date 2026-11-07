@@ -366,6 +366,20 @@ test('sums cart line prices in integer tetri without floating-point drift', () =
   ]), 20);
 });
 
+test('includes per-unit gift and VIP add-ons exactly once in cart totals', () => {
+  const subtotal = calculateCartSubtotalGEL([
+    { priceGEL: 140, basePriceGEL: 120, giftWrap: true, vipWarranty: true, quantity: 2 },
+    { priceGEL: 105, basePriceGEL: 100, giftWrap: true, vipWarranty: false, quantity: 3 }
+  ]);
+
+  // (120 + 5 + 15) * 2 + (100 + 5) * 3 = 595 GEL.
+  assert.equal(subtotal, 595);
+  assert.deepEqual(
+    calculateCheckoutTotals({ subtotal, discountPercent: 15, deliveryFee: 12.5 }),
+    { subtotalGEL: 595, discountGEL: 89.25, deliveryGEL: 12.5, totalGEL: 518.25 }
+  );
+});
+
 test('rounds subtotal and delivery to exact tetri before discount calculation', () => {
   assert.deepEqual(
     calculateCheckoutTotals({
