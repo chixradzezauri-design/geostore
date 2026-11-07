@@ -313,12 +313,16 @@ test('requires a custom variant selection when the catalogue defines custom vari
 });
 
 
-test('accepts only the exact secure order ID confirmed by the checkout RPC', () => {
+test('accepts a complete, internally consistent server checkout snapshot', () => {
   const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
-  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, orderId), {
-    valid: true,
-    orderId
-  });
+  assert.deepEqual(validateOrderCreationResponse({
+    order_id: orderId,
+    items: [{ id: 'p1', price: 100, quantity: 1 }],
+    subtotal_gel: 100,
+    discount_gel: 10,
+    delivery_gel: 5,
+    total_gel: 95
+  }, orderId), { valid: true, orderId });
 });
 
 test('rejects missing, malformed, or mismatched checkout order IDs', () => {
@@ -338,6 +342,34 @@ test('rejects missing, malformed, or mismatched checkout order IDs', () => {
   assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, 'ORD-not-secure'), {
     valid: false,
     reason: 'invalid_expected_id'
+  });
+});
+
+test('rejects incomplete, negative, or internally inconsistent server totals', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  const valid = {
+    order_id: orderId,
+    items: [{ id: 'p1', price: 100, quantity: 1 }],
+    subtotal_gel: 100,
+    discount_gel: 10,
+    delivery_gel: 5,
+    total_gel: 95
+  };
+  assert.deepEqual(validateOrderCreationResponse({ ...valid, total_gel: undefined }, orderId), {
+    valid: false,
+    reason: 'invalid_totals'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ ...valid, discount_gel: -1 }, orderId), {
+    valid: false,
+    reason: 'invalid_totals'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ ...valid, total_gel: 94.99 }, orderId), {
+    valid: false,
+    reason: 'inconsistent_totals'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ ...valid, items: [] }, orderId), {
+    valid: false,
+    reason: 'missing_items'
   });
 });
 
