@@ -62,6 +62,64 @@ export const groupCheckoutItems = (items) => {
 
 export const PENDING_CHECKOUT_TTL_MS = 24 * 60 * 60 * 1000;
 
+const MAX_PENDING_CHECKOUT_ENTRIES = 20;
+
+/** Read the v3 multi-checkout store and transparently migrate the legacy v2 single entry. */
+export const parsePendingCheckoutEntries = (rawValue, now = Date.now()) => {
+  if (typeof now !== 'number' || !Number.isSafeInteger(now)) return [];
+  if (typeof rawValue !== 'string' || !rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    const candidates = Array.isArray(parsed?.entries)
+      ? parsed.entries
+      : [parsed]; // v2 compatibility
+    const byFingerprint = new Map();
+    candidates.forEach((entry) => {
+      if (!isReusableCheckout(entry, entry?.fingerprint, now)) return;
+      byFingerprint.set(entry.fingerprint, {
+        fingerprint: entry.fingerprint,
+        orderId: entry.orderId,
+        createdAt: entry.createdAt
+      });
+    });
+    return Array.from(byFingerprint.values())
+      .sort((left, right) => left.createdAt - right.createdAt)
+      .slice(-MAX_PENDING_CHECKOUT_ENTRIES);
+  } catch {
+    return [];
+  }
+};
+
+export const findReusablePendingCheckout = (rawValue, fingerprint, now = Date.now()) => (
+  parsePendingCheckoutEntries(rawValue, now)
+    .find((entry) => isReusableCheckout(entry, fingerprint, now)) || null
+);
+
+/** Synchronous read/modify/write payload; localStorage operations run atomically per JS task. */
+export const upsertPendingCheckoutEntry = (rawValue, entry, now = Date.now()) => {
+  const entries = parsePendingCheckoutEntries(rawValue, now)
+    .filter((saved) => saved.fingerprint !== entry?.fingerprint);
+  if (isReusableCheckout(entry, entry?.fingerprint, now)) {
+    entries.push({
+      fingerprint: entry.fingerprint,
+      orderId: entry.orderId,
+      createdAt: entry.createdAt
+    });
+  }
+  return JSON.stringify({
+    version: 3,
+    entries: entries.slice(-MAX_PENDING_CHECKOUT_ENTRIES)
+  });
+};
+
+export const removePendingCheckoutEntry = (rawValue, orderId, now = Date.now()) => {
+  const entries = parsePendingCheckoutEntries(rawValue, now)
+    .filter((entry) => entry.orderId !== orderId);
+  return entries.length
+    ? JSON.stringify({ version: 3, entries })
+    : null;
+};
+
 export const isReusableCheckout = (entry, fingerprint, now = Date.now()) => {
   if (
     !entry ||
