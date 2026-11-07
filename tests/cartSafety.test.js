@@ -61,3 +61,24 @@ test('keeps different product IDs independent', () => {
   assert.equal(second.valid, true);
   assert.equal(second.cart.length, 2);
 });
+
+test('keeps separately customized gift and warranty options as distinct cart lines', () => {
+  const plain = addToCart([], { ...product, name: 'Test jacket (Size: M)', selectedSize: 'M' }, 1);
+  const wrapped = addToCart(plain.cart, {
+    ...product,
+    name: 'Test jacket (Size: M) + Premium gift wrapping',
+    priceGEL: 125,
+    selectedSize: 'M'
+  }, 1);
+  assert.equal(wrapped.valid, true);
+  assert.equal(wrapped.cart.length, 2);
+  assert.equal(wrapped.cart[0].priceGEL, 120);
+  assert.equal(wrapped.cart[1].priceGEL, 125);
+});
+
+test('merges customized lines only when their name and price also match', () => {
+  const first = addToCart([], { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
+  const second = addToCart(first.cart, { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
+  assert.equal(second.cart.length, 1);
+  assert.equal(second.cart[0].quantity, 2);
+});
