@@ -912,8 +912,15 @@ export default function AdminDashboardPro({
       totalProductRevenue += productNetRevenue;
 
       if (!items.length) {
-        const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
-        incomeTotals.set(label, (incomeTotals.get(label) || 0) + orderTotal);
+        // Keep legacy product revenue and the delivery fee in separate buckets
+        // so the income-source breakdown reconciles to the order total.
+        if (productNetRevenue > 0) {
+          const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
+          incomeTotals.set(label, (incomeTotals.get(label) || 0) + productNetRevenue);
+        }
+        if (deliveryCharge > 0) {
+          incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
+        }
         unknownCogsItems += 1;
         return;
       }
