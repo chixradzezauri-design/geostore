@@ -6,7 +6,7 @@ const COMMON_WEAK_PASSWORDS = new Set([
 
 export const validateRegistrationPassword = (password) => {
   const value = String(password ?? '');
-  if (value.length < 12) return { valid: false, reason: 'length' };
+  if (value.length < 10) return { valid: false, reason: 'length' };
 
   const normalized = value.toLowerCase();
   if (COMMON_WEAK_PASSWORDS.has(normalized) ||
