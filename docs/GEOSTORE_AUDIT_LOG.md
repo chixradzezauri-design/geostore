@@ -891,3 +891,15 @@ The entire test transaction was rolled back. A post-rollback query confirmed tha
 - Editing a product does not write created_at, so normal edits do not move a product to the top of the admin list.
 - Quick price, purchase-cost and base-stock edits use a compare-and-swap PATCH filter against the previously read value and require exactly one updated row; stale concurrent edits are rejected instead of silently overwriting a newer value.
 - The live private.admin_save_product RPC is insert-only (no upsert), and the public wrapper is invoker-only. Existing-product edits use the separate guarded update path.
+
+
+## Finance and commerce RLS verification — 2026-11-07
+
+Read-only live-catalog checks closed the earlier expenses-policy verification gap:
+- expenses has RLS enabled and a single ALL policy restricted to the configured primary-admin UUID plus app_metadata.role=admin. Authenticated table grants do not bypass that RLS policy; anon has no table grants.
+- store_coupons has RLS enabled: anon/authenticated can read only active coupons, while insert/update/delete and inactive-coupon reads require the primary admin identity/role.
+- orders has RLS enabled; direct SELECT is admin-only and anon/authenticated have no direct INSERT or UPDATE privilege. Checkout and customer history use the dedicated RPC paths.
+- order_notifications has RLS enabled and no direct table policies/grants; customer access is through authenticated owner-scoped RPCs.
+- products has a public catalog SELECT policy, but purchase_cost has no anon/authenticated SELECT privilege. Product insert/update/delete policies require the primary-admin UUID and admin app-metadata role.
+
+No RLS policy or grant was changed in this check.
