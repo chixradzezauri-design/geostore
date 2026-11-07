@@ -1100,7 +1100,11 @@ export default function App() {
       throw new Error(errorBody || 'შეკვეთის მოძებნა ვერ მოხერხდა.');
     }
 
-    return response.json();
+    const result = await response.json();
+    if (result?.rateLimited === true) {
+      throw new Error('ORDER_TRACKING_RATE_LIMITED');
+    }
+    return result;
   };
 
   const fetchStorePricingSettings = async () => {
