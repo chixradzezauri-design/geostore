@@ -10900,3 +10900,51 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .admin-banner-card img { width:72px!important; height:60px!important; }
  .admin-banner-card>button { flex:0 0 34px; }
 }
+
+
+/* Admin CRM and security settings — readable, responsive account controls */
+.admin-crm-panel,.admin-settings-panel { min-width:0; }
+.admin-crm-panel { border-color:rgba(148,163,184,.17)!important; border-radius:clamp(18px,2.4vw,26px)!important; padding:clamp(14px,2.5vw,26px)!important; background:linear-gradient(145deg,rgba(23,25,29,.97),rgba(12,14,17,.98))!important; box-shadow:0 16px 44px rgba(0,0,0,.2)!important; }
+.admin-crm-panel>div:first-child { gap:14px!important; }
+.admin-crm-panel h3,.admin-settings-panel h3 { min-width:0; line-height:1.55!important; letter-spacing:-.015em; }
+.admin-crm-search { min-width:0; }
+.admin-crm-search input { min-height:44px; border-radius:12px!important; background:#101216!important; border-color:rgba(148,163,184,.2)!important; font-size:12px!important; }
+.admin-crm-panel>p { line-height:1.7!important; overflow-wrap:anywhere; border-radius:12px!important; padding:12px!important; }
+.admin-crm-list { display:grid; gap:12px!important; }
+.admin-crm-user-card { min-width:0; border-radius:16px!important; padding:clamp(13px,2vw,19px)!important; border-color:rgba(148,163,184,.16)!important; background:rgba(10,12,15,.64)!important; }
+.admin-crm-user-card>div:first-child { min-width:0; gap:12px!important; }
+.admin-crm-user-card>div:first-child>div:first-child { min-width:0; flex:1 1 260px; }
+.admin-crm-user-card h4 { min-width:0; overflow-wrap:anywhere; font-size:14px!important; line-height:1.5!important; }
+.admin-crm-user-card>div:first-child>div:first-child>p { overflow-wrap:anywhere; line-height:1.65!important; }
+.admin-crm-user-actions { min-width:0; gap:7px!important; }
+.admin-crm-user-actions button { min-height:36px; border-radius:10px!important; padding:8px 10px!important; line-height:1.4!important; font-size:11px!important; }
+.admin-crm-user-actions button svg { flex:0 0 auto; }
+.admin-crm-user-card>div[class*=bg-slate-900][class*=border-amber] { min-width:0; border-radius:13px!important; padding:14px!important; }
+.admin-crm-user-card>div[class*=bg-slate-900][class*=border-amber] input { width:100%; min-width:0; min-height:40px; border-radius:10px!important; background:#101216!important; }
+.admin-settings-panel { display:grid; gap:clamp(14px,2.2vw,22px)!important; }
+.admin-settings-panel>div { min-width:0; border-color:rgba(148,163,184,.17)!important; border-radius:clamp(17px,2.2vw,24px)!important; padding:clamp(14px,2.4vw,24px)!important; background:linear-gradient(145deg,rgba(23,25,29,.97),rgba(12,14,17,.98))!important; box-shadow:0 14px 38px rgba(0,0,0,.18)!important; }
+.admin-security-notice { border-color:rgba(210,176,112,.28)!important; }
+.admin-security-notice p { line-height:1.75!important; overflow-wrap:anywhere; }
+.admin-delivery-fee-fields { gap:10px!important; }
+.admin-delivery-fee-fields>div { min-width:0; border-radius:13px!important; padding:13px!important; border-color:rgba(148,163,184,.16)!important; background:rgba(10,12,15,.62)!important; }
+.admin-delivery-fee-fields label { display:block; line-height:1.6!important; }
+.admin-delivery-fee-fields input,.admin-global-settings-form input { min-width:0; min-height:43px; border-radius:11px!important; background:#101216!important; border-color:rgba(148,163,184,.2)!important; font-size:13px!important; }
+.admin-settings-panel button { min-height:40px; border-radius:11px!important; font-size:12px!important; }
+.admin-global-settings-form { display:grid; gap:13px!important; }
+.admin-global-settings-form>div { min-width:0; gap:7px!important; }
+.admin-global-settings-form label { line-height:1.5!important; }
+@media(max-width:639px) {
+ .admin-crm-panel { padding:13px!important; border-radius:17px!important; }
+ .admin-crm-panel>div:first-child { align-items:stretch!important; }
+ .admin-crm-panel h3 { align-items:flex-start!important; font-size:12px!important; }
+ .admin-crm-search { width:100%!important; }
+ .admin-crm-user-card { padding:13px!important; }
+ .admin-crm-user-card>div:first-child { align-items:stretch!important; }
+ .admin-crm-user-actions { width:100%!important; justify-content:flex-start!important; }
+ .admin-crm-user-actions button { flex:1 1 auto; justify-content:center; }
+ .admin-crm-user-card>div[class*=border-amber]>div:last-child { flex-wrap:wrap; }
+ .admin-settings-panel>div { padding:13px!important; border-radius:17px!important; }
+ .admin-settings-panel h3 { align-items:flex-start!important; font-size:12px!important; }
+ .admin-delivery-fee-fields { grid-template-columns:minmax(0,1fr)!important; }
+ .admin-settings-panel button { width:100%; justify-content:center; }
+}
