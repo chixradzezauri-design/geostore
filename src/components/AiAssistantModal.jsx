@@ -466,7 +466,7 @@ export default function AiAssistantModal({
       : queryText;
 
     setMessages(prev => [...prev, {
-      id: \`u-\${Date.now()}\`,
+      id: `u-${Date.now()}`,
       sender: 'user',
       text: safeUserText
     }]);
@@ -484,11 +484,11 @@ export default function AiAssistantModal({
           rateLimited: 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.',
           notFound: 'მითითებული კოდითა და ტელეფონის ნომრით შეკვეთა ვერ მოიძებნა. გადაამოწმეთ ორივე მონაცემი.',
           failed: 'შეკვეთის შემოწმება ამჟამად ვერ მოხერხდა. მოგვიანებით სცადეთ.',
-          heading: id => \`📦 შეკვეთა #\${id}\`,
-          date: value => \`• თარიღი: \${value}\`,
-          total: value => \`• თანხა: \${value}\`,
-          status: value => \`• სტატუსი: \${value}\`,
-          items: value => \`• ნივთები: \${value}\`
+          heading: id => `📦 შეკვეთა #${id}`,
+          date: value => `• თარიღი: ${value}`,
+          total: value => `• თანხა: ${value}`,
+          status: value => `• სტატუსი: ${value}`,
+          items: value => `• ნივთები: ${value}`
         },
         en: {
           askCode: 'To check your order, send your order code (for example, ORD-...).',
@@ -498,11 +498,11 @@ export default function AiAssistantModal({
           rateLimited: 'The order lookup limit has been reached for security. Please try again later.',
           notFound: 'No order matched that code and phone number. Please check both details.',
           failed: 'The order could not be checked right now. Please try again later.',
-          heading: id => \`📦 Order #\${id}\`,
-          date: value => \`• Date: \${value}\`,
-          total: value => \`• Total: \${value}\`,
-          status: value => \`• Status: \${value}\`,
-          items: value => \`• Items: \${value}\`
+          heading: id => `📦 Order #${id}`,
+          date: value => `• Date: ${value}`,
+          total: value => `• Total: ${value}`,
+          status: value => `• Status: ${value}`,
+          items: value => `• Items: ${value}`
         },
         ru: {
           askCode: 'Чтобы проверить заказ, отправьте код заказа (например, ORD-...).',
@@ -512,11 +512,11 @@ export default function AiAssistantModal({
           rateLimited: 'Достигнут лимит поиска заказа в целях безопасности. Попробуйте позже.',
           notFound: 'Заказ с таким кодом и номером телефона не найден. Проверьте оба значения.',
           failed: 'Сейчас не удалось проверить заказ. Попробуйте позже.',
-          heading: id => \`📦 Заказ #\${id}\`,
-          date: value => \`• Дата: \${value}\`,
-          total: value => \`• Сумма: \${value}\`,
-          status: value => \`• Статус: \${value}\`,
-          items: value => \`• Товары: \${value}\`
+          heading: id => `📦 Заказ #${id}`,
+          date: value => `• Дата: ${value}`,
+          total: value => `• Сумма: ${value}`,
+          status: value => `• Статус: ${value}`,
+          items: value => `• Товары: ${value}`
         }
       }[language];
 
@@ -557,7 +557,7 @@ export default function AiAssistantModal({
       }
 
       setMessages(prev => [...prev, {
-        id: \`ai-\${Date.now()}\`,
+        id: `ai-${Date.now()}`,
         sender: 'ai',
         text: replyText,
         recommendedProducts: []
@@ -570,14 +570,14 @@ export default function AiAssistantModal({
       const refreshedProducts = await fetchLiveProducts();
       const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
       setMessages(prev => [...prev, {
-        id: \`ai-\${Date.now()}\`,
+        id: `ai-${Date.now()}`,
         sender: 'ai',
         text: aiResult.text,
         recommendedProducts: aiResult.products
       }]);
     } catch {
       setMessages(prev => [...prev, {
-        id: \`ai-\${Date.now()}\`,
+        id: `ai-${Date.now()}`,
         sender: 'ai',
         text: currentLang === 'en'
           ? 'I could not process that request. Please try again.'
