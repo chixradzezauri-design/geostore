@@ -20,6 +20,15 @@ test('adds a product and preserves its selected variant', () => {
   assert.equal(result.cart[0].selectedColor, 'Black');
 });
 
+test('keeps gift and warranty choices as distinct cart lines for the same product variant', () => {
+  const first = addProductToCart([], { ...product, selectedSize: 'M', giftWrap: true, giftMessage: 'Happy birthday' }, 1);
+  const second = addProductToCart(first.cart, { ...product, selectedSize: 'M', vipWarranty: true }, 1);
+  assert.equal(second.cart.length, 2);
+  assert.equal(second.cart[0].giftWrap, true);
+  assert.equal(second.cart[0].giftMessage, 'Happy birthday');
+  assert.equal(second.cart[1].vipWarranty, true);
+});
+
 test('merges only identical product variants into one cart line', () => {
   const first = addProductToCart([], { ...product, selectedSize: 'M' }, 1);
   const second = addProductToCart(first.cart, { ...product, selectedSize: 'M' }, 1);
@@ -131,6 +140,29 @@ test('sanitizes persisted cart snapshots and keeps valid product variants', () =
   assert.equal(result[0].priceGEL, 120);
   assert.equal(result[0].selectedSize, 'M');
   assert.equal(result[0].selectedColor, 'Black');
+});
+
+test('sanitizes structured add-ons and recovers legacy add-ons from saved cart names', () => {
+  const [modern] = sanitizeCartSnapshot([{
+    ...product, quantity: 1, priceGEL: 140, basePriceGEL: 120,
+    giftWrap: true, vipWarranty: true, giftMessage: ' Happy birthday '
+  }]);
+  assert.equal(modern.priceGEL, 140);
+  assert.equal(modern.basePriceGEL, 120);
+  assert.equal(modern.giftWrap, true);
+  assert.equal(modern.vipWarranty, true);
+  assert.equal(modern.giftMessage, 'Happy birthday');
+
+  const [legacy] = sanitizeCartSnapshot([{
+    ...product, quantity: 1, priceGEL: 140,
+    name: 'Test jacket + სასაჩუქრე პრემიუმ შეფუთვა [სასაჩუქრე ბარათის ტექსტი (უფასო): "Happy birthday"] + VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)'
+  }]);
+  assert.equal(legacy.name, 'Test jacket');
+  assert.equal(legacy.priceGEL, 140);
+  assert.equal(legacy.basePriceGEL, 120);
+  assert.equal(legacy.giftWrap, true);
+  assert.equal(legacy.vipWarranty, true);
+  assert.equal(legacy.giftMessage, 'Happy birthday');
 });
 
 test('returns an empty cart for malformed snapshots and caps oversized snapshots', () => {

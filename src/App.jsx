@@ -2087,10 +2087,13 @@ export default function App() {
       return {
         id: item.id,
         name: item.name,
-        price: Number(item.priceGEL ?? item.price) || 0,
+        price: Number(item.basePriceGEL ?? item.priceGEL ?? item.price) || 0,
         quantity: Number(quantity ?? 1),
         selected_size: item.selectedSize || null,
         selected_color: item.selectedColor || null,
+        gift_wrap: item.giftWrap === true,
+        vip_warranty: item.vipWarranty === true,
+        gift_message: item.giftWrap === true ? String(item.giftMessage ?? '').trim().slice(0, 240) : '',
         purchase_cost: purchaseCost,
         category: catalogProduct?.category || item.category || '',
         vendor: catalogProduct?.vendor || item.vendor || ''
@@ -2692,7 +2695,7 @@ export default function App() {
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={`${item.id}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}`}
+                      key={`${item.id}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}-${item.giftWrap ? 'gift' : ''}-${item.vipWarranty ? 'vip' : ''}-${item.giftMessage || ''}`}
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
@@ -2709,6 +2712,19 @@ export default function App() {
                           </p>
                         )}
 
+                        {(item.giftWrap || item.vipWarranty) && (
+                          <p className="gs-cart-item-options text-slate-400 text-[10px]">
+                            {[
+                              item.giftWrap ? (currentLang === 'en' ? 'Gift wrapping (+5 ₾)' : currentLang === 'ru' ? 'Подарочная упаковка (+5 ₾)' : 'სასაჩუქრე შეფუთვა (+5 ₾)') : null,
+                              item.vipWarranty ? (currentLang === 'en' ? 'VIP warranty (+15 ₾)' : currentLang === 'ru' ? 'VIP-гарантия (+15 ₾)' : 'VIP გარანტია (+15 ₾)') : null
+                            ].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                        {item.giftMessage && (
+                          <p className="gs-cart-gift-message text-slate-400 text-[10px] break-words">
+                            {currentLang === 'en' ? 'Gift message:' : currentLang === 'ru' ? 'Текст открытки:' : 'სასაჩუქრე ტექსტი:'} {item.giftMessage}
+                          </p>
+                        )}
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} × {item.quantity}
                         </p>

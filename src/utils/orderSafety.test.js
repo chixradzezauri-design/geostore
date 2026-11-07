@@ -128,6 +128,22 @@ test('reconciles stale cart prices and stock against the latest catalogue', () =
   assert.equal(result.cartItems[2].priceGEL, 25);
 });
 
+test('reconciles the base price without losing server-priced cart add-ons', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'p1', name: 'Jacket', priceGEL: 140, basePriceGEL: 120,
+      giftWrap: true, vipWarranty: true, giftMessage: 'Happy birthday', quantity: 1
+    }],
+    [{ id: 'p1', name: 'Jacket', price_gel: 130, stock: 3 }]
+  );
+  assert.equal(result.hasChanges, true);
+  assert.equal(result.cartItems[0].basePriceGEL, 130);
+  assert.equal(result.cartItems[0].priceGEL, 150);
+  assert.equal(result.cartItems[0].giftWrap, true);
+  assert.equal(result.cartItems[0].vipWarranty, true);
+  assert.equal(result.cartItems[0].giftMessage, 'Happy birthday');
+});
+
 test('does not report a change when cart price and aggregate stock are current', () => {
   const result = reconcileCartWithCatalog(
     [{ id: 'p1', name: 'Current', priceGEL: 35, quantity: 2 }],

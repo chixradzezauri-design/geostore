@@ -1627,7 +1627,7 @@ export default function AdminDashboardPro({
           const unitPrice = numericValue(item.priceGEL ?? item.price);
           return `
             <tr>
-              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : ''}</td>
+              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : '' } ${item.gift_wrap ? '(სასაჩუქრე შეფუთვა +5 ₾)' : ''} ${item.vip_warranty ? '(VIP გარანტია +15 ₾)' : ''} ${item.gift_message ? `<br/><small>სასაჩუქრე ტექსტი: ${escapeHtml(item.gift_message)}</small>` : ''}</td>
               <td>${quantity}</td>
               <td>${unitPrice.toFixed(2)} ₾</td>
               <td>${(unitPrice * quantity).toFixed(2)} ₾</td>
@@ -3152,7 +3152,11 @@ export default function AdminDashboardPro({
                             {item.sku && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SKU: <b>{item.sku}</b></span>}
                             {item.selectedSize && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ზომა: <b>{item.selectedSize}</b></span>}
                             {item.selectedColor && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ფერი: <b>{item.selectedColor}</b></span>}
+                            {item.gift_wrap === true && <span className="bg-amber-950/40 text-amber-200 px-2 py-0.5 rounded border border-amber-800/60">სასაჩუქრე შეფუთვა (+5 ₾)</span>}
+                            {item.vip_warranty === true && <span className="bg-amber-950/40 text-amber-200 px-2 py-0.5 rounded border border-amber-800/60">VIP გარანტია (+15 ₾)</span>}
                             <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
+                          </div>
+                          {item.gift_message && <p className="text-amber-200 text-[11px] break-words">სასაჩუქრე ტექსტი: {item.gift_message}</p>}
                           </div>
                         </div>
                         <div className="admin-order-item-price text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-900">

@@ -875,6 +875,7 @@ export default function StoreView({
                         </div>
                         <textarea
                           rows="2"
+                          maxLength={240}
                           placeholder={storeText.giftPlaceholder}
                           aria-label={storeText.giftMessage}
                           value={giftMessage}
@@ -995,21 +996,15 @@ export default function StoreView({
                 disabled={Number(selectedProduct.stock ?? 0) <= 0}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
-                  const sizeLabel = currentLang === 'en' ? 'Size' : currentLang === 'ru' ? 'Размер' : 'ზომა';
-                  const selectedOptions = [];
-                  if (isCf && selectedSize) selectedOptions.push(`${sizeLabel}: ${selectedSize}`);
-                  if (selectedColor) selectedOptions.push(`${storeText.color.replace(/[:：]\s*$/, '')}: ${selectedColor}`);
-                  let customName = selectedOptions.length
-                    ? `${selectedProduct.name} (${selectedOptions.join(', ')})`
-                    : selectedProduct.name;
-                  if (isGiftWrapped) customName += ` + ${storeText.giftWrap}`;
-                  if (giftMessage.trim()) customName += ` [${storeText.giftMessage.replace(/[:：]\s*$/, '')}: "${giftMessage.trim()}"]`;
-                  if (hasVipWarranty) customName += ` + ${storeText.vipWarranty}`;
 
                   const added = addToCart({ 
                     ...selectedProduct, 
                     priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
-                    name: customName,
+                    basePriceGEL: currentBasePrice,
+                    name: selectedProduct.name,
+                    giftWrap: isGiftWrapped === true,
+                    vipWarranty: hasVipWarranty === true,
+                    giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 240) : '',
                     selectedSize: isCf && selectedSize ? selectedSize : null,
                     selectedColor: selectedColor
                   }); 

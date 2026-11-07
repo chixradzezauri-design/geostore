@@ -127,7 +127,7 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
     const currentPrice = Number(product.price_gel);
     const currentStock = Number(product.stock ?? 0);
     const safeStock = Number.isFinite(currentStock) ? Math.max(0, Math.floor(currentStock)) : 0;
-    const oldPrice = Number(item?.priceGEL ?? item?.price);
+    const oldPrice = Number(item?.basePriceGEL ?? item?.priceGEL ?? item?.price);
     const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0;
 
     if (!hasValidPrice) {
@@ -179,7 +179,8 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
     return {
       ...item,
       name: product.name || item.name,
-      priceGEL: currentPrice,
+      priceGEL: currentPrice + (item?.giftWrap === true ? 5 : 0) + (item?.vipWarranty === true ? 15 : 0),
+      basePriceGEL: currentPrice,
       stock: safeStock
     };
   });

@@ -1,3 +1,32 @@
+const LEGACY_GIFT_WRAP_LABELS = ['სასაჩუქრე პრემიუმ შეფუთვა', 'Premium gift wrapping', 'Премиальная подарочная упаковка'];
+const LEGACY_VIP_LABELS = ['VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)', 'VIP protection and extended warranty (+1 year)', 'VIP-защита и расширенная гарантия (+1 год)'];
+const LEGACY_GIFT_MESSAGE_LABELS = ['სასაჩუქრე ბარათის ტექსტი (უფასო)', 'Gift card message (free)', 'Текст подарочной открытки (бесплатно)'];
+
+const extractLegacyCartAddons = (rawName) => {
+  let name = String(rawName ?? '');
+  let giftWrap = false;
+  let vipWarranty = false;
+  let giftMessage = '';
+  for (const label of LEGACY_VIP_LABELS) {
+    const marker = ` + ${label}`;
+    if (name.includes(marker)) { vipWarranty = true; name = name.replace(marker, ''); break; }
+  }
+  for (const label of LEGACY_GIFT_MESSAGE_LABELS) {
+    const marker = ` [${label}: "`;
+    const start = name.lastIndexOf(marker);
+    if (start >= 0 && name.endsWith('"]')) {
+      giftMessage = name.slice(start + marker.length, -2).trim().slice(0, 240);
+      name = name.slice(0, start);
+      break;
+    }
+  }
+  for (const label of LEGACY_GIFT_WRAP_LABELS) {
+    const marker = ` + ${label}`;
+    if (name.includes(marker)) { giftWrap = true; name = name.replace(marker, ''); break; }
+  }
+  return { name: name.trim(), giftWrap, vipWarranty, giftMessage };
+};
+
 export const addProductToCart = (cart, product, quantity = 1) => {
   const currentCart = Array.isArray(cart) ? cart : [];
   const requestedQuantity = Number(quantity);
@@ -16,6 +45,9 @@ export const addProductToCart = (cart, product, quantity = 1) => {
     (String(item?.selectedSize || '').trim() || null) === size &&
     (String(item?.selectedColor || '').trim() || null) === color &&
     String(item?.name ?? '') === String(product?.name ?? '') &&
+    (item?.giftWrap === true) === (product?.giftWrap === true) &&
+    (item?.vipWarranty === true) === (product?.vipWarranty === true) &&
+    String(item?.giftMessage ?? '') === String(product?.giftWrap === true ? product?.giftMessage ?? '' : '') &&
     Number(item?.priceGEL ?? item?.price) === Number(product?.priceGEL ?? product?.price);
   const alreadyInCart = currentCart
     .filter(sameProduct)
@@ -35,6 +67,10 @@ export const addProductToCart = (cart, product, quantity = 1) => {
       : item)
     : [...currentCart, {
       ...product,
+      basePriceGEL: Number(product.basePriceGEL ?? product.priceGEL ?? product.price),
+      giftWrap: product.giftWrap === true,
+      vipWarranty: product.vipWarranty === true,
+      giftMessage: product.giftWrap === true ? String(product.giftMessage ?? '').trim().slice(0, 240) : '',
       selectedSize: size,
       selectedColor: color,
       quantity: requestedQuantity
@@ -52,6 +88,9 @@ export const removeProductFromCart = (cart, product) => {
     String(item?.name ?? '') === String(product?.name ?? '') &&
     (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
     (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
+    (item?.giftWrap === true) === (product?.giftWrap === true) &&
+    (item?.vipWarranty === true) === (product?.vipWarranty === true) &&
+    String(item?.giftMessage ?? '') === String(product?.giftWrap === true ? product?.giftMessage ?? '' : '') &&
     Object.is(Number(item?.priceGEL ?? item?.price), price)
   ));
 };
@@ -67,6 +106,9 @@ export const updateProductCartQuantity = (cart, product, requestedQuantity) => {
     String(item?.name ?? '') === String(product?.name ?? '') &&
     (String(item?.selectedSize || '').trim() || null) === (String(product?.selectedSize || '').trim() || null) &&
     (String(item?.selectedColor || '').trim() || null) === (String(product?.selectedColor || '').trim() || null) &&
+    (item?.giftWrap === true) === (product?.giftWrap === true) &&
+    (item?.vipWarranty === true) === (product?.vipWarranty === true) &&
+    String(item?.giftMessage ?? '') === String(product?.giftWrap === true ? product?.giftMessage ?? '' : '') &&
     Object.is(Number(item?.priceGEL ?? item?.price), Number(product?.priceGEL ?? product?.price));
   const lineIndex = currentCart.findIndex(matchesLine);
   if (lineIndex < 0) return { valid: false, reason: 'missing', cart: currentCart };
@@ -101,7 +143,22 @@ export const sanitizeCartSnapshot = (value) => {
     if (!id || id.length > 160 || !name || name.length > 300) return [];
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) return [];
     if (!Number.isFinite(price) || price < 0) return [];
-    const safeItem = { ...item, id, name, quantity, priceGEL: price };
+    const hasLegacyAddonMetadata = !Object.prototype.hasOwnProperty.call(item, 'giftWrap') &&
+      !Object.prototype.hasOwnProperty.call(item, 'vipWarranty') &&
+      !Object.prototype.hasOwnProperty.call(item, 'giftMessage') && item.basePriceGEL === undefined;
+    const legacyAddons = hasLegacyAddonMetadata ? extractLegacyCartAddons(name) : null;
+    const giftWrap = hasLegacyAddonMetadata ? legacyAddons.giftWrap : item.giftWrap === true;
+    const vipWarranty = hasLegacyAddonMetadata ? legacyAddons.vipWarranty : item.vipWarranty === true;
+    const giftMessage = giftWrap
+      ? String(hasLegacyAddonMetadata ? legacyAddons.giftMessage : item.giftMessage ?? '').trim().slice(0, 240)
+      : '';
+    const addonFee = (giftWrap ? 5 : 0) + (vipWarranty ? 15 : 0);
+    const parsedBasePrice = Number(item.basePriceGEL ?? (hasLegacyAddonMetadata ? Math.max(0, price - addonFee) : price));
+    const basePriceGEL = Number.isFinite(parsedBasePrice) && parsedBasePrice >= 0 ? parsedBasePrice : price;
+    const safeItem = {
+      ...item, id, name: hasLegacyAddonMetadata ? legacyAddons.name : name,
+      quantity, priceGEL: price, basePriceGEL, giftWrap, vipWarranty, giftMessage
+    };
     if (item.stock !== undefined) {
       const stock = Number(item.stock);
       safeItem.stock = Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : 0;
