@@ -26,6 +26,11 @@ test('customer tabs share the storefront theme while admin stays separate', () =
   assert.match(app, /activeTab !== 'admin'\s*\?\s*'geostore-fashion-store'/);
 });
 
+test('flash-sale layout rules do not capture category tiles', () => {
+  assert.doesNotMatch(css, /\.geostore-fashion-store\s+\.geostore-storefront\s+\.grid:has\(\s*>div\.group\)/);
+  assert.match(css, /\.gs-flash-sale-section\s*>\s*\.grid/);
+});
+
 test('wishlist markup and styles use the shared customer storefront theme', () => {
   assert.match(app, /gs-wishlist-page/);
   assert.match(app, /gs-wishlist-card/);
