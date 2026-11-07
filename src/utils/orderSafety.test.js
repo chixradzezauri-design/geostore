@@ -21,6 +21,7 @@ import {
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
+  parseOrderDeliveryChargeGEL,
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
@@ -90,6 +91,13 @@ test('calculates the confirmed total from add-on-inclusive subtotal, coupon, and
     calculateCheckoutTotals({ subtotal, discountPercent: 10, deliveryFee: 7 }),
     { subtotalGEL: 280, discountGEL: 28, deliveryGEL: 7, totalGEL: 259 }
   );
+});
+
+test('delivery fee parser uses the final server-appended amount, not address text', () => {
+  assert.equal(parseOrderDeliveryChargeGEL('Street, მიწოდება: 999 ₾ (თბილისი, მიწოდება: 5.50 ₾)', 105.50), 5.5);
+  assert.equal(parseOrderDeliveryChargeGEL('Street (თბილისი, მიწოდება: 15 ₾)', 10), 10);
+  assert.equal(parseOrderDeliveryChargeGEL('Street without fee', 10), 0);
+  assert.equal(parseOrderDeliveryChargeGEL('Street (მიწოდება: -5 ₾)', 10), 0);
 });
 
 test('uses the final server-priced unit amount without double-counting paid add-ons', () => {
