@@ -445,12 +445,12 @@ export default function Modals({
               <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-neutral-500">GEOSTORE · ORDER CONFIRMED</p>
               <h3 id="geostore-order-success-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{copy.orderAccepted}</h3>
               <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">{copy.thankYou}</p>
-              <div className="gs-order-code-panel mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <div className="gs-order-code-panel mt-6 min-w-0 max-w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-3 sm:p-5">
                 <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500" >{copy.orderCode}</span>
                 <code
                   dir="ltr"
                   aria-label={`${copy.orderCode}: ${orderConfirmation.id}`}
-                  className="gs-order-code-value mt-2 block w-full max-w-full rounded-lg px-1 py-2 text-center text-base font-bold text-neutral-950 sm:text-lg"
+                  className="gs-order-code-value mt-2 block min-w-0 w-full max-w-full break-all rounded-lg px-1 py-2 text-center text-base font-bold leading-relaxed text-neutral-950 [overflow-wrap:anywhere] sm:text-lg"
                 >{String(orderConfirmation.id || '').trim() ? `#${String(orderConfirmation.id).trim()}` : '—'}</code>
                 <button type="button"
                   disabled={!String(orderConfirmation.id || '').trim()}
