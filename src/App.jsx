@@ -400,6 +400,7 @@ export default function App() {
   const [orders, setOrders] = useState([]);
   const [myOrders, setMyOrders] = useState([]);
   const [myOrdersLoading, setMyOrdersLoading] = useState(false);
+  const [myOrdersError, setMyOrdersError] = useState('');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
@@ -783,6 +784,7 @@ export default function App() {
     const loadOwnOrders = async () => {
       if (!currentUser?.email) {
         setMyOrders([]);
+        setMyOrdersError('');
         setMyOrdersLoading(false);
         return;
       }
@@ -803,6 +805,7 @@ export default function App() {
         const rows = await response.json();
         if (!Array.isArray(rows)) throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
         if (!active) return;
+        setMyOrdersError('');
         setMyOrders(rows.map((o) => ({
           id: o.id,
           created_at: o.created_at || null,
@@ -820,6 +823,11 @@ export default function App() {
         if (active) {
           console.error('My orders fetch error:', error);
           setMyOrders([]);
+          setMyOrdersError(currentLang === 'en'
+            ? 'Order history is temporarily unavailable. Please try again shortly.'
+            : currentLang === 'ru'
+              ? 'История заказов временно недоступна. Повторите попытку позже.'
+              : 'შეკვეთების ისტორია დროებით მიუწვდომელია. სცადეთ მოგვიანებით.');
         }
       } finally {
         if (active) setMyOrdersLoading(false);
@@ -2550,6 +2558,10 @@ export default function App() {
                 {myOrdersLoading ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
                     {currentLang === 'en' ? 'Loading orders…' : currentLang === 'ru' ? 'Загрузка заказов…' : 'შეკვეთები იტვირთება…'}
+                  </p>
+                ) : myOrdersError ? (
+                  <p role="status" className="text-amber-300 text-xs py-6 text-center">
+                    {myOrdersError}
                   </p>
                 ) : myOrders.length === 0 ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
