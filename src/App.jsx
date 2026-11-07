@@ -1516,9 +1516,9 @@ export default function App() {
         if (!passwordCheck.valid) {
           const passwordMessages = {
             length: {
-              ka: 'პაროლი უნდა შეიცავდეს მინიმუმ 12 სიმბოლოს.',
-              en: 'Password must contain at least 12 characters.',
-              ru: 'Пароль должен содержать не менее 12 символов.'
+              ka: 'პაროლი უნდა შეიცავდეს მინიმუმ 10 სიმბოლოს.',
+              en: 'Password must contain at least 10 characters.',
+              ru: 'Пароль должен содержать не менее 10 символов.'
             },
             lowercase: {
               ka: 'პაროლში დაამატეთ მინიმუმ ერთი პატარა ლათინური ასო.',
@@ -1684,7 +1684,7 @@ export default function App() {
         message.toLowerCase().includes('password should be at least') ||
         message.toLowerCase().includes('weak password')
       ) {
-        alert(currentLang === 'en' ? 'Choose a stronger password with at least 12 characters and mixed character types.' : currentLang === 'ru' ? 'Выберите более надёжный пароль длиной не менее 12 символов с разными типами символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი — მინიმუმ 12 სიმბოლო, დიდი და პატარა ასო, ციფრი და სპეციალური სიმბოლო.');
+        alert(currentLang === 'en' ? 'Choose a stronger password with at least 10 characters and mixed character types.' : currentLang === 'ru' ? 'Выберите более надёжный пароль длиной не менее 10 символов с разными типами символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი — მინიმუმ 10 სიმბოლო, დიდი და პატარა ასო, ციფრი და სპეციალური სიმბოლო.');
       } else {
         alert(
           currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
