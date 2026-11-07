@@ -1486,7 +1486,15 @@ begin
   -- The browser total is a confirmation guard, never the pricing authority.
   -- Reject malformed or stale totals before stock is touched.
   if jsonb_typeof(p_order->'total_gel') is distinct from 'number'
-     or coalesce(p_order->>'total_gel', '') !~ '^[0-9]+(\.[0-9]{1,2})?
+     or coalesce(p_order->>'total_gel', '') !~ '^[0-9]+([.][0-9]{1,2})?$' then
+    raise exception 'შეკვეთის დადასტურებული თანხა არასწორია.';
+  end if;
+  if (p_order->>'total_gel')::numeric < 0
+     or (p_order->>'total_gel')::numeric > 101000000000 then
+    raise exception 'შეკვეთის დადასტურებული თანხა დასაშვებ ზღვარს სცდება.';
+  end if;
+
+  
   -- Validate each raw line before aggregation so invalid or negative
   -- quantities cannot offset valid quantities for the same product.
   if exists (
