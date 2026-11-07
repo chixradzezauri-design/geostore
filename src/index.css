@@ -8906,3 +8906,80 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   }
 }
 
+
+
+/* GEOSTORE maintenance: unify catalogue filters with the warm editorial storefront */
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls{
+  border:1px solid #e7ddd2!important;
+  border-radius:10px!important;
+  background:#f7f4ef!important;
+  box-shadow:0 6px 20px rgba(43,32,23,.055)!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter>div:first-child,
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control>div:first-child{
+  color:#66594d!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter>div:first-child svg,
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control>div:first-child svg{
+  color:#8a735b!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter input,
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control select{
+  min-width:0!important;
+  min-height:42px!important;
+  box-sizing:border-box!important;
+  border:1px solid #ded3c8!important;
+  border-radius:7px!important;
+  background:#fffdfa!important;
+  color:#302a24!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  font-weight:550!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter input::placeholder{
+  color:#9a8e82!important;
+  opacity:1!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter input:focus-visible,
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control select:focus-visible{
+  border-color:#9a8065!important;
+  outline:2px solid rgba(154,128,101,.18)!important;
+  outline-offset:1px!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter>span{
+  color:#8b7d70!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter>button{
+  color:#725a43!important;
+  text-decoration-color:#b7a28d!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter>button:hover{
+  color:#342a21!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control select option{
+  background:#fffdfa!important;
+  color:#302a24!important;
+}
+@media(max-width:760px){
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls{
+    padding:12px!important;
+    gap:12px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter{
+    gap:7px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter input,
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control select{
+    min-height:44px!important;
+    font-size:13px!important;
+  }
+}
+@media(max-width:360px){
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter{
+    grid-template-columns:minmax(0,1fr) 8px minmax(0,1fr)!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter>button{
+    grid-column:1/-1!important;
+    justify-self:start!important;
+  }
+}
