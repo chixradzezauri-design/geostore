@@ -132,7 +132,13 @@ export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee
 
   const subtotalCents = Math.round((safeSubtotal + Number.EPSILON) * 100);
   const deliveryCents = Math.round((safeDeliveryFee + Number.EPSILON) * 100);
-  const discountCents = Math.round(subtotalCents * safeDiscountPercent / 100);
+  // Convert the validated two-decimal percentage to integer basis points.
+  // BigInt keeps the multiplication exact and matches PostgreSQL numeric ROUND
+  // for positive half-tetri values (e.g. 3.75 GEL at 34.80%).
+  const discountBasisPoints = Math.round(safeDiscountPercent * 100);
+  const discountCents = Number(
+    (BigInt(subtotalCents) * BigInt(discountBasisPoints) + 5000n) / 10000n
+  );
 
   return {
     subtotalGEL: subtotalCents / 100,
