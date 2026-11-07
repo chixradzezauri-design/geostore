@@ -1859,6 +1859,8 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
+    const requestVersion = supportTicketsSessionVersion.current;
+    if (!adminLoggedIn) return;
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
         method: 'PATCH',
@@ -1866,14 +1868,16 @@ export default function AdminDashboardPro({
         body: JSON.stringify({ status: newStatus })
       });
       if (!response.ok) throw new Error('ტიკეტის სტატუსის განახლება ვერ მოხერხდა.');
-      fetchTickets();
+      if (requestVersion !== supportTicketsSessionVersion.current) return;
+      fetchTickets(requestVersion);
       logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
-    } catch { alert('შეცდომა სტატუსის განახლებისას'); }
+    } catch { if (requestVersion === supportTicketsSessionVersion.current) alert('შეცდომა სტატუსის განახლებისას'); }
   };
 
   const handleSendTicketReply = async (ticketId) => {
     const replyText = replyInputs[ticketId];
-    if (!replyText || !replyText.trim()) return;
+    if (!replyText || !replyText.trim() || !adminLoggedIn) return;
+    const requestVersion = supportTicketsSessionVersion.current;
 
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
@@ -1882,14 +1886,17 @@ export default function AdminDashboardPro({
         body: JSON.stringify({ reply: replyText.trim(), status: 'მოგვარებული' })
       });
       if (!response.ok) throw new Error('ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
+      if (requestVersion !== supportTicketsSessionVersion.current) return;
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
-      fetchTickets();
+      fetchTickets(requestVersion);
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
       alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის ტიკეტში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
-    } catch { alert('შეცდომა პასუხის გაგზავნისას'); }
+    } catch { if (requestVersion === supportTicketsSessionVersion.current) alert('შეცდომა პასუხის გაგზავნისას'); }
   };
 
   const handleDeleteTicket = async (ticketId) => {
+    if (!adminLoggedIn) return;
+    const requestVersion = supportTicketsSessionVersion.current;
     if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
@@ -1897,9 +1904,10 @@ export default function AdminDashboardPro({
           headers: await getSupabaseHeaders()
         });
         if (!response.ok) throw new Error('ტიკეტის წაშლა ვერ მოხერხდა.');
-        fetchTickets();
+        if (requestVersion !== supportTicketsSessionVersion.current) return;
+        fetchTickets(requestVersion);
         logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
-      } catch { alert('შეცდომა ტიგეტის წაშლისას'); }
+      } catch { if (requestVersion === supportTicketsSessionVersion.current) alert('შეცდომა ტიგეტის წაშლისას'); }
     }
   };
 
