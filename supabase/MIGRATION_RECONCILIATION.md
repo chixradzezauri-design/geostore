@@ -199,3 +199,10 @@ Static checks confirm unique migration version numbers and balanced function del
 - Verified against live column types: product ID is text, price/old price/purchase cost are numeric, and stock is integer. The new validator checks the numeric text and stock range before `jsonb_populate_record` can cast those values.
 - Rechecked the final staged file after repair: one private creation implementation, one public SECURITY INVOKER wrapper, balanced dollar-quote delimiters, and authenticated-only grants. The old-price and purchase-cost regexes use the intended single escaped decimal point.
 - No production migration was applied. This remains staged pending PostgreSQL execution tests and migration reconciliation.
+
+### Product-version migration preflight findings (2026-11-08)
+
+- Compared the staged creation RPC against the live `products` schema and the exact AdminDashboardPro response contract. The editor requires `created_at` and a valid `version` in the create response. The insert RPC now explicitly sets server-owned `created_at`, `updated_at`, and `version=1`, and fills non-null JSON/boolean columns with safe defaults; it does not trust client-supplied lifecycle fields.
+- Live Supabase confirms the legacy 3-argument `admin_adjust_product_variant_stock` functions do not exist. Removed unconditional REVOKE statements targeting those missing signatures, which would have caused the migration to fail at apply time. The new 4-argument versioned RPC is created and granted separately.
+- Live function inventory confirms the legacy save/delete RPCs targeted by remaining revokes do exist. The new save wrapper is authenticated-only and retains its internal exact-admin check.
+- The product-version migration remains staged. No live database DDL or product data was changed. A temporary Supabase development branch would incur usage charges, so no branch was created without explicit cost approval; full PostgreSQL execution testing remains a release prerequisite.
