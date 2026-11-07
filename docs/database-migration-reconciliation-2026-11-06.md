@@ -1,25 +1,29 @@
 # GEOSTORE database migration reconciliation
-Date: 2026-11-06
-Project: `xmtnszxtnfxnrojionoa`
-Branch: `maintenance/security-cleanup-2026-11-06`
 
-## Read-only findings
+Date: 2026-11-07
+Supabase project: `xmtnszxtnfxnrojionoa`
+Working branch: `maintenance/storefront-draft-save-2026-11-06`
+Reviewed branch commit: `a8b8ac2942bbe6314b875b0d9d73ef33dca69106`
 
-- Supabase remote migration ledger: **47 applied versions**.
-- Current maintenance branch: **24 SQL migration files**.
-- Applied remote versions with no same-version/same-name file in this branch: **23**.
-- The 24 branch files are recorded as present in the remote ledger; this is a filename/version comparison only, not a checksum verification.
-- No schema changes, migration repairs, migration pushes, resets, or live data edits were performed during this audit.
+## Current reconciliation status
 
-## Missing migration source files
+- Supabase remote migration ledger: **57 applied versions**.
+- Working branch: **46 SQL migration files**.
+- Exact version-and-name matches: **37**.
+- Remote applied versions with no exact matching source file in the working branch: **20**.
+- Branch files not present in the remote migration ledger: **9**.
+- The migration `20261107110746_enforce_nonnegative_product_stock` is applied remotely and its exact source file is present in the branch.
+- Three exact historical source files were recovered from the original Git object history/known source branches and restored without executing them again:
+  - `20261103044438_add_idempotent_checkout_replay.sql`
+  - `20261103044704_validate_checkout_idempotency_payload.sql`
+  - `20261103044919_minimize_checkout_idempotency_snapshot.sql`
+- The existing `20261103121325_persist_admin_coupons_and_delivery_fees.sql` source was checked against the original source branch and is already present in this branch.
+- GitHub path-history lookup for the remaining 20 exact missing filenames returned no commits. Their original SQL has not yet been recovered.
 
-The following remote ledger entries do not have a matching file in the current branch:
+## Remote applied versions without exact branch source
 
 - `20261102181854_add_product_purchase_cost.sql`
 - `20261103042140_server_checkout_prices_and_store_config.sql`
-- `20261103044438_add_idempotent_checkout_replay.sql`
-- `20261103044704_validate_checkout_idempotency_payload.sql`
-- `20261103044919_minimize_checkout_idempotency_snapshot.sql`
 - `20261103083543_add_optional_customer_email_to_orders.sql`
 - `20261103113219_restrict_unused_public_order_tracking_rpc.sql`
 - `20261103114054_restrict_anon_products_to_public_catalog_columns.sql`
@@ -39,22 +43,63 @@ The following remote ledger entries do not have a matching file in the current b
 - `20261103225301_tighten_storefront_studio_rls_and_indexes.sql`
 - `20261103230610_create_storefront_media_bucket_and_admin_policies.sql`
 
-## Recovery constraints
+## Branch-only migrations; do not replay without reconciliation
 
-1. Do not create placeholder/no-op migrations for these versions.
-2. Do not rename a similar migration from another branch to one of these versions unless its original SQL is recovered and its equivalence is independently verified.
+- `20261106120000_validate_order_item_variants.sql`
+- `20261106200000_prevent_completed_order_status_rollback.sql`
+- `20261106210000_validate_checkout_input_on_order_insert.sql`
+- `20261106220000_harden_support_ticket_public_insert.sql`
+- `20261107001000_add_product_data_integrity_constraints.sql`
+- `20261107002000_harden_flash_sale_rounding.sql`
+- `20261107010000_add_authenticated_order_history.sql`
+- `20261107020000_add_order_status_notifications.sql`
+- `20261107030000_preserve_stock_on_admin_product_upsert.sql`
+
+## Read-only live schema inventory
+
+The live catalog was queried across `public` and `private` schemas. Counts at this snapshot:
+
+| Catalog object | Count |
+| --- | ---: |
+| Tables | 13 |
+| Columns | 110 |
+| Constraints | 41 |
+| Indexes | 25 |
+| RLS policies | 30 |
+| Non-internal triggers | 4 |
+| Routines | 30 |
+| Ordinary views | 0 |
+| Table-level grants | 197 |
+| Column-level grants | 1,137 |
+| Extensions | 5 |
+| Storage buckets | 1 |
+
+All public tables remain RLS-enabled based on the preceding security audit. No live schema mutation, migration repair, database push, reset, or test-data cleanup was performed in this reconciliation step.
+
+## Confirmed support-intake permission detail
+
+The public support form sends only these five fields: `id`, `customer_name`, `email`, `subject`, and `message`.
+
+The live `public.support_tickets` table currently grants the `anon` role table-level INSERT, which permits attempts to supply all columns. Its RLS insert policy already forces `status = 'ღია'` and `reply IS NULL`, but a caller can still supply `created_at`. The safer target is a column-level INSERT grant for the five form fields only, with the database default controlling `created_at`. This should be a new forward-only migration after the history reconciliation; do not rewrite an already-applied migration.
+
+## Recovery and safety constraints
+
+1. Do not create placeholder/no-op migrations for missing versions.
+2. Do not rename a similar migration to impersonate a missing version unless the original SQL is recovered and equivalence is independently verified.
 3. Do not run `supabase migration repair`, `supabase db push`, or `supabase db reset` while the source history and live schema have not been reconciled.
-4. Recover exact SQL from the original commits/PR branches where possible. Preserve original ordering and content.
-5. For any migration whose original SQL cannot be recovered, capture the live schema as a reviewed baseline only after cataloguing tables, columns, constraints, indexes, RLS policies, grants, triggers, views, functions, storage buckets, and extensions.
-6. A schema dump/baseline is not permission to replay all migrations against production. Existing 47 versions are already applied.
+4. Do not replay any of the 57 already-applied migrations.
+5. Recover exact original SQL where possible. For unrecoverable versions, use the catalogued live schema as a reviewed baseline; do not invent historical SQL.
+6. Keep the nine branch-only migrations staged until their effects are individually compared with the live catalog and routines.
+7. Once reconciliation is complete, add new forward-only migrations for verified security improvements; do not rewrite historical migration files.
 
-## Supabase CLI v3 caution
+## Next actions
 
-Supabase CLI v3 changes database commands to target the local stack by default; hosted operations require explicit remote targeting and confirmation. Before adding any CI or operator commands, review the current CLI v3 migration guide. The project must not rely on old `--linked` assumptions or run a remote mutation accidentally.
+1. Finish classifying the 20 unrecovered historical migrations by their live schema effects and source provenance.
+2. Compare all nine branch-only migrations against the live constraints, functions, triggers, policies, grants, and data.
+3. Prepare a forward-only least-privilege support INSERT grant migration (five allowed columns only).
+4. Validate the flash-sale rounding fix against the live `private.admin_apply_flash_sale` function and test data in a non-production-safe way before any rollout.
+5. Run CI/security checks after the source reconciliation commit. Do not trigger a Vercel production deployment until the consolidated release is approved.
 
-## Verification status
+## Deployment rule
 
-- This document records a read-only reconciliation snapshot.
-- Latest branch build and dependency audit passed on commit `4144cbf28e0936f4a2fd6ad69edff5576beff7f4`.
-- CodeQL completed successfully on that same commit.
-- Vercel check remains blocked by the account's build-rate limit, not by a reported application build error.
+Vercel production deployment remains intentionally deferred until the complete release review. Avoid repeated builds/deployments while the free account's usage limits are a concern.
