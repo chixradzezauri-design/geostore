@@ -231,6 +231,7 @@ export default function AdminDashboardPro({
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
   const [orderAdminNoteInput, setOrderAdminNoteInput] = useState('');
+  const [isSavingOrderNote, setIsSavingOrderNote] = useState(false);
   const [reactivationOrder, setReactivationOrder] = useState(null);
   const [reactivationPassword, setReactivationPassword] = useState('');
   const [reactivationError, setReactivationError] = useState('');
@@ -2064,13 +2065,13 @@ export default function AdminDashboardPro({
       }
 
       await fetchAdminOrders();
-      if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
-        setSelectedOrderForModal(prev => ({ ...prev, status: newStatus }));
-      }
+      setSelectedOrderForModal(prev =>
+        prev && String(prev.id) === String(orderId) ? { ...prev, status: newStatus } : prev
+      );
 
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        const updatedLocal = localOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
         localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
       } catch {}
 
@@ -2139,13 +2140,13 @@ export default function AdminDashboardPro({
       }
 
       await fetchAdminOrders();
-      if (selectedOrderForModal?.id === reactivationOrder.id) {
-        setSelectedOrderForModal(prev => ({ ...prev, status: 'ახალი' }));
-      }
+      setSelectedOrderForModal(prev =>
+        prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
+      );
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
         localStorage.setItem('geostore_local_orders', JSON.stringify(
-          localOrders.map(order => order.id === reactivationOrder.id ? { ...order, status: 'ახალი' } : order)
+          localOrders.map(order => String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order)
         ));
       } catch {}
 
@@ -2161,13 +2162,16 @@ export default function AdminDashboardPro({
   };
 
   const handleSaveOrderAdminNote = async (orderId) => {
+    if (isSavingOrderNote) return;
+    const noteToSave = String(orderAdminNoteInput ?? '');
+    setIsSavingOrderNote(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_order_note`, {
         method: 'POST',
         headers: await getSupabaseHeaders({ authenticated: true }),
         body: JSON.stringify({
           p_order_id: String(orderId),
-          p_admin_note: String(orderAdminNoteInput ?? '')
+          p_admin_note: noteToSave
         })
       });
       if (!response.ok) {
@@ -2175,15 +2179,21 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შენიშვნის ბაზაში შენახვა ვერ მოხერხდა.');
       }
       if (typeof setOrders === 'function') {
-        setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, adminNote: orderAdminNoteInput } : o));
+        setOrders(prev => (prev || []).map(o =>
+          String(o.id) === String(orderId) ? { ...o, adminNote: noteToSave } : o
+        ));
       }
-      if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
-        setSelectedOrderForModal(prev => ({ ...prev, adminNote: orderAdminNoteInput }));
-      }
+      // The modal may have been switched while the request was in flight.
+      // Update it only if it still displays the order that was actually saved.
+      setSelectedOrderForModal(prev =>
+        prev && String(prev.id) === String(orderId) ? { ...prev, adminNote: noteToSave } : prev
+      );
       alert('✅ ადმინისტრატორის შენიშვნა წარმატებით შეინახა!');
     } catch (error) {
       console.error('Admin order note save failed:', error);
       alert(error?.message || 'შეცდომა შენიშვნის შენახვისას');
+    } finally {
+      setIsSavingOrderNote(false);
     }
   };
 
@@ -3195,14 +3205,17 @@ export default function AdminDashboardPro({
                     maxLength={5000}
                     placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
                     value={orderAdminNoteInput}
+                    disabled={isSavingOrderNote}
                     onChange={e => setOrderAdminNoteInput(e.target.value)}
                     className="flex-1 bg-slate-950 border border-emerald-500/20 p-3 rounded-2xl text-white outline-none focus:border-emerald-400"
                   />
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => handleSaveOrderAdminNote(selectedOrderForModal.id)}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-2xl transition cursor-pointer"
+                    disabled={isSavingOrderNote}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-2xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    შენახვა
+                    {isSavingOrderNote ? 'ინახება…' : 'შენახვა'}
                   </button>
                 </div>
               </div>
