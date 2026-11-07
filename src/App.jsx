@@ -841,6 +841,7 @@ export default function App() {
     setStorefrontPublishBusy(true);
     const uploadedAssets = [];
     let storefrontPublished = false;
+    let publishRequestStarted = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
@@ -868,6 +869,7 @@ export default function App() {
         siteSettings: validateStorefrontSiteSettings(siteSettings)
       };
       const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
+      publishRequestStarted = true;
       const publishResponse = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/publish_storefront_config`,
         {
@@ -880,6 +882,8 @@ export default function App() {
         }
       );
       if (!publishResponse.ok) {
+        // A definitive HTTP error means Postgres rejected and rolled back the transaction.
+        publishRequestStarted = false;
         throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + (await publishResponse.text()));
       }
       // The database transaction has committed both the published config
@@ -896,7 +900,13 @@ export default function App() {
       alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
     } catch (error) {
       if (!storefrontPublished && uploadedAssets.length) {
-        await cleanupStorefrontUploads(uploadedAssets);
+        if (publishRequestStarted) {
+          // A network failure after sending the RPC has an ambiguous outcome.
+          // Keep uploaded files rather than risk deleting assets used by a committed publish.
+          console.warn('Storefront publish outcome is unknown; uploaded assets were retained for safety.');
+        } else {
+          await cleanupStorefrontUploads(uploadedAssets);
+        }
       }
       alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
     } finally {
