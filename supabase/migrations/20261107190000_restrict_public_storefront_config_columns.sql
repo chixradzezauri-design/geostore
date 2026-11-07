@@ -2,11 +2,19 @@
 -- Draft content is read only through an admin-verified RPC.
 
 REVOKE SELECT ON TABLE public.storefront_config FROM PUBLIC, anon, authenticated;
+-- Table-level revokes do not remove older column-level SELECT grants.
+-- Explicitly revoke the sensitive columns as well, including grants inherited
+-- through PUBLIC, before exposing the minimal published snapshot below.
+REVOKE SELECT (draft_config, draft_updated_at, published_at, updated_by)
+ON TABLE public.storefront_config FROM PUBLIC, anon, authenticated;
 GRANT SELECT (config_key, published_config, is_published)
 ON TABLE public.storefront_config TO anon, authenticated;
 
 -- Public media metadata must not disclose the administrator UUID.
 REVOKE SELECT ON TABLE public.storefront_media FROM PUBLIC, anon, authenticated;
+-- Remove any previously issued column-level access to the uploader identity.
+REVOKE SELECT (created_by)
+ON TABLE public.storefront_media FROM PUBLIC, anon, authenticated;
 GRANT SELECT (
   id, storage_path, public_url, file_name, mime_type,
   size_bytes, alt_text, folder, is_public, created_at
