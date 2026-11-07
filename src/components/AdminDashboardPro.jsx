@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
-import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, parseOrderDeliveryChargeGEL } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, parseOrderDeliveryChargeGEL, resolveOrderDeliveryChargeGEL } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
@@ -906,7 +906,7 @@ export default function AdminDashboardPro({
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
       const lineGross = items.reduce((sum, item) => sum + calculateOrderLineRevenueGEL(item), 0);
-      const deliveryCharge = parseOrderDeliveryChargeGEL(order.address, orderTotal);
+      const deliveryCharge = resolveOrderDeliveryChargeGEL(order, orderTotal);
       const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
       totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
       totalProductRevenue += productNetRevenue;
