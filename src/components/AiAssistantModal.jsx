@@ -107,13 +107,17 @@ export default function AiAssistantModal({
   const [messages, setMessages] = useState([getInitialGreeting()]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [pendingOrderCode, setPendingOrderCode] = useState('');
   const [liveProducts, setLiveProducts] = useState(products);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (isAiAssistantOpen) {
       setMessages([getInitialGreeting()]);
+      setPendingOrderCode('');
       fetchLiveProducts();
+    } else {
+      setPendingOrderCode('');
     }
   }, [isAiAssistantOpen, selectedProduct]);
 
@@ -205,6 +209,7 @@ export default function AiAssistantModal({
 
   const handleResetChat = () => {
     setMessages([getInitialGreeting()]);
+    setPendingOrderCode('');
   };
 
   if (!isAiAssistantOpen) return null;
@@ -446,58 +451,113 @@ export default function AiAssistantModal({
     const queryText = String(textToSend || inputMessage).trim();
     if (!queryText) return;
 
-    const userMsg = { id: `u-${Date.now()}`, sender: 'user', text: queryText };
-    setMessages(prev => [...prev, userMsg]);
+    const orderCodeMatch = queryText.match(/\bORD-[A-Z0-9_-]{6,60}\b/i);
+    const phoneCandidates = queryText
+      .replace(orderCodeMatch?.[0] || '', ' ')
+      .match(/\+?\d[\d\s().-]{5,}\d/g) || [];
+    const phoneCandidate = phoneCandidates[0] || '';
+    const phone = phoneCandidate.replace(/\D/g, '');
+    const orderCode = orderCodeMatch?.[0].replace(/\s+/g, '').toUpperCase() || '';
+    const activeOrderCode = orderCode || pendingOrderCode;
+    const orderIntent = Boolean(orderCode || pendingOrderCode) ||
+      /შეკვეთ|სტატუს|order|tracking|заказ|статус/i.test(queryText);
+    const safeUserText = orderIntent && phoneCandidate
+      ? queryText.replace(phoneCandidate, '•••••••••')
+      : queryText;
+
+    setMessages(prev => [...prev, {
+      id: \`u-\${Date.now()}\`,
+      sender: 'user',
+      text: safeUserText
+    }]);
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    const orderCodeMatch = queryText.match(/\bORD[-\s]?[A-Z0-9_-]{4,60}\b/i);
-    const isOrderQuery = Boolean(orderCodeMatch) ||
-      /შეკვეთ|სტატუს|order|tracking|заказ|статус/i.test(queryText);
+    if (orderIntent) {
+      const language = currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka';
+      const copy = {
+        ka: {
+          askCode: 'შეკვეთის შესამოწმებლად გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...).',
+          askPhone: 'კოდი მივიღე. ახლა გამოგზავნეთ შეკვეთისას მითითებული ტელეფონის ნომერი (9–15 ციფრი). ნომერი ჩატის ისტორიაში დაფარული იქნება.',
+          invalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს. სცადეთ ხელახლა.',
+          unavailable: 'შეკვეთის უსაფრთხო ძიება ამჟამად მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით.',
+          rateLimited: 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.',
+          notFound: 'მითითებული კოდითა და ტელეფონის ნომრით შეკვეთა ვერ მოიძებნა. გადაამოწმეთ ორივე მონაცემი.',
+          failed: 'შეკვეთის შემოწმება ამჟამად ვერ მოხერხდა. მოგვიანებით სცადეთ.',
+          heading: id => \`📦 შეკვეთა #\${id}\`,
+          date: value => \`• თარიღი: \${value}\`,
+          total: value => \`• თანხა: \${value}\`,
+          status: value => \`• სტატუსი: \${value}\`,
+          items: value => \`• ნივთები: \${value}\`
+        },
+        en: {
+          askCode: 'To check your order, send your order code (for example, ORD-...).',
+          askPhone: 'Got the code. Now send the phone number used for the order (9–15 digits). The number will be hidden in chat history.',
+          invalidPhone: 'The phone number must contain 9–15 digits. Please try again.',
+          unavailable: 'Secure order lookup is currently unavailable. Please try again later.',
+          rateLimited: 'The order lookup limit has been reached for security. Please try again later.',
+          notFound: 'No order matched that code and phone number. Please check both details.',
+          failed: 'The order could not be checked right now. Please try again later.',
+          heading: id => \`📦 Order #\${id}\`,
+          date: value => \`• Date: \${value}\`,
+          total: value => \`• Total: \${value}\`,
+          status: value => \`• Status: \${value}\`,
+          items: value => \`• Items: \${value}\`
+        },
+        ru: {
+          askCode: 'Чтобы проверить заказ, отправьте код заказа (например, ORD-...).',
+          askPhone: 'Код получен. Теперь отправьте номер телефона, указанный при заказе (9–15 цифр). Номер будет скрыт в истории чата.',
+          invalidPhone: 'Номер телефона должен содержать 9–15 цифр. Попробуйте ещё раз.',
+          unavailable: 'Безопасный поиск заказа сейчас недоступен. Попробуйте позже.',
+          rateLimited: 'Достигнут лимит поиска заказа в целях безопасности. Попробуйте позже.',
+          notFound: 'Заказ с таким кодом и номером телефона не найден. Проверьте оба значения.',
+          failed: 'Сейчас не удалось проверить заказ. Попробуйте позже.',
+          heading: id => \`📦 Заказ #\${id}\`,
+          date: value => \`• Дата: \${value}\`,
+          total: value => \`• Сумма: \${value}\`,
+          status: value => \`• Статус: \${value}\`,
+          items: value => \`• Товары: \${value}\`
+        }
+      }[language];
 
-    if (isOrderQuery) {
       let replyText = '';
-      const orderCode = orderCodeMatch?.[0].replace(/\s+/g, '').toUpperCase() || '';
-      const phoneText = orderCodeMatch
-        ? queryText.replace(orderCodeMatch[0], ' ')
-        : queryText;
-      const phoneCandidates = phoneText.match(/\+?\d[\d\s().-]{7,}\d/g) || [];
-      const phone = phoneCandidates
-        .map(value => value.replace(/\D/g, ''))
-        .find(value => value.length >= 9 && value.length <= 15);
-
-      if (!orderCode) {
-        replyText = 'შეკვეთის მოსაძებნად ჯერ გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...).';
-      } else if (!phone) {
-        replyText = 'გამოგზავნეთ შეკვეთის კოდი და შეკვეთისას გამოყენებული ტელეფონის ნომერი ერთად (9–15 ციფრი).';
+      if (!activeOrderCode) {
+        replyText = copy.askCode;
+      } else if (!phoneCandidate) {
+        setPendingOrderCode(activeOrderCode);
+        replyText = copy.askPhone;
+      } else if (phone.length < 9 || phone.length > 15) {
+        setPendingOrderCode(activeOrderCode);
+        replyText = copy.invalidPhone;
       } else if (typeof lookupOrderForTracking !== 'function') {
-        replyText = 'შეკვეთის უსაფრთხო ძიება ამჟამად მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით ან გამოიყენოთ შეკვეთის ტრეკინგის გვერდი.';
+        setPendingOrderCode('');
+        replyText = copy.unavailable;
       } else {
+        setPendingOrderCode('');
         try {
-          const order = await lookupOrderForTracking(orderCode, phone);
+          const order = await lookupOrderForTracking(activeOrderCode, phone);
           if (order?.rateLimited === true) {
-            replyText = 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.';
+            replyText = copy.rateLimited;
           } else if (!order || typeof order !== 'object' || !order.id) {
-            replyText = 'მითითებული კოდითა და ტელეფონის ნომრით შეკვეთა ვერ მოიძებნა. გადაამოწმეთ ორივე მონაცემი.';
+            replyText = copy.notFound;
           } else {
-            const total = formatPrice(Number(order.totalGEL) || 0);
             replyText = [
-              `📦 შეკვეთა #${order.id}`,
-              `• თარიღი: ${order.date || '—'}`,
-              `• თანხა: ${total}`,
-              `• სტატუსი: ${order.status || 'ახალი'}`,
-              `• ნივთები: ${order.itemSummary || 'პროდუქტები'}`
+              copy.heading(order.id),
+              copy.date(order.date || '—'),
+              copy.total(formatPrice(Number(order.totalGEL) || 0)),
+              copy.status(order.status || 'ახალი'),
+              copy.items(order.itemSummary || '—')
             ].join('\n');
           }
         } catch (error) {
           replyText = error?.message === 'ORDER_TRACKING_RATE_LIMITED'
-            ? 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.'
-            : 'შეკვეთის შემოწმება ამჟამად ვერ მოხერხდა. გადაამოწმეთ მონაცემები და მოგვიანებით სცადეთ.';
+            ? copy.rateLimited
+            : copy.failed;
         }
       }
 
       setMessages(prev => [...prev, {
-        id: `ai-${Date.now()}`,
+        id: \`ai-\${Date.now()}\`,
         sender: 'ai',
         text: replyText,
         recommendedProducts: []
@@ -510,16 +570,20 @@ export default function AiAssistantModal({
       const refreshedProducts = await fetchLiveProducts();
       const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
       setMessages(prev => [...prev, {
-        id: `ai-${Date.now()}`,
+        id: \`ai-\${Date.now()}\`,
         sender: 'ai',
         text: aiResult.text,
         recommendedProducts: aiResult.products
       }]);
     } catch {
       setMessages(prev => [...prev, {
-        id: `ai-${Date.now()}`,
+        id: \`ai-\${Date.now()}\`,
         sender: 'ai',
-        text: 'მოთხოვნის დამუშავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელახლა.',
+        text: currentLang === 'en'
+          ? 'I could not process that request. Please try again.'
+          : currentLang === 'ru'
+            ? 'Не удалось обработать запрос. Попробуйте ещё раз.'
+            : 'მოთხოვნის დამუშავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელახლა.',
         recommendedProducts: []
       }]);
     } finally {
