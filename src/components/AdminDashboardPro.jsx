@@ -3583,6 +3583,7 @@ export default function AdminDashboardPro({
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და ფოტოების მართვა</h3>
+              <p className="text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
               <div className="admin-category-tree space-y-4">
                 {mainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
