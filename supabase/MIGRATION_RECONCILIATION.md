@@ -175,3 +175,11 @@ Static checks confirm unique migration version numbers and balanced function del
 - The cancellation/reactivation SQL used regex predicates alongside integer casts in `AND` conditions. PostgreSQL does not promise left-to-right evaluation of boolean predicates, so malformed historical JSON stock could still raise during a cast. Updated `20261107234500_harden_order_json_and_variant_integrity.sql` to put each cast behind a `CASE WHEN` regex guard for both cancellation restoration caps and reactivation stock availability.
 - The live `private.create_order_with_stock(jsonb)` function remains a `SECURITY DEFINER` function with an empty search path and currently permits guest checkout via the anon role. The immutable UUID owner-binding wrapper is staged but not live yet. Guest access is intentional for checkout; the wrapper must be deployed with the complete validated trigger sequence before treating ownership isolation as complete.
 - No real orders, stock values, or production schema were changed. Static review only; PostgreSQL execution tests are still required.
+
+## Follow-up: safe numeric validation in versioned product mutations
+
+- Re-reviewed the staged 20261108010000_add_product_optimistic_version.sql mutation RPCs.
+- Found that old-price and purchase-cost validation combined a regex check with numeric casts in boolean OR expressions. PostgreSQL does not guarantee predicate evaluation order, so malformed strings could still reach a numeric cast and raise an unhandled cast error.
+- Rewrote both checks with explicit CASE guards. Numeric casts now occur only after the input matches the supported non-negative GEL decimal format; malformed input is rejected through the intended validation path.
+- Static review confirms the migration has balanced dollar-quoted function delimiters and three explicit CASE guards in its input-validation / stock-update logic.
+- The migration remains staged. No production schema or product data was changed; PostgreSQL execution tests and coordinated release are still pending.
