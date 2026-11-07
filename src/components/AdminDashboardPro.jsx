@@ -2563,7 +2563,7 @@ export default function AdminDashboardPro({
             item.selectedColor ? `ფერი: ${item.selectedColor}` : '',
             item.customVariantName || item.custom_variant_name || ''
           ].filter(Boolean).join(', ');
-          return `${item.name || 'პროდუქტი'} ×${Math.max(1, Math.floor(Number(item.quantity) || 1))}${details ? ` (${details})` : ''}`;
+          return `${item.name || 'პროდუქტი'} ×${normalizeOrderQuantity(item.quantity) || 'უცნობია'}${details ? ` (${details})` : ''}`;
         }).join(' | ') || o.itemSummary || '';
         return [
           o.id,
