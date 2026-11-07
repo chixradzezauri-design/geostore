@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
-import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, parseOrderDeliveryChargeGEL, resolveOrderDeliveryChargeGEL } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, resolveOrderDeliveryChargeGEL } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
