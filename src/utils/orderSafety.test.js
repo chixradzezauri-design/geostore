@@ -297,6 +297,8 @@ test('reconciles selected custom variant price and stock against the current cat
     [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 99, variants: [{ id: 'v-small', name: 'Small pack', priceGEL: 24, stock: 1 }] }]
   );
   assert.deepEqual(result.changes.map(change => change.type), ['price', 'stock']);
+  assert.equal(result.changes[0].customVariantId, 'v-small');
+  assert.equal(result.changes[1].customVariantId, 'v-small');
   assert.equal(result.cartItems[0].basePriceGEL, 24);
   assert.equal(result.cartItems[0].priceGEL, 24);
   assert.equal(result.cartItems[0].stock, 1);
