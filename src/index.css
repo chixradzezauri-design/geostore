@@ -10816,3 +10816,58 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .admin-expense-row > div:last-child { width: 100%; justify-content: space-between; }
  .admin-calculator-results > div { align-items: flex-start; }
 }
+
+
+/* Admin category studio — responsive hierarchy and editing controls */
+.admin-category-manager { min-width:0; display:grid; gap:clamp(16px,2.4vw,26px)!important; }
+.admin-category-manager>div { min-width:0; border-color:rgba(148,163,184,.17)!important; border-radius:clamp(18px,2.4vw,26px)!important; padding:clamp(14px,2.5vw,26px)!important; background:linear-gradient(145deg,rgba(23,25,29,.97),rgba(12,14,17,.98))!important; box-shadow:0 16px 44px rgba(0,0,0,.2)!important; }
+.admin-category-manager h3 { line-height:1.55!important; letter-spacing:-.015em; }
+.admin-category-manager h3 svg { flex:0 0 auto; }
+.admin-category-form { display:grid; gap:14px!important; }
+.admin-category-form>div:first-child { gap:10px!important; }
+.admin-category-form input:not([type=file]),.admin-category-form select,.admin-category-manager input:not([type=file]) { min-width:0; min-height:45px; border-radius:12px!important; border-color:rgba(148,163,184,.2)!important; background:#101216!important; padding:11px 13px!important; font-size:13px!important; line-height:1.45!important; }
+.admin-category-form input:focus,.admin-category-form select:focus,.admin-category-manager input:focus { outline:2px solid rgba(210,176,112,.35); outline-offset:1px; }
+.admin-category-form>div:nth-child(2) { min-width:0; border-radius:15px!important; padding:14px!important; border-color:rgba(148,163,184,.15)!important; background:rgba(8,10,12,.55)!important; }
+.admin-category-form label { line-height:1.6!important; flex-wrap:wrap; }
+.admin-category-form input[type=file],.admin-category-manager input[type=file] { display:block; min-width:0; max-width:100%; font-size:11px!important; line-height:1.5!important; }
+.admin-category-form input[type=file]::file-selector-button,.admin-category-manager input[type=file]::file-selector-button { margin:0 10px 6px 0; padding:9px 12px; border:0; border-radius:9px; background:#d7c8ad; color:#151515; font-weight:750; cursor:pointer; }
+.admin-category-form>button[type=submit] { min-height:46px; border-radius:13px!important; padding:12px 16px!important; font-size:12px!important; letter-spacing:.015em; }
+.admin-category-manager>div>p { line-height:1.7!important; overflow-wrap:anywhere; }
+.admin-category-tree { display:grid; gap:12px!important; }
+.admin-category-card { min-width:0; border-radius:17px!important; padding:clamp(12px,2vw,19px)!important; border-color:rgba(148,163,184,.16)!important; background:rgba(10,12,15,.62)!important; }
+.admin-category-card>div:first-child { align-items:center!important; gap:12px!important; }
+.admin-category-card>div:first-child>div:first-child { flex:1 1 230px; min-width:0; }
+.admin-category-card>div:first-child>div:first-child>div:last-child { min-width:0; }
+.admin-category-card h4 { min-width:0; overflow-wrap:anywhere; font-size:13px!important; line-height:1.5!important; }
+.admin-category-card img { object-fit:cover; }
+.admin-category-card>div:first-child>div:last-child { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px!important; }
+.admin-category-card button,.admin-subcategory-card button { min-width:32px; min-height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:9px!important; }
+.admin-category-card button:disabled,.admin-subcategory-card button:disabled { opacity:.28!important; }
+.admin-category-card button svg,.admin-subcategory-card button svg { flex:0 0 auto; }
+.admin-category-card>div[class*=bg-slate-900][class*=border-amber],.admin-subcategory-card>div[class*=bg-slate-900][class*=border-amber] { min-width:0; border-radius:13px!important; padding:14px!important; }
+.admin-category-card input:not([type=file]),.admin-subcategory-card input:not([type=file]) { width:100%; min-height:40px; border-radius:10px!important; }
+.admin-category-card>div[class*=border-amber] button,.admin-subcategory-card>div[class*=border-amber] button { min-height:34px; padding:8px 12px!important; }
+.admin-subcategory-list { margin-left:clamp(5px,1.5vw,17px)!important; padding-left:clamp(10px,2vw,20px)!important; border-color:rgba(148,163,184,.23)!important; }
+.admin-subcategory-card { min-width:0; border-radius:13px!important; padding:10px 12px!important; border-color:rgba(148,163,184,.14)!important; background:rgba(18,20,24,.85)!important; }
+.admin-subcategory-card>div:first-child { min-width:0; align-items:center!important; }
+.admin-subcategory-identity { min-width:0; overflow:hidden; }
+.admin-subcategory-identity>span { min-width:0; overflow-wrap:anywhere; line-height:1.5!important; }
+.admin-subcategory-card>div:first-child>div:last-child { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px!important; }
+.admin-subcategory-card>div[class*=border-amber] { min-width:0; border-radius:11px!important; padding:11px!important; }
+@media(max-width:639px) {
+ .admin-category-manager { gap:14px!important; }
+ .admin-category-manager>div { padding:13px!important; border-radius:17px!important; }
+ .admin-category-manager h3 { align-items:flex-start!important; font-size:12px!important; }
+ .admin-category-form>div:first-child { grid-template-columns:minmax(0,1fr)!important; }
+ .admin-category-form>div:nth-child(2) { padding:11px!important; }
+ .admin-category-form label { align-items:flex-start!important; }
+ .admin-category-card>div:first-child { align-items:flex-start!important; }
+ .admin-category-card>div:first-child>div:first-child { flex-basis:100%; }
+ .admin-category-card>div:first-child>div:last-child { width:100%; justify-content:flex-start; }
+ .admin-category-card button { flex:0 0 34px; }
+ .admin-subcategory-card>div:first-child { align-items:flex-start!important; flex-wrap:wrap; }
+ .admin-subcategory-identity { flex:1 1 100%!important; }
+ .admin-subcategory-card>div:first-child>div:last-child { width:100%; justify-content:flex-start; }
+ .admin-subcategory-card button { flex:0 0 32px; }
+ .admin-category-card>div[class*=border-amber]>div:last-child,.admin-subcategory-card>div[class*=border-amber]>div:last-child { flex-wrap:wrap; }
+}
