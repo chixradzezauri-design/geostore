@@ -60,15 +60,23 @@ export const groupCheckoutItems = (items) => {
     .map(([, item]) => item);
 };
 
-export const isReusableCheckout = (entry, fingerprint) => (
-  Boolean(
-    entry &&
-    typeof fingerprint === 'string' &&
-    entry.fingerprint === fingerprint &&
-    typeof entry.orderId === 'string' &&
-    /^ORD-[A-F0-9]{32}$/.test(entry.orderId)
-  )
-);
+export const PENDING_CHECKOUT_TTL_MS = 24 * 60 * 60 * 1000;
+
+export const isReusableCheckout = (entry, fingerprint, now = Date.now()) => {
+  if (
+    !entry ||
+    typeof fingerprint !== 'string' ||
+    !fingerprint ||
+    entry.fingerprint !== fingerprint ||
+    typeof entry.orderId !== 'string' ||
+    !/^ORD-[A-F0-9]{32}$/.test(entry.orderId) ||
+    !Number.isSafeInteger(entry.createdAt) ||
+    !Number.isSafeInteger(now)
+  ) return false;
+
+  const age = now - entry.createdAt;
+  return age >= 0 && age <= PENDING_CHECKOUT_TTL_MS;
+};
 
 export const normalizeTrackingLookup = (orderId, phone) => {
   const normalizedOrderId = String(orderId || '').trim().replace(/^#+/, '').toUpperCase();
