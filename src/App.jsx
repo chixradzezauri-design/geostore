@@ -2291,7 +2291,7 @@ export default function App() {
 
     let orderUserEmail = 'guest';
     let serverOrderResult = null;
-    let orderOwnerId = null;
+    let orderOwnerId = activeCartOwnerRef.current.userId || null;
     // Keep the order ID in the outer scope: it is needed after the RPC succeeds.
     let orderId = '';
 
