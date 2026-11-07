@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hasProductMutationLock } from './productMutationSafety.js';
+import { hasProductMutationLock, buildProductVersionFilter } from './productMutationSafety.js';
 
 test('detects a product field update lock', () => {
   assert.equal(hasProductMutationLock(new Set(['priceGEL:product-1']), 'product-1'), true);
@@ -22,7 +22,7 @@ test('fails closed for missing lock collections or product ids', () => {
 });
 
 
-test('builds an encoded optimistic version filter from a valid timestamp', () => {
+test('builds an encoded optimistic version filter from a valid revision', () => {
   assert.equal(
     buildProductVersionFilter(17),
     'version=eq.17'
