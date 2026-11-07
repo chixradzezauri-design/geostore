@@ -270,3 +270,23 @@ test('allows cart persistence only for the matching initialized owner, including
     currentUserId: null
   }), true);
 });
+
+
+test('keeps custom product variants as separate inventory units in the cart', () => {
+  const variants = [
+    { id: 'v-small', name: 'Small pack', priceGEL: 20, stock: 1 },
+    { id: 'v-large', name: 'Large pack', priceGEL: 35, stock: 2 }
+  ];
+  const small = addProductToCart([], { ...product, variants, customVariantId: 'v-small', customVariantName: 'Small pack', stock: 1, priceGEL: 20 }, 1);
+  assert.equal(small.valid, true);
+  const large = addProductToCart(small.cart, { ...product, variants, customVariantId: 'v-large', customVariantName: 'Large pack', stock: 2, priceGEL: 35 }, 1);
+  assert.equal(large.valid, true);
+  assert.equal(large.cart.length, 2);
+  const overSmall = addProductToCart(large.cart, { ...product, variants, customVariantId: 'v-small', customVariantName: 'Small pack', stock: 1, priceGEL: 20 }, 1);
+  assert.equal(overSmall.valid, false);
+  assert.equal(overSmall.reason, 'limit');
+  assert.equal(overSmall.remaining, 0);
+  const remaining = removeProductFromCart(large.cart, large.cart[0]);
+  assert.equal(remaining.length, 1);
+  assert.equal(remaining[0].customVariantId, 'v-large');
+});

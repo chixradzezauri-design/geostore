@@ -222,3 +222,36 @@ test('normalizes server order totals to finite nonnegative GEL values', () => {
     assert.equal(normalizeOrderTotal(value), 0);
   }
 });
+
+
+test('does not merge different custom product variants into one order line', () => {
+  const grouped = groupCheckoutItems([
+    { id: 'p-variant', custom_variant_id: 'v-small', quantity: 1 },
+    { id: 'p-variant', custom_variant_id: 'v-large', quantity: 2 },
+    { id: 'p-variant', custom_variant_id: 'v-small', quantity: 3 }
+  ]);
+  assert.equal(grouped.length, 2);
+  assert.deepEqual(grouped, [
+    { id: 'p-variant', selected_size: null, selected_color: null, custom_variant_id: 'v-large', quantity: 2 },
+    { id: 'p-variant', selected_size: null, selected_color: null, custom_variant_id: 'v-small', quantity: 4 }
+  ]);
+});
+
+test('reconciles selected custom variant price and stock against the current catalogue', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p-variant', name: 'Pack', priceGEL: 20, basePriceGEL: 20, quantity: 2, customVariantId: 'v-small', customVariantName: 'Small pack' }],
+    [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 99, variants: [{ id: 'v-small', name: 'Small pack', priceGEL: 24, stock: 1 }] }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['price', 'stock']);
+  assert.equal(result.cartItems[0].basePriceGEL, 24);
+  assert.equal(result.cartItems[0].priceGEL, 24);
+  assert.equal(result.cartItems[0].stock, 1);
+});
+
+test('requires a custom variant selection when the catalogue defines custom variants', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p-variant', name: 'Pack', priceGEL: 20, quantity: 1 }],
+    [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 99, variants: [{ id: 'v1', name: 'One', priceGEL: 20, stock: 2 }] }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['variant_custom_missing']);
+});

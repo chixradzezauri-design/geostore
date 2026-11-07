@@ -35,6 +35,15 @@ export const getProductAvailableStock = (product) => {
   }
   return Math.max(0, Number(product?.stock) || 0);
 };
+
+export const getProductStartingPrice = (product) => {
+  if (Array.isArray(product?.variants) && product.variants.length > 0) {
+    const prices = getCustomProductVariants(product).map(variant => variant.priceGEL);
+    return prices.length ? Math.min(...prices) : null;
+  }
+  const price = Number(product?.priceGEL ?? product?.price_gel);
+  return Number.isFinite(price) && price >= 0 ? price : null;
+};
 export const hasProductVariantOptions = (product) => (
   getAvailableProductSizes(product).length > 0 || getAvailableProductColors(product).length > 0 || hasCustomProductVariants(product)
 );

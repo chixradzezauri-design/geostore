@@ -1,7 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
-import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock } from '../utils/productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants } from '../utils/productVariants.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -242,22 +242,26 @@ export default function StoreView({
 
     if (minPrice !== '') {
       const min = Number(minPrice);
-      result = result.filter(p => p.priceGEL !== null && p.priceGEL !== undefined && p.priceGEL !== '' &&
-        Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) >= min);
+      result = result.filter(p => {
+        const price = getProductStartingPrice(p);
+        return price !== null && price >= min;
+      });
     }
     if (maxPrice !== '') {
       const max = Number(maxPrice);
-      result = result.filter(p => p.priceGEL !== null && p.priceGEL !== undefined && p.priceGEL !== '' &&
-        Number.isFinite(Number(p.priceGEL)) && Number(p.priceGEL) <= max);
+      result = result.filter(p => {
+        const price = getProductStartingPrice(p);
+        return price !== null && price <= max;
+      });
     }
 
     if (sortBy === 'price-asc' || sortBy === 'price-desc') {
       const direction = sortBy === 'price-asc' ? 1 : -1;
       result.sort((a, b) => {
-        const priceA = Number(a.priceGEL);
-        const priceB = Number(b.priceGEL);
-        const validA = a.priceGEL !== null && a.priceGEL !== undefined && a.priceGEL !== '' && Number.isFinite(priceA);
-        const validB = b.priceGEL !== null && b.priceGEL !== undefined && b.priceGEL !== '' && Number.isFinite(priceB);
+        const priceA = getProductStartingPrice(a);
+        const priceB = getProductStartingPrice(b);
+        const validA = priceA !== null;
+        const validB = priceB !== null;
         if (validA !== validB) return validA ? -1 : 1;
         if (!validA) return 0;
         return (priceA - priceB) * direction;
@@ -271,6 +275,7 @@ export default function StoreView({
 
   const flashSaleProducts = useMemo(() => {
     return activeProducts.filter(p => {
+      if (hasCustomProductVariants(p)) return false;
       const oldPrice = Number(p?.oldPriceGEL);
       const currentPrice = Number(p?.priceGEL);
       return Number.isFinite(oldPrice) && Number.isFinite(currentPrice) && oldPrice > currentPrice;
@@ -405,8 +410,8 @@ export default function StoreView({
                   <div className="py-3 space-y-1.5">
                     <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-amber-400 font-black text-sm">{formatPrice(prod.priceGEL)}</span>
-                      {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
+                      <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
+                      {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
                   </div>
                   <button onClick={() => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
@@ -697,8 +702,8 @@ export default function StoreView({
                   </div>
                   <h3 onClick={() => handleOpenProduct(prod)} className="gs-product-title gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="gs-product-price gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
-                    <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(prod.priceGEL)}</p>
-                    {Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
+                    <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
+                    {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
