@@ -40,9 +40,11 @@ BEGIN
     RAISE EXCEPTION 'Invalid product price' USING ERRCODE = '22023';
   END IF;
 
-  IF jsonb_typeof(v_product.variants) IS DISTINCT FROM 'array'
-     OR jsonb_array_length(v_product.variants) > 50 THEN
+  IF jsonb_typeof(v_product.variants) IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'Invalid product variants' USING ERRCODE = '22023';
+  END IF;
+  IF jsonb_array_length(v_product.variants) > 50 THEN
+    RAISE EXCEPTION 'Too many product variants' USING ERRCODE = '22023';
   END IF;
 
   IF EXISTS (
