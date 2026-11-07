@@ -11,20 +11,20 @@ export const hasProductMutationLock = (locks, productId) => {
   if (!id || !locks || typeof locks.has !== 'function') return false;
   for (const key of locks) {
     const value = String(key);
-    if (value.endsWith(`:${id}`) || value.startsWith(`variant-stock:${id}:`)) return true;
+    if (value.endsWith(\`:\${id}\`) || value.startsWith(\`variant-stock:\${id}:\`)) return true;
   }
   return false;
 };
 
 /**
- * Build a PostgREST compare-and-swap filter from the exact database version
+ * Build a PostgREST compare-and-swap filter from the exact database revision
  * captured when the product editor was opened.
  */
 export const buildProductVersionFilter = (version) => {
   if (!(typeof version === 'number' || typeof version === 'string')) return null;
   const value = String(version).trim();
-  if (!/^\\d+$/.test(value)) return null;
+  if (!/^\d+$/.test(value)) return null;
   const numeric = Number(value);
   if (!Number.isSafeInteger(numeric) || numeric < 1) return null;
-  return `version=eq.${encodeURIComponent(value)}`;
+  return \`version=eq.\${encodeURIComponent(value)}\`;
 };
