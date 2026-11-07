@@ -762,7 +762,7 @@ export default function App() {
     return notifications.filter((n) => !n.read).length;
   }, [notifications]);
 
-  const handleSaveStorefrontDraft = async () => {
+  const handleSaveStorefrontDraft = async (settingsOverride = siteSettings) => {
     if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
     storefrontSaveLock.current = true;
     setStorefrontDraftBusy(true);
@@ -793,7 +793,7 @@ export default function App() {
       const snapshot = {
         categories: draftCategories,
         banners: draftBanners,
-        siteSettings: validateStorefrontSiteSettings(siteSettings)
+        siteSettings: validateStorefrontSiteSettings(settingsOverride)
       };
       const savedAt = new Date().toISOString();
       const response = await fetch(
