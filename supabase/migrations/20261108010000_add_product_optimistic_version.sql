@@ -91,7 +91,10 @@ BEGIN
     RAISE EXCEPTION 'Product stock is outside the supported range' USING ERRCODE = '22023';
   END IF;
 
-  v_product := jsonb_populate_record(NULL::public.products, p_product);
+  v_product := jsonb_populate_record(
+    NULL::public.products,
+    p_product - 'created_at' - 'updated_at' - 'version'
+  );
   v_product.price_gel := v_price;
   v_product.old_price_gel := v_old_price;
   v_product.purchase_cost := v_purchase_cost;
