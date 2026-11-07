@@ -191,3 +191,16 @@ The first test fixture used the same transaction-start now() timestamp for initi
 The transaction was rolled back. A post-rollback read-only query confirmed that the temporary products/order, stock RPC functions, and validator trigger were not persisted. The remote migration ledger remains unchanged at 67 applied versions, latest 20261107160152. No live migration or production data change was made.
 
 The static Node regression tests were extended but not executed. A staging-database migration run, full Node suite, browser QA and production deployment are still required before release.
+
+
+## Order ownership migration repair and end-to-end rollback verification — 2026-11-07
+
+The combined dry-run exposed malformed duplicated SQL in 20261107200000_bind_order_ownership_to_auth_user_uuid.sql. The stray fragment began with a bare THEN after the first notification-function grants and repeated already-complete checkout/history/notification definitions. The duplicate tail was removed; the migration now ends after the first complete set of functions.
+
+All four pending migrations (20261107170000, 20261107200000, 20261107230000, 20261107234500) were then loaded together against the live schema inside BEGIN ... ROLLBACK. The authenticated functional test passed:
+- Order insert owner was bound to auth.uid() by the trigger.
+- Customer order history returned the owner's order, retained custom-variant display fields, and omitted purchase_cost/vendor/category.
+- A different authenticated UUID saw no orders or notifications and could not mark the owner's notifications read; the actual owner could read and mark their notifications.
+- Variant stock RPC increment, oversell rejection, stale-editor stock preservation, duplicate ID/name rejection, cancellation restore-once, and protected reactivation/re-deduction all passed.
+
+The transaction was rolled back. Post-rollback checks confirmed no temporary product/order rows, RPCs, validator trigger, or orders.user_id column remained. The live migration ledger and production data were unchanged. Node regression tests were updated but not run; no staging database migration, production migration, browser QA, build, or deployment was performed.
