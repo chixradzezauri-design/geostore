@@ -55,3 +55,15 @@ test('fails closed for malformed custom variants instead of falling back to base
   assert.equal(getCustomProductVariants({ variants: [{ id: 'v1', name: 'No stock', priceGEL: 10, stock: null }] }).length, 0);
   assert.equal(getProductStartingPrice({ priceGEL: null }), null);
 });
+
+
+test('fails closed when custom variants contain duplicate IDs or names', () => {
+  assert.deepEqual(getCustomProductVariants({ variants: [
+    { id: 'same', name: 'Small', priceGEL: 10, stock: 2 },
+    { id: 'same', name: 'Large', priceGEL: 20, stock: 3 }
+  ] }), []);
+  assert.deepEqual(getCustomProductVariants({ variants: [
+    { id: 'v1', name: 'Small', priceGEL: 10, stock: 2 },
+    { id: 'v2', name: ' small ', priceGEL: 20, stock: 3 }
+  ] }), []);
+});
