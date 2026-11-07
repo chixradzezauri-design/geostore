@@ -87,3 +87,29 @@ Other checks found missing effects:
 - Direct authenticated UPDATE permission on `orders.admin_note` is still present.
 
 This confirms that migration version history alone cannot establish whether a migration's SQL effects are already applied. Each pending migration must be checked against the actual live schema before it is considered safe to run.
+
+## Additional issues found and corrected in the staged SQL
+
+### Storefront draft-field exposure
+
+The live ACL query confirmed that `anon` currently has table-level SELECT on both `public.storefront_config` and `public.storefront_media`. The live row policy restricts which rows are visible, but the column privileges still expose `draft_config` on a published storefront row and `created_by` in public media metadata. The column-restriction migration now revokes table SELECT from both `PUBLIC` and `anon` before granting only the published config/media columns. This fix is staged and **not yet applied to production**.
+
+### Migration replacement ordering
+
+- `20261107200000_bind_order_ownership_to_auth_user_uuid.sql` renames the original checkout implementation to `private.create_order_with_stock_unchecked` and wraps it with immutable Auth UUID ownership validation.
+- Later migrations `20261107230000_require_configured_product_options.sql` and `20261108001000_validate_variant_price_precision.sql` now replace the `_unchecked` implementation rather than overwriting the ownership wrapper. This preserves the owner check on idempotent replays.
+- `20261107234500_harden_order_json_and_variant_integrity.sql` now retains the custom-variant stock restoration upper bound introduced by `20261107233000`; the later migration no longer removes that guard.
+- `20261108001000_validate_variant_price_precision.sql` was rebuilt from the valid stock-preservation function and final checkout function. The variant price validator is now created before its trigger, and duplicate intermediate function copies were removed.
+- `20261108010000_add_product_optimistic_version.sql` now revokes the legacy 3-argument variant-stock RPC so callers cannot bypass the version-checked endpoint.
+
+## Remaining confirmed live gaps
+
+The live read-only schema checks still show these staged protections are not active:
+
+- Anonymous table-level SELECT on storefront config/media (see above).
+- Order UUID ownership columns and binding trigger are absent.
+- Order-item variant validation and checkout-input insert validation triggers are absent.
+- Direct authenticated UPDATE permission on `orders.admin_note` remains.
+- Product optimistic version columns and versioned mutation RPCs are absent.
+
+These are release blockers to address through a reviewed, coordinated migration sequence. No production migration has been applied and no product/order rows have been changed.
