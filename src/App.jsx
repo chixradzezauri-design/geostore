@@ -646,8 +646,14 @@ export default function App() {
 
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthForm((current) => ({ ...current, password: '' }));
+        setAuthMode('reset-password');
+        setIsAuthOpen(true);
+      }
 
       const authUser = session?.user || null;
       const authorizedAdmin = isAuthorizedAdmin(authUser);
@@ -1638,12 +1644,40 @@ export default function App() {
     const email = authForm.email.trim().toLowerCase();
     const password = authForm.password;
 
-    if (!email || !password) {
+    if (!email || (authMode !== 'reset-request' && !password)) {
       alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
       return;
     }
 
-    if (password.length < 6) {
+    if (authMode === 'reset-request' && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      alert(currentLang === 'en' ? 'Enter a valid email address.' : currentLang === 'ru' ? 'Введите корректный адрес электронной почты.' : 'შეიყვანეთ სწორი ელ-ფოსტა.');
+      return;
+    }
+
+    if (authMode === 'reset-request') {
+      if (authSubmitLock.current) return;
+      authSubmitLock.current = true;
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'https://geostore.vercel.app/'
+        });
+        if (error) throw error;
+        setIsAuthOpen(false);
+        showToast(currentLang === 'en'
+          ? 'If an account exists for this email, a password reset link has been sent.'
+          : currentLang === 'ru'
+            ? 'Если аккаунт с таким адресом существует, ссылка для сброса пароля отправлена.'
+            : 'თუ ამ ელ-ფოსტით ანგარიში არსებობს, პაროლის აღდგენის ბმული გამოგზავნილია.');
+      } catch (error) {
+        console.error('Password reset request failed:', error);
+        alert(currentLang === 'en' ? 'Could not send the reset email. Please try again later.' : currentLang === 'ru' ? 'Не удалось отправить письмо. Попробуйте позже.' : 'აღდგენის წერილის გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
+      } finally {
+        authSubmitLock.current = false;
+      }
+      return;
+    }
+
+    if (password.length < (authMode === 'reset-password' || authMode === 'register' ? 10 : 6)) {
       alert(currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
       return;
     }
@@ -1653,7 +1687,34 @@ export default function App() {
     authSubmitLock.current = true;
 
     try {
-      if (authMode === 'register') {
+      if (authMode === 'reset-password') {
+        const passwordCheck = validateRegistrationPassword(password);
+        if (!passwordCheck.valid) {
+          const message = currentLang === 'en'
+            ? 'Use at least 10 characters with uppercase, lowercase, a number and a symbol.'
+            : currentLang === 'ru'
+              ? 'Используйте не менее 10 символов, включая заглавные и строчные буквы, цифру и символ.'
+              : 'გამოიყენეთ მინიმუმ 10 სიმბოლო, დიდი და პატარა ასოებით, ციფრითა და სპეციალური სიმბოლოთი.';
+          alert(message);
+          return;
+        }
+        const pwned = await checkPwnedPassword(password);
+        if (!pwned.valid) {
+          alert(currentLang === 'en' ? 'Choose a different password; this password is unsafe or could not be checked.' : currentLang === 'ru' ? 'Выберите другой пароль: этот пароль небезопасен или его не удалось проверить.' : 'აირჩიეთ სხვა პაროლი — ეს პაროლი არასაიმედოა ან მისი შემოწმება ვერ მოხერხდა.');
+          return;
+        }
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) throw signOutError;
+        setCurrentUser(null);
+        setAdminLoggedIn(false);
+        setActiveTab('store');
+        setAuthMode('login');
+        setAuthForm({ name: '', phone: '', email: '', password: '' });
+        setIsAuthOpen(false);
+        showToast(currentLang === 'en' ? 'Password updated. Please sign in again.' : currentLang === 'ru' ? 'Пароль обновлён. Войдите снова.' : 'პაროლი განახლდა. გთხოვთ, ხელახლა შეხვიდეთ.');
+      } else if (authMode === 'register') {
         const passwordCheck = validateRegistrationPassword(password);
         if (!passwordCheck.valid) {
           const passwordMessages = {

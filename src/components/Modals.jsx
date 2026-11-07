@@ -104,6 +104,8 @@ export default function Modals({
       auth: 'ავტორიზაცია', register: 'რეგისტრაცია',
       name: 'სახელი', yourName: 'თქვენი სახელი', password: 'პაროლი',
       login: 'შესვლა სისტემაში', finishRegister: 'რეგისტრაციის დასრულება',
+      forgotPassword: 'დაგავიწყდათ პაროლი?', sendReset: 'აღდგენის ბმულის გაგზავნა',
+      resetPassword: 'ახალი პაროლის დაყენება', resetEmailHint: 'თუ ანგარიში არსებობს, მიიღებთ აღდგენის წერილს.',
       faceId: 'Face ID-ით / Passkey-ით შესვლა',
       noAccount: 'არ გაქვთ ანგარიში? დარეგისტრირდით', hasAccount: 'უკვე გაქვთ ანგარიში? ავტორიზაცია',
       readOrder: 'შეკვეთის კოდი დაკოპირდა.'
@@ -132,6 +134,8 @@ export default function Modals({
       auth: 'Sign in', register: 'Create account',
       name: 'Name', yourName: 'Your name', password: 'Password',
       login: 'Sign in', finishRegister: 'Complete registration',
+      forgotPassword: 'Forgot password?', sendReset: 'Send reset link',
+      resetPassword: 'Set a new password', resetEmailHint: 'If an account exists, a reset email will be sent.',
       faceId: 'Continue with Face ID / Passkey',
       noAccount: 'Don’t have an account? Register', hasAccount: 'Already have an account? Sign in',
       readOrder: 'Order code copied.'
@@ -160,6 +164,8 @@ export default function Modals({
       auth: 'Вход', register: 'Регистрация',
       name: 'Имя', yourName: 'Ваше имя', password: 'Пароль',
       login: 'Войти', finishRegister: 'Завершить регистрацию',
+      forgotPassword: 'Забыли пароль?', sendReset: 'Отправить ссылку',
+      resetPassword: 'Установить новый пароль', resetEmailHint: 'Если аккаунт существует, письмо будет отправлено.',
       faceId: 'Войти с Face ID / Passkey',
       noAccount: 'Нет аккаунта? Зарегистрируйтесь', hasAccount: 'Уже есть аккаунт? Войти',
       readOrder: 'Код заказа скопирован.'
@@ -652,7 +658,7 @@ export default function Modals({
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Lock className="w-5 h-5 text-amber-400" />
-                {authMode === 'login' ? copy.auth : copy.register}
+                {authMode === 'login' ? copy.auth : authMode === 'register' ? copy.register : authMode === 'reset-request' ? copy.forgotPassword : copy.resetPassword}
               </h3>
               <button type="button" onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
@@ -684,7 +690,7 @@ export default function Modals({
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
               </div>
 
-              <div className="space-y-1">
+              {authMode !== 'reset-request' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
                 <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
@@ -698,18 +704,32 @@ export default function Modals({
                         : 'გამოიყენეთ მინიმუმ 10 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. GEOSTORE ასევე ამოწმებს ცნობილ გაჟონვებში მოხვედრას ისე, რომ პაროლი არ იგზავნება.'}
                   </p>
                 )}
-              </div>
+              </div>}
 
+              {authMode === 'reset-request' && <p className="text-[11px] text-slate-400">{copy.resetEmailHint}</p>}
               <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-                {authMode === 'login' ? copy.login : copy.finishRegister}
+                {authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
               </button>
             </form>
 
-            <div className="text-center pt-2 border-t border-amber-500/20">
-              <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+            <div className="text-center pt-2 border-t border-amber-500/20 space-y-3">
+              {authMode === 'login' && (
+                <button type="button" onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
+                  {copy.forgotPassword}
+                </button>
+              )}
+              {authMode !== 'login' && authMode !== 'reset-password' && (
+                <button type="button" onClick={() => setAuthMode('login')} className="block w-full text-slate-400 hover:text-amber-400 text-xs font-bold">
+                  {copy.auth}
+                </button>
+              )}
+              {authMode === 'reset-password' && (
+                <p className="text-[11px] text-slate-400">{currentLang === 'en' ? 'Choose a new, unique password for your account.' : currentLang === 'ru' ? 'Выберите новый уникальный пароль для аккаунта.' : 'აირჩიეთ ახალი, უნიკალური პაროლი თქვენი ანგარიშისთვის.'}</p>
+              )}
+              {authMode !== 'reset-password' && <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
                 className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer">
                 {authMode === 'login' ? copy.noAccount : copy.hasAccount}
-              </button>
+              </button>}
             </div>
           </div>
         </div>
