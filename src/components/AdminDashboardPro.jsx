@@ -1353,7 +1353,7 @@ export default function AdminDashboardPro({
         body: JSON.stringify({ p_product_id: String(id), p_expected_version: Number(expectedVersion) })
       });
       if (!res.ok) throw new Error(await res.text());
-      if (await res.json() !== true) throw new Error('პროდუქტი ვერ წაიშალა ან აღარ არსებობს.');
+      if (await res.json() !== true) throw new Error('პროდუქტი სხვა ადმინისტრატორმა შეცვალა ან უკვე წაიშალა. განაახლეთ სია და სცადეთ თავიდან.');
       if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => String(p.id) !== String(id)));
       const productImages = [
         ...(Array.isArray(productToDelete?.gallery) ? productToDelete.gallery : []),
@@ -1617,7 +1617,11 @@ export default function AdminDashboardPro({
         });
         if (!updateResponse.ok) {
           productWriteState = 'rejected';
-          throw new Error(await updateResponse.text());
+          const updateError = await updateResponse.text().catch(() => '');
+          if (updateError.includes('40001') || updateError.toLowerCase().includes('changed in another session')) {
+            throw new Error('სხვა ადმინისტრატორმა ან მოწყობილობამ ეს პროდუქტი უკვე შეცვალა. თქვენი ძველი მონაცემები არ შენახულა — განაახლეთ სია და ხელახლა გახსენით რედაქტირება.');
+          }
+          throw new Error(updateError || 'პროდუქტის განახლება ვერ მოხერხდა.');
         }
         productWriteState = 'committed';
         const updatedRows = await updateResponse.json();
