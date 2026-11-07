@@ -27,3 +27,12 @@ test('ignores missing products and malformed gallery fields', () => {
 test('returns an empty set for an invalid product list', () => {
   assert.equal(collectReferencedProductImageUrls(null, 'product-a').size, 0);
 });
+
+
+test('cleans newly uploaded images only when the product write is known not to have committed', async () => {
+  const { shouldCleanupUploadedProductImages } = await import('./productImageCleanup.js');
+  assert.equal(shouldCleanupUploadedProductImages('not-started'), true);
+  assert.equal(shouldCleanupUploadedProductImages('rejected'), true);
+  assert.equal(shouldCleanupUploadedProductImages('unknown'), false);
+  assert.equal(shouldCleanupUploadedProductImages('committed'), false);
+});
