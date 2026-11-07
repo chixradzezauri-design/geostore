@@ -1081,7 +1081,7 @@ export default function StoreView({
                       <div className="gs-product-review-upload flex items-center gap-3 bg-[#060608] p-3 rounded-2xl border border-amber-500/20">
                         <label className="flex items-center gap-2 text-xs text-amber-400 font-bold cursor-pointer hover:underline">
                           <ImageIcon className="w-4 h-4" /> {storeText.uploadPhoto}
-                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleReviewImageChange} className="hidden" />
+                          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleReviewImageChange} className="hidden" />
                         </label>
                         {visibleReviewImage && <span className="text-emerald-400 text-[10px] font-bold">✅ {storeText.photoSelected}</span>}
                       </div>
