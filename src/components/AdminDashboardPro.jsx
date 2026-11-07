@@ -14,7 +14,7 @@ import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productO
 import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
 import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
-import { hasProductMutationLock } from '../utils/productMutationSafety.js';
+import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -411,6 +411,7 @@ export default function AdminDashboardPro({
   const [newVarStock, setNewVarStock] = useState('');
   const [variantStockAdjustments, setVariantStockAdjustments] = useState({});
   const productSaveLock = useRef(false);
+  const productEditVersion = useRef(null);
   const productDeleteLocks = useRef(new Set());
   const quickProductUpdateLocks = useRef(new Set());
   const isProductMutationBusy = (productId) => hasProductMutationLock(quickProductUpdateLocks.current, productId);
@@ -1430,6 +1431,7 @@ export default function AdminDashboardPro({
   };
 
   const handleEditProduct = (p) => {
+    productEditVersion.current = p.updated_at || null;
     setEditingProductId(String(p.id));
     setProductForm({
       ...productFormInitial, name: p.name || '', category: p.category || productFormInitial.category,
@@ -1450,6 +1452,7 @@ export default function AdminDashboardPro({
   };
 
   const resetProductEditor = () => {
+    productEditVersion.current = null;
     setEditingProductId(null);
     setProductForm(productFormInitial);
     setSelectedImages([]);
@@ -1513,6 +1516,10 @@ export default function AdminDashboardPro({
     }
     const prodId = editingProductId || createAdminId('prod');
     if (!prodId) return alert(secureIdError);
+    const productVersionFilter = editingProductId ? buildProductVersionFilter(productEditVersion.current) : null;
+    if (editingProductId && !productVersionFilter) {
+      return alert('პროდუქტის ვერსია არ არის ჩატვირთული. განაახლეთ პროდუქტების სია, ხელახლა გახსენით რედაქტირება და სცადეთ თავიდან.');
+    }
     const newProductSku = editingProductId
       ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null)
       : createAdminId('GEO');
@@ -1583,7 +1590,7 @@ export default function AdminDashboardPro({
         delete updatePayload.stock;
         const updateHeaders = await getSupabaseHeaders();
         productWriteState = 'unknown';
-        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
+        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)) + '&' + productVersionFilter, {
           method: 'PATCH',
           headers: updateHeaders,
           body: JSON.stringify(updatePayload)
@@ -1595,9 +1602,11 @@ export default function AdminDashboardPro({
         productWriteState = 'committed';
         const updatedRows = await updateResponse.json();
         if (!Array.isArray(updatedRows) || updatedRows.length !== 1) {
-          throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
+          productWriteState = 'rejected';
+          throw new Error('პროდუქტი სხვა ადმინისტრატორმა ან სხვა ჩანართმა შეცვალა. თქვენი ცვლილებები არ შენახულა — განაახლეთ სია, ხელახლა გახსენით პროდუქტი და სცადეთ თავიდან.');
         }
         savedProductRow = updatedRows[0];
+        productEditVersion.current = savedProductRow.updated_at || null;
       } else {
         const createHeaders = await getSupabaseHeaders();
         productWriteState = 'unknown';
