@@ -26,6 +26,30 @@ export const normalizeOrderItems = (items) => (
 // Pure checkout safety helpers. Kept separate so Node's built-in test runner
 // can verify retry and item-grouping rules without browser or Supabase access.
 
+export const buildCheckoutFingerprintPayload = ({
+  ownerId,
+  customerName,
+  phone,
+  address,
+  userEmail,
+  customerEmail,
+  items,
+  couponCode,
+  deliveryRegion
+}) => ({
+  // Bind retries to the authenticated Supabase identity, not only its email.
+  // Guest orders share a distinct sentinel and cannot collide with user orders.
+  owner_id: ownerId || 'guest',
+  customer_name: customerName,
+  phone,
+  address,
+  user_email: userEmail || 'guest',
+  customer_email: String(customerEmail || '').toLowerCase(),
+  items: groupCheckoutItems(items),
+  coupon_code: String(couponCode || '').trim().toUpperCase(),
+  delivery_region: deliveryRegion
+});
+
 export const groupCheckoutItems = (items) => {
   const groupedItems = new Map();
 
