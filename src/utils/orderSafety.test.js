@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  calculateCartSubtotalGEL,
   calculateCheckoutTotals,
   reconcileCartWithCatalog,
   createSecureOrderId,
@@ -292,4 +293,33 @@ test('checkout catalogue selection includes custom variants for live cart reconc
   for (const field of ['id', 'name', 'price_gel', 'stock', 'available_sizes', 'available_colors', 'variants']) {
     assert.ok(CHECKOUT_CATALOG_SELECT.split(',').includes(field), `missing ${field}`);
   }
+});
+
+
+test('sums cart line prices in integer tetri without floating-point drift', () => {
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 0.1, quantity: 1 },
+    { priceGEL: 0.2, quantity: 1 },
+    { priceGEL: 0.1, quantity: 3 }
+  ]), 0.6);
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 9.9, quantity: 1 },
+    { priceGEL: 0.1, quantity: 1 }
+  ]), 10);
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 10, quantity: 2 },
+    { priceGEL: -5, quantity: 1 },
+    { priceGEL: 'invalid', quantity: 1 }
+  ]), 20);
+});
+
+test('rounds subtotal and delivery to exact tetri before discount calculation', () => {
+  assert.deepEqual(
+    calculateCheckoutTotals({
+      subtotal: 0.1 + 0.2,
+      discountPercent: 10,
+      deliveryFee: 0.1 + 0.2
+    }),
+    { subtotalGEL: 0.3, discountGEL: 0.03, deliveryGEL: 0.3, totalGEL: 0.57 }
+  );
 });

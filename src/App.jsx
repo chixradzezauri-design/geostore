@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -1523,20 +1523,9 @@ export default function App() {
     } catch {}
   }, [bannersList]);
 
-  const cartSubtotalGEL = useMemo(() => {
-    const itemsToCalc = quickBuyProduct
-      ? [quickBuyProduct]
-      : cart;
-
-    return itemsToCalc.reduce((acc, item) => {
-      const rawPrice = item?.priceGEL ?? item?.price;
-      const price = Number(rawPrice);
-      const rawQuantity = Number(item?.quantity ?? 1);
-      const quantity = Number.isFinite(rawQuantity) ? Math.max(1, Math.floor(rawQuantity)) : 1;
-      if (!Number.isFinite(price) || price < 0) return acc;
-      return acc + price * quantity;
-    }, 0);
-  }, [cart, quickBuyProduct]);
+  const cartSubtotalGEL = useMemo(() => calculateCartSubtotalGEL(
+    quickBuyProduct ? [quickBuyProduct] : cart
+  ), [cart, quickBuyProduct]);
 
   const currentDeliveryCost = useMemo(() => {
     if (selectedRegion === 'tbilisi') {

@@ -83,6 +83,24 @@ export const createSecureOrderId = (cryptoApi) => {
  * Mirrors the server checkout calculation: coupon discount is rounded to
  * two GEL decimal places before it is subtracted; delivery is added after.
  */
+export const calculateCartSubtotalGEL = (items) => {
+  const lines = Array.isArray(items) ? items : [];
+  const totalCents = lines.reduce((sum, item) => {
+    const price = Number(item?.priceGEL ?? item?.price);
+    const rawQuantity = Number(item?.quantity ?? 1);
+    const quantity = Number.isFinite(rawQuantity) ? Math.max(1, Math.floor(rawQuantity)) : 1;
+    if (!Number.isFinite(price) || price < 0) return sum;
+    const priceCents = Math.round((price + Number.EPSILON) * 100);
+    return sum + priceCents * quantity;
+  }, 0);
+  return totalCents / 100;
+};
+
+/**
+ * Uses integer tetri (GEL cents) throughout so browser totals and minimum
+ * coupon thresholds do not drift due to binary floating-point arithmetic.
+ * The server RPC independently recalculates all values from database prices.
+ */
 export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee }) => {
   const rawSubtotal = Number(subtotal);
   const safeSubtotal = Number.isFinite(rawSubtotal) ? Math.max(0, rawSubtotal) : 0;
@@ -95,18 +113,17 @@ export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee
   const rawDeliveryFee = Number(deliveryFee);
   const safeDeliveryFee = Number.isFinite(rawDeliveryFee) ? Math.max(0, rawDeliveryFee) : 0;
 
-  const discountGEL = Math.round(
-    (safeSubtotal * safeDiscountPercent / 100 + Number.EPSILON) * 100
-  ) / 100;
+  const subtotalCents = Math.round((safeSubtotal + Number.EPSILON) * 100);
+  const deliveryCents = Math.round((safeDeliveryFee + Number.EPSILON) * 100);
+  const discountCents = Math.round(subtotalCents * safeDiscountPercent / 100);
 
   return {
-    subtotalGEL: safeSubtotal,
-    discountGEL,
-    deliveryGEL: safeDeliveryFee,
-    totalGEL: Number((Math.max(0, safeSubtotal - discountGEL) + safeDeliveryFee).toFixed(10))
+    subtotalGEL: subtotalCents / 100,
+    discountGEL: discountCents / 100,
+    deliveryGEL: deliveryCents / 100,
+    totalGEL: (Math.max(0, subtotalCents - discountCents) + deliveryCents) / 100
   };
 };
-
 
 /**
  * Compares cart snapshots with a fresh public catalogue response.
