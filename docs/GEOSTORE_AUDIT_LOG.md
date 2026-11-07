@@ -449,3 +449,17 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - No frontend-only anti-spam shim or localStorage pseudo-audit log was added; neither would provide server-side enforcement or durable audit evidence.
 - Proper completion requires a database-backed rate-limit mechanism for anonymous ticket intake and a protected, append-only admin activity table/write path. These are separate schema changes and need careful migration + authorization tests.
 - No ticket, order, or customer data was changed. No build or deployment was run.
+
+
+## Checkout variant-change messaging — 2026-11-07
+
+### Finding and fix
+- Cart reconciliation correctly detects stale size/color selections, but the checkout interruption message previously described every discrepancy as only a price or stock change.
+- Updated the checkout message in Georgian, English, and Russian. When a size/color is no longer offered, it now explicitly tells the customer to remove the affected item or choose an available option before retrying.
+- Price/stock-only discrepancies retain their previous localized message.
+- No order submission, stock, database, or pricing logic changed.
+
+### Verification boundary
+- Confirmed the exact localized branch was saved on the maintenance branch.
+- Existing regression tests cover valid and invalid variant selections; they were not executed in this environment.
+- No build, real checkout, Vercel build, or deployment was run.
