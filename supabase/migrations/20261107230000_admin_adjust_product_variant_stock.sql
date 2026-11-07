@@ -102,14 +102,16 @@ CREATE OR REPLACE FUNCTION public.admin_adjust_product_variant_stock(
 )
 RETURNS public.products
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = ''
 AS $function$
   SELECT private.admin_adjust_product_variant_stock(p_product_id, p_variant_id, p_delta);
 $function$;
 
 REVOKE ALL ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer)
-  FROM PUBLIC, anon, authenticated;
+  FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.admin_adjust_product_variant_stock(text, text, integer)
+  TO authenticated;
 REVOKE ALL ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer)
   FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_adjust_product_variant_stock(text, text, integer)
