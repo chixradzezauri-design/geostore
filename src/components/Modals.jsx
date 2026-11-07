@@ -675,9 +675,18 @@ export default function Modals({
 
               <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required minLength={6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' ? 12 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
+                {authMode === 'register' && (
+                  <p className="text-[11px] leading-relaxed text-slate-400">
+                    {currentLang === 'en'
+                      ? 'Use 12+ characters with uppercase and lowercase letters, a number and a symbol. Avoid common passwords.'
+                      : currentLang === 'ru'
+                        ? 'Используйте не менее 12 символов: заглавные и строчные буквы, цифру и символ. Не используйте распространённые пароли.'
+                        : 'გამოიყენეთ მინიმუმ 12 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. მოერიდეთ გავრცელებულ პაროლებს.'}
+                  </p>
+                )}
               </div>
 
               <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
