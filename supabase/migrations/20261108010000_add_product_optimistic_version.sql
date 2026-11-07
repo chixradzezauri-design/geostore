@@ -97,6 +97,18 @@ BEGIN
   v_product.purchase_cost := v_purchase_cost;
   v_product.stock := v_stock;
 
+  -- Never accept client-supplied database lifecycle/revision fields. The
+  -- editor validates created_at in its response and expects a fresh version.
+  v_product.created_at := pg_catalog.now();
+  v_product.updated_at := pg_catalog.now();
+  v_product.version := 1;
+  v_product.gallery := COALESCE(v_product.gallery, '[]'::jsonb);
+  v_product.variants := COALESCE(v_product.variants, '[]'::jsonb);
+  v_product.tags := COALESCE(v_product.tags, '[]'::jsonb);
+  v_product.available_sizes := COALESCE(v_product.available_sizes, '[]'::jsonb);
+  v_product.available_colors := COALESCE(v_product.available_colors, '[]'::jsonb);
+  v_product.is_featured := COALESCE(v_product.is_featured, false);
+
   -- Insert only: an ID collision must never overwrite an existing product.
   INSERT INTO public.products
   SELECT (v_product).*
