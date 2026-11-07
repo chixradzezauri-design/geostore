@@ -7,6 +7,17 @@ export const normalizeOrderTotal = (value) => {
   return Number.isFinite(total) && total >= 0 ? total : 0;
 };
 
+// Checkout appends the authoritative fee after the customer's free-form address.
+// Use the last marker so address text cannot spoof the reporting fee.
+export const parseOrderDeliveryChargeGEL = (address, orderTotal) => {
+  const total = normalizeOrderTotal(orderTotal);
+  const matches = [...String(address ?? '').matchAll(/მიწოდება:\\s*([\\d.,]+)\\s*₾/gi)];
+  if (!matches.length) return 0;
+  const raw = Number(String(matches[matches.length - 1][1]).replace(',', '.'));
+  if (!Number.isFinite(raw) || raw < 0) return 0;
+  return Math.round(Math.min(total, raw) * 100) / 100;
+};
+
 // Missing legacy quantities default to one; explicitly invalid/non-positive quantities
 // contribute zero rather than silently inventing a sale.
 export const normalizeOrderQuantity = (value) => {
