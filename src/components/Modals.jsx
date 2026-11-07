@@ -24,6 +24,7 @@ export default function Modals({
   authForm,
   setAuthForm,
   handleAuthSubmit,
+  authSubmitting = false,
   isTermsOpen,
   setIsTermsOpen,
   isWarrantyOpen,
@@ -714,8 +715,10 @@ export default function Modals({
               </div>}
 
               {authMode === 'reset-request' && <p className="text-[11px] text-slate-400">{copy.resetEmailHint}</p>}
-              <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-                {authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
+              <button type="submit" disabled={authSubmitting} aria-busy={authSubmitting} className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-60 disabled:cursor-wait text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
+                {authSubmitting
+                  ? (currentLang === 'en' ? 'Please wait…' : currentLang === 'ru' ? 'Подождите…' : 'გთხოვთ დაელოდოთ…')
+                  : authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
               </button>
             </form>
 
