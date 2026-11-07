@@ -11,7 +11,7 @@ import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
-import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
+import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages } from '../utils/productImageCleanup';
 import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 
@@ -1503,6 +1503,7 @@ export default function AdminDashboardPro({
     if (!editingProductId && !newProductSku) return alert(secureIdError);
     let galleryImages = [];
     let newlyUploadedImages = [];
+    let productWriteState = 'not-started';
     let newProdPayload;
 
     if (productSaveLock.current) return;
@@ -1560,22 +1561,32 @@ export default function AdminDashboardPro({
         const updatePayload = { ...newProdPayload };
         delete updatePayload.id;
         delete updatePayload.stock;
+        productWriteState = 'unknown';
         const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
           method: 'PATCH',
           headers: await getSupabaseHeaders(),
           body: JSON.stringify(updatePayload)
         });
-        if (!updateResponse.ok) throw new Error(await updateResponse.text());
+        if (!updateResponse.ok) {
+          productWriteState = 'rejected';
+          throw new Error(await updateResponse.text());
+        }
+        productWriteState = 'committed';
         const updatedRows = await updateResponse.json();
         if (!Array.isArray(updatedRows) || updatedRows.length !== 1) {
           throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
         }
         savedProductRow = updatedRows[0];
       } else {
+        productWriteState = 'unknown';
         const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
         });
-        if (!createResponse.ok) throw new Error(await createResponse.text());
+        if (!createResponse.ok) {
+          productWriteState = 'rejected';
+          throw new Error(await createResponse.text());
+        }
+        productWriteState = 'committed';
         const createdResult = await createResponse.json();
         savedProductRow = Array.isArray(createdResult) ? createdResult[0] : createdResult;
         if (
@@ -1627,7 +1638,11 @@ export default function AdminDashboardPro({
           : 'პროდუქტი დაემატა, მაგრამ ძველი ფოტოების ნაწილი Storage-დან ვერ წაიშალა.')
         : (wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!'));
     } catch (error) {
-      if (newlyUploadedImages.length > 0) await deleteProductImages(newlyUploadedImages, prodId);
+      if (newlyUploadedImages.length > 0 && shouldCleanupUploadedProductImages(productWriteState)) {
+        await deleteProductImages(newlyUploadedImages, prodId);
+      } else if (newlyUploadedImages.length > 0 && productWriteState === 'unknown') {
+        console.warn('GEOSTORE retained newly uploaded product images because the database write outcome is unknown.');
+      }
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
     } finally {
       productSaveLock.current = false;
