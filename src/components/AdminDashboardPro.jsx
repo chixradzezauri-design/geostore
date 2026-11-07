@@ -12,6 +12,13 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
+const getLocalDateInputValue = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
 const getSupabaseHeaders = async () => {
@@ -232,7 +239,7 @@ export default function AdminDashboardPro({
   });
 
   const [expenses, setExpenses] = useState([]);
-  const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
 
   const [aiQuery, setAiQuery] = useState('');
   const [aiChatLogs, setAiChatLogs] = useState([
@@ -656,8 +663,9 @@ export default function AdminDashboardPro({
         const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) >= 0;
         const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) >= 0;
         let itemCost = null;
+        const isEstimatedCost = !hasSnapshotCost && hasCurrentCost;
         if (hasSnapshotCost) itemCost = Number(snapshotCost);
-        else if (hasCurrentCost) {
+        else if (isEstimatedCost) {
           itemCost = Number(currentCost);
           estimatedCogsItems += 1;
         } else unknownCogsItems += 1;
@@ -667,22 +675,24 @@ export default function AdminDashboardPro({
         const productLabel = item.name || product?.name || `პროდუქტი ${productKey}`;
         const productEntry = productProfitTotals.get(productKey) || {
           key: productKey, name: productLabel, vendor, category,
-          quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0
+          quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, estimatedCostItems: 0
         };
         productEntry.quantity += quantity;
         productEntry.revenue += allocatedRevenue;
         if (itemCost === null) productEntry.unknownCostItems += quantity;
         else productEntry.cogs += itemCost * quantity;
+        if (isEstimatedCost) productEntry.estimatedCostItems += quantity;
         productProfitTotals.set(productKey, productEntry);
 
         const vendorEntry = vendorProfitTotals.get(vendor) || {
-          name: vendor, quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, productCount: new Set()
+          name: vendor, quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, estimatedCostItems: 0, productCount: new Set()
         };
         vendorEntry.quantity += quantity;
         vendorEntry.revenue += allocatedRevenue;
         vendorEntry.productCount.add(productKey);
         if (itemCost === null) vendorEntry.unknownCostItems += quantity;
         else vendorEntry.cogs += itemCost * quantity;
+        if (isEstimatedCost) vendorEntry.estimatedCostItems += quantity;
         vendorProfitTotals.set(vendor, vendorEntry);
       });
       if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
@@ -717,7 +727,7 @@ export default function AdminDashboardPro({
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     // Gross profit is product revenue less product cost. Delivery fees are
     // tracked separately and added to net operating result, not product margin.
-    const grossProfit = unknownCogsItems === 0 ? totalProductRevenue - totalCogs : null;
+    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
     const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
     periodExpenses.forEach(expense => {
@@ -738,14 +748,14 @@ export default function AdminDashboardPro({
       incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
       productProfitability: Array.from(productProfitTotals.values()).map(item => ({
         ...item,
-        grossProfit: item.unknownCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       vendorProfitability: Array.from(vendorProfitTotals.values()).map(item => ({
         ...item,
         productCount: item.productCount.size,
-        grossProfit: item.unknownCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       expenseBreakdown: Array.from(expenseTotals.values()).sort((x, y) => y.amount - x.amount)
     };
@@ -785,16 +795,16 @@ export default function AdminDashboardPro({
         ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
         ['უცნობი თვითღირებულების ერთეულები', financialOverview.unknownCogsItems],
-        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება' : financialOverview.grossProfit.toFixed(2)],
+        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.grossProfit.toFixed(2)],
         ['ოპერაციული ხარჯები', financialOverview.totalExpenses.toFixed(2)],
-        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება' : financialOverview.netProfit.toFixed(2)]
+        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.netProfit.toFixed(2)]
       ]);
     exportCsv(`geostore-product-profitability-${periodLabel}.csv`,
-      ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები'],
-      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems]));
+      ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
+      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
     exportCsv(`geostore-vendor-profitability-${periodLabel}.csv`,
-      ['მომწოდებელი', 'პროდუქტების რაოდენობა', 'გაყიდული ერთეულები', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები'],
-      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems]));
+      ['მომწოდებელი', 'პროდუქტების რაოდენობა', 'გაყიდული ერთეულები', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
+      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
     exportCsv(`geostore-expenses-${periodLabel}.csv`,
       ['თარიღი', 'კატეგორია', 'აღწერა', 'თანხა (GEL)'],
       financialOverview.periodExpenses.map(item => [item.date || item.created_at || '', item.category || '', item.description || '', Number(item.amount || 0).toFixed(2)]));
@@ -859,7 +869,7 @@ export default function AdminDashboardPro({
 
       if (res.ok) {
         setExpenses(prev => [newExp, ...prev]);
-        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
         alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
       } else {
@@ -2360,6 +2370,7 @@ export default function AdminDashboardPro({
                     <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
                     <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
+                    {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
                   </div>
                 ))}
               </div>
@@ -2374,6 +2385,7 @@ export default function AdminDashboardPro({
                     <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
                     <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
+                    {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
                   </div>
                 ))}
               </div>
