@@ -30,6 +30,11 @@ test('database variant trigger rejects duplicate IDs and case-insensitive duplic
   assert.match(orderAndVariantMigration, /GROUP BY item->>'id'\s+HAVING count\(\*\) > 1/);
   assert.match(orderAndVariantMigration, /GROUP BY lower\(trim\(coalesce\(item->>'name', ''\)\)\)\s+HAVING count\(\*\) > 1/);
   assert.match(orderAndVariantMigration, /CREATE OR REPLACE FUNCTION private\.preserve_product_variant_stock/);
+  assert.match(orderAndVariantMigration, /jsonb_array_length\(coalesce\(NEW\.variants, '\[\]'::jsonb\)\) > 50/);
+  assert.match(orderAndVariantMigration, /length\(trim\(coalesce\(v_variant->>'id', ''\)\)\) > 80/);
+  assert.match(orderAndVariantMigration, /length\(trim\(coalesce\(v_variant->>'name', ''\)\)\) > 80/);
+  assert.match(orderAndVariantMigration, /v_variant->>'priceGEL'\)::numeric > 1000000000/);
+  assert.match(orderAndVariantMigration, /v_variant->>'stock'\)::integer > 1000000/);
 });
 
 test('variant stock RPC checks admin identity, locks the product and matches exactly one variant', () => {
@@ -39,6 +44,9 @@ test('variant stock RPC checks admin identity, locks the product and matches exa
   assert.match(variantStockMigration, /FOR UPDATE/);
   assert.match(variantStockMigration, /v_variant_count <> 1/);
   assert.match(variantStockMigration, /v_new_stock < 0 OR v_new_stock > 1000000/);
+  assert.match(variantStockMigration, /length\(trim\(p_product_id\)\) > 64/);
+  assert.match(variantStockMigration, /length\(trim\(p_variant_id\)\) > 80/);
+  assert.match(variantStockMigration, /v_current_stock > 1000000/);
   assert.match(variantStockMigration, /set_config\('geostore\.variant_stock_adjustment', 'on', true\)/);
   assert.match(variantStockMigration, /CREATE OR REPLACE FUNCTION public\.admin_adjust_product_variant_stock/);
 });
