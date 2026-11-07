@@ -1784,7 +1784,7 @@ export default function AdminDashboardPro({
       let refreshedRows = null;
       try {
         const refreshResponse = await fetch(
-          SUPABASE_URL + '/rest/v1/products?select=id,price_gel,old_price_gel,stock&' +
+          SUPABASE_URL + '/rest/v1/products?select=id,price_gel,old_price_gel,stock,version,updated_at&' +
           (category === 'ყველა' ? 'order=id.asc' : 'category=eq.' + encodeURIComponent(category) + '&order=id.asc'),
           { headers: await getSupabaseHeaders() }
         );
@@ -1807,7 +1807,9 @@ export default function AdminDashboardPro({
             price_gel: Number(saved.price_gel),
             oldPriceGEL: saved.old_price_gel == null ? null : Number(saved.old_price_gel),
             old_price_gel: saved.old_price_gel,
-            stock: saved.stock
+            stock: saved.stock,
+            version: saved.version ?? product.version,
+            updated_at: saved.updated_at ?? product.updated_at
           };
         }));
       }
