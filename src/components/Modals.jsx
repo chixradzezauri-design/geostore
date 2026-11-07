@@ -98,7 +98,7 @@ export default function Modals({
       trackerPrompt: 'შეიყვანეთ შეკვეთის კოდი ზედა ველში სტატუსის სანახავად.',
       trackerEmpty: 'შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.',
       trackerNotFound: 'შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.',
-      trackerFailed: 'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.',
+      trackerFailed: 'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.', trackerRateLimited: 'ძალიან ბევრი მცდელობა. უსაფრთხოებისთვის სცადეთ ხელახლა 15 წუთში.',
       notifications: 'შეტყობინებების ცენტრი', totalNotifications: 'სულ შეტყობინება:',
       markRead: 'ყველას წაკითხულად მონიშვნა', noNotifications: 'ახალი შეტყობინებები არ არის.',
       auth: 'ავტორიზაცია', register: 'რეგისტრაცია',
@@ -126,7 +126,7 @@ export default function Modals({
       trackerPrompt: 'Enter your order code above to view its status.',
       trackerEmpty: 'Enter the order code and the phone number used when placing the order.',
       trackerNotFound: 'Order not found. Check the code and phone number.',
-      trackerFailed: 'Order tracking is temporarily unavailable. Please try again later.',
+      trackerFailed: 'Order tracking is temporarily unavailable. Please try again later.', trackerRateLimited: 'Too many attempts. For security, please try again in 15 minutes.',
       notifications: 'Notifications', totalNotifications: 'Total notifications:',
       markRead: 'Mark all as read', noNotifications: 'There are no new notifications.',
       auth: 'Sign in', register: 'Create account',
@@ -154,7 +154,7 @@ export default function Modals({
       trackerPrompt: 'Введите код заказа выше, чтобы посмотреть его статус.',
       trackerEmpty: 'Введите код заказа и номер телефона, указанный при оформлении.',
       trackerNotFound: 'Заказ не найден. Проверьте код и номер телефона.',
-      trackerFailed: 'Отслеживание заказа временно недоступно. Попробуйте позже.',
+      trackerFailed: 'Отслеживание заказа временно недоступно. Попробуйте позже.', trackerRateLimited: 'Слишком много попыток. В целях безопасности попробуйте снова через 15 минут.',
       notifications: 'Уведомления', totalNotifications: 'Всего уведомлений:',
       markRead: 'Отметить все как прочитанные', noNotifications: 'Новых уведомлений нет.',
       auth: 'Вход', register: 'Регистрация',
@@ -309,8 +309,12 @@ export default function Modals({
       }
       setTrackedOrder(found);
     } catch (error) {
-      console.error('Secure order tracking failed:', error);
-      setTrackerError('შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.');
+      if (error?.message === 'ORDER_TRACKING_RATE_LIMITED') {
+        setTrackerError(copy.trackerRateLimited);
+      } else {
+        console.error('Secure order tracking failed:', error);
+        setTrackerError(copy.trackerFailed);
+      }
     } finally {
       setIsSearchingOrder(false);
     }
