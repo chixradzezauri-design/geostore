@@ -38,7 +38,7 @@ test('checks HIBP using only the five-character hash prefix', async () => {
   assert.deepEqual(result, { valid: false, reason: 'pwned' });
   assert.equal(requestedUrl, 'https://api.pwnedpasswords.com/range/5BAA6');
   assert.equal(requestOptions.headers['Add-Padding'], 'true');
-  assert.equal(requestedUrl.includes('password'), false);
+  assert.equal(requestedUrl.endsWith('/range/5BAA6'), true);
 });
 
 test('fails closed if the breached-password service is unavailable', async () => {
