@@ -239,6 +239,64 @@ const validateStorefrontCategorySnapshot = (rawCategories, catalogProducts = [])
   return normalized;
 };
 
+const DEFAULT_SITE_SETTINGS = {
+  storeName: 'GEOSTORE',
+  topBarText: 'GEOSTORE — ტანსაცმელი, ფეხსაცმელი და აქსესუარები',
+  heroTitle: 'შენი სტილი. შენი არჩევანი.',
+  heroSubtitle: 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.'
+};
+
+const validateStorefrontSiteSettings = (rawSettings) => {
+  if (!rawSettings || typeof rawSettings !== 'object' || Array.isArray(rawSettings)) {
+    throw new Error('საიტის პარამეტრების ფორმატი არასწორია.');
+  }
+  const settings = { ...DEFAULT_SITE_SETTINGS, ...rawSettings };
+  const limits = { storeName: 60, topBarText: 160, heroTitle: 120, heroSubtitle: 240 };
+  for (const [key, maxLength] of Object.entries(limits)) {
+    if (typeof settings[key] !== 'string') settings[key] = String(settings[key] ?? '');
+    settings[key] = settings[key].trim();
+    if (settings[key].length > maxLength) {
+      throw new Error(`საიტის პარამეტრი „${key}“ მაქსიმუმ ${maxLength} სიმბოლო უნდა იყოს.`);
+    }
+  }
+  if (settings.storeName.length < 2) throw new Error('მაღაზიის დასახელება მინიმუმ 2 სიმბოლო უნდა იყოს.');
+  return settings;
+};
+
+const validateStorefrontBannerSnapshot = (rawBanners) => {
+  if (!Array.isArray(rawBanners) || rawBanners.length > 20) {
+    throw new Error('ბანერების სია არასწორია ან 20 ბანერზე მეტია.');
+  }
+  const ids = new Set();
+  return rawBanners.map((raw, index) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new Error('ბანერების სიაში აღმოჩნდა არასწორი ჩანაწერი.');
+    }
+    const banner = { ...raw };
+    banner.id = String(banner.id || '').trim();
+    banner.title = String(banner.title || '').trim();
+    banner.subtitle = String(banner.subtitle || '').trim();
+    banner.image = String(banner.image || '').trim();
+    banner.link = String(banner.link || '').trim();
+    if (!banner.id || banner.id.length > 120 || ids.has(banner.id)) {
+      throw new Error('ბანერის ID ცარიელია ან დუბლირებულია.');
+    }
+    ids.add(banner.id);
+    if (!banner.title || banner.title.length > 120 || banner.subtitle.length > 240) {
+      throw new Error(`ბანერი №${index + 1}: სათაური სავალდებულოა (მაქს. 120), აღწერა კი მაქს. 240 სიმბოლო.`);
+    }
+    if (banner.link) {
+      try {
+        const url = new URL(banner.link);
+        if (!['https:', 'http:'].includes(url.protocol)) throw new Error('Invalid protocol');
+      } catch {
+        throw new Error(`ბანერი „${banner.title}“ შეიცავს არასწორ ბმულს.`);
+      }
+    }
+    return banner;
+  });
+};
+
 const DEFAULT_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
   { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
@@ -716,8 +774,9 @@ export default function App() {
       }
 
       const draftBanners = [];
-      for (let index = 0; index < (Array.isArray(bannersList) ? bannersList.length : 0); index += 1) {
-        const banner = bannersList[index];
+      const validatedBanners = validateStorefrontBannerSnapshot(bannersList);
+      for (let index = 0; index < validatedBanners.length; index += 1) {
+        const banner = validatedBanners[index];
         const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
         draftBanners.push({ ...banner, image });
       }
@@ -725,7 +784,7 @@ export default function App() {
       const snapshot = {
         categories: draftCategories,
         banners: draftBanners,
-        siteSettings: siteSettings && typeof siteSettings === 'object' && !Array.isArray(siteSettings) ? siteSettings : {}
+        siteSettings: validateStorefrontSiteSettings(siteSettings)
       };
       const savedAt = new Date().toISOString();
       const response = await fetch(
@@ -778,8 +837,9 @@ export default function App() {
       }
 
       const publishedBanners = [];
-      for (let index = 0; index < (Array.isArray(bannersList) ? bannersList.length : 0); index += 1) {
-        const banner = bannersList[index];
+      const validatedBanners = validateStorefrontBannerSnapshot(bannersList);
+      for (let index = 0; index < validatedBanners.length; index += 1) {
+        const banner = validatedBanners[index];
         const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
         publishedBanners.push({ ...banner, image });
       }
@@ -2300,6 +2360,7 @@ export default function App() {
           <StoreView
             currentLang={currentLang}
             siteSettings={siteSettings}
+            banners={bannersList || []}
             categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
