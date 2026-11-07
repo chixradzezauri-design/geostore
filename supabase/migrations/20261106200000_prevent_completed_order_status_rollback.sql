@@ -153,7 +153,9 @@ BEGIN
        OR NEW.stock_deducted_at IS NULL
        OR NEW.stock_deducted_at <= OLD.stock_deducted_at
        OR auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid
-       OR coalesce(auth.jwt()->'app_metadata'->>'role', '') <> 'admin' THEN
+       OR coalesce(auth.jwt()->'app_metadata'->>'role', '') <> 'admin'
+       -- Only the atomic reactivation RPC may set this transaction-local marker.
+       OR coalesce(current_setting('geostore.order_reactivation', true), '') <> 'on' THEN
       RAISE EXCEPTION 'გაუქმებული შეკვეთის ხელახლა გააქტიურება მხოლოდ დაცული პროცედურით არის შესაძლებელი.';
     END IF;
 
@@ -277,6 +279,10 @@ begin
       raise exception 'მარაგში აღარ არის საკმარისი რაოდენობა პროდუქტისთვის: %', v_item.product_id;
     end if;
   end loop;
+
+  -- Mark this transaction so the trigger permits reactivation only
+  -- through this RPC, after stock has been atomically deducted above.
+  perform set_config('geostore.order_reactivation', 'on', true);
 
   update public.orders
      set status = 'ახალი',
