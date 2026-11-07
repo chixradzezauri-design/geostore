@@ -99,7 +99,7 @@ BEGIN
     ) AS item(value)
     WHERE o.user_id = v_uid
       AND lower(btrim(coalesce(o.status, ''))) IN
-        ('დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён')
+        ('დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён', 'завершен')
       AND item.value ->> 'id' = p_product_id
   ) INTO v_verified;
 
