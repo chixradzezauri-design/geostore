@@ -13323,3 +13323,139 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .geostore-fashion-store .gs-profile-order-row{padding:11px!important}
   .geostore-fashion-store .gs-profile-order-row>div:last-child>span:first-child{font-size:13px!important}
 }
+
+
+/* GEOSTORE — account security and profile layout final pass (2026-11-07)
+   Auth is rendered through a body portal: keep these selectors global. */
+.gs-commerce-dialog--account{
+  box-sizing:border-box!important;
+  width:min(100% - 28px,440px)!important;
+  max-width:440px!important;
+  max-height:min(88dvh,760px)!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  padding:clamp(20px,4vw,30px)!important;
+  border:1px solid #d9c9b5!important;
+  border-radius:5px!important;
+  background:#fbfaf8!important;
+  color:#302921!important;
+  box-shadow:0 24px 80px rgba(0,0,0,.28)!important;
+  scrollbar-width:thin!important;
+}
+.gs-commerce-dialog--account>div:first-child{
+  gap:14px!important;
+  padding-bottom:16px!important;
+  border-color:#e8dfd5!important;
+}
+.gs-commerce-dialog--account h3{
+  min-width:0!important;
+  color:#302921!important;
+  font-family:"Noto Serif Georgian",Georgia,serif!important;
+  font-size:clamp(16px,3vw,19px)!important;
+  line-height:1.4!important;
+}
+.gs-commerce-dialog--account h3 svg{color:#8b735a!important;flex:0 0 auto!important}
+.gs-commerce-dialog--account form{gap:15px!important;color:#51483e!important}
+.gs-commerce-dialog--account label{display:block!important;color:#51483e!important;font-size:12px!important;line-height:1.5!important}
+.gs-commerce-dialog--account input{
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-height:48px!important;
+  padding:12px 14px!important;
+  border:1px solid #ded4c9!important;
+  border-radius:4px!important;
+  outline:none!important;
+  background:#fff!important;
+  color:#302921!important;
+  box-shadow:none!important;
+  font-size:16px!important;
+  line-height:1.4!important;
+}
+.gs-commerce-dialog--account input::placeholder{color:#a59a8e!important;opacity:1!important}
+.gs-commerce-dialog--account input:focus-visible{border-color:#8b735a!important;box-shadow:0 0 0 3px rgba(139,115,90,.14)!important}
+.gs-commerce-dialog--account form p{color:#776b5f!important;overflow-wrap:anywhere!important;line-height:1.6!important}
+.gs-commerce-dialog--account form button[type="submit"]{
+  min-height:49px!important;
+  padding:13px 16px!important;
+  border:1px solid #302921!important;
+  border-radius:4px!important;
+  background:#302921!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  letter-spacing:.04em!important;
+}
+.gs-commerce-dialog--account form button[type="submit"]:hover{background:#51483e!important}
+.gs-commerce-dialog--account form button[type="submit"]:disabled{opacity:.55!important}
+.gs-commerce-dialog--account>div:last-child{
+  padding-top:15px!important;
+  border-color:#e8dfd5!important;
+}
+.gs-commerce-dialog--account>div:last-child button{
+  min-height:38px!important;
+  color:#80694f!important;
+  line-height:1.5!important;
+  overflow-wrap:anywhere!important;
+}
+.geostore-fashion-store .gs-profile-page{width:min(100%,900px)!important;min-width:0!important}
+.geostore-fashion-store .gs-profile-card{
+  min-width:0!important;
+  padding:clamp(16px,3vw,26px)!important;
+  border:1px solid #e5dbd1!important;
+  border-radius:5px!important;
+  background:#fffdfa!important;
+  color:#302921!important;
+  box-shadow:0 12px 34px rgba(38,30,22,.055)!important;
+  backdrop-filter:none!important;
+}
+.geostore-fashion-store .gs-profile-card h2{
+  padding-bottom:15px!important;
+  border-color:#e9e0d7!important;
+  color:#302921!important;
+  font-family:"Noto Serif Georgian",Georgia,serif!important;
+  font-size:clamp(18px,2.5vw,22px)!important;
+}
+.geostore-fashion-store .gs-profile-card h2 svg{color:#8b735a!important}
+.geostore-fashion-store .gs-profile-card>div.grid>div{
+  min-width:0!important;
+  padding:15px!important;
+  border:1px solid #e9e0d7!important;
+  border-radius:4px!important;
+  background:#faf8f5!important;
+}
+.geostore-fashion-store .gs-profile-card>div.grid span{color:#8a7d70!important;letter-spacing:.06em!important}
+.geostore-fashion-store .gs-profile-card>div.grid b{
+  display:block!important;
+  max-width:100%!important;
+  color:#302921!important;
+  font-size:13px!important;
+  line-height:1.55!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+.geostore-fashion-store .gs-profile-card>div.pt-4{border-color:#e9e0d7!important}
+.geostore-fashion-store .gs-profile-card>div.pt-4 h3{color:#80694f!important}
+.geostore-fashion-store .gs-profile-card>div.pt-4 p{color:#776b5f!important;line-height:1.65!important}
+.geostore-fashion-store .gs-profile-card>button{
+  min-height:46px!important;
+  border:1px solid #ead4d0!important;
+  border-radius:4px!important;
+  background:#fff7f5!important;
+  color:#a3483f!important;
+  font-size:12px!important;
+}
+@media(max-width:640px){
+  .gs-commerce-dialog--account{
+    width:calc(100% - 24px)!important;
+    max-height:calc(100dvh - 24px)!important;
+    padding:19px!important;
+    border-radius:5px!important;
+  }
+  .gs-commerce-dialog--account form{gap:13px!important}
+  .geostore-fashion-store .gs-profile-card>div.grid{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(max-width:360px){
+  .gs-commerce-dialog--account{width:calc(100% - 18px)!important;padding:15px!important}
+  .geostore-fashion-store .gs-profile-card{padding:13px!important}
+}
