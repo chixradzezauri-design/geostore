@@ -549,14 +549,18 @@ export default function AdminDashboardPro({
   };
 
   const calculatedSalesMetrics = useMemo(() => {
-    const pCost = Number(calcForm.purchaseCost) || 0;
-    const sPrice = Number(calcForm.sellingPrice) || 0;
-    const discPct = Number(calcForm.discountPercent) || 0;
-    const ship = Number(calcForm.shippingCost) || 0;
-    const pack = Number(calcForm.packagingCost) || 0;
-    const proc = Number(calcForm.processingFee) || 0;
-    const other = Number(calcForm.otherExpenses) || 0;
-    const qty = Number(calcForm.quantity) || 1;
+    const toNonNegative = value => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    };
+    const pCost = toNonNegative(calcForm.purchaseCost);
+    const sPrice = toNonNegative(calcForm.sellingPrice);
+    const discPct = Math.min(100, toNonNegative(calcForm.discountPercent));
+    const ship = toNonNegative(calcForm.shippingCost);
+    const pack = toNonNegative(calcForm.packagingCost);
+    const proc = toNonNegative(calcForm.processingFee);
+    const other = toNonNegative(calcForm.otherExpenses);
+    const qty = Math.max(1, Math.floor(Number.isFinite(Number(calcForm.quantity)) ? Number(calcForm.quantity) : 1));
 
     const discountedPrice = sPrice * (1 - discPct / 100);
     const revenue = discountedPrice * qty;
@@ -792,7 +796,7 @@ export default function AdminDashboardPro({
         ['ბრუნვა', financialOverview.totalSalesRevenue.toFixed(2)],
         ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
         ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
-        ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.totalCogs.toFixed(2)],
+        ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.estimatedCogsItems ? 'შეფასებულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
         ['უცნობი თვითღირებულების ერთეულები', financialOverview.unknownCogsItems],
         ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.grossProfit.toFixed(2)],
@@ -801,10 +805,10 @@ export default function AdminDashboardPro({
       ]);
     exportCsv(`geostore-product-profitability-${periodLabel}.csv`,
       ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
-      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
+      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
     exportCsv(`geostore-vendor-profitability-${periodLabel}.csv`,
       ['მომწოდებელი', 'პროდუქტების რაოდენობა', 'გაყიდული ერთეულები', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
-      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
+      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
     exportCsv(`geostore-expenses-${periodLabel}.csv`,
       ['თარიღი', 'კატეგორია', 'აღწერა', 'თანხა (GEL)'],
       financialOverview.periodExpenses.map(item => [item.date || item.created_at || '', item.category || '', item.description || '', Number(item.amount || 0).toFixed(2)]));
@@ -819,10 +823,10 @@ export default function AdminDashboardPro({
     setIsAiThinking(true);
 
     setTimeout(() => {
-      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
+      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
       if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
-      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
+      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
       else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
@@ -836,11 +840,21 @@ export default function AdminDashboardPro({
     const description = String(expenseForm.description ?? '').trim();
     const category = String(expenseForm.category ?? '').trim();
     const amount = Number(amountText);
-    const validDate = /^\d{4}-\d{2}-\d{2}$/.test(String(expenseForm.date || ''))
-      && !Number.isNaN(new Date(`${expenseForm.date}T00:00:00`).getTime());
+    const dateParts = String(expenseForm.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const parsedExpenseDate = dateParts
+      ? new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]))
+      : null;
+    const validDate = Boolean(dateParts && parsedExpenseDate
+      && parsedExpenseDate.getFullYear() === Number(dateParts[1])
+      && parsedExpenseDate.getMonth() === Number(dateParts[2]) - 1
+      && parsedExpenseDate.getDate() === Number(dateParts[3]));
 
     if (!description || !category) {
       alert('ხარჯის კატეგორია და აღწერა სავალდებულოა.');
+      return;
+    }
+    if (category.length > 80 || description.length > 300) {
+      alert('კატეგორია მაქსიმუმ 80, ხოლო აღწერა მაქსიმუმ 300 სიმბოლო უნდა იყოს.');
       return;
     }
     if (!/^\d+(?:\.\d{1,2})?$/.test(amountText) || !Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
@@ -2367,7 +2381,7 @@ export default function AdminDashboardPro({
                   <div key={item.key} className="border-b border-slate-800 pb-3 space-y-1.5">
                     <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
                     <p className="text-[10px] text-slate-400">{item.vendor} · {item.category}</p>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
                     <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
                     {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
@@ -2382,7 +2396,7 @@ export default function AdminDashboardPro({
                 {financialOverview.vendorProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">მომწოდებლის გაყიდვები არ არის.</p> : financialOverview.vendorProfitability.map(item => (
                   <div key={item.name} className="border-b border-slate-800 pb-3 space-y-1.5">
                     <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
                     <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
                     {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
