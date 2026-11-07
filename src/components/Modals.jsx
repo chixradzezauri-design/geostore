@@ -675,16 +675,16 @@ export default function Modals({
 
               <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' ? 12 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
                 {authMode === 'register' && (
                   <p className="text-[11px] leading-relaxed text-slate-400">
                     {currentLang === 'en'
-                      ? 'Use 12+ mixed characters. GEOSTORE also checks known breached passwords without sending the password itself.'
+                      ? 'Use 10+ mixed characters. GEOSTORE also checks known breached passwords without sending the password itself.'
                       : currentLang === 'ru'
-                        ? 'Используйте не менее 12 символов разных типов. GEOSTORE также проверяет известные утечки, не отправляя сам пароль.'
-                        : 'გამოიყენეთ მინიმუმ 12 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. GEOSTORE ასევე ამოწმებს ცნობილ გაჟონვებში მოხვედრას ისე, რომ პაროლი არ იგზავნება.'}
+                        ? 'Используйте не менее 10 символов разных типов. GEOSTORE также проверяет известные утечки, не отправляя сам пароль.'
+                        : 'გამოიყენეთ მინიმუმ 10 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. GEOSTORE ასევე ამოწმებს ცნობილ გაჟონვებში მოხვედრას ისე, რომ პაროლი არ იგზავნება.'}
                   </p>
                 )}
               </div>
