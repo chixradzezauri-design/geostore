@@ -25,3 +25,9 @@ test('catalogue card styles are isolated from the product detail information pan
 test('customer tabs share the storefront theme while admin stays separate', () => {
   assert.match(app, /activeTab !== 'admin'\s*\?\s*'geostore-fashion-store'/);
 });
+
+test('wishlist markup and styles use the shared customer storefront theme', () => {
+  assert.match(app, /gs-wishlist-page/);
+  assert.match(app, /gs-wishlist-card/);
+  assert.match(css, /\.geostore-fashion-store\s+\.gs-wishlist-card/);
+});
