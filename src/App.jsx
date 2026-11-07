@@ -836,6 +836,7 @@ export default function App() {
 
     if (!currentUser?.email) {
       setMyOrders([]);
+      setMyOrdersError('');
       setMyOrdersLoading(false);
       return () => { active = false; };
     }
@@ -853,7 +854,7 @@ export default function App() {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [currentUser?.email, activeTab]);
+  }, [currentUser?.email, activeTab, currentLang]);
 
   useEffect(() => {
     let active = true;
