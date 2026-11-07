@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle, Shirt, FolderTree } from 'lucide-react';
 
 import { supabase } from '../supabaseClient';
+import { parseOrderTrackingMessage } from '../utils/orderTrackingMessage';
 
 // 🔤 ქართული და ინგლისური სინონიმებისა და სტილისტური ტერმინების გაფართოებული ლექსიკონი
 const SYNONYMS = {
@@ -451,19 +452,15 @@ export default function AiAssistantModal({
     const queryText = String(textToSend || inputMessage).trim();
     if (!queryText) return;
 
-    const orderCodeMatch = queryText.match(/\bORD-[A-Z0-9_-]{6,60}\b/i);
-    const phoneCandidates = queryText
-      .replace(orderCodeMatch?.[0] || '', ' ')
-      .match(/\+?\d[\d\s().-]{5,}\d/g) || [];
-    const phoneCandidate = phoneCandidates[0] || '';
-    const phone = phoneCandidate.replace(/\D/g, '');
-    const orderCode = orderCodeMatch?.[0].replace(/\s+/g, '').toUpperCase() || '';
-    const activeOrderCode = orderCode || pendingOrderCode;
-    const orderIntent = Boolean(orderCode || pendingOrderCode) ||
-      /შეკვეთ|სტატუს|order|tracking|заказ|статус/i.test(queryText);
-    const safeUserText = orderIntent && phoneCandidate
-      ? queryText.replace(phoneCandidate, '•••••••••')
-      : queryText;
+    const trackingInput = parseOrderTrackingMessage(queryText, pendingOrderCode);
+    const {
+      orderIntent,
+      orderCode: activeOrderCode,
+      phone,
+      hasPhoneCandidate,
+      phoneIsValid,
+      safeUserText
+    } = trackingInput;
 
     setMessages(prev => [...prev, {
       id: `u-${Date.now()}`,
@@ -523,10 +520,10 @@ export default function AiAssistantModal({
       let replyText = '';
       if (!activeOrderCode) {
         replyText = copy.askCode;
-      } else if (!phoneCandidate) {
+      } else if (!hasPhoneCandidate) {
         setPendingOrderCode(activeOrderCode);
         replyText = copy.askPhone;
-      } else if (phone.length < 9 || phone.length > 15) {
+      } else if (!phoneIsValid) {
         setPendingOrderCode(activeOrderCode);
         replyText = copy.invalidPhone;
       } else if (typeof lookupOrderForTracking !== 'function') {
