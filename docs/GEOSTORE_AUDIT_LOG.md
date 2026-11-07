@@ -844,3 +844,22 @@ The entire test transaction was rolled back. A post-rollback query confirmed tha
 - The same transaction also passed variant stock adjustment, oversell rejection, stale-editor stock preservation, duplicate ID/name rejection, cancellation restore-once, and protected reactivation/re-deduction checks.
 - The transaction was rolled back. Post-rollback verification confirmed both temporary products, the temporary order, new RPC/validator objects, and the orders.user_id column were absent. No production schema or data changed.
 - Regression coverage was added to tests/databaseMigrationSafety.test.js for the malformed duplicate SQL tail and the new variant RPC contracts. The Node test file was not executed; only the SQL integration test ran.
+
+
+### Full staged inventory/checkout integration re-run — 2026-11-07
+- Re-ran the four forward-only migrations in order inside one rollback-only PostgreSQL transaction: custom-variant checkout integration, Auth UUID ownership, admin variant stock adjustment RPC, and order/variant JSON integrity hardening.
+- **11/11 transactional integration checks passed:**
+  1. Admin variant restock changes only the selected variant; base stock remains unchanged.
+  2. Non-admin stock adjustment is rejected.
+  3. Oversell/negative resulting stock is rejected.
+  4. A stale product-editor payload cannot overwrite live variant stock while changing price.
+  5. Duplicate variant IDs are rejected.
+  6. Case-insensitive duplicate variant names are rejected.
+  7. Server-side custom-variant pricing plus gift-wrap/VIP fees produces the expected subtotal and stock deduction.
+  8. Same-owner retry is idempotent and does not deduct stock twice.
+  9. Cross-account replay using the same email but a different Auth UUID is rejected.
+  10. Customer order history excludes purchase cost, vendor and internal category.
+  11. Cancellation, protected reactivation, and cancellation after reactivation restore/deduct the exact variant stock correctly.
+- The test harness explicitly reset transaction-local inventory/re-activation flags between simulated RPC calls, matching real separate API transactions. No production code change was needed for this test-fixture detail.
+- After ROLLBACK, verified 0 orders, 0 audit products, no ownership columns, no unchecked private checkout function, no stock RPC, and unchanged remote migration history (67 applied versions; latest 20261107160152).
+- These tests validate the staged SQL and real RPC/trigger behavior transactionally, but do not apply the migrations to production. The current live order-history function remains unchanged until the forward migration is deliberately applied.
