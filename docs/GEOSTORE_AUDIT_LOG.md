@@ -130,3 +130,35 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Existing bucket write policies are appropriately restricted; the public bucket setting is intentional for public storefront image URLs and is not equivalent to public write access.
 - Server-side remediation is blocked on establishing the correct local Supabase CLI / function deployment workflow. Do not replace it with client-only security controls or deploy unreviewed SQL.
 - No production changes, migration application, function deployment, code behavior changes, build, or deploy were made.
+
+
+## Product image persistence and catalogue payload audit — 2026-11-07
+
+### Product image flow reviewed
+
+- Public and admin catalogue reads both fetch the `image` and `gallery` columns from `public.products`; the frontend maps these into `image` and `gallery` fields without converting or stripping the original values.
+- Admin upload accepts only validated JPEG/PNG/WEBP/GIF data URLs up to 5 MiB per image and up to 10 gallery images. New data URLs are uploaded to the public `storefront-media` bucket under a product-specific path; already-hosted URLs are retained unchanged.
+- New uploads are tracked and removed if the product database write fails. When an edit succeeds, previously referenced images not present in the new gallery are cleaned up only if they belong to that product's own Storage prefix. A cleanup failure is surfaced as a warning rather than silently reported as success.
+- Product editing preloads the existing gallery (or main image fallback) into the editor. This means existing URLs/data URLs are retained by default when the admin opens and saves an unchanged product.
+- Existing product deletion first deletes the database row via the admin RPC and then attempts to remove that product's own Storage images; if cleanup fails, the UI warns that orphaned images may remain.
+
+### Live data and payload finding
+
+- Live `public.products` currently contains 1 product.
+- That product's main image and its one gallery item are both embedded JPEG data URLs, each 133,771 characters/bytes of text; the gallery item is not a Storage URL.
+- Live `storefront-media` contains 0 objects, and `public.storefront_media` contains 0 metadata rows (verified in the preceding stage).
+- Because the same data URL is stored in both `image` and `gallery`, catalogue requests may transfer roughly twice the image text payload for that product. This is a storage/transfer inefficiency, not evidence of data loss or an access-control failure.
+- The single live product has a valid one-item gallery array; no malformed or empty gallery was found. No live data was altered or migrated.
+
+### Follow-up / safe remediation
+
+1. Preserve compatibility with legacy inline data URLs while migrating images to Storage. Do not bulk-rewrite product rows until every image has been uploaded, URL responses verified, and rollback data retained.
+2. Avoid duplicating the same full image payload in both `image` and `gallery` in future writes where schema/UI compatibility allows; retain `image` as the main-image compatibility field and gallery as the canonical ordered set.
+3. Consider returning compact catalogue fields or separating image metadata from large binary-like values only after verifying every storefront, AI, product detail, admin, order, and export consumer.
+4. Add a safe admin preview/check for missing or unreachable image URLs before cleanup; never delete an old image until the replacement is confirmed persisted and readable.
+5. Keep the existing 5 MiB per-image and 10-image gallery bounds unless a tested product requirement justifies a change.
+
+### Verification boundary
+
+- Read-only repository review and read-only SQL counts/length checks only.
+- No product rows or Storage objects changed; no migration, build, deployment, or automated tests executed.
