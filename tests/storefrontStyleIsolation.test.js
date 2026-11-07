@@ -94,8 +94,12 @@ test('mobile navigation retains login and registration inside the hamburger menu
   assert.match(header, /<div className="gs-menu-auth">/);
   assert.match(header, /openAuth\('login'\)/);
   assert.match(header, /openAuth\('register'\)/);
-  const mobileMenuStyles = css.slice(css.lastIndexOf('@media(max-width:640px)'));
-  assert.match(mobileMenuStyles, /\.gs-menu-auth\{[\s\S]*?display:grid!important;/);
+  const authRuleStart = css.lastIndexOf('.geostore-fashion-store .gs-menu-auth{');
+  const authRuleEnd = css.indexOf('}', authRuleStart);
+  const authRule = css.slice(authRuleStart, authRuleEnd + 1);
+  const mobileAuthMediaStart = css.lastIndexOf('@media(max-width:640px)', authRuleStart);
+  assert.ok(authRuleStart >= 0 && authRuleEnd > authRuleStart && mobileAuthMediaStart >= 0);
+  assert.match(authRule, /display:grid!important;/);
 });
 
 test('mobile footer policy links use a compact responsive layout', () => {
