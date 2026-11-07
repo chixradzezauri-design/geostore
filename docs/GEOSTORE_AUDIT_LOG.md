@@ -809,3 +809,26 @@ No database DDL, row data, authentication settings, Vercel builds, or deployment
 - The test exercised the real public RPC wrappers, ownership trigger, order notification trigger, status-transition guard, stock-preservation trigger, and reactivation password-auth timestamp check.
 - After ROLLBACK, verified: 0 orders, 0 audit test products, no new ownership columns, no renamed unchecked function, and remote migration history unchanged at `20261107160152`.
 - This is transactional integration verification only. No persistent product/order data or production schema was changed.
+
+
+## Variant inventory and order lifecycle integration test — 2026-11-07
+
+### Authenticated transaction test
+The staged migrations 20261107170000, 20261107200000, 20261107230000 and 20261107234500 were loaded together inside a transaction against the live schema. The test then switched to the authenticated role with the configured admin JWT claims and exercised the actual RPCs and triggers:
+
+- Admin variant stock RPC: +3 changed the selected variant from 5 to 8.
+- Oversell protection: -99 was rejected and stock remained 8.
+- Stale editor protection: a simulated update submitted stock 0 while changing price; the trigger retained stock 8 and accepted the price change.
+- Variant identity: duplicate IDs and case-insensitive duplicate names were rejected.
+- Cancellation: a temporary order with a custom variant restored stock from 3 to 5.
+- Idempotency: repeating cancellation did not restore stock a second time.
+- Reactivation: the protected reactivation RPC deducted stock from 5 to 3 and returned the order to the new state; cancelling again restored stock to 5.
+
+The first test attempt used the same transaction's now() timestamp for both initial deduction and reactivation. PostgreSQL's now() is fixed at transaction start, so the status guard correctly rejected a non-increasing stock_deducted_at timestamp. The fixture was corrected to represent an order created in an earlier transaction (stock_deducted_at = now() - interval '1 hour'); the full test then passed. No production function change was needed for this timestamp condition.
+
+The entire test transaction was rolled back. A post-rollback query confirmed that both temporary products, the temporary order, the new stock RPC, and the variant validator function/trigger were absent. No persistent data or schema changes occurred.
+
+### Verification boundary
+- The PostgreSQL transaction-level integration test passed for admin variant stock adjustment, oversell rejection, stale-editor preservation, duplicate rejection, cancellation idempotency and reactivation.
+- The Node database migration safety tests were extended but not executed. Browser QA, full Node suite, production build, Vercel build/deploy and live migration application remain outstanding.
+- The public stock RPC returns only id and variants, avoiding SELECT privileges on internal product columns; both RPC wrappers are SECURITY INVOKER and the private implementation checks admin UID and app_metadata role.
