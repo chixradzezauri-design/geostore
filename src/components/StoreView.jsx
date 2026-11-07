@@ -757,7 +757,7 @@ export default function StoreView({
                   )}
                 </div>
 
-                <div className="gs-product-detail-info min-w-0 space-y-5 sm:space-y-6 text-xs w-full">
+                <div className="gs-product-detail-info min-w-0 text-xs w-full">
                   <div className="gs-product-detail-heading space-y-2">
                     <div className="gs-product-detail-meta flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
