@@ -863,3 +863,14 @@ The entire test transaction was rolled back. A post-rollback query confirmed tha
 - The test harness explicitly reset transaction-local inventory/re-activation flags between simulated RPC calls, matching real separate API transactions. No production code change was needed for this test-fixture detail.
 - After ROLLBACK, verified 0 orders, 0 audit products, no ownership columns, no unchecked private checkout function, no stock RPC, and unchanged remote migration history (67 applied versions; latest 20261107160152).
 - These tests validate the staged SQL and real RPC/trigger behavior transactionally, but do not apply the migrations to production. The current live order-history function remains unchanged until the forward migration is deliberately applied.
+
+
+## Supabase advisor and privilege audit — 2026-11-07
+
+- Security advisor: one WARN remains — Auth leaked-password protection is disabled. This is a dashboard Auth setting and must be enabled manually by the project owner.
+- Security advisor INFO findings: RLS-enabled/no-policy tables are private.admin_activity_log, private.order_tracking_rate_limits, private.support_intake_rate_limits, and public.order_notifications. These are intentionally not directly readable/writable; the notification table is accessed through owner-filtered RPCs. Authenticated-RLS transaction tests confirmed one user cannot read or mark another user's notifications.
+- Performance advisor: four indexes are currently unused (three storefront CMS created_by indexes and order_notifications_recipient_created_idx). No index was dropped: low traffic and limited order data make current usage statistics insufficient evidence that these indexes are unnecessary.
+- Health advisor returned no findings.
+- Read-only function catalog audit found zero SECURITY DEFINER functions in public and zero private SECURITY DEFINER functions without an empty search_path.
+- Column/table privilege checks confirmed anon and authenticated cannot SELECT products.purchase_cost; anon can read public product price; anon cannot SELECT orders; authenticated order SELECT is constrained by the primary-admin-only RLS policy; expenses are admin-only under RLS; order_notifications has no direct SELECT privilege.
+- No security setting, schema, index, row or permission was changed during this advisor/privilege audit.
