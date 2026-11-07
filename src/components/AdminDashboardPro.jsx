@@ -316,37 +316,7 @@ export default function AdminDashboardPro({
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
 
-  const fetchAdminOrders = async () => {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        if (typeof setOrders === 'function') {
-          setOrders(data.map(o => {
-            const items = normalizeOrderItems(o.items);
-            return ({
-            id: o.id,
-            created_at: o.created_at || null,
-            date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
-            time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
-            customerName: o.customer_name,
-            user_email: o.customer_email || o.user_email || '',
-            phone: o.phone,
-            address: o.address,
-            totalGEL: Number(o.total_gel) || 0,
-            status: o.status || 'ახალი',
-            items, // normalized order lines; malformed legacy entries are ignored
-            adminNote: o.admin_note || '',
-            stock_deducted_at: o.stock_deducted_at || null,
-            stock_restored_at: o.stock_restored_at || null,
-            status_changed_at: o.status_changed_at || null,
-            itemSummary: items.length > 0 ? items.map(i => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
-          });
-          }));
-        }
-      }
-    } catch {}
-  };
+
 
   // Order data is refreshed centrally by App.jsx; this function remains for post-mutation refreshes.
 
@@ -2069,7 +2039,11 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
-      await fetchAdminOrders();
+      if (typeof setOrders === 'function') {
+        setOrders(prev => (prev || []).map(order =>
+          String(order.id) === String(orderId) ? { ...order, status: newStatus } : order
+        ));
+      }
       setSelectedOrderForModal(prev =>
         prev && String(prev.id) === String(orderId) ? { ...prev, status: newStatus } : prev
       );
@@ -2144,7 +2118,11 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
-      await fetchAdminOrders();
+      if (typeof setOrders === 'function') {
+        setOrders(prev => (prev || []).map(order =>
+          String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order
+        ));
+      }
       setSelectedOrderForModal(prev =>
         prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
       );
