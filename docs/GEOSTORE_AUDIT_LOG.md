@@ -536,7 +536,7 @@ This file is the durable handoff log for staged audit work. Add new findings and
 
 ### Verification
 - Rollback-only support tests accepted five same-IP submissions, rejected the sixth with SQLSTATE `PGRST` and HTTP status 429, accepted three same-email submissions from distinct IPs, and rejected the fourth with HTTP 429.
-- Rollback-only admin audit tests inserted and read a record as the primary-admin JWT and confirmed a non-admin JWT cannot insert or read.
+- Rollback-only admin audit tests ran under the actual PostgreSQL `authenticated` role: the primary-admin JWT successfully inserted/read a record, while a non-admin JWT was denied. A separate anonymous-role test submitted five tickets through the existing public INSERT policy and received HTTP 429 on the sixth.
 - Verified no test tickets, rate-limit entries, or audit records persisted after rollback.
 - Verified RLS enabled on both private tables; anon has no direct table access or audit RPC access; authenticated has no direct table access but can call the admin wrappers; private functions use SECURITY DEFINER with empty search_path.
 - Security Advisor reports the existing leaked-password-protection warning plus INFO-only notices that the private tables have RLS enabled without policies. This is intentional: the tables have no direct client grants, and all access is through narrowly scoped protected functions.
