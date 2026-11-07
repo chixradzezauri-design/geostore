@@ -1519,7 +1519,7 @@ export default function App() {
           return;
         }
         const normalizedPhone = phone.replace(/\D/g, '');
-        if (!/^[+()\d\s-]+$/.test(phone) || !/^\d{9,15}$/.test(normalizedPhone)) {
+        if (!/^\+?[0-9()\s-]+$/.test(phone) || !/^\d{9,15}$/.test(normalizedPhone)) {
           alert(currentLang === 'en' ? 'Enter a valid phone number with 9–15 digits.' : currentLang === 'ru' ? 'Введите корректный номер телефона из 9–15 цифр.' : 'შეიყვანეთ სწორი ტელეფონის ნომერი 9–15 ციფრით.');
           return;
         }
