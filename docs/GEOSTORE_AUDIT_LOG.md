@@ -223,3 +223,20 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Reordering persists in the current category array/localStorage immediately, but server durability requires the existing explicit “Save storefront draft” action; visitor visibility requires “Publish”.
 - Publish still writes `storefront_config` and `storefront_versions` in separate requests. The previously logged non-atomic version-history gap remains open and was not modified in this category-focused stage.
 - A future hardening step should validate the full category tree and product-category references again at the save/publish boundary, not only in the admin UI.
+
+
+### Additional save/publish boundary validation
+
+- Added a shared `validateStorefrontCategorySnapshot` guard to both draft-save and publish paths in `src/App.jsx`.
+- Before any category image upload or storefront configuration write, the guard normalizes legacy string entries and validates: maximum 100 categories; non-empty unique IDs; 2–60 character unique names; valid one-level parent references; and every non-empty live product category must still exist in the category snapshot.
+- This prevents malformed or orphaning category trees from being saved/published even if stale localStorage or legacy data bypasses the admin UI checks.
+- Current live catalogue remains compatible: the single product uses `ტანსაცმელი`, which exists in the built-in default category list. No production data was changed.
+- Additional commit: `ca89a542d6853515b573b80042b6b4261b1d6a1d`.
+- Added a persistent admin-panel note explaining that category changes must be saved to the Supabase draft and published for visitors; commit `fcb14dee9886548cfb98e5b86b9b2c170985ba4b`.
+
+### Final verification status for this stage
+
+- Re-read the committed App validator and confirmed it is invoked in both draft-save and publish flows.
+- Re-read category CRUD, file validation, and reorder handlers after the final changes.
+- Read-only Supabase check: 1 live product; its category is `ტანსაცმელი`; no product/category mismatch in the built-in default categories. No `storefront_config` or `storefront_versions` rows exist yet.
+- No production database changes, Storage writes, migrations, tests, build, or deployment were performed. Full compile/runtime verification remains pending.
