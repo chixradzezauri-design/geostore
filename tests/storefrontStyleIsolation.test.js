@@ -6,6 +6,9 @@ const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
 const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.url), 'utf8');
 const storeView = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
 const modals = readFileSync(new URL('../src/components/Modals.jsx', import.meta.url), 'utf8');
+const imageSearch = readFileSync(new URL('../src/components/ImageSearchModal.jsx', import.meta.url), 'utf8');
+const productCompare = readFileSync(new URL('../src/components/ProductCompareModal.jsx', import.meta.url), 'utf8');
+const wardrobe = readFileSync(new URL('../src/components/AIDigitalWardrobe.jsx', import.meta.url), 'utf8');
 const aiAssistant = readFileSync(new URL('../src/components/AiAssistantModal.jsx', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
@@ -58,4 +61,22 @@ test('mobile category imagery and the catalogue filter panel retain readable con
   assert.match(finalFilterTheme, /\.gs-catalog-controls\{[^}]*background:#f7f4ef!important;/s);
   assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter>div:first-child,[\s\S]*?color:#66594d!important;/);
   assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter input,[\s\S]*?background:#fffdfa!important;/);
+});
+
+
+test('image search and product comparison use the shared editorial modal theme', () => {
+  assert.match(imageSearch, /gs-image-search-overlay/);
+  assert.match(imageSearch, /gs-image-search-dialog/);
+  assert.match(productCompare, /gs-product-compare-overlay/);
+  assert.match(productCompare, /gs-product-compare-card/);
+  assert.match(css, /\.gs-image-search-dialog\{[^}]*background:#fffdfa!important;/s);
+  assert.match(css, /\.gs-product-compare-card\{[^}]*background:#fffdfa!important;/s);
+});
+
+test('digital wardrobe and its add-item dialog use the shared responsive design system', () => {
+  assert.match(wardrobe, /gs-digital-wardrobe/);
+  assert.match(wardrobe, /gs-wardrobe-hero/);
+  assert.match(wardrobe, /gs-wardrobe-add-form/);
+  assert.match(css, /\.gs-wardrobe-hero\{[^}]*background:linear-gradient\(115deg,#f5f0e9 0%,#ebe3d9 100%\)!important;/s);
+  assert.match(css, /\.gs-wardrobe-add-form\{[^}]*max-height:min\(90dvh,780px\)!important;/s);
 });
