@@ -172,3 +172,22 @@ The staged `20261107200000_bind_order_ownership_to_auth_user_uuid.sql` addresses
 - preserving the public wrapper as SECURITY INVOKER while keeping the private implementation SECURITY DEFINER.
 
 A regression check was added to `tests/databaseMigrationSafety.test.js`. The live migration is still pending; do not deploy customer order-history code that expects `user_id` until the reviewed database migration has been applied.
+
+
+## Transaction-level validation update — 2026-11-07
+
+The following staged migrations were loaded together against the current live schema inside one explicit transaction: 20261107170000_integrate_custom_product_variants, 20261107200000_bind_order_ownership_to_auth_user_uuid, 20261107230000_admin_adjust_product_variant_stock, and 20261107234500_harden_order_json_and_variant_integrity.
+
+Under the authenticated role with the configured admin JWT claims, a temporary rollback-only integration test verified:
+- the variant restock RPC increments only the requested variant and rejects an oversell delta;
+- a stale editor payload cannot overwrite the current variant stock while changing its price;
+- duplicate variant IDs and case-insensitive duplicate names are rejected;
+- cancelling an order restores the custom variant stock once;
+- repeating cancellation does not double-restore stock;
+- protected reactivation deducts the variant stock again, and a subsequent cancellation restores it again.
+
+The first test fixture used the same transaction-start now() timestamp for initial deduction and reactivation. The status guard correctly rejected a non-increasing stock_deducted_at value. The fixture was corrected to represent a prior transaction; the complete integration test then passed. This was a test-fixture issue, not a production reactivation defect.
+
+The transaction was rolled back. A post-rollback read-only query confirmed that the temporary products/order, stock RPC functions, and validator trigger were not persisted. The remote migration ledger remains unchanged at 67 applied versions, latest 20261107160152. No live migration or production data change was made.
+
+The static Node regression tests were extended but not executed. A staging-database migration run, full Node suite, browser QA and production deployment are still required before release.
