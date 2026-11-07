@@ -237,3 +237,17 @@ The ownership migration recreates the public SECURITY INVOKER checkout wrapper a
 Post-rollback verification again found 0 orders, 0 audit products, no ownership columns, no unchecked private checkout function, no variant-stock RPC, and the same 67-version remote migration ledger (latest 20261107160152). No production data or schema was changed.
 
 Migration-history drift remains a separate release gate: do not run db push or migration repair until the older missing remote versions are classified. The live customer-history function still returns raw item JSON until the forward ownership/minimization migration is deliberately applied.
+
+
+## Superseded migration classification — 2026-11-07
+
+A fresh live-catalog comparison confirms the following six older branch migrations must not be replayed over the newer remote schema:
+
+- 20261106120000_validate_order_item_variants: no matching order-item trigger exists, but direct INSERT/UPDATE on public.orders is denied to anon and authenticated roles. The sole public checkout RPC already validates product IDs, selected size/color, quantity and variant selection. Keep this as optional defense-in-depth only; it is not required for the current access model.
+- 20261106210000_validate_checkout_input_on_order_insert: no matching insert trigger exists, but direct INSERT is denied and the public checkout wrapper plus private checkout implementation already validate the customer, phone, address, email, items and quantity. Replaying it would add a redundant validation path.
+- 20261106220000_harden_support_ticket_public_insert: superseded by the later applied support-ticket column-grant migration. Live anon INSERT is already limited to exactly id, customer_name, email, subject and message; created_at, status and reply are not writable by anon.
+- 20261107001000_add_product_data_integrity_constraints: superseded by applied product constraints. Live checks already cover nonnegative/bounded stock, two-decimal bounded selling/old prices, purchase cost, and array shape/limits for variants, sizes, colors, gallery and tags.
+- 20261107002000_harden_flash_sale_rounding: superseded by the live flash-sale implementation. It validates a 0–100 discount with at most two decimals, rounds the new price, excludes products with custom variants, and updates only when the rounded price is lower than the reference price.
+- 20261107020000_add_order_status_notifications: superseded by the later applied notification migrations. Live order insert/status triggers, the order_notifications table and authenticated notification RPCs already exist. Do not replay this older email-based implementation over the newer notification code or the staged UUID-owner migration.
+
+These findings classify the SQL effects, not the migration ledger. The remote database still has 67 applied versions while several earlier repository migration versions are absent from the remote ledger. Do not use db push or migration repair until the exact historical versions and their superseding migrations are reconciled in a controlled plan.
