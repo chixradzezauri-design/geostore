@@ -228,10 +228,15 @@ export default function AiAssistantModal({
       .filter(variant => variant && variant.priceGEL !== null && variant.priceGEL !== undefined &&
         variant.priceGEL !== '' && Number.isFinite(Number(variant.priceGEL)) &&
         Number(variant.priceGEL) > 0 && Number(variant.stock) > 0);
-    const hasAvailableStock = (product) => Number(product?.stock) > 0 || availableVariants(product).length > 0;
-    const matchesBudget = (product, budget) =>
-      (Number(product?.stock) > 0 && Number(product?.priceGEL) > 0 && Number(product.priceGEL) <= budget) ||
-      availableVariants(product).some(variant => Number(variant.priceGEL) <= budget);
+    const hasAvailableStock = (product) => {
+      const hasCustomVariants = Array.isArray(product?.variants) && product.variants.length > 0;
+      return hasCustomVariants ? availableVariants(product).length > 0 : Number(product?.stock) > 0;
+    };
+    const matchesBudget = (product, budget) => {
+      const hasCustomVariants = Array.isArray(product?.variants) && product.variants.length > 0;
+      if (hasCustomVariants) return availableVariants(product).some(variant => Number(variant.priceGEL) <= budget);
+      return Number(product?.stock) > 0 && Number(product?.priceGEL) > 0 && Number(product.priceGEL) <= budget;
+    };
 
     // 1. სალამი და ზოგადი საუბარი
     if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello')) {
@@ -293,7 +298,7 @@ export default function AiAssistantModal({
     // 4. ფასდაკლებები და აქციები
     const isDiscountQuery = SYNONYMS.discount.some(w => query.includes(w));
     if (isDiscountQuery) {
-      const sales = sourceProducts.filter(p => hasAvailableStock(p) && p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
+      const sales = sourceProducts.filter(p => (!Array.isArray(p.variants) || p.variants.length === 0) && hasAvailableStock(p) && p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return {
         text: `🔥 მიმდინარე სპეციალური ფასდაკლებები და აქციები (${sales.length} ნივთი):`,
         products: sales.length > 0 ? sales.slice(0, 4) : sourceProducts.slice(0, 4)
