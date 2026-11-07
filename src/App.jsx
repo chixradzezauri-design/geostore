@@ -684,7 +684,11 @@ export default function App() {
         console.error('Supabase session restore error:', error);
 
         if (mounted) {
+          // Fail closed if the server cannot verify the restored session.
+          // Clear every privilege-related UI state, not only the profile.
           setCurrentUser(null);
+          setAdminLoggedIn(false);
+          setActiveTab((current) => current === 'admin' ? 'store' : current);
         }
       } finally {
         if (mounted) {
