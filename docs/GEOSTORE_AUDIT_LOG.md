@@ -41,3 +41,28 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - No production schema/data changes were made during this audit step.
 - No Vercel build or deployment was triggered.
 - Do not claim tests passed unless they are actually executed.
+
+
+## Admin security audit — continuation 2026-11-07
+
+### Additional checks
+
+- No `SECURITY DEFINER` functions exist in the exposed `public` schema; privileged implementations are in `private` and exposed only through SQL wrappers.
+- No ordinary views were found in `public`; therefore no public view bypass of RLS was identified.
+- `public.products` has column-level SELECT grants for anon/authenticated even though the table-level SELECT privilege check is false. This is intentional/functional for the public catalogue; do not interpret the table-level result alone as a storefront outage.
+- Sensitive mutation grants checked: anon has no UPDATE/DELETE on support tickets or storefront configuration/media; authenticated has grants, but RLS policies bind writes to the primary administrator UID and trusted app_metadata role.
+- Support-ticket public INSERT is intentionally allowed with field-length/status/reply constraints. No server-side rate limiter was identified for this public submission path; abuse protection remains a follow-up item.
+- Admin activity log in AdminDashboardPro is component state only (initial sample entries + local state updates); it is not a durable server audit trail. Do not present it as a tamper-resistant audit log.
+- Staff permissions remain a local-only planning list; they do not grant or restrict actual access. Do not rely on these checkboxes for authorization.
+
+### Follow-up items (not yet implemented)
+
+1. Design abuse controls for public support-ticket submission (prefer server-side throttling; avoid trusting client-only limits).
+2. If durable admin auditing is required, implement a server-written append-only event log with actor UID, action, target, timestamp, and restricted read access. Never allow the browser to author arbitrary actor identity.
+3. Implement staff accounts only with real Supabase Auth identities and server-side permission checks; otherwise keep the current local-only warning explicit.
+4. Continue storefront publish/draft and media lifecycle review. No production changes made in this continuation.
+
+### Verification boundary
+
+- Read-only live Supabase queries only.
+- No migration applied, no production data changed, no build/deploy run, and no automated tests executed.
