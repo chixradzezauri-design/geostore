@@ -685,3 +685,27 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
 - Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
 - No Vercel deployment or production database changes were made.
+
+
+## Checkout revenue and inventory consistency follow-up — 2026-11-07
+
+### Findings confirmed against the connected Supabase project
+- The live `private.create_order_with_stock` function already validates custom variant selection, prices custom variants from the database, atomically deducts the matching variant stock, and calculates server-side gift-wrap (+5 GEL) and VIP-warranty (+15 GEL) fees.
+- The server order snapshot stores the final per-unit `price` with add-on fees already included, and separately stores `base_price` and `addon_total`.
+- The live `private.preserve_product_variant_stock` trigger already preserves stock for existing variant IDs and blocks removal/reuse of variant IDs referenced in order history. The products table also has an admin-only UPDATE RLS policy.
+- The order-notifications table has RLS enabled and no direct table policies; customer access is intentionally through authenticated, owner-scoped RPC functions. Supabase advisors also report the private rate-limit/activity tables with RLS enabled and no policies. These are not exposed direct-table access paths.
+- Supabase security advisor still reports Leaked Password Protection disabled; this is a dashboard Auth setting and was not changed by SQL.
+
+### Corrections made on the design branch
+- Removed the redundant, not-yet-applied `admin_update_product` migration and restored the existing admin product PATCH path. It omits stale base stock from the payload; the existing database trigger protects variant stock.
+- Restored the already-applied `20261106103325_preserve_order_item_variants.sql` migration file to its original content. Applied migration history must not be rewritten to retrofit later changes.
+- Corrected admin finance and invoice line totals: server snapshots already include add-on fees in `price`, so adding the fees again would double-count revenue. A shared `calculateOrderLineRevenueGEL` helper now uses the final server price and is covered by a focused unit test.
+- Hardened the staged custom-variant migration's cancellation/reactivation paths by separating JSON array-type validation from `jsonb_array_length`; malformed non-array order items now produce the intended validation error rather than an array-function exception.
+- Added a checkout fingerprint test ensuring paid add-ons remain grouped with the exact custom variant.
+
+### Verification boundary
+- GitHub file refetches confirmed each edited file matches the saved branch content.
+- Four focused Node smoke assertions for the server-priced revenue helper passed.
+- The complete Node test suite, production build, and browser QA were not run on these latest commits. No live Supabase migration was applied.
+- Latest GitHub commit status reports Vercel failure with the build-rate-limit upgrade URL. No additional Vercel build/deploy was initiated.
+- Continue with the staged Auth UUID ownership migration review and migration-history reconciliation before any production database change.
