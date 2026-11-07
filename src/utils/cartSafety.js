@@ -181,6 +181,16 @@ export const sanitizeCartSnapshot = (value) => {
 };
 
 
+/** Parse a cross-tab cart snapshot defensively; malformed or removed values fail closed. */
+export const parseStoredCartSnapshot = (rawValue) => {
+  if (typeof rawValue !== 'string' || !rawValue) return [];
+  try {
+    return sanitizeCartSnapshot(JSON.parse(rawValue));
+  } catch {
+    return [];
+  }
+};
+
 export const getCartStorageKey = (userId) => (
   userId
     ? `geostore_cart:user:${encodeURIComponent(String(userId))}`
