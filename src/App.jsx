@@ -1362,9 +1362,22 @@ export default function App() {
           image: p.image || null,
           availableSizes: Array.isArray(p.available_sizes) ? p.available_sizes : [],
           availableColors: Array.isArray(p.available_colors) ? p.available_colors : [],
-          gallery: p.gallery || (p.image ? [p.image] : []),
-          variants: p.variants || [],
-          tags: p.tags || [],
+          gallery: Array.isArray(p.gallery)
+            ? [...new Set(p.gallery.filter((image) => typeof image === 'string' && image.trim()).map((image) => image.trim()))]
+            : (typeof p.gallery === 'string' && p.gallery.trim()
+              ? (() => {
+                  try {
+                    const parsed = JSON.parse(p.gallery);
+                    return Array.isArray(parsed)
+                      ? [...new Set(parsed.filter((image) => typeof image === 'string' && image.trim()).map((image) => image.trim()))]
+                      : (p.image ? [p.image] : []);
+                  } catch {
+                    return p.image ? [p.image] : [];
+                  }
+                })()
+              : (p.image ? [p.image] : [])),
+          variants: Array.isArray(p.variants) ? p.variants : [],
+          tags: Array.isArray(p.tags) ? p.tags : [],
           // purchase_cost is returned only by the admin-only RPC.
           purchaseCost: p.purchase_cost === null || p.purchase_cost === undefined ? null : Number(p.purchase_cost),
           material: p.material || '',
