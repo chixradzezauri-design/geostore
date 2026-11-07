@@ -463,3 +463,25 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Confirmed the exact localized branch was saved on the maintenance branch.
 - Existing regression tests cover valid and invalid variant selections; they were not executed in this environment.
 - No build, real checkout, Vercel build, or deployment was run.
+
+
+## Server-side checkout variant enforcement — 2026-11-07
+
+### Finding and repair
+- The live `private.create_order_with_stock(jsonb)` preserved selected size/color values in order snapshots and idempotency keys, but it did not verify that the selected options still belonged to the product's current catalogue options.
+- Updated the live function to load `available_sizes` and `available_colors` from the product row and reject any non-empty selection that is not an exact member of the corresponding JSON array.
+- The validation treats missing, malformed, or non-array option data as offering no selectable values; it does not silently accept arbitrary options.
+- Retained the existing private SECURITY DEFINER implementation, empty search_path, server-side product price/stock calculation, advisory lock, order idempotency, and public SECURITY INVOKER wrapper.
+
+### Verification
+- Invalid size was rejected with the expected server error.
+- Invalid color was rejected with the expected server error (the current live product has no available colors).
+- A valid size was accepted and preserved in the generated order snapshot inside a rollback-only test block.
+- Confirmed no test order was persisted and product stock remained 45.
+- Confirmed the public RPC wrapper remains SECURITY INVOKER and callable by anon/authenticated as before; the private implementation remains SECURITY DEFINER with its empty search_path.
+- Security Advisor still reports only the known leaked-password-protection warning (plan-level setting); no new security lint appeared.
+
+### Migration tracking limitation
+- The existing migration version `20261106103325` is present in live migration history, but its checked-in SQL did not match the live function and the migration runner rejected the full PL/pgSQL body. Two attempts were stopped; no migration-history entry was added by those failed attempts.
+- The live DDL was applied and verified through the SQL execution path. A canonical follow-up migration still needs to be generated with the Supabase CLI migration workflow before final release; do not treat this as fully reconciled in migration history.
+- No order/customer data was changed; no stock changed; no build or deployment was run.
