@@ -39,7 +39,7 @@ export default function AiAssistantModal({
       addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
       placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
       inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
-      disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
+      disclaimer: 'პასუხები ეფუძნება კატალოგის მონაცემებსა და წინასწარ წესებს · GEOSTORE',
       quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო', selectedProductContext: 'კონტექსტი: ', prompts: [{ label: '👋 გამარჯობა', query: 'გამარჯობა' }, { label: '🧥 ტანსაცმელი', query: 'ტანსაცმელი' }, { label: '👟 ფეხსაცმელები', query: 'ფეხსაცმელები' }, { label: '📱 სმარტფონები', query: 'სმარტფონები' }, { label: '💻 ლეპტოპები', query: 'ლეპტოპები' }, { label: '🔥 ფასდაკლებები', query: 'ფასდაკლებები' }, { label: '🚚 მიწოდება', query: 'მიწოდება' }]
     },
     en: {
@@ -52,7 +52,7 @@ export default function AiAssistantModal({
       addToCart: 'Add to cart', typing: 'Finding the best options...',
       placeholder: 'What are you looking for? Add a product, size or budget...',
       inputLabel: 'Message for AI assistant', send: 'Send message',
-      disclaimer: 'AI recommendations are for informational purposes · GEOSTORE',
+      disclaimer: 'Replies use catalog data and predefined rules · GEOSTORE',
       quickPrompts: 'Quick prompts', productImage: 'Product image', selectedProductContext: 'Selected product: ', prompts: [{ label: '👋 Hello', query: 'Hello' }, { label: '🧥 Clothing', query: 'Clothing' }, { label: '👟 Shoes', query: 'Shoes' }, { label: '📱 Smartphones', query: 'Smartphones' }, { label: '💻 Laptops', query: 'Laptops' }, { label: '🔥 Discounts', query: 'Discounts' }, { label: '🚚 Delivery', query: 'Delivery' }]
     },
     ru: {
@@ -65,7 +65,7 @@ export default function AiAssistantModal({
       addToCart: 'В корзину', typing: 'Подбираю лучшие варианты...',
       placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
       inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
-      disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE',
+      disclaimer: 'Ответы основаны на данных каталога и заданных правилах · GEOSTORE',
       quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара', selectedProductContext: 'Товар: ', prompts: [{ label: '👋 Привет', query: 'Привет' }, { label: '🧥 Одежда', query: 'Одежда' }, { label: '👟 Обувь', query: 'Обувь' }, { label: '📱 Смартфоны', query: 'Смартфоны' }, { label: '💻 Ноутбуки', query: 'Ноутбуки' }, { label: '🔥 Скидки', query: 'Скидки' }, { label: '🚚 Доставка', query: 'Доставка' }]
     }
   })[currentLang] || ({
@@ -241,10 +241,9 @@ export default function AiAssistantModal({
         };
       }
 
-      const randomStoreItem = sourceProducts[Math.floor(Math.random() * sourceProducts.length)];
       return {
-        text: `✨ თქვენს ციფრულ გარდერობში ფიქსირდება ${userWardrobe.length} ნივთი. AI სტილისტის რეკომენდაცია: თქვენს არსებულ ტანსაცმელს შესანიშნავად მოუხდება ჩვენი ვიტრინიდან ქვემოთ წარმოდგენილი პრემიუმ პროდუქტი!`,
-        products: [randomStoreItem]
+        text: `✨ თქვენს ციფრულ გარდერობში შენახულია ${userWardrobe.length} ნივთი. ზუსტი შეთავსების დასადგენად მიუთითეთ სასურველი კატეგორია, ფერი ან ბიუჯეტი — ამის მიხედვით მოვძებნი შესაბამის პროდუქტებს კატალოგში.`,
+        products: []
       };
     }
 

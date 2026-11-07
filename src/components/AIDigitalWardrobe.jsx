@@ -104,40 +104,53 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
     setWardrobe(prev => prev.filter(item => item.id !== id));
   };
 
-  // 🤖 AI სტილისტის მიერ აუტფიტის გენერაცია
+  // წესებზე დაფუძნებული, გამეორებადი ლუქის შეთავაზება — შემთხვევითი პროდუქტი არ ირჩევა.
   const handleGenerateOutfit = () => {
     setIsGenerating(true);
     setGeneratedOutfit(null);
 
-    setTimeout(() => {
-      // 1. გარდერობიდან ვირჩევთ ტანსაცმელსა და ფეხსაცმელს
-      const clothes = wardrobe.filter(i => i.category === 'ტანსაცმელი');
-      const footwear = wardrobe.filter(i => i.category === 'ფეხსაცმელი');
+    const topItem = wardrobe.find(item => item.category === 'ტანსაცმელი') || null;
+    const shoesItem = wardrobe.find(item => item.category === 'ფეხსაცმელი') || null;
+    const accessoryTerms = ['აქსესუარი', 'ჩანთა', 'ქამარი', 'სათვალე', 'ქუდი', 'accessory', 'bag', 'belt', 'glasses', 'hat'];
+    const eventTerms = event.includes('სპორტული')
+      ? ['სპორტ', 'sport', 'sneaker', 'ბოტასი']
+      : event.includes('ოფიციალური')
+        ? ['კლასიკ', 'საქმიანი', 'formal', 'classic']
+        : event.includes('წვეულება')
+          ? ['საღამო', 'party', 'evening', 'ელეგანტ']
+          : ['ყოველდღ', 'casual', 'basic'];
+    const storeCandidates = products
+      .filter(product => {
+        if (!product || !product.name) return false;
+        const searchable = [product.name, product.category, ...(Array.isArray(product.tags) ? product.tags : [])]
+          .filter(Boolean).join(' ').toLowerCase();
+        const hasRelevantTerm = [...accessoryTerms, ...eventTerms].some(term => searchable.includes(term));
+        const hasAvailableStock = Number(product.stock) > 0 ||
+          (Array.isArray(product.variants) && product.variants.some(variant => Number(variant.stock) > 0));
+        return hasRelevantTerm && hasAvailableStock;
+      })
+      .sort((a, b) => Number(a.priceGEL || 0) - Number(b.priceGEL || 0) ||
+        String(a.name).localeCompare(String(b.name)));
 
-      const topItem = clothes[Math.floor(Math.random() * clothes.length)] || clothes[0];
-      const shoesItem = footwear[Math.floor(Math.random() * footwear.length)] || footwear[0];
+    let advice = `სტილის შეთავაზება (${weather} | ${event}): `;
+    if (weather.includes('წვიმიანი') || weather.includes('ცივი')) {
+      advice += 'ამ პირობებში გაითვალისწინეთ ფენობრივი ჩაცმა და თბილი აქსესუარები.';
+    } else if (weather.includes('ქარიანი')) {
+      advice += 'აირჩიეთ კომფორტული ზედა ფენა და პრაქტიკული ფეხსაცმელი.';
+    } else {
+      advice += 'შეარჩიეთ მსუბუქი და კომფორტული კომბინაცია.';
+    }
+    if (!topItem || !shoesItem) {
+      advice += ' სრული კომბინაციისთვის გარდერობში დაამატეთ ტანსაცმელი და ფეხსაცმელი.';
+    }
 
-      // 2. მაღაზიიდან ვურჩევთ შესაფერის პროდუქტს აუტფიტის სრულყოფისთვის
-      const recommendedStoreProduct = products.length > 0 
-        ? products[Math.floor(Math.random() * products.length)]
-        : null;
-
-      let advice = `AI სტილისტის რჩევა (${weather} | ${event}): `;
-      if (weather.includes('წვიმიანი') || weather.includes('ცივი')) {
-        advice += "გირჩევთ ფენობრივ ჩაცმულობას და თბილ აქსესუარებს. კონტრასტული ფერები შესანიშნავ განწყობას შექმნის!";
-      } else {
-        advice += "მინიმალისტური და ჰაეროვანი კომბინაცია იდეალურია დღევანდელი დღისთვის!";
-      }
-
-      setGeneratedOutfit({
-        top: topItem,
-        shoes: shoesItem,
-        storeAddon: recommendedStoreProduct,
-        advice: advice
-      });
-
-      setIsGenerating(false);
-    }, 1200);
+    setGeneratedOutfit({
+      top: topItem,
+      shoes: shoesItem,
+      storeAddon: storeCandidates[0] || null,
+      advice
+    });
+    setIsGenerating(false);
   };
 
   return (
@@ -190,7 +203,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
           </div>
           <div>
             <h2 className="text-lg font-black text-white">AI სტილისტი — აუტფიტის გენერატორი</h2>
-            <p className="text-xs text-slate-400">აირჩიეთ გარემო პირობები და ხელოვნური ინტელექტი შეგირჩევთ საუკეთესო ლუქს</p>
+            <p className="text-xs text-slate-400">აირჩიეთ ამინდი და დრესკოდი — სისტემა გარდერობიდან შეგირჩევთ განმეორებად, წესებზე დაფუძნებულ კომბინაციას</p>
           </div>
         </div>
 
@@ -234,7 +247,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl transition shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isGenerating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-              {isGenerating ? 'AI აანალიზებს გარდერობს...' : 'აუტფიტის გენერაცია 🚀'}
+              {isGenerating ? 'ვაწყობ კომბინაციას...' : 'ლუქის შეთავაზება 🚀'}
             </button>
           </div>
         </div>
@@ -273,7 +286,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
               {/* Store Addon Recommendation */}
               {generatedOutfit.storeAddon && (
                 <div className="bg-gradient-to-b from-emerald-950/30 to-slate-900 border border-emerald-500/40 rounded-2xl p-4 text-center space-y-3 relative">
-                  <span className="text-[10px] font-black text-slate-950 bg-emerald-400 px-3 py-1 rounded-full uppercase">💡 AI რეკომენდაცია მაღაზიიდან</span>
+                  <span className="text-[10px] font-black text-slate-950 bg-emerald-400 px-3 py-1 rounded-full uppercase">💡 კატალოგიდან შერჩეული აქსესუარი</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
                     {generatedOutfit.storeAddon.image ? <img src={generatedOutfit.storeAddon.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                   </div>
