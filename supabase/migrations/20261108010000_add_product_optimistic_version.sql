@@ -47,7 +47,7 @@ begin
   if p_product is null or v_product_id is null
      or p_expected_version is null or p_expected_version < 1
      or nullif(trim(p_product ->> 'name'), '') is null
-     or coalesce(p_product ->> 'price_gel', '') !~ '^[0-9]+(\\.[0-9]{1,2})?
+     or coalesce(p_product ->> 'price_gel', '') !~ '^[0-9]+(\.[0-9]{1,2})?
   p_product_id text,
   p_variant_id text,
   p_delta integer,
@@ -120,7 +120,7 @@ create or replace function public.admin_adjust_product_variant_stock(
 )
 returns public.products
 language sql
-security definer
+security invoker
 set search_path = ''
 as $$
   select private.admin_adjust_product_variant_stock(
@@ -162,7 +162,7 @@ create or replace function public.admin_delete_product_if_version(
 )
 returns boolean
 language sql
-security definer
+security invoker
 set search_path = ''
 as $$
   select private.admin_delete_product_if_version(p_product_id, p_expected_version);
@@ -176,10 +176,13 @@ revoke all on function private.admin_delete_product_if_version(text,bigint) from
 revoke all on function public.admin_delete_product_if_version(text,bigint) from public, anon;
 grant execute on function public.admin_delete_product_if_version(text,bigint) to authenticated;
 
--- Retire the legacy unversioned delete route so stale clients cannot bypass
--- the compare-and-delete contract.
-revoke all on function public.admin_delete_product(text) from public, anon, authenticated;
-revoke all on function private.admin_delete_product(text) from public, anon, authenticated;
+-- Keep implementation functions private and callable only through guarded wrappers.
+grant usage on schema private to authenticated;
+grant execute on function private.admin_update_product(jsonb,bigint) to authenticated;
+grant execute on function private.admin_adjust_product_variant_stock(text,text,integer,bigint) to authenticated;
+grant execute on function private.admin_delete_product_if_version(text,bigint) to authenticated;
+
+revoke all on function private.touch_product_updated_at() from public, anon, authenticated;
 
 
      or (p_product ->> 'price_gel')::numeric < 0
@@ -234,7 +237,7 @@ create or replace function public.admin_update_product(
 )
 returns setof public.products
 language sql
-security definer
+security invoker
 set search_path = ''
 as $
   select * from private.admin_update_product(p_product, p_expected_version);
