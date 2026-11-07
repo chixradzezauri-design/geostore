@@ -10871,3 +10871,32 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .admin-subcategory-card button { flex:0 0 32px; }
  .admin-category-card>div[class*=border-amber]>div:last-child,.admin-subcategory-card>div[class*=border-amber]>div:last-child { flex-wrap:wrap; }
 }
+
+
+/* Admin campaign banners — refined composer and resilient preview cards */
+.admin-banners { min-width:0; display:grid; gap:clamp(16px,2.4vw,26px)!important; }
+.admin-banners>div { min-width:0; border-color:rgba(148,163,184,.17)!important; border-radius:clamp(18px,2.4vw,26px)!important; padding:clamp(14px,2.5vw,26px)!important; background:linear-gradient(145deg,rgba(23,25,29,.97),rgba(12,14,17,.98))!important; box-shadow:0 16px 44px rgba(0,0,0,.2)!important; }
+.admin-banners h3 { line-height:1.55!important; letter-spacing:-.015em; }
+.admin-banner-form { display:grid; gap:12px!important; }
+.admin-banner-fields { gap:10px!important; }
+.admin-banner-form input { min-width:0; width:100%; min-height:45px; border-radius:12px!important; border-color:rgba(148,163,184,.2)!important; background:#101216!important; padding:11px 13px!important; font-size:13px!important; line-height:1.45!important; }
+.admin-banner-form input:focus { outline:2px solid rgba(210,176,112,.35); outline-offset:1px; }
+.admin-banner-form button { min-height:45px; width:fit-content; max-width:100%; border-radius:12px!important; padding:11px 18px!important; font-size:12px!important; }
+.admin-banner-list { gap:12px!important; }
+.admin-banner-card { min-width:0; align-items:center!important; border-radius:15px!important; padding:12px!important; border-color:rgba(148,163,184,.15)!important; background:rgba(10,12,15,.62)!important; }
+.admin-banner-card>div:first-child { flex:1 1 auto; min-width:0; align-items:center; gap:12px!important; }
+.admin-banner-card img { width:clamp(68px,10vw,100px)!important; height:clamp(54px,7vw,76px)!important; border-radius:11px!important; }
+.admin-banner-card>div:first-child>div { min-width:0; }
+.admin-banner-card h4 { font-size:13px!important; line-height:1.5!important; overflow-wrap:anywhere; }
+.admin-banner-card p { line-height:1.55!important; overflow-wrap:anywhere; }
+.admin-banner-card>button { flex:0 0 36px; min-width:36px; min-height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px!important; }
+@media(max-width:639px) {
+ .admin-banners { gap:14px!important; }
+ .admin-banners>div { padding:13px!important; border-radius:17px!important; }
+ .admin-banners h3 { align-items:flex-start!important; font-size:12px!important; }
+ .admin-banner-form button { width:100%; justify-content:center; }
+ .admin-banner-card { align-items:flex-start!important; gap:10px!important; }
+ .admin-banner-card>div:first-child { align-items:flex-start!important; }
+ .admin-banner-card img { width:72px!important; height:60px!important; }
+ .admin-banner-card>button { flex:0 0 34px; }
+}
