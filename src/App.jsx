@@ -2333,16 +2333,19 @@ export default function App() {
       Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder
     );
     const confirmedTotal = Number(serverOrderResult.total_gel);
+    const confirmedDelivery = Number(serverOrderResult.delivery_gel);
+    const safeConfirmedTotal = Number.isFinite(confirmedTotal) && confirmedTotal >= 0 ? confirmedTotal : 0;
+    const safeConfirmedDelivery = Number.isFinite(confirmedDelivery) && confirmedDelivery >= 0 ? confirmedDelivery : 0;
     const newOrderObj = {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
       customer_name: customerName,
       phone: customerPhone,
-      address: `${customerAddress} (${regionText}, მიწოდება: ${Number(serverOrderResult.delivery_gel) || 0} ₾)`,
+      address: `${customerAddress} (${regionText}, მიწოდება: ${safeConfirmedDelivery} ₾)`,
       user_email: orderUserEmail,
       items: confirmedItems,
-      totalGEL: Number.isFinite(confirmedTotal) ? confirmedTotal : 0,
-      total_gel: Number.isFinite(confirmedTotal) ? confirmedTotal : 0,
+      totalGEL: safeConfirmedTotal,
+      total_gel: safeConfirmedTotal,
       status: 'ახალი',
       itemSummary: confirmedItems.length > 0
         ? confirmedItems.map((item) => `${item.name || 'პროდუქტი'} (x${item.quantity || 1})`).join(', ')
@@ -2364,7 +2367,7 @@ export default function App() {
     setCheckoutError('');
     setIsSubmittingOrder(false);
     orderSubmitLock.current = false;
-    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: Number(serverOrderResult.total_gel) });
+    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: safeConfirmedTotal });
     if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
     try {
       const savedPendingCheckout = JSON.parse(window.sessionStorage.getItem('geostore.pendingCheckout') || 'null');
