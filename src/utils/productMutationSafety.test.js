@@ -24,13 +24,15 @@ test('fails closed for missing lock collections or product ids', () => {
 
 test('builds an encoded optimistic version filter from a valid timestamp', () => {
   assert.equal(
-    buildProductVersionFilter('2026-11-08T01:00:00.000Z'),
-    'updated_at=eq.2026-11-08T01%3A00%3A00.000Z'
+    buildProductVersionFilter(17),
+    'version=eq.17'
   );
 });
 
 test('rejects missing or invalid product version tokens', () => {
   assert.equal(buildProductVersionFilter(null), null);
   assert.equal(buildProductVersionFilter(''), null);
-  assert.equal(buildProductVersionFilter('not-a-date'), null);
+  assert.equal(buildProductVersionFilter('not-a-number'), null);
+  assert.equal(buildProductVersionFilter(0), null);
+  assert.equal(buildProductVersionFilter(-1), null);
 });
