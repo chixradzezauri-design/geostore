@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -2539,7 +2539,11 @@ export default function App() {
       let storedPendingCheckout = null;
       if (canPersistFingerprint) {
         try {
-          storedPendingCheckout = JSON.parse(window.localStorage.getItem('geostore.pendingCheckout.v2') || 'null');
+          storedPendingCheckout = findReusablePendingCheckout(
+            window.localStorage.getItem('geostore.pendingCheckout.v3') ||
+              window.localStorage.getItem('geostore.pendingCheckout.v2') || '',
+            checkoutFingerprint
+          );
         } catch {
           storedPendingCheckout = null;
         }
@@ -2564,7 +2568,13 @@ export default function App() {
       pendingCheckoutRef.current = pendingEntry;
       if (canPersistFingerprint) {
         try {
-          window.localStorage.setItem('geostore.pendingCheckout.v2', JSON.stringify(pendingEntry));
+          const pendingStoreKey = 'geostore.pendingCheckout.v3';
+          const currentStore = window.localStorage.getItem(pendingStoreKey) ||
+            window.localStorage.getItem('geostore.pendingCheckout.v2') || '';
+          window.localStorage.setItem(
+            pendingStoreKey,
+            upsertPendingCheckoutEntry(currentStore, pendingEntry)
+          );
         } catch {
           // In-memory retry protection remains active if browser storage is unavailable.
         }
@@ -2678,8 +2688,14 @@ export default function App() {
     setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: safeConfirmedTotal });
     if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
     try {
-      const savedPendingCheckout = JSON.parse(window.localStorage.getItem('geostore.pendingCheckout.v2') || 'null');
-      if (savedPendingCheckout?.orderId === orderId) window.localStorage.removeItem('geostore.pendingCheckout.v2');
+      const pendingStoreKey = 'geostore.pendingCheckout.v3';
+      const currentStore = window.localStorage.getItem(pendingStoreKey) ||
+        window.localStorage.getItem('geostore.pendingCheckout.v2') || '';
+      const nextStore = removePendingCheckoutEntry(currentStore, orderId);
+      if (nextStore) window.localStorage.setItem(pendingStoreKey, nextStore);
+      else window.localStorage.removeItem(pendingStoreKey);
+      // Remove the legacy slot only after its entry has been migrated/cleaned.
+      window.localStorage.removeItem('geostore.pendingCheckout.v2');
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
