@@ -1,5 +1,6 @@
 // src/components/ProductCompareModal.jsx - Side-by-Side Product Comparison
 import React from 'react';
+import { getProductAvailableStock, getProductStartingPrice } from '../utils/productVariants.js';
 import { X, ShoppingBag, Trash2, Scale, Check, ShieldCheck } from 'lucide-react';
 
 export default function ProductCompareModal({
@@ -69,7 +70,7 @@ export default function ProductCompareModal({
                     <div className="gs-product-compare-specs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 space-y-3 text-xs">
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">ფასი:</span>
-                        <span className="text-amber-400 font-black text-sm">{formatPrice(prod.priceGEL)}</span>
+                        <span className="text-amber-400 font-black text-sm">{getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}</span>
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">მომწოდებელი:</span>
@@ -77,7 +78,7 @@ export default function ProductCompareModal({
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">მარაგში:</span>
-                        <span className="text-emerald-400 font-bold">{prod.stock || 1} ცალი</span>
+                        <span className="text-emerald-400 font-bold">{getProductAvailableStock(prod)} ცალი</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">SKU:</span>
