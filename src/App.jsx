@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -1422,12 +1422,15 @@ export default function App() {
       if (couponResponse.ok) {
         const rows = await couponResponse.json();
         setCoupons(Array.isArray(rows) ? rows
-          .filter((row) => row && row.active === true && typeof row.code === 'string')
+          .filter((row) => row && row.active === true &&
+            typeof row.code === 'string' && /^[A-Z0-9_-]{3,64}$/.test(row.code.trim()) &&
+            isValidGELAmount(row.discount_percent, { min: 0.01, max: 100 }) &&
+            isValidGELAmount(row.min_order_gel))
           .map((row) => ({
             id: row.id,
-            code: row.code.trim().toUpperCase(),
+            code: row.code.trim(),
             discountPercent: Number(row.discount_percent),
-            minOrderGEL: Number(row.min_order_gel) || 0,
+            minOrderGEL: Number(row.min_order_gel),
             status: 'აქტიური'
           })) : []);
       } else {
@@ -1656,11 +1659,8 @@ export default function App() {
     const minOrderGEL = Number(found?.minOrderGEL ?? 0);
     if (
       found &&
-      Number.isFinite(discountPercent) &&
-      discountPercent > 0 &&
-      discountPercent <= 100 &&
-      Number.isFinite(minOrderGEL) &&
-      minOrderGEL >= 0
+      isValidGELAmount(found.discountPercent, { min: 0.01, max: 100 }) &&
+      isValidGELAmount(found.minOrderGEL ?? 0)
     ) {
       if (cartSubtotalGEL < minOrderGEL) {
         const message = currentLang === 'en'
@@ -2383,14 +2383,17 @@ export default function App() {
 
       const freshFees = { ...deliveryFees };
       let selectedFeeFound = false;
+      let selectedFeeInvalid = false;
       freshDeliveryRows.forEach((row) => {
         if (!Object.prototype.hasOwnProperty.call(freshFees, row.region)) return;
-        const fee = Number(row.fee_gel);
-        if (!Number.isFinite(fee) || fee < 0) return;
-        freshFees[row.region] = fee;
+        if (!isValidGELAmount(row.fee_gel)) {
+          if (row.region === selectedRegion) selectedFeeInvalid = true;
+          return;
+        }
+        freshFees[row.region] = Number(row.fee_gel);
         if (row.region === selectedRegion) selectedFeeFound = true;
       });
-      if (!selectedFeeFound) {
+      if (!selectedFeeFound || selectedFeeInvalid) {
         throw new Error(currentLang === 'en'
           ? 'Delivery price for the selected region is unavailable. Please contact support.'
           : currentLang === 'ru'
@@ -2398,13 +2401,18 @@ export default function App() {
             : 'არჩეული რეგიონის მიწოდების ფასი ვერ მოიძებნა. დაუკავშირდით მხარდაჭერას.');
       }
 
-      const freshCoupons = freshCouponRows.map((row) => ({
-        id: row.id,
-        code: row.code,
-        discountPercent: Number(row.discount_percent),
-        minOrderGEL: Number(row.min_order_gel) || 0,
-        status: row.active ? 'აქტიური' : 'გამორთული'
-      }));
+      const freshCoupons = freshCouponRows
+        .filter((row) => row && row.active === true &&
+          typeof row.code === 'string' && /^[A-Z0-9_-]{3,64}$/.test(row.code.trim()) &&
+          isValidGELAmount(row.discount_percent, { min: 0.01, max: 100 }) &&
+          isValidGELAmount(row.min_order_gel))
+        .map((row) => ({
+          id: row.id,
+          code: row.code.trim(),
+          discountPercent: Number(row.discount_percent),
+          minOrderGEL: Number(row.min_order_gel),
+          status: 'აქტიური'
+        }));
       const oldSelectedFee = Number(currentDeliveryCost);
       const newSelectedFee = Number(freshFees[selectedRegion]);
       let pricingChanged = !Number.isFinite(oldSelectedFee) || oldSelectedFee !== newSelectedFee;
