@@ -12,6 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
+import { normalizeOrderItems } from '../utils/orderSafety';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -321,7 +322,9 @@ export default function AdminDashboardPro({
       if (res.ok) {
         const data = await res.json();
         if (typeof setOrders === 'function') {
-          setOrders(data.map(o => ({
+          setOrders(data.map(o => {
+            const items = normalizeOrderItems(o.items);
+            return ({
             id: o.id,
             created_at: o.created_at || null,
             date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
@@ -332,13 +335,14 @@ export default function AdminDashboardPro({
             address: o.address,
             totalGEL: Number(o.total_gel) || 0,
             status: o.status || 'ახალი',
-            items: o.items || [], // 🌟 შეკვეთილი პროდუქტების სრული მასივი
+            items, // normalized order lines; malformed legacy entries are ignored
             adminNote: o.admin_note || '',
             stock_deducted_at: o.stock_deducted_at || null,
             stock_restored_at: o.stock_restored_at || null,
             status_changed_at: o.status_changed_at || null,
-            itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
-          })));
+            itemSummary: items.length > 0 ? items.map(i => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
+          });
+          }));
         }
       }
     } catch {}
@@ -1645,8 +1649,9 @@ export default function AdminDashboardPro({
       return Number.isFinite(number) && number >= 0 ? number : 0;
     };
 
-    const itemsRows = Array.isArray(order.items) && order.items.length > 0
-      ? order.items.map((item) => {
+    const safeOrderItems = normalizeOrderItems(order.items);
+    const itemsRows = safeOrderItems.length > 0
+      ? safeOrderItems.map((item) => {
           const imageSrc = safeImageSrc(item.image);
           const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
           const unitPrice = numericValue(item.priceGEL ?? item.price);
@@ -3152,11 +3157,11 @@ export default function AdminDashboardPro({
 
               {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
               <div className="admin-order-items-section space-y-3">
-                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({Array.isArray(selectedOrderForModal.items) ? selectedOrderForModal.items.length : 1})</h4>
+                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length || 1})</h4>
                 
                 <div className="space-y-3">
-                  {Array.isArray(selectedOrderForModal.items) && selectedOrderForModal.items.length > 0 ? (
-                    selectedOrderForModal.items.map((item, idx) => (
+                  {normalizeOrderItems(selectedOrderForModal.items).length > 0 ? (
+                    normalizeOrderItems(selectedOrderForModal.items).map((item, idx) => (
                       <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         {item.image ? (
                           <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
