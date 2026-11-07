@@ -254,6 +254,24 @@ export const calculateCheckoutTotals = ({ subtotal, discountPercent, deliveryFee
  * The server RPC remains authoritative; this is a customer-facing stale-cart
  * guard so changed prices/stock are reviewed before the order is submitted.
  */
+/** Classify stale-cart changes so checkout explains the actual action needed. */
+export const classifyCartReconciliationChanges = (changes) => {
+  const entries = Array.isArray(changes) ? changes : [];
+  const types = new Set(entries.map((change) => change?.type));
+  if (['unavailable', 'invalid_price', 'variant_custom_unavailable'].some((type) => types.has(type))) {
+    return 'unavailable';
+  }
+  if ([
+    'variant_size', 'variant_color', 'variant_size_missing', 'variant_color_missing',
+    'variant_custom_missing'
+  ].some((type) => types.has(type))) {
+    return 'options';
+  }
+  if (types.has('stock') || types.has('unavailable_stock')) return 'stock';
+  if (types.has('price')) return 'price';
+  return 'review';
+};
+
 export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
   const cart = Array.isArray(cartItems) ? cartItems : [];
   const catalog = Array.isArray(catalogProducts) ? catalogProducts : [];
