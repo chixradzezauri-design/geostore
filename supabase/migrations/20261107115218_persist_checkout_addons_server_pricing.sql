@@ -335,7 +335,7 @@ BEGIN
   END IF;
 
   IF coalesce(length(trim(p_order->>'customer_name')), 0) NOT BETWEEN 2 AND 100
-     OR coalesce(length(trim(p_order->>'address')), 0) NOT BETWEEN 3 AND 300
+     OR coalesce(length(trim(p_order->>'address')), 0) NOT BETWEEN 3 AND 400
      OR coalesce(length(p_order->>'phone'), 0) > 32 THEN
     RAISE EXCEPTION 'სახელი, ტელეფონი ან მისამართი არასწორია.';
   END IF;

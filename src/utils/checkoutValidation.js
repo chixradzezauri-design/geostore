@@ -1,5 +1,8 @@
 const hasControlCharacters = (value) => /[\u0000-\u001f\u007f]/.test(value);
 
+export const buildOrderDeliveryAddress = ({ address, regionText, deliveryFee }) =>
+  `${String(address ?? '').trim()} (${String(regionText ?? '').trim()}, მიწოდება: ${String(deliveryFee ?? '').trim()} ₾)`;
+
 export const validateCheckoutContact = ({ name, phone, email, address, requireEmail = false }) => {
   const cleanName = String(name ?? '').trim();
   const phoneInput = String(phone ?? '');

@@ -26,7 +26,7 @@ import {
 
 import { translations } from './utils/translations';
 import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
-import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
+import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
@@ -2359,7 +2359,7 @@ export default function App() {
               id: orderId,
               customer_name: customerName,
               phone: customerPhone,
-              address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+              address: buildOrderDeliveryAddress({ address: customerAddress, regionText, deliveryFee: currentDeliveryCost }),
               // სტუმრის იდენტობა ბაზის ფუნქციას ცალკე sentinel-ით გადაეცემა;
               // საკონტაქტო ელფოსტა ინახება customer_email ველში.
               user_email: orderSession?.user?.email || 'guest',
