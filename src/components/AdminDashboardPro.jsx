@@ -11,7 +11,7 @@ import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
-import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages } from '../utils/productImageCleanup';
+import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
 import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 
@@ -125,7 +125,7 @@ const deleteProductImages = async (imageUrls, productId) => {
     if (!orderReferenceResponse.ok) throw new Error('შეკვეთების ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
     const orderReferenceRows = await orderReferenceResponse.json();
     if (!Array.isArray(orderReferenceRows)) throw new Error('შეკვეთების სია არასწორია.');
-    if (orderReferenceRows.length > 0) return false;
+    if (shouldRetainProductImagesForOrderHistory(orderReferenceRows)) return false;
 
     // A product-owned Storage path can still be referenced by another product.
     // Read the lightweight image references first and fail closed if this check fails.
