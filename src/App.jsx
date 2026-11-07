@@ -1067,21 +1067,21 @@ export default function App() {
         if (!Array.isArray(rows)) throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
         if (!isCurrentOwner()) return;
         setMyOrdersError('');
-        setMyOrders(rows.map((o) => ({
-          id: o.id,
-          created_at: o.created_at || null,
-          date: o.created_at
-            ? new Date(o.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
-            : '',
-          customerName: o.customer_name || '',
-          user_email: currentUser.email,
-          phone: o.phone || '',
-          address: o.address || '',
-          totalGEL: normalizeOrderTotal(o.total_gel),
-          status: o.status || 'ახალი',
-          items: normalizeOrderItems(o.items),
-          status_changed_at: o.status_changed_at || null
-        })));
+        setMyOrders(rows.map((o) => {
+          const parsedDate = o.created_at ? new Date(o.created_at) : null;
+          const validDate = parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate : null;
+          return {
+            id: typeof o.id === 'string' ? o.id : '',
+            created_at: validDate ? validDate.toISOString() : null,
+            date: validDate
+              ? validDate.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
+              : '',
+            totalGEL: normalizeOrderTotal(o.total_gel),
+            status: typeof o.status === 'string' && o.status.trim() ? o.status : 'ახალი',
+            items: normalizeOrderItems(o.items),
+            status_changed_at: o.status_changed_at || null
+          };
+        }).filter((order) => order.id));
       } catch (error) {
         if (isCurrentOwner()) {
           console.error('My orders fetch error:', error);
@@ -3090,13 +3090,14 @@ export default function App() {
                             </span>
                           </div>
 
-                          <p className="text-slate-300 text-[11px]">
-                            📍 {currentLang === 'en' ? 'Address' : currentLang === 'ru' ? 'Адрес' : 'მისამართი'}: {order.address}
-                          </p>
-
-                          <p className="text-slate-400 text-[11px]">
-                            📞 {currentLang === 'en' ? 'Phone' : currentLang === 'ru' ? 'Телефон' : 'ტელეფონი'}: {order.phone}
-                          </p>
+                          {Array.isArray(order.items) && order.items.length > 0 && (
+                            <p className="text-slate-300 text-[11px] leading-relaxed break-words">
+                              {order.items.slice(0, 3).map((item) =>
+                                `${item.name || (currentLang === 'en' ? 'Product' : currentLang === 'ru' ? 'Товар' : 'პროდუქტი')}${item.customVariantName ? ` — ${item.customVariantName}` : ''} ×${Math.max(1, Number(item.quantity) || 1)}`
+                              ).join(' · ')}
+                              {order.items.length > 3 ? ` +${order.items.length - 3}` : ''}
+                            </p>
+                          )}
                         </div>
 
                         <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
