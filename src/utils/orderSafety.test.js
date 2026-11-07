@@ -9,6 +9,7 @@ import {
   reconcileCartWithCatalog,
   createSecureOrderId,
   groupCheckoutItems,
+  buildCheckoutFingerprintPayload,
   isReusableCheckout,
   findReusablePendingCheckout,
   parsePendingCheckoutEntries,
@@ -20,6 +21,27 @@ import {
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
+
+test('checkout retry fingerprints are isolated by authenticated owner identity', () => {
+  const base = {
+    customerName: 'Test Customer',
+    phone: '555123456',
+    address: 'Test address',
+    userEmail: 'customer@example.com',
+    customerEmail: 'customer@example.com',
+    items: [{ id: 'p-1', quantity: 1 }],
+    couponCode: '',
+    deliveryRegion: 'tbilisi'
+  };
+  const accountA = buildCheckoutFingerprintPayload({ ...base, ownerId: 'user-a' });
+  const accountB = buildCheckoutFingerprintPayload({ ...base, ownerId: 'user-b' });
+  const guest = buildCheckoutFingerprintPayload({ ...base, ownerId: null });
+  assert.equal(accountA.owner_id, 'user-a');
+  assert.equal(accountB.owner_id, 'user-b');
+  assert.equal(guest.owner_id, 'guest');
+  assert.notEqual(JSON.stringify(accountA), JSON.stringify(accountB));
+  assert.notEqual(JSON.stringify(accountA), JSON.stringify(guest));
+});
 
 test('accepts only non-negative GEL values with at most two decimal places', () => {
   for (const value of ['0', '10', '10.5', '10.50', 0, 10.25, '1000000000.00']) {
