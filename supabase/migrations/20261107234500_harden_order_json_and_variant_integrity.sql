@@ -114,8 +114,11 @@ begin
              select 1
                from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end) element
               where element->>'id' = v_item.custom_variant_id
-                and coalesce(element->>'stock', '') ~ '^[0-9]{1,7}$'
-                and (element->>'stock')::integer between 0 and (1000000 - v_item.quantity)
+                and CASE
+                      WHEN coalesce(element->>'stock', '') ~ '^[0-9]{1,7}$'
+                        THEN (element->>'stock')::integer BETWEEN 0 AND (1000000 - v_item.quantity)
+                      ELSE false
+                    END
            );
       end if;
 
@@ -241,7 +244,11 @@ begin
              with ordinality as variant_rows(element, ordinality)
          )
        where p.id = v_item.product_id
-         and exists (select 1 from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end) element where element->>'id' = v_item.custom_variant_id and coalesce((element->>'stock')::integer, 0) >= v_item.quantity);
+         and exists (select 1 from jsonb_array_elements(case when jsonb_typeof(p.variants) = 'array' then p.variants else '[]'::jsonb end) element where element->>'id' = v_item.custom_variant_id and CASE
+                 WHEN coalesce(element->>'stock', '') ~ '^[0-9]{1,7}$'
+                   THEN (element->>'stock')::integer >= v_item.quantity
+                 ELSE false
+               END);
     end if;
 
     get diagnostics v_updated = row_count;
