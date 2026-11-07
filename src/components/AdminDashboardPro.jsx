@@ -937,11 +937,17 @@ export default function AdminDashboardPro({
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = normalizeOrderQuantity(item.quantity);
         const itemGross = calculateOrderLineRevenueGEL(item);
+        const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
         if (quantity === 0) {
+          // Preserve the revenue share in the income-source reconciliation,
+          // but never attribute malformed quantities to product/vendor profit.
+          if (allocatedRevenue > 0) {
+            const label = 'პროდუქტის შემოსავალი — რაოდენობა არასწორია';
+            incomeTotals.set(label, (incomeTotals.get(label) || 0) + allocatedRevenue);
+          }
           unknownCogsItems += 1;
           return;
         }
-        const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
         const label = `${vendor} · ${category}`;
