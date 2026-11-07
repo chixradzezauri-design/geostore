@@ -27,7 +27,7 @@ import {
 import { translations } from './utils/translations';
 import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
-import { validateRegistrationPassword } from './utils/passwordSafety';
+import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { addProductToCart } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
@@ -1547,6 +1547,24 @@ export default function App() {
             }
           };
           alert(passwordMessages[passwordCheck.reason]?.[currentLang] || passwordMessages.length.ka);
+          return;
+        }
+
+        const pwnedPasswordCheck = await checkPwnedPassword(password);
+        if (!pwnedPasswordCheck.valid) {
+          const pwnedMessages = {
+            pwned: {
+              ka: 'ეს პაროლი ცნობილია მონაცემთა გაჟონვებიდან. უსაფრთხოებისთვის აირჩიეთ სხვა პაროლი.',
+              en: 'This password appears in known data breaches. Choose a different password.',
+              ru: 'Этот пароль найден в известных утечках данных. Выберите другой пароль.'
+            },
+            unavailable: {
+              ka: 'პაროლის უსაფრთხოების შემოწმება დროებით ვერ შესრულდა. სცადეთ ხელახლა.',
+              en: 'The password safety check is temporarily unavailable. Please try again.',
+              ru: 'Проверка безопасности пароля временно недоступна. Попробуйте ещё раз.'
+            }
+          };
+          alert(pwnedMessages[pwnedPasswordCheck.reason]?.[currentLang] || pwnedMessages.unavailable.ka);
           return;
         }
 
