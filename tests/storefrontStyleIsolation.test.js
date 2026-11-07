@@ -80,3 +80,10 @@ test('digital wardrobe and its add-item dialog use the shared responsive design 
   assert.match(css, /\.gs-wardrobe-hero\{[^}]*background:linear-gradient\(115deg,#f5f0e9 0%,#ebe3d9 100%\)!important;/s);
   assert.match(css, /\.gs-wardrobe-add-form\{[^}]*max-height:min\(90dvh,780px\)!important;/s);
 });
+ 
+test('product comparison uses variant-aware prices and actual available stock', () => {
+  assert.match(productCompare, /getProductStartingPrice\(prod\)/);
+  assert.match(productCompare, /getProductAvailableStock\(prod\)/);
+  assert.doesNotMatch(productCompare, /prod\.stock\s*\|\|\s*1/);
+});
+
