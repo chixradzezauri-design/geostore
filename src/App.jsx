@@ -2730,9 +2730,9 @@ export default function App() {
         )}
 
         {activeTab === 'wishlist' && (
-          <div className="space-y-6">
+          <div className="gs-wishlist-page space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <h2 className="gs-wishlist-title text-xl font-black tracking-tight flex items-center gap-2">
                 <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
                 {t.wishlist} ({wishlist.length})
               </h2>
@@ -2740,7 +2740,7 @@ export default function App() {
               {wishlist.length > 0 && (
                 <button
                   onClick={handleShareWishlist}
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                  className="gs-wishlist-share bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
                 >
                   <Share2 className="w-4 h-4" />
                   {t.shareList}
@@ -2749,29 +2749,29 @@ export default function App() {
             </div>
 
             {wishlist.length === 0 ? (
-              <p className="text-slate-500 text-xs py-8">
+              <p className="gs-wishlist-empty text-slate-500 text-xs py-8">
                 {t.emptyWishlist}
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map((prod) => (
                   <div
                     key={prod.id}
-                    className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
+                    className="gs-wishlist-card bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
                     <div className="flex items-center gap-3.5">
                       <img
                         src={prod.image}
                         alt=""
-                        className="w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
+                        className="gs-wishlist-image w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
                       />
 
                       <div>
-                        <h4 className="font-bold text-xs text-white line-clamp-1">
+                        <h4 className="gs-wishlist-product-title font-bold text-xs line-clamp-1">
                           {prod.name}
                         </h4>
 
-                        <p className="text-emerald-400 font-black text-xs mt-1">
+                        <p className="gs-wishlist-product-price font-black text-xs mt-1">
                           {formatPrice(prod.priceGEL)}
                         </p>
                       </div>
@@ -2779,7 +2779,7 @@ export default function App() {
 
                     <button
                       onClick={() => addToCart(prod)}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                      className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer"
                     >
                       {t.addToCart}
                     </button>
