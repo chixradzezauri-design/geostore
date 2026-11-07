@@ -3157,7 +3157,6 @@ export default function AdminDashboardPro({
                             <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
                           </div>
                           {item.gift_message && <p className="text-amber-200 text-[11px] break-words">სასაჩუქრე ტექსტი: {item.gift_message}</p>}
-                          </div>
                         </div>
                         <div className="admin-order-item-price text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-900">
                           <span className="text-slate-400 text-[10px]">ერთეულის ფასი: {item.priceGEL || item.price || 0} ₾</span>
