@@ -2338,7 +2338,7 @@ export default function App() {
         const hasVariantChange = reconciliation.changes.some((change) =>
           ['variant_size', 'variant_color', 'variant_size_missing', 'variant_color_missing',
             'variant_custom_missing', 'variant_custom_unavailable'].includes(change.type) ||
-          (change.type === 'stock' && Boolean(change.customVariantId))
+          (['price', 'stock'].includes(change.type) && Boolean(change.customVariantId))
         );
         const message = currentLang === 'en'
           ? hasVariantChange
