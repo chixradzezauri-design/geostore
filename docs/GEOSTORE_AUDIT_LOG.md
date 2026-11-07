@@ -274,3 +274,29 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - No local compile, automated test suite, browser interaction test, Vercel build, or deployment was run. Full runtime verification remains pending and must be completed in the final consolidated verification stage.
 - The previously recorded non-atomic publish/version-history gap remains open: config publish and version insertion are still separate requests. This stage did not pretend to fix it or change production schema.
 - Version-history listing/restore UI, safe old-media garbage collection, and server-side support-ticket throttling also remain open from earlier stages.
+
+
+## Storefront version history visibility and safe draft restore — 2026-11-07
+
+### Changes saved
+
+- Added an authenticated-admin-only read of the latest 20 `storefront_versions` rows, selecting only the fields needed by the admin UI.
+- Added a version-history panel in global settings with label and timestamp.
+- Added guarded “restore to draft” behavior. It validates the snapshot shape before loading categories, banners, and site settings into the editor; it requires confirmation and never publishes automatically or deletes/replaces history.
+- Version history reloads after the publish operation finishes, so a newly created version can appear without a full page refresh.
+- Current live version table is empty, so the history panel will correctly show an empty-state message until a successful publish writes a version.
+
+### Live database review for the next hardening stage
+
+- Live migration history currently ends at `20261106110051` (`fix_flash_sale_stale_original_price`).
+- `storefront_versions` columns are: UUID id, config_key, JSONB snapshot, optional version_label, optional created_by, and created_at.
+- RLS policies allow the primary administrator to SELECT, INSERT, UPDATE, and DELETE version rows. The UI added here only reads rows; it does not edit or delete them. For durable history integrity, a later server-side migration should remove browser UPDATE/DELETE capability and use append-only transactional functions.
+- No existing public/private function matching storefront publish/version transaction was found in the live database. The current two-request publish/version consistency gap remains.
+- Security advisor currently reports only the known `auth_leaked_password_protection` warning. Performance advisor reports three unused indexes as INFO; these are not removed because current workload evidence is insufficient.
+- The environment has no Supabase CLI installed and no checked-out local repository. Per the Supabase workflow requirements, a new migration file must first be generated with `supabase migration new`; therefore no migration filename was invented and no direct production DDL was applied. Transactional publish and append-only version hardening remain queued until a verified local CLI/migration workflow is available.
+
+### Verification boundary
+
+- Re-fetched the changed App/Admin/StoreView files and confirmed the banner validation runs in both draft and publish paths; settings validation runs in both paths; normalized settings are passed into the draft snapshot; banners are passed into and rendered by StoreView; version reads are gated by admin state; and restore loads only into the draft editor.
+- Read-only live database checks only. No production data, schema, policies, Storage objects, or migration history changed.
+- No local compile, automated tests, browser interaction test, Vercel build, or deployment was run. These must be part of the final consolidated verification stage.
