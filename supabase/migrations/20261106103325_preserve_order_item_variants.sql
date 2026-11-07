@@ -94,7 +94,8 @@ begin
        or length(coalesce(item->>'selected_size', '')) > 40
        or length(coalesce(item->>'selected_color', '')) > 60
        or length(coalesce(item->>'custom_variant_id', '')) > 80
-       or (item ? 'custom_variant_id' and jsonb_typeof(item->'custom_variant_id') <> 'string')
+       or (item ? 'custom_variant_id' and jsonb_typeof(item->'custom_variant_id') not in ('string', 'null'))
+       or (jsonb_typeof(item->'custom_variant_id') = 'string' and nullif(trim(item->>'custom_variant_id'), '') is null)
        or (item ? 'gift_wrap' and jsonb_typeof(item->'gift_wrap') <> 'boolean')
        or (item ? 'vip_warranty' and jsonb_typeof(item->'vip_warranty') <> 'boolean')
        or (item ? 'gift_message' and jsonb_typeof(item->'gift_message') <> 'string')
