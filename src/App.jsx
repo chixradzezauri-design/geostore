@@ -29,6 +29,7 @@ import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReu
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { addProductToCart } from './utils/cartSafety';
+import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1349,12 +1350,8 @@ export default function App() {
 
     const selectedSize = String(product?.selectedSize || '').trim();
     const selectedColor = String(product?.selectedColor || '').trim();
-    const allowedSizes = Array.isArray(product?.availableSizes)
-      ? product.availableSizes.map(value => String(value).trim()).filter(Boolean)
-      : [];
-    const allowedColors = Array.isArray(product?.availableColors)
-      ? product.availableColors.map(value => String(value).trim()).filter(Boolean)
-      : [];
+    const allowedSizes = getAvailableProductSizes(product);
+    const allowedColors = getAvailableProductColors(product);
 
     if (selectedSize && !allowedSizes.includes(selectedSize)) {
       showToast('არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
