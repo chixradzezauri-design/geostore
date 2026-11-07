@@ -5,6 +5,9 @@ alter table public.products
   add column if not exists updated_at timestamptz not null default pg_catalog.now(),
   add column if not exists version bigint not null default 1;
 
+-- The storefront catalogue query is public; these revision fields are non-sensitive.
+grant select (updated_at, version) on public.products to anon, authenticated;
+
 create or replace function private.touch_product_updated_at()
 returns trigger
 language plpgsql
