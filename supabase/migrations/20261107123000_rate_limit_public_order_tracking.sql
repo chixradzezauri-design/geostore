@@ -52,6 +52,10 @@ BEGIN
     RETURN NULL;
   END IF;
 
+  -- Remove expired buckets so old lookup keys do not accumulate indefinitely.
+  DELETE FROM private.order_tracking_rate_limits
+   WHERE window_started_at < now() - interval '1 hour';
+
   -- SHA-256 hashes prevent raw phone numbers/order codes being stored in this table.
   v_phone_hash := encode(
     extensions.digest(convert_to('phone:' || v_input_phone, 'UTF8'), 'sha256'),
