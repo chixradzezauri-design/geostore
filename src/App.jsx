@@ -32,6 +32,7 @@ import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
+import { matchesProductSearch } from './utils/productSearch.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -2511,9 +2512,7 @@ export default function App() {
         selectedVendorFilter === 'ყველა' ||
         p.vendor === selectedVendorFilter;
 
-      const matchesSearch = p.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      const matchesSearch = matchesProductSearch(p, searchQuery);
 
       return (
         matchesCategory &&
