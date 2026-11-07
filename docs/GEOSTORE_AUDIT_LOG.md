@@ -728,3 +728,30 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Both staged SQL migrations (`20261107170000_integrate_custom_product_variants` and `20261107200000_bind_order_ownership_to_auth_user_uuid`) were executed inside explicit transactions ending in ROLLBACK. PostgreSQL accepted the DDL/function definitions; no schema changes were retained.
 - Confirmed after rollback that `orders.user_id` and `order_notifications.recipient_user_id` do not exist yet and the remote migration history remains at `20261107160152`.
 - No production migration was applied. The raw-item exposure remains in the live database until the reviewed forward migration is deliberately applied.
+
+
+## Custom variant identity and admin stock adjustment — 2026-11-07
+
+### Live database verification (read-only)
+- The live migration ledger contains 67 applied versions; latest is 20261107160152.
+- The live private.create_order_with_stock(jsonb) already handles custom variant IDs, database-owned variant pricing, stock deduction, and server-priced gift-wrap/VIP-warranty fees.
+- The live implementation still selects a matching variant with LIMIT 1 and does not require exactly one match. Its variant/customization fingerprint ordering also omitted the custom variant ID from sort keys.
+- The live private.preserve_product_variant_stock() trigger preserves existing variant stock and blocks removal/reuse of variants referenced by order history, but no separate duplicate-ID/name validator trigger exists yet.
+- Live catalog check: one product row, variants is an empty JSON array, zero variants, zero duplicate IDs, and zero duplicate names.
+- Existing products RLS includes an authenticated admin-only UPDATE policy requiring the configured admin UID and app_metadata role.
+
+### Branch changes
+- Hardened staged 20261107170000_integrate_custom_product_variants.sql:
+  - Require exactly one catalogue match for each requested custom variant ID; reject missing or duplicate matches.
+  - Include custom variant IDs in deterministic order/fingerprint sorting and legacy idempotency checks.
+  - Validate custom variant ID and gift-message JSON types.
+  - Add a final BEFORE INSERT/UPDATE trigger validating variant array shape, identity types, maximum count, price/stock shape, and case-insensitive unique names/IDs. It runs after the existing stock-preservation trigger so it validates the final NEW row.
+- Added staged 20261107230000_admin_adjust_product_variant_stock.sql for the RPC already called by AdminDashboardPro. It locks the product row, applies a signed integer delta to exactly one variant, checks bounds, respects products RLS, uses SECURITY INVOKER for both private implementation and public wrapper, and grants execution only to authenticated users.
+- Added an admin UI control to restock or decrement saved variants without replacing stale stock snapshots. New unsaved variants keep their initial stock from the product editor.
+- Added a focused checkout fingerprint test combining custom variant IDs with paid add-ons.
+
+### Verification and release boundary
+- The two staged migrations were executed together against the live schema inside BEGIN ... ROLLBACK. PostgreSQL accepted the DDL and function definitions.
+- A post-rollback read-only check confirmed the new private/public RPCs and validator trigger do not persist. The migration ledger remained unchanged; no live data or stock was modified.
+- GitHub refetches confirmed saved file contents. The new Node test was added but the full Node test suite was not run. No production build, browser QA, Vercel build, deployment, or live migration was run.
+- Do not deploy the admin stock-adjustment UI before applying 20261107170000 and then 20261107230000 after migration-history reconciliation.
