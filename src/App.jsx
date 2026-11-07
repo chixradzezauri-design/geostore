@@ -1116,7 +1116,6 @@ export default function App() {
               ? validDate.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
               : '',
             totalGEL: normalizeOrderTotal(o.total_gel),
-          deliveryGEL: o.checkout_result?.delivery_gel ?? null,
             status: typeof o.status === 'string' && o.status.trim() ? o.status : 'ახალი',
             items: normalizeOrderItems(o.items),
             status_changed_at: o.status_changed_at || null
@@ -1268,6 +1267,7 @@ export default function App() {
           phone: o.phone || '',
           address: o.address || '',
           totalGEL: normalizeOrderTotal(o.total_gel),
+          deliveryGEL: o.checkout_result?.delivery_gel ?? null,
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
           items,
