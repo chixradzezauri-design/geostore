@@ -192,3 +192,10 @@ Static checks confirm unique migration version numbers and balanced function del
 - Also corrected the generated old-price/purchase-cost regex escaping in the versioned update function so the decimal separator is matched correctly.
 - Static checks: function dollar-quote delimiters balanced; the migration includes the creation RPC, public wrapper, explicit authorization check, and authenticated-only grants. This has not been run against PostgreSQL.
 - Production preflight still shows the version columns and versioned RPCs are absent. No live database rows or schema were changed.
+
+### Product creation RPC final ACL and SQL review
+
+- The insert-only `admin_save_product(jsonb)` replacement is now paired with explicit ACLs: revoke PUBLIC/anon, grant execution only to authenticated, and retain the exact-admin UUID plus app_metadata authorization inside the SECURITY DEFINER implementation.
+- Verified against live column types: product ID is text, price/old price/purchase cost are numeric, and stock is integer. The new validator checks the numeric text and stock range before `jsonb_populate_record` can cast those values.
+- Rechecked the final staged file after repair: one private creation implementation, one public SECURITY INVOKER wrapper, balanced dollar-quote delimiters, and authenticated-only grants. The old-price and purchase-cost regexes use the intended single escaped decimal point.
+- No production migration was applied. This remains staged pending PostgreSQL execution tests and migration reconciliation.
