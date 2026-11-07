@@ -310,6 +310,8 @@ export default function AdminDashboardPro({
   const expensesSessionVersion = useRef(0);
   const expensesAdminSessionRef = useRef(adminSessionKey);
   expensesAdminSessionRef.current = adminSessionKey;
+  const ordersAdminSessionRef = useRef(adminLoggedIn ? adminSessionKey : '');
+  ordersAdminSessionRef.current = adminLoggedIn ? adminSessionKey : '';
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
   const expenseCreateLock = useRef(false);
   const expenseDeleteLocks = useRef(new Set());
@@ -2399,7 +2401,7 @@ export default function AdminDashboardPro({
 
       // A successful response from an older admin session must not mutate
       // the state of a newly signed-in session.
-      if (!adminLoggedIn || adminSessionKey !== requestSessionKey) return;
+      if (!ordersAdminSessionRef.current || ordersAdminSessionRef.current !== requestSessionKey) return;
 
       const statusChangedAt = new Date().toISOString();
       const applyConfirmedOrderStatus = (order) => {
@@ -2504,7 +2506,7 @@ export default function AdminDashboardPro({
 
       // Do not let a response from a previous admin session overwrite
       // the current dashboard, or replace an order refreshed by another admin.
-      if (!adminLoggedIn || adminSessionKey !== reactivationSessionKey) return;
+      if (!ordersAdminSessionRef.current || ordersAdminSessionRef.current !== reactivationSessionKey) return;
 
       const reactivatedAt = new Date().toISOString();
       const applyReactivatedOrder = (order) =>
