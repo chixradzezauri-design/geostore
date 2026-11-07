@@ -108,3 +108,9 @@ test('mobile footer policy links use a compact responsive layout', () => {
   assert.match(footerStyles, /\.geostore-footer-links\{[\s\S]*?display:grid!important;/);
   assert.match(footerStyles, /grid-template-columns:1fr!important/);
 });
+
+
+test('retired catalogue information selectors are removed after style isolation', () => {
+  assert.doesNotMatch(storeView, /gs-product-info/);
+  assert.doesNotMatch(css, /\.gs-product-info\\b/);
+});
