@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
-import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
@@ -905,8 +905,12 @@ export default function AdminDashboardPro({
       items.forEach(item => {
         const productId = item.id ?? item.product_id;
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
-        const quantity = Math.max(1, Number(item.quantity) || 1);
+        const quantity = normalizeOrderQuantity(item.quantity);
         const itemGross = calculateOrderLineRevenueGEL(item);
+        if (quantity === 0) {
+          unknownCogsItems += 1;
+          return;
+        }
         const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
