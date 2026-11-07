@@ -113,3 +113,15 @@ The live read-only schema checks still show these staged protections are not act
 - Product optimistic version columns and versioned mutation RPCs are absent.
 
 These are release blockers to address through a reviewed, coordinated migration sequence. No production migration has been applied and no product/order rows have been changed.
+
+### Follow-up SQL integrity review
+
+The migration files were checked again for replacement-order and delimiter integrity. Three additional corrections are now staged:
+
+- `20261107234500_harden_order_json_and_variant_integrity.sql` was restored to one definition of each function and keeps the variant stock ceiling check during cancellation restoration.
+- `20261108001000_validate_variant_price_precision.sql` now has one valid stock-preservation function, then the price-validation function, then its trigger, followed by the checkout implementation update to `private.create_order_with_stock_unchecked`. This avoids both malformed function ordering and replacement of the immutable-owner wrapper.
+- `20261108010000_add_product_optimistic_version.sql` was rebuilt with balanced dollar-quoted function bodies and one definition of each versioned RPC. It also revokes the old non-versioned variant-stock and product-delete RPCs.
+
+The storefront draft reader is now an admin-verified RPC; the application no longer requests `draft_config` through direct table SELECT. The draft upsert requests a minimal response so it does not need to read the private draft column.
+
+Static checks confirm unique migration version numbers and balanced function delimiters in the reviewed files. These checks are not a substitute for executing the migrations against a disposable PostgreSQL database. No migration was executed against production, and no Vercel build or deployment was started.
