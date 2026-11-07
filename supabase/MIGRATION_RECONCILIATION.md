@@ -159,3 +159,11 @@ Static checks confirm unique migration version numbers and balanced function del
 - The application reads orders for the authenticated primary-admin session and writes order notes/status only through validated RPCs; no direct REST PATCH to `orders` was found in `App.jsx` or `AdminDashboardPro.jsx`.
 - Hardened `20261107241000_revoke_direct_order_note_column_update.sql` to revoke table-level UPDATE and the `admin_note` column-level UPDATE from `PUBLIC`, `anon`, and `authenticated`. This prevents future broad grants from restoring direct client-side order mutation.
 - This remains staged only. Live read-only preflight still reports `authenticated` can update `orders.admin_note` until the migration is applied in the coordinated release. No production database changes were made.
+
+
+## Follow-up: normalize guest identity in checkout input validation
+
+- Reviewed the staged INSERT validation trigger against the separate order-ownership trigger. Ownership treats `guest` case-insensitively and trims surrounding whitespace, while the checkout input validator previously compared `user_email` to the exact lowercase string only.
+- This mismatch allowed crafted values such as `Guest` or ` guest ` to take the non-guest validation branch even though the ownership trigger classified them as guest orders. That could bypass the guest email-required check.
+- Updated `20261106210000_validate_checkout_input_on_order_insert.sql` to normalize with `lower(btrim(coalesce(new.user_email, 'guest')))` before deciding whether the guest email requirement applies.
+- Staged SQL only; no live database write was made. The trigger's complete behavior still needs PostgreSQL execution testing before release.
