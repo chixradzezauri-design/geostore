@@ -413,3 +413,23 @@ This file is the durable handoff log for staged audit work. Add new findings and
 ### Verification boundary
 - Re-read the updated JSX and confirmed the wrapping classes are present.
 - No local build, automated test, browser/device interaction, real order, Vercel build, or deployment was run in this stage.
+
+
+## Checkout variant reconciliation and responsive confirmation — 2026-11-07
+
+### Fixed in frontend
+- Order confirmation code display now wraps long secure ORD references within the mobile dialog and the panel cannot exceed its available width.
+- The checkout's fresh catalogue request now includes `available_sizes` and `available_colors`.
+- Cart reconciliation now compares selected size/color against the latest server catalogue and reports unavailable options before checkout. It supports both snake_case API fields and camelCase in-memory product fields.
+- Added regression tests for rejected stale size/color choices and accepted current choices.
+
+### Database discrepancy discovered
+- Live `private.create_order_with_stock(jsonb)` contains variant snapshotting/idempotency but does **not** contain the size/color membership checks present in the staged `20261106103325_preserve_order_item_variants.sql` source file.
+- Live migration history already contains version `20261106103325`, so the checked-in SQL and live function body are out of sync.
+- Attempted to apply a corrective migration named `enforce_order_variant_selection`; Supabase rejected the SQL with a syntax-at-end-of-input error before applying it. No database function change was committed by that attempt.
+- Do not claim server-side variant enforcement is fixed. It remains a backend follow-up; frontend now blocks stale/invalid selections during normal checkout but cannot secure direct API calls by itself.
+
+### Verification boundary
+- Confirmed updated source and test text was saved on the maintenance branch.
+- Could not run Node tests, local build, or browser checkout in the current environment.
+- No production order, stock, product, or customer data was changed. No Vercel build/deployment was run.
