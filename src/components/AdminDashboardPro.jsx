@@ -14,7 +14,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, normalizeProductImageList, shouldCleanupUploadedProductImages, shouldRetainProductImagesForOrderHistory } from '../utils/productImageCleanup';
-import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, resolveOrderDeliveryChargeGEL } from '../utils/orderSafety';
+import { calculateOrderLineRevenueGEL, isValidGELAmount, normalizeOrderItems, normalizeOrderQuantity, normalizeOrderTotal, resolveOrderDeliveryChargeGEL, roundGEL } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { hasProductMutationLock, buildProductVersionFilter } from '../utils/productMutationSafety.js';
 import { isValidExpenseCatalogueResponse } from '../utils/expenseCatalogSafety.js';
@@ -908,12 +908,13 @@ export default function AdminDashboardPro({
     let unknownCogsItems = 0;
     let unallocatedProductRevenue = 0;
     const incomeTotals = new Map();
+    const addIncome = (label, amount) => incomeTotals.set(label, roundGEL((incomeTotals.get(label) || 0) + roundGEL(amount)));
     const productProfitTotals = new Map();
     const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
       const orderTotal = normalizeOrderTotal(order.totalGEL ?? order.total_gel);
-      totalSalesRevenue += orderTotal;
+      totalSalesRevenue = roundGEL(totalSalesRevenue + orderTotal);
       const rawItems = Array.isArray(order.items) ? order.items : [];
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
@@ -921,8 +922,8 @@ export default function AdminDashboardPro({
       const lineGross = items.reduce((sum, item) => sum + calculateOrderLineRevenueGEL(item), 0);
       const deliveryCharge = resolveOrderDeliveryChargeGEL(order, orderTotal);
       const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
-      totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
-      totalProductRevenue += productNetRevenue;
+      totalDeliveryRevenue = roundGEL(totalDeliveryRevenue + Math.min(orderTotal, deliveryCharge));
+      totalProductRevenue = roundGEL(totalProductRevenue + productNetRevenue);
 
       if (!items.length) {
         // Keep legacy product revenue and the delivery fee in separate buckets
@@ -930,10 +931,10 @@ export default function AdminDashboardPro({
         if (productNetRevenue > 0) {
           unallocatedProductRevenue += productNetRevenue;
           const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
-          incomeTotals.set(label, (incomeTotals.get(label) || 0) + productNetRevenue);
+          addIncome(label, productNetRevenue);
         }
         if (deliveryCharge > 0) {
-          incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
+          addIncome('მიწოდების საფასური', Math.min(orderTotal, deliveryCharge));
         }
         unknownCogsItems += 1;
         return;
@@ -941,9 +942,9 @@ export default function AdminDashboardPro({
       if (productNetRevenue > 0 && lineGross <= 0) {
         unallocatedProductRevenue += productNetRevenue;
         const label = 'პროდუქტის შემოსავალი — განაწილება ვერ ხერხდება';
-        incomeTotals.set(label, (incomeTotals.get(label) || 0) + productNetRevenue);
+        addIncome(label, productNetRevenue);
         unknownCogsItems += 1;
-        if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + deliveryCharge);
+        if (deliveryCharge > 0) addIncome('მიწოდების საფასური', deliveryCharge);
         return;
       }
 
@@ -959,7 +960,7 @@ export default function AdminDashboardPro({
           if (allocatedRevenue > 0) {
             unallocatedProductRevenue += allocatedRevenue;
             const label = 'პროდუქტის შემოსავალი — რაოდენობა არასწორია';
-            incomeTotals.set(label, (incomeTotals.get(label) || 0) + allocatedRevenue);
+            addIncome(label, allocatedRevenue);
           }
           unknownCogsItems += 1;
           return;
@@ -967,7 +968,7 @@ export default function AdminDashboardPro({
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
         const label = `${vendor} · ${category}`;
-        incomeTotals.set(label, (incomeTotals.get(label) || 0) + allocatedRevenue);
+        addIncome(label, allocatedRevenue);
 
         const snapshotCost = item.purchase_cost ?? item.purchaseCost;
         const currentCost = product?.purchaseCost ?? product?.purchase_cost;
@@ -980,7 +981,7 @@ export default function AdminDashboardPro({
           itemCost = Number(currentCost);
           estimatedCogsItems += quantity;
         } else unknownCogsItems += quantity;
-        if (itemCost !== null) totalCogs += itemCost * quantity;
+        if (itemCost !== null) totalCogs = roundGEL(totalCogs + roundGEL(itemCost) * quantity);
 
         const productKey = String(item.id || item.product_id || item.name || 'unknown-product');
         const productLabel = item.name || product?.name || `პროდუქტი ${productKey}`;
@@ -989,9 +990,9 @@ export default function AdminDashboardPro({
           quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, estimatedCostItems: 0
         };
         productEntry.quantity += quantity;
-        productEntry.revenue += allocatedRevenue;
+        productEntry.revenue = roundGEL(productEntry.revenue + allocatedRevenue);
         if (itemCost === null) productEntry.unknownCostItems += quantity;
-        else productEntry.cogs += itemCost * quantity;
+        else productEntry.cogs = roundGEL(productEntry.cogs + roundGEL(itemCost) * quantity);
         if (isEstimatedCost) productEntry.estimatedCostItems += quantity;
         productProfitTotals.set(productKey, productEntry);
 
@@ -999,14 +1000,14 @@ export default function AdminDashboardPro({
           name: vendor, quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, estimatedCostItems: 0, productCount: new Set()
         };
         vendorEntry.quantity += quantity;
-        vendorEntry.revenue += allocatedRevenue;
+        vendorEntry.revenue = roundGEL(vendorEntry.revenue + allocatedRevenue);
         vendorEntry.productCount.add(productKey);
         if (itemCost === null) vendorEntry.unknownCostItems += quantity;
-        else vendorEntry.cogs += itemCost * quantity;
+        else vendorEntry.cogs = roundGEL(vendorEntry.cogs + roundGEL(itemCost) * quantity);
         if (isEstimatedCost) vendorEntry.estimatedCostItems += quantity;
         vendorProfitTotals.set(vendor, vendorEntry);
       });
-      if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
+      if (deliveryCharge > 0) addIncome('მიწოდების საფასური', Math.min(orderTotal, deliveryCharge));
     });
 
     const trendBuckets = new Map();
@@ -1021,7 +1022,7 @@ export default function AdminDashboardPro({
         ? date.toLocaleDateString('ka-GE', { day: '2-digit', month: 'short' })
         : date.toLocaleDateString('ka-GE', { month: 'short', year: '2-digit' });
       const current = trendBuckets.get(key) || { key, label, revenue: 0, orders: 0 };
-      current.revenue += normalizeOrderTotal(order.totalGEL ?? order.total_gel);
+      current.revenue = roundGEL(current.revenue + normalizeOrderTotal(order.totalGEL ?? order.total_gel));
       current.orders += 1;
       trendBuckets.set(key, current);
     });
@@ -1029,16 +1030,16 @@ export default function AdminDashboardPro({
     const bestSellingProducts = Array.from(productProfitTotals.values())
       .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
     const lowStockProducts = getLowStockInventory(products, 5);
-    const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+    const totalExpenses = roundGEL(periodExpenses.reduce((sum, expense) => sum + roundGEL(expense.amount), 0));
     // Gross profit is product revenue less product cost. Delivery fees are
     // tracked separately and added to net operating result, not product margin.
-    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
-    const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
+    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? roundGEL(totalProductRevenue - totalCogs) : null;
+    const netProfit = grossProfit === null ? null : roundGEL(grossProfit + totalDeliveryRevenue - totalExpenses);
     const expenseTotals = new Map();
     periodExpenses.forEach(expense => {
       const label = expense.category || 'კატეგორია მითითებული არ არის';
       const current = expenseTotals.get(label) || { label, amount: 0, count: 0 };
-      current.amount += Number(expense.amount) || 0;
+      current.amount = roundGEL(current.amount + roundGEL(expense.amount));
       current.count += 1;
       expenseTotals.set(label, current);
     });
