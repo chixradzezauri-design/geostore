@@ -919,9 +919,9 @@ export default function AdminDashboardPro({
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const lineGross = items.reduce((sum, item) => sum + calculateOrderLineRevenueGEL(item), 0);
+      const lineGross = roundGEL(items.reduce((sum, item) => sum + calculateOrderLineRevenueGEL(item), 0));
       const deliveryCharge = resolveOrderDeliveryChargeGEL(order, orderTotal);
-      const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
+      const productNetRevenue = roundGEL(Math.max(0, orderTotal - deliveryCharge));
       totalDeliveryRevenue = roundGEL(totalDeliveryRevenue + Math.min(orderTotal, deliveryCharge));
       totalProductRevenue = roundGEL(totalProductRevenue + productNetRevenue);
 
@@ -929,7 +929,7 @@ export default function AdminDashboardPro({
         // Keep legacy product revenue and the delivery fee in separate buckets
         // so the income-source breakdown reconciles to the order total.
         if (productNetRevenue > 0) {
-          unallocatedProductRevenue += productNetRevenue;
+          unallocatedProductRevenue = roundGEL(unallocatedProductRevenue + productNetRevenue);
           const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
           addIncome(label, productNetRevenue);
         }
@@ -953,12 +953,12 @@ export default function AdminDashboardPro({
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = normalizeOrderQuantity(item.quantity);
         const itemGross = calculateOrderLineRevenueGEL(item);
-        const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
+        const allocatedRevenue = lineGross > 0 ? roundGEL(productNetRevenue * (itemGross / lineGross)) : 0;
         if (quantity === 0) {
           // Preserve the revenue share in the income-source reconciliation,
           // but never attribute malformed quantities to product/vendor profit.
           if (allocatedRevenue > 0) {
-            unallocatedProductRevenue += allocatedRevenue;
+            unallocatedProductRevenue = roundGEL(unallocatedProductRevenue + allocatedRevenue);
             const label = 'პროდუქტის შემოსავალი — რაოდენობა არასწორია';
             addIncome(label, allocatedRevenue);
           }
