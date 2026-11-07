@@ -24,3 +24,11 @@ export const collectReferencedProductImageUrls = (products, excludedProductId) =
  */
 export const shouldCleanupUploadedProductImages = (writeState) =>
   writeState === 'not-started' || writeState === 'rejected';
+
+/**
+ * Conservatively retain media when order history exists. Product image URLs
+ * are copied into immutable order snapshots, so product deletion must not
+ * break historical order details.
+ */
+export const shouldRetainProductImagesForOrderHistory = (orders) =>
+  Array.isArray(orders) && orders.length > 0;
