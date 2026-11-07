@@ -221,3 +221,10 @@ Static checks confirm unique migration version numbers and balanced function del
 - Public coupon reads expose only the coupon fields the storefront requests (`id`, `code`, `discount_percent`, `min_order_gel`, `active`); public delivery-fee reads expose only `region` and `fee_gel`. Their write policies are primary-admin-only.
 - Support-ticket anonymous INSERT is constrained by a validation policy and a BEFORE INSERT database trigger. The trigger stores hashed IP/email identifiers, serializes concurrent attempts with advisory transaction locks, limits IP submissions to 5 per 15 minutes and email submissions to 3 per 60 minutes, and purges rate-limit rows older than 24 hours. Direct anonymous SELECT/UPDATE/DELETE is not granted.
 - Security Advisor still reports the expected informational RLS-without-policy notices for private rate-limit/log tables and `order_notifications` (these are intentionally inaccessible directly), plus the previously known Auth leaked-password protection warning. No new public-table RLS-disabled finding was returned.
+
+### Supabase Storage access review (2026-11-08)
+
+- The application uses a single `storefront-media` bucket for both storefront and product images. It is intentionally public-read so customer-facing image URLs work. The bucket enforces a 5 MiB per-object limit and allows only JPEG, PNG, WebP, and GIF.
+- Storage object writes are not public: INSERT, UPDATE, and DELETE policies are scoped to `bucket_id='storefront-media'`, the exact primary admin Auth UUID, and `app_metadata.role='admin'`. UPDATE has both `USING` and `WITH CHECK`. No anon upload/update/delete policy exists.
+- The app uploads with `x-upsert: false`, so it does not rely on broader overwrite permissions. Product and storefront image cleanup also targets the same bucket.
+- No Storage policy change was required in this review. Public read is a deliberate storefront requirement; private admin writes remain restricted.
