@@ -132,3 +132,9 @@ Static checks confirm unique migration version numbers and balanced function del
 - The live database still listed `anon` SELECT on `storefront_config.draft_config`, `draft_updated_at`, `published_at`, and `updated_by`; `storefront_media.created_by` was also still readable. Authenticated had broad column-level privileges from the existing policy setup.
 - Corrected `20261107190000_restrict_public_storefront_config_columns.sql` to explicitly revoke SELECT on those sensitive columns from `PUBLIC`, `anon`, and `authenticated`, before granting only the intended published snapshot/media columns.
 - The fix is committed to the working branch only. No production SQL was executed; live exposure remains until the coordinated migration is applied.
+
+## Follow-up: storefront RLS and order-note path
+
+- Rechecked live `pg_policies`: storefront config writes and media writes are restricted to the exact primary-admin UUID plus `app_metadata.role = 'admin'`. Public reads are row-filtered to published config/public media; the remaining exposure was the sensitive column grants documented above.
+- Confirmed the application saves admin order notes through `admin_save_order_note`, not a direct table PATCH. The staged `20261107241000_revoke_direct_order_note_column_update.sql` removes the legacy authenticated column-level UPDATE grant. Live still has that grant until the migration is applied; current RLS independently limits order updates to the primary admin.
+- Live orders history still uses the older email-based function because the Auth UUID ownership migration is not applied. The staged ownership migration adds `orders.user_id`, binds it from `auth.uid()`, backfills only unambiguous email matches, and changes customer history/notifications to immutable UUID ownership.
