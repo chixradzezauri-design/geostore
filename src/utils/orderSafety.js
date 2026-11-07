@@ -119,6 +119,29 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'invalid_price' });
       return item;
     }
+
+    const selectedSize = String(item?.selectedSize ?? item?.selected_size ?? '').trim();
+    const selectedColor = String(item?.selectedColor ?? item?.selected_color ?? '').trim();
+    const sizeOptions = Array.isArray(product.available_sizes)
+      ? product.available_sizes.map((value) => String(value ?? '').trim()).filter(Boolean)
+      : Array.isArray(product.availableSizes)
+        ? product.availableSizes.map((value) => String(value ?? '').trim()).filter(Boolean)
+        : [];
+    const colorOptions = Array.isArray(product.available_colors)
+      ? product.available_colors.map((value) => String(value ?? '').trim()).filter(Boolean)
+      : Array.isArray(product.availableColors)
+        ? product.availableColors.map((value) => String(value ?? '').trim()).filter(Boolean)
+        : Array.isArray(product.colors)
+          ? product.colors.map((value) => String(value ?? '').trim()).filter(Boolean)
+          : [];
+
+    if (selectedSize && !sizeOptions.includes(selectedSize)) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_size', selected: selectedSize });
+    }
+    if (selectedColor && !colorOptions.includes(selectedColor)) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_color', selected: selectedColor });
+    }
+
     if (!Number.isFinite(oldPrice) || oldPrice !== currentPrice) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'price', oldValue: oldPrice, newValue: currentPrice });
     }
