@@ -377,7 +377,7 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="text" required minLength={2} maxLength={100} autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
+                    <input disabled={isSubmittingOrder} type="text" required minLength={2} maxLength={100} autoComplete="name" placeholder={copy.fullName} value={checkoutForm.name}
                       onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
@@ -387,7 +387,7 @@ export default function Modals({
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.phone} <span className="text-neutral-400">*</span></span>
                   <span className="relative block">
                     <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                    <input type="tel" required minLength={9} maxLength={24} autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
+                    <input disabled={isSubmittingOrder} type="tel" required minLength={9} maxLength={24} autoComplete="tel" inputMode="tel" placeholder="599 00 00 00" value={checkoutForm.phone}
                       onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
                       className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                   </span>
@@ -396,7 +396,7 @@ export default function Modals({
 
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.email} {!currentUser?.email && <span className="text-neutral-400">*</span>}</span>
-                <input type="email" maxLength={254} required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
+                <input disabled={isSubmittingOrder} type="email" maxLength={254} required={!currentUser?.email} readOnly={Boolean(currentUser?.email)} autoComplete="email"
                   placeholder="name@example.com" value={currentUser?.email || checkoutForm.email || ''}
                   onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white read-only:cursor-not-allowed read-only:opacity-65" />
@@ -407,7 +407,7 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.region} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <Truck className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <select value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
+                  <select disabled={isSubmittingOrder} value={selectedRegion || 'tbilisi'} onChange={e => setSelectedRegion && setSelectedRegion(e.target.value)}
                     className="w-full appearance-none rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:bg-white">
                     <option value="tbilisi">{copy.tbilisi} ({deliveryFees.tbilisi} ₾)</option>
                     <option value="bigCities">{copy.bigCities} ({deliveryFees.bigCities} ₾)</option>
@@ -420,7 +420,7 @@ export default function Modals({
                 <span className="text-[11px] font-semibold text-neutral-700" >{copy.address} <span className="text-neutral-400">*</span></span>
                 <span className="relative block">
                   <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <input type="text" required minLength={3} maxLength={300} autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
+                  <input disabled={isSubmittingOrder} type="text" required minLength={3} maxLength={300} autoComplete="street-address" placeholder={copy.addressPlaceholder} value={checkoutForm.address}
                     onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
                     className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white" />
                 </span>
