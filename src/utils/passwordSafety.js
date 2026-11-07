@@ -1,5 +1,5 @@
 const COMMON_WEAK_PASSWORDS = new Set([
-  'password123!', 'password1234!', 'qwerty123456!', 'qwertyuiop12!',
+  'password123!', 'password1234!', 'password12345!', 'qwerty123456!', 'qwertyuiop12!',
   'welcome12345!', 'admin123456!', 'letmein12345!', 'iloveyou1234!',
   'geostore12345!', '123456789012!'
 ]);
