@@ -27,6 +27,7 @@ import {
 import { translations } from './utils/translations';
 import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
 import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
+import { validateRegistrationPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { addProductToCart } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
@@ -1511,6 +1512,44 @@ export default function App() {
 
     try {
       if (authMode === 'register') {
+        const passwordCheck = validateRegistrationPassword(password);
+        if (!passwordCheck.valid) {
+          const passwordMessages = {
+            length: {
+              ka: 'პაროლი უნდა შეიცავდეს მინიმუმ 12 სიმბოლოს.',
+              en: 'Password must contain at least 12 characters.',
+              ru: 'Пароль должен содержать не менее 12 символов.'
+            },
+            lowercase: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი პატარა ლათინური ასო.',
+              en: 'Add at least one lowercase letter.',
+              ru: 'Добавьте хотя бы одну строчную латинскую букву.'
+            },
+            uppercase: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი დიდი ლათინური ასო.',
+              en: 'Add at least one uppercase letter.',
+              ru: 'Добавьте хотя бы одну заглавную латинскую букву.'
+            },
+            number: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი ციფრი.',
+              en: 'Add at least one number.',
+              ru: 'Добавьте хотя бы одну цифру.'
+            },
+            symbol: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი სპეციალური სიმბოლო.',
+              en: 'Add at least one special character.',
+              ru: 'Добавьте хотя бы один специальный символ.'
+            },
+            common: {
+              ka: 'ეს პაროლი ძალიან გავრცელებულია. აირჩიეთ განსხვავებული პაროლი.',
+              en: 'This password is too common. Choose a different password.',
+              ru: 'Этот пароль слишком распространён. Выберите другой пароль.'
+            }
+          };
+          alert(passwordMessages[passwordCheck.reason]?.[currentLang] || passwordMessages.length.ka);
+          return;
+        }
+
         const name = authForm.name.trim();
         const phone = authForm.phone.trim();
 
@@ -1627,7 +1666,7 @@ export default function App() {
         message.toLowerCase().includes('password should be at least') ||
         message.toLowerCase().includes('weak password')
       ) {
-        alert(currentLang === 'en' ? 'Choose a stronger password with at least 6 characters.' : currentLang === 'ru' ? 'Выберите более надежный пароль длиной не менее 6 символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი, მინიმუმ 6 სიმბოლოთი.');
+        alert(currentLang === 'en' ? 'Choose a stronger password with at least 12 characters and mixed character types.' : currentLang === 'ru' ? 'Выберите более надёжный пароль длиной не менее 12 символов с разными типами символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი — მინიმუმ 12 სიმბოლო, დიდი და პატარა ასო, ციფრი და სპეციალური სიმბოლო.');
       } else {
         alert(
           currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
