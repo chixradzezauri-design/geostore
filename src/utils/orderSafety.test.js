@@ -21,7 +21,7 @@ import {
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
-  parseOrderDeliveryChargeGEL,
+  parseOrderDeliveryChargeGEL,\n  resolveOrderDeliveryChargeGEL,
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
@@ -91,6 +91,24 @@ test('calculates the confirmed total from add-on-inclusive subtotal, coupon, and
     calculateCheckoutTotals({ subtotal, discountPercent: 10, deliveryFee: 7 }),
     { subtotalGEL: 280, discountGEL: 28, deliveryGEL: 7, totalGEL: 259 }
   );
+});
+
+test('server-confirmed delivery fee takes precedence over stale client address text', () => {
+  assert.equal(resolveOrderDeliveryChargeGEL({
+    deliveryGEL: 5.5,
+    address: 'Street (თბილისი, მიწოდება: 9 ₾)'
+  }, 105.5), 5.5);
+  assert.equal(resolveOrderDeliveryChargeGEL({
+    checkout_result: { delivery_gel: 7.25 },
+    address: 'Street (თბილისი, მიწოდება: 9 ₾)'
+  }, 105.5), 7.25);
+  assert.equal(resolveOrderDeliveryChargeGEL({
+    address: 'Street (თბილისი, მიწოდება: 9 ₾)'
+  }, 105.5), 9);
+  assert.equal(resolveOrderDeliveryChargeGEL({
+    deliveryGEL: 200,
+    address: 'Street (მიწოდება: 9 ₾)'
+  }, 100), 100);
 });
 
 test('delivery fee parser uses the final server-appended amount, not address text', () => {
