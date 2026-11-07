@@ -109,12 +109,11 @@ END;
 $function$;
 
 -- Recreate the public PL/pgSQL wrapper after the private function rename.
--- This forces its cached call plan to resolve the new UUID-ownership wrapper,
--- rather than continuing to call the renamed unchecked implementation.
+-- This ensures its call plan resolves the UUID-ownership wrapper, not the unchecked function.
 CREATE OR REPLACE FUNCTION public.create_order_with_stock(p_order jsonb)
- RETURNS jsonb
- LANGUAGE plpgsql
- SET search_path TO ''
+RETURNS jsonb
+LANGUAGE plpgsql
+SET search_path = ''
 AS $function$
 DECLARE
   v_phone text;
@@ -347,14 +346,14 @@ GRANT EXECUTE ON FUNCTION private.mark_my_order_notifications_read() TO authenti
 
   RETURN private.create_order_with_stock(p_order);
 END;
-$function$
-;
+$function$;
+
 REVOKE ALL ON FUNCTION public.create_order_with_stock(jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.create_order_with_stock(jsonb) TO anon, authenticated, service_role;
 
-REVOKE ALL ON FUNCTION private.create_order_with_stock_unchecked(jsonb) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION private.create_order_with_stock(jsonb) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION private.create_order_with_stock(jsonb) TO anon, authenticated;
+REVOKE ALL ON FUNCTION private.create_order_with_stock_unchecked(jsonb) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION private.create_order_with_stock(jsonb) FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION private.create_order_with_stock(jsonb) TO anon, authenticated, service_role;
 
 -- Customer order history is now keyed exclusively by auth.uid(), not mutable email.
 -- Drop wrappers first because PostgreSQL cannot change a RETURNS TABLE signature in place.
