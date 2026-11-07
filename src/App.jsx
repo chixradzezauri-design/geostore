@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, buildCheckoutFingerprintPayload, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, isValidGELAmount, createSecureOrderId, groupCheckoutItems, buildCheckoutFingerprintPayload, isReusableCheckout, findReusablePendingCheckout, upsertPendingCheckoutEntry, removePendingCheckoutEntry, mergePendingCheckoutStores, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -2597,8 +2597,10 @@ export default function App() {
       if (canPersistFingerprint) {
         try {
           storedPendingCheckout = findReusablePendingCheckout(
-            window.localStorage.getItem('geostore.pendingCheckout.v3') ||
-              window.localStorage.getItem('geostore.pendingCheckout.v2') || '',
+            mergePendingCheckoutStores(
+              window.localStorage.getItem('geostore.pendingCheckout.v3') || '',
+              window.localStorage.getItem('geostore.pendingCheckout.v2') || ''
+            ),
             checkoutFingerprint
           );
         } catch {
