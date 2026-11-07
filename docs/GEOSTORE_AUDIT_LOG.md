@@ -884,3 +884,10 @@ The entire test transaction was rolled back. A post-rollback query confirmed tha
 - The storefront filtering/sorting pipeline already clones activeProducts before sorting; this was rechecked and a regression assertion was added to guard against future in-place mutation of App state.
 - Added utility tests for empty normalized size/color fallback, lowest in-stock variant pricing, and all-out-of-stock fallback. Added a source regression assertion for the storefront default sort and immutable list handling.
 - Node tests were not executed, and no browser QA/build/deploy was run.
+
+
+### Admin catalogue ordering and concurrent edits recheck
+- Admin product listing sorts a filtered copy deterministically by created_at/createdAt descending and then product ID; it does not sort the shared React state array in place.
+- Editing a product does not write created_at, so normal edits do not move a product to the top of the admin list.
+- Quick price, purchase-cost and base-stock edits use a compare-and-swap PATCH filter against the previously read value and require exactly one updated row; stale concurrent edits are rejected instead of silently overwriting a newer value.
+- The live private.admin_save_product RPC is insert-only (no upsert), and the public wrapper is invoker-only. Existing-product edits use the separate guarded update path.
