@@ -258,8 +258,8 @@ export default function AiAssistantModal({
 
       if (userWardrobe.length === 0) {
         return {
-          text: `🧥 თქვენი ციფრული გარდერობი ჯერ ცარიელია. გადადით „AI ციფრული გარდერობის“ განყოფილებაში, ატვირთეთ თქვენი ტანსაცმელი და მე შევძლებ სრულყოფილი ლუქების და მაღაზიიდან დამატებითი ნივთების შერჩევას!`,
-          products: sourceProducts.slice(0, 2)
+          text: `🧥 თქვენი ციფრული გარდერობი ჯერ ცარიელია. დაამატეთ თქვენი ტანსაცმელი და ფეხსაცმელი, შემდეგ კი მიუთითეთ კატეგორია, ფერი ან ბიუჯეტი — კატალოგში შესაბამის პროდუქტებს მოვძებნი.`,
+          products: []
         };
       }
 
@@ -301,7 +301,7 @@ export default function AiAssistantModal({
       const sales = sourceProducts.filter(p => (!Array.isArray(p.variants) || p.variants.length === 0) && hasAvailableStock(p) && p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return {
         text: `🔥 მიმდინარე სპეციალური ფასდაკლებები და აქციები (${sales.length} ნივთი):`,
-        products: sales.length > 0 ? sales.slice(0, 4) : sourceProducts.slice(0, 4)
+        products: sales.slice(0, 4)
       };
     }
 
