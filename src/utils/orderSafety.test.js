@@ -306,6 +306,18 @@ test('normalizes server order totals to finite nonnegative GEL values', () => {
 });
 
 
+test('groups the same custom variant across separate cart lines for aggregate stock checks', () => {
+  const grouped = groupCheckoutItems([
+    { id: 'p-variant', custom_variant_id: 'v-1', quantity: 2 },
+    { id: 'p-variant', custom_variant_id: 'v-1', quantity: 3 },
+    { id: 'p-variant', custom_variant_id: 'v-2', quantity: 1 }
+  ]);
+  assert.deepEqual(grouped, [
+    { id: 'p-variant', selected_size: null, selected_color: null, custom_variant_id: 'v-1', quantity: 5 },
+    { id: 'p-variant', selected_size: null, selected_color: null, custom_variant_id: 'v-2', quantity: 1 }
+  ]);
+});
+
 test('does not merge different custom product variants into one order line', () => {
   const grouped = groupCheckoutItems([
     { id: 'p-variant', custom_variant_id: 'v-small', quantity: 1 },
