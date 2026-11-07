@@ -1,6 +1,7 @@
 // src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { buildSemicolonCsv } from '../utils/csvExportSafety.js';
+import { buildProductExportRows } from '../utils/productExportSafety.js';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
@@ -1787,16 +1788,8 @@ export default function AdminDashboardPro({
 
     exportCsv(
       `geostore_products_${Date.now()}.csv`,
-      ['ID', 'SKU', 'Name', 'Category', 'Price (GEL)', 'Stock', 'Vendor'],
-      products.map(p => [
-        p.id,
-        p.sku || 'N/A',
-        p.name,
-        p.category,
-        p.priceGEL,
-        p.stock ?? 0,
-        p.vendor || 'GEOSTORE'
-      ])
+      ['ID', 'SKU', 'Name', 'Category', 'Price (GEL)', 'Old price (GEL)', 'Purchase cost (GEL)', 'Stock', 'Available sizes', 'Available colors', 'Custom variants', 'Vendor'],
+      buildProductExportRows(products)
     );
     logActivity('გადმოიწერა პროდუქტების CSV ექსპორტი');
   };
