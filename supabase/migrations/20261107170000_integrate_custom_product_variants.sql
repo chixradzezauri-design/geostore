@@ -29,6 +29,7 @@ declare
   v_request jsonb;
   v_variant jsonb;
   v_variant_price numeric;
+  v_variant_count integer;
 begin
   if p_order is null or jsonb_typeof(p_order) <> 'object' then
     raise exception 'შეკვეთის მონაცემები არასწორია.';
@@ -98,7 +99,8 @@ begin
           ) || CASE WHEN grouped.custom_variant_id IS NOT NULL
             THEN jsonb_build_object('custom_variant_id', grouped.custom_variant_id)
             ELSE '{}'::jsonb END
-          order by grouped.product_id, grouped.selected_size nulls first, grouped.selected_color nulls first
+          order by grouped.product_id, grouped.selected_size nulls first,
+                   grouped.selected_color nulls first, grouped.custom_variant_id nulls first
         ),
         '[]'::jsonb
       )
@@ -141,8 +143,8 @@ begin
         ) || CASE WHEN grouped.custom_variant_id IS NOT NULL
           THEN jsonb_build_object('custom_variant_id', grouped.custom_variant_id)
           ELSE '{}'::jsonb END order by grouped.product_id, grouped.selected_size nulls first,
-          grouped.selected_color nulls first, grouped.gift_wrap,
-          grouped.vip_warranty, grouped.gift_message), '[]'::jsonb)
+          grouped.selected_color nulls first, grouped.custom_variant_id nulls first,
+          grouped.gift_wrap, grouped.vip_warranty, grouped.gift_message), '[]'::jsonb)
         from (
           select
             item->>'id' as product_id,
@@ -191,6 +193,7 @@ begin
               from jsonb_array_elements(p_order->'items') e(item)
               where nullif(trim(item->>'selected_size'), '') is not null
                  or nullif(trim(item->>'selected_color'), '') is not null
+                 or nullif(trim(item->>'custom_variant_id'), '') is not null
             )
           )
         )
@@ -230,6 +233,12 @@ begin
       end if;
       v_price := v_product.price_gel;
     else
+      select count(*) into v_variant_count
+        from jsonb_array_elements(case when jsonb_typeof(v_product.variants) = 'array' then v_product.variants else '[]'::jsonb end) as entry(element)
+       where element->>'id' = v_item.custom_variant_id;
+      if v_variant_count <> 1 then
+        raise exception 'არჩეული ვარიანტი ვერ მოიძებნა ან დუბლირებულია.';
+      end if;
       v_variant := null;
       select element into v_variant
         from jsonb_array_elements(case when jsonb_typeof(v_product.variants) = 'array' then v_product.variants else '[]'::jsonb end) as entry(element)
@@ -271,7 +280,7 @@ begin
         + (case when coalesce((item->>'vip_warranty')::boolean, false) then 15 else 0 end) as addon_fee
     from jsonb_array_elements(p_order->'items') e(item)
     order by item->>'id', item->>'selected_size', item->>'selected_color',
-      item->>'gift_wrap', item->>'vip_warranty', item->>'gift_message'
+      item->>'custom_variant_id', item->>'gift_wrap', item->>'vip_warranty', item->>'gift_message'
   loop
     select id, name, price_gel, purchase_cost, vendor, category, available_sizes, available_colors, variants into v_product
       from public.products where id = v_item.product_id;
@@ -835,4 +844,63 @@ CREATE TRIGGER preserve_product_variant_stock
 BEFORE UPDATE OF variants ON public.products
 FOR EACH ROW EXECUTE FUNCTION private.preserve_product_variant_stock();
 REVOKE ALL ON FUNCTION private.preserve_product_variant_stock() FROM PUBLIC, anon, authenticated;
+-- Validate final variant JSON after stock-preservation triggers have run.
+-- This also runs for inserts and for the controlled inventory RPC, which bypasses
+-- only the stale-stock preservation trigger.
+CREATE OR REPLACE FUNCTION private.validate_product_variant_identity()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path TO ''
+AS $validate_variant$
+BEGIN
+  IF jsonb_typeof(NEW.variants) IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტების სია არასწორია.';
+  END IF;
+  IF jsonb_array_length(NEW.variants) > 50 THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტების რაოდენობა დასაშვებ ზღვარს აჭარბებს.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+      FROM jsonb_array_elements(NEW.variants) AS e(item)
+     WHERE jsonb_typeof(item) IS DISTINCT FROM 'object'
+        OR NULLIF(trim(item ->> 'id'), '') IS NULL
+        OR length(trim(item ->> 'id')) > 80
+        OR NULLIF(trim(item ->> 'name'), '') IS NULL
+        OR length(trim(item ->> 'name')) > 80
+        OR coalesce(item ->> 'priceGEL', '') !~ '^[0-9]+(\.[0-9]{1,2})?$'
+        OR coalesce(item ->> 'stock', '') !~ '^[0-9]{1,7}$'
+        OR CASE
+             WHEN coalesce(item ->> 'stock', '') ~ '^[0-9]{1,7}$'
+               THEN (item ->> 'stock')::integer > 1000000
+             ELSE TRUE
+           END
+  ) THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტის ID, სახელი, ფასი ან მარაგი არასწორია.';
+  END IF;
+
+  IF EXISTS (
+    SELECT item ->> 'id'
+      FROM jsonb_array_elements(NEW.variants) AS e(item)
+     GROUP BY item ->> 'id'
+    HAVING count(*) > 1
+  ) OR EXISTS (
+    SELECT lower(trim(item ->> 'name'))
+      FROM jsonb_array_elements(NEW.variants) AS e(item)
+     GROUP BY lower(trim(item ->> 'name'))
+    HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'პროდუქტის ვარიანტის ID ან სახელი დუბლირებულია.';
+  END IF;
+
+  RETURN NEW;
+END;
+$validate_variant$;
+
+REVOKE ALL ON FUNCTION private.validate_product_variant_identity() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS z_validate_product_variant_identity ON public.products;
+CREATE TRIGGER z_validate_product_variant_identity
+BEFORE INSERT OR UPDATE OF variants ON public.products
+FOR EACH ROW EXECUTE FUNCTION private.validate_product_variant_identity();
+
 COMMIT;
