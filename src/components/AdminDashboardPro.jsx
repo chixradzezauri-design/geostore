@@ -1382,12 +1382,12 @@ export default function AdminDashboardPro({
     if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
-    const updateKey = field + ':' + String(id);
-    if (quickProductUpdateLocks.current.has(updateKey)) return;
-    quickProductUpdateLocks.current.add(updateKey);
     const currentValue = current[column] ?? current[field];
     const versionFilter = buildProductVersionFilter(current.version);
     if (!versionFilter) return alert('პროდუქტის ვერსია არ არის განახლებული. განაახლეთ სია და სცადეთ ხელახლა.');
+    const updateKey = field + ':' + String(id);
+    if (quickProductUpdateLocks.current.has(updateKey)) return;
+    quickProductUpdateLocks.current.add(updateKey);
     const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
       const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + versionFilter + '&' + compareFilter, {
