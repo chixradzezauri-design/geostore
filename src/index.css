@@ -8406,3 +8406,19 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .gs-order-success-dialog .gs-order-code-panel strong{font-size:12px!important;letter-spacing:0!important}
  .gs-order-success-dialog p{font-size:11px!important;line-height:1.55!important}
 }
+
+
+/* Checkout confirmation: keep the full reference readable on narrow screens. */
+.gs-order-success-dialog,
+.gs-order-code-panel{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+.gs-order-code-panel{overflow:hidden}
+.gs-order-code-value{
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-all!important;
+  line-height:1.55!important;
+  letter-spacing:.035em!important;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace!important;
+  user-select:text;
+}
+.gs-commerce-overlay--success{overscroll-behavior:contain}
