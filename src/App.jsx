@@ -588,7 +588,20 @@ export default function App() {
     address: ''
   });
 
-  const [quickBuyProduct] = useState(null);
+  const [quickBuyProduct, setQuickBuyProduct] = useState(null);
+
+  const handleQuickBuy = (product) => {
+    if (!product || typeof product !== 'object') return;
+    setQuickBuyProduct(product);
+    setCheckoutError('');
+    setOrderConfirmation(null);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleCheckoutOpenChange = (nextOpen) => {
+    setIsCheckoutOpen(nextOpen);
+    if (!nextOpen) setQuickBuyProduct(null);
+  };
 
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -730,6 +743,7 @@ export default function App() {
           setOrderConfirmation(null);
           setIsCheckoutOpen(false);
           setCheckoutError('');
+          setQuickBuyProduct(null);
         }
         activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
       } catch (error) {
@@ -2715,6 +2729,7 @@ export default function App() {
     setIsSubmittingOrder(false);
     orderSubmitLock.current = false;
     setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: safeConfirmedTotal });
+    setQuickBuyProduct(null);
     if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
     try {
       const pendingStoreKey = 'geostore.pendingCheckout.v3';
@@ -2853,6 +2868,7 @@ export default function App() {
             comparisonList={comparisonList}
             toggleComparison={toggleComparison}
             addToCart={addToCart}
+            onQuickBuy={handleQuickBuy}
             formatPrice={formatPrice}
           />
           </Suspense>
@@ -3490,7 +3506,7 @@ export default function App() {
           <Modals
         currentLang={currentLang}
         isCheckoutOpen={isCheckoutOpen}
-        setIsCheckoutOpen={setIsCheckoutOpen}
+        setIsCheckoutOpen={handleCheckoutOpenChange}
         checkoutForm={checkoutForm}
         setCheckoutForm={setCheckoutForm}
         handlePlaceOrder={handlePlaceOrder}
