@@ -58,9 +58,9 @@ test('order confirmation code uses responsive wrapping styles on its actual code
 test('mobile category imagery and the catalogue filter panel retain readable contrast', () => {
   assert.match(css, /\.gs-editorial-category-card \.gs-category-photo\{\s*opacity:1!important;/s);
   const finalFilterTheme = css.slice(css.lastIndexOf('GEOSTORE maintenance: unify catalogue filters'));
-  assert.match(finalFilterTheme, /\.gs-catalog-controls\{[^}]*background:var\\(--gs-page\\)!important;/s);
-  assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter>div:first-child,[\s\S]*?color:var\\(--gs-muted-strong\\)!important;/);
-  assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter input,[\s\S]*?background:var\\(--gs-surface\\)!important;/);
+  assert.match(finalFilterTheme, /\.gs-catalog-controls\{[^}]*background:var\(--gs-page\)!important;/s);
+  assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter>div:first-child,[\s\S]*?color:var\(--gs-muted-strong\)!important;/);
+  assert.match(finalFilterTheme, /\.gs-catalog-controls \.gs-price-filter input,[\s\S]*?background:var\(--gs-surface\)!important;/);
 });
 
 
@@ -69,8 +69,8 @@ test('image search and product comparison use the shared editorial modal theme',
   assert.match(imageSearch, /gs-image-search-dialog/);
   assert.match(productCompare, /gs-product-compare-overlay/);
   assert.match(productCompare, /gs-product-compare-card/);
-  assert.match(css, /\.gs-image-search-dialog,\s*\.gs-product-compare-dialog,\s*\.gs-wardrobe-add-form\{[^}]*background:var\\(--gs-surface\\)!important;/s);
-  assert.match(css, /\.gs-product-compare-card\{[^}]*background:var\\(--gs-surface\\)!important;/s);
+  assert.match(css, /\.gs-image-search-dialog,\s*\.gs-product-compare-dialog,\s*\.gs-wardrobe-add-form\{[^}]*background:var\(--gs-surface\)!important;/s);
+  assert.match(css, /\.gs-product-compare-card\{[^}]*background:var\(--gs-surface\)!important;/s);
 });
 
 test('digital wardrobe and its add-item dialog use the shared responsive design system', () => {
