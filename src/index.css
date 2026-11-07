@@ -13133,3 +13133,100 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 @media(prefers-reduced-motion:reduce){
   .gs-commerce-overlay *{transition:none!important;animation:none!important}
 }
+
+
+/* GEOSTORE — unified account and authentication dialog (2026-11-07) */
+.gs-commerce-dialog--account{
+  box-sizing:border-box!important;
+  width:min(100%,460px)!important;
+  max-width:460px!important;
+  max-height:min(90dvh,820px)!important;
+  min-width:0!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  padding:clamp(20px,4vw,32px)!important;
+  border:1px solid #e5dbd1!important;
+  border-radius:5px!important;
+  background:#fffdfa!important;
+  color:#302921!important;
+  box-shadow:0 28px 90px rgba(24,20,16,.28)!important;
+  overscroll-behavior:contain!important;
+}
+.gs-commerce-dialog--account h3{
+  min-width:0!important;
+  color:#302921!important;
+  font-family:"Noto Serif Georgian",Georgia,serif!important;
+  font-size:clamp(17px,2.6vw,21px)!important;
+  line-height:1.4!important;
+  overflow-wrap:anywhere!important;
+}
+.gs-commerce-dialog--account label{
+  display:block!important;
+  color:#594b3e!important;
+  font-size:11px!important;
+  line-height:1.55!important;
+}
+.gs-commerce-dialog--account input{
+  box-sizing:border-box!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:47px!important;
+  padding:12px 14px!important;
+  border:1px solid #ded4c9!important;
+  border-radius:3px!important;
+  background:#faf8f5!important;
+  color:#302921!important;
+  font-size:14px!important;
+  line-height:1.5!important;
+  box-shadow:none!important;
+}
+.gs-commerce-dialog--account input::placeholder{color:#9b8f82!important}
+.gs-commerce-dialog--account input:focus{
+  border-color:#8b735a!important;
+  background:#fffdfa!important;
+}
+.gs-commerce-dialog--account form>button[type="submit"]{
+  min-height:48px!important;
+  border:1px solid #302921!important;
+  border-radius:3px!important;
+  background:#302921!important;
+  color:#fffdfa!important;
+  box-shadow:none!important;
+  font-size:12px!important;
+  letter-spacing:.025em!important;
+}
+.gs-commerce-dialog--account form>button[type="submit"]:hover:not(:disabled){
+  background:#514335!important;
+}
+.gs-commerce-dialog--account form>button[type="submit"]:disabled{
+  cursor:wait!important;
+  opacity:.62!important;
+}
+.gs-commerce-dialog--account button:focus-visible,
+.gs-commerce-dialog--account input:focus-visible{
+  outline:2px solid #9a8065!important;
+  outline-offset:3px!important;
+}
+.gs-commerce-dialog--account p{
+  max-width:100%!important;
+  color:#796d61!important;
+  font-size:11px!important;
+  line-height:1.65!important;
+  overflow-wrap:anywhere!important;
+}
+.gs-commerce-dialog--account button:not([type="submit"]){
+  overflow-wrap:anywhere!important;
+}
+@media(max-width:640px){
+  .gs-commerce-dialog--account{
+    width:100%!important;
+    max-width:460px!important;
+    max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
+    padding:20px 17px!important;
+  }
+  .gs-commerce-dialog--account input{min-height:47px!important;font-size:16px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .gs-commerce-dialog--account *{transition:none!important;animation:none!important}
+}
