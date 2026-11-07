@@ -9432,3 +9432,89 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 @media(prefers-reduced-motion:reduce){
   .geostore-fashion-store *{transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+
+/* Neo Edition: commerce dialogs are rendered with createPortal(document.body).
+   Keep these selectors outside .geostore-fashion-store so portal content is styled. */
+.gs-commerce-overlay--checkout .gs-commerce-dialog--checkout,
+.gs-commerce-overlay--success .gs-commerce-dialog--success,
+.gs-commerce-overlay--tracker .gs-commerce-dialog--tracker{
+  border:1px solid #dfe2e8!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  color:#17191f!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.28)!important;
+}
+.gs-commerce-overlay--checkout .gs-checkout-header{
+  border-color:#e1e3e8!important;
+  background:#111318!important;
+  color:#fff!important;
+}
+.gs-commerce-overlay--checkout .gs-checkout-header h3,
+.gs-commerce-overlay--checkout .gs-checkout-header p{color:inherit!important}
+.gs-commerce-overlay--checkout .gs-checkout-header p{opacity:.72}
+.gs-commerce-overlay--checkout .gs-commerce-dialog--checkout label{
+  color:#343a46!important;
+}
+.gs-commerce-overlay--checkout .gs-commerce-dialog--checkout input,
+.gs-commerce-overlay--checkout .gs-commerce-dialog--checkout select,
+.gs-commerce-overlay--checkout .gs-commerce-dialog--checkout textarea{
+  min-width:0!important;
+  border:1px solid #dfe2e8!important;
+  border-radius:8px!important;
+  background:#f8f9fb!important;
+  color:#17191f!important;
+  box-shadow:none!important;
+}
+.gs-commerce-overlay--checkout .gs-commerce-dialog--checkout button[type="submit"],
+.gs-commerce-overlay--success .gs-commerce-dialog--success button{
+  border-radius:9px!important;
+}
+.gs-commerce-overlay--success .gs-order-code-value{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  border:1px dashed #345cff!important;
+  border-radius:9px!important;
+  background:#f0f2ff!important;
+  color:#2448e8!important;
+}
+.gs-commerce-overlay--tracker .gs-commerce-dialog--tracker{
+  border-color:#dfe2e8!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  color:#17191f!important;
+}
+.gs-commerce-overlay--tracker .gs-commerce-dialog--tracker h3,
+.gs-commerce-overlay--tracker .gs-commerce-dialog--tracker p,
+.gs-commerce-overlay--tracker .gs-commerce-dialog--tracker label{
+  color:#252a34!important;
+}
+.gs-commerce-overlay--tracker .gs-order-tracker-form input{
+  min-width:0!important;
+  border:1px solid #dfe2e8!important;
+  border-radius:8px!important;
+  background:#f8f9fb!important;
+  color:#17191f!important;
+}
+.gs-commerce-overlay--tracker .gs-order-tracker-form button[type="submit"]{
+  border:0!important;
+  border-radius:8px!important;
+  background:#345cff!important;
+  color:#fff!important;
+}
+@media(max-width:600px){
+  .gs-commerce-overlay--checkout,
+  .gs-commerce-overlay--success,
+  .gs-commerce-overlay--tracker{padding:10px!important}
+  .gs-commerce-overlay--checkout .gs-commerce-dialog--checkout,
+  .gs-commerce-overlay--success .gs-commerce-dialog--success,
+  .gs-commerce-overlay--tracker .gs-commerce-dialog--tracker{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:calc(100dvh - 20px)!important;
+    border-radius:13px!important;
+  }
+}
