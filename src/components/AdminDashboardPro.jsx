@@ -291,6 +291,8 @@ export default function AdminDashboardPro({
 
   const [expenses, setExpenses] = useState([]);
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
+  const expenseCreateLock = useRef(false);
+  const expenseDeleteLocks = useRef(new Set());
 
   const [aiQuery, setAiQuery] = useState('');
   const [aiChatLogs, setAiChatLogs] = useState([
@@ -943,6 +945,8 @@ export default function AdminDashboardPro({
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
+    if (expenseCreateLock.current) return;
+
     const amountText = String(expenseForm.amount ?? '').trim();
     const description = String(expenseForm.description ?? '').trim();
     const category = String(expenseForm.category ?? '').trim();
@@ -983,6 +987,8 @@ export default function AdminDashboardPro({
       description
     };
 
+    // Lock synchronously before the first await to prevent duplicate inserts.
+    expenseCreateLock.current = true;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
@@ -996,31 +1002,44 @@ export default function AdminDashboardPro({
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
         alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
       } else {
+        const errorBody = await res.text().catch(() => '');
+        console.error('Expense insert failed:', errorBody);
         alert('შეცდომა ბაზაში შენახვისას');
       }
-    } catch {
+    } catch (error) {
+      console.error('Expense insert request failed:', error);
       alert('ქსელის შეცდომა სერვერთან მიერთებისას');
+    } finally {
+      expenseCreateLock.current = false;
     }
   };
 
   const handleDeleteExpense = async (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${id}`, {
-          method: 'DELETE',
-          headers: await getSupabaseHeaders()
-        });
+    const expenseKey = String(id ?? '');
+    if (!expenseKey || expenseDeleteLocks.current.has(expenseKey)) return;
+    if (!window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
 
-        if (res.ok) {
-          setExpenses(prev => prev.filter(e => e.id !== id));
-          logActivity(`წაიშალა ხარჯი (ID: ${id})`);
-          alert('✅ ხარჯი წარმატებით წაიშალა!');
-        } else {
-          alert('შეცდომა წაშლისას');
-        }
-      } catch {
-        alert('ქსელის შეცდომა');
+    expenseDeleteLocks.current.add(expenseKey);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(expenseKey)}`, {
+        method: 'DELETE',
+        headers: await getSupabaseHeaders()
+      });
+
+      if (res.ok) {
+        setExpenses(prev => prev.filter(e => String(e.id) !== expenseKey));
+        logActivity(`წაიშალა ხარჯი (ID: ${expenseKey})`);
+        alert('✅ ხარჯი წარმატებით წაიშალა!');
+      } else {
+        const errorBody = await res.text().catch(() => '');
+        console.error('Expense delete failed:', errorBody);
+        alert('შეცდომა წაშლისას');
       }
+    } catch (error) {
+      console.error('Expense delete request failed:', error);
+      alert('ქსელის შეცდომა');
+    } finally {
+      expenseDeleteLocks.current.delete(expenseKey);
     }
   };
 
