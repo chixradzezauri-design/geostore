@@ -30,7 +30,7 @@ import { validateCheckoutContact, validateCheckoutItems } from './utils/checkout
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner } from './utils/cartSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes } from './utils/productVariants.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -1422,11 +1422,11 @@ export default function App() {
 
   useEffect(() => {
     const activeOwner = activeCartOwnerRef.current;
-    if (
-      authLoading ||
-      !activeOwner.initialized ||
-      String(activeOwner.userId ?? '') !== String(currentUser?.id ?? '')
-    ) return;
+    if (!canPersistCartForOwner({
+      authLoading,
+      activeOwner,
+      currentUserId: currentUser?.id
+    })) return;
     try {
       localStorage.setItem(
         getCartStorageKey(activeOwner.userId),

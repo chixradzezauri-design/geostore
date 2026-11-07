@@ -153,3 +153,13 @@ export const switchCartStorageOwner = ({
   storage.setItem(nextKey, JSON.stringify(nextCart));
   return { cart: nextCart, storageKey: nextKey };
 };
+
+/**
+ * Prevents a cart snapshot from being written while auth is unresolved,
+ * before an owner is activated, or under a different account's storage key.
+ */
+export const canPersistCartForOwner = ({ authLoading, activeOwner, currentUserId }) => (
+  !authLoading &&
+  activeOwner?.initialized === true &&
+  String(activeOwner.userId ?? '') === String(currentUserId ?? '')
+);

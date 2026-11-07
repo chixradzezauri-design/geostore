@@ -200,3 +200,41 @@ test('uses distinct storage keys for guest and each authenticated account', () =
   assert.equal(getCartStorageKey('user/a'), 'geostore_cart:user:user%2Fa');
   assert.notEqual(getCartStorageKey('user-a'), getCartStorageKey('user-b'));
 });
+
+
+test('blocks cart persistence while auth is loading or the owner is not initialized', async () => {
+  const { canPersistCartForOwner } = await import('../src/utils/cartSafety.js');
+  assert.equal(canPersistCartForOwner({
+    authLoading: true,
+    activeOwner: { initialized: true, userId: 'user-a' },
+    currentUserId: 'user-a'
+  }), false);
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: false, userId: null },
+    currentUserId: null
+  }), false);
+});
+
+test('blocks cart persistence when the active owner differs from the signed-in account', async () => {
+  const { canPersistCartForOwner } = await import('../src/utils/cartSafety.js');
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: true, userId: 'user-a' },
+    currentUserId: 'user-b'
+  }), false);
+});
+
+test('allows cart persistence only for the matching initialized owner, including guest carts', async () => {
+  const { canPersistCartForOwner } = await import('../src/utils/cartSafety.js');
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: true, userId: 'user-a' },
+    currentUserId: 'user-a'
+  }), true);
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: true, userId: null },
+    currentUserId: null
+  }), true);
+});
