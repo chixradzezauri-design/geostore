@@ -2229,19 +2229,35 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
+      const statusChangedAt = new Date().toISOString();
+      const applyConfirmedOrderStatus = (order) => {
+        if (String(order.id) !== orderKey) return order;
+        const nextOrder = {
+          ...order,
+          status: newStatus,
+          status_changed_at: statusChangedAt
+        };
+        if (isCancelledOrderStatus(newStatus)) {
+          // The RPC has completed the atomic stock restoration before returning.
+          // Only mark restoration locally when this order had a recorded deduction.
+          if (order.stock_deducted_at && !order.stock_restored_at) {
+            nextOrder.stock_restored_at = statusChangedAt;
+          }
+        } else if (isCancelledOrderStatus(order.status) && newStatus === 'ახალი') {
+          // Reactivation RPC atomically deducted stock and cleared the restore marker.
+          nextOrder.stock_deducted_at = statusChangedAt;
+          nextOrder.stock_restored_at = null;
+        }
+        return nextOrder;
+      };
       if (typeof setOrders === 'function') {
-        setOrders(prev => (prev || []).map(order =>
-          String(order.id) === orderKey ? { ...order, status: newStatus } : order
-        ));
+        setOrders(prev => (prev || []).map(applyConfirmedOrderStatus));
       }
-      setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === orderKey ? { ...prev, status: newStatus } : prev
-      );
+      setSelectedOrderForModal(prev => prev ? applyConfirmedOrderStatus(prev) : prev);
 
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        const updatedLocal = localOrders.map(o => String(o.id) === orderKey ? { ...o, status: newStatus } : o);
-        localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
+        localStorage.setItem('geostore_local_orders', JSON.stringify(localOrders.map(applyConfirmedOrderStatus)));
       } catch {}
 
       logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
@@ -2310,19 +2326,23 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
+      const reactivatedAt = new Date().toISOString();
+      const applyReactivatedOrder = (order) => String(order.id) === String(reactivationOrder.id)
+        ? {
+            ...order,
+            status: 'ახალი',
+            stock_deducted_at: reactivatedAt,
+            stock_restored_at: null,
+            status_changed_at: reactivatedAt
+          }
+        : order;
       if (typeof setOrders === 'function') {
-        setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order
-        ));
+        setOrders(prev => (prev || []).map(applyReactivatedOrder));
       }
-      setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
-      );
+      setSelectedOrderForModal(prev => prev ? applyReactivatedOrder(prev) : prev);
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        localStorage.setItem('geostore_local_orders', JSON.stringify(
-          localOrders.map(order => String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order)
-        ));
+        localStorage.setItem('geostore_local_orders', JSON.stringify(localOrders.map(applyReactivatedOrder)));
       } catch {}
 
       logActivity(`გაუქმებული შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
