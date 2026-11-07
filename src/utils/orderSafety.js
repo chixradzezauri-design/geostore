@@ -255,7 +255,8 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
 };
 
 
-// Accept a checkout response only when it confirms the exact secure ID sent by the client.
+// Accept checkout only when the RPC confirms the exact ID and its complete
+// server-calculated financial snapshot. Never turn a malformed total into 0 GEL.
 export const validateOrderCreationResponse = (serverResult, expectedOrderId) => {
   const expectedId = String(expectedOrderId || '').trim();
   const receivedId = String(serverResult?.order_id || '').trim();
@@ -264,6 +265,21 @@ export const validateOrderCreationResponse = (serverResult, expectedOrderId) => 
   }
   if (!receivedId) return { valid: false, reason: 'missing_order_id' };
   if (receivedId !== expectedId) return { valid: false, reason: 'order_id_mismatch' };
+
+  const totals = ['subtotal_gel', 'discount_gel', 'delivery_gel', 'total_gel']
+    .map((field) => Number(serverResult?.[field]));
+  if (totals.some((value) => !Number.isFinite(value) || value < 0)) {
+    return { valid: false, reason: 'invalid_totals' };
+  }
+  const [subtotal, discount, delivery, total] = totals;
+  const toCents = (value) => Math.round((value + Number.EPSILON) * 100);
+  if (toCents(discount) > toCents(subtotal) ||
+      toCents(total) !== Math.max(0, toCents(subtotal) - toCents(discount)) + toCents(delivery)) {
+    return { valid: false, reason: 'inconsistent_totals' };
+  }
+  if (!Array.isArray(serverResult?.items) || serverResult.items.length === 0) {
+    return { valid: false, reason: 'missing_items' };
+  }
   return { valid: true, orderId: receivedId };
 };
 
