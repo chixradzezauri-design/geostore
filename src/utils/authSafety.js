@@ -10,3 +10,9 @@ export const isAuthRestoreCurrent = ({ mounted, restoreVersion, currentVersion }
 export const isSameAuthOwner = (activeOwnerId, submittedOwnerId) => (
   String(activeOwnerId ?? '') === String(submittedOwnerId ?? '')
 );
+
+/** Checkout may proceed only if identity stayed stable while restoring the session. */
+export const isCheckoutOwnerConsistent = ({ initialOwnerId, sessionOwnerId, activeOwnerId }) => (
+  isSameAuthOwner(initialOwnerId, sessionOwnerId) &&
+  isSameAuthOwner(initialOwnerId, activeOwnerId)
+);
