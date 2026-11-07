@@ -11029,3 +11029,201 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .admin-support-reply-form button { width:100%; }
  .admin-support-ticket-meta { align-items:flex-start!important; }
 }
+
+
+/* GEOSTORE — admin support & AI analyst refinement */
+.admin-ai-analyst,
+.admin-support-panel {
+  min-width: 0;
+  width: 100%;
+  color: #f4f4f5;
+  background: linear-gradient(145deg, rgba(24,24,27,.96), rgba(9,9,11,.98));
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 24px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.22);
+  backdrop-filter: blur(18px);
+}
+.admin-ai-analyst > h3,
+.admin-support-panel > h3 {
+  min-width: 0;
+  line-height: 1.45;
+  letter-spacing: .015em;
+  border-color: rgba(212,175,55,.2);
+}
+.admin-ai-chat {
+  min-width: 0;
+  max-height: min(460px, 58vh);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212,175,55,.45) rgba(255,255,255,.04);
+  border-color: rgba(212,175,55,.16);
+}
+.admin-ai-message {
+  min-width: 0;
+  width: 100%;
+}
+.admin-ai-bubble {
+  min-width: 0;
+  max-width: min(86%, 720px);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.7;
+  border-radius: 18px;
+}
+.admin-ai-composer {
+  min-width: 0;
+  align-items: stretch;
+}
+.admin-ai-composer input {
+  min-width: 0;
+  min-height: 48px;
+  line-height: 1.5;
+  border-color: rgba(212,175,55,.24);
+}
+.admin-ai-composer input:focus {
+  border-color: rgba(212,175,55,.72);
+  box-shadow: 0 0 0 3px rgba(212,175,55,.09);
+}
+.admin-ai-composer button {
+  min-height: 48px;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #e8d49a, #c5a85c);
+  color: #171717;
+}
+.admin-support-list {
+  min-width: 0;
+}
+.admin-support-ticket {
+  min-width: 0;
+  overflow: hidden;
+  border-color: rgba(212,175,55,.17);
+  border-radius: 20px;
+  background: rgba(12,12,14,.72);
+}
+.admin-support-ticket-header {
+  min-width: 0;
+  border-color: rgba(212,175,55,.16);
+}
+.admin-support-ticket-meta {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+.admin-support-ticket-meta > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-support-ticket-controls {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-support-status-actions {
+  max-width: 100%;
+  flex-wrap: wrap;
+  border-color: rgba(212,175,55,.18);
+}
+.admin-support-status-actions button {
+  min-height: 34px;
+  line-height: 1.35;
+}
+.admin-support-ticket-content,
+.admin-support-ticket-reply {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.7;
+}
+.admin-support-ticket-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.75;
+  border-color: rgba(212,175,55,.14);
+}
+.admin-support-ticket-reply {
+  border-color: rgba(212,175,55,.22);
+  background: rgba(212,175,55,.055);
+}
+.admin-support-reply-form {
+  min-width: 0;
+}
+.admin-support-reply-form input {
+  min-width: 0;
+  min-height: 48px;
+  line-height: 1.5;
+  border-color: rgba(212,175,55,.2);
+}
+.admin-support-reply-form input:focus {
+  border-color: rgba(212,175,55,.7);
+  box-shadow: 0 0 0 3px rgba(212,175,55,.08);
+}
+.admin-support-reply-form button {
+  min-height: 48px;
+  background: linear-gradient(135deg, #e8d49a, #c5a85c);
+  color: #171717;
+}
+@media (max-width: 640px) {
+  .admin-ai-analyst,
+  .admin-support-panel {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+  .admin-ai-analyst > h3,
+  .admin-support-panel > h3 {
+    align-items: flex-start;
+    font-size: 14px;
+    padding-bottom: 13px;
+  }
+  .admin-ai-chat {
+    max-height: 52vh;
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+  .admin-ai-bubble {
+    max-width: 94%;
+    padding: 12px !important;
+    font-size: 12px;
+  }
+  .admin-ai-composer {
+    flex-direction: column;
+    gap: 9px;
+  }
+  .admin-ai-composer input,
+  .admin-ai-composer button {
+    width: 100%;
+    min-height: 46px;
+  }
+  .admin-support-ticket {
+    padding: 14px !important;
+    border-radius: 16px !important;
+  }
+  .admin-support-ticket-header {
+    align-items: stretch;
+  }
+  .admin-support-ticket-controls {
+    width: 100%;
+    align-items: stretch;
+  }
+  .admin-support-status-actions {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .admin-support-status-actions button {
+    min-width: 0;
+    padding: 8px 4px;
+    font-size: 10px;
+    white-space: normal;
+  }
+  .admin-support-ticket-controls > button {
+    align-self: flex-end;
+  }
+  .admin-support-reply-form {
+    flex-direction: column;
+  }
+  .admin-support-reply-form input,
+  .admin-support-reply-form button {
+    width: 100%;
+    min-height: 46px;
+  }
+}
