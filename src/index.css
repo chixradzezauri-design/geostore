@@ -10771,3 +10771,48 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   .admin-orders-pagination { align-items: flex-start !important; }
   .admin-orders-pagination > div { width: 100%; }
 }
+
+
+
+/* Admin finance suite — consistent compact editorial surfaces */
+.admin-analytics-toolbar,
+.admin-analytics-card,
+.admin-calculator-results,
+.admin-expenses > .admin-staff-panel,
+.admin-expenses > div:last-child {
+  background: linear-gradient(145deg,rgba(24,26,30,.96),rgba(13,15,18,.98)) !important;
+  border-color: rgba(148,163,184,.17) !important;
+  box-shadow: 0 14px 38px rgba(0,0,0,.18) !important;
+}
+.admin-analytics-toolbar { border-radius: 17px !important; padding: 16px !important; gap: 14px !important; }
+.admin-analytics-toolbar h3 { font-size: 13px !important; letter-spacing: -.01em; }
+.admin-analytics-toolbar p { line-height: 1.55 !important; }
+.admin-analytics-toolbar select { min-height: 42px; border-radius: 12px !important; border-color: rgba(148,163,184,.2) !important; background: #111318 !important; }
+.admin-analytics-toolbar button { min-height: 42px; border-radius: 12px !important; background: #e9e3d9 !important; color: #171717 !important; }
+.admin-analytics-kpis { gap: 12px !important; }
+.admin-analytics-card { min-width: 0; border-radius: 17px !important; padding: 18px !important; }
+.admin-analytics-card > p:first-child { line-height: 1.55 !important; align-items: flex-start; }
+.admin-analytics-card > p:nth-child(2) { font-size: clamp(22px,2.1vw,30px) !important; line-height: 1.2 !important; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.admin-analytics-card > span { display: inline-block; max-width: 100%; line-height: 1.55 !important; white-space: normal !important; overflow-wrap: anywhere; }
+.admin-calculator-layout { align-items: stretch; }
+.admin-calculator-results { border-radius: 18px !important; padding: clamp(16px,2.2vw,24px) !important; }
+.admin-calculator-results > div { gap: 12px; align-items: baseline; line-height: 1.5; }
+.admin-calculator-results > div span { min-width: 0; overflow-wrap: anywhere; }
+.admin-calculator-results > div b { text-align: right; overflow-wrap: anywhere; }
+.admin-expenses .admin-expense-form { gap: 12px !important; }
+.admin-expenses .admin-expense-form input,
+.admin-expenses .admin-expense-form select { min-height: 44px; min-width: 0; border-radius: 12px !important; background: #111318 !important; border-color: rgba(148,163,184,.18) !important; }
+.admin-expenses .admin-expense-form button { min-height: 42px; border-radius: 12px !important; background: #e9e3d9 !important; color: #171717 !important; }
+.admin-expense-row { gap: 12px !important; align-items: center !important; border-radius: 14px !important; border-color: rgba(148,163,184,.16) !important; background: rgba(15,17,21,.8) !important; }
+.admin-expense-row > div:first-child { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 8px; line-height: 1.55; }
+.admin-expense-row > div:first-child b { overflow-wrap: anywhere; }
+.admin-expense-row > div:last-child { flex: 0 0 auto; gap: 12px !important; }
+@media (max-width: 639px) {
+ .admin-analytics-toolbar { align-items: stretch !important; }
+ .admin-analytics-toolbar select,.admin-analytics-toolbar button { width: 100%; }
+ .admin-analytics-card { padding: 15px !important; }
+ .admin-expenses .admin-expense-form > div { grid-template-columns: minmax(0,1fr) !important; }
+ .admin-expense-row { align-items: flex-start !important; flex-direction: column !important; }
+ .admin-expense-row > div:last-child { width: 100%; justify-content: space-between; }
+ .admin-calculator-results > div { align-items: flex-start; }
+}
