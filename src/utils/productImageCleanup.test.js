@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { collectReferencedProductImageUrls } from './productImageCleanup.js';
+import { collectReferencedProductImageUrls, shouldCleanupUploadedProductImages } from './productImageCleanup.js';
 
 test('collects image and gallery URLs from other products only', () => {
   const referenced = collectReferencedProductImageUrls([
@@ -29,8 +29,7 @@ test('returns an empty set for an invalid product list', () => {
 });
 
 
-test('cleans newly uploaded images only when the product write is known not to have committed', async () => {
-  const { shouldCleanupUploadedProductImages } = await import('./productImageCleanup.js');
+test('cleans newly uploaded images only when the product write is known not to have committed', () => {
   assert.equal(shouldCleanupUploadedProductImages('not-started'), true);
   assert.equal(shouldCleanupUploadedProductImages('rejected'), true);
   assert.equal(shouldCleanupUploadedProductImages('unknown'), false);
