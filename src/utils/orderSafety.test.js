@@ -7,6 +7,7 @@ import {
   calculateCheckoutTotals,
   calculateOrderLineRevenueGEL,
   reconcileCartWithCatalog,
+  classifyCartReconciliationChanges,
   createSecureOrderId,
   groupCheckoutItems,
   buildCheckoutFingerprintPayload,
@@ -225,6 +226,18 @@ test('clamps invalid discount and delivery values safely', () => {
   );
 });
 
+
+test('classifies unavailable products, option changes, stock limits, and price changes separately', () => {
+  assert.equal(classifyCartReconciliationChanges([{ type: 'unavailable' }]), 'unavailable');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'invalid_price' }]), 'unavailable');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'variant_custom_unavailable' }]), 'unavailable');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'variant_size_missing' }]), 'options');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'variant_color' }]), 'options');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'unavailable_stock' }]), 'stock');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'stock' }]), 'stock');
+  assert.equal(classifyCartReconciliationChanges([{ type: 'price' }]), 'price');
+  assert.equal(classifyCartReconciliationChanges([]), 'review');
+});
 
 test('reconciles stale cart prices and stock against the latest catalogue', () => {
   const result = reconcileCartWithCatalog(
