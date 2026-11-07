@@ -21,6 +21,7 @@ import {
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
+  deduplicateOrdersById,
   roundGEL,
   parseOrderDeliveryChargeGEL,
   resolveOrderDeliveryChargeGEL,
@@ -682,4 +683,16 @@ test('GEL values are rounded consistently to tetri', () => {
   assert.equal(roundGEL(12.344), 12.34);
   assert.equal(normalizeOrderTotal('12.345'), 12.35);
   assert.equal(calculateOrderLineRevenueGEL({ price: 1.005, quantity: 3 }), 3.03);
+});
+
+
+test('financial order deduplication keeps the newest snapshot per order ID', () => {
+  const older = { id: 'ORD-1', status: 'pending', updated_at: '2026-01-01T10:00:00Z', total_gel: 20 };
+  const newer = { id: 'ORD-1', status: 'delivered', updated_at: '2026-01-02T10:00:00Z', total_gel: 20 };
+  const other = { id: 'ORD-2', status: 'delivered', updated_at: '2026-01-01T11:00:00Z', total_gel: 35 };
+  const result = deduplicateOrdersById([older, newer, other, { ...newer, id: ' ord-1 ' }]);
+  assert.equal(result.length, 2);
+  assert.equal(result[0].status, 'delivered');
+  assert.equal(result[1].id, 'ORD-2');
+  assert.deepEqual(deduplicateOrdersById(null), []);
 });
