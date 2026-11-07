@@ -1,6 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
+import { supabase } from '../supabaseClient';
 import { estimateProductSize, isFootwearProduct } from '../utils/sizeRecommendation';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasValidProductOptionSelection } from '../utils/productVariants.js';
 import { 
@@ -79,42 +80,67 @@ export default function StoreView({
     return () => clearInterval(timer);
   }, []);
 
-  const reviewStorageKey = currentUser?.id
-    ? `geostore_product_reviews:user:${currentUser.id}`
-    : 'geostore_product_reviews:guest';
+  const reviewOwnerKey = currentUser?.id || 'guest';
   const [allReviews, setAllReviews] = useState({});
   const [reviewsLoadedFor, setReviewsLoadedFor] = useState(null);
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
-  const [newReviewImage, setNewReviewImage] = useState('');
+  const [newReviewImage, setNewReviewImage] = useState(null);
 
   useEffect(() => {
-    let loaded = {};
-    try {
-      const saved = localStorage.getItem(reviewStorageKey);
-      const parsed = saved ? JSON.parse(saved) : {};
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) loaded = parsed;
-    } catch {}
-    setAllReviews(loaded);
-    setReviewsLoadedFor(reviewStorageKey);
-  }, [reviewStorageKey]);
-
-  useEffect(() => {
-    if (reviewsLoadedFor !== reviewStorageKey) return;
-    try { localStorage.setItem(reviewStorageKey, JSON.stringify(allReviews)); } catch {}
-  }, [allReviews, reviewStorageKey, reviewsLoadedFor]);
+    let cancelled = false;
+    setReviewsLoadedFor(null);
+    setAllReviews({});
+    const loadReviews = async () => {
+      const { data, error } = await supabase
+        .from('product_reviews')
+        .select('id, product_id, author_label, rating, comment, image_path, verified_purchase, created_at')
+        .order('created_at', { ascending: false })
+        .limit(2000);
+      if (cancelled) return;
+      if (error) {
+        console.error('Product reviews could not be loaded:', error);
+        setAllReviews({});
+      } else {
+        const grouped = {};
+        (data || []).forEach(review => {
+          const image = review.image_path
+            ? supabase.storage.from('product-review-images').getPublicUrl(review.image_path).data.publicUrl
+            : null;
+          const item = {
+            id: review.id,
+            userId: null,
+            author: review.author_label || 'GEOSTORE customer',
+            comment: review.comment,
+            rating: Math.min(5, Math.max(1, Number(review.rating) || 5)),
+            image,
+            verifiedPurchase: review.verified_purchase === true,
+            date: new Date(review.created_at).toLocaleDateString(
+              currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka-GE'
+            )
+          };
+          if (!grouped[review.product_id]) grouped[review.product_id] = [];
+          grouped[review.product_id].push(item);
+        });
+        setAllReviews(grouped);
+      }
+      setReviewsLoadedFor(reviewOwnerKey);
+    };
+    loadReviews();
+    return () => { cancelled = true; };
+  }, [reviewOwnerKey, currentLang]);
 
   // Never carry a review draft or image from one account into another.
   useEffect(() => {
     setNewReviewComment('');
     setNewReviewRating(5);
-    setNewReviewImage('');
-  }, [reviewStorageKey]);
+    setNewReviewImage(null);
+  }, [reviewOwnerKey]);
 
-  const reviewsReady = reviewsLoadedFor === reviewStorageKey;
+  const reviewsReady = reviewsLoadedFor === reviewOwnerKey;
   const visibleReviews = reviewsReady ? allReviews : {};
   const visibleReviewComment = reviewsReady ? newReviewComment : '';
-  const visibleReviewImage = reviewsReady ? newReviewImage : '';
+  const visibleReviewImage = reviewsReady ? newReviewImage : null;
 
   // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი
   const isClothingOrFootwear = (prod) => {
