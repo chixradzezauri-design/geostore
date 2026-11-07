@@ -431,7 +431,7 @@ export default function AdminDashboardPro({
   const handleAdjustCustomVariantStock = async (variantId) => {
     if (!editingProductId || productSaveLock.current) return;
     const rawDelta = String(variantStockAdjustments[variantId] ?? '').trim();
-    if (!/^-?\\d+$/.test(rawDelta)) return alert('მარაგის ცვლილება მიუთითეთ მთელი რიცხვით, მაგალითად +5 ან -2.');
+    if (!/^-?\d+$/.test(rawDelta)) return alert('მარაგის ცვლილება მიუთითეთ მთელი რიცხვით, მაგალითად +5 ან -2.');
     const delta = Number(rawDelta);
     if (!Number.isSafeInteger(delta) || delta === 0 || delta < -1000000 || delta > 1000000) {
       return alert('მარაგის ცვლილება უნდა იყოს -1,000,000-დან +1,000,000-მდე და ნულისგან განსხვავებული.');
