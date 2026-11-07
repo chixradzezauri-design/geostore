@@ -215,3 +215,16 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
 
   return { cartItems: refreshedCart, changes, hasChanges: changes.length > 0 };
 };
+
+
+// Accept a checkout response only when it confirms the exact secure ID sent by the client.
+export const validateOrderCreationResponse = (serverResult, expectedOrderId) => {
+  const expectedId = String(expectedOrderId || '').trim();
+  const receivedId = String(serverResult?.order_id || '').trim();
+  if (!/^ORD-[A-F0-9]{32}$/.test(expectedId)) {
+    return { valid: false, reason: 'invalid_expected_id' };
+  }
+  if (!receivedId) return { valid: false, reason: 'missing_order_id' };
+  if (receivedId !== expectedId) return { valid: false, reason: 'order_id_mismatch' };
+  return { valid: true, orderId: receivedId };
+};

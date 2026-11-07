@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
+import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -2432,9 +2432,11 @@ export default function App() {
       }
 
       serverOrderResult = await response.json();
-      if (!serverOrderResult?.order_id || serverOrderResult.order_id !== orderId) {
+      const orderConfirmationCheck = validateOrderCreationResponse(serverOrderResult, orderId);
+      if (!orderConfirmationCheck.valid) {
         throw new Error('სერვერისგან შეკვეთის დადასტურება ვერ მივიღეთ.');
       }
+      orderId = orderConfirmationCheck.orderId;
     } catch (err) {
       console.error('Order submission failed:', err);
       const message = getCheckoutErrorMessage(err, currentLang);

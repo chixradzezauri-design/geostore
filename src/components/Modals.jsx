@@ -87,7 +87,7 @@ export default function Modals({
       secureOrder: 'თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში', close: 'დახურვა', orderAccepted: 'შეკვეთა მიღებულია',
       thankYou: 'მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.',
       orderCode: 'შეკვეთის კოდი', copyCode: 'კოდის კოპირება', codeCopied: 'შეკვეთის კოდი დაკოპირდა.',
-      confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
+      emailLabel: 'ელ-ფოსტა:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
       orderPhone: 'შეკვეთაზე მითითებული ტელეფონი', checking: 'მოწმდება...', search: 'ძებნა',
       orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
       products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
@@ -117,7 +117,7 @@ export default function Modals({
       secureOrder: 'Your order is securely stored with GEOSTORE', close: 'Close', orderAccepted: 'Order received',
       thankYou: 'Thank you for your purchase. Keep your order code to check its status later.',
       orderCode: 'Order code', copyCode: 'Copy code', codeCopied: 'Order code copied.',
-      confirmation: 'Confirmation:', understood: 'Got it', trackerTitle: 'Track your order', trackerInvalidCode: 'The order code is invalid. Enter the complete ORD code.', trackerInvalidPhone: 'The phone number must contain 9–15 digits.',
+      emailLabel: 'Email:', understood: 'Got it', trackerTitle: 'Track your order', trackerInvalidCode: 'The order code is invalid. Enter the complete ORD code.', trackerInvalidPhone: 'The phone number must contain 9–15 digits.',
       orderPhone: 'Phone number used for the order', checking: 'Checking...', search: 'Search',
       orderDate: 'Order date:', total: 'Total amount:', items: 'Order items:',
       products: 'Products', deliveryProgress: 'Delivery progress', accepted: 'Accepted',
@@ -147,7 +147,7 @@ export default function Modals({
       secureOrder: 'Ваш заказ надежно сохраняется в GEOSTORE', close: 'Закрыть', orderAccepted: 'Заказ принят',
       thankYou: 'Спасибо за покупку. Сохраните код заказа, чтобы позже проверить его статус.',
       orderCode: 'Код заказа', copyCode: 'Скопировать код', codeCopied: 'Код заказа скопирован.',
-      confirmation: 'Подтверждение:', understood: 'Понятно', trackerTitle: 'Статус заказа', trackerInvalidCode: 'Неверный код заказа. Введите полный код ORD.', trackerInvalidPhone: 'Номер телефона должен содержать 9–15 цифр.',
+      emailLabel: 'Эл. почта:', understood: 'Понятно', trackerTitle: 'Статус заказа', trackerInvalidCode: 'Неверный код заказа. Введите полный код ORD.', trackerInvalidPhone: 'Номер телефона должен содержать 9–15 цифр.',
       orderPhone: 'Телефон, указанный при заказе', checking: 'Проверка...', search: 'Поиск',
       orderDate: 'Дата заказа:', total: 'Итого:', items: 'Состав заказа:',
       products: 'Товары', deliveryProgress: 'Статус доставки', accepted: 'Принят',
@@ -178,7 +178,7 @@ export default function Modals({
     secureOrder: 'თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში', close: 'დახურვა', orderAccepted: 'შეკვეთა მიღებულია',
     thankYou: 'მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.',
     orderCode: 'შეკვეთის კოდი', copyCode: 'კოდის კოპირება', codeCopied: 'შეკვეთის კოდი დაკოპირდა.',
-    confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
+    emailLabel: 'ელ-ფოსტა:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
     orderPhone: 'შეკვეთაზე მითითებული ტელეფონი', checking: 'მოწმდება...', search: 'ძებნა',
     orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
     products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
@@ -482,7 +482,7 @@ export default function Modals({
                 >{copy.copyCode}</button>
               </div>
               {orderConfirmation.email && (
-                <p className="mt-4 break-all text-[10px] text-neutral-500">{copy.confirmation} {orderConfirmation.email}</p>
+                <p className="mt-4 break-all text-[10px] text-neutral-500">{copy.emailLabel} {orderConfirmation.email}</p>
               )}
               <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)}
                 className="mt-6 w-full rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800">

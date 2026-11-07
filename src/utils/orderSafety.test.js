@@ -8,7 +8,8 @@ import {
   groupCheckoutItems,
   isReusableCheckout,
   normalizeOrderItems,
-  normalizeOrderTotal
+  normalizeOrderTotal,
+  validateOrderCreationResponse
 } from './orderSafety.js';
 
 test('groups identical product and option combinations', () => {
@@ -254,4 +255,33 @@ test('requires a custom variant selection when the catalogue defines custom vari
     [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 99, variants: [{ id: 'v1', name: 'One', priceGEL: 20, stock: 2 }] }]
   );
   assert.deepEqual(result.changes.map(change => change.type), ['variant_custom_missing']);
+});
+
+
+test('accepts only the exact secure order ID confirmed by the checkout RPC', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, orderId), {
+    valid: true,
+    orderId
+  });
+});
+
+test('rejects missing, malformed, or mismatched checkout order IDs', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  assert.deepEqual(validateOrderCreationResponse(null, orderId), {
+    valid: false,
+    reason: 'missing_order_id'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ order_id: 'ORD-123' }, orderId), {
+    valid: false,
+    reason: 'order_id_mismatch'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId.toLowerCase() }, orderId), {
+    valid: false,
+    reason: 'order_id_mismatch'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, 'ORD-not-secure'), {
+    valid: false,
+    reason: 'invalid_expected_id'
+  });
 });
