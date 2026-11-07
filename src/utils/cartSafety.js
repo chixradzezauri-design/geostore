@@ -112,3 +112,44 @@ export const sanitizeCartSnapshot = (value) => {
     return [safeItem];
   });
 };
+
+
+export const getCartStorageKey = (userId) => (
+  userId
+    ? `geostore_cart:user:${encodeURIComponent(String(userId))}`
+    : 'geostore_cart:guest'
+);
+
+/**
+ * Persists the outgoing owner's cart and loads the next owner's isolated cart.
+ * On first activation, the legacy unscoped cart is migrated to the guest slot.
+ */
+export const switchCartStorageOwner = ({
+  storage,
+  previousOwnerId = null,
+  nextOwnerId = null,
+  currentCart = [],
+  isInitial = false
+}) => {
+  if (!storage) throw new Error('Cart storage is unavailable.');
+  const nextKey = getCartStorageKey(nextOwnerId);
+  if (isInitial) {
+    const legacyCart = storage.getItem('geostore_cart');
+    if (legacyCart && !storage.getItem(getCartStorageKey(null))) {
+      storage.setItem(getCartStorageKey(null), legacyCart);
+    }
+  } else if (String(previousOwnerId ?? '') !== String(nextOwnerId ?? '')) {
+    storage.setItem(getCartStorageKey(previousOwnerId), JSON.stringify(sanitizeCartSnapshot(currentCart)));
+  }
+  let nextCart = [];
+  const saved = storage.getItem(nextKey);
+  if (saved) {
+    try {
+      nextCart = sanitizeCartSnapshot(JSON.parse(saved));
+    } catch {
+      nextCart = [];
+    }
+  }
+  storage.setItem(nextKey, JSON.stringify(nextCart));
+  return { cart: nextCart, storageKey: nextKey };
+};

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot } from '../src/utils/cartSafety.js';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner } from '../src/utils/cartSafety.js';
 
 const product = {
   id: 'p-1',
@@ -147,4 +147,56 @@ test('returns an empty cart for malformed snapshots and caps oversized snapshots
 test('normalizes invalid saved stock to zero without trusting it for checkout', () => {
   const [item] = sanitizeCartSnapshot([{ ...product, stock: 'bad', quantity: 1 }]);
   assert.equal(item.stock, 0);
+});
+
+
+test('isolates guest and authenticated carts across sign-in and sign-out', () => {
+  const values = new Map([['geostore_cart', JSON.stringify([{ ...product, quantity: 2 }])]]);
+  const storage = {
+    getItem: key => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, String(value))
+  };
+  const guest = switchCartStorageOwner({
+    storage,
+    nextOwnerId: null,
+    currentCart: [],
+    isInitial: true
+  });
+  assert.equal(guest.cart[0].quantity, 2);
+  const userA = switchCartStorageOwner({
+    storage,
+    previousOwnerId: null,
+    nextOwnerId: 'user-a',
+    currentCart: [{ ...product, quantity: 3 }]
+  });
+  assert.deepEqual(userA.cart, []);
+  const userB = switchCartStorageOwner({
+    storage,
+    previousOwnerId: 'user-a',
+    nextOwnerId: 'user-b',
+    currentCart: [{ ...product, quantity: 1 }]
+  });
+  assert.deepEqual(userB.cart, []);
+  const backToA = switchCartStorageOwner({
+    storage,
+    previousOwnerId: 'user-b',
+    nextOwnerId: 'user-a',
+    currentCart: [{ ...product, quantity: 4 }]
+  });
+  assert.equal(backToA.cart[0].quantity, 3);
+  const backToGuest = switchCartStorageOwner({
+    storage,
+    previousOwnerId: 'user-a',
+    nextOwnerId: null,
+    currentCart: [{ ...product, quantity: 5 }]
+  });
+  assert.equal(backToGuest.cart[0].quantity, 2);
+  assert.equal(JSON.parse(values.get('geostore_cart:user:user-a'))[0].quantity, 5);
+  assert.equal(JSON.parse(values.get('geostore_cart:user:user-b'))[0].quantity, 1);
+});
+
+test('uses distinct storage keys for guest and each authenticated account', () => {
+  assert.equal(getCartStorageKey(null), 'geostore_cart:guest');
+  assert.equal(getCartStorageKey('user/a'), 'geostore_cart:user:user%2Fa');
+  assert.notEqual(getCartStorageKey('user-a'), getCartStorageKey('user-b'));
 });
