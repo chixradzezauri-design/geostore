@@ -77,6 +77,20 @@ test('cart subtotal uses the already-inclusive server-priced add-on line amount'
   }]), 280);
 });
 
+test('calculates the confirmed total from add-on-inclusive subtotal, coupon, and delivery', () => {
+  const subtotal = calculateCartSubtotalGEL([{
+    priceGEL: 140,
+    basePriceGEL: 120,
+    giftWrap: true,
+    vipWarranty: true,
+    quantity: 2
+  }]);
+  assert.deepEqual(
+    calculateCheckoutTotals({ subtotal, discountPercent: 10, deliveryFee: 7 }),
+    { subtotalGEL: 280, discountGEL: 28, deliveryGEL: 7, totalGEL: 259 }
+  );
+});
+
 test('uses the final server-priced unit amount without double-counting paid add-ons', () => {
   assert.equal(calculateOrderLineRevenueGEL({
     price: 140,
