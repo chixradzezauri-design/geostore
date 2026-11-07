@@ -21,7 +21,8 @@ import {
   PENDING_CHECKOUT_TTL_MS,
   normalizeOrderItems,
   normalizeOrderTotal,
-  parseOrderDeliveryChargeGEL,\n  resolveOrderDeliveryChargeGEL,
+  parseOrderDeliveryChargeGEL,
+  resolveOrderDeliveryChargeGEL,
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
