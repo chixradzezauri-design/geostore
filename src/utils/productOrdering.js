@@ -7,3 +7,44 @@ export const resolveProductCreatedAt = ({ isEditing, savedRow, existingProduct, 
 
   return savedRow?.created_at ?? now();
 };
+
+
+/** Returns low-stock inventory positions, checking custom variants independently. */
+export const getLowStockInventory = (products, threshold = 5) => {
+  const limit = Number(threshold);
+  if (!Array.isArray(products) || !Number.isFinite(limit) || limit < 0) return [];
+
+  const positions = [];
+  products.forEach((product) => {
+    if (!product || typeof product !== 'object') return;
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    const inventoryRows = variants.length > 0
+      ? variants.map((variant) => ({
+          stock: variant?.stock,
+          variantId: variant?.id,
+          variantName: variant?.name
+        }))
+      : [{ stock: product.stock, variantId: null, variantName: null }];
+
+    inventoryRows.forEach((row) => {
+      if (row.stock === null || row.stock === undefined || String(row.stock).trim() === '') return;
+      const stock = Number(row.stock);
+      if (!Number.isSafeInteger(stock) || stock < 0 || stock > limit) return;
+      positions.push({
+        ...product,
+        variantId: row.variantId ?? null,
+        variantName: row.variantName ?? null,
+        _stockValue: stock,
+        _inventoryKey: row.variantId == null
+          ? String(product.id ?? product.sku ?? product.name ?? 'product')
+          : `${String(product.id ?? 'product')}::variant::${String(row.variantId)}`
+      });
+    });
+  });
+
+  return positions.sort((a, b) =>
+    a._stockValue - b._stockValue ||
+    String(a.name || '').localeCompare(String(b.name || '')) ||
+    String(a.variantName || '').localeCompare(String(b.variantName || ''))
+  );
+};

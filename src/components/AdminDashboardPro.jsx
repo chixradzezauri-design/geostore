@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants } from '../utils/productValidation';
-import { resolveProductCreatedAt } from '../utils/productOrdering';
+import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
@@ -833,13 +833,7 @@ export default function AdminDashboardPro({
     const salesTrend = Array.from(trendBuckets.values()).sort((a, b) => a.key.localeCompare(b.key)).slice(useDailyTrend ? -90 : -24);
     const bestSellingProducts = Array.from(productProfitTotals.values())
       .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
-    const lowStockProducts = (products || []).filter(product =>
-      product.stock !== null && product.stock !== undefined && String(product.stock).trim() !== ''
-    ).map(product => ({
-      ...product,
-      _stockValue: Number(product.stock)
-    })).filter(product => Number.isFinite(product._stockValue) && product._stockValue >= 0 && product._stockValue <= 5)
-      .sort((a, b) => a._stockValue - b._stockValue);
+    const lowStockProducts = getLowStockInventory(products, 5);
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     // Gross profit is product revenue less product cost. Delivery fees are
     // tracked separately and added to net operating result, not product margin.
@@ -2563,8 +2557,8 @@ export default function AdminDashboardPro({
                   <span className="text-[10px] text-slate-400">ზღვარი: 5 ცალი</span>
                 </div>
                 {financialOverview.lowStockProducts.length === 0 ? <p className="text-emerald-300 text-xs py-6">ყველა პროდუქტს საკმარისი მარაგი აქვს ან მარაგი მითითებული არ არის.</p> : financialOverview.lowStockProducts.map(product => (
-                  <div key={product.id || product.sku || product.name} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}</span></div>
+                  <div key={product._inventoryKey} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                    <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}{product.variantName ? ` · ${product.variantName}` : ''}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}{product.variantName ? ' · ვარიანტი' : ''}</span></div>
                     <span className={product._stockValue === 0 ? 'text-rose-300 font-black whitespace-nowrap' : 'text-amber-300 font-black whitespace-nowrap'}>{product._stockValue === 0 ? 'არ არის მარაგში' : `${product._stockValue} ცალი დარჩა`}</span>
                   </div>
                 ))}
@@ -2586,10 +2580,10 @@ export default function AdminDashboardPro({
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <h3 className="font-black text-white text-sm">მარაგის სტატისტიკა</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">პროდუქტები დაბალი მარაგით</p><b className="text-2xl text-amber-300">{financialOverview.lowStockProducts.length}</b></div>
+                  <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">დაბალი მარაგის პოზიციები</p><b className="text-2xl text-amber-300">{financialOverview.lowStockProducts.length}</b></div>
                   <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">ნულოვანი მარაგი</p><b className="text-2xl text-rose-300">{financialOverview.lowStockProducts.filter(product => product._stockValue === 0).length}</b></div>
                 </div>
-                <p className="text-[10px] text-slate-500">მონაცემები იკითხება არსებული პროდუქტის stock ველიდან. მარაგი ავტომატურად არ იცვლება.</p>
+                <p className="text-[10px] text-slate-500">მონაცემები ითვალისწინებს როგორც პროდუქტის საერთო მარაგს, ისე თითოეული ინდივიდუალური ვარიანტის მარაგს.</p>
               </div>
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
