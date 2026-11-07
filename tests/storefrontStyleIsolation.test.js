@@ -112,5 +112,5 @@ test('mobile footer policy links use a compact responsive layout', () => {
 
 test('retired catalogue information selectors are removed after style isolation', () => {
   assert.doesNotMatch(storeView, /gs-product-info/);
-  assert.doesNotMatch(css, /\.gs-product-info\\b/);
+  assert.doesNotMatch(css, /\.gs-product-info\b/);
 });
