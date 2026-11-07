@@ -1,5 +1,6 @@
 // src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React
+import { buildSemicolonCsv } from '../utils/csvExportSafety.js';, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
@@ -1055,13 +1056,8 @@ export default function AdminDashboardPro({
   const expenseBreakdown = analyticsData.expenseBreakdown;
 
   const exportCsv = (filename, headers, rows) => {
-    const escapeCell = value => {
-      const raw = value === null || value === undefined ? '' : String(value);
-      const safe = /^[=+@-]/.test(raw) ? "'" + raw : raw;
-      return '"' + safe.replace(/"/g, '""') + '"';
-    };
-    const csv = [headers, ...rows].map(row => row.map(escapeCell).join(';')).join('\r\n');
-    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+    const csv = buildSemicolonCsv(headers, rows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
