@@ -8983,3 +8983,292 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     justify-self:start!important;
   }
 }
+
+
+/* GEOSTORE maintenance: bring secondary shopping tools into the editorial design system */
+.gs-image-search-overlay,
+.gs-product-compare-overlay,
+.gs-wardrobe-add-modal{
+  box-sizing:border-box!important;
+  padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))!important;
+  background:rgba(35,29,24,.58)!important;
+  backdrop-filter:blur(10px)!important;
+  overscroll-behavior:contain!important;
+}
+.gs-image-search-dialog,
+.gs-product-compare-dialog,
+.gs-wardrobe-add-form{
+  box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:100%!important;
+  border:1px solid #e6ddd3!important;
+  border-radius:14px!important;
+  background:#fffdfa!important;
+  color:#302a24!important;
+  box-shadow:0 24px 80px rgba(36,28,21,.24)!important;
+}
+.gs-image-search-dialog{
+  width:min(520px,100%)!important;
+  max-height:min(88dvh,760px)!important;
+  padding:clamp(16px,3vw,26px)!important;
+  gap:18px!important;
+}
+.gs-image-search-header{
+  min-width:0!important;
+  border-color:#e9e1d8!important;
+  padding-bottom:14px!important;
+}
+.gs-image-search-dialog h3,
+.gs-product-compare-dialog h2,
+.gs-digital-wardrobe h1,
+.gs-digital-wardrobe h2,
+.gs-digital-wardrobe h3,
+.gs-digital-wardrobe h4{
+  color:#29241f!important;
+}
+.gs-image-search-dialog p,
+.gs-product-compare-dialog p,
+.gs-digital-wardrobe p,
+.gs-digital-wardrobe label,
+.gs-product-compare-dialog span{
+  color:#766b60;
+}
+.gs-image-search-dialog .text-white,
+.gs-product-compare-dialog .text-white,
+.gs-digital-wardrobe .text-white{
+  color:#302a24!important;
+}
+.gs-image-search-dialog [class*="bg-slate-900"],
+.gs-image-search-dialog [class*="bg-slate-950"],
+.gs-product-compare-dialog [class*="bg-[#08080a]"],
+.gs-product-compare-dialog [class*="bg-[#121216]"],
+.gs-digital-wardrobe [class*="bg-slate-900"],
+.gs-digital-wardrobe [class*="bg-slate-950"],
+.gs-digital-wardrobe [class*="bg-gradient-to-r"],
+.gs-digital-wardrobe [class*="bg-gradient-to-b"]{
+  background:#f6f2ec!important;
+  border-color:#e6ddd3!important;
+  color:#302a24!important;
+  box-shadow:none!important;
+}
+.gs-image-search-dialog [class*="border-slate-"],
+.gs-product-compare-dialog [class*="border-amber-"],
+.gs-digital-wardrobe [class*="border-emerald-"]{
+  border-color:#e5dbd0!important;
+}
+.gs-image-search-dialog [class*="text-emerald-"],
+.gs-product-compare-dialog [class*="text-amber-"],
+.gs-digital-wardrobe [class*="text-emerald-"]{
+  color:#80684f!important;
+}
+.gs-image-search-dialog button,
+.gs-product-compare-dialog button,
+.gs-digital-wardrobe button{
+  min-width:0!important;
+  border-radius:7px!important;
+  box-shadow:none!important;
+  line-height:1.4!important;
+}
+.gs-image-search-dialog button[class*="bg-emerald-"],
+.gs-product-compare-dialog button[class*="bg-amber-"],
+.gs-digital-wardrobe button[class*="bg-emerald-"]{
+  border:1px solid #302a24!important;
+  background:#302a24!important;
+  color:#fffdfa!important;
+}
+.gs-image-search-dialog button[class*="bg-emerald-"]:hover,
+.gs-product-compare-dialog button[class*="bg-amber-"]:hover,
+.gs-digital-wardrobe button[class*="bg-emerald-"]:hover{
+  background:#665747!important;
+  border-color:#665747!important;
+  color:#fffdfa!important;
+}
+.gs-image-search-dialog input,
+.gs-image-search-dialog select,
+.gs-product-compare-dialog input,
+.gs-product-compare-dialog select,
+.gs-digital-wardrobe input:not([type="file"]),
+.gs-digital-wardrobe select,
+.gs-wardrobe-add-form input:not([type="file"]),
+.gs-wardrobe-add-form select{
+  box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:42px!important;
+  border:1px solid #ded4ca!important;
+  border-radius:7px!important;
+  background:#fffdfa!important;
+  color:#302a24!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+}
+.gs-image-search-dropzone{
+  border-color:#cfc1b2!important;
+  border-radius:12px!important;
+  background:#f7f3ed!important;
+}
+.gs-image-search-dropzone:hover{
+  border-color:#9a8065!important;
+  background:#f2ece4!important;
+}
+.gs-image-search-preview,
+.gs-product-compare-media{
+  border:1px solid #e6ddd3!important;
+  border-radius:10px!important;
+  background:#f6f2ec!important;
+}
+.gs-image-search-preview img,
+.gs-product-compare-media img{
+  max-width:100%!important;
+  object-fit:contain!important;
+}
+.gs-image-search-notice{
+  border-color:#eadbc5!important;
+  border-radius:9px!important;
+  background:#f7f0e6!important;
+}
+.gs-image-search-notice p{color:#66513d!important}
+.gs-product-compare-dialog{
+  width:min(1180px,100%)!important;
+  max-height:min(90dvh,900px)!important;
+  padding:clamp(16px,2.5vw,30px)!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+.gs-product-compare-header{
+  border-color:#e9e1d8!important;
+  padding-bottom:16px!important;
+}
+.gs-product-compare-card{
+  min-width:0!important;
+  border:1px solid #e7ddd2!important;
+  border-radius:10px!important;
+  background:#fffdfa!important;
+  color:#302a24!important;
+  box-shadow:0 6px 20px rgba(43,32,23,.055)!important;
+}
+.gs-product-compare-specs,
+.gs-product-compare-description{
+  border-color:#e8dfd5!important;
+  border-radius:8px!important;
+  background:#f7f4ef!important;
+}
+.gs-product-compare-card .text-slate-400,
+.gs-product-compare-card .text-slate-500,
+.gs-product-compare-card .text-slate-200,
+.gs-product-compare-card .text-slate-300{
+  color:#766b60!important;
+}
+.gs-product-compare-card .text-amber-400,
+.gs-product-compare-card .text-amber-300{
+  color:#80684f!important;
+}
+.gs-product-compare-action{
+  min-height:44px!important;
+  border-radius:7px!important;
+  background:#302a24!important;
+  color:#fffdfa!important;
+}
+.gs-product-compare-action:hover{background:#665747!important}
+.gs-digital-wardrobe{
+  width:100%!important;
+  min-width:0!important;
+  color:#302a24!important;
+}
+.gs-wardrobe-hero{
+  align-items:stretch!important;
+  border:1px solid #e7ddd2!important;
+  border-radius:12px!important;
+  background:linear-gradient(115deg,#f5f0e9 0%,#ebe3d9 100%)!important;
+  box-shadow:0 8px 24px rgba(43,32,23,.06)!important;
+}
+.gs-wardrobe-hero h1{
+  max-width:720px!important;
+  font:400 clamp(25px,3.4vw,40px)/1.15 Georgia,serif!important;
+  letter-spacing:-.035em!important;
+}
+.gs-wardrobe-hero p{
+  max-width:620px!important;
+  color:#766b60!important;
+  font-size:13px!important;
+  line-height:1.7!important;
+}
+.gs-wardrobe-summary,
+.gs-wardrobe-generator,
+.gs-wardrobe-result,
+.gs-wardrobe-result-card,
+.gs-wardrobe-item-card{
+  border:1px solid #e7ddd2!important;
+  border-radius:10px!important;
+  background:#fffdfa!important;
+  color:#302a24!important;
+  box-shadow:0 6px 20px rgba(43,32,23,.055)!important;
+}
+.gs-wardrobe-generator h2{font:400 clamp(19px,2.2vw,25px)/1.25 Georgia,serif!important}
+.gs-wardrobe-generator label{color:#66594d!important;font-size:12px!important}
+.gs-wardrobe-generator select,
+.gs-wardrobe-add-form input:not([type="file"]),
+.gs-wardrobe-add-form select{
+  min-height:44px!important;
+  padding:10px 12px!important;
+  border-radius:7px!important;
+}
+.gs-wardrobe-add-form{
+  width:min(520px,100%)!important;
+  max-height:min(90dvh,780px)!important;
+  overflow-y:auto!important;
+  padding:clamp(16px,3vw,26px)!important;
+}
+.gs-wardrobe-add-form h3{font:400 21px/1.3 Georgia,serif!important}
+.gs-wardrobe-add-form label{color:#66594d!important}
+.gs-wardrobe-item-grid{align-items:stretch!important}
+.gs-wardrobe-item-card{
+  min-width:0!important;
+  padding:10px!important;
+}
+.gs-wardrobe-item-card h4{color:#302a24!important}
+.gs-wardrobe-item-card p{color:#766b60!important}
+.gs-wardrobe-item-card>div:first-child{
+  border-radius:8px!important;
+  background:#f6f2ec!important;
+}
+.gs-wardrobe-result-card--store{
+  border-color:#d8c8b7!important;
+  background:#f7f3ed!important;
+}
+@media(max-width:640px){
+  .gs-image-search-overlay,
+  .gs-product-compare-overlay,
+  .gs-wardrobe-add-modal{
+    align-items:flex-start!important;
+    overflow-y:auto!important;
+    padding: max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))!important;
+  }
+  .gs-image-search-dialog,
+  .gs-product-compare-dialog,
+  .gs-wardrobe-add-form{
+    width:100%!important;
+    max-height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
+    margin:auto 0!important;
+    padding:15px!important;
+    border-radius:12px!important;
+  }
+  .gs-product-compare-grid{
+    grid-auto-columns:minmax(235px,82vw)!important;
+    gap:10px!important;
+  }
+  .gs-product-compare-card{padding:13px!important}
+  .gs-product-compare-media{height:156px!important;padding:10px!important}
+  .gs-wardrobe-hero{padding:18px!important;gap:14px!important}
+  .gs-wardrobe-summary{padding:15px!important}
+  .gs-wardrobe-generator,
+  .gs-wardrobe-result{padding:15px!important}
+  .gs-wardrobe-item-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .gs-wardrobe-item-card{padding:8px!important}
+  .gs-wardrobe-item-card>div:first-child{height:126px!important}
+}
+@media(max-width:360px){
+  .gs-wardrobe-item-grid{gap:7px!important}
+  .gs-wardrobe-item-card>div:first-child{height:112px!important}
+  .gs-product-compare-grid{grid-auto-columns:minmax(220px,86vw)!important}
+}
