@@ -4041,7 +4041,6 @@ export default function AdminDashboardPro({
               <div className="border-t border-emerald-500/20 pt-5 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="text-sm font-bold text-white">გამოქვეყნების ვერსიების ისტორია</h4>
-                  <button type="button" onClick={() => setStorefrontVersionsError('ისტორიის განახლებისთვის ხელახლა გახსენით ადმინისტრატორის პარამეტრები.')} className="text-[10px] font-bold text-emerald-300 underline">ისტორიის სტატუსი</button>
                 </div>
                 {storefrontVersionsLoading ? (
                   <p className="text-xs text-slate-400">ვერსიები იტვირთება…</p>
