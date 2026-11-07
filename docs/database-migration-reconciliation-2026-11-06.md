@@ -5,9 +5,9 @@ Supabase project: `xmtnszxtnfxnrojionoa`
 Working branch: `maintenance/storefront-draft-save-2026-11-06`
 Reviewed branch commit: `284511356901059dcaa19ece3a0e1d90d29b2eb8`
 
-## Current reconciliation status
+## Reconciliation baseline snapshot — 2026-11-06
 
-- Supabase remote migration ledger: **58 applied versions**.
+- Supabase remote migration ledger at this snapshot: **58 applied versions**.
 - Working branch: **44 SQL migration files**.
 - Exact version-and-name matches: **38**.
 - Remote applied versions with no exact matching source file in the working branch: **20**.
@@ -103,9 +103,9 @@ These deletions affect only unapplied files in the working branch; no production
 1. Do not create placeholder/no-op migrations for missing versions.
 2. Do not rename a similar migration to impersonate a missing version unless the original SQL is recovered and equivalence is independently verified.
 3. Do not run `supabase migration repair`, `supabase db push`, or `supabase db reset` while the source history and live schema have not been reconciled.
-4. Do not replay any of the 58 already-applied migrations.
+4. Do not replay any already-applied migration; the live ledger has since advanced to 67 versions (latest: 20261107160152).
 5. Recover exact original SQL where possible. For unrecoverable versions, use the catalogued live schema as a reviewed baseline; do not invent historical SQL.
-6. Keep the six remaining branch-only migrations staged until their effects are individually compared with the live catalog and routines.
+6. Keep every remaining branch-only migration staged until its effects are individually compared with the live catalog and routines.
 7. Once reconciliation is complete, add new forward-only migrations for verified security improvements; do not rewrite historical migration files.
 
 ## Next actions
@@ -120,3 +120,20 @@ These deletions affect only unapplied files in the working branch; no production
 ## Deployment rule
 
 Vercel production deployment remains intentionally deferred until the complete release review. Avoid repeated builds/deployments while the free account's usage limits are a concern.
+
+## Live migration and custom-variant follow-up — 2026-11-07
+
+A fresh read-only Supabase migration-ledger query reports **67 applied versions**, with latest applied version 20261107160152_minimize_customer_order_history_payload. The custom-variant integration migration 20261107170000_integrate_custom_product_variants and the admin variant-restock migration 20261107230000_admin_adjust_product_variant_stock are not applied.
+
+Read-only live catalog checks confirmed:
+- private.create_order_with_stock(jsonb) already accepts custom variant IDs, snapshots the selected variant, prices variants from the database, and calculates gift-wrap (+5 GEL) and VIP-warranty (+15 GEL) fees server-side.
+- The live order function still uses LIMIT 1 for variant lookup and does not perform an exact-one-match check; its variant fingerprint ordering is not deterministic when one product has multiple variants with identical size/color.
+- private.preserve_product_variant_stock() already protects existing variant stock and blocks removal/reuse of IDs referenced in order history. A separate database validator for duplicate variant IDs/names is not yet present.
+- The live products table currently contains one product with an empty variants array. The read-only duplicate-ID and duplicate-name check returned zero duplicates.
+
+Staged corrections:
+- 20261107170000_integrate_custom_product_variants.sql now checks that each requested custom variant ID resolves to exactly one catalogue entry, makes the variant/customization fingerprint and order-line ordering deterministic, rejects malformed custom-variant/gift-message types, and installs a final database trigger that rejects duplicate IDs/names and invalid variant stock/identity on insert or update.
+- 20261107230000_admin_adjust_product_variant_stock.sql adds the RPC already called by the admin UI. It uses row locking, a signed inventory delta, exact-one-variant matching, bounds checks, an authenticated RLS-respecting implementation, and an invoker-only public wrapper.
+- Apply these in timestamp order only after migration-history reconciliation. The admin stock-adjustment UI must not be deployed before its RPC migration is applied.
+
+Both staged migrations were executed together against the live schema inside an explicit BEGIN ... ROLLBACK transaction. PostgreSQL accepted the DDL and function definitions. A post-rollback read-only query confirmed that the new RPCs and validator trigger were not persisted. No live migration, product row, order, or stock value was changed.
