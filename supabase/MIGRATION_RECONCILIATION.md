@@ -138,3 +138,10 @@ Static checks confirm unique migration version numbers and balanced function del
 - Rechecked live `pg_policies`: storefront config writes and media writes are restricted to the exact primary-admin UUID plus `app_metadata.role = 'admin'`. Public reads are row-filtered to published config/public media; the remaining exposure was the sensitive column grants documented above.
 - Confirmed the application saves admin order notes through `admin_save_order_note`, not a direct table PATCH. The staged `20261107241000_revoke_direct_order_note_column_update.sql` removes the legacy authenticated column-level UPDATE grant. Live still has that grant until the migration is applied; current RLS independently limits order updates to the primary admin.
 - Live orders history still uses the older email-based function because the Auth UUID ownership migration is not applied. The staged ownership migration adds `orders.user_id`, binds it from `auth.uid()`, backfills only unambiguous email matches, and changes customer history/notifications to immutable UUID ownership.
+
+## Follow-up: preserve product media after a successful database response
+
+- Found a second edge case in `AdminDashboardPro.jsx`: after an HTTP-successful versioned product update, malformed/empty response JSON incorrectly changed the write state from `committed` to `rejected`.
+- That could cause the catch handler to delete newly uploaded images even though the database update may already reference them.
+- Removed the incorrect state downgrade. An HTTP-successful write remains `committed`; if its returned row cannot be validated, the UI now tells the admin to refresh and verify the product while retaining the uploaded media.
+- Existing `productImageCleanup.test.js` already asserts that `committed` and `unknown` writes must retain uploaded images. Test execution is still pending.
