@@ -1348,8 +1348,6 @@ export default function App() {
           createdAt: p.created_at || null,
           updated_at: p.updated_at || null,
           version: p.version ?? null,
-          updated_at: p.updated_at || null,
-          version: p.version ?? null,
           sku: p.sku || `GEO-${p.id}`,
           name: p.name,
           category: p.category || 'ტანსაცმელი',
