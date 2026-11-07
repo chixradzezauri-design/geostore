@@ -21,6 +21,7 @@ export default function StoreView({
   comparisonList = [],
   toggleComparison,
   addToCart,
+  onQuickBuy,
   formatPrice
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
@@ -315,6 +316,23 @@ export default function StoreView({
   const currentAvailableStock = selectedProduct && Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0
     ? (selectedCustomVariant?.stock ?? 0)
     : Number(selectedProduct?.stock ?? 0);
+
+  const buildSelectedProductSnapshot = () => ({
+    ...selectedProduct,
+    priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
+    basePriceGEL: currentBasePrice,
+    name: selectedProduct.name,
+    giftWrap: isGiftWrapped === true,
+    vipWarranty: hasVipWarranty === true,
+    giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 240) : '',
+    selectedSize: getAvailableProductSizes(selectedProduct).length > 0 && selectedSize ? selectedSize : null,
+    selectedColor,
+    customVariantId: selectedCustomVariant?.id || null,
+    customVariantName: selectedCustomVariant?.name || '',
+    stock: selectedCustomVariant ? selectedCustomVariant.stock : selectedProduct.stock
+  });
+
+  const quickBuyLabel = currentLang === 'en' ? 'Buy now' : currentLang === 'ru' ? 'Купить сейчас' : 'შეძენა';
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -1026,33 +1044,33 @@ export default function StoreView({
             </div>
 
             <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
-              <button 
-                disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
-                onClick={() => { 
-                  const isCf = isClothingOrFootwear(selectedProduct);
-
-                  const added = addToCart({ 
-                    ...selectedProduct, 
-                    priceGEL: currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0),
-                    basePriceGEL: currentBasePrice,
-                    name: selectedProduct.name,
-                    giftWrap: isGiftWrapped === true,
-                    vipWarranty: hasVipWarranty === true,
-                    giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 240) : '',
-                    selectedSize: getAvailableProductSizes(selectedProduct).length > 0 && selectedSize ? selectedSize : null,
-                    selectedColor: selectedColor,
-                    customVariantId: selectedCustomVariant?.id || null,
-                    customVariantName: selectedCustomVariant?.name || '',
-                    stock: selectedCustomVariant ? selectedCustomVariant.stock : selectedProduct.stock
-                  }); 
-                  if (added !== false) setSelectedProduct(null); 
-                }} 
-                className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
-              >
-                <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="gs-modal-add-label">{storeText.addToCart}{selectedCustomVariant ? ` · ${selectedCustomVariant.name}` : getAvailableProductSizes(selectedProduct).length > 0 ? ` · ${selectedSize}` : ''}</span>
-                <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
+                  onClick={() => {
+                    const added = addToCart(buildSelectedProductSnapshot());
+                    if (added !== false) setSelectedProduct(null);
+                  }}
+                  className="gs-modal-add-to-cart min-w-0 w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
+                >
+                  <ShoppingBag className="w-4 h-4 shrink-0" />
+                  <span className="gs-modal-add-label truncate">{storeText.addToCart}</span>
+                  <span className="gs-modal-add-price whitespace-nowrap">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
+                  onClick={() => {
+                    onQuickBuy?.(buildSelectedProductSnapshot());
+                    setSelectedProduct(null);
+                  }}
+                  className="w-full min-w-0 border border-white/20 bg-white text-black hover:bg-white/90 font-black py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Zap className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{quickBuyLabel}</span>
+                </button>
+              </div>
             </div>
 
           </div>
