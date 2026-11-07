@@ -683,12 +683,12 @@ export default function Modals({
                 </>
               )}
 
-              <div className="space-y-1">
+              {authMode !== 'reset-password' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
                 <input id="geostore-auth-email" type="email" maxLength={254} required autoComplete="email" placeholder="name@example.com" value={authForm.email}
                   onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
-              </div>
+              </div>}
 
               {authMode !== 'reset-request' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>

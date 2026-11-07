@@ -650,7 +650,7 @@ export default function App() {
       if (!mounted) return;
 
       if (event === 'PASSWORD_RECOVERY') {
-        setAuthForm((current) => ({ ...current, password: '' }));
+        setAuthForm((current) => ({ ...current, email: session?.user?.email || current.email, password: '' }));
         setAuthMode('reset-password');
         setIsAuthOpen(true);
       }
@@ -1644,12 +1644,12 @@ export default function App() {
     const email = authForm.email.trim().toLowerCase();
     const password = authForm.password;
 
-    if (!email || (authMode !== 'reset-request' && !password)) {
+    if ((authMode !== 'reset-password' && !email) || (authMode !== 'reset-request' && !password)) {
       alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
       return;
     }
 
-    if (authMode === 'reset-request' && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (authMode === 'reset-request' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert(currentLang === 'en' ? 'Enter a valid email address.' : currentLang === 'ru' ? 'Введите корректный адрес электронной почты.' : 'შეიყვანეთ სწორი ელ-ფოსტა.');
       return;
     }
@@ -1678,7 +1678,7 @@ export default function App() {
     }
 
     if (password.length < (authMode === 'reset-password' || authMode === 'register' ? 10 : 6)) {
-      alert(currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
+      alert(authMode === 'reset-password' || authMode === 'register' ? (currentLang === 'en' ? 'Password must contain at least 10 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 10 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 10 სიმბოლოს.') : (currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.'));
       return;
     }
 
