@@ -1626,8 +1626,9 @@ export default function AdminDashboardPro({
         productWriteState = 'committed';
         const updatedRows = await updateResponse.json();
         if (!Array.isArray(updatedRows) || updatedRows.length !== 1) {
-          productWriteState = 'rejected';
-          throw new Error('პროდუქტი სხვა ადმინისტრატორმა ან სხვა ჩანართმა შეცვალა. თქვენი ცვლილებები არ შენახულა — განაახლეთ სია, ხელახლა გახსენით პროდუქტი და სცადეთ თავიდან.');
+          // HTTP success means the database may already have committed the update.
+          // Keep the write state as committed so newly referenced images are never deleted.
+          throw new Error('სერვერმა პროდუქტის განახლების პასუხი ვერ დაადასტურა. მონაცემები შესაძლოა უკვე შენახულია; განაახლეთ პროდუქტების სია და გადაამოწმეთ შედეგი. ატვირთული ფოტოები უსაფრთხოდ შენარჩუნებულია.');
         }
         savedProductRow = updatedRows[0];
         if (!buildProductVersionFilter(savedProductRow.version)) {
