@@ -1445,7 +1445,7 @@ export default function App() {
           setDeliveryFees((current) => {
             const next = { ...current };
             rows.forEach((row) => {
-              if (Object.prototype.hasOwnProperty.call(next, row.region)) {
+              if (Object.prototype.hasOwnProperty.call(next, row.region) && isValidGELAmount(row.fee_gel)) {
                 next[row.region] = Number(row.fee_gel);
               }
             });
