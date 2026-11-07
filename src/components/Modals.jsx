@@ -34,6 +34,7 @@ export default function Modals({
   setIsNotificationsOpen,
   notifications = [],
   notificationsLoading = false,
+  notificationsError = '',
   markAllNotificationsAsRead,
   orders = [],
   lookupOrderForTracking,
@@ -600,6 +601,11 @@ export default function Modals({
                 <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
                   <Bell className="w-8 h-8 text-amber-400/50 mx-auto animate-pulse" />
                   <p className="text-slate-400 text-xs font-bold">{currentLang === 'en' ? 'Loading notifications…' : currentLang === 'ru' ? 'Загрузка уведомлений…' : 'შეტყობინებები იტვირთება…'}</p>
+                </div>
+              ) : notificationsError ? (
+                <div role="alert" className="text-center py-8 px-4 bg-[#121216] rounded-3xl border border-amber-500/25 space-y-2">
+                  <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
+                  <p className="text-amber-200 text-xs font-bold leading-relaxed">{notificationsError}</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
