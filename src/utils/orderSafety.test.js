@@ -134,3 +134,29 @@ test('does not report a change when cart price and aggregate stock are current',
   assert.equal(result.hasChanges, false);
   assert.deepEqual(result.changes, []);
 });
+
+
+test('flags cart variants that are no longer offered by the latest catalogue', () => {
+  const result = reconcileCartWithCatalog(
+    [
+      { id: 'p1', name: 'Jacket', priceGEL: 120, quantity: 1, selectedSize: 'XXL', selectedColor: 'Red' }
+    ],
+    [
+      { id: 'p1', name: 'Jacket', price_gel: 120, stock: 4, available_sizes: ['S', 'M', 'L'], available_colors: ['Black'] }
+    ]
+  );
+  assert.deepEqual(result.changes.map((change) => change.type), ['variant_size', 'variant_color']);
+  assert.equal(result.hasChanges, true);
+});
+
+test('accepts currently offered cart variants from snake_case catalogue fields', () => {
+  const result = reconcileCartWithCatalog(
+    [
+      { id: 'p1', name: 'Jacket', priceGEL: 120, quantity: 1, selectedSize: 'M', selectedColor: 'Black' }
+    ],
+    [
+      { id: 'p1', name: 'Jacket', price_gel: 120, stock: 4, available_sizes: ['S', 'M', 'L'], available_colors: ['Black'] }
+    ]
+  );
+  assert.equal(result.hasChanges, false);
+});
