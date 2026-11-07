@@ -3,15 +3,15 @@
 Date: 2026-11-07
 Supabase project: `xmtnszxtnfxnrojionoa`
 Working branch: `maintenance/storefront-draft-save-2026-11-06`
-Reviewed branch commit: `56ecebc1238e387956f9a6d916345318a5408206`
+Reviewed branch commit: `8a95232c20351c9efe39aeea5d70a780c022f5e9`
 
 ## Current reconciliation status
 
 - Supabase remote migration ledger: **57 applied versions**.
-- Working branch: **44 SQL migration files**.
+- Working branch: **43 SQL migration files**.
 - Exact version-and-name matches: **37**.
 - Remote applied versions with no exact matching source file in the working branch: **20**.
-- Branch files not present in the remote migration ledger: **7**.
+- Branch files not present in the remote migration ledger: **6**.
 - The migration `20261107110746_enforce_nonnegative_product_stock` is applied remotely and its exact source file is present in the branch.
 - Three exact historical source files were recovered from the original Git object history/known source branches and restored without executing them again:
   - `20261103044438_add_idempotent_checkout_replay.sql`
@@ -46,7 +46,6 @@ Reviewed branch commit: `56ecebc1238e387956f9a6d916345318a5408206`
 ## Branch-only migrations; do not replay without reconciliation
 
 - `20261106120000_validate_order_item_variants.sql`
-- `20261106200000_prevent_completed_order_status_rollback.sql`
 - `20261106210000_validate_checkout_input_on_order_insert.sql`
 - `20261106220000_harden_support_ticket_public_insert.sql`
 - `20261107001000_add_product_data_integrity_constraints.sql`
@@ -82,18 +81,20 @@ The live `public.support_tickets` table currently grants the `anon` role table-l
 
 ## Branch-only migration conflict review
 
-Two branch-only migration files were removed from the working branch because live catalog inspection proved they are unsafe/incompatible as written:
+Three branch-only migration files were removed from the working branch after live catalog inspection:
 
 - `20261107010000_add_authenticated_order_history.sql`: the live `private.get_my_orders()` already exists with a `RETURNS TABLE(...)` signature. The staged file attempts `CREATE OR REPLACE FUNCTION` with `RETURNS jsonb`, which PostgreSQL cannot apply as a return-type change. The live implementation must be reviewed and retained rather than overwritten.
 - `20261107030000_preserve_stock_on_admin_product_upsert.sql`: the live `private.admin_save_product(jsonb)` is intentionally insert-only to prevent ID collisions from overwriting existing product data. The staged file would replace it with an UPSERT. Although that version preserves stock, it reintroduces the previously fixed product-ID overwrite risk.
+
+- `20261106200000_prevent_completed_order_status_rollback.sql`: its three function bodies and the status-transition trigger are already present in the live database with equivalent behavior. Catalog output omits default `SECURITY INVOKER` and normalizes `SET search_path` syntax, but the executable logic matches. Its delete grant/policy restrictions are also already in place. Replaying it would only drop/recreate the existing trigger and replace the same functions.
 
 These deletions affect only unapplied files in the working branch; no production database objects or data were changed.
 
 ## Branch-only migration conflict review continued
 
 - `20261106200000_prevent_completed_order_status_rollback.sql` overlaps the live `orders_guard_status_transition` trigger and the already hardened `private.guard_order_status_transition()` function. Do not replay it until a full function-body equivalence check is complete.
-- `20261106120000_validate_order_item_variants.sql` has no corresponding live trigger yet.
-- `20261106210000_validate_checkout_input_on_order_insert.sql` has no corresponding live trigger yet.
+- `20261106120000_validate_order_item_variants.sql` has no corresponding live trigger, but the only permitted order-creation path is the protected checkout RPC, which already checks selected sizes and colors against the product catalogue. Direct INSERT is not granted to `anon` or `authenticated`; keep this as optional defense-in-depth pending review.
+- `20261106210000_validate_checkout_input_on_order_insert.sql` has no corresponding live trigger, but direct INSERT is not granted to `anon` or `authenticated`, and the protected checkout RPC already validates customer name, phone, address, email, item shape, quantity, and selected options. Keep staged until its additional trigger checks are compared against the RPC to avoid duplicate or conflicting validation.
 - `20261106220000_harden_support_ticket_public_insert.sql` is a valid staged least-privilege improvement: it restricts anonymous INSERT to the five fields the browser sends. It is not applied because migration history remains unreconciled.
 - `20261107001000_add_product_data_integrity_constraints.sql` has no matching live checks except existing nonnegative stock and purchase-cost checks. The current product rows produced zero violations for the proposed limits.
 - `20261107002000_harden_flash_sale_rounding.sql` addresses a confirmed live gap: the current flash-sale function does not enforce two-decimal discount precision and updates rows even when the rounded price is unchanged.
