@@ -63,6 +63,9 @@ begin
        or length(coalesce(item->>'selected_size', '')) > 40
        or length(coalesce(item->>'selected_color', '')) > 60
        or length(coalesce(item->>'custom_variant_id', '')) > 120
+       or (item ? 'custom_variant_id' and jsonb_typeof(item->'custom_variant_id') not in ('string', 'null'))
+       or (jsonb_typeof(item->'custom_variant_id') = 'string' and nullif(trim(item->>'custom_variant_id'), '') is null)
+       or (item ? 'gift_message' and jsonb_typeof(item->'gift_message') not in ('string', 'null'))
        or (item ? 'gift_wrap' and jsonb_typeof(item->'gift_wrap') is distinct from 'boolean')
        or (item ? 'vip_warranty' and jsonb_typeof(item->'vip_warranty') is distinct from 'boolean')
        or length(coalesce(item->>'gift_message', '')) > 240
@@ -864,6 +867,8 @@ BEGIN
     SELECT 1
       FROM jsonb_array_elements(NEW.variants) AS e(item)
      WHERE jsonb_typeof(item) IS DISTINCT FROM 'object'
+        OR jsonb_typeof(item -> 'id') IS DISTINCT FROM 'string'
+        OR jsonb_typeof(item -> 'name') IS DISTINCT FROM 'string'
         OR NULLIF(trim(item ->> 'id'), '') IS NULL
         OR length(trim(item ->> 'id')) > 80
         OR NULLIF(trim(item ->> 'name'), '') IS NULL
