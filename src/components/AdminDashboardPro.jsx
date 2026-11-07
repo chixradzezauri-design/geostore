@@ -832,10 +832,27 @@ export default function AdminDashboardPro({
       'დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён', 'завершен'
     ].includes(String(order?.status || '').trim().toLowerCase());
     const parseDate = value => {
-      if (!value) return null;
+      if (value === null || value === undefined || value === '') return null;
       const raw = String(value).trim();
+      if (!raw) return null;
+      const buildLocalDate = (year, month, day) => {
+        const parsed = new Date(year, month - 1, day);
+        return parsed.getFullYear() === year &&
+          parsed.getMonth() === month - 1 &&
+          parsed.getDate() === day
+          ? parsed
+          : null;
+      };
+      // Date-only values are calendar dates, not UTC timestamps. Parse them
+      // locally so period boundaries do not shift across time zones.
+      const isoDate = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoDate) {
+        return buildLocalDate(Number(isoDate[1]), Number(isoDate[2]), Number(isoDate[3]));
+      }
       const localDate = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
-      if (localDate) return new Date(Number(localDate[3]), Number(localDate[2]) - 1, Number(localDate[1]));
+      if (localDate) {
+        return buildLocalDate(Number(localDate[3]), Number(localDate[2]), Number(localDate[1]));
+      }
       const parsed = new Date(raw);
       return Number.isNaN(parsed.getTime()) ? null : parsed;
     };
