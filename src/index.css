@@ -4589,7 +4589,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   gap:clamp(18px,3vw,32px)!important;
 }
 .geostore-fashion-store .gs-product-gallery,
-.geostore-fashion-store .gs-product-detail-info{min-width:0!important}
+.geostore-fashion-store .gs-product-detail-info{display:flex!important;flex-direction:column!important;min-width:0!important}
 .geostore-fashion-store .gs-product-gallery{position:relative!important}
 .geostore-fashion-store .gs-product-detail-image{
   width:100%!important;
