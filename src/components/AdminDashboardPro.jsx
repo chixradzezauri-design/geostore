@@ -180,6 +180,7 @@ const getOrderStatusClasses = (status) => {
     case 'completed':
     case 'доставлен':
     case 'завершён':
+    case 'завершен':
       return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
     case 'გაუქმებული':
     case 'cancelled':
@@ -193,7 +194,7 @@ const getOrderStatusClasses = (status) => {
 
 const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
 const isDeliveredOrderStatus = (status) =>
-  ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён'].includes(normalizeOrderStatus(status));
+  ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён', 'завершен'].includes(normalizeOrderStatus(status));
 const isShippedOrderStatus = (status) =>
   ['გაგზავნილი', 'გზაშია', 'shipped', 'on the way', 'отправлен', 'в пути'].includes(normalizeOrderStatus(status));
 const isCancelledOrderStatus = (status) =>
