@@ -65,3 +65,25 @@ The staged migration `20261108010000_add_product_optimistic_version.sql` adds `p
 **Release order:** reconcile and safely apply the required database migration first, then deploy the matching application code. Deploying the app before the database migration will make the catalogue query request columns that do not yet exist.
 
 No production migration was applied during this check. No product/order rows were changed.
+
+## Read-only schema preflight
+
+A read-only query confirmed that several branch-only migrations have effects already present in the live schema even though their versions are not recorded as applied. Examples include:
+
+- `public.order_notifications` and its order insert trigger exist.
+- The private order-tracking rate-limit table has RLS enabled.
+- The product variant stock-preservation trigger exists.
+- The live checkout function already contains the configured custom-variant guard.
+- `private.admin_list_products()` and `private.get_my_orders()` exist.
+- The support-ticket column-level INSERT grant is already present.
+
+Other checks found missing effects:
+
+- The order-item variant validation trigger and checkout-input insert trigger are absent.
+- `products.updated_at` and `products.version` are absent (required by the new concurrency migration).
+- The order `user_id` column and auth-owner binding trigger are absent.
+- The variant identity validation trigger is absent.
+- The 3-argument variant-stock RPC from the staged migration is absent.
+- Direct authenticated UPDATE permission on `orders.admin_note` is still present.
+
+This confirms that migration version history alone cannot establish whether a migration's SQL effects are already applied. Each pending migration must be checked against the actual live schema before it is considered safe to run.
