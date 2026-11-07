@@ -485,3 +485,26 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - The existing migration version `20261106103325` is present in live migration history, but its checked-in SQL did not match the live function and the migration runner rejected the full PL/pgSQL body. Two attempts were stopped; no migration-history entry was added by those failed attempts.
 - The live DDL was applied and verified through the SQL execution path. A canonical follow-up migration still needs to be generated with the Supabase CLI migration workflow before final release; do not treat this as fully reconciled in migration history.
 - No order/customer data was changed; no stock changed; no build or deployment was run.
+
+
+## Order cancellation, stock restoration and reactivation — 2026-11-07
+
+### Findings and repair
+- Live `private.admin_update_order_status` was older than the staged hardening SQL: cancellation restored stock without validating each raw line/quantity and did not enforce the full shipped/delivered transition rules at the function boundary.
+- Live `private.admin_reactivate_cancelled_order` was missing the fresh-password `auth.jwt()->'amr'` check and strict validation of stored order lines before stock deduction.
+- The live `orders` table did not yet have the dedicated status-transition guard trigger.
+- Applied Supabase migration `20261107084940_harden_order_status_stock_transitions`. It updates the two admin RPC implementations, adds the trigger guard, requires a fresh password authentication for reactivation, validates order line quantities before stock math, and revokes order DELETE for client roles.
+- Preserved existing public RPC wrappers and their authenticated-only execute permissions. The private implementations remain SECURITY DEFINER with empty search_path.
+
+### Verification
+- Ran a rollback-only test against the pre-existing explicitly named test order `GEOSTORE-TEST-IDEMP-20261103-01`.
+- Cancellation restored exactly one stock unit; repeating cancellation did not restore stock again.
+- Direct table-update reactivation was rejected by the new trigger.
+- Dedicated reactivation RPC re-deducted exactly one unit and reset the stock ledger markers.
+- Test transaction rolled back successfully: test order remained in its original `ახალი` status, stock remained 45, and no extra test order was created.
+- Confirmed the new trigger exists and the migration version appears in Supabase migration history.
+- Security Advisor still reports only the existing leaked-password-protection warning.
+
+### Release boundary
+- Canonical migration source added to the maintenance branch at `supabase/migrations/20261107084940_harden_order_status_stock_transitions.sql`.
+- No real customer orders or stock were changed by verification; no build or deployment was run.
