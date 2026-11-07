@@ -5,19 +5,18 @@ export const deduplicateOrdersById = (orders) => {
   const selected = new Map();
   const timestamp = (order) => {
     const values = [order?.updated_at, order?.updatedAt, order?.status_changed_at, order?.statusChangedAt, order?.created_at, order?.createdAt, order?.date];
-    for (const value of values) {
-      if (!value) continue;
-      const parsed = new Date(value).getTime();
-      if (Number.isFinite(parsed)) return parsed;
-    }
-    return 0;
+    const parsed = values.map(value => value ? Date.parse(value) : NaN).filter(Number.isFinite);
+    return parsed.length ? Math.max(...parsed) : 0;
   };
   orders.forEach((order) => {
     if (!order || typeof order !== 'object' || Array.isArray(order)) return;
     const id = String(order.id ?? '').trim().toUpperCase();
     if (!id) return;
     const current = selected.get(id);
-    if (!current || timestamp(order) > timestamp(current)) selected.set(id, order);
+    // Use the newest timestamp across all available audit fields. On an exact
+    // timestamp tie, the later API snapshot wins so a stale earlier row cannot
+    // overwrite the final row returned by the server.
+    if (!current || timestamp(order) >= timestamp(current)) selected.set(id, order);
   });
   return Array.from(selected.values());
 };
