@@ -1455,17 +1455,25 @@ export default function AdminDashboardPro({
 
       let savedProductRow = null;
       if (editingProductId) {
-        // Do not overwrite checkout stock deductions with the editor's stale snapshot.
+        // The database locks the product row and preserves current base/variant stock.
+        // Keep the product ID in the payload; stock is never sent from this stale editor snapshot.
         const updatePayload = { ...newProdPayload };
-        delete updatePayload.id;
         delete updatePayload.stock;
-        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
-          method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
+        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_update_product', {
+          method: 'POST',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({ p_product: updatePayload })
         });
         if (!updateResponse.ok) throw new Error(await updateResponse.text());
-        const updatedRows = await updateResponse.json();
-        if (!Array.isArray(updatedRows) || updatedRows.length !== 1) throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
-        savedProductRow = updatedRows[0];
+        const updatedResult = await updateResponse.json();
+        savedProductRow = Array.isArray(updatedResult) ? updatedResult[0] : updatedResult;
+        if (
+          !savedProductRow ||
+          typeof savedProductRow !== 'object' ||
+          String(savedProductRow.id ?? '') !== String(prodId)
+        ) {
+          throw new Error('სერვერმა განახლებული პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
+        }
       } else {
         const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
