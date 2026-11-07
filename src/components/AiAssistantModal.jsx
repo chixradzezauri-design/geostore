@@ -451,25 +451,25 @@ export default function AiAssistantModal({
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    const orderCodeMatch = queryText.match(/\\bORD[-\\s]?[A-Z0-9_-]{4,60}\\b/i);
+    const orderCodeMatch = queryText.match(/\bORD[-\s]?[A-Z0-9_-]{4,60}\b/i);
     const isOrderQuery = Boolean(orderCodeMatch) ||
       /შეკვეთ|სტატუს|order|tracking|заказ|статус/i.test(queryText);
 
     if (isOrderQuery) {
       let replyText = '';
-      const orderCode = orderCodeMatch?.[0].replace(/\\s+/g, '').toUpperCase() || '';
+      const orderCode = orderCodeMatch?.[0].replace(/\s+/g, '').toUpperCase() || '';
       const phoneText = orderCodeMatch
         ? queryText.replace(orderCodeMatch[0], ' ')
         : queryText;
-      const phoneCandidates = phoneText.match(/\\+?\\d[\\d\\s().-]{7,}\\d/g) || [];
+      const phoneCandidates = phoneText.match(/\+?\d[\d\s().-]{7,}\d/g) || [];
       const phone = phoneCandidates
-        .map(value => value.replace(/\\D/g, ''))
+        .map(value => value.replace(/\D/g, ''))
         .find(value => value.length >= 9 && value.length <= 15);
 
       if (!orderCode) {
         replyText = 'შეკვეთის მოსაძებნად ჯერ გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...).';
       } else if (!phone) {
-        replyText = 'კოდი მივიღე. ახლა იმავე შეტყობინებაში ან ახალ შეტყობინებაში მიუთითეთ შეკვეთისას გამოყენებული ტელეფონის ნომერი (9–15 ციფრი). ხელახლა გამოგზავნეთ კოდიც.';
+        replyText = 'გამოგზავნეთ შეკვეთის კოდი და შეკვეთისას გამოყენებული ტელეფონის ნომერი ერთად (9–15 ციფრი).';
       } else if (typeof lookupOrderForTracking !== 'function') {
         replyText = 'შეკვეთის უსაფრთხო ძიება ამჟამად მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით ან გამოიყენოთ შეკვეთის ტრეკინგის გვერდი.';
       } else {
@@ -487,7 +487,7 @@ export default function AiAssistantModal({
               `• თანხა: ${total}`,
               `• სტატუსი: ${order.status || 'ახალი'}`,
               `• ნივთები: ${order.itemSummary || 'პროდუქტები'}`
-            ].join('\\n');
+            ].join('\n');
           }
         } catch (error) {
           replyText = error?.message === 'ORDER_TRACKING_RATE_LIMITED'
