@@ -97,6 +97,7 @@ test('delivery fee parser uses the final server-appended amount, not address tex
   assert.equal(parseOrderDeliveryChargeGEL('Street, მიწოდება: 999 ₾ (თბილისი, მიწოდება: 5.50 ₾)', 105.50), 5.5);
   assert.equal(parseOrderDeliveryChargeGEL('Street (თბილისი, მიწოდება: 15 ₾)', 10), 10);
   assert.equal(parseOrderDeliveryChargeGEL('Street without fee', 10), 0);
+  assert.equal(parseOrderDeliveryChargeGEL('Street (მიწოდება: 5,50 ₾)', 10), 5.5);
   assert.equal(parseOrderDeliveryChargeGEL('Street (მიწოდება: -5 ₾)', 10), 0);
 });
 
