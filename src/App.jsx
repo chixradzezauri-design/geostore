@@ -734,6 +734,13 @@ export default function App() {
         setWishlist([]);
         comparisonListRef.current = [];
         setComparisonList([]);
+        setMyOrders([]);
+        setMyOrdersError('');
+        setMyOrdersLoading(false);
+        setNotifications([]);
+        setNotificationsError('');
+        setNotificationsLoading(false);
+        setIsNotificationsOpen(false);
         activeCartOwnerRef.current = { initialized: false, userId: null };
       }
     };
@@ -873,6 +880,7 @@ export default function App() {
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
     } catch (error) {
+      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
       console.error('Mark notifications read failed:', error);
       showToast(currentLang === 'en' ? 'Could not update notifications.' : currentLang === 'ru' ? 'Не удалось обновить уведомления.' : 'შეტყობინებების განახლება ვერ მოხერხდა.');
     }
