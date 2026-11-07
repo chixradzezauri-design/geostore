@@ -10,6 +10,7 @@ const variantIntegrationMigration = read('supabase/migrations/20261107170000_int
 const variantStockMigration = read('supabase/migrations/20261107230000_admin_adjust_product_variant_stock.sql');
 const adminDashboard = read('src/components/AdminDashboardPro.jsx');
 const orderOwnershipMigration = read('supabase/migrations/20261107200000_bind_order_ownership_to_auth_user_uuid.sql');
+const orderNoteGrantMigration = read('supabase/migrations/20261107241000_revoke_direct_order_note_column_update.sql');
 
 test('order cancellation and reactivation validate JSON array type before array length', () => {
   const typeGuards = orderAndVariantMigration.match(
@@ -98,4 +99,9 @@ test('order ownership migration contains no orphaned duplicate checkout SQL tail
   assert.equal((orderOwnershipMigration.match(/CREATE OR REPLACE FUNCTION public\.create_order_with_stock\(p_order jsonb\)/g) || []).length, 1);
   assert.match(orderOwnershipMigration, /GRANT EXECUTE ON FUNCTION private\.mark_my_order_notifications_read\(\) TO authenticated;\s*$/);
   assert.doesNotMatch(orderOwnershipMigration, /^\s+THEN\s*\n\s+RAISE EXCEPTION 'შეკვეთის იდენტიფიკატორი არასწორია\.'/m);
+});
+
+test('direct admin-note column writes are revoked in favor of the validated RPC', () => {
+  assert.match(orderNoteGrantMigration, /REVOKE UPDATE \(admin_note\) ON TABLE public\.orders FROM authenticated/);
+  assert.match(adminDashboard, /\/rest\/v1\/rpc\/admin_save_order_note/);
 });
