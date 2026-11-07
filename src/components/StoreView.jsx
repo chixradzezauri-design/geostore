@@ -11,6 +11,7 @@ import {
 export default function StoreView({
   currentLang = 'ka',
   siteSettings,
+  banners = [],
   categories = [],
   selectedCategory,
   setSelectedCategory,
@@ -319,6 +320,36 @@ export default function StoreView({
         </div>
         <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
       </section>
+
+      {Array.isArray(banners) && banners.length > 0 && (
+        <section className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
+          {banners.slice(0, 4).map((banner) => {
+            const imageUrl = String(banner?.image || '').trim();
+            const targetUrl = String(banner?.link || '').trim();
+            let safeTarget = '';
+            try {
+              const parsed = new URL(targetUrl);
+              if (['https:', 'http:'].includes(parsed.protocol)) safeTarget = parsed.href;
+            } catch {}
+            const content = (
+              <div className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
+                {imageUrl && (
+                  <img src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
+                <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
+                  <h2 className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
+                  {banner?.subtitle && <p className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
+                  {safeTarget && <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">აღმოაჩინე კოლექცია ↗</span>}
+                </div>
+              </div>
+            );
+            return safeTarget
+              ? <a key={banner.id} href={safeTarget} target="_blank" rel="noopener noreferrer" className="block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-amber-400">{content}</a>
+              : <div key={banner.id}>{content}</div>;
+          })}
+        </section>
+      )}
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
