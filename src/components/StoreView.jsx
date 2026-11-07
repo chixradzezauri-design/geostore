@@ -1079,7 +1079,7 @@ export default function StoreView({
                         <select 
                           value={newReviewRating} 
                           disabled={isSubmittingReview}
-                          onChange={e => setNewReviewRating(Number(e.target.value))
+                          onChange={e => setNewReviewRating(Number(e.target.value))}
                           className="gs-product-review-rating-select bg-[#060608] text-amber-400 font-bold border border-amber-500/30 rounded-xl p-2 outline-none text-xs"
                         >
                           <option value="5">⭐⭐⭐⭐⭐ (5)</option>
