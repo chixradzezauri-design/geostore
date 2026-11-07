@@ -125,3 +125,10 @@ The migration files were checked again for replacement-order and delimiter integ
 The storefront draft reader is now an admin-verified RPC; the application no longer requests `draft_config` through direct table SELECT. The draft upsert requests a minimal response so it does not need to read the private draft column.
 
 Static checks confirm unique migration version numbers and balanced function delimiters in the reviewed files. These checks are not a substitute for executing the migrations against a disposable PostgreSQL database. No migration was executed against production, and no Vercel build or deployment was started.
+
+## Follow-up: revoke legacy column-level SELECT grants
+
+- A live read-only inspection of `information_schema.column_privileges` confirmed that the earlier storefront ACL migration's table-level `REVOKE SELECT` would not remove pre-existing column-level grants.
+- The live database still listed `anon` SELECT on `storefront_config.draft_config`, `draft_updated_at`, `published_at`, and `updated_by`; `storefront_media.created_by` was also still readable. Authenticated had broad column-level privileges from the existing policy setup.
+- Corrected `20261107190000_restrict_public_storefront_config_columns.sql` to explicitly revoke SELECT on those sensitive columns from `PUBLIC`, `anon`, and `authenticated`, before granting only the intended published snapshot/media columns.
+- The fix is committed to the working branch only. No production SQL was executed; live exposure remains until the coordinated migration is applied.
