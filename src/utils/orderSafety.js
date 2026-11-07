@@ -1,3 +1,27 @@
+// Remove duplicate rows before financial aggregation. For repeated IDs, keep the
+// most recently updated snapshot; stable input order breaks timestamp ties.
+export const deduplicateOrdersById = (orders) => {
+  if (!Array.isArray(orders)) return [];
+  const selected = new Map();
+  const timestamp = (order) => {
+    const values = [order?.updated_at, order?.updatedAt, order?.status_changed_at, order?.statusChangedAt, order?.created_at, order?.createdAt, order?.date];
+    for (const value of values) {
+      if (!value) continue;
+      const parsed = new Date(value).getTime();
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return 0;
+  };
+  orders.forEach((order) => {
+    if (!order || typeof order !== 'object' || Array.isArray(order)) return;
+    const id = String(order.id ?? '').trim().toUpperCase();
+    if (!id) return;
+    const current = selected.get(id);
+    if (!current || timestamp(order) > timestamp(current)) selected.set(id, order);
+  });
+  return Array.from(selected.values());
+};
+
 // Keep order payload normalization pure so malformed legacy rows cannot crash
 // customer history, admin details, or invoice rendering.
 // Normalize server order totals identically in customer history and admin finance.
