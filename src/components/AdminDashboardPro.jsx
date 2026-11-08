@@ -457,6 +457,8 @@ export default function AdminDashboardPro({
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [supportTicketsError, setSupportTicketsError] = useState('');
+  const [legacyMessages, setLegacyMessages] = useState([]);
+  const [legacyMessagesError, setLegacyMessagesError] = useState('');
   const [replyInputs, setReplyInputs] = useState({});
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
@@ -492,6 +494,37 @@ export default function AdminDashboardPro({
     if (!adminLoggedIn) return undefined;
     fetchTickets();
     const interval = setInterval(fetchTickets, 15000);
+    return () => clearInterval(interval);
+  }, [adminLoggedIn]);
+
+  const fetchLegacyMessages = async () => {
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/messages?select=id,created_at,client_name,sender,text,image,time&order=created_at.desc&limit=100`,
+        { headers: await getSupabaseHeaders() }
+      );
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error('მიმოწერების მონაცემების ფორმატი არასწორია.');
+      setLegacyMessages(rows);
+      setLegacyMessagesError('');
+    } catch (error) {
+      console.error('GEOSTORE legacy messages fetch failed:', error);
+      setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
+    }
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      setLegacyMessages([]);
+      setLegacyMessagesError('');
+      return undefined;
+    }
+    fetchLegacyMessages();
+    const interval = setInterval(fetchLegacyMessages, 15000);
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
 
@@ -2400,6 +2433,7 @@ export default function AdminDashboardPro({
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
+            { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
             { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0, icon: Activity },
             { id: 'broadcasts', label: '📢 შეტყობინებები', icon: Send },
@@ -3633,6 +3667,43 @@ export default function AdminDashboardPro({
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {adminTab === 'messages' && (
+          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
+              <div>
+                <h3 className="font-black text-white text-base flex items-center gap-2.5">
+                  <HelpCircle className="w-5 h-5 text-emerald-400" /> შენახული მიმოწერები ({legacyMessages.length})
+                </h3>
+                <p className="text-slate-400 text-xs mt-1">არსებული messages ჩანაწერები. განახლება ხდება ავტომატურად ყოველ 15 წამში.</p>
+              </div>
+              <button type="button" onClick={fetchLegacyMessages} className="rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/10">განახლება</button>
+            </div>
+            {legacyMessagesError && (
+              <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+                მიმოწერების ჩატვირთვა ვერ მოხერხდა. არსებული ეკრანის მონაცემები არ შეცვლილა. დეტალი: {legacyMessagesError}
+              </div>
+            )}
+            {legacyMessages.length === 0 ? (
+              <p className="text-slate-400 text-xs py-8 text-center">შენახული მიმოწერები არ მოიძებნა. ახალი მხარდაჭერის მოთხოვნები იხილეთ „მხარდაჭერა“ განყოფილებაში.</p>
+            ) : (
+              <div className="space-y-3">
+                {legacyMessages.map((message) => (
+                  <article key={message.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 sm:p-5 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>
+                      <span className="text-[10px] text-slate-400">{message.created_at ? new Date(message.created_at).toLocaleString('ka-GE') : (message.time || '')}</span>
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wide text-emerald-300">{message.sender || 'უცნობი გამომგზავნი'}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200">{message.text || 'ტექსტური შეტყობინება არ არის.'}</p>
+                    {message.image && <p className="text-[10px] text-slate-400">მიმაგრებულია სურათი</p>}
+                    <p className="text-[10px] text-slate-500">ჩანაწერის ID: {message.id}</p>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
