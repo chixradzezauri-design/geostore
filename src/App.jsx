@@ -1474,15 +1474,32 @@ export default function App() {
 
     adminOrdersSessionActive.current = true;
     adminOrdersSessionVersion.current += 1;
-    // Keep the existing admin order refresh cadence without repeatedly
-    // downloading the full public catalogue.
+    // Realtime delivers new/updated orders immediately. Keep the 15-second
+    // refresh as a recovery path if the websocket disconnects or an event is missed.
     fetchOrders();
+    const orderChannel = supabase
+      .channel('geostore-admin-orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          // Re-fetch through the authenticated REST path so RLS and
+          // session-version checks remain active; never trust event payloads.
+          void fetchOrders();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && adminOrdersSessionActive.current) {
+          void fetchOrders();
+        }
+      });
     const interval = setInterval(fetchOrders, 15000);
 
     return () => {
       adminOrdersSessionActive.current = false;
       adminOrdersSessionVersion.current += 1;
       clearInterval(interval);
+      void supabase.removeChannel(orderChannel);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
   }, [adminLoggedIn]);
