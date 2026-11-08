@@ -456,6 +456,7 @@ export default function AdminDashboardPro({
   const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
 
   const [supportTickets, setSupportTickets] = useState([]);
+  const [supportTicketsError, setSupportTicketsError] = useState('');
   const [replyInputs, setReplyInputs] = useState({});
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
@@ -464,20 +465,27 @@ export default function AdminDashboardPro({
   const fetchTickets = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setSupportTickets((data || []).map(t => ({
-          id: t.id,
-          customerName: t.customer_name,
-          email: t.email,
-          subject: t.subject,
-          message: t.message,
-          status: t.status || 'ღია',
-          reply: t.reply || '',
-          date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
-        })));
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error(detail || `HTTP ${res.status}`);
       }
-    } catch {}
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
+      setSupportTickets(data.map(t => ({
+        id: t.id,
+        customerName: t.customer_name,
+        email: t.email,
+        subject: t.subject,
+        message: t.message,
+        status: t.status || 'ღია',
+        reply: t.reply || '',
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
+      })));
+      setSupportTicketsError('');
+    } catch (error) {
+      console.error('GEOSTORE support tickets fetch failed:', error);
+      setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+    }
   };
 
   useEffect(() => {
@@ -3260,6 +3268,12 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
             </h3>
+            {supportTicketsError && (
+              <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+                მხარდაჭერის შეტყობინებების ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული მონაცემები შენარჩუნებულია. დეტალი: {supportTicketsError}
+                <button type="button" onClick={fetchTickets} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
+              </div>
+            )}
             <div className="admin-support-list space-y-4">
               {(!supportTickets || supportTickets.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
