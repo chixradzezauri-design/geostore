@@ -323,3 +323,60 @@ test('rounds subtotal and delivery to exact tetri before discount calculation', 
     { subtotalGEL: 0.3, discountGEL: 0.03, deliveryGEL: 0.3, totalGEL: 0.57 }
   );
 });
+
+
+test('reconciles a size/color stock row using its own inventory and the product base price', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, basePriceGEL: 30,
+      quantity: 2, selectedSize: 'M', selectedColor: 'Black',
+      customVariantId: 'shirt-m-black', customVariantName: 'M / Black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 0,
+      available_sizes: ['S', 'M'], available_colors: ['Black', 'White'],
+      variants: [
+        { id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 30, stock: 4 },
+        { id: 'shirt-m-white', name: 'M / White', variantType: 'size_color', size: 'M', color: 'White', priceGEL: 30, stock: 1 }
+      ]
+    }]
+  );
+  assert.equal(result.hasChanges, false);
+  assert.equal(result.cartItems[0].stock, 4);
+  assert.equal(result.cartItems[0].customVariantName, 'M / Black');
+});
+
+test('rejects size/color cart lines when the inventory ID does not match the selected combination', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, quantity: 1,
+      selectedSize: 'M', selectedColor: 'Black', customVariantId: 'shirt-s-black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 99,
+      available_sizes: ['S', 'M'], available_colors: ['Black'],
+      variants: [
+        { id: 'shirt-s-black', name: 'S / Black', variantType: 'size_color', size: 'S', color: 'Black', priceGEL: 30, stock: 5 },
+        { id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 30, stock: 3 }
+      ]
+    }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['variant_size_color_missing']);
+});
+
+test('rejects size/color inventory lines that exceed the selected combination stock', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, quantity: 3,
+      selectedSize: 'M', selectedColor: 'Black', customVariantId: 'shirt-m-black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 99,
+      available_sizes: ['M'], available_colors: ['Black'],
+      variants: [
+        { id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 30, stock: 2 }
+      ]
+    }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['stock']);
+});
