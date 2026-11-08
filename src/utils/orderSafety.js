@@ -155,20 +155,47 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
     }
 
     const customVariantId = String(item?.customVariantId ?? '').trim();
-    const customVariant = customVariantId && Array.isArray(product.variants)
-      ? product.variants.find(variant => String(variant?.id ?? '') === customVariantId)
+    const selectedSize = String(item?.selectedSize ?? item?.selected_size ?? '').trim();
+    const selectedColor = String(item?.selectedColor ?? item?.selected_color ?? '').trim();
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    const sizeColorVariants = variants.filter(variant => variant?.variantType === 'size_color');
+    const hasSizeColorStock = sizeColorVariants.length > 0;
+    const customVariant = customVariantId
+      ? variants.find(variant => String(variant?.id ?? '') === customVariantId && variant?.variantType !== 'size_color')
       : null;
-    const hasCustomVariants = Array.isArray(product.variants) && product.variants.length > 0;
-    const currentPrice = customVariantId ? Number(customVariant?.priceGEL ?? customVariant?.price_gel) : Number(product.price_gel);
-    const currentStock = customVariantId ? Number(customVariant?.stock ?? 0) : Number(product.stock ?? 0);
+    const sizeColorVariant = customVariantId && hasSizeColorStock
+      ? sizeColorVariants.find(variant => String(variant?.id ?? '') === customVariantId)
+      : null;
+    const selectedInventoryVariant = customVariant || sizeColorVariant;
+    const hasCustomVariants = variants.some(variant => variant?.variantType !== 'size_color');
+    const currentPrice = sizeColorVariant
+      ? Number(product.price_gel)
+      : customVariantId
+        ? Number(customVariant?.priceGEL ?? customVariant?.price_gel)
+        : Number(product.price_gel);
+    const currentStock = selectedInventoryVariant ? Number(selectedInventoryVariant.stock ?? 0) : Number(product.stock ?? 0);
     const safeStock = Number.isFinite(currentStock) ? Math.max(0, Math.floor(currentStock)) : 0;
     const oldPrice = Number(item?.basePriceGEL ?? item?.priceGEL ?? item?.price);
-    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0 && (!customVariantId || Boolean(customVariant));
+    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0 &&
+      (!customVariantId || Boolean(selectedInventoryVariant));
+    if (hasCustomVariants && hasSizeColorStock) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_inventory_configuration' });
+      return item;
+    }
     if (hasCustomVariants && !customVariantId) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_custom_missing' });
       return item;
     }
-    if (customVariantId && !customVariant) {
+    if (hasSizeColorStock && (
+      !customVariantId ||
+      !sizeColorVariant ||
+      String(sizeColorVariant.size ?? '').trim() !== selectedSize ||
+      String(sizeColorVariant.color ?? '').trim() !== selectedColor
+    )) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_size_color_missing', selectedSize, selectedColor });
+      return item;
+    }
+    if (customVariantId && !selectedInventoryVariant) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_custom_unavailable', selected: customVariantId });
       return item;
     }
@@ -176,9 +203,6 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'invalid_price' });
       return item;
     }
-
-    const selectedSize = String(item?.selectedSize ?? item?.selected_size ?? '').trim();
-    const selectedColor = String(item?.selectedColor ?? item?.selected_color ?? '').trim();
     const sizeOptions = Array.isArray(product.available_sizes)
       ? product.available_sizes.map((value) => String(value ?? '').trim()).filter(Boolean)
       : Array.isArray(product.availableSizes)
@@ -226,7 +250,7 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       priceGEL: currentPrice + (item?.giftWrap === true ? 5 : 0) + (item?.vipWarranty === true ? 15 : 0),
       basePriceGEL: currentPrice,
       stock: safeStock,
-      customVariantName: customVariant ? String(customVariant.name || '') : ''
+      customVariantName: selectedInventoryVariant ? String(selectedInventoryVariant.name || '') : ''
     };
   });
 
