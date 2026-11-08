@@ -9228,3 +9228,30 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size: 10px !important;
   }
 }
+
+
+/* GEOSTORE verified cascade fix: match the catalog media selector specificity.
+   The earlier 2-class mobile override could not replace the later 3-class rules.
+   Remove only the frame's artificial inset; keep contain so the full product stays visible. */
+@media(max-width:767px){
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media{
+    height:auto!important;
+    min-height:0!important;
+    aspect-ratio:4/5!important;
+    padding:0!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-image{
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+  }
+}
+@media(max-width:360px){
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media{
+    aspect-ratio:4/5!important;
+    padding:0!important;
+  }
+}
