@@ -8009,3 +8009,69 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button>div{gap:6px!important}
  .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child h2{font-size:14px!important}
 }
+
+
+/* GEOSTORE admin mobile repair — one-column navigation and clear workspace.
+   Scoped to the admin view so storefront navigation and customer widgets stay intact. */
+@media (max-width: 640px) {
+  .geostore-shell .admin-dashboard-pro > div:first-child > div:nth-child(2) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 7px !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .geostore-shell .admin-dashboard-pro > div:first-child > div:nth-child(2) > button {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    height: auto !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 12px !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+
+  .geostore-shell .admin-dashboard-pro > div:first-child > div:nth-child(2) > button > div {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    gap: 9px !important;
+  }
+
+  .geostore-shell .admin-dashboard-pro > div:first-child > div:nth-child(2) > button > div > span {
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  .geostore-shell .admin-dashboard-pro > div:first-child > button {
+    width: 100% !important;
+    min-height: 46px !important;
+    margin-top: 8px !important;
+  }
+
+  .geostore-shell .admin-dashboard-pro > div:nth-child(2) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Floating customer controls must not cover the administrator workspace. */
+.geostore-shell:has(.admin-dashboard-pro) .gs-floating-ai,
+.geostore-shell:has(.admin-dashboard-pro) .gs-floating-support {
+  display: none !important;
+}
