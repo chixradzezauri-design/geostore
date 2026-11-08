@@ -9228,3 +9228,19 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size: 10px !important;
   }
 }
+
+
+/* GEOSTORE maintenance: reduce excess mobile product-card image-frame height.
+   Keep object-fit:contain so product photography is never cropped. */
+@media(max-width:767px){
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media{
+    aspect-ratio:4/4.5!important;
+    padding:6px!important;
+  }
+}
+@media(max-width:360px){
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media{
+    aspect-ratio:4/4.5!important;
+    padding:5px!important;
+  }
+}
