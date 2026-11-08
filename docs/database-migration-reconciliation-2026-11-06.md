@@ -120,3 +120,67 @@ These deletions affect only unapplied files in the working branch; no production
 ## Deployment rule
 
 Vercel production deployment remains intentionally deferred until the complete release review. Avoid repeated builds/deployments while the free account's usage limits are a concern.
+
+
+---
+
+# GEOSTORE database and release reconciliation — 2026-11-09
+
+Project: \`xmtnszxtnfxnrojionoa\`
+Repository: \`chixradzezauri-design/geostore\`
+Working branch: \`maintenance/storefront-draft-save-2026-11-06\`
+PR: #71
+Reviewed maintenance head before this reconciliation: \`ff0ac34375ded32d6e99e3145fb981e1a74f041d\`
+Production main at review: \`3f8ca352ce6cb9faf016c0ce696b9ee558441652\`
+
+## Live database changes and verification
+
+The Auth UUID ownership migration was applied as **\`20261108215548_bind_order_ownership_to_auth_user_uuid\`**. The branch migration file was renamed to this exact version so a future migration push will not replay the stale \`20261107200000\` filename.
+
+- \`public.orders.user_id\` references \`auth.users(id)\`.
+- \`public.order_notifications.recipient_user_id\` references \`auth.users(id)\`.
+- New authenticated-order ownership trigger: \`orders_bind_auth_user_before_insert\`.
+- \`private.get_my_orders()\` now filters by \`auth.uid()\`.
+- Customer notification read/mark-read functions now filter by \`recipient_user_id = auth.uid()\`.
+- Public RPC wrappers retain the same request and response contracts used by \`src/App.jsx\`.
+- Orders RLS remains enabled.
+- At the time of migration there was one guest test order, zero registered-email orders, and zero order notifications. The backfill therefore linked zero rows and left the existing guest order untouched.
+
+## Migration history reconciliation
+
+The remote Supabase ledger now contains **69 applied versions**, with \`20261108215548\` as the newest entry.
+
+The maintenance branch contains historical migrations whose effects are already present under other applied migration versions. They must not be replayed:
+
+- Support-ticket public INSERT is already column-scoped: anon can insert only \`id\`, \`customer_name\`, \`email\`, \`subject\`, and \`message\`; it cannot set \`created_at\`, \`status\`, or \`reply\`.
+- Product integrity checks are present and validated, including price, old price, stock, purchase cost, size/color arrays, gallery, variants, and tags.
+- Flash-sale logic already validates two-decimal discounts, avoids no-op rounded prices, and excludes products with custom variants.
+- Order notification table, triggers, and RPC wrappers already exist; the table currently has no rows and no direct client grants.
+- Order-tracking rate-limit storage exists in the private schema with RLS enabled.
+- Custom-variant checkout, stock deduction/restoration, variant-preservation trigger, and deterministic admin product ordering are already present.
+- The two optional staged validations for order-item variants and checkout input are not installed. The protected checkout RPC already validates those inputs; these triggers remain staged rather than being applied redundantly.
+
+The previous reconciliation report documents **20 remote-applied historical versions whose exact SQL source could not be recovered from repository path history**. They are already applied in the live database; they must not be replayed. No placeholder/no-op historical SQL has been fabricated. This remains a source-archive/reproducibility gap, not a pending live DDL operation.
+
+## Security and health review
+
+- Public tables retain RLS.
+- Four INFO advisor findings report RLS-enabled tables without policies: three private operational tables and \`public.order_notifications\`. These are intentionally private/RPC-only and have no direct client grants.
+- The Auth advisor still warns that leaked-password protection is disabled. This is an Auth dashboard setting, not a SQL migration; it remains to be enabled in Supabase Auth settings.
+- Performance advisor reports five unused indexes. The two new user-ID indexes are expected to be unused until authenticated customer orders exist; do not remove them based on this initial sample.
+- Health advisor returned no findings.
+
+## Deployment and release gates
+
+- The maintenance Preview deployment for the reviewed head was READY and its Vite production build succeeded.
+- The build still reports the existing JavaScript chunk-size warning (about 509 kB); this is a performance follow-up, not a build failure.
+- Production remains on \`main\`; no production deployment was triggered by this reconciliation.
+- Full rendered visual QA on an actual mobile device and desktop is still required before Production merge. HTTP/build success is not a substitute for rendered visual verification.
+
+## Safety rules
+
+1. Do not replay any already-applied migration.
+2. Do not reset the production database or rewrite the remote migration ledger.
+3. Do not fabricate missing historical SQL.
+4. Keep the two redundant optional validation migrations staged until separately justified.
+5. Merge/deploy only after current CI checks and visual QA are complete.
