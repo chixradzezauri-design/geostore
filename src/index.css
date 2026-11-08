@@ -9113,3 +9113,118 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size: 12px !important;
   }
 }
+
+
+/* GEOSTORE mobile storefront polish v2 — visible, compact filter card.
+   The category/filter sibling selector fixes the earlier ineffective spacing target. */
+@media (max-width: 760px) {
+  .geostore-fashion-store .geostore-storefront .gs-editorial-collections + .gs-catalog-controls {
+    margin-top: 10px !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls.gs-filter-panel {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    border: 1px solid #e5dbcf !important;
+    border-radius: 14px !important;
+    background: #f5f0e9 !important;
+    box-shadow: 0 3px 12px rgba(54, 39, 25, .06) !important;
+    color: #352d25 !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) 8px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 7px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter > div,
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    color: #655747 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter > div svg,
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control > div svg {
+    width: 14px !important;
+    height: 14px !important;
+    color: #92795f !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 7px 8px !important;
+    border: 1px solid #ded3c6 !important;
+    border-radius: 8px !important;
+    background: #fffdfa !important;
+    color: #302a24 !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter > span {
+    color: #9a8a79 !important;
+    text-align: center !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #e6ddd2 !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 7px 30px 7px 9px !important;
+    border: 1px solid #ded3c6 !important;
+    border-radius: 8px !important;
+    background: #fffdfa !important;
+    color: #302a24 !important;
+    box-shadow: none !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls button {
+    color: #80664b !important;
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls.gs-filter-panel {
+    padding: 9px !important;
+    gap: 7px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter {
+    gap: 5px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter > div {
+    font-size: 10px !important;
+  }
+}
