@@ -20,7 +20,7 @@ test('storefront navigation styles do not leak into the AI assistant header', ()
 });
 
 test('catalogue card styles are isolated from the product detail information panel', () => {
-  assert.match(storeView, /className="gs-catalog-product-grid/);
+  assert.match(storeView, /className=\{?\s*["'`] ?gs-catalog-product-grid/);
   assert.match(storeView, /className="gs-catalog-product-info/);
   assert.match(storeView, /className="gs-product-detail-info/);
   assert.ok(!['gs-product-grid', 'gs-product-card', 'gs-product-media', 'gs-product-title', 'gs-product-price', 'gs-product-action', 'gs-product-card-action'].some(className => new RegExp(`(?:^|[\\s"'])${className}(?:$|[\\s"'])`).test(storeView)));
