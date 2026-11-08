@@ -467,7 +467,7 @@ export default function AdminDashboardPro({
 
   const handleSizeColorStockChange = (variantId, rawStock) => {
     const stockText = String(rawStock ?? '');
-    if (stockText !== '' && (!/^\\d+$/.test(stockText) || Number(stockText) > 1000000)) return;
+    if (stockText !== '' && (!/^\d+$/.test(stockText) || Number(stockText) > 1000000)) return;
     setSizeColorStock(prev => prev.map(variant => variant.id === variantId
       ? { ...variant, stock: stockText === '' ? 0 : Number(stockText) }
       : variant));
@@ -497,6 +497,10 @@ export default function AdminDashboardPro({
     setProductForm(prev => ({ ...prev, [field]: nextOptions }));
     if (sizeColorStock.length > 0) {
       const rows = buildSizeColorStockVariants(nextSizes, nextColors, sizeColorStock, Number(productForm.priceGEL) || 0);
+      if (rows.length > 50) {
+        alert('ზომისა და ფერის მარაგის მატრიცაში მაქსიმუმ 50 კომბინაციაა დაშვებული.');
+        return;
+      }
       setSizeColorStock(rows);
     }
   };
