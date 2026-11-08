@@ -431,6 +431,9 @@ export default function AdminDashboardPro({
 
   const handleAddCustomVariant = (e) => {
     e.preventDefault();
+    if (sizeColorStock.length > 0) {
+      return alert('ამ პროდუქტზე ზომებისა და ფერების მარაგის მატრიცა უკვე ჩართულია. ინდივიდუალური ვარიანტები მასთან ერთად არ გამოიყენება.');
+    }
     const name = String(newVarName || '').trim();
     const priceText = String(newVarPrice ?? '').trim();
     const stockText = String(newVarStock ?? '').trim();
