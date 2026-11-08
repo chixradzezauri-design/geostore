@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateProductVariants } from './productValidation.js';
+import { validateProductVariants, validateSizeColorInventoryVariants } from './productValidation.js';
 
 test('accepts an empty variant list and valid variants', () => {
   assert.deepEqual(validateProductVariants([]), { valid: true });
@@ -36,4 +36,24 @@ test('rejects invalid prices and stock values', () => {
       { id: 'v1', name: 'Option', priceGEL: 10, stock }
     ]).reason, 'stock');
   }
+});
+
+
+test('validates complete size/color stock matrices', () => {
+  const rows = [
+    { id: 'a', name: 'S / Black', variantType: 'size_color', size: 'S', color: 'Black', priceGEL: 20, stock: 3 },
+    { id: 'b', name: 'S / White', variantType: 'size_color', size: 'S', color: 'White', priceGEL: 20, stock: 0 },
+    { id: 'c', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 20, stock: 2 },
+    { id: 'd', name: 'M / White', variantType: 'size_color', size: 'M', color: 'White', priceGEL: 20, stock: 1 }
+  ];
+  assert.deepEqual(validateSizeColorInventoryVariants(rows, ['S', 'M'], ['Black', 'White']), { valid: true });
+  assert.deepEqual(validateSizeColorInventoryVariants(rows.slice(0, 3), ['S', 'M'], ['Black', 'White']), { valid: false, reason: 'coverage' });
+});
+
+test('rejects duplicate, unknown, malformed, or out-of-range size/color stock rows', () => {
+  const base = { id: 'a', name: 'S / Black', variantType: 'size_color', size: 'S', color: 'Black', priceGEL: 20, stock: 3 };
+  assert.equal(validateSizeColorInventoryVariants([base, { ...base, id: 'b' }], ['S'], ['Black']).reason, 'combination');
+  assert.equal(validateSizeColorInventoryVariants([{ ...base, size: 'XL' }], ['S'], ['Black']).reason, 'combination');
+  assert.equal(validateSizeColorInventoryVariants([{ ...base, stock: -1 }], ['S'], ['Black']).reason, 'stock');
+  assert.equal(validateSizeColorInventoryVariants([{ ...base, variantType: 'custom' }], ['S'], ['Black']).reason, 'shape');
 });
