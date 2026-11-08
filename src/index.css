@@ -8998,3 +8998,13 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 .geostore-shell:has(.admin-dashboard-pro) .gs-floating-support {
   display: none !important;
 }
+
+
+/* GEOSTORE mobile QA — keep fixed assistance launchers off catalogue cards.
+   Both actions remain available from the mobile header menu. */
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-ai,
+  .geostore-fashion-store .gs-floating-support {
+    display: none !important;
+  }
+}
