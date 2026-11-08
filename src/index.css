@@ -9050,3 +9050,21 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     background-position:60% 32%!important;
   }
 }
+
+/* GEOSTORE maintenance: tighten mobile category-to-filter rhythm without changing desktop layout */
+@media (max-width: 760px) {
+  .geostore-fashion-store .geostore-storefront > .gs-catalog-controls {
+    margin-top: 14px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-collections > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 14px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls {
+    padding: 10px !important;
+    gap: 10px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-price-filter,
+  .geostore-fashion-store .geostore-storefront .gs-catalog-controls .gs-sort-control {
+    gap: 6px !important;
+  }
+}
