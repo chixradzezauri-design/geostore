@@ -175,6 +175,25 @@ const getOrderStatusClasses = (status) => {
   }
 };
 
+const resolveOrderItemImage = (item, products) => {
+  const savedOrderImage = String(item?.image || item?.image_url || item?.imageUrl || '').trim();
+  if (savedOrderImage) return savedOrderImage;
+
+  const productId = String(item?.id ?? item?.product_id ?? '').trim();
+  if (!productId || !Array.isArray(products)) return '';
+
+  const matchingProduct = products.find(product =>
+    String(product?.id ?? '').trim() === productId
+  );
+  return String(
+    matchingProduct?.image ||
+    matchingProduct?.img ||
+    matchingProduct?.image_url ||
+    matchingProduct?.imageUrl ||
+    ''
+  ).trim();
+};
+
 const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
 const isDeliveredOrderStatus = (status) =>
   ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён'].includes(normalizeOrderStatus(status));
@@ -3211,8 +3230,8 @@ export default function AdminDashboardPro({
                   {normalizeOrderItems(selectedOrderForModal.items).length > 0 ? (
                     normalizeOrderItems(selectedOrderForModal.items).map((item, idx) => (
                       <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        {item.image ? (
-                          <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
+                        {resolveOrderItemImage(item, products) ? (
+                          <img src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
                           <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">No Img</div>
                         )}
