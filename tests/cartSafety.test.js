@@ -361,3 +361,35 @@ test('scoped product collections discard malformed and duplicate entries and enf
   assert.equal(getUserScopedCollectionStorageKey('geostore_wishlist', null), 'geostore_wishlist:guest');
   assert.equal(getUserScopedCollectionStorageKey('geostore_wishlist', 'user/a'), 'geostore_wishlist:user:user%2Fa');
 });
+
+
+test('tracks cart quantity independently for each size/color inventory ID', () => {
+  const blackM = {
+    id: 'shirt-1', name: 'Test shirt', priceGEL: 30, stock: 2,
+    selectedSize: 'M', selectedColor: 'Black',
+    customVariantId: 'shirt-m-black', customVariantName: 'M / Black'
+  };
+  const whiteM = {
+    ...blackM, selectedColor: 'White',
+    customVariantId: 'shirt-m-white', customVariantName: 'M / White', stock: 1
+  };
+
+  const first = addProductToCart([], blackM, 2);
+  assert.equal(first.valid, true);
+  assert.equal(first.remaining, 0);
+
+  const overBlackStock = addProductToCart(first.cart, blackM, 1);
+  assert.equal(overBlackStock.valid, false);
+  assert.equal(overBlackStock.reason, 'limit');
+
+  const otherColor = addProductToCart(first.cart, whiteM, 1);
+  assert.equal(otherColor.valid, true);
+  assert.equal(otherColor.cart.length, 2);
+  assert.equal(getCurrentCartItemStock({
+    id: 'shirt-1',
+    variants: [
+      { id: 'shirt-m-black', stock: 0 },
+      { id: 'shirt-m-white', stock: 1 }
+    ]
+  }, otherColor.cart[1]), 1);
+});
