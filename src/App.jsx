@@ -1322,7 +1322,12 @@ export default function App() {
           category: p.category || 'ტანსაცმელი',
           priceGEL: Number(p.price_gel),
           oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
-          stock: p.stock === null || p.stock === undefined ? 0 : Number(p.stock),
+          stock: Array.isArray(p.variants) && p.variants.some(variant => variant?.variantType === 'size_color')
+            ? p.variants.filter(variant => variant?.variantType === 'size_color').reduce((total, variant) => {
+                const quantity = Number(variant?.stock);
+                return total + (Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0);
+              }, 0)
+            : (p.stock === null || p.stock === undefined ? 0 : Number(p.stock)),
           vendor: p.vendor || 'GEOSTORE',
           description: p.description || '',
           image: p.image || null,
