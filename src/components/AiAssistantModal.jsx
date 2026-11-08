@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Sparkles, Send, X, ShoppingBag, Lightbulb, RotateCcw, Tag, RefreshCw, CheckCircle2, AlertCircle, Shirt, FolderTree } from 'lucide-react';
 
 import { supabase } from '../supabaseClient';
+import { parseOrderTrackingMessage } from '../utils/orderTrackingMessage';
 
 // 🔤 ქართული და ინგლისური სინონიმებისა და სტილისტური ტერმინების გაფართოებული ლექსიკონი
 const SYNONYMS = {
@@ -21,7 +22,7 @@ export default function AiAssistantModal({
   products = [],
   categories = [],
   vendorsList = [],
-  orders = [],
+  lookupOrderForTracking,
   coupons = [],
   siteSettings = {},
   selectedProduct = null,
@@ -39,7 +40,7 @@ export default function AiAssistantModal({
       addToCart: 'კალათაში', typing: 'ვარჩევ საუკეთესო ვარიანტებს...',
       placeholder: 'რას ეძებ? მიუთითე პროდუქტი, ზომა ან ბიუჯეტი...',
       inputLabel: 'შეტყობინება AI ასისტენტისთვის', send: 'შეტყობინების გაგზავნა',
-      disclaimer: 'AI რეკომენდაციები საინფორმაციო ხასიათისაა · GEOSTORE',
+      disclaimer: 'პასუხები ეფუძნება კატალოგის მონაცემებსა და წინასწარ წესებს · GEOSTORE',
       quickPrompts: 'სწრაფი კითხვები', productImage: 'პროდუქტის ფოტო', selectedProductContext: 'კონტექსტი: ', prompts: [{ label: '👋 გამარჯობა', query: 'გამარჯობა' }, { label: '🧥 ტანსაცმელი', query: 'ტანსაცმელი' }, { label: '👟 ფეხსაცმელები', query: 'ფეხსაცმელები' }, { label: '📱 სმარტფონები', query: 'სმარტფონები' }, { label: '💻 ლეპტოპები', query: 'ლეპტოპები' }, { label: '🔥 ფასდაკლებები', query: 'ფასდაკლებები' }, { label: '🚚 მიწოდება', query: 'მიწოდება' }]
     },
     en: {
@@ -52,7 +53,7 @@ export default function AiAssistantModal({
       addToCart: 'Add to cart', typing: 'Finding the best options...',
       placeholder: 'What are you looking for? Add a product, size or budget...',
       inputLabel: 'Message for AI assistant', send: 'Send message',
-      disclaimer: 'AI recommendations are for informational purposes · GEOSTORE',
+      disclaimer: 'Replies use catalog data and predefined rules · GEOSTORE',
       quickPrompts: 'Quick prompts', productImage: 'Product image', selectedProductContext: 'Selected product: ', prompts: [{ label: '👋 Hello', query: 'Hello' }, { label: '🧥 Clothing', query: 'Clothing' }, { label: '👟 Shoes', query: 'Shoes' }, { label: '📱 Smartphones', query: 'Smartphones' }, { label: '💻 Laptops', query: 'Laptops' }, { label: '🔥 Discounts', query: 'Discounts' }, { label: '🚚 Delivery', query: 'Delivery' }]
     },
     ru: {
@@ -65,7 +66,7 @@ export default function AiAssistantModal({
       addToCart: 'В корзину', typing: 'Подбираю лучшие варианты...',
       placeholder: 'Что вы ищете? Укажите товар, размер или бюджет...',
       inputLabel: 'Сообщение для AI-помощника', send: 'Отправить сообщение',
-      disclaimer: 'Рекомендации AI носят информационный характер · GEOSTORE',
+      disclaimer: 'Ответы основаны на данных каталога и заданных правилах · GEOSTORE',
       quickPrompts: 'Быстрые вопросы', productImage: 'Фото товара', selectedProductContext: 'Товар: ', prompts: [{ label: '👋 Привет', query: 'Привет' }, { label: '🧥 Одежда', query: 'Одежда' }, { label: '👟 Обувь', query: 'Обувь' }, { label: '📱 Смартфоны', query: 'Смартфоны' }, { label: '💻 Ноутбуки', query: 'Ноутбуки' }, { label: '🔥 Скидки', query: 'Скидки' }, { label: '🚚 Доставка', query: 'Доставка' }]
     }
   })[currentLang] || ({
@@ -107,13 +108,17 @@ export default function AiAssistantModal({
   const [messages, setMessages] = useState([getInitialGreeting()]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [pendingOrderCode, setPendingOrderCode] = useState('');
   const [liveProducts, setLiveProducts] = useState(products);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (isAiAssistantOpen) {
       setMessages([getInitialGreeting()]);
+      setPendingOrderCode('');
       fetchLiveProducts();
+    } else {
+      setPendingOrderCode('');
     }
   }, [isAiAssistantOpen, selectedProduct]);
 
@@ -136,7 +141,7 @@ export default function AiAssistantModal({
       // Request only public catalog columns; purchase_cost must remain private.
       const { data, error } = await supabase
         .from('products')
-        .select('id,sku,name,category,vendor,price_gel,old_price_gel,stock,image,tags,available_sizes,available_colors,description,material,durability')
+        .select('id,sku,name,category,vendor,price_gel,old_price_gel,stock,image,tags,available_sizes,available_colors,variants,description,material,durability')
         .order('created_at', { ascending: false });
       if (error) throw error;
       if (data && data.length > 0) {
@@ -147,18 +152,26 @@ export default function AiAssistantModal({
               else parsedTags = String(p.tags).split(',').map(t => t.trim());
             }
 
-            let parsedSizes = ['S', 'M', 'L', 'XL'];
+            let parsedSizes = [];
             if (p.available_sizes) {
               if (Array.isArray(p.available_sizes)) parsedSizes = p.available_sizes;
               else parsedSizes = String(p.available_sizes).split(',').map(s => s.trim());
             }
 
-            let parsedColors = ['შავი', 'თეთრი'];
+            let parsedColors = [];
             if (p.available_colors) {
               if (Array.isArray(p.available_colors)) parsedColors = p.available_colors;
               else parsedColors = String(p.available_colors).split(',').map(c => c.trim());
             }
 
+            let parsedVariants = [];
+            if (Array.isArray(p.variants)) parsedVariants = p.variants;
+            else if (typeof p.variants === 'string') {
+              try {
+                const decoded = JSON.parse(p.variants);
+                if (Array.isArray(decoded)) parsedVariants = decoded;
+              } catch {}
+            }
             return {
               id: p.id,
               sku: p.sku || 'N/A',
@@ -172,6 +185,7 @@ export default function AiAssistantModal({
               tags: parsedTags,
               availableSizes: parsedSizes,
               availableColors: parsedColors,
+              variants: parsedVariants,
               description: p.description || '',
               material: p.material || '',
               durability: p.durability || ''
@@ -196,6 +210,7 @@ export default function AiAssistantModal({
 
   const handleResetChat = () => {
     setMessages([getInitialGreeting()]);
+    setPendingOrderCode('');
   };
 
   if (!isAiAssistantOpen) return null;
@@ -215,6 +230,19 @@ export default function AiAssistantModal({
     const query = (localizedPromptAliases[rawQuery.toLowerCase()] || rawQuery).toLowerCase();
     const words = query.split(/\s+/).filter(w => w.length > 0);
     const sourceProducts = currentProductsList && currentProductsList.length > 0 ? currentProductsList : (liveProducts.length > 0 ? liveProducts : products);
+    const availableVariants = (product) => (Array.isArray(product?.variants) ? product.variants : [])
+      .filter(variant => variant && variant.priceGEL !== null && variant.priceGEL !== undefined &&
+        variant.priceGEL !== '' && Number.isFinite(Number(variant.priceGEL)) &&
+        Number(variant.priceGEL) > 0 && Number(variant.stock) > 0);
+    const hasAvailableStock = (product) => {
+      const hasCustomVariants = Array.isArray(product?.variants) && product.variants.length > 0;
+      return hasCustomVariants ? availableVariants(product).length > 0 : Number(product?.stock) > 0;
+    };
+    const matchesBudget = (product, budget) => {
+      const hasCustomVariants = Array.isArray(product?.variants) && product.variants.length > 0;
+      if (hasCustomVariants) return availableVariants(product).some(variant => Number(variant.priceGEL) <= budget);
+      return Number(product?.stock) > 0 && Number(product?.priceGEL) > 0 && Number(product.priceGEL) <= budget;
+    };
 
     // 1. სალამი და ზოგადი საუბარი
     if (query.includes('გამარჯობა') || query.includes('სალამი') || query.includes('მოგესალმებით') || query.includes('hello')) {
@@ -236,51 +264,32 @@ export default function AiAssistantModal({
 
       if (userWardrobe.length === 0) {
         return {
-          text: `🧥 თქვენი ციფრული გარდერობი ჯერ ცარიელია. გადადით „AI ციფრული გარდერობის“ განყოფილებაში, ატვირთეთ თქვენი ტანსაცმელი და მე შევძლებ სრულყოფილი ლუქების და მაღაზიიდან დამატებითი ნივთების შერჩევას!`,
-          products: sourceProducts.slice(0, 2)
-        };
-      }
-
-      const randomStoreItem = sourceProducts[Math.floor(Math.random() * sourceProducts.length)];
-      return {
-        text: `✨ თქვენს ციფრულ გარდერობში ფიქსირდება ${userWardrobe.length} ნივთი. AI სტილისტის რეკომენდაცია: თქვენს არსებულ ტანსაცმელს შესანიშნავად მოუხდება ჩვენი ვიტრინიდან ქვემოთ წარმოდგენილი პრემიუმ პროდუქტი!`,
-        products: [randomStoreItem]
-      };
-    }
-
-    // 3. შეკვეთის ტრეკინგი
-    const orderMatch = query.match(/ord[-\s]?\d+/i) || query.match(/#?\d{4,}/);
-    if (orderMatch || query.includes('შეკვეთა') || query.includes('სტატუსი')) {
-      if (orderMatch) {
-        const orderIdClean = orderMatch[0].toUpperCase().replace(/\s+/g, '');
-        const foundOrder = (orders || []).find(o => o.id?.toUpperCase().includes(orderIdClean));
-        
-        if (foundOrder) {
-          return {
-            text: `📦 შეკვეთა #${foundOrder.id}:\n• მიმღები: ${foundOrder.customerName}\n• თარიღი: ${foundOrder.date}\n• თანხა: ${formatPrice(foundOrder.totalGEL)}\n• სტატუსი: 🟢 ${foundOrder.status || 'ახალი'}`,
-            products: []
-          };
-        } else {
-          return {
-            text: `🔍 შეკვეთა კოდით "${orderMatch[0].toUpperCase()}" ვერ მოიძებნა ბაზაში.`,
-            products: []
-          };
-        }
-      } else {
-        return {
-          text: 'შეკვეთის შესამოწმებლად, გთხოვთ მომწეროთ შეკვეთის უნიკალური ნომერი (მაგ: ORD-1025)! 📦',
+          text: `🧥 თქვენი ციფრული გარდერობი ჯერ ცარიელია. დაამატეთ თქვენი ტანსაცმელი და ფეხსაცმელი, შემდეგ კი მიუთითეთ კატეგორია, ფერი ან ბიუჯეტი — კატალოგში შესაბამის პროდუქტებს მოვძებნი.`,
           products: []
         };
       }
+
+      return {
+        text: `✨ თქვენს ციფრულ გარდერობში შენახულია ${userWardrobe.length} ნივთი. ზუსტი შეთავსების დასადგენად მიუთითეთ სასურველი კატეგორია, ფერი ან ბიუჯეტი — ამის მიხედვით მოვძებნი შესაბამის პროდუქტებს კატალოგში.`,
+        products: []
+      };
     }
 
+    // 3. შეკვეთის ტრეკინგი ხორციელდება დაცული RPC-ით და მოითხოვს შეკვეთის კოდსა და ტელეფონს.
+    if (query.includes('შეკვეთ') || query.includes('სტატუს') || /order|tracking|заказ|статус/.test(query)) {
+      return {
+        text: 'შეკვეთის შესამოწმებლად გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...) და შეკვეთისას მითითებული ტელეფონის ნომერი ერთ შეტყობინებაში.',
+        products: [],
+        requiresOrderLookup: true
+      };
+    }
     // 4. ფასდაკლებები და აქციები
     const isDiscountQuery = SYNONYMS.discount.some(w => query.includes(w));
     if (isDiscountQuery) {
-      const sales = sourceProducts.filter(p => p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
+      const sales = sourceProducts.filter(p => (!Array.isArray(p.variants) || p.variants.length === 0) && hasAvailableStock(p) && p.oldPriceGEL && p.oldPriceGEL > p.priceGEL);
       return {
         text: `🔥 მიმდინარე სპეციალური ფასდაკლებები და აქციები (${sales.length} ნივთი):`,
-        products: sales.length > 0 ? sales.slice(0, 4) : sourceProducts.slice(0, 4)
+        products: sales.slice(0, 4)
       };
     }
 
@@ -317,67 +326,62 @@ export default function AiAssistantModal({
       });
     }
 
-    let filtered = [...sourceProducts];
+    let filtered = sourceProducts.filter(hasAvailableStock);
 
     if (matchedCategoryNames.length > 0) {
       filtered = filtered.filter(p => {
-        const pCatLower = (p.category || '').toLowerCase();
+        const pCatLower = String(p.category || '').toLowerCase();
         return matchedCategoryNames.some(catName => pCatLower.includes(catName.toLowerCase()));
       });
     }
 
-    // 7. ბიუჯეტი, ფერი და ზომა
+    // ბიუჯეტი, ფერი და ზომა მოწმდება რეალურ, მარაგში არსებულ მონაცემებზე.
     const priceMatch = query.match(/(\d+)\s*(ლარამდე|ლარი|gel|₾)/);
     const maxBudget = priceMatch ? Number(priceMatch[1]) : null;
-
     const colorKeywords = ['შავი', 'თეთრი', 'წითელი', 'ლურჯი', 'მწვანე', 'ყვითელი', 'ნაცრისფერი', 'ვერცხლისფერი', 'ოქროსფერი', 'ტიტანი'];
     const foundColor = colorKeywords.find(c => query.includes(c));
-
-    const sizeKeywords = ['s', 'm', 'l', 'xl', 'xxl', '39', '40', '41', '42', '43', '44'];
+    const sizeKeywords = ['xxl', 'xl', 's', 'm', 'l', '39', '40', '41', '42', '43', '44'];
     const foundSize = sizeKeywords.find(s => query.split(/\b/).includes(s));
 
-    if (maxBudget) {
-      filtered = filtered.filter(p => p.priceGEL <= maxBudget);
-    }
+    if (maxBudget !== null) filtered = filtered.filter(p => matchesBudget(p, maxBudget));
 
     if (foundColor) {
       filtered = filtered.filter(p => {
-        const colStr = (p.availableColors || []).join(' ').toLowerCase();
-        const nameStr = p.name.toLowerCase();
-        return colStr.includes(foundColor) || nameStr.includes(foundColor);
+        const variantNames = availableVariants(p).map(variant => String(variant.name || '')).join(' ');
+        const colors = [...(Array.isArray(p.availableColors) ? p.availableColors : []), variantNames].join(' ').toLowerCase();
+        return colors.includes(foundColor) || String(p.name || '').toLowerCase().includes(foundColor);
       });
     }
 
     if (foundSize) {
       filtered = filtered.filter(p => {
-        const sizes = (p.availableSizes || []).map(s => String(s).toLowerCase());
-        return sizes.includes(foundSize);
+        const sizes = (Array.isArray(p.availableSizes) ? p.availableSizes : []).map(s => String(s).toLowerCase());
+        const variantNames = availableVariants(p).map(variant => String(variant.name || '').toLowerCase());
+        return sizes.includes(foundSize) || variantNames.some(name => name.split(/[^a-z0-9]+/).includes(foundSize));
       });
     }
 
     const searchWords = words.filter(w => !w.match(/\d+/) && !['ლარამდე', 'ლარი', 'გთხოვ', 'მაჩვენე', 'მინდა', 'შემირჩიე'].includes(w));
-    
-    if (searchWords.length > 0 && matchedCategoryNames.length === 0 && !maxBudget && !foundColor && !foundSize) {
-      filtered = sourceProducts.filter(p => {
-        const pName = p.name.toLowerCase();
-        const pCat = p.category.toLowerCase();
-        const pDesc = p.description.toLowerCase();
-        const pTags = (p.tags || []).map(t => t.toLowerCase());
-
+    if (searchWords.length > 0 && matchedCategoryNames.length === 0 && maxBudget === null && !foundColor && !foundSize) {
+      filtered = filtered.filter(p => {
+        const pName = String(p.name || '').toLowerCase();
+        const pCat = String(p.category || '').toLowerCase();
+        const pDesc = String(p.description || '').toLowerCase();
+        const pTags = (Array.isArray(p.tags) ? p.tags : []).map(t => String(t).toLowerCase());
         return searchWords.some(w => pName.includes(w) || pCat.includes(w) || pDesc.includes(w) || pTags.some(t => t.includes(w)));
       });
     }
 
     if (filtered.length > 0) {
       return {
-        text: `✨ კატეგორიებისა და მოთხოვნის შესაბამისად ნაპოვნია საუკეთესო პროდუქტები (${filtered.length} ვარიანტი):`,
+        text: `✨ მოთხოვნის შესაბამისად ნაპოვნია ${filtered.length} ხელმისაწვდომი პროდუქტი:`,
         products: filtered.slice(0, 4)
       };
     }
 
     return {
-      text: `🤔 ზუსტი დამთხვევა ვერ მოიძებნა, თუმცა გთავაზობთ ჩვენი პრემიუმ კატალოგის ტოპ პროდუქტებს:`,
-      products: sourceProducts.slice(0, 3)
+      text: '🤔 ამ მოთხოვნასთან შესაბამისი, მარაგში არსებული პროდუქტი ვერ მოიძებნა. სცადეთ სხვა ზომა, ფერი ან უფრო მაღალი ბიუჯეტი.',
+      products: []
     };
   };
 
@@ -434,34 +438,154 @@ export default function AiAssistantModal({
       const count = text.match(/\\((\\d+) ვარიანტი\\)/)?.[1] || result.products?.length || 0;
       return { ...result, text: t(`✨ Found ${count} matching product option(s) based on your request:`, `✨ По вашему запросу найдено подходящих вариантов: ${count}:`) };
     }
-    if (text.startsWith('🤔 ზუსტი დამთხვევა ვერ მოიძებნა')) {
-      return { ...result, text: t('🤔 I couldn’t find an exact match, but here are some top picks from our premium catalog:', '🤔 Точное совпадение не найдено, но вот несколько популярных товаров из нашего премиального каталога:') };
+    if (text.startsWith('🤔 ამ მოთხოვნასთან შესაბამისი')) {
+      return { ...result, text: t('🤔 No matching in-stock product was found. Try another size, color or a higher budget.', '🤔 Подходящий товар в наличии не найден. Попробуйте другой размер, цвет или увеличьте бюджет.') };
+    }
+    if (text.startsWith('✨ მოთხოვნის შესაბამისად ნაპოვნია')) {
+      const count = text.match(/(\d+)/)?.[1] || result.products?.length || 0;
+      return { ...result, text: t(`✨ Found ${count} matching in-stock product(s):`, `✨ Найдено подходящих товаров в наличии: ${count}:`) };
     }
     return result;
   };
 
   const handleSendMessage = async (textToSend) => {
-    const queryText = textToSend || inputMessage;
-    if (!queryText.trim()) return;
+    const queryText = String(textToSend || inputMessage).trim();
+    if (!queryText) return;
 
-    const userMsg = { id: `u-${Date.now()}`, sender: 'user', text: queryText };
-    setMessages(prev => [...prev, userMsg]);
+    const trackingInput = parseOrderTrackingMessage(queryText, pendingOrderCode);
+    const {
+      orderIntent,
+      orderCode: activeOrderCode,
+      phone,
+      hasPhoneCandidate,
+      phoneIsValid,
+      safeUserText
+    } = trackingInput;
+
+    setMessages(prev => [...prev, {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      text: safeUserText
+    }]);
     if (!textToSend) setInputMessage('');
     setIsTyping(true);
 
-    const refreshedProducts = await fetchLiveProducts();
+    if (orderIntent) {
+      const language = currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka';
+      const copy = {
+        ka: {
+          askCode: 'შეკვეთის შესამოწმებლად გამოგზავნეთ შეკვეთის კოდი (მაგ. ORD-...).',
+          askPhone: 'კოდი მივიღე. ახლა გამოგზავნეთ შეკვეთისას მითითებული ტელეფონის ნომერი (9–15 ციფრი). ნომერი ჩატის ისტორიაში დაფარული იქნება.',
+          invalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს. სცადეთ ხელახლა.',
+          unavailable: 'შეკვეთის უსაფრთხო ძიება ამჟამად მიუწვდომელია. გთხოვთ, სცადოთ მოგვიანებით.',
+          rateLimited: 'უსაფრთხოების მიზნით შეკვეთის ძიების დროებითი ლიმიტი ამოიწურა. გთხოვთ, მოგვიანებით სცადოთ.',
+          notFound: 'მითითებული კოდითა და ტელეფონის ნომრით შეკვეთა ვერ მოიძებნა. გადაამოწმეთ ორივე მონაცემი.',
+          failed: 'შეკვეთის შემოწმება ამჟამად ვერ მოხერხდა. მოგვიანებით სცადეთ.',
+          heading: id => `📦 შეკვეთა #${id}`,
+          date: value => `• თარიღი: ${value}`,
+          total: value => `• თანხა: ${value}`,
+          status: value => `• სტატუსი: ${value}`,
+          items: value => `• ნივთები: ${value}`
+        },
+        en: {
+          askCode: 'To check your order, send your order code (for example, ORD-...).',
+          askPhone: 'Got the code. Now send the phone number used for the order (9–15 digits). The number will be hidden in chat history.',
+          invalidPhone: 'The phone number must contain 9–15 digits. Please try again.',
+          unavailable: 'Secure order lookup is currently unavailable. Please try again later.',
+          rateLimited: 'The order lookup limit has been reached for security. Please try again later.',
+          notFound: 'No order matched that code and phone number. Please check both details.',
+          failed: 'The order could not be checked right now. Please try again later.',
+          heading: id => `📦 Order #${id}`,
+          date: value => `• Date: ${value}`,
+          total: value => `• Total: ${value}`,
+          status: value => `• Status: ${value}`,
+          items: value => `• Items: ${value}`
+        },
+        ru: {
+          askCode: 'Чтобы проверить заказ, отправьте код заказа (например, ORD-...).',
+          askPhone: 'Код получен. Теперь отправьте номер телефона, указанный при заказе (9–15 цифр). Номер будет скрыт в истории чата.',
+          invalidPhone: 'Номер телефона должен содержать 9–15 цифр. Попробуйте ещё раз.',
+          unavailable: 'Безопасный поиск заказа сейчас недоступен. Попробуйте позже.',
+          rateLimited: 'Достигнут лимит поиска заказа в целях безопасности. Попробуйте позже.',
+          notFound: 'Заказ с таким кодом и номером телефона не найден. Проверьте оба значения.',
+          failed: 'Сейчас не удалось проверить заказ. Попробуйте позже.',
+          heading: id => `📦 Заказ #${id}`,
+          date: value => `• Дата: ${value}`,
+          total: value => `• Сумма: ${value}`,
+          status: value => `• Статус: ${value}`,
+          items: value => `• Товары: ${value}`
+        }
+      }[language];
 
-    setTimeout(() => {
+      let replyText = '';
+      if (!activeOrderCode) {
+        replyText = copy.askCode;
+      } else if (!hasPhoneCandidate) {
+        setPendingOrderCode(activeOrderCode);
+        replyText = copy.askPhone;
+      } else if (!phoneIsValid) {
+        setPendingOrderCode(activeOrderCode);
+        replyText = copy.invalidPhone;
+      } else if (typeof lookupOrderForTracking !== 'function') {
+        setPendingOrderCode('');
+        replyText = copy.unavailable;
+      } else {
+        setPendingOrderCode('');
+        try {
+          const order = await lookupOrderForTracking(activeOrderCode, phone);
+          if (order?.rateLimited === true) {
+            replyText = copy.rateLimited;
+          } else if (!order || typeof order !== 'object' || !order.id) {
+            replyText = copy.notFound;
+          } else {
+            replyText = [
+              copy.heading(order.id),
+              copy.date(order.date || '—'),
+              copy.total(formatPrice(Number(order.totalGEL) || 0)),
+              copy.status(order.status || 'ახალი'),
+              copy.items(order.itemSummary || '—')
+            ].join('\n');
+          }
+        } catch (error) {
+          replyText = error?.message === 'ORDER_TRACKING_RATE_LIMITED'
+            ? copy.rateLimited
+            : copy.failed;
+        }
+      }
+
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: replyText,
+        recommendedProducts: []
+      }]);
+      setIsTyping(false);
+      return;
+    }
+
+    try {
+      const refreshedProducts = await fetchLiveProducts();
       const aiResult = localizeAiReply(generateAiReply(queryText, refreshedProducts), queryText);
-      const aiMsg = {
+      setMessages(prev => [...prev, {
         id: `ai-${Date.now()}`,
         sender: 'ai',
         text: aiResult.text,
         recommendedProducts: aiResult.products
-      };
-      setMessages(prev => [...prev, aiMsg]);
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: currentLang === 'en'
+          ? 'I could not process that request. Please try again.'
+          : currentLang === 'ru'
+            ? 'Не удалось обработать запрос. Попробуйте ещё раз.'
+            : 'მოთხოვნის დამუშავება ვერ მოხერხდა. გთხოვთ, სცადოთ ხელახლა.',
+        recommendedProducts: []
+      }]);
+    } finally {
       setIsTyping(false);
-    }, 400);
+    }
   };
 
   return (

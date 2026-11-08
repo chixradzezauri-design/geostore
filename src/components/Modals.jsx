@@ -33,8 +33,9 @@ export default function Modals({
   isNotificationsOpen,
   setIsNotificationsOpen,
   notifications = [],
+  notificationsLoading = false,
+  notificationsError = '',
   markAllNotificationsAsRead,
-  orders = [],
   lookupOrderForTracking,
   selectedRegion,
   setSelectedRegion,
@@ -86,7 +87,7 @@ export default function Modals({
       secureOrder: 'თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში', close: 'დახურვა', orderAccepted: 'შეკვეთა მიღებულია',
       thankYou: 'მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.',
       orderCode: 'შეკვეთის კოდი', copyCode: 'კოდის კოპირება', codeCopied: 'შეკვეთის კოდი დაკოპირდა.',
-      confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
+      emailLabel: 'ელ-ფოსტა:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
       orderPhone: 'შეკვეთაზე მითითებული ტელეფონი', checking: 'მოწმდება...', search: 'ძებნა',
       orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
       products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
@@ -96,12 +97,14 @@ export default function Modals({
       trackerPrompt: 'შეიყვანეთ შეკვეთის კოდი ზედა ველში სტატუსის სანახავად.',
       trackerEmpty: 'შეიყვანეთ შეკვეთის კოდი და შეკვეთისას მითითებული ტელეფონი.',
       trackerNotFound: 'შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.',
-      trackerFailed: 'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.',
+      trackerFailed: 'შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.', trackerRateLimited: 'ძალიან ბევრი მცდელობა. უსაფრთხოებისთვის სცადეთ ხელახლა 15 წუთში.',
       notifications: 'შეტყობინებების ცენტრი', totalNotifications: 'სულ შეტყობინება:',
       markRead: 'ყველას წაკითხულად მონიშვნა', noNotifications: 'ახალი შეტყობინებები არ არის.',
       auth: 'ავტორიზაცია', register: 'რეგისტრაცია',
       name: 'სახელი', yourName: 'თქვენი სახელი', password: 'პაროლი',
       login: 'შესვლა სისტემაში', finishRegister: 'რეგისტრაციის დასრულება',
+      forgotPassword: 'დაგავიწყდათ პაროლი?', sendReset: 'აღდგენის ბმულის გაგზავნა',
+      resetPassword: 'ახალი პაროლის დაყენება', resetEmailHint: 'თუ ანგარიში არსებობს, მიიღებთ აღდგენის წერილს.',
       faceId: 'Face ID-ით / Passkey-ით შესვლა',
       noAccount: 'არ გაქვთ ანგარიში? დარეგისტრირდით', hasAccount: 'უკვე გაქვთ ანგარიში? ავტორიზაცია',
       readOrder: 'შეკვეთის კოდი დაკოპირდა.'
@@ -114,7 +117,7 @@ export default function Modals({
       secureOrder: 'Your order is securely stored with GEOSTORE', close: 'Close', orderAccepted: 'Order received',
       thankYou: 'Thank you for your purchase. Keep your order code to check its status later.',
       orderCode: 'Order code', copyCode: 'Copy code', codeCopied: 'Order code copied.',
-      confirmation: 'Confirmation:', understood: 'Got it', trackerTitle: 'Track your order', trackerInvalidCode: 'The order code is invalid. Enter the complete ORD code.', trackerInvalidPhone: 'The phone number must contain 9–15 digits.',
+      emailLabel: 'Email:', understood: 'Got it', trackerTitle: 'Track your order', trackerInvalidCode: 'The order code is invalid. Enter the complete ORD code.', trackerInvalidPhone: 'The phone number must contain 9–15 digits.',
       orderPhone: 'Phone number used for the order', checking: 'Checking...', search: 'Search',
       orderDate: 'Order date:', total: 'Total amount:', items: 'Order items:',
       products: 'Products', deliveryProgress: 'Delivery progress', accepted: 'Accepted',
@@ -124,12 +127,14 @@ export default function Modals({
       trackerPrompt: 'Enter your order code above to view its status.',
       trackerEmpty: 'Enter the order code and the phone number used when placing the order.',
       trackerNotFound: 'Order not found. Check the code and phone number.',
-      trackerFailed: 'Order tracking is temporarily unavailable. Please try again later.',
+      trackerFailed: 'Order tracking is temporarily unavailable. Please try again later.', trackerRateLimited: 'Too many attempts. For security, please try again in 15 minutes.',
       notifications: 'Notifications', totalNotifications: 'Total notifications:',
       markRead: 'Mark all as read', noNotifications: 'There are no new notifications.',
       auth: 'Sign in', register: 'Create account',
       name: 'Name', yourName: 'Your name', password: 'Password',
       login: 'Sign in', finishRegister: 'Complete registration',
+      forgotPassword: 'Forgot password?', sendReset: 'Send reset link',
+      resetPassword: 'Set a new password', resetEmailHint: 'If an account exists, a reset email will be sent.',
       faceId: 'Continue with Face ID / Passkey',
       noAccount: 'Don’t have an account? Register', hasAccount: 'Already have an account? Sign in',
       readOrder: 'Order code copied.'
@@ -142,7 +147,7 @@ export default function Modals({
       secureOrder: 'Ваш заказ надежно сохраняется в GEOSTORE', close: 'Закрыть', orderAccepted: 'Заказ принят',
       thankYou: 'Спасибо за покупку. Сохраните код заказа, чтобы позже проверить его статус.',
       orderCode: 'Код заказа', copyCode: 'Скопировать код', codeCopied: 'Код заказа скопирован.',
-      confirmation: 'Подтверждение:', understood: 'Понятно', trackerTitle: 'Статус заказа', trackerInvalidCode: 'Неверный код заказа. Введите полный код ORD.', trackerInvalidPhone: 'Номер телефона должен содержать 9–15 цифр.',
+      emailLabel: 'Эл. почта:', understood: 'Понятно', trackerTitle: 'Статус заказа', trackerInvalidCode: 'Неверный код заказа. Введите полный код ORD.', trackerInvalidPhone: 'Номер телефона должен содержать 9–15 цифр.',
       orderPhone: 'Телефон, указанный при заказе', checking: 'Проверка...', search: 'Поиск',
       orderDate: 'Дата заказа:', total: 'Итого:', items: 'Состав заказа:',
       products: 'Товары', deliveryProgress: 'Статус доставки', accepted: 'Принят',
@@ -152,12 +157,14 @@ export default function Modals({
       trackerPrompt: 'Введите код заказа выше, чтобы посмотреть его статус.',
       trackerEmpty: 'Введите код заказа и номер телефона, указанный при оформлении.',
       trackerNotFound: 'Заказ не найден. Проверьте код и номер телефона.',
-      trackerFailed: 'Отслеживание заказа временно недоступно. Попробуйте позже.',
+      trackerFailed: 'Отслеживание заказа временно недоступно. Попробуйте позже.', trackerRateLimited: 'Слишком много попыток. В целях безопасности попробуйте снова через 15 минут.',
       notifications: 'Уведомления', totalNotifications: 'Всего уведомлений:',
       markRead: 'Отметить все как прочитанные', noNotifications: 'Новых уведомлений нет.',
       auth: 'Вход', register: 'Регистрация',
       name: 'Имя', yourName: 'Ваше имя', password: 'Пароль',
       login: 'Войти', finishRegister: 'Завершить регистрацию',
+      forgotPassword: 'Забыли пароль?', sendReset: 'Отправить ссылку',
+      resetPassword: 'Установить новый пароль', resetEmailHint: 'Если аккаунт существует, письмо будет отправлено.',
       faceId: 'Войти с Face ID / Passkey',
       noAccount: 'Нет аккаунта? Зарегистрируйтесь', hasAccount: 'Уже есть аккаунт? Войти',
       readOrder: 'Код заказа скопирован.'
@@ -171,7 +178,7 @@ export default function Modals({
     secureOrder: 'თქვენი შეკვეთა უსაფრთხოდ ინახება GEOSTORE-ში', close: 'დახურვა', orderAccepted: 'შეკვეთა მიღებულია',
     thankYou: 'მადლობა შეძენისთვის. შეინახეთ შეკვეთის კოდი, რომ მოგვიანებით სტატუსი შეამოწმოთ.',
     orderCode: 'შეკვეთის კოდი', copyCode: 'კოდის კოპირება', codeCopied: 'შეკვეთის კოდი დაკოპირდა.',
-    confirmation: 'დადასტურება:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
+    emailLabel: 'ელ-ფოსტა:', understood: 'გასაგებია', trackerTitle: 'შეკვეთის სტატუსის შემოწმება', trackerInvalidCode: 'შეკვეთის კოდი არასწორია. გამოიყენეთ სრული ORD კოდი.', trackerInvalidPhone: 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.',
     orderPhone: 'შეკვეთაზე მითითებული ტელეფონი', checking: 'მოწმდება...', search: 'ძებნა',
     orderDate: 'შეკვეთის თარიღი:', total: 'ჯამური თანხა:', items: 'შეკვეთის შემადგენლობა:',
     products: 'პროდუქტები', deliveryProgress: 'მიწოდების სტატუსის პროგრესი', accepted: 'მიღებულია',
@@ -203,24 +210,59 @@ export default function Modals({
     return messages[message] || message;
   };
   const getNotificationCopy = (notification) => {
-    const defaults = {
-      n1: {
-        ka: ['მოგესალმებით GEOSTORE-ში!', 'ისარგებლეთ 10% ფასდაკლებით პრომო-კოდით: GEOSTORE2026'],
-        en: ['Welcome to GEOSTORE!', 'Enjoy 10% off with promo code: GEOSTORE2026'],
-        ru: ['Добро пожаловать в GEOSTORE!', 'Получите скидку 10% с промокодом: GEOSTORE2026']
+    const raw = String(notification?.status || '').trim().toLowerCase();
+    const groups = {
+      received: ['ახალი', 'new', 'новый'],
+      processing: ['მუშავდება', 'processing', 'в обработке'],
+      shipped: ['გაგზავნილი', 'shipped', 'отправлен', 'გზაშია', 'on the way', 'в пути'],
+      completed: [],
+      delivered: ['დასრულებული', 'completed', 'завершён', 'ჩაბარებულია', 'delivered', 'доставлен'],
+      cancelled: ['გაუქმებული', 'cancelled', 'canceled', 'отменён']
+    };
+    const key = Object.keys(groups).find((name) => groups[name].includes(raw)) || 'updated';
+    const copy = {
+      received: {
+        ka: ['შეკვეთა მიღებულია', 'თქვენი შეკვეთა მიღებულია და მალე დაიწყება დამუშავება.'],
+        en: ['Order received', 'Your order has been received and will be processed soon.'],
+        ru: ['Заказ принят', 'Ваш заказ принят и скоро будет обработан.']
       },
-      n2: {
-        ka: ['უფასო მიწოდება', 'მიწოდება თბილისის მასშტაბით სრულიად უფასოა!'],
-        en: ['Free delivery', 'Delivery across Tbilisi is completely free!'],
-        ru: ['Бесплатная доставка', 'Доставка по Тбилиси совершенно бесплатна!']
+      processing: {
+        ka: ['შეკვეთა მუშავდება', 'თქვენი შეკვეთა მუშავდება. გაცნობებთ სტატუსის შემდეგ ცვლილებას.'],
+        en: ['Order processing', 'Your order is being processed. We will notify you when it changes.'],
+        ru: ['Заказ обрабатывается', 'Ваш заказ обрабатывается. Мы сообщим об изменении статуса.']
+      },
+      shipped: {
+        ka: ['შეკვეთა გამოგზავნილია', 'თქვენი შეკვეთა გადაეცა მიწოდების პროცესს.'],
+        en: ['Order shipped', 'Your order has entered the delivery process.'],
+        ru: ['Заказ отправлен', 'Ваш заказ передан в доставку.']
+      },
+      completed: {
+        ka: ['შეკვეთა დასრულებულია', 'თქვენი შეკვეთა დასრულებულად აღირიცხა.'],
+        en: ['Order completed', 'Your order has been marked as completed.'],
+        ru: ['Заказ завершён', 'Ваш заказ отмечен как завершённый.']
+      },
+      delivered: {
+        ka: ['შეკვეთა ჩაბარებულია', 'თქვენი შეკვეთა წარმატებით ჩაბარდა.'],
+        en: ['Order delivered', 'Your order has been successfully delivered.'],
+        ru: ['Заказ доставлен', 'Ваш заказ успешно доставлен.']
+      },
+      cancelled: {
+        ka: ['შეკვეთა გაუქმებულია', 'თქვენი შეკვეთა გაუქმდა. საჭიროების შემთხვევაში დაუკავშირდით მხარდაჭერას.'],
+        en: ['Order cancelled', 'Your order was cancelled. Contact support if you need help.'],
+        ru: ['Заказ отменён', 'Ваш заказ отменён. Если нужна помощь, свяжитесь с поддержкой.']
+      },
+      updated: {
+        ka: ['შეკვეთის სტატუსი განახლდა', 'თქვენი შეკვეთის სტატუსი შეიცვალა. დეტალები იხილეთ შეკვეთების ისტორიაში.'],
+        en: ['Order status updated', 'Your order status has changed. See your order history for details.'],
+        ru: ['Статус заказа обновлён', 'Статус вашего заказа изменился. Подробности доступны в истории заказов.']
       }
     };
-    const localized = defaults[notification.id]?.[currentLang];
-    const original = defaults[notification.id]?.ka;
-    if (localized && original && notification.title === original[0] && notification.message === original[1]) {
-      return { title: localized[0], message: localized[1] };
-    }
-    return { title: notification.title, message: notification.message };
+    const language = currentLang === 'en' ? 'en' : currentLang === 'ru' ? 'ru' : 'ka';
+    const orderCode = notification?.orderId ? ` · #${notification.orderId}` : '';
+    return {
+      title: copy[key][language][0] + orderCode,
+      message: copy[key][language][1]
+    };
   };
   const localizedNotificationDate = (date) => {
     if (date === 'დღეს') return currentLang === 'en' ? 'Today' : currentLang === 'ru' ? 'Сегодня' : date;
@@ -233,7 +275,7 @@ export default function Modals({
       'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
       'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
       'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
-      'დასრულებული': ['დასრულებული', 'Completed', 'Завершён'], completed: ['დასრულებული', 'Completed', 'Завершён'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['დასრულებული', 'Completed', 'Завершён'],
+      'დასრულებული': ['ჩაბარებულია', 'Delivered', 'Доставлен'], completed: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['ჩაბარებულია', 'Delivered', 'Доставлен'],
       'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
     };
     const languageIndex = currentLang === 'en' ? 1 : currentLang === 'ru' ? 2 : 0;
@@ -258,7 +300,11 @@ export default function Modals({
         : copy.trackerInvalidPhone);
       return;
     }
-    if (typeof lookupOrderForTracking !== 'function' || isSearchingOrder) return;
+    if (isSearchingOrder) return;
+    if (typeof lookupOrderForTracking !== 'function') {
+      setTrackerError(copy.trackerFailed);
+      return;
+    }
     const { orderId: cleanId, phone: cleanPhone } = normalizedLookup;
 
     setIsSearchingOrder(true);
@@ -266,14 +312,22 @@ export default function Modals({
     setTrackerError('');
     try {
       const found = await lookupOrderForTracking(cleanId, cleanPhone);
-      if (!found) {
+      if (found?.rateLimited === true) {
+        setTrackerError(copy.trackerRateLimited);
+        return;
+      }
+      if (!found || typeof found !== 'object' || !found.id) {
         setTrackerError('შეკვეთა ვერ მოიძებნა. გადაამოწმეთ კოდი და ტელეფონის ნომერი.');
         return;
       }
       setTrackedOrder(found);
     } catch (error) {
-      console.error('Secure order tracking failed:', error);
-      setTrackerError('შეკვეთის მოძებნა დროებით ვერ ხერხდება. სცადეთ მოგვიანებით.');
+      if (error?.message === 'ORDER_TRACKING_RATE_LIMITED') {
+        setTrackerError(copy.trackerRateLimited);
+      } else {
+        console.error('Secure order tracking failed:', error);
+        setTrackerError(copy.trackerFailed);
+      }
     } finally {
       setIsSearchingOrder(false);
     }
@@ -404,24 +458,31 @@ export default function Modals({
               <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-neutral-500">GEOSTORE · ORDER CONFIRMED</p>
               <h3 id="geostore-order-success-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{copy.orderAccepted}</h3>
               <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-neutral-500">{copy.thankYou}</p>
-              <div className="gs-order-code-panel mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <div className="gs-order-code-panel mt-6 min-w-0 max-w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 p-3 sm:p-5">
                 <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500" >{copy.orderCode}</span>
-                <strong className="mt-2 block break-all text-lg font-semibold tracking-[0.08em] text-neutral-950 sm:text-xl">#{orderConfirmation.id}</strong>
+                <code
+                  dir="ltr"
+                  aria-label={`${copy.orderCode}: ${orderConfirmation.id}`}
+                  className="gs-order-code-value mt-2 block min-w-0 w-full max-w-full break-all rounded-lg px-1 py-2 text-center text-base font-bold leading-relaxed text-neutral-950 [overflow-wrap:anywhere] sm:text-lg"
+                >{String(orderConfirmation.id || '').trim() ? `#${String(orderConfirmation.id).trim()}` : '—'}</code>
                 <button type="button"
+                  disabled={!String(orderConfirmation.id || '').trim()}
                   onClick={() => {
+                    const code = String(orderConfirmation.id || '').trim();
+                    if (!code) return;
                     if (navigator.clipboard?.writeText) {
-                      navigator.clipboard.writeText(orderConfirmation.id)
+                      navigator.clipboard.writeText(code)
                         .then(() => alert(copy.codeCopied))
-                        .catch(() => alert(copy.orderCode + ': ' + orderConfirmation.id));
+                        .catch(() => alert(copy.orderCode + ': ' + code));
                     } else {
-                      alert(copy.orderCode + ': ' + orderConfirmation.id);
+                      alert(copy.orderCode + ': ' + code);
                     }
                   }}
-                  className="mt-3 inline-flex items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white"
+                  className="mt-3 inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-300 bg-white px-4 py-2 text-[11px] font-semibold text-neutral-800 transition hover:border-neutral-950 hover:bg-neutral-950 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >{copy.copyCode}</button>
               </div>
               {orderConfirmation.email && (
-                <p className="mt-4 break-all text-[10px] text-neutral-500">{copy.confirmation} {orderConfirmation.email}</p>
+                <p className="mt-4 break-all text-[10px] text-neutral-500">{copy.emailLabel} {orderConfirmation.email}</p>
               )}
               <button type="button" onClick={() => setOrderConfirmation && setOrderConfirmation(null)}
                 className="mt-6 w-full rounded-xl bg-neutral-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-neutral-800">
@@ -473,7 +534,7 @@ export default function Modals({
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold block" >{copy.orderCode}</span>
-                      <b className="text-amber-400 text-sm font-black">#{trackedOrder.id}</b>
+                      <b className="text-amber-400 text-sm font-black break-all">#{trackedOrder.id}</b>
                     </div>
                     <span className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold">
                       🟢 {localizedStatus(trackedOrder.status)}
@@ -491,7 +552,7 @@ export default function Modals({
                     </div>
                     <div className="col-span-2">
                       <span className="text-slate-500 text-[10px] block" >{copy.items}</span>
-                      <b className="text-slate-200">{trackedOrder.itemSummary || copy.products}</b>
+                      <b className="text-slate-200 break-words [overflow-wrap:anywhere]">{trackedOrder.itemSummary || copy.products}</b>
                     </div>
                   </div>
                 </div>
@@ -560,7 +621,17 @@ export default function Modals({
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
-              {notifications.length === 0 ? (
+              {notificationsLoading ? (
+                <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
+                  <Bell className="w-8 h-8 text-amber-400/50 mx-auto animate-pulse" />
+                  <p className="text-slate-400 text-xs font-bold">{currentLang === 'en' ? 'Loading notifications…' : currentLang === 'ru' ? 'Загрузка уведомлений…' : 'შეტყობინებები იტვირთება…'}</p>
+                </div>
+              ) : notificationsError ? (
+                <div role="alert" className="text-center py-8 px-4 bg-[#121216] rounded-3xl border border-amber-500/25 space-y-2">
+                  <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
+                  <p className="text-amber-200 text-xs font-bold leading-relaxed">{notificationsError}</p>
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="text-center py-12 bg-[#121216] rounded-3xl border border-amber-500/15 space-y-2">
                   <Bell className="w-8 h-8 text-amber-400/50 mx-auto" />
                   <p className="text-slate-400 text-xs font-bold" >{copy.noNotifications}</p>
@@ -594,7 +665,7 @@ export default function Modals({
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <Lock className="w-5 h-5 text-amber-400" />
-                {authMode === 'login' ? copy.auth : copy.register}
+                {authMode === 'login' ? copy.auth : authMode === 'register' ? copy.register : authMode === 'reset-request' ? copy.forgotPassword : copy.resetPassword}
               </h3>
               <button type="button" onClick={() => setIsAuthOpen(false)} aria-label={copy.close} className="text-slate-400 hover:text-white p-2.5 bg-[#141418] rounded-2xl transition cursor-pointer border border-amber-500/20">
                 <X className="w-4 h-4" />
@@ -619,30 +690,53 @@ export default function Modals({
                 </>
               )}
 
-              <div className="space-y-1">
+              {authMode !== 'reset-password' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-email" className="text-slate-300 font-bold">{copy.email}</label>
                 <input id="geostore-auth-email" type="email" maxLength={254} required autoComplete="email" placeholder="name@example.com" value={authForm.email}
                   onChange={e => setAuthForm({ ...authForm, email: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
-              </div>
+              </div>}
 
-              <div className="space-y-1">
+              {authMode !== 'reset-request' && <div className="space-y-1">
                 <label htmlFor="geostore-auth-password" className="text-slate-300 font-bold">{copy.password}</label>
-                <input id="geostore-auth-password" type="password" required minLength={6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
+                <input id="geostore-auth-password" type="password" required minLength={authMode === 'register' || authMode === 'reset-password' ? 10 : 6} autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="••••••••" value={authForm.password}
                   onChange={e => setAuthForm({ ...authForm, password: e.target.value })}
                   className="w-full bg-[#08080a] border border-amber-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-amber-400 shadow-inner transition-all" />
-              </div>
+                {authMode === 'register' && (
+                  <p className="text-[11px] leading-relaxed text-slate-400">
+                    {currentLang === 'en'
+                      ? 'Use 10+ mixed characters. GEOSTORE also checks known breached passwords without sending the password itself.'
+                      : currentLang === 'ru'
+                        ? 'Используйте не менее 10 символов разных типов. GEOSTORE также проверяет известные утечки, не отправляя сам пароль.'
+                        : 'გამოიყენეთ მინიმუმ 10 სიმბოლო: დიდი და პატარა ლათინური ასოები, ციფრი და სპეციალური სიმბოლო. GEOSTORE ასევე ამოწმებს ცნობილ გაჟონვებში მოხვედრას ისე, რომ პაროლი არ იგზავნება.'}
+                  </p>
+                )}
+              </div>}
 
+              {authMode === 'reset-request' && <p className="text-[11px] text-slate-400">{copy.resetEmailHint}</p>}
               <button type="submit" className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-amber-500/20 transition-all cursor-pointer text-xs mt-2">
-                {authMode === 'login' ? copy.login : copy.finishRegister}
+                {authMode === 'login' ? copy.login : authMode === 'reset-request' ? copy.sendReset : authMode === 'reset-password' ? copy.resetPassword : copy.finishRegister}
               </button>
             </form>
 
-            <div className="text-center pt-2 border-t border-amber-500/20">
-              <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+            <div className="text-center pt-2 border-t border-amber-500/20 space-y-3">
+              {authMode === 'login' && (
+                <button type="button" onClick={() => setAuthMode('reset-request')} className="block w-full text-amber-400 hover:text-amber-300 text-xs font-bold">
+                  {copy.forgotPassword}
+                </button>
+              )}
+              {authMode !== 'login' && authMode !== 'reset-password' && (
+                <button type="button" onClick={() => setAuthMode('login')} className="block w-full text-slate-400 hover:text-amber-400 text-xs font-bold">
+                  {copy.auth}
+                </button>
+              )}
+              {authMode === 'reset-password' && (
+                <p className="text-[11px] text-slate-400">{currentLang === 'en' ? 'Choose a new, unique password for your account.' : currentLang === 'ru' ? 'Выберите новый уникальный пароль для аккаунта.' : 'აირჩიეთ ახალი, უნიკალური პაროლი თქვენი ანგარიშისთვის.'}</p>
+              )}
+              {authMode !== 'reset-password' && <button type="button" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
                 className="text-slate-400 hover:text-amber-400 text-xs font-bold transition-all cursor-pointer">
                 {authMode === 'login' ? copy.noAccount : copy.hasAccount}
-              </button>
+              </button>}
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'rea
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
-import StoreView from './components/StoreView';
+const StoreView = lazy(() => import('./components/StoreView'));
 
 import {
   MessageSquare,
@@ -25,9 +25,14 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeTrackingLookup, reconcileCartWithCatalog } from './utils/orderSafety';
-import { validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
+import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
+import { isAuthRestoreCurrent } from './utils/authSafety';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
+import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
+import { matchesProductSearch } from './utils/productSearch.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -66,7 +71,16 @@ const STOREFRONT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedAssets) => {
   const value = String(imageData || '').trim();
-  if (!value.startsWith('data:')) return value;
+  if (!value.startsWith('data:')) {
+    if (!value) return '';
+    try {
+      const parsedUrl = new URL(value, window.location.origin);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Unsupported image URL protocol');
+      return parsedUrl.href;
+    } catch {
+      throw new Error('კატეგორიის ან ბანერის ფოტოს ბმული არასწორია. გამოიყენეთ HTTP ან HTTPS მისამართი.');
+    }
+  }
 
   const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
   if (!match) throw new Error('კატეგორიის ან ბანერის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
@@ -139,21 +153,32 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
 const cleanupStorefrontUploads = async (uploadedAssets) => {
   const assets = Array.isArray(uploadedAssets) ? uploadedAssets : [];
   await Promise.allSettled(assets.map(async ({ path }) => {
-    const encodedPath = String(path || '').split('/').map(encodeURIComponent).join('/');
-    if (!encodedPath) return;
+    const safePath = String(path || '').replace(/^\/+/, '');
+    const isManagedStorefrontPath =
+      safePath.startsWith('storefront/categories/') ||
+      safePath.startsWith('storefront/banners/');
+    if (!isManagedStorefrontPath) return;
+
+    const encodedPath = safePath.split('/').map(encodeURIComponent).join('/');
     const storageResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/${STOREFRONT_MEDIA_BUCKET}/${encodedPath}`, {
       method: 'DELETE',
       headers: await getSupabaseHeaders({ authenticated: true })
     });
-    if (!storageResponse.ok) {
-      console.error('Storefront upload cleanup failed:', path, await storageResponse.text());
+
+    // Keep the media row if Storage deletion failed. Removing its metadata
+    // while the public object still exists would create an untracked orphan.
+    // A 404 means the object is already absent, so metadata cleanup is safe.
+    if (!storageResponse.ok && storageResponse.status !== 404) {
+      console.error('Storefront upload cleanup failed:', safePath, await storageResponse.text());
+      return;
     }
+
     const metadataResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/storefront_media?storage_path=eq.${encodeURIComponent(path)}`,
+      `${SUPABASE_URL}/rest/v1/storefront_media?storage_path=eq.${encodeURIComponent(safePath)}`,
       { method: 'DELETE', headers: await getSupabaseHeaders({ authenticated: true }) }
     );
     if (!metadataResponse.ok) {
-      console.error('Storefront media metadata cleanup failed:', path, await metadataResponse.text());
+      console.error('Storefront media metadata cleanup failed:', safePath, await metadataResponse.text());
     }
   }));
 };
@@ -166,6 +191,123 @@ const DEFAULT_CATEGORIES = [
   { id: 'c3', name: 'აქსესუარები', icon: 'Sparkles', parentId: null }
 ];
 
+const validateStorefrontCategorySnapshot = (rawCategories, catalogProducts = []) => {
+  if (!Array.isArray(rawCategories) || rawCategories.length > 100) {
+    throw new Error('კატეგორიების სია არასწორია ან 100 კატეგორიაზე მეტია.');
+  }
+
+  const normalized = rawCategories.map((category, index) => {
+    if (typeof category === 'string') {
+      const name = category.trim();
+      return { id: `cat-legacy-${index}`, name, icon: 'Shirt', parentId: null, image: '', img: '' };
+    }
+    if (!category || typeof category !== 'object' || Array.isArray(category)) {
+      throw new Error('კატეგორიების სიაში აღმოჩნდა არასწორი ჩანაწერი.');
+    }
+    const image = typeof category.image === 'string' ? category.image : (typeof category.img === 'string' ? category.img : '');
+    return {
+      ...category,
+      id: String(category.id || `cat-legacy-${index}`).trim(),
+      name: String(category.name || '').trim(),
+      icon: String(category.icon || 'Shirt'),
+      parentId: category.parentId ? String(category.parentId) : null,
+      image,
+      img: image
+    };
+  });
+
+  const ids = new Set();
+  const names = new Set();
+  for (const category of normalized) {
+    const normalizedName = category.name.toLocaleLowerCase();
+    if (!category.id || category.id.length > 120 || ids.has(category.id)) {
+      throw new Error('კატეგორიის ID ცარიელია ან დუბლირებულია.');
+    }
+    if (category.name.length < 2 || category.name.length > 60 || names.has(normalizedName)) {
+      throw new Error('კატეგორიის სახელი უნდა იყოს 2-60 სიმბოლო და უნიკალური.');
+    }
+    ids.add(category.id);
+    names.add(normalizedName);
+  }
+
+  const rootIds = new Set(normalized.filter(category => !category.parentId).map(category => category.id));
+  for (const category of normalized) {
+    if (category.parentId && (!rootIds.has(category.parentId) || category.parentId === category.id)) {
+      throw new Error(`„${category.name}“ კატეგორიის მთავარი კატეგორია არასწორია. შეასწორეთ იერარქია და ხელახლა სცადეთ.`);
+    }
+  }
+
+  const categoryNames = new Set(normalized.map(category => category.name));
+  const missingProductCategories = [...new Set(
+    (Array.isArray(catalogProducts) ? catalogProducts : [])
+      .map(product => String(product?.category || '').trim())
+      .filter(name => name && !categoryNames.has(name))
+  )];
+  if (missingProductCategories.length) {
+    throw new Error(`არსებობს პროდუქტები, რომელთა კატეგორია აღარ არსებობს: ${missingProductCategories.slice(0, 5).join(', ')}. ჯერ გადაიტანეთ ეს პროდუქტები არსებულ კატეგორიებში.`);
+  }
+
+  return normalized;
+};
+
+const DEFAULT_SITE_SETTINGS = {
+  storeName: 'GEOSTORE',
+  topBarText: 'GEOSTORE — ტანსაცმელი, ფეხსაცმელი და აქსესუარები',
+  heroTitle: 'შენი სტილი. შენი არჩევანი.',
+  heroSubtitle: 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.'
+};
+
+const validateStorefrontSiteSettings = (rawSettings) => {
+  if (!rawSettings || typeof rawSettings !== 'object' || Array.isArray(rawSettings)) {
+    throw new Error('საიტის პარამეტრების ფორმატი არასწორია.');
+  }
+  const settings = { ...DEFAULT_SITE_SETTINGS, ...rawSettings };
+  const limits = { storeName: 60, topBarText: 160, heroTitle: 120, heroSubtitle: 240 };
+  for (const [key, maxLength] of Object.entries(limits)) {
+    if (typeof settings[key] !== 'string') settings[key] = String(settings[key] ?? '');
+    settings[key] = settings[key].trim();
+    if (settings[key].length > maxLength) {
+      throw new Error(`საიტის პარამეტრი „${key}“ მაქსიმუმ ${maxLength} სიმბოლო უნდა იყოს.`);
+    }
+  }
+  if (settings.storeName.length < 2) throw new Error('მაღაზიის დასახელება მინიმუმ 2 სიმბოლო უნდა იყოს.');
+  return settings;
+};
+
+const validateStorefrontBannerSnapshot = (rawBanners) => {
+  if (!Array.isArray(rawBanners) || rawBanners.length > 20) {
+    throw new Error('ბანერების სია არასწორია ან 20 ბანერზე მეტია.');
+  }
+  const ids = new Set();
+  return rawBanners.map((raw, index) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new Error('ბანერების სიაში აღმოჩნდა არასწორი ჩანაწერი.');
+    }
+    const banner = { ...raw };
+    banner.id = String(banner.id || '').trim();
+    banner.title = String(banner.title || '').trim();
+    banner.subtitle = String(banner.subtitle || '').trim();
+    banner.image = String(banner.image || '').trim();
+    banner.link = String(banner.link || '').trim();
+    if (!banner.id || banner.id.length > 120 || ids.has(banner.id)) {
+      throw new Error('ბანერის ID ცარიელია ან დუბლირებულია.');
+    }
+    ids.add(banner.id);
+    if (!banner.title || banner.title.length > 120 || banner.subtitle.length > 240) {
+      throw new Error(`ბანერი №${index + 1}: სათაური სავალდებულოა (მაქს. 120), აღწერა კი მაქს. 240 სიმბოლო.`);
+    }
+    if (banner.link) {
+      try {
+        const url = new URL(banner.link);
+        if (!['https:', 'http:'].includes(url.protocol)) throw new Error('Invalid protocol');
+      } catch {
+        throw new Error(`ბანერი „${banner.title}“ შეიცავს არასწორ ბმულს.`);
+      }
+    }
+    return banner;
+  });
+};
+
 const DEFAULT_VENDORS = [
   { id: 'v1', name: 'GEOSTORE ოფიციალური', commission: 0, status: 'აქტიური' },
   { id: 'v2', name: 'TechHub Georgia', commission: 10, status: 'აქტიური' }
@@ -177,9 +319,6 @@ const DEFAULT_PRODUCTS = [];
 
 // Never invent a live coupon. Active coupons are loaded from Supabase.
 const DEFAULT_COUPONS = [];
-
-// Storefront notifications must come from real persisted events, not demo promises.
-const DEFAULT_NOTIFICATIONS = [];
 
 // Supabase Auth მომხმარებლის ფორმატის შენარჩუნება,
 // რათა არსებული Header და პროფილის კომპონენტები იმუშაოს.
@@ -225,7 +364,7 @@ const localizeOrderStatus = (status, lang = 'ka') => {
     'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
     'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
     'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
-    'დასრულებული': ['დასრულებული', 'Completed', 'Завершён'], completed: ['დასრულებული', 'Completed', 'Завершён'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['დასრულებული', 'Completed', 'Завершён'],
+    'დასრულებული': ['ჩაბარებულია', 'Delivered', 'Доставлен'], completed: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['ჩაბარებულია', 'Delivered', 'Доставлен'],
     'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
   };
   const languageIndex = lang === 'en' ? 1 : lang === 'ru' ? 2 : 0;
@@ -263,15 +402,24 @@ export default function App() {
 
   const t = translations[currentLang] || translations.ka;
 
-  const [siteSettings, setSiteSettings] = useState(() =>
-    loadSafeStorage('geostore_site_settings', {
-      storeName: 'GEOSTORE',
-      topBarText: 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი',
-      heroTitle: 'მრავალვენდერიანი მარკეტფლეისი საუკეთესო შეთავაზებებით',
-      heroSubtitle:
-        'აღმოაჩინე შენი საყვარელი ბრენდები და მომწოდებლები ერთ სივრცეში!'
-    })
-  );
+  const [siteSettings, setSiteSettings] = useState(() => {
+    const saved = loadSafeStorage('geostore_site_settings', DEFAULT_SITE_SETTINGS);
+    const settings = {
+      ...DEFAULT_SITE_SETTINGS,
+      ...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {})
+    };
+    // Replace only the exact legacy technology-marketplace defaults; preserve user edits.
+    if (settings.topBarText === 'GEOSTORE - N1 ტექნიკის ონლაინ მარკეტფლეისი') {
+      settings.topBarText = DEFAULT_SITE_SETTINGS.topBarText;
+    }
+    if (/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(settings.heroTitle || '')) {
+      settings.heroTitle = DEFAULT_SITE_SETTINGS.heroTitle;
+    }
+    if (/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(settings.heroSubtitle || '')) {
+      settings.heroSubtitle = DEFAULT_SITE_SETTINGS.heroSubtitle;
+    }
+    return settings;
+  });
 
   const [deliveryFees, setDeliveryFees] = useState(() =>
     loadSafeStorage('geostore_delivery_fees', {
@@ -306,17 +454,10 @@ export default function App() {
     loadSafeStorage('geostore_banners', [])
   );
 
-  const [notifications, setNotifications] = useState(() =>
-    loadSafeStorage('geostore_notifications', DEFAULT_NOTIFICATIONS).filter((notification) =>
-      !(
-        (notification?.id === 'n1' &&
-          notification?.title === 'მოგესალმებით GEOSTORE-ში!' &&
-          String(notification?.message || '').includes('GEOSTORE2026')) ||
-        (notification?.id === 'n2' &&
-          notification?.title === 'უფასო მიწოდება' &&
-          String(notification?.message || '').includes('თბილისის მასშტაბით სრულიად უფასოა'))
-      )
-  ));
+  // Notifications are server-owned and scoped to the authenticated account.
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState('');
 
   const [activeTab, setActiveTab] = useState('store');
 
@@ -339,16 +480,40 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [cart, setCart] = useState(() =>
-    loadSafeStorage('geostore_cart', [])
+    sanitizeCartSnapshot(loadSafeStorage('geostore_cart:guest', loadSafeStorage('geostore_cart', [])))
   );
 
-  const [wishlist, setWishlist] = useState(() =>
-    loadSafeStorage('geostore_wishlist', [])
-  );
+  const cartRef = useRef(cart);
+  const activeCartOwnerRef = useRef({ initialized: false, userId: null });
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
 
-  const [comparisonList, setComparisonList] = useState(() =>
-    loadSafeStorage('geostore_comparison', [])
+  const [wishlist, setWishlistState] = useState(() =>
+    sanitizeProductCollection(loadSafeStorage('geostore_wishlist:guest', loadSafeStorage('geostore_wishlist', [])), 100)
   );
+  const wishlistRef = useRef(wishlist);
+  const setWishlist = (nextValue) => {
+    const nextItems = sanitizeProductCollection(
+      typeof nextValue === 'function' ? nextValue(wishlistRef.current) : nextValue,
+      100
+    );
+    wishlistRef.current = nextItems;
+    setWishlistState(nextItems);
+  };
+
+  const [comparisonList, setComparisonListState] = useState(() =>
+    sanitizeProductCollection(loadSafeStorage('geostore_comparison:guest', loadSafeStorage('geostore_comparison', [])), 4)
+  );
+  const comparisonListRef = useRef(comparisonList);
+  const setComparisonList = (nextValue) => {
+    const nextItems = sanitizeProductCollection(
+      typeof nextValue === 'function' ? nextValue(comparisonListRef.current) : nextValue,
+      4
+    );
+    comparisonListRef.current = nextItems;
+    setComparisonListState(nextItems);
+  };
 
   const [promoInput, setPromoInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -377,7 +542,19 @@ export default function App() {
   // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
   // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  // Serialize catalogue refreshes and discard results from a previous admin session.
+  const productsFetchLock = useRef(false);
+  const productsFetchQueued = useRef(false);
+  const productsAccessEpoch = useRef(0);
+  const adminAccessRef = useRef(adminLoggedIn);
+  if (adminAccessRef.current !== adminLoggedIn) {
+    adminAccessRef.current = adminLoggedIn;
+    productsAccessEpoch.current += 1;
+  }
+  const [storefrontDraftBusy, setStorefrontDraftBusy] = useState(false);
   const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
+  const storefrontSaveLock = useRef(false);
+  const storefrontPublishLock = useRef(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -388,6 +565,12 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
 
   const [orders, setOrders] = useState([]);
+  const adminOrdersFetchLock = useRef(false);
+  const adminOrdersSessionActive = useRef(false);
+  const adminOrdersSessionVersion = useRef(0);
+  const [myOrders, setMyOrders] = useState([]);
+  const [myOrdersLoading, setMyOrdersLoading] = useState(false);
+  const [myOrdersError, setMyOrdersError] = useState('');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const orderSubmitLock = useRef(false);
@@ -419,6 +602,35 @@ export default function App() {
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
 
   useEffect(() => {
+    if (!adminLoggedIn) return undefined;
+    let active = true;
+    const loadStorefrontDraft = async () => {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config`,
+          { headers: await getSupabaseHeaders({ authenticated: true }) }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        const draft = rows?.[0]?.draft_config;
+        if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
+        if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
+        if (Array.isArray(draft.banners)) setBannersList(draft.banners);
+        if (draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings)) {
+          setSiteSettings(draft.siteSettings);
+        }
+      } catch (error) {
+        console.error('Storefront draft load error:', error);
+      }
+    };
+    loadStorefrontDraft();
+    return () => { active = false; };
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
+    // Admins load their private draft in the separate authenticated effect above.
+    // Do not let a slower public-config request overwrite that draft after login.
+    if (adminLoggedIn) return undefined;
     let active = true;
     const loadPublishedStorefront = async () => {
       try {
@@ -432,14 +644,14 @@ export default function App() {
         if (!active || !config || typeof config !== 'object') return;
         if (Array.isArray(config.categories)) setCategoriesList(config.categories);
         if (Array.isArray(config.banners)) setBannersList(config.banners);
-        if (config.siteSettings && typeof config.siteSettings === 'object') setSiteSettings(config.siteSettings);
+        if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) setSiteSettings(config.siteSettings);
       } catch (error) {
         console.error('Published storefront config load error:', error);
       }
     };
     loadPublishedStorefront();
     return () => { active = false; };
-  }, []);
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     if (isCheckoutOpen || orderConfirmation || isAuthOpen || isTermsOpen || isWarrantyOpen || isTrackerOpen || isNotificationsOpen) {
@@ -457,6 +669,7 @@ export default function App() {
   // Supabase Auth: სესიის აღდგენა და ცვლილებების მოსმენა.
   useEffect(() => {
     let mounted = true;
+    let authEventVersion = 0;
 
     // ძველი localStorage მომხმარებლის მონაცემი აღარ გამოიყენება.
     try {
@@ -465,13 +678,88 @@ export default function App() {
       // არაფერია გასაკეთებელი.
     }
 
+    const activateCartOwner = (userId) => {
+      const nextOwnerId = userId || null;
+      const activeOwner = activeCartOwnerRef.current;
+      if (activeOwner.initialized && String(activeOwner.userId ?? '') === String(nextOwnerId ?? '')) return;
+      try {
+        const switched = switchCartStorageOwner({
+          storage: window.localStorage,
+          previousOwnerId: activeOwner.userId,
+          nextOwnerId,
+          currentCart: cartRef.current,
+          isInitial: !activeOwner.initialized
+        });
+        cartRef.current = switched.cart;
+        setCart(switched.cart);
+
+        const switchedWishlist = switchUserScopedCollectionOwner({
+          storage: window.localStorage, baseKey: 'geostore_wishlist',
+          previousOwnerId: activeOwner.userId, nextOwnerId,
+          currentItems: wishlistRef.current, isInitial: !activeOwner.initialized, maxItems: 100
+        });
+        wishlistRef.current = switchedWishlist.items;
+        setWishlist(switchedWishlist.items);
+
+        const switchedComparison = switchUserScopedCollectionOwner({
+          storage: window.localStorage, baseKey: 'geostore_comparison',
+          previousOwnerId: activeOwner.userId, nextOwnerId,
+          currentItems: comparisonListRef.current, isInitial: !activeOwner.initialized, maxItems: 4
+        });
+        comparisonListRef.current = switchedComparison.items;
+        setComparisonList(switchedComparison.items);
+
+        // Personal checkout details must not carry over to another account.
+        if (activeOwner.initialized && String(activeOwner.userId ?? '') !== String(nextOwnerId ?? '')) {
+          // Customer-private data must disappear immediately on account changes,
+          // before the next profile/notification requests finish loading.
+          setMyOrders([]);
+          setMyOrdersError('');
+          setMyOrdersLoading(false);
+          setNotifications([]);
+          setNotificationsError('');
+          setNotificationsLoading(false);
+          setIsNotificationsOpen(false);
+          setCheckoutForm({ name: '', phone: '', email: '', address: '' });
+          setAppliedCoupon(null);
+          setPromoInput('');
+        }
+        activeCartOwnerRef.current = { initialized: true, userId: nextOwnerId };
+      } catch (error) {
+        // Fail closed: never persist the outgoing owner's cart under a new account.
+        console.error('Cart owner switch failed:', error);
+        cartRef.current = [];
+        setCart([]);
+        wishlistRef.current = [];
+        setWishlist([]);
+        comparisonListRef.current = [];
+        setComparisonList([]);
+        setMyOrders([]);
+        setMyOrdersError('');
+        setMyOrdersLoading(false);
+        setNotifications([]);
+        setNotificationsError('');
+        setNotificationsLoading(false);
+        setIsNotificationsOpen(false);
+        activeCartOwnerRef.current = { initialized: false, userId: null };
+      }
+    };
+
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      authEventVersion += 1;
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthForm((current) => ({ ...current, email: session?.user?.email || current.email, password: '' }));
+        setAuthMode('reset-password');
+        setIsAuthOpen(true);
+      }
 
       const authUser = session?.user || null;
       const authorizedAdmin = isAuthorizedAdmin(authUser);
+      activateCartOwner(authUser?.id || null);
       setCurrentUser(normalizeAuthUser(authUser));
       setAdminLoggedIn(authorizedAdmin);
       // Route verified administrator accounts directly to the dashboard.
@@ -483,6 +771,7 @@ export default function App() {
     });
 
     const restoreSession = async () => {
+      const restoreVersion = authEventVersion;
       try {
         // getUser() ამოწმებს მომხმარებელს Supabase Auth სერვერზე;
         // მხოლოდ სანდო app_metadata.role='admin' ანიჭებს პანელზე წვდომას.
@@ -492,9 +781,10 @@ export default function App() {
           throw error;
         }
 
-        if (mounted) {
+        if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
           const authUser = data?.user || null;
           const authorizedAdmin = isAuthorizedAdmin(authUser);
+          activateCartOwner(authUser?.id || null);
           setCurrentUser(normalizeAuthUser(authUser));
           setAdminLoggedIn(authorizedAdmin);
           setActiveTab((current) =>
@@ -502,13 +792,17 @@ export default function App() {
           );
         }
       } catch (error) {
-        console.error('Supabase session restore error:', error);
-
-        if (mounted) {
+        if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
+          console.error('Supabase session restore error:', error);
+          // Fail closed if the server cannot verify the restored session.
+          // Clear every privilege-related UI state, not only the profile.
+          activateCartOwner(null);
           setCurrentUser(null);
+          setAdminLoggedIn(false);
+          setActiveTab((current) => current === 'admin' ? 'store' : current);
         }
       } finally {
-        if (mounted) {
+        if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
           setAuthLoading(false);
         }
       }
@@ -565,49 +859,72 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const markAllNotificationsAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((n) => ({ ...n, read: true }))
-    );
-
-    showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
+  const markAllNotificationsAsRead = async () => {
+    const requestOwnerId = currentUser?.id;
+    if (!requestOwnerId || String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId) ||
+        notificationsLoading || !notifications.some((n) => !n.read)) return;
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/mark_my_order_notifications_read`,
+        {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({})
+        }
+      );
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => '');
+        throw new Error(errorBody || 'შეტყობინებების განახლება ვერ მოხერხდა.');
+      }
+      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      showToast(currentLang === 'en' ? '🔔 All notifications marked as read.' : currentLang === 'ru' ? '🔔 Все уведомления отмечены как прочитанные.' : '🔔 ყველა შეტყობინება მონიშნულია წაკითხულად');
+    } catch (error) {
+      if (String(activeCartOwnerRef.current.userId ?? '') !== String(requestOwnerId)) return;
+      console.error('Mark notifications read failed:', error);
+      showToast(currentLang === 'en' ? 'Could not update notifications.' : currentLang === 'ru' ? 'Не удалось обновить уведомления.' : 'შეტყობინებების განახლება ვერ მოხერხდა.');
+    }
   };
 
   const unreadNotificationsCount = useMemo(() => {
     return notifications.filter((n) => !n.read).length;
   }, [notifications]);
 
-  const handlePublishStorefront = async () => {
-    if (!adminLoggedIn || storefrontPublishBusy) return;
-    setStorefrontPublishBusy(true);
+  const handleSaveStorefrontDraft = async (settingsOverride = siteSettings) => {
+    if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
+    storefrontSaveLock.current = true;
+    setStorefrontDraftBusy(true);
     const uploadedAssets = [];
-    let storefrontPublished = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
-
-      const publishedCategories = [];
-      for (let index = 0; index < (Array.isArray(categories) ? categories.length : 0); index += 1) {
-        const category = categories[index];
-        const image = category.image || category.img || '';
-        const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
-        publishedCategories.push({ ...category, image: uploaded, img: uploaded });
+      if (!session?.user?.id || !isAuthorizedAdmin(session.user)) {
+        throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
       }
 
-      const publishedBanners = [];
-      for (let index = 0; index < (Array.isArray(bannersList) ? bannersList.length : 0); index += 1) {
-        const banner = bannersList[index];
+      const validatedCategories = validateStorefrontCategorySnapshot(categories, products);
+      const draftCategories = [];
+      for (let index = 0; index < validatedCategories.length; index += 1) {
+        const category = validatedCategories[index];
+        const image = category.image || category.img || '';
+        const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
+        draftCategories.push({ ...category, image: uploaded, img: uploaded });
+      }
+
+      const draftBanners = [];
+      const validatedBanners = validateStorefrontBannerSnapshot(bannersList);
+      for (let index = 0; index < validatedBanners.length; index += 1) {
+        const banner = validatedBanners[index];
         const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
-        publishedBanners.push({ ...banner, image });
+        draftBanners.push({ ...banner, image });
       }
 
       const snapshot = {
-        categories: publishedCategories,
-        banners: publishedBanners,
-        siteSettings: siteSettings && typeof siteSettings === 'object' ? siteSettings : {}
+        categories: draftCategories,
+        banners: draftBanners,
+        siteSettings: validateStorefrontSiteSettings(settingsOverride)
       };
-      const publishedAt = new Date().toISOString();
-      const configResponse = await fetch(
+      const savedAt = new Date().toISOString();
+      const response = await fetch(
         `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
         {
           method: 'POST',
@@ -618,92 +935,331 @@ export default function App() {
           body: JSON.stringify({
             config_key: 'storefront',
             draft_config: snapshot,
-            published_config: snapshot,
-            is_published: true,
             updated_by: session.user.id,
-            draft_updated_at: publishedAt,
-            published_at: publishedAt
+            draft_updated_at: savedAt
           })
         }
       );
-      if (!configResponse.ok) throw new Error('საიტის კონფიგურაციის შენახვა ვერ მოხერხდა: ' + (await configResponse.text()));
-      storefrontPublished = true;
+      if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
 
-      const versionResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_versions`, {
-        method: 'POST',
-        headers: await getSupabaseHeaders({ authenticated: true }),
-        body: JSON.stringify({
-          config_key: 'storefront',
-          snapshot,
-          version_label: `გამოქვეყნება ${new Date(publishedAt).toLocaleString('ka-GE')}`,
-          created_by: session.user.id
-        })
-      });
-      if (!versionResponse.ok) {
-        console.error('Storefront version snapshot save failed:', await versionResponse.text());
+      setCategoriesList(draftCategories);
+      setBannersList(draftBanners);
+      alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
+    } catch (error) {
+      if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
+      alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+    } finally {
+      storefrontSaveLock.current = false;
+      setStorefrontDraftBusy(false);
+    }
+  };
+
+  const handlePublishStorefront = async () => {
+    if (!adminLoggedIn || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
+    storefrontPublishLock.current = true;
+    setStorefrontPublishBusy(true);
+    const uploadedAssets = [];
+    let storefrontPublished = false;
+    let publishRequestStarted = false;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
+
+      const validatedCategories = validateStorefrontCategorySnapshot(categories, products);
+      const publishedCategories = [];
+      for (let index = 0; index < validatedCategories.length; index += 1) {
+        const category = validatedCategories[index];
+        const image = category.image || category.img || '';
+        const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
+        publishedCategories.push({ ...category, image: uploaded, img: uploaded });
+      }
+
+      const publishedBanners = [];
+      const validatedBanners = validateStorefrontBannerSnapshot(bannersList);
+      for (let index = 0; index < validatedBanners.length; index += 1) {
+        const banner = validatedBanners[index];
+        const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
+        publishedBanners.push({ ...banner, image });
+      }
+
+      const snapshot = {
+        categories: publishedCategories,
+        banners: publishedBanners,
+        siteSettings: validateStorefrontSiteSettings(siteSettings)
+      };
+      const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
+      publishRequestStarted = true;
+      const publishResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/publish_storefront_config`,
+        {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({
+            p_snapshot: snapshot,
+            p_version_label: versionLabel
+          })
+        }
+      );
+      if (!publishResponse.ok) {
+        // A definitive HTTP error means Postgres rejected and rolled back the transaction.
+        publishRequestStarted = false;
+        throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + (await publishResponse.text()));
+      }
+      // The database transaction has committed both the published config
+      // and its immutable history row. Do not clean up referenced uploads
+      // if response parsing or a later UI update fails.
+      storefrontPublished = true;
+      const publishResult = await publishResponse.json();
+      if (!publishResult?.version_id) {
+        throw new Error('საიტი გამოქვეყნდა, თუმცა ვერსიის დადასტურების პასუხი ვერ მივიღეთ. განაახლეთ ისტორიის სია.');
       }
 
       setCategoriesList(publishedCategories);
       setBannersList(publishedBanners);
-      alert(versionResponse.ok
-        ? 'საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიაც შეინახა.'
-        : 'საიტის ცვლილებები გამოქვეყნდა, თუმცა ვერსიის ისტორიის ჩანაწერი ვერ შეინახა.');
+      alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
     } catch (error) {
       if (!storefrontPublished && uploadedAssets.length) {
-        await cleanupStorefrontUploads(uploadedAssets);
+        if (publishRequestStarted) {
+          // A network failure after sending the RPC has an ambiguous outcome.
+          // Keep uploaded files rather than risk deleting assets used by a committed publish.
+          console.warn('Storefront publish outcome is unknown; uploaded assets were retained for safety.');
+        } else {
+          await cleanupStorefrontUploads(uploadedAssets);
+        }
       }
       alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
     } finally {
+      storefrontPublishLock.current = false;
       setStorefrontPublishBusy(false);
     }
   };
 
+  useEffect(() => {
+    let active = true;
+    let requestInFlight = false;
+    const requestOwnerId = currentUser?.id || null;
+    const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
+      String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
+    const loadOwnOrders = async () => {
+      if (!currentUser?.id) {
+        setMyOrders([]);
+        setMyOrdersError('');
+        setMyOrdersLoading(false);
+        return;
+      }
+      if (requestInFlight) return;
+      requestInFlight = true;
+      setMyOrdersLoading(true);
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/get_my_orders`,
+          {
+            method: 'POST',
+            headers: await getSupabaseHeaders({ authenticated: true }),
+            body: JSON.stringify({})
+          }
+        );
+        if (!response.ok) {
+          const errorBody = await response.text().catch(() => '');
+          throw new Error(errorBody || 'შეკვეთების ისტორიის მიღება ვერ მოხერხდა.');
+        }
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('შეკვეთების ისტორიის მონაცემები არასწორია.');
+        if (!isCurrentOwner()) return;
+        setMyOrdersError('');
+        setMyOrders(rows.map((o) => {
+          const parsedDate = o.created_at ? new Date(o.created_at) : null;
+          const validDate = parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate : null;
+          return {
+            id: typeof o.id === 'string' ? o.id : '',
+            created_at: validDate ? validDate.toISOString() : null,
+            date: validDate
+              ? validDate.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')
+              : '',
+            totalGEL: normalizeOrderTotal(o.total_gel),
+            status: typeof o.status === 'string' && o.status.trim() ? o.status : 'ახალი',
+            items: normalizeOrderItems(o.items),
+            status_changed_at: o.status_changed_at || null
+          };
+        }).filter((order) => order.id));
+      } catch (error) {
+        if (isCurrentOwner()) {
+          console.error('My orders fetch error:', error);
+          setMyOrders([]);
+          setMyOrdersError(currentLang === 'en'
+            ? 'Order history is temporarily unavailable. Please try again shortly.'
+            : currentLang === 'ru'
+              ? 'История заказов временно недоступна. Повторите попытку позже.'
+              : 'შეკვეთების ისტორია დროებით მიუწვდომელია. სცადეთ მოგვიანებით.');
+        }
+      } finally {
+        requestInFlight = false;
+        if (isCurrentOwner()) setMyOrdersLoading(false);
+      }
+    };
+
+    if (!currentUser?.id) {
+      setMyOrders([]);
+      setMyOrdersError('');
+      setMyOrdersLoading(false);
+      return () => { active = false; };
+    }
+    if (activeTab !== 'profile') return () => { active = false; };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void loadOwnOrders();
+    };
+    void loadOwnOrders();
+    const interval = window.setInterval(() => void loadOwnOrders(), 30000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [currentUser?.id, activeTab, currentLang]);
+
+  useEffect(() => {
+    let active = true;
+    let requestInFlight = false;
+    const requestOwnerId = currentUser?.id || null;
+    const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
+      String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
+    const loadNotifications = async () => {
+      if (!currentUser?.id) {
+        setNotifications([]);
+        setNotificationsLoading(false);
+        return;
+      }
+      if (requestInFlight) return;
+      requestInFlight = true;
+      setNotificationsLoading(true);
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/get_my_order_notifications`,
+          {
+            method: 'POST',
+            headers: await getSupabaseHeaders({ authenticated: true }),
+            body: JSON.stringify({})
+          }
+        );
+        if (!response.ok) {
+          const errorBody = await response.text().catch(() => '');
+          throw new Error(errorBody || 'შეტყობინებების მიღება ვერ მოხერხდა.');
+        }
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('შეტყობინებების მონაცემები არასწორია.');
+        if (!isCurrentOwner()) return;
+        setNotificationsError('');
+        setNotifications(rows.map((n) => ({
+          id: String(n.id),
+          orderId: n.order_id,
+          status: n.status,
+          title: '',
+          message: '',
+          date: n.created_at ? new Date(n.created_at).toLocaleString(currentLang === 'en' ? 'en-GB' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : '',
+          read: Boolean(n.read_at),
+          readAt: n.read_at || null
+        })));
+      } catch (error) {
+        if (isCurrentOwner()) {
+          console.error('Order notifications fetch failed:', error);
+          setNotifications([]);
+          setNotificationsError(currentLang === 'en'
+            ? 'Notifications are temporarily unavailable. Please try again shortly.'
+            : currentLang === 'ru'
+              ? 'Уведомления временно недоступны. Повторите попытку позже.'
+              : 'შეტყობინებები დროებით მიუწვდომელია. სცადეთ მოგვიანებით.');
+        }
+      } finally {
+        requestInFlight = false;
+        if (isCurrentOwner()) setNotificationsLoading(false);
+      }
+    };
+
+    if (!currentUser?.id) {
+      setNotifications([]);
+      setNotificationsError('');
+      setNotificationsLoading(false);
+      return () => { active = false; };
+    }
+    void loadNotifications();
+    const interval = window.setInterval(() => void loadNotifications(), 30000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void loadNotifications();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [currentUser?.id, currentLang]);
+
   const fetchOrders = async () => {
+    // Prevent overlapping 15-second refreshes from applying stale order snapshots.
+    if (!adminOrdersSessionActive.current || adminOrdersFetchLock.current) return;
+    const requestSessionVersion = adminOrdersSessionVersion.current;
+    adminOrdersFetchLock.current = true;
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
         { headers: await getSupabaseHeaders({ authenticated: true }) }
       );
-
-      if (res.ok) {
-        const data = await res.json();
-
-        setOrders(
-          data.map((o) => ({
-            id: o.id,
-            created_at: o.created_at || null,
-            date: o.created_at
-              ? new Date(o.created_at).toLocaleDateString('ka-GE')
-              : 'დღეს',
-            time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
-            customerName: o.customer_name,
-            user_email: o.customer_email || o.user_email || '',
-            phone: o.phone,
-            address: o.address,
-            totalGEL: Number(o.total_gel) || 0,
-            status: o.status || 'ახალი',
-            adminNote: o.admin_note || '',
-            items: Array.isArray(o.items) ? o.items : [],
-            stock_deducted_at: o.stock_deducted_at || null,
-            stock_restored_at: o.stock_restored_at || null,
-            status_changed_at: o.status_changed_at || null,
-            itemSummary: Array.isArray(o.items)
-              ? o.items
-                  .map((i) => `${i.name} (x${i.quantity})`)
-                  .join(', ')
-              : 'პროდუქტები'
-          }))
-        );
+      if (!res.ok) {
+        const errorBody = await res.text().catch(() => '');
+        throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
       }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
+      // Do not restore private admin data after logout while a request is pending.
+      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
+      setOrders(data.map((o) => {
+        const items = normalizeOrderItems(o.items);
+        return {
+          id: o.id,
+          created_at: o.created_at || null,
+          date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+          time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
+          customerName: o.customer_name || '',
+          user_email: o.customer_email || o.user_email || '',
+          phone: o.phone || '',
+          address: o.address || '',
+          totalGEL: normalizeOrderTotal(o.total_gel),
+          status: o.status || 'ახალი',
+          adminNote: o.admin_note || '',
+          items,
+          stock_deducted_at: o.stock_deducted_at || null,
+          stock_restored_at: o.stock_restored_at || null,
+          status_changed_at: o.status_changed_at || null,
+          itemSummary: items.length > 0
+            ? items.map((i) => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ')
+            : 'პროდუქტები'
+        };
+      }));
     } catch (error) {
       console.error('Orders fetch error:', error);
+    } finally {
+      adminOrdersFetchLock.current = false;
     }
   };
 
   const fetchProductsFromDatabase = async () => {
+    if (productsFetchLock.current) {
+      // Coalesce overlapping triggers into one fresh follow-up request.
+      productsFetchQueued.current = true;
+      return;
+    }
+
+    productsFetchLock.current = true;
+    const requestAccessEpoch = productsAccessEpoch.current;
+    const requestAdminLoggedIn = adminAccessRef.current;
+
     try {
       let res;
-      if (adminLoggedIn) {
+      if (requestAdminLoggedIn) {
         const requestAdminProducts = async () => fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_products`, {
           method: 'POST',
           headers: await getSupabaseHeaders({ authenticated: true }),
@@ -770,8 +1326,8 @@ export default function App() {
           vendor: p.vendor || 'GEOSTORE',
           description: p.description || '',
           image: p.image || null,
-          availableSizes: p.available_sizes || ['S', 'M', 'L', 'XL'],
-          availableColors: p.available_colors || ['შავი', 'თეთრი'],
+          availableSizes: Array.isArray(p.available_sizes) ? p.available_sizes : [],
+          availableColors: Array.isArray(p.available_colors) ? p.available_colors : [],
           gallery: p.gallery || (p.image ? [p.image] : []),
           variants: p.variants || [],
           tags: p.tags || [],
@@ -797,11 +1353,23 @@ export default function App() {
           return rightTime - leftTime || String(left.id ?? '').localeCompare(String(right.id ?? ''));
         });
 
+        // Never let an old auth session or superseded request replace fresh catalogue data.
+        if (
+          requestAccessEpoch !== productsAccessEpoch.current ||
+          productsFetchQueued.current
+        ) return;
+
         // The products state persistence effect below owns the local cache write.
         setProducts(formatted);
       }
     } catch (error) {
       console.error('Products fetch error:', error);
+    } finally {
+      productsFetchLock.current = false;
+      if (productsFetchQueued.current) {
+        productsFetchQueued.current = false;
+        void fetchProductsFromDatabase();
+      }
     }
   };
 
@@ -826,7 +1394,11 @@ export default function App() {
       throw new Error(errorBody || 'შეკვეთის მოძებნა ვერ მოხერხდა.');
     }
 
-    return response.json();
+    const result = await response.json();
+    if (result?.rateLimited === true) {
+      throw new Error('ORDER_TRACKING_RATE_LIMITED');
+    }
+    return result;
   };
 
   const fetchStorePricingSettings = async () => {
@@ -893,16 +1465,41 @@ export default function App() {
     document.addEventListener('visibilitychange', refreshProductsWhenVisible);
 
     if (!adminLoggedIn) {
+      adminOrdersSessionActive.current = false;
+      adminOrdersSessionVersion.current += 1;
+      // Never retain private administrator order snapshots after access is lost.
+      setOrders([]);
       return () => document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     }
 
-    // Keep the existing admin order refresh cadence without repeatedly
-    // downloading the full public catalogue.
+    adminOrdersSessionActive.current = true;
+    adminOrdersSessionVersion.current += 1;
+    // Realtime delivers new/updated orders immediately. Keep the 15-second
+    // refresh as a recovery path if the websocket disconnects or an event is missed.
     fetchOrders();
+    const orderChannel = supabase
+      .channel('geostore-admin-orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          // Re-fetch through the authenticated REST path so RLS and
+          // session-version checks remain active; never trust event payloads.
+          void fetchOrders();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && adminOrdersSessionActive.current) {
+          void fetchOrders();
+        }
+      });
     const interval = setInterval(fetchOrders, 15000);
 
     return () => {
+      adminOrdersSessionActive.current = false;
+      adminOrdersSessionVersion.current += 1;
       clearInterval(interval);
+      void supabase.removeChannel(orderChannel);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
   }, [adminLoggedIn]);
@@ -946,28 +1543,41 @@ export default function App() {
   }, [vendorsList]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('geostore_cart', JSON.stringify(cart));
-    } catch {}
-  }, [cart]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        'geostore_wishlist',
-        JSON.stringify(wishlist)
-      );
-    } catch {}
-  }, [wishlist]);
-
-  useEffect(() => {
+    const activeOwner = activeCartOwnerRef.current;
+    if (!canPersistCartForOwner({
+      authLoading,
+      activeOwner,
+      currentUserId: currentUser?.id
+    })) return;
     try {
       localStorage.setItem(
-        'geostore_comparison',
-        JSON.stringify(comparisonList)
+        getCartStorageKey(activeOwner.userId),
+        JSON.stringify(sanitizeCartSnapshot(cart))
       );
     } catch {}
-  }, [comparisonList]);
+  }, [cart, currentUser?.id, authLoading]);
+
+  useEffect(() => {
+    const activeOwner = activeCartOwnerRef.current;
+    if (!canPersistCartForOwner({ authLoading, activeOwner, currentUserId: currentUser?.id })) return;
+    try {
+      localStorage.setItem(
+        getUserScopedCollectionStorageKey('geostore_wishlist', activeOwner.userId),
+        JSON.stringify(sanitizeProductCollection(wishlist, 100))
+      );
+    } catch {}
+  }, [wishlist, currentUser?.id, authLoading]);
+
+  useEffect(() => {
+    const activeOwner = activeCartOwnerRef.current;
+    if (!canPersistCartForOwner({ authLoading, activeOwner, currentUserId: currentUser?.id })) return;
+    try {
+      localStorage.setItem(
+        getUserScopedCollectionStorageKey('geostore_comparison', activeOwner.userId),
+        JSON.stringify(sanitizeProductCollection(comparisonList, 4))
+      );
+    } catch {}
+  }, [comparisonList, currentUser?.id, authLoading]);
 
   useEffect(() => {
     try {
@@ -1005,29 +1615,9 @@ export default function App() {
     } catch {}
   }, [bannersList]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        'geostore_notifications',
-        JSON.stringify(notifications)
-      );
-    } catch {}
-  }, [notifications]);
-
-  const cartSubtotalGEL = useMemo(() => {
-    const itemsToCalc = quickBuyProduct
-      ? [quickBuyProduct]
-      : cart;
-
-    return itemsToCalc.reduce((acc, item) => {
-      const rawPrice = item?.priceGEL ?? item?.price;
-      const price = Number(rawPrice);
-      const rawQuantity = Number(item?.quantity ?? 1);
-      const quantity = Number.isFinite(rawQuantity) ? Math.max(1, Math.floor(rawQuantity)) : 1;
-      if (!Number.isFinite(price) || price < 0) return acc;
-      return acc + price * quantity;
-    }, 0);
-  }, [cart, quickBuyProduct]);
+  const cartSubtotalGEL = useMemo(() => calculateCartSubtotalGEL(
+    quickBuyProduct ? [quickBuyProduct] : cart
+  ), [cart, quickBuyProduct]);
 
   const currentDeliveryCost = useMemo(() => {
     if (selectedRegion === 'tbilisi') {
@@ -1099,15 +1689,18 @@ export default function App() {
   };
 
   const addToCart = (product, quantity = 1) => {
-    const requestedQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+    const requestedQuantity = Number(quantity);
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 100) {
+      showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
+      return false;
+    }
+
     const selectedSize = String(product?.selectedSize || '').trim();
     const selectedColor = String(product?.selectedColor || '').trim();
-    const allowedSizes = Array.isArray(product?.availableSizes)
-      ? product.availableSizes.map(value => String(value).trim()).filter(Boolean)
-      : [];
-    const allowedColors = Array.isArray(product?.availableColors)
-      ? product.availableColors.map(value => String(value).trim()).filter(Boolean)
-      : [];
+    const customVariantId = String(product?.customVariantId || '').trim();
+    const customVariant = customVariantId ? getCustomProductVariant(product, customVariantId) : null;
+    const allowedSizes = getAvailableProductSizes(product);
+    const allowedColors = getAvailableProductColors(product);
 
     if (selectedSize && !allowedSizes.includes(selectedSize)) {
       showToast('არჩეული ზომა ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
@@ -1117,51 +1710,66 @@ export default function App() {
       showToast('არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
       return false;
     }
-
-    const rawAvailableStock = Number(product?.stock ?? 0);
-    const availableStock = Number.isFinite(rawAvailableStock) ? Math.max(0, Math.floor(rawAvailableStock)) : 0;
-    // A product can have multiple clothing sizes/colors in one cart.
-    // Keep each selected variant as a separate line, while enforcing stock
-    // against the total quantity of the underlying product across all variants.
-    const sameProduct = (item) => item.id === product.id && item.name === product.name;
-    const sameCartLine = (item) =>
-      sameProduct(item) &&
-      (item.selectedSize || null) === (product.selectedSize || null) &&
-      (item.selectedColor || null) === (product.selectedColor || null);
-    const existingCartLine = cart.find(sameCartLine);
-    const alreadyInCart = cart
-      .filter(sameProduct)
-      .reduce((total, item) => total + Math.max(0, Math.floor(Number(item.quantity) || 0)), 0);
-
-    if (availableStock <= 0) {
-      showToast('პროდუქტი ამჟამად მარაგში არ არის.');
+    if (customVariantId && (!customVariant || customVariant.stock <= 0)) {
+      showToast('არჩეული ვარიანტი აღარ არის ხელმისაწვდომი.');
+      return false;
+    }
+    if (Array.isArray(product?.variants) && product.variants.length > 0 && !customVariantId) {
+      showToast('შეკვეთამდე აირჩიეთ პროდუქტის ვარიანტი.');
       return false;
     }
 
-    if (alreadyInCart + requestedQuantity > availableStock) {
-      showToast(`მარაგში დარჩენილია მხოლოდ ${Math.max(0, availableStock - alreadyInCart)} ცალი.`);
-      return false;
-    }
+    // Use the latest cart snapshot synchronously so rapid taps cannot
+    // bypass stock limits before React has committed the previous update.
+    const result = addProductToCart(cartRef.current, {
+      ...product,
+      selectedSize: selectedSize || null,
+      selectedColor: selectedColor || null,
+      customVariantId: customVariant?.id || null,
+      customVariantName: customVariant?.name || '',
+      stock: customVariant ? customVariant.stock : product.stock
+    }, requestedQuantity);
 
-    setCart((prev) => {
-      const existing = prev.find(sameCartLine);
-
-      if (existing) {
-        return prev.map((item) =>
-          sameCartLine(item)
-            ? {
-                ...item,
-                quantity: item.quantity + requestedQuantity
-              }
-            : item
-        );
+    if (!result.valid) {
+      if (result.reason === 'stock') {
+        showToast('პროდუქტი ამჟამად მარაგში არ არის.');
+      } else if (result.reason === 'limit') {
+        showToast(`მარაგში დარჩენილია მხოლოდ ${result.remaining} ცალი.`);
+      } else {
+        showToast('რაოდენობა უნდა იყოს მთელი რიცხვი 1-დან 100-მდე.');
       }
+      return false;
+    }
 
-      return [...prev, { ...product, quantity: requestedQuantity }];
-    });
-
+    cartRef.current = result.cart;
+    setCart(result.cart);
     showToast(`🛒 "${product.name}" დაემატა კალათაში!`);
     return true;
+  };
+
+  const changeCartQuantity = (item, nextQuantity) => {
+    const currentProduct = products.find(product => String(product.id) === String(item.id));
+    const currentVariant = item.customVariantId ? getCustomProductVariant(currentProduct, item.customVariantId) : null;
+    const result = updateProductCartQuantity(cartRef.current, {
+      ...item,
+      // Never trust the stock snapshot stored in localStorage when the live
+      // product or selected custom variant has disappeared from the catalogue.
+      stock: getCurrentCartItemStock(currentProduct, item)
+    }, nextQuantity);
+    if (!result.valid) {
+      if (result.reason === 'limit') {
+        showToast(currentLang === 'en' ? 'No more stock is available.' : currentLang === 'ru' ? 'Больше товара нет в наличии.' : 'მარაგში მეტი რაოდენობა აღარ არის.');
+      }
+      return;
+    }
+    cartRef.current = result.cart;
+    setCart(result.cart);
+  };
+
+  const removeFromCart = (item) => {
+    const nextCart = removeProductFromCart(cartRef.current, item);
+    cartRef.current = nextCart;
+    setCart(nextCart);
   };
 
   const toggleWishlist = (product) => {
@@ -1251,13 +1859,41 @@ export default function App() {
     const email = authForm.email.trim().toLowerCase();
     const password = authForm.password;
 
-    if (!email || !password) {
+    if ((authMode !== 'reset-password' && !email) || (authMode !== 'reset-request' && !password)) {
       alert(currentLang === 'en' ? 'Enter your email and password.' : currentLang === 'ru' ? 'Введите электронную почту и пароль.' : 'შეიყვანეთ ელ-ფოსტა და პაროლი.');
       return;
     }
 
-    if (password.length < 6) {
-      alert(currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.');
+    if (authMode === 'reset-request' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert(currentLang === 'en' ? 'Enter a valid email address.' : currentLang === 'ru' ? 'Введите корректный адрес электронной почты.' : 'შეიყვანეთ სწორი ელ-ფოსტა.');
+      return;
+    }
+
+    if (authMode === 'reset-request') {
+      if (authSubmitLock.current) return;
+      authSubmitLock.current = true;
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: 'https://geostore.vercel.app/'
+        });
+        if (error) throw error;
+        setIsAuthOpen(false);
+        showToast(currentLang === 'en'
+          ? 'If an account exists for this email, a password reset link has been sent.'
+          : currentLang === 'ru'
+            ? 'Если аккаунт с таким адресом существует, ссылка для сброса пароля отправлена.'
+            : 'თუ ამ ელ-ფოსტით ანგარიში არსებობს, პაროლის აღდგენის ბმული გამოგზავნილია.');
+      } catch (error) {
+        console.error('Password reset request failed:', error);
+        alert(currentLang === 'en' ? 'Could not send the reset email. Please try again later.' : currentLang === 'ru' ? 'Не удалось отправить письмо. Попробуйте позже.' : 'აღდგენის წერილის გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
+      } finally {
+        authSubmitLock.current = false;
+      }
+      return;
+    }
+
+    if (password.length < (authMode === 'reset-password' || authMode === 'register' ? 10 : 6)) {
+      alert(authMode === 'reset-password' || authMode === 'register' ? (currentLang === 'en' ? 'Password must contain at least 10 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 10 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 10 სიმბოლოს.') : (currentLang === 'en' ? 'Password must contain at least 6 characters.' : currentLang === 'ru' ? 'Пароль должен содержать не менее 6 символов.' : 'პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს.'));
       return;
     }
 
@@ -1266,17 +1902,100 @@ export default function App() {
     authSubmitLock.current = true;
 
     try {
-      if (authMode === 'register') {
+      if (authMode === 'reset-password') {
+        const passwordCheck = validateRegistrationPassword(password);
+        if (!passwordCheck.valid) {
+          const message = currentLang === 'en'
+            ? 'Use at least 10 characters with uppercase, lowercase, a number and a symbol.'
+            : currentLang === 'ru'
+              ? 'Используйте не менее 10 символов, включая заглавные и строчные буквы, цифру и символ.'
+              : 'გამოიყენეთ მინიმუმ 10 სიმბოლო, დიდი და პატარა ასოებით, ციფრითა და სპეციალური სიმბოლოთი.';
+          alert(message);
+          return;
+        }
+        const pwned = await checkPwnedPassword(password);
+        if (!pwned.valid) {
+          alert(currentLang === 'en' ? 'Choose a different password; this password is unsafe or could not be checked.' : currentLang === 'ru' ? 'Выберите другой пароль: этот пароль небезопасен или его не удалось проверить.' : 'აირჩიეთ სხვა პაროლი — ეს პაროლი არასაიმედოა ან მისი შემოწმება ვერ მოხერხდა.');
+          return;
+        }
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) throw signOutError;
+        setCurrentUser(null);
+        setAdminLoggedIn(false);
+        setActiveTab('store');
+        setAuthMode('login');
+        setAuthForm({ name: '', phone: '', email: '', password: '' });
+        setIsAuthOpen(false);
+        showToast(currentLang === 'en' ? 'Password updated. Please sign in again.' : currentLang === 'ru' ? 'Пароль обновлён. Войдите снова.' : 'პაროლი განახლდა. გთხოვთ, ხელახლა შეხვიდეთ.');
+      } else if (authMode === 'register') {
+        const passwordCheck = validateRegistrationPassword(password);
+        if (!passwordCheck.valid) {
+          const passwordMessages = {
+            length: {
+              ka: 'პაროლი უნდა შეიცავდეს მინიმუმ 10 სიმბოლოს.',
+              en: 'Password must contain at least 10 characters.',
+              ru: 'Пароль должен содержать не менее 10 символов.'
+            },
+            lowercase: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი პატარა ლათინური ასო.',
+              en: 'Add at least one lowercase letter.',
+              ru: 'Добавьте хотя бы одну строчную латинскую букву.'
+            },
+            uppercase: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი დიდი ლათინური ასო.',
+              en: 'Add at least one uppercase letter.',
+              ru: 'Добавьте хотя бы одну заглавную латинскую букву.'
+            },
+            number: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი ციფრი.',
+              en: 'Add at least one number.',
+              ru: 'Добавьте хотя бы одну цифру.'
+            },
+            symbol: {
+              ka: 'პაროლში დაამატეთ მინიმუმ ერთი სპეციალური სიმბოლო.',
+              en: 'Add at least one special character.',
+              ru: 'Добавьте хотя бы один специальный символ.'
+            },
+            common: {
+              ka: 'ეს პაროლი ძალიან გავრცელებულია. აირჩიეთ განსხვავებული პაროლი.',
+              en: 'This password is too common. Choose a different password.',
+              ru: 'Этот пароль слишком распространён. Выберите другой пароль.'
+            }
+          };
+          alert(passwordMessages[passwordCheck.reason]?.[currentLang] || passwordMessages.length.ka);
+          return;
+        }
+
+        const pwnedPasswordCheck = await checkPwnedPassword(password);
+        if (!pwnedPasswordCheck.valid) {
+          const pwnedMessages = {
+            pwned: {
+              ka: 'ეს პაროლი ცნობილია მონაცემთა გაჟონვებიდან. უსაფრთხოებისთვის აირჩიეთ სხვა პაროლი.',
+              en: 'This password appears in known data breaches. Choose a different password.',
+              ru: 'Этот пароль найден в известных утечках данных. Выберите другой пароль.'
+            },
+            unavailable: {
+              ka: 'პაროლის უსაფრთხოების შემოწმება დროებით ვერ შესრულდა. სცადეთ ხელახლა.',
+              en: 'The password safety check is temporarily unavailable. Please try again.',
+              ru: 'Проверка безопасности пароля временно недоступна. Попробуйте ещё раз.'
+            }
+          };
+          alert(pwnedMessages[pwnedPasswordCheck.reason]?.[currentLang] || pwnedMessages.unavailable.ka);
+          return;
+        }
+
         const name = authForm.name.trim();
         const phone = authForm.phone.trim();
 
-        if (name.length < 2 || name.length > 100) {
-          alert(currentLang === 'en' ? 'Name must contain 2–100 characters.' : currentLang === 'ru' ? 'Имя должно содержать 2–100 символов.' : 'სახელი უნდა შეიცავდეს 2–100 სიმბოლოს.');
+        if (name.length < 2 || name.length > 100 || /[\u0000-\u001f\u007f]/.test(name)) {
+          alert(currentLang === 'en' ? 'Name must contain 2–100 valid characters.' : currentLang === 'ru' ? 'Имя должно содержать 2–100 допустимых символов.' : 'სახელი უნდა შეიცავდეს 2–100 დასაშვებ სიმბოლოს.');
           return;
         }
         const normalizedPhone = phone.replace(/\D/g, '');
-        if (!/^\d{9,15}$/.test(normalizedPhone)) {
-          alert(currentLang === 'en' ? 'Phone number must contain 9–15 digits.' : currentLang === 'ru' ? 'Номер телефона должен содержать 9–15 цифр.' : 'ტელეფონის ნომერი უნდა შეიცავდეს 9–15 ციფრს.');
+        if (!/^\+?[0-9()\s-]+$/.test(phone) || !/^\d{9,15}$/.test(normalizedPhone)) {
+          alert(currentLang === 'en' ? 'Enter a valid phone number with 9–15 digits.' : currentLang === 'ru' ? 'Введите корректный номер телефона из 9–15 цифр.' : 'შეიყვანეთ სწორი ტელეფონის ნომერი 9–15 ციფრით.');
           return;
         }
 
@@ -1383,7 +2102,7 @@ export default function App() {
         message.toLowerCase().includes('password should be at least') ||
         message.toLowerCase().includes('weak password')
       ) {
-        alert(currentLang === 'en' ? 'Choose a stronger password with at least 6 characters.' : currentLang === 'ru' ? 'Выберите более надежный пароль длиной не менее 6 символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი, მინიმუმ 6 სიმბოლოთი.');
+        alert(currentLang === 'en' ? 'Choose a stronger password with at least 10 characters and mixed character types.' : currentLang === 'ru' ? 'Выберите более надёжный пароль длиной не менее 10 символов с разными типами символов.' : 'აირჩიეთ უფრო ძლიერი პაროლი — მინიმუმ 10 სიმბოლო, დიდი და პატარა ასო, ციფრი და სპეციალური სიმბოლო.');
       } else {
         alert(
           currentLang === 'en' ? `Sign-in error: ${message || 'Unknown error'}` : currentLang === 'ru' ? `Ошибка входа: ${message || 'Неизвестная ошибка'}` : `ავტორიზაციის შეცდომა: ${message || 'უცნობი შეცდომა'}`
@@ -1403,6 +2122,13 @@ export default function App() {
       }
 
       setCurrentUser(null);
+      setAdminLoggedIn(false);
+      setOrders([]);
+      setMyOrders([]);
+      setCheckoutForm({ name: '', phone: '', email: '', address: '' });
+      setAuthForm({ name: '', phone: '', email: '', password: '' });
+      setAppliedCoupon(null);
+      setPromoInput('');
       setActiveTab('store');
 
       showToast(currentLang === 'en' ? 'Signed out successfully.' : currentLang === 'ru' ? 'Вы успешно вышли из аккаунта.' : 'ანგარიშიდან წარმატებით გამოხვედით.');
@@ -1445,7 +2171,8 @@ export default function App() {
     orderSubmitLock.current = true;
     setIsSubmittingOrder(true);
     setCheckoutError('');
-    showToast('შეკვეთის გაგზავნა დაიწყო...');
+    // The submit button already shows the loading state; avoid a stale toast
+    // covering the order confirmation dialog after the server commits.
 
     const customerName = checkoutForm.name?.trim() || '';
     const customerPhone = checkoutForm.phone?.trim() || '';
@@ -1494,14 +2221,20 @@ export default function App() {
       const rawPurchaseCost = catalogProduct?.purchaseCost ?? catalogProduct?.purchase_cost;
       const purchaseCost = rawPurchaseCost === null || rawPurchaseCost === undefined || rawPurchaseCost === ''
         ? null
-        : (Number.isFinite(Number(rawPurchaseCost)) && Number(rawPurchaseCost) > 0 ? Number(rawPurchaseCost) : null);
+        : (Number.isFinite(Number(rawPurchaseCost)) && Number(rawPurchaseCost) >= 0 ? Number(rawPurchaseCost) : null);
       return {
         id: item.id,
         name: item.name,
-        price: Number(item.priceGEL ?? item.price) || 0,
+        image: catalogProduct?.image || item.image || item.img || '',
+        price: Number(item.basePriceGEL ?? item.priceGEL ?? item.price) || 0,
         quantity: Number(quantity ?? 1),
         selected_size: item.selectedSize || null,
         selected_color: item.selectedColor || null,
+        custom_variant_id: item.customVariantId || null,
+        custom_variant_name: item.customVariantName || null,
+        gift_wrap: item.giftWrap === true,
+        vip_warranty: item.vipWarranty === true,
+        gift_message: item.giftWrap === true ? String(item.giftMessage ?? '').trim().slice(0, 240) : '',
         purchase_cost: purchaseCost,
         category: catalogProduct?.category || item.category || '',
         vendor: catalogProduct?.vendor || item.vendor || ''
@@ -1568,7 +2301,7 @@ export default function App() {
       // customer-facing stale-cart guard; the SQL RPC still rechecks price
       // and stock under row locks and remains the source of truth.
       const catalogueResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/products?select=id,name,price_gel,stock`,
+        `${SUPABASE_URL}/rest/v1/products?select=${CHECKOUT_CATALOG_SELECT}`,
         { headers: await getSupabaseHeaders() }
       );
       if (!catalogueResponse.ok) {
@@ -1589,11 +2322,20 @@ export default function App() {
             : product;
         }));
         const changedNames = [...new Set(reconciliation.changes.map((change) => change.name).filter(Boolean))].slice(0, 3).join(', ');
+        const hasVariantChange = reconciliation.changes.some((change) =>
+          change.type === 'variant_size' || change.type === 'variant_color'
+        );
         const message = currentLang === 'en'
-          ? `The price or stock changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
+          ? hasVariantChange
+            ? `A selected size or color is no longer available for: ${changedNames}. Remove that item from your cart or choose an available option, then try again.`
+            : `The price or stock changed for: ${changedNames}. Your cart has been refreshed. Please review it and place the order again.`
           : currentLang === 'ru'
-            ? `Цена или наличие изменились для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
-            : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
+            ? hasVariantChange
+              ? `Выбранный размер или цвет больше недоступен для: ${changedNames}. Удалите товар из корзины или выберите доступный вариант, затем повторите заказ.`
+              : `Цена или наличие изменились для: ${changedNames}. Корзина обновлена. Проверьте её и повторите оформление заказа.`
+            : hasVariantChange
+              ? `არჩეული ზომა ან ფერი აღარ არის ხელმისაწვდომი: ${changedNames}. წაშალეთ ეს ნივთი კალათიდან ან აირჩიეთ ხელმისაწვდომი ვარიანტი და სცადეთ თავიდან.`
+              : `შეიცვალა ფასი ან მარაგი: ${changedNames}. კალათა განახლდა. გადაამოწმეთ მონაცემები და ხელახლა გააფორმეთ შეკვეთა.`;
         setCheckoutError(message);
         showToast(message);
         setIsSubmittingOrder(false);
@@ -1758,7 +2500,7 @@ export default function App() {
               id: orderId,
               customer_name: customerName,
               phone: customerPhone,
-              address: `${customerAddress} (${regionText}, მიწოდება: ${currentDeliveryCost} ₾)`,
+              address: buildOrderDeliveryAddress({ address: customerAddress, regionText, deliveryFee: currentDeliveryCost }),
               // სტუმრის იდენტობა ბაზის ფუნქციას ცალკე sentinel-ით გადაეცემა;
               // საკონტაქტო ელფოსტა ინახება customer_email ველში.
               user_email: orderSession?.user?.email || 'guest',
@@ -1780,9 +2522,11 @@ export default function App() {
       }
 
       serverOrderResult = await response.json();
-      if (!serverOrderResult?.order_id || serverOrderResult.order_id !== orderId) {
+      const orderConfirmationCheck = validateOrderCreationResponse(serverOrderResult, orderId);
+      if (!orderConfirmationCheck.valid) {
         throw new Error('სერვერისგან შეკვეთის დადასტურება ვერ მივიღეთ.');
       }
+      orderId = orderConfirmationCheck.orderId;
     } catch (err) {
       console.error('Order submission failed:', err);
       const message = getCheckoutErrorMessage(err, currentLang);
@@ -1793,20 +2537,27 @@ export default function App() {
       return;
     }
 
+    const confirmedItems = normalizeOrderItems(
+      Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder
+    );
+    const confirmedTotal = Number(serverOrderResult.total_gel);
+    const confirmedDelivery = Number(serverOrderResult.delivery_gel);
+    const safeConfirmedTotal = Number.isFinite(confirmedTotal) && confirmedTotal >= 0 ? confirmedTotal : 0;
+    const safeConfirmedDelivery = Number.isFinite(confirmedDelivery) && confirmedDelivery >= 0 ? confirmedDelivery : 0;
     const newOrderObj = {
       id: orderId,
       date: new Date().toLocaleDateString('ka-GE'),
       customer_name: customerName,
       phone: customerPhone,
-      address: `${customerAddress} (${regionText}, მიწოდება: ${Number(serverOrderResult.delivery_gel) || 0} ₾)`,
+      address: `${customerAddress} (${regionText}, მიწოდება: ${safeConfirmedDelivery} ₾)`,
       user_email: orderUserEmail,
-      items: Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder,
-      totalGEL: Number(serverOrderResult.total_gel),
-      total_gel: Number(serverOrderResult.total_gel),
+      items: confirmedItems,
+      totalGEL: safeConfirmedTotal,
+      total_gel: safeConfirmedTotal,
       status: 'ახალი',
-      itemSummary: (Array.isArray(serverOrderResult.items) ? serverOrderResult.items : itemsToOrder)
-        .map((i) => `${i.name} (x${i.quantity})`)
-        .join(', ')
+      itemSummary: confirmedItems.length > 0
+        ? confirmedItems.map((item) => `${item.name || 'პროდუქტი'}${item.customVariantName ? ` — ${item.customVariantName}` : ''} (x${item.quantity || 1})`).join(', ')
+        : 'პროდუქტები'
     };
 
     setOrders((prev) => [
@@ -1824,7 +2575,7 @@ export default function App() {
     setCheckoutError('');
     setIsSubmittingOrder(false);
     orderSubmitLock.current = false;
-    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: Number(serverOrderResult.total_gel) });
+    setOrderConfirmation({ id: orderId, email: orderUserEmail, totalGEL: safeConfirmedTotal });
     if (pendingCheckoutRef.current?.orderId === orderId) pendingCheckoutRef.current = null;
     try {
       const savedPendingCheckout = JSON.parse(window.sessionStorage.getItem('geostore.pendingCheckout') || 'null');
@@ -1835,36 +2586,23 @@ export default function App() {
     setCart([]);
     setAppliedCoupon(null);
 
-    showToast(
-      `✅ შეკვეთა #${orderId} წარმატებით გაფორმდა!`
-    );
+    // The confirmation dialog is the single success surface and displays the full order code.
   };
 
+  // Category and subcategory filtering belongs to StoreView, which has the
+  // parent/child category tree. Filtering by the parent name here first would
+  // discard products assigned to its subcategories before StoreView can include them.
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const matchesCategory =
-        selectedCategory === t.allCategories ||
-        selectedCategory === 'ყველა' ||
-        p.category === selectedCategory;
-
       const matchesVendor =
         selectedVendorFilter === t.allVendors ||
         selectedVendorFilter === 'ყველა' ||
         p.vendor === selectedVendorFilter;
 
-      const matchesSearch = p.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-      return (
-        matchesCategory &&
-        matchesVendor &&
-        matchesSearch
-      );
+      return matchesVendor && matchesProductSearch(p, searchQuery);
     });
   }, [
     products,
-    selectedCategory,
     selectedVendorFilter,
     searchQuery,
     t
@@ -1874,7 +2612,7 @@ export default function App() {
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
   return (
-    <div className={`geostore-shell ${activeTab === 'store' ? 'geostore-fashion-store' : '' } min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`}>
+    <div className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`}>
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
@@ -1931,9 +2669,17 @@ export default function App() {
 
       <main className="w-full max-w-[1440px] min-w-0 mx-auto px-4 sm:px-6 py-6 flex-1 space-y-8 box-border">
         {activeTab === 'store' && (
+          <Suspense
+            fallback={(
+              <div role="status" aria-live="polite" className="w-full min-h-[40vh] flex items-center justify-center text-sm text-stone-500">
+                {currentLang === 'ka' ? 'მაღაზია იტვირთება...' : currentLang === 'ru' ? 'Магазин загружается...' : 'Loading store...'}
+              </div>
+            )}
+          >
           <StoreView
             currentLang={currentLang}
             siteSettings={siteSettings}
+            banners={bannersList || []}
             categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
@@ -1945,6 +2691,7 @@ export default function App() {
             addToCart={addToCart}
             formatPrice={formatPrice}
           />
+          </Suspense>
         )}
 
         {activeTab === 'wardrobe' && (
@@ -1987,6 +2734,8 @@ export default function App() {
             setCategoriesList={setCategoriesList}
             bannersList={bannersList || []}
             setBannersList={setBannersList}
+            onSaveStorefrontDraft={handleSaveStorefrontDraft}
+            storefrontDraftBusy={storefrontDraftBusy}
             onPublishStorefront={handlePublishStorefront}
             storefrontPublishBusy={storefrontPublishBusy}
             siteSettings={siteSettings}
@@ -1999,9 +2748,9 @@ export default function App() {
         )}
 
         {activeTab === 'wishlist' && (
-          <div className="space-y-6">
+          <div className="gs-wishlist-page space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <h2 className="gs-wishlist-title text-xl font-black tracking-tight flex items-center gap-2">
                 <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
                 {t.wishlist} ({wishlist.length})
               </h2>
@@ -2009,7 +2758,7 @@ export default function App() {
               {wishlist.length > 0 && (
                 <button
                   onClick={handleShareWishlist}
-                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                  className="gs-wishlist-share bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
                 >
                   <Share2 className="w-4 h-4" />
                   {t.shareList}
@@ -2018,29 +2767,29 @@ export default function App() {
             </div>
 
             {wishlist.length === 0 ? (
-              <p className="text-slate-500 text-xs py-8">
+              <p className="gs-wishlist-empty text-slate-500 text-xs py-8">
                 {t.emptyWishlist}
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="gs-wishlist-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {wishlist.map((prod) => (
                   <div
                     key={prod.id}
-                    className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
+                    className="gs-wishlist-card bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-center justify-between backdrop-blur-2xl shadow-xl"
                   >
                     <div className="flex items-center gap-3.5">
                       <img
                         src={prod.image}
                         alt=""
-                        className="w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
+                        className="gs-wishlist-image w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
                       />
 
                       <div>
-                        <h4 className="font-bold text-xs text-white line-clamp-1">
+                        <h4 className="gs-wishlist-product-title font-bold text-xs line-clamp-1">
                           {prod.name}
                         </h4>
 
-                        <p className="text-emerald-400 font-black text-xs mt-1">
+                        <p className="gs-wishlist-product-price font-black text-xs mt-1">
                           {formatPrice(prod.priceGEL)}
                         </p>
                       </div>
@@ -2048,7 +2797,7 @@ export default function App() {
 
                     <button
                       onClick={() => addToCart(prod)}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                      className="gs-wishlist-add bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 transition cursor-pointer"
                     >
                       {t.addToCart}
                     </button>
@@ -2078,13 +2827,14 @@ export default function App() {
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
                   {cart.map((item) => (
                     <div
-                      key={`${item.id}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}`}
+                      key={`${item.id}-${item.customVariantId || ''}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}-${item.giftWrap ? 'gift' : ''}-${item.vipWarranty ? 'vip' : ''}-${item.giftMessage || ''}`}
                       className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
                     >
                       <div className="space-y-1">
                         <h4 className="gs-cart-item-title font-bold text-xs text-white">
                           {item.name}
                         </h4>
+                        {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">ვარიანტი: {item.customVariantName}</p>}
 
                         {(item.selectedSize || item.selectedColor) && (
                           <p className="gs-cart-item-variant text-slate-400 text-[11px]">
@@ -2095,22 +2845,31 @@ export default function App() {
                           </p>
                         )}
 
+                        {(item.giftWrap || item.vipWarranty) && (
+                          <p className="gs-cart-item-options text-slate-400 text-[10px]">
+                            {[
+                              item.giftWrap ? (currentLang === 'en' ? 'Gift wrapping (+5 ₾)' : currentLang === 'ru' ? 'Подарочная упаковка (+5 ₾)' : 'სასაჩუქრე შეფუთვა (+5 ₾)') : null,
+                              item.vipWarranty ? (currentLang === 'en' ? 'VIP warranty (+15 ₾)' : currentLang === 'ru' ? 'VIP-гарантия (+15 ₾)' : 'VIP გარანტია (+15 ₾)') : null
+                            ].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                        {item.giftMessage && (
+                          <p className="gs-cart-gift-message text-slate-400 text-[10px] break-words">
+                            {currentLang === 'en' ? 'Gift message:' : currentLang === 'ru' ? 'Текст открытки:' : 'სასაჩუქრე ტექსტი:'} {item.giftMessage}
+                          </p>
+                        )}
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
-                          {formatPrice(item.priceGEL)} x {item.quantity}
+                          {formatPrice(item.priceGEL)} × {item.quantity}
                         </p>
+                        <div className="flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
+                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? 'Decrease quantity' : currentLang === 'ru' ? 'Уменьшить количество' : 'რაოდენობის შემცირება'} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
+                          <span className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
+                          <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? 'Increase quantity' : currentLang === 'ru' ? 'Увеличить количество' : 'რაოდენობის გაზრდა'} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
+                        </div>
                       </div>
 
                       <button
-                        onClick={() =>
-                          setCart((prev) =>
-                            prev.filter((c) => !(
-                              c.id === item.id &&
-                              c.name === item.name &&
-                              (c.selectedSize || null) === (item.selectedSize || null) &&
-                              (c.selectedColor || null) === (item.selectedColor || null)
-                            ))
-                          )
-                        }
+                        onClick={() => removeFromCart(item)}
                         aria-label={currentLang === 'en' ? `Remove ${item.name} from cart` : currentLang === 'ru' ? `Удалить ${item.name} из корзины` : `წაშალე ${item.name} კალათიდან`}
                         className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                       >
@@ -2322,20 +3081,20 @@ export default function App() {
               </h3>
 
               <div className="space-y-3">
-                {orders.filter(
-                  (o) =>
-                    o.user_email === currentUser.email
-                ).length === 0 ? (
+                {myOrdersLoading ? (
+                  <p className="text-slate-500 text-xs py-6 text-center">
+                    {currentLang === 'en' ? 'Loading orders…' : currentLang === 'ru' ? 'Загрузка заказов…' : 'შეკვეთები იტვირთება…'}
+                  </p>
+                ) : myOrdersError ? (
+                  <p role="status" className="text-amber-300 text-xs py-6 text-center">
+                    {myOrdersError}
+                  </p>
+                ) : myOrders.length === 0 ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
                     {t.noOrders}
                   </p>
                 ) : (
-                  orders
-                    .filter(
-                      (o) =>
-                        o.user_email === currentUser.email
-                    )
-                    .map((order) => (
+                  myOrders.map((order) => (
                       <div
                         key={order.id}
                         className="gs-profile-order-row bg-slate-950/60 border border-slate-800/80 p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner"
@@ -2349,13 +3108,14 @@ export default function App() {
                             </span>
                           </div>
 
-                          <p className="text-slate-300 text-[11px]">
-                            📍 {currentLang === 'en' ? 'Address' : currentLang === 'ru' ? 'Адрес' : 'მისამართი'}: {order.address}
-                          </p>
-
-                          <p className="text-slate-400 text-[11px]">
-                            📞 {currentLang === 'en' ? 'Phone' : currentLang === 'ru' ? 'Телефон' : 'ტელეფონი'}: {order.phone}
-                          </p>
+                          {Array.isArray(order.items) && order.items.length > 0 && (
+                            <p className="text-slate-300 text-[11px] leading-relaxed break-words">
+                              {order.items.slice(0, 3).map((item) =>
+                                `${item.name || (currentLang === 'en' ? 'Product' : currentLang === 'ru' ? 'Товар' : 'პროდუქტი')}${item.customVariantName ? ` — ${item.customVariantName}` : ''} ×${Math.max(1, Number(item.quantity) || 1)}`
+                              ).join(' · ')}
+                              {order.items.length > 3 ? ` +${order.items.length - 3}` : ''}
+                            </p>
+                          )}
                         </div>
 
                         <div className="text-right flex sm:flex-col justify-between items-center sm:items-end w-full sm:w-auto">
@@ -2444,24 +3204,31 @@ export default function App() {
                       method: 'POST',
                       headers: {
                         ...(await getSupabaseHeaders()),
-                        Prefer: 'return=representation'
+                        Prefer: 'return=minimal'
                       },
                       body: JSON.stringify({
                         id: ticketId,
                         customer_name: name,
                         email: email || null,
                         subject: subject || null,
-                        message,
-                        status: 'ღია',
-                        reply: null
+                        message
                       })
                     }
                   );
 
                   if (!response.ok) {
-                    throw new Error(
-                      'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა.'
-                    );
+                    if (response.status === 429) {
+                      throw new Error(currentLang === 'en'
+                        ? 'Too many support requests. Please try again later.'
+                        : currentLang === 'ru'
+                          ? 'Слишком много обращений. Попробуйте позже.'
+                          : 'ძალიან ბევრი მოთხოვნა გაიგზავნა. გთხოვთ, სცადოთ მოგვიანებით.');
+                    }
+                    throw new Error(currentLang === 'en'
+                      ? 'Could not send the support request. Please try again later.'
+                      : currentLang === 'ru'
+                        ? 'Не удалось отправить обращение. Попробуйте позже.'
+                        : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
                   }
 
                   alert(currentLang === 'en'
@@ -2583,6 +3350,8 @@ export default function App() {
         isNotificationsOpen={isNotificationsOpen}
         setIsNotificationsOpen={setIsNotificationsOpen}
         notifications={notifications}
+        notificationsLoading={notificationsLoading}
+        notificationsError={notificationsError}
         markAllNotificationsAsRead={markAllNotificationsAsRead}
         orders={orders}
         lookupOrderForTracking={lookupOrderForTracking}
@@ -2615,7 +3384,7 @@ export default function App() {
         products={products}
         categories={categories}
         vendorsList={vendorsList}
-        orders={orders}
+        lookupOrderForTracking={lookupOrderForTracking}
         coupons={coupons}
         siteSettings={siteSettings}
         deliveryFees={deliveryFees}

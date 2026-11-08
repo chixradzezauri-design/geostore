@@ -3,14 +3,26 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
-  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, CornerDownRight, KeyRound, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square, Eye, X 
+  Smartphone, Laptop, Headphones, Watch, Tv, Speaker, Sparkles, Gamepad2, Tablet, LayoutDashboard, ShoppingCart, BarChart3, Truck, ShieldAlert, Footprints, Shirt, Gem, Cpu, ChevronRight, ChevronUp, ChevronDown, CornerDownRight, KeyRound, Layers, UserX, UserCheck, Edit3, Calculator, Wallet, UserCog, CheckSquare, Square, Eye, X 
 } from 'lucide-react';
 
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
+import { validateProductVariants } from '../utils/productValidation';
+import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
+import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
+import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { createSecureId } from '../utils/secureId.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
+const getLocalDateInputValue = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
 const getSupabaseHeaders = async () => {
@@ -29,6 +41,11 @@ const getSupabaseHeaders = async () => {
 const PRODUCT_IMAGE_BUCKET = 'storefront-media';
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PRODUCT_GALLERY_IMAGES = 10;
+const createAdminId = (prefix) => {
+  try { return createSecureId(prefix); }
+  catch (error) { console.error('GEOSTORE secure identifier generation failed:', error); return null; }
+};
+const secureIdError = 'უსაფრთხო იდენტიფიკატორის შექმნა ვერ მოხერხდა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.';
 const PRODUCT_IMAGE_TYPES = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -56,7 +73,14 @@ const uploadProductImage = async (imageData, productId, index) => {
   const bytes = new Uint8Array(binary.length);
   for (let offset = 0; offset < binary.length; offset += 1) bytes[offset] = binary.charCodeAt(offset);
 
-  const path = `products/${encodeURIComponent(String(productId))}/${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}.${PRODUCT_IMAGE_TYPES[mimeType]}`;
+  if (!window.crypto?.getRandomValues) {
+    throw new Error('უსაფრთხო ფოტოს ატვირთვისთვის ბრაუზერის კრიპტოგრაფიული ფუნქცია მიუწვდომელია.');
+  }
+  const randomBytes = new Uint8Array(16);
+  window.crypto.getRandomValues(randomBytes);
+  const randomSuffix = Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  const safeProductId = encodeURIComponent(String(productId));
+  const path = `products/${safeProductId}/${Date.now()}-${index}-${randomSuffix}.${PRODUCT_IMAGE_TYPES[mimeType]}`;
   const headers = await getSupabaseHeaders();
   delete headers.Prefer;
   headers['Content-Type'] = mimeType;
@@ -91,10 +115,25 @@ const deleteProductImages = async (imageUrls, productId) => {
   }).filter(Boolean))];
   if (!paths.length) return true;
   try {
+    // A product-owned Storage path can still be referenced by another product.
+    // Read the lightweight image references first and fail closed if this check fails.
+    const referenceResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/products?select=id,image,gallery`,
+      { headers: await getSupabaseHeaders() }
+    );
+    if (!referenceResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
+    const productRows = await referenceResponse.json();
+    if (!Array.isArray(productRows)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+    const referencedUrls = collectReferencedProductImageUrls(productRows, productId);
+    const safePaths = paths.filter(path => {
+      const canonicalUrl = publicPrefix + path.split('/').map(encodeURIComponent).join('/');
+      return !referencedUrls.has(canonicalUrl);
+    });
+    if (!safePaths.length) return true;
     const headers = await getSupabaseHeaders();
     delete headers.Prefer;
     const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${PRODUCT_IMAGE_BUCKET}`, {
-      method: 'DELETE', headers, body: JSON.stringify({ prefixes: paths })
+      method: 'DELETE', headers, body: JSON.stringify({ prefixes: safePaths })
     });
     if (!response.ok) throw new Error(await response.text());
     return true;
@@ -115,17 +154,44 @@ const getOrderStatusClasses = (status) => {
     case 'გაგზავნილი':
     case 'გზაშია':
     case 'shipped':
+    case 'on the way':
+    case 'отправлен':
+    case 'в пути':
       return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/40';
     case 'დასრულებული':
     case 'ჩაბარებულია':
     case 'delivered':
+    case 'completed':
+    case 'доставлен':
+    case 'завершён':
       return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/40';
     case 'გაუქმებული':
     case 'cancelled':
+    case 'canceled':
+    case 'отменён':
       return 'bg-rose-500/10 text-rose-300 border border-rose-500/40';
     default:
       return 'bg-slate-500/10 text-slate-300 border border-slate-500/40';
   }
+};
+
+const resolveOrderItemImage = (item, products) => {
+  const savedOrderImage = String(item?.image || item?.image_url || item?.imageUrl || '').trim();
+  if (savedOrderImage) return savedOrderImage;
+
+  const productId = String(item?.id ?? item?.product_id ?? '').trim();
+  if (!productId || !Array.isArray(products)) return '';
+
+  const matchingProduct = products.find(product =>
+    String(product?.id ?? '').trim() === productId
+  );
+  return String(
+    matchingProduct?.image ||
+    matchingProduct?.img ||
+    matchingProduct?.image_url ||
+    matchingProduct?.imageUrl ||
+    ''
+  ).trim();
 };
 
 const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
@@ -135,6 +201,16 @@ const isShippedOrderStatus = (status) =>
   ['გაგზავნილი', 'გზაშია', 'shipped', 'on the way', 'отправлен', 'в пути'].includes(normalizeOrderStatus(status));
 const isCancelledOrderStatus = (status) =>
   ['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(normalizeOrderStatus(status));
+
+const getOrderStatusFilterKey = (status) => {
+  if (isDeliveredOrderStatus(status)) return 'დასრულებული';
+  if (isShippedOrderStatus(status)) return 'გაგზავნილი';
+  if (isCancelledOrderStatus(status)) return 'გაუქმებული';
+  const normalized = normalizeOrderStatus(status);
+  if (['ახალი', 'new'].includes(normalized)) return 'ახალი';
+  if (['მუშავდება', 'processing', 'в обработке'].includes(normalized)) return 'მუშავდება';
+  return String(status || '');
+};
 
 export default function AdminDashboardPro({
   adminLoggedIn,
@@ -158,6 +234,8 @@ export default function AdminDashboardPro({
   setCategoriesList,
   bannersList = [],
   setBannersList,
+  onSaveStorefrontDraft,
+  storefrontDraftBusy = false,
   onPublishStorefront,
   storefrontPublishBusy = false,
   siteSettings,
@@ -179,6 +257,7 @@ export default function AdminDashboardPro({
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
   const [orderAdminNoteInput, setOrderAdminNoteInput] = useState('');
+  const [isSavingOrderNote, setIsSavingOrderNote] = useState(false);
   const [reactivationOrder, setReactivationOrder] = useState(null);
   const [reactivationPassword, setReactivationPassword] = useState('');
   const [reactivationError, setReactivationError] = useState('');
@@ -229,7 +308,7 @@ export default function AdminDashboardPro({
   });
 
   const [expenses, setExpenses] = useState([]);
-  const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
 
   const [aiQuery, setAiQuery] = useState('');
   const [aiChatLogs, setAiChatLogs] = useState([
@@ -262,34 +341,7 @@ export default function AdminDashboardPro({
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
 
-  const fetchAdminOrders = async () => {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        if (typeof setOrders === 'function') {
-          setOrders(data.map(o => ({
-            id: o.id,
-            created_at: o.created_at || null,
-            date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
-            time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
-            customerName: o.customer_name,
-            user_email: o.customer_email || o.user_email || '',
-            phone: o.phone,
-            address: o.address,
-            totalGEL: Number(o.total_gel) || 0,
-            status: o.status || 'ახალი',
-            items: o.items || [], // 🌟 შეკვეთილი პროდუქტების სრული მასივი
-            adminNote: o.admin_note || '',
-            stock_deducted_at: o.stock_deducted_at || null,
-            stock_restored_at: o.stock_restored_at || null,
-            status_changed_at: o.status_changed_at || null,
-            itemSummary: Array.isArray(o.items) ? o.items.map(i => `${i.name} (x${i.quantity || 1})`).join(', ') : 'პროდუქტები'
-          })));
-        }
-      }
-    } catch {}
-  };
+
 
   // Order data is refreshed centrally by App.jsx; this function remains for post-mutation refreshes.
 
@@ -305,8 +357,9 @@ export default function AdminDashboardPro({
         if (typeof cat === 'object') {
           const catImg = cat.image || cat.img || '';
           return {
+            ...cat,
             id: cat.id || `cat-obj-${idx}`,
-            name: cat.name || 'კატეგორია',
+            name: String(cat.name || 'კატეგორია'),
             icon: cat.icon || 'Shirt',
             parentId: cat.parentId || null,
             image: catImg,
@@ -348,12 +401,29 @@ export default function AdminDashboardPro({
 
   const handleAddCustomVariant = (e) => {
     e.preventDefault();
-    if (!newVarName.trim() || !newVarPrice) return;
+    const name = String(newVarName || '').trim();
+    const priceText = String(newVarPrice ?? '').trim();
+    const stockText = String(newVarStock ?? '').trim();
+    const price = Number(priceText);
+    const stock = stockText === '' ? 10 : Number(stockText);
+
+    if (!name || name.length > 80) return alert('ვარიანტის სახელი აუცილებელია და მაქსიმუმ 80 სიმბოლო უნდა იყოს.');
+    if (!Number.isFinite(price) || price < 0 || price > 1000000000 || !/^\d+(?:\.\d{1,2})?$/.test(priceText)) {
+      return alert('ვარიანტის ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
+    }
+    if (!Number.isSafeInteger(stock) || stock < 0 || stock > 1000000) {
+      return alert('ვარიანტის მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
+    }
+    if (productVariants.length >= 50) return alert('ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.');
+    if (productVariants.some(variant => String(variant.name || '').trim().toLocaleLowerCase() === name.toLocaleLowerCase())) return alert('ამ პროდუქტზე ასეთი ვარიანტის სახელი უკვე არსებობს.');
+
+    const generatedVariantId = createAdminId('var');
+    if (!generatedVariantId) return alert(secureIdError);
     const varObj = {
-      id: `var-${Date.now()}`,
-      name: newVarName.trim(),
-      priceGEL: Number(newVarPrice),
-      stock: newVarStock === '' ? 10 : Math.max(0, Math.trunc(Number(newVarStock) || 0))
+      id: generatedVariantId,
+      name,
+      priceGEL: price,
+      stock
     };
     setProductVariants(prev => [...prev, varObj]);
     setNewVarName('');
@@ -405,25 +475,38 @@ export default function AdminDashboardPro({
   const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
 
   const [supportTickets, setSupportTickets] = useState([]);
+  const [supportTicketsError, setSupportTicketsError] = useState('');
+  const [legacyMessages, setLegacyMessages] = useState([]);
+  const [legacyMessagesError, setLegacyMessagesError] = useState('');
   const [replyInputs, setReplyInputs] = useState({});
+  const [storefrontVersions, setStorefrontVersions] = useState([]);
+  const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
+  const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
   const fetchTickets = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setSupportTickets((data || []).map(t => ({
-          id: t.id,
-          customerName: t.customer_name,
-          email: t.email,
-          subject: t.subject,
-          message: t.message,
-          status: t.status || 'ღია',
-          reply: t.reply || '',
-          date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
-        })));
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error(detail || `HTTP ${res.status}`);
       }
-    } catch {}
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
+      setSupportTickets(data.map(t => ({
+        id: t.id,
+        customerName: t.customer_name,
+        email: t.email,
+        subject: t.subject,
+        message: t.message,
+        status: t.status || 'ღია',
+        reply: t.reply || '',
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
+      })));
+      setSupportTicketsError('');
+    } catch (error) {
+      console.error('GEOSTORE support tickets fetch failed:', error);
+      setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+    }
   };
 
   useEffect(() => {
@@ -433,25 +516,139 @@ export default function AdminDashboardPro({
     return () => clearInterval(interval);
   }, [adminLoggedIn]);
 
-  const [activityLogs, setActivityLogs] = useState([
-    { id: 'l1', action: 'ადმინისტრატორი შევიდა სისტემაში', time: new Date().toLocaleTimeString('ka-GE') },
-    { id: 'l2', action: 'სისტემის მონაცემები წარმატებით ჩაიტვირთა', time: new Date().toLocaleTimeString('ka-GE') }
-  ]);
+  const fetchLegacyMessages = async () => {
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/messages?select=id,created_at,client_name,sender,text,image,time&order=created_at.desc&limit=100`,
+        { headers: await getSupabaseHeaders() }
+      );
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error('მიმოწერების მონაცემების ფორმატი არასწორია.');
+      setLegacyMessages(rows);
+      setLegacyMessagesError('');
+    } catch (error) {
+      console.error('GEOSTORE legacy messages fetch failed:', error);
+      setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
+    }
+  };
 
-  const logActivity = (actionText) => {
-    const newLog = {
-      id: `log-${Date.now()}`,
-      action: actionText,
-      time: new Date().toLocaleTimeString('ka-GE') + ' (' + new Date().toLocaleDateString('ka-GE') + ')'
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      setLegacyMessages([]);
+      setLegacyMessagesError('');
+      return undefined;
+    }
+    fetchLegacyMessages();
+    const interval = setInterval(fetchLegacyMessages, 15000);
+    return () => clearInterval(interval);
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
+    let active = true;
+    if (!adminLoggedIn) {
+      setStorefrontVersions([]);
+      setStorefrontVersionsError('');
+      setStorefrontVersionsLoading(false);
+      return () => { active = false; };
+    }
+    if (storefrontPublishBusy) return () => { active = false; };
+    const loadStorefrontVersions = async () => {
+      setStorefrontVersionsLoading(true);
+      setStorefrontVersionsError('');
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_versions?config_key=eq.storefront&select=id,snapshot,version_label,created_at&order=created_at.desc&limit=20`,
+          { headers: await getSupabaseHeaders() }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('ვერსიების ისტორიის ფორმატი არასწორია.');
+        if (active) setStorefrontVersions(rows);
+      } catch (error) {
+        if (active) setStorefrontVersionsError(error.message || 'ვერსიების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      } finally {
+        if (active) setStorefrontVersionsLoading(false);
+      }
     };
-    setActivityLogs(prev => [newLog, ...(prev || [])]);
+    loadStorefrontVersions();
+    return () => { active = false; };
+  }, [adminLoggedIn, storefrontPublishBusy]);
+
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [activityLogsLoading, setActivityLogsLoading] = useState(false);
+  const [activityLogsError, setActivityLogsError] = useState('');
+
+  const fetchActivityLogs = async () => {
+    setActivityLogsLoading(true);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_limit: 100 })
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error('აქტივობების ისტორიის ფორმატი არასწორია.');
+      setActivityLogs(rows.map(log => ({
+        id: String(log.id),
+        action: log.action,
+        time: log.created_at ? new Date(log.created_at).toLocaleString('ka-GE') : ''
+      })));
+      setActivityLogsError('');
+    } catch (error) {
+      setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+    } finally {
+      setActivityLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      setActivityLogs([]);
+      setActivityLogsError('');
+      setActivityLogsLoading(false);
+      return;
+    }
+    fetchActivityLogs();
+  }, [adminLoggedIn]);
+
+  const logActivity = async (actionText) => {
+    const action = String(actionText || '').trim().slice(0, 500);
+    if (!action) return;
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_action: action })
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const rows = await response.json();
+      const saved = Array.isArray(rows) ? rows[0] : rows;
+      if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
+      setActivityLogs(prev => [{
+        id: String(saved.id),
+        action: saved.action,
+        time: saved.created_at ? new Date(saved.created_at).toLocaleString('ka-GE') : ''
+      }, ...(prev || [])].slice(0, 100));
+      setActivityLogsError('');
+    } catch (error) {
+      setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
+      console.error('GEOSTORE admin activity log write failed:', error);
+    }
   };
 
   const handleAddStaff = (e) => {
     e.preventDefault();
     if (!staffForm.name || !staffForm.email) return;
+    const staffId = createAdminId('st');
+    if (!staffId) return alert(secureIdError);
     const newStaffMember = {
-      id: `st-${Date.now()}`,
+      id: staffId,
       name: staffForm.name.trim(),
       email: staffForm.email.trim(),
       role: staffForm.role,
@@ -484,8 +681,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const staffId = createAdminId('st');
+    if (!staffId) return alert(secureIdError);
     const newStaffMember = {
-      id: `st-${Date.now()}`,
+      id: staffId,
       name: targetUser.name || 'მომხმარებელი',
       email: targetUser.email || 'user@geostore.ge',
       role: 'მენეჯერი',
@@ -522,14 +721,18 @@ export default function AdminDashboardPro({
   };
 
   const calculatedSalesMetrics = useMemo(() => {
-    const pCost = Number(calcForm.purchaseCost) || 0;
-    const sPrice = Number(calcForm.sellingPrice) || 0;
-    const discPct = Number(calcForm.discountPercent) || 0;
-    const ship = Number(calcForm.shippingCost) || 0;
-    const pack = Number(calcForm.packagingCost) || 0;
-    const proc = Number(calcForm.processingFee) || 0;
-    const other = Number(calcForm.otherExpenses) || 0;
-    const qty = Number(calcForm.quantity) || 1;
+    const toNonNegative = value => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    };
+    const pCost = toNonNegative(calcForm.purchaseCost);
+    const sPrice = toNonNegative(calcForm.sellingPrice);
+    const discPct = Math.min(100, toNonNegative(calcForm.discountPercent));
+    const ship = toNonNegative(calcForm.shippingCost);
+    const pack = toNonNegative(calcForm.packagingCost);
+    const proc = toNonNegative(calcForm.processingFee);
+    const other = toNonNegative(calcForm.otherExpenses);
+    const qty = Math.max(1, Math.floor(Number.isFinite(Number(calcForm.quantity)) ? Number(calcForm.quantity) : 1));
 
     const discountedPrice = sPrice * (1 - discPct / 100);
     const revenue = discountedPrice * qty;
@@ -542,8 +745,12 @@ export default function AdminDashboardPro({
   }, [calcForm]);
 
   const analyticsData = useMemo(() => {
-    const isCancelled = order => ['გაუქმებული', 'cancelled'].includes(String(order?.status || '').trim().toLowerCase());
-    const isDelivered = order => ['დასრულებული', 'ჩაბარებულია', 'delivered', 'completed'].includes(String(order?.status || '').trim().toLowerCase());
+    const isCancelled = order => [
+      'გაუქმებული', 'cancelled', 'canceled', 'отменён', 'отменен'
+    ].includes(String(order?.status || '').trim().toLowerCase());
+    const isDelivered = order => [
+      'დასრულებული', 'ჩაბარებულია', 'delivered', 'completed', 'доставлен', 'завершён', 'завершен'
+    ].includes(String(order?.status || '').trim().toLowerCase());
     const parseDate = value => {
       if (!value) return null;
       const raw = String(value).trim();
@@ -596,7 +803,7 @@ export default function AdminDashboardPro({
     const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
-      const orderTotal = Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
+      const orderTotal = normalizeOrderTotal(order.totalGEL ?? order.total_gel);
       totalSalesRevenue += orderTotal;
       const rawItems = Array.isArray(order.items) ? order.items : [];
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
@@ -632,33 +839,36 @@ export default function AdminDashboardPro({
         const hasSnapshotCost = snapshotCost !== null && snapshotCost !== undefined && snapshotCost !== '' && Number.isFinite(Number(snapshotCost)) && Number(snapshotCost) >= 0;
         const hasCurrentCost = currentCost !== null && currentCost !== undefined && currentCost !== '' && Number.isFinite(Number(currentCost)) && Number(currentCost) >= 0;
         let itemCost = null;
+        const isEstimatedCost = !hasSnapshotCost && hasCurrentCost;
         if (hasSnapshotCost) itemCost = Number(snapshotCost);
-        else if (hasCurrentCost) {
+        else if (isEstimatedCost) {
           itemCost = Number(currentCost);
-          estimatedCogsItems += 1;
-        } else unknownCogsItems += 1;
+          estimatedCogsItems += quantity;
+        } else unknownCogsItems += quantity;
         if (itemCost !== null) totalCogs += itemCost * quantity;
 
         const productKey = String(item.id || item.product_id || item.name || 'unknown-product');
         const productLabel = item.name || product?.name || `პროდუქტი ${productKey}`;
         const productEntry = productProfitTotals.get(productKey) || {
           key: productKey, name: productLabel, vendor, category,
-          quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0
+          quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, estimatedCostItems: 0
         };
         productEntry.quantity += quantity;
         productEntry.revenue += allocatedRevenue;
         if (itemCost === null) productEntry.unknownCostItems += quantity;
         else productEntry.cogs += itemCost * quantity;
+        if (isEstimatedCost) productEntry.estimatedCostItems += quantity;
         productProfitTotals.set(productKey, productEntry);
 
         const vendorEntry = vendorProfitTotals.get(vendor) || {
-          name: vendor, quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, productCount: new Set()
+          name: vendor, quantity: 0, revenue: 0, cogs: 0, unknownCostItems: 0, estimatedCostItems: 0, productCount: new Set()
         };
         vendorEntry.quantity += quantity;
         vendorEntry.revenue += allocatedRevenue;
         vendorEntry.productCount.add(productKey);
         if (itemCost === null) vendorEntry.unknownCostItems += quantity;
         else vendorEntry.cogs += itemCost * quantity;
+        if (isEstimatedCost) vendorEntry.estimatedCostItems += quantity;
         vendorProfitTotals.set(vendor, vendorEntry);
       });
       if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
@@ -676,23 +886,19 @@ export default function AdminDashboardPro({
         ? date.toLocaleDateString('ka-GE', { day: '2-digit', month: 'short' })
         : date.toLocaleDateString('ka-GE', { month: 'short', year: '2-digit' });
       const current = trendBuckets.get(key) || { key, label, revenue: 0, orders: 0 };
-      current.revenue += Math.max(0, Number(order.totalGEL ?? order.total_gel) || 0);
+      current.revenue += normalizeOrderTotal(order.totalGEL ?? order.total_gel);
       current.orders += 1;
       trendBuckets.set(key, current);
     });
     const salesTrend = Array.from(trendBuckets.values()).sort((a, b) => a.key.localeCompare(b.key)).slice(useDailyTrend ? -90 : -24);
     const bestSellingProducts = Array.from(productProfitTotals.values())
       .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
-    const lowStockProducts = (products || []).filter(product =>
-      product.stock !== null && product.stock !== undefined && String(product.stock).trim() !== ''
-    ).map(product => ({
-      ...product,
-      _stockValue: Number(product.stock)
-    })).filter(product => Number.isFinite(product._stockValue) && product._stockValue >= 0 && product._stockValue <= 5)
-      .sort((a, b) => a._stockValue - b._stockValue);
+    const lowStockProducts = getLowStockInventory(products, 5);
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-    const grossProfit = unknownCogsItems === 0 ? totalSalesRevenue - totalCogs : null;
-    const netProfit = grossProfit === null ? null : grossProfit - totalExpenses;
+    // Gross profit is product revenue less product cost. Delivery fees are
+    // tracked separately and added to net operating result, not product margin.
+    const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
+    const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
     periodExpenses.forEach(expense => {
       const label = expense.category || 'კატეგორია მითითებული არ არის';
@@ -712,14 +918,14 @@ export default function AdminDashboardPro({
       incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
       productProfitability: Array.from(productProfitTotals.values()).map(item => ({
         ...item,
-        grossProfit: item.unknownCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       vendorProfitability: Array.from(vendorProfitTotals.values()).map(item => ({
         ...item,
         productCount: item.productCount.size,
-        grossProfit: item.unknownCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       expenseBreakdown: Array.from(expenseTotals.values()).sort((x, y) => y.amount - x.amount)
     };
@@ -756,19 +962,19 @@ export default function AdminDashboardPro({
         ['ბრუნვა', financialOverview.totalSalesRevenue.toFixed(2)],
         ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
         ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
-        ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.totalCogs.toFixed(2)],
+        ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.estimatedCogsItems ? 'შეფასებულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
         ['უცნობი თვითღირებულების ერთეულები', financialOverview.unknownCogsItems],
-        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება' : financialOverview.grossProfit.toFixed(2)],
+        ['მთლიანი მოგება', financialOverview.grossProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.grossProfit.toFixed(2)],
         ['ოპერაციული ხარჯები', financialOverview.totalExpenses.toFixed(2)],
-        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება' : financialOverview.netProfit.toFixed(2)]
+        ['წმინდა მოგება', financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება არასრულია' : financialOverview.netProfit.toFixed(2)]
       ]);
     exportCsv(`geostore-product-profitability-${periodLabel}.csv`,
-      ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები'],
-      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems]));
+      ['პროდუქტი', 'მომწოდებელი', 'კატეგორია', 'რაოდენობა', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
+      financialOverview.productProfitability.map(item => [item.name, item.vendor, item.category, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
     exportCsv(`geostore-vendor-profitability-${periodLabel}.csv`,
-      ['მომწოდებელი', 'პროდუქტების რაოდენობა', 'გაყიდული ერთეულები', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები'],
-      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems]));
+      ['მომწოდებელი', 'პროდუქტების რაოდენობა', 'გაყიდული ერთეულები', 'შემოსავალი (GEL)', 'თვითღირებულება (GEL)', 'მოგება (GEL)', 'მარჟა (%)', 'უცნობი თვითღირებულების ერთეულები', 'შეფასებული თვითღირებულების ერთეულები'],
+      financialOverview.vendorProfitability.map(item => [item.name, item.productCount, item.quantity, item.revenue.toFixed(2), item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2), item.grossProfit === null ? 'ვერ განისაზღვრება' : item.grossProfit.toFixed(2), item.margin === null ? 'ვერ განისაზღვრება' : item.margin.toFixed(2), item.unknownCostItems, item.estimatedCostItems]));
     exportCsv(`geostore-expenses-${periodLabel}.csv`,
       ['თარიღი', 'კატეგორია', 'აღწერა', 'თანხა (GEL)'],
       financialOverview.periodExpenses.map(item => [item.date || item.created_at || '', item.category || '', item.description || '', Number(item.amount || 0).toFixed(2)]));
@@ -783,10 +989,10 @@ export default function AdminDashboardPro({
     setIsAiThinking(true);
 
     setTimeout(() => {
-      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
+      let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
       if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
-      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — თვითღირებულება აკლია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
+      else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
       else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
@@ -796,18 +1002,44 @@ export default function AdminDashboardPro({
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
-    if (!expenseForm.amount || !expenseForm.description) return;
-    if (!Number.isFinite(Number(expenseForm.amount)) || Number(expenseForm.amount) <= 0) {
-      alert('ხარჯის თანხა უნდა იყოს ნულზე მეტი.');
+    const amountText = String(expenseForm.amount ?? '').trim();
+    const description = String(expenseForm.description ?? '').trim();
+    const category = String(expenseForm.category ?? '').trim();
+    const amount = Number(amountText);
+    const dateParts = String(expenseForm.date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const parsedExpenseDate = dateParts
+      ? new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]))
+      : null;
+    const validDate = Boolean(dateParts && parsedExpenseDate
+      && parsedExpenseDate.getFullYear() === Number(dateParts[1])
+      && parsedExpenseDate.getMonth() === Number(dateParts[2]) - 1
+      && parsedExpenseDate.getDate() === Number(dateParts[3]));
+
+    if (!description || !category) {
+      alert('ხარჯის კატეგორია და აღწერა სავალდებულოა.');
+      return;
+    }
+    if (category.length > 80 || description.length > 300) {
+      alert('კატეგორია მაქსიმუმ 80, ხოლო აღწერა მაქსიმუმ 300 სიმბოლო უნდა იყოს.');
+      return;
+    }
+    if (!/^\d+(?:\.\d{1,2})?$/.test(amountText) || !Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
+      alert('ხარჯის თანხა უნდა იყოს 0-ზე მეტი, მაქსიმუმ 1,000,000,000 და არაუმეტეს 2 ათწილადი ნიშნით.');
+      return;
+    }
+    if (!validDate) {
+      alert('ხარჯის თარიღი არასწორია.');
       return;
     }
 
+    const expenseId = createAdminId('exp');
+    if (!expenseId) return alert(secureIdError);
     const newExp = {
-      id: `exp-${Date.now()}`,
-      category: expenseForm.category,
-      amount: Number(expenseForm.amount),
+      id: expenseId,
+      category,
+      amount,
       date: expenseForm.date,
-      description: expenseForm.description
+      description
     };
 
     try {
@@ -819,7 +1051,7 @@ export default function AdminDashboardPro({
 
       if (res.ok) {
         setExpenses(prev => [newExp, ...prev]);
-        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+        setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
         alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
       } else {
@@ -868,95 +1100,162 @@ export default function AdminDashboardPro({
     );
   }
 
-  const handleCategoryFileChange = (e, isEditing = false) => {
-    const file = e.target.files?.[0];
+  const persistCategoryList = (updatedCategories) => {
+    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
+    try {
+      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
+    } catch {
+      alert('კატეგორიები განახლდა მიმდინარე სესიაში, მაგრამ მოწყობილობის დროებით მეხსიერებაში შენახვა ვერ მოხერხდა. შეინახეთ მონახაზი Supabase-ში.');
+    }
+  };
+
+  const handleCategoryFileChange = async (e, isEditing = false) => {
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64Result = reader.result;
-      if (isEditing) {
-        setEditCatImage(base64Result);
-      } else {
-        setNewCatImage(base64Result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      await validateImageFile(file, MAX_PRODUCT_IMAGE_BYTES);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : '';
+        if (!result || !isValidImageDataUrl(result, MAX_PRODUCT_IMAGE_BYTES)) {
+          alert('ფოტოს შიგთავსის შემოწმება ვერ მოხერხდა. აირჩიეთ სწორი JPG, PNG, WEBP ან GIF.');
+          input.value = '';
+          return;
+        }
+        if (isEditing) setEditCatImage(result);
+        else setNewCatImage(result);
+        input.value = '';
+      };
+      reader.onerror = () => {
+        alert('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
+        input.value = '';
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      alert(error.message || 'ფოტოს ატვირთვა ვერ მოხერხდა.');
+      input.value = '';
+    }
   };
 
   const handleAddCategory = (e) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
-    const cleanName = newCatName.trim();
-    const catId = `cat-${Date.now()}`;
+    const cleanName = String(newCatName || '').trim();
+    if (cleanName.length < 2 || cleanName.length > 60) {
+      alert('კატეგორიის სახელი უნდა შეიცავდეს 2-დან 60 სიმბოლომდე.');
+      return;
+    }
+    if (safeCategories.some(category => category.name.trim().toLocaleLowerCase() === cleanName.toLocaleLowerCase())) {
+      alert('ასეთი სახელის კატეგორია უკვე არსებობს. კატეგორიის სახელები უნიკალური უნდა იყოს.');
+      return;
+    }
+    const parent = selectedParentId ? safeCategories.find(category => category.id === selectedParentId && !category.parentId) : null;
+    if (selectedParentId && !parent) {
+      alert('არჩეული მთავარი კატეგორია აღარ არსებობს. განაახლეთ არჩევანი.');
+      return;
+    }
+    const catId = createAdminId('cat');
+    if (!catId) return alert(secureIdError);
     const cleanImage = newCatImage.trim() || '';
-    
-    const newCatObj = { 
-      id: catId, 
-      name: cleanName, 
-      icon: newCatIcon, 
-      parentId: selectedParentId || null,
-      image: cleanImage, 
-      img: cleanImage 
+    const newCatObj = {
+      id: catId,
+      name: cleanName,
+      icon: newCatIcon,
+      parentId: parent?.id || null,
+      image: cleanImage,
+      img: cleanImage
     };
 
-    const updatedCategories = [...safeCategories, newCatObj];
-    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
-    try {
-      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
-    } catch {}
-
+    persistCategoryList([...safeCategories, newCatObj]);
     setNewCatName('');
     setNewCatImage('');
     setSelectedParentId('');
-    logActivity(`დაემატა ${selectedParentId ? 'სუბკატეგორია' : 'მთავარი კატეგორია'} ფოტოთი: ${cleanName}`);
-    alert('✅ კატეგორია და მისი ატვირთული ფოტო წარმატებით დაემატა!');
+    logActivity(`დაემატა ${parent ? 'სუბკატეგორია' : 'მთავარი კატეგორია'}: ${cleanName}`);
+    alert('კატეგორია დაემატა. ცვლილების საიტზე შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო ვიზიტორებისთვის გამოსაჩენად — „გამოქვეყნება“.');
   };
 
   const handleSaveEditedCategory = (catId) => {
-    if (!editCatName.trim()) return;
-    const cleanImg = editCatImage.trim();
-
-    const updatedCategories = safeCategories.map(c => {
-      if (c.id === catId) {
-        return { 
-          ...c, 
-          name: editCatName.trim(), 
-          icon: editCatIcon, 
-          image: cleanImg, 
-          img: cleanImg 
-        };
+    const existing = safeCategories.find(category => category.id === catId);
+    const cleanName = String(editCatName || '').trim();
+    if (!existing) {
+      alert('კატეგორია ვეღარ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return;
+    }
+    if (cleanName.length < 2 || cleanName.length > 60) {
+      alert('კატეგორიის სახელი უნდა შეიცავდეს 2-დან 60 სიმბოლომდე.');
+      return;
+    }
+    if (safeCategories.some(category => category.id !== catId && category.name.trim().toLocaleLowerCase() === cleanName.toLocaleLowerCase())) {
+      alert('ასეთი სახელის კატეგორია უკვე არსებობს.');
+      return;
+    }
+    const oldName = String(existing.name || '').trim();
+    if (cleanName !== oldName) {
+      const assignedCount = (products || []).filter(product => String(product.category || '').trim() === oldName).length;
+      if (assignedCount > 0) {
+        alert(`კატეგორიაზე „${oldName}“ მიბმულია ${assignedCount} პროდუქტი. ჯერ გადაიტანეთ ეს პროდუქტები სხვა კატეგორიაში, შემდეგ შეცვალეთ სახელი, რათა პროდუქტები კატალოგიდან არ გაქრეს.`);
+        return;
       }
-      return c;
-    });
+    }
 
-    if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
-    try {
-      localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
-    } catch {}
-
+    const cleanImg = editCatImage.trim();
+    const updatedCategories = safeCategories.map(category => category.id === catId
+      ? { ...category, name: cleanName, icon: editCatIcon, image: cleanImg, img: cleanImg }
+      : category
+    );
+    persistCategoryList(updatedCategories);
     setEditingCatId(null);
     setEditCatName('');
     setEditCatImage('');
     logActivity(`განახლდა კატეგორია (ID: ${catId})`);
-    alert('✅ კატეგორია წარმატებით განახლდა!');
+    alert('კატეგორია განახლდა. შეინახეთ მონახაზი Supabase-ში, შემდეგ კი გამოაქვეყნეთ ცვლილება.');
   };
 
   const handleDeleteCategory = (targetId, targetName) => {
-    if (window.confirm(`ნამდვილად გსურთ კატეგორიის "${targetName}" წაშლა?`)) {
-      const updatedCategories = safeCategories.filter(c => c.id !== targetId && c.parentId !== targetId);
-
-      if (typeof setCategoriesList === 'function') setCategoriesList(updatedCategories);
-      try {
-        localStorage.setItem('geostore_cats', JSON.stringify(updatedCategories));
-      } catch {}
-
-      logActivity(`წაიშალა კატეგორია: ${targetName}`);
+    const target = safeCategories.find(category => category.id === targetId);
+    if (!target) return;
+    const idsToDelete = new Set([targetId]);
+    if (!target.parentId) {
+      safeCategories.filter(category => category.parentId === targetId).forEach(category => idsToDelete.add(category.id));
     }
+    const namesToDelete = new Set(safeCategories.filter(category => idsToDelete.has(category.id)).map(category => category.name.trim()));
+    const assignedProducts = (products || []).filter(product => namesToDelete.has(String(product.category || '').trim()));
+    if (assignedProducts.length > 0) {
+      alert(`კატეგორიაზე „${targetName}“ ან მის ქვეკატეგორიაზე მიბმულია ${assignedProducts.length} პროდუქტი. წაშლა დაბლოკილია, რათა პროდუქტები კატალოგიდან არ დაიკარგოს. ჯერ გადაიტანეთ პროდუქტები სხვა კატეგორიაში.`);
+      return;
+    }
+    const childCount = idsToDelete.size - 1;
+    const confirmation = childCount > 0
+      ? `ნამდვილად გსურთ „${targetName}“-ისა და მისი ${childCount} ქვეკატეგორიის წაშლა? ეს ქმედება ვერ წაშლის პროდუქტებს.`
+      : `ნამდვილად გსურთ კატეგორიის „${targetName}“ წაშლა?`;
+    if (!window.confirm(confirmation)) return;
+
+    persistCategoryList(safeCategories.filter(category => !idsToDelete.has(category.id)));
+    logActivity(`წაიშალა კატეგორია: ${targetName}`);
+  };
+
+  const moveCategory = (categoryId, direction) => {
+    const current = safeCategories.findIndex(category => category.id === categoryId);
+    if (current < 0) return;
+    const parentId = safeCategories[current].parentId || null;
+    const siblingIndexes = safeCategories
+      .map((category, index) => ({ category, index }))
+      .filter(item => (item.category.parentId || null) === parentId)
+      .map(item => item.index);
+    const siblingPosition = siblingIndexes.indexOf(current);
+    const targetPosition = siblingPosition + direction;
+    if (targetPosition < 0 || targetPosition >= siblingIndexes.length) return;
+
+    const reordered = [...safeCategories];
+    const targetIndex = siblingIndexes[targetPosition];
+    [reordered[current], reordered[targetIndex]] = [reordered[targetIndex], reordered[current]];
+    persistCategoryList(reordered);
   };
 
   const handleDeleteProduct = async (id) => {
     if (!window.confirm('ნამდვილად გსურთ ამ პროდუქტის წაშლა ბაზიდან?')) return;
+    const productToDelete = (products || []).find(product => String(product.id) === String(id));
     try {
       const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_delete_product', {
         method: 'POST', headers: await getSupabaseHeaders(),
@@ -964,9 +1263,16 @@ export default function AdminDashboardPro({
       });
       if (!res.ok) throw new Error(await res.text());
       if (await res.json() !== true) throw new Error('პროდუქტი ვერ წაიშალა ან აღარ არსებობს.');
-      if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => p.id !== id));
+      if (typeof setProducts === 'function') setProducts(prev => (prev || []).filter(p => String(p.id) !== String(id)));
+      const productImages = [
+        ...(Array.isArray(productToDelete?.gallery) ? productToDelete.gallery : []),
+        productToDelete?.image
+      ].filter(Boolean);
+      const imagesCleaned = await deleteProductImages(productImages, id);
       logActivity('წაიშალა პროდუქტი ბაზიდან (ID: ' + id + ')');
-      alert('✅ პროდუქტი წარმატებით წაიშალა!');
+      alert(imagesCleaned
+        ? '✅ პროდუქტი და მისი ატვირთული ფოტოები წარმატებით წაიშალა!'
+        : 'პროდუქტი წაიშალა, მაგრამ ზოგი ფოტო Storage-დან ვერ წაიშალა. პროდუქტი აღარ ჩანს მაღაზიაში; დარჩენილი ფოტოების გასუფთავება ცალკე იქნება საჭირო.');
     } catch (error) { alert('წაშლა ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
@@ -1102,7 +1408,27 @@ export default function AdminDashboardPro({
     if (productForm.stock !== '' && (!/^\d+$/.test(String(productForm.stock).trim()) || !Number.isSafeInteger(Number(productForm.stock)) || Number(productForm.stock) > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
 
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const prodId = editingProductId || `prod-${Date.now()}`;
+    if (tagsArray.length > 30 || tagsArray.some(tag => tag.length > 40) ||
+        new Set(tagsArray.map(tag => tag.toLocaleLowerCase())).size !== tagsArray.length) {
+      return alert('ტეგები უნდა იყოს უნიკალური: მაქსიმუმ 30 ტეგი, თითოეული არაუმეტეს 40 სიმბოლოსი.');
+    }
+    const variantsValidation = validateProductVariants(productVariants);
+    if (!variantsValidation.valid) {
+      const variantErrors = {
+        count: 'ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.',
+        shape: 'პროდუქტის ვარიანტის მონაცემები არასწორია.',
+        identity: 'თითოეულ ვარიანტს უნდა ჰქონდეს უნიკალური ID და სახელი (მაქსიმუმ 80 სიმბოლო).',
+        price: 'ვარიანტის ფასი არასწორია.',
+        stock: 'ვარიანტის მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.'
+      };
+      return alert(variantErrors[variantsValidation.reason] || 'პროდუქტის ვარიანტების შემოწმება ვერ მოხერხდა.');
+    }
+    const prodId = editingProductId || createAdminId('prod');
+    if (!prodId) return alert(secureIdError);
+    const newProductSku = editingProductId
+      ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null)
+      : createAdminId('GEO');
+    if (!editingProductId && !newProductSku) return alert(secureIdError);
     let galleryImages = [];
     let newlyUploadedImages = [];
     let newProdPayload;
@@ -1125,7 +1451,7 @@ export default function AdminDashboardPro({
       const mainImage = galleryImages[0] || null;
       newProdPayload = {
       id: prodId,
-      sku: editingProductId ? ((products || []).find(p => String(p.id) === String(editingProductId))?.sku || null) : `GEO-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: newProductSku,
       name: productName,
       category: String(productForm.category).trim(),
       vendor: productForm.vendor || 'GEOSTORE ოფიციალური',
@@ -1171,26 +1497,39 @@ export default function AdminDashboardPro({
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
         });
         if (!createResponse.ok) throw new Error(await createResponse.text());
-        await createResponse.json();
+        const createdResult = await createResponse.json();
+        savedProductRow = Array.isArray(createdResult) ? createdResult[0] : createdResult;
+        if (
+          !savedProductRow ||
+          typeof savedProductRow !== 'object' ||
+          String(savedProductRow.id ?? '') !== String(prodId) ||
+          !savedProductRow.created_at
+        ) {
+          throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
+        }
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
+      let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
         const previousImages = [...new Set([
           ...(Array.isArray(existingProduct.gallery) ? existingProduct.gallery : []),
           existingProduct.image
         ].filter(Boolean))];
         const removedImages = previousImages.filter(url => !galleryImages.includes(url));
-        if (removedImages.length > 0) await deleteProductImages(removedImages, prodId);
+        if (removedImages.length > 0) {
+          imageCleanupWarning = !(await deleteProductImages(removedImages, prodId));
+        }
       }
       const localProdObject = {
-        id: prodId, createdAt: existingProduct?.createdAt || new Date().toISOString(),
+        id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
         oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
         stock: editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock,
         image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
         description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
-        availableColors: newProdPayload.available_colors, variants: productVariants,
+        availableColors: newProdPayload.available_colors,
+        variants: Array.isArray(savedProductRow?.variants) ? savedProductRow.variants : productVariants,
         material: newProdPayload.material, durability: newProdPayload.durability,
         brand: newProdPayload.brand, isFeatured: newProdPayload.is_featured,
         model: newProdPayload.model, cpu: newProdPayload.cpu, ram: newProdPayload.ram,
@@ -1203,7 +1542,11 @@ export default function AdminDashboardPro({
       const wasEditing = Boolean(editingProductId);
       resetProductEditor();
       logActivity((wasEditing ? 'განახლდა' : 'დაემატა') + ' პროდუქტი: ' + newProdPayload.name);
-      alert(wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!');
+      alert(imageCleanupWarning
+        ? (wasEditing
+          ? 'პროდუქტი განახლდა და მარაგი შენარჩუნებულია, მაგრამ ძველი ფოტოების ნაწილი Storage-დან ვერ წაიშალა.'
+          : 'პროდუქტი დაემატა, მაგრამ ძველი ფოტოების ნაწილი Storage-დან ვერ წაიშალა.')
+        : (wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!'));
     } catch (error) {
       if (newlyUploadedImages.length > 0) await deleteProductImages(newlyUploadedImages, prodId);
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
@@ -1281,25 +1624,43 @@ export default function AdminDashboardPro({
         return;
       }
 
-      setProducts(prev => (prev || []).map(product => {
-        if (category !== 'ყველა' && product.category !== category) return product;
+      // Re-read the server's final values: some products may be skipped when
+      // rounding would leave their price unchanged, and concurrent admin edits may occur.
+      let refreshedRows = null;
+      try {
+        const refreshResponse = await fetch(
+          SUPABASE_URL + '/rest/v1/products?select=id,price_gel,old_price_gel,stock&' +
+          (category === 'ყველა' ? 'order=id.asc' : 'category=eq.' + encodeURIComponent(category) + '&order=id.asc'),
+          { headers: await getSupabaseHeaders() }
+        );
+        if (refreshResponse.ok) {
+          const rows = await refreshResponse.json();
+          if (Array.isArray(rows)) refreshedRows = rows;
+        }
+      } catch (refreshError) {
+        console.warn('Flash sale saved, but product refresh failed:', refreshError);
+      }
 
-        const currentPrice = Number(product.priceGEL ?? product.price_gel ?? 0);
-        const savedOldPrice = Number(product.oldPriceGEL ?? product.old_price_gel);
-        const basePrice = Number.isFinite(savedOldPrice) && savedOldPrice > currentPrice
-          ? savedOldPrice
-          : currentPrice;
-        const discountedPrice = Math.round(basePrice * (1 - percent / 100) * 100) / 100;
-
-        return {
-          ...product,
-          oldPriceGEL: basePrice,
-          priceGEL: discountedPrice
-        };
-      }));
+      if (refreshedRows) {
+        const savedById = new Map(refreshedRows.map(row => [String(row.id), row]));
+        setProducts(prev => (prev || []).map(product => {
+          const saved = savedById.get(String(product.id));
+          if (!saved) return product;
+          return {
+            ...product,
+            priceGEL: Number(saved.price_gel),
+            price_gel: Number(saved.price_gel),
+            oldPriceGEL: saved.old_price_gel == null ? null : Number(saved.old_price_gel),
+            old_price_gel: saved.old_price_gel,
+            stock: saved.stock
+          };
+        }));
+      }
 
       logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
-      alert(`⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`);
+      alert(refreshedRows
+        ? `⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`
+        : `ფასდაკლება ბაზაში შენახულია (${updatedCount} პროდუქტი), თუმცა სიის განახლება ვერ მოხერხდა. განაახლეთ გვერდი, რომ ფასები ზუსტად გამოჩნდეს.`);
       setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
     } catch (error) {
       console.error('Flash sale update failed:', error);
@@ -1338,14 +1699,15 @@ export default function AdminDashboardPro({
       return Number.isFinite(number) && number >= 0 ? number : 0;
     };
 
-    const itemsRows = Array.isArray(order.items) && order.items.length > 0
-      ? order.items.map((item) => {
+    const safeOrderItems = normalizeOrderItems(order.items);
+    const itemsRows = safeOrderItems.length > 0
+      ? safeOrderItems.map((item) => {
           const imageSrc = safeImageSrc(item.image);
           const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
           const unitPrice = numericValue(item.priceGEL ?? item.price);
           return `
             <tr>
-              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : ''}</td>
+              <td>${imageSrc ? `<img src="${imageSrc}" width="40" height="40" alt="" style="object-fit:contain; border-radius:8px;" />` : ''} ${escapeHtml(item.name)} ${item.selectedSize ? `(ზომა: ${escapeHtml(item.selectedSize)})` : ''} ${item.selectedColor ? `(ფერი: ${escapeHtml(item.selectedColor)})` : '' } ${(item.customVariantName || item.custom_variant_name) ? `(ვარიანტი: ${escapeHtml(item.customVariantName || item.custom_variant_name)})` : ''} ${item.gift_wrap ? '(სასაჩუქრე შეფუთვა +5 ₾)' : ''} ${item.vip_warranty ? '(VIP გარანტია +15 ₾)' : ''} ${item.gift_message ? `<br/><small>სასაჩუქრე ტექსტი: ${escapeHtml(item.gift_message)}</small>` : ''}</td>
               <td>${quantity}</td>
               <td>${unitPrice.toFixed(2)} ₾</td>
               <td>${(unitPrice * quantity).toFixed(2)} ₾</td>
@@ -1501,8 +1863,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const couponId = createAdminId('c');
+    if (!couponId) return alert(secureIdError);
     const newC = {
-      id: `c-${Date.now()}`,
+      id: couponId,
       code,
       discountPercent,
       minOrderGEL,
@@ -1609,7 +1973,7 @@ export default function AdminDashboardPro({
       alert('ვენდორის სახელი სავალდებულოა და მაქსიმუმ 100 სიმბოლოს უნდა შეიცავდეს.');
       return;
     }
-    if (!/^\\d+(?:\\.\\d{1,2})?$/.test(commissionText) || !Number.isFinite(commission) || commission < 0 || commission > 100) {
+    if (!/^\d+(?:\.\d{1,2})?$/.test(commissionText) || !Number.isFinite(commission) || commission < 0 || commission > 100) {
       alert('კომისია უნდა იყოს 0-დან 100%-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
       return;
     }
@@ -1618,8 +1982,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const vendorId = createAdminId('v');
+    if (!vendorId) return alert(secureIdError);
     const newV = {
-      id: `v-${Date.now()}`,
+      id: vendorId,
       name: vendorName,
       commission,
       status: 'აქტიური'
@@ -1659,12 +2025,18 @@ export default function AdminDashboardPro({
         return;
       }
     }
+    if ((Array.isArray(bannersList) ? bannersList.length : 0) >= 20) {
+      alert('ერთდროულად მაქსიმუმ 20 აქტიური ბანერის შენახვა შეიძლება.');
+      return;
+    }
+    const bannerId = createAdminId('b');
+    if (!bannerId) return alert(secureIdError);
     const newB = {
-      id: `b-${Date.now()}`,
-      ...bannerForm,
+      id: bannerId,
       title,
       subtitle,
-      image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200'
+      image: image || 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?auto=format&fit=crop&q=80&w=1200',
+      link: String(bannerForm.link || '').trim()
     };
     if (typeof setBannersList === 'function') {
       setBannersList(prev => [...(prev || []), newB]);
@@ -1696,8 +2068,10 @@ export default function AdminDashboardPro({
       return;
     }
 
+    const notificationId = createAdminId('notif');
+    if (!notificationId) return alert(secureIdError);
     const newNotification = {
-      id: `notif-${Date.now()}`,
+      id: notificationId,
       title,
       message,
       date: new Date().toLocaleDateString('ka-GE')
@@ -1723,7 +2097,7 @@ export default function AdminDashboardPro({
     const currentStatus = normalizeOrderStatus(existingOrder?.status);
     const nextStatus = normalizeOrderStatus(newStatus);
 
-    if (isDeliveredOrderStatus(currentStatus) && nextStatus !== currentStatus) {
+    if (isDeliveredOrderStatus(currentStatus) && !isDeliveredOrderStatus(nextStatus)) {
       alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
       return;
     }
@@ -1753,14 +2127,18 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
-      await fetchAdminOrders();
-      if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
-        setSelectedOrderForModal(prev => ({ ...prev, status: newStatus }));
+      if (typeof setOrders === 'function') {
+        setOrders(prev => (prev || []).map(order =>
+          String(order.id) === String(orderId) ? { ...order, status: newStatus } : order
+        ));
       }
+      setSelectedOrderForModal(prev =>
+        prev && String(prev.id) === String(orderId) ? { ...prev, status: newStatus } : prev
+      );
 
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        const updatedLocal = localOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
         localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
       } catch {}
 
@@ -1828,14 +2206,18 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
-      await fetchAdminOrders();
-      if (selectedOrderForModal?.id === reactivationOrder.id) {
-        setSelectedOrderForModal(prev => ({ ...prev, status: 'ახალი' }));
+      if (typeof setOrders === 'function') {
+        setOrders(prev => (prev || []).map(order =>
+          String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order
+        ));
       }
+      setSelectedOrderForModal(prev =>
+        prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
+      );
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
         localStorage.setItem('geostore_local_orders', JSON.stringify(
-          localOrders.map(order => order.id === reactivationOrder.id ? { ...order, status: 'ახალი' } : order)
+          localOrders.map(order => String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order)
         ));
       } catch {}
 
@@ -1851,13 +2233,16 @@ export default function AdminDashboardPro({
   };
 
   const handleSaveOrderAdminNote = async (orderId) => {
+    if (isSavingOrderNote) return;
+    const noteToSave = String(orderAdminNoteInput ?? '');
+    setIsSavingOrderNote(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_order_note`, {
         method: 'POST',
         headers: await getSupabaseHeaders({ authenticated: true }),
         body: JSON.stringify({
           p_order_id: String(orderId),
-          p_admin_note: String(orderAdminNoteInput ?? '')
+          p_admin_note: noteToSave
         })
       });
       if (!response.ok) {
@@ -1865,15 +2250,21 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შენიშვნის ბაზაში შენახვა ვერ მოხერხდა.');
       }
       if (typeof setOrders === 'function') {
-        setOrders(prev => (prev || []).map(o => o.id === orderId ? { ...o, adminNote: orderAdminNoteInput } : o));
+        setOrders(prev => (prev || []).map(o =>
+          String(o.id) === String(orderId) ? { ...o, adminNote: noteToSave } : o
+        ));
       }
-      if (selectedOrderForModal && selectedOrderForModal.id === orderId) {
-        setSelectedOrderForModal(prev => ({ ...prev, adminNote: orderAdminNoteInput }));
-      }
+      // The modal may have been switched while the request was in flight.
+      // Update it only if it still displays the order that was actually saved.
+      setSelectedOrderForModal(prev =>
+        prev && String(prev.id) === String(orderId) ? { ...prev, adminNote: noteToSave } : prev
+      );
       alert('✅ ადმინისტრატორის შენიშვნა წარმატებით შეინახა!');
     } catch (error) {
       console.error('Admin order note save failed:', error);
       alert(error?.message || 'შეცდომა შენიშვნის შენახვისას');
+    } finally {
+      setIsSavingOrderNote(false);
     }
   };
 
@@ -1910,15 +2301,15 @@ export default function AdminDashboardPro({
     if (typeof setUsersList === 'function') {
       setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
     }
-    logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) ბლოკირების სტატუსი`);
+    logActivity(`შეიცვალა მხოლოდ CRM ჩანაწერის შეზღუდვის ნიშანი (ID: ${userId})`);
   };
 
   const handleDeleteUser = (userId, userName) => {
-    if (window.confirm(`ნამდვილად გსურთ მომხმარებლის "${userName || userId}" წაშლა სისტემიდან?`)) {
+    if (window.confirm(`წაიშლება მხოლოდ ამ მოწყობილობაზე შენახული CRM ჩანაწერი "${userName || userId}". Supabase Auth ანგარიში და შეკვეთები არ წაიშლება. გავაგრძელოთ?`)) {
       if (typeof setUsersList === 'function') {
         setUsersList(prev => (prev || []).filter(u => u.id !== userId && u.email !== userId));
       }
-      logActivity(`წაიშალა მომხმარებელი: ${userName || userId}`);
+      logActivity(`წაიშალა მხოლოდ ლოკალური CRM ჩანაწერი: ${userName || userId}`);
     }
   };
 
@@ -1942,14 +2333,44 @@ export default function AdminDashboardPro({
     alert('✅ მომხმარებლის მონაცემები წარმატებით განახლდა!');
   };
 
-  const handleSaveSettings = (e) => {
-    e.preventDefault();
-    if (typeof setSiteSettings === 'function') {
-      setSiteSettings(siteSettings);
+  const handleRestoreStorefrontVersion = (version) => {
+    if (!adminLoggedIn || !version?.snapshot || typeof version.snapshot !== 'object' || Array.isArray(version.snapshot)) return;
+    const snapshot = version.snapshot;
+    if (!Array.isArray(snapshot.categories) || !Array.isArray(snapshot.banners) ||
+        !snapshot.siteSettings || typeof snapshot.siteSettings !== 'object' || Array.isArray(snapshot.siteSettings)) {
+      alert('ამ ვერსიის მონაცემები არასრულია და უსაფრთხოდ ვერ აღდგება.');
+      return;
     }
-    try { localStorage.setItem('geostore_site_settings', JSON.stringify(siteSettings)); } catch {}
-    logActivity('განახლდა საიტის გლობალური პარამეტრები');
-    alert('საიტის პარამეტრები წარმატებით განახლდა!');
+    const label = String(version.version_label || version.created_at || 'არჩეული ვერსია');
+    if (!window.confirm(`გსურთ „${label}“-ის ჩატვირთვა მონახაზში? გამოქვეყნება ავტომატურად არ მოხდება.`)) return;
+    if (typeof setCategoriesList === 'function') setCategoriesList(snapshot.categories);
+    if (typeof setBannersList === 'function') setBannersList(snapshot.banners);
+    if (typeof setSiteSettings === 'function') setSiteSettings(snapshot.siteSettings);
+    alert('ვერსია ჩაიტვირთა რედაქტორში. ცვლილებების შესანახად დააჭირეთ „მონახაზის შენახვას“, ხოლო საიტზე გამოსაჩენად ცალკე გამოაქვეყნეთ.');
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    const normalized = {
+      ...siteSettings,
+      storeName: String(siteSettings?.storeName || '').trim(),
+      topBarText: String(siteSettings?.topBarText || '').trim(),
+      heroTitle: String(siteSettings?.heroTitle || '').trim(),
+      heroSubtitle: String(siteSettings?.heroSubtitle || '').trim()
+    };
+    if (normalized.storeName.length < 2 || normalized.storeName.length > 60 ||
+        normalized.topBarText.length > 160 || normalized.heroTitle.length > 120 ||
+        normalized.heroSubtitle.length > 240) {
+      alert('შეამოწმეთ ველების სიგრძე: მაღაზიის სახელი 2–60, ზედა ზოლი 160, მთავარი სათაური 120, აღწერა 240 სიმბოლო.');
+      return;
+    }
+    if (typeof setSiteSettings === 'function') setSiteSettings(normalized);
+    if (typeof onSaveStorefrontDraft !== 'function') {
+      alert('Supabase-ის მონახაზის შენახვა მიუწვდომელია. ცვლილებები დარჩება მხოლოდ ამ მოწყობილობაზე.');
+      return;
+    }
+    logActivity('მზადდება საიტის პარამეტრების მონახაზის შენახვა');
+    await onSaveStorefrontDraft(normalized);
   };
 
   const filteredUsers = (usersList || []).filter(u => 
@@ -1979,7 +2400,11 @@ export default function AdminDashboardPro({
       String(o.customerName ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
       String(o.phone ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase());
 
-    const matchesStatus = orderStatusFilter === 'ყველა' || o.status === orderStatusFilter;
+    // Legacy English/Russian status values must appear in the same filter
+    // bucket as their Georgian equivalents, rather than disappearing from
+    // filtered lists even though tracking recognizes them.
+    const matchesStatus = orderStatusFilter === 'ყველა' ||
+      getOrderStatusFilterKey(o.status) === orderStatusFilter;
     return matchesSearch && matchesStatus;
   }).sort((a, b) => {
     const aTime = Date.parse(a.status_changed_at || '') || Date.parse(a.created_at || '') || 0;
@@ -2027,6 +2452,7 @@ export default function AdminDashboardPro({
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
+            { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
             { id: 'logs', label: '📋 აქტივობები', count: activityLogs?.length || 0, icon: Activity },
             { id: 'broadcasts', label: '📢 შეტყობინებები', icon: Send },
@@ -2082,8 +2508,16 @@ export default function AdminDashboardPro({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <button
               type="button"
+              onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
+              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
+              className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
+            >
+              {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
+            </button>
+            <button
+              type="button"
               onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
-              disabled={storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
+              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
               className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
             >
               {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
@@ -2184,8 +2618,8 @@ export default function AdminDashboardPro({
                   <span className="text-[10px] text-slate-400">ზღვარი: 5 ცალი</span>
                 </div>
                 {financialOverview.lowStockProducts.length === 0 ? <p className="text-emerald-300 text-xs py-6">ყველა პროდუქტს საკმარისი მარაგი აქვს ან მარაგი მითითებული არ არის.</p> : financialOverview.lowStockProducts.map(product => (
-                  <div key={product.id || product.sku || product.name} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}</span></div>
+                  <div key={product._inventoryKey} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                    <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}{product.variantName ? ` · ${product.variantName}` : ''}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}{product.variantName ? ' · ვარიანტი' : ''}</span></div>
                     <span className={product._stockValue === 0 ? 'text-rose-300 font-black whitespace-nowrap' : 'text-amber-300 font-black whitespace-nowrap'}>{product._stockValue === 0 ? 'არ არის მარაგში' : `${product._stockValue} ცალი დარჩა`}</span>
                   </div>
                 ))}
@@ -2207,10 +2641,10 @@ export default function AdminDashboardPro({
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <h3 className="font-black text-white text-sm">მარაგის სტატისტიკა</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">პროდუქტები დაბალი მარაგით</p><b className="text-2xl text-amber-300">{financialOverview.lowStockProducts.length}</b></div>
+                  <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">დაბალი მარაგის პოზიციები</p><b className="text-2xl text-amber-300">{financialOverview.lowStockProducts.length}</b></div>
                   <div className="bg-slate-950/70 rounded-2xl p-4"><p className="text-[10px] text-slate-400">ნულოვანი მარაგი</p><b className="text-2xl text-rose-300">{financialOverview.lowStockProducts.filter(product => product._stockValue === 0).length}</b></div>
                 </div>
-                <p className="text-[10px] text-slate-500">მონაცემები იკითხება არსებული პროდუქტის stock ველიდან. მარაგი ავტომატურად არ იცვლება.</p>
+                <p className="text-[10px] text-slate-500">მონაცემები ითვალისწინებს როგორც პროდუქტის საერთო მარაგს, ისე თითოეული ინდივიდუალური ვარიანტის მარაგს.</p>
               </div>
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -2226,7 +2660,7 @@ export default function AdminDashboardPro({
                   </div>
                 ))}
                 {financialOverview.unknownCogsItems > 0 && <p className="text-amber-300 text-[10px]">თვითღირებულება უცნობია {financialOverview.unknownCogsItems} შეკვეთის/პროდუქტის ჩანაწერზე.</p>}
-                {financialOverview.estimatedCogsItems > 0 && <p className="text-amber-300 text-[10px]">ძველი შეკვეთების {financialOverview.estimatedCogsItems} პოზიციაზე გამოყენებულია პროდუქტის მიმდინარე თვითღირებულება და არა გაყიდვის დღის ისტორიული ფასი.</p>}
+                {financialOverview.estimatedCogsItems > 0 && <p className="text-amber-300 text-[10px]">ძველი შეკვეთების {financialOverview.estimatedCogsItems} ერთეულზე გამოყენებულია პროდუქტის მიმდინარე თვითღირებულება და არა გაყიდვის დღის ისტორიული ფასი.</p>}
               </div>
               <div className="bg-slate-900/80 border border-rose-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-rose-500/20 pb-3">
@@ -2261,9 +2695,10 @@ export default function AdminDashboardPro({
                   <div key={item.key} className="border-b border-slate-800 pb-3 space-y-1.5">
                     <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
                     <p className="text-[10px] text-slate-400">{item.vendor} · {item.category}</p>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
                     <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
+                    {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
                   </div>
                 ))}
               </div>
@@ -2275,9 +2710,10 @@ export default function AdminDashboardPro({
                 {financialOverview.vendorProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">მომწოდებლის გაყიდვები არ არის.</p> : financialOverview.vendorProfitability.map(item => (
                   <div key={item.name} className="border-b border-slate-800 pb-3 space-y-1.5">
                     <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
                     <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
+                    {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
                   </div>
                 ))}
               </div>
@@ -2706,18 +3142,27 @@ export default function AdminDashboardPro({
                         </button>
 
                         {isCancelledOrderStatus(o.status) ? (
-                          <button
-                            onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
-                            className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
-                          >
-                            <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
-                          </button>
+                          o.stock_deducted_at && o.stock_restored_at ? (
+                            <button
+                              onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                              className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
+                            >
+                              <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
+                            </button>
+                          ) : (
+                            <span
+                              className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-200 text-[10px] leading-relaxed"
+                              title="რეაქტივაცია მოითხოვს მარაგის ჩამოჭრისა და აღდგენის დადასტურებულ ჩანაწერებს."
+                            >
+                              რეაქტივაცია მიუწვდომელია — მარაგის ისტორია არასრულია
+                            </span>
+                          )
                         ) : (
                           <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
-                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={o.status === 'დასრულებული'} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${o.status === 'დასრულებული' ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
+                            <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაუქმებული')} disabled={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status)} title={isShippedOrderStatus(o.status) || isDeliveredOrderStatus(o.status) ? 'გაგზავნილი ან ჩაბარებული შეკვეთის გაუქმება დაბრუნების პროცესის გარეშე დაუშვებელია.' : undefined} className="px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed text-slate-400 hover:text-white">გაუქმება</button>
                           </div>
                         )}
@@ -2779,14 +3224,14 @@ export default function AdminDashboardPro({
 
               {/* 2. პროდუქტების სრული ინფორმაცია და ფოტოები */}
               <div className="admin-order-items-section space-y-3">
-                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({Array.isArray(selectedOrderForModal.items) ? selectedOrderForModal.items.length : 1})</h4>
+                <h4 className="font-black text-emerald-400 text-sm">🛍️ შეკვეთილი პროდუქტები ({normalizeOrderItems(selectedOrderForModal.items).length || 1})</h4>
                 
                 <div className="space-y-3">
-                  {Array.isArray(selectedOrderForModal.items) && selectedOrderForModal.items.length > 0 ? (
-                    selectedOrderForModal.items.map((item, idx) => (
+                  {normalizeOrderItems(selectedOrderForModal.items).length > 0 ? (
+                    normalizeOrderItems(selectedOrderForModal.items).map((item, idx) => (
                       <div key={idx} className="admin-order-item bg-slate-950 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        {item.image ? (
-                          <img src={item.image} alt="" className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
+                        {resolveOrderItemImage(item, products) ? (
+                          <img src={resolveOrderItemImage(item, products)} alt={item.name || 'შეკვეთილი პროდუქტი'} className="w-16 h-16 object-contain bg-slate-900 p-1.5 rounded-2xl border border-emerald-500/20 shrink-0" />
                         ) : (
                           <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-slate-500 text-[10px] shrink-0">No Img</div>
                         )}
@@ -2796,8 +3241,12 @@ export default function AdminDashboardPro({
                             {item.sku && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">SKU: <b>{item.sku}</b></span>}
                             {item.selectedSize && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ზომა: <b>{item.selectedSize}</b></span>}
                             {item.selectedColor && <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">ფერი: <b>{item.selectedColor}</b></span>}
+                            {item.customVariantName && <span className="bg-slate-900 px-2 py-0.5 rounded border border-amber-500/30">ვარიანტი: <b>{item.customVariantName}</b></span>}
+                            {item.gift_wrap === true && <span className="bg-amber-950/40 text-amber-200 px-2 py-0.5 rounded border border-amber-800/60">სასაჩუქრე შეფუთვა (+5 ₾)</span>}
+                            {item.vip_warranty === true && <span className="bg-amber-950/40 text-amber-200 px-2 py-0.5 rounded border border-amber-800/60">VIP გარანტია (+15 ₾)</span>}
                             <span>რაოდენობა: <b>{item.quantity || 1}</b></span>
                           </div>
+                          {item.gift_message && <p className="text-amber-200 text-[11px] break-words">სასაჩუქრე ტექსტი: {item.gift_message}</p>}
                         </div>
                         <div className="admin-order-item-price text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-900">
                           <span className="text-slate-400 text-[10px]">ერთეულის ფასი: {item.priceGEL || item.price || 0} ₾</span>
@@ -2832,14 +3281,17 @@ export default function AdminDashboardPro({
                     maxLength={5000}
                     placeholder="ჩაწერეთ შენიშვნა (მაგ: კლიენტმა ითხოვა 14:00 საათზე მოტანა)..." 
                     value={orderAdminNoteInput}
+                    disabled={isSavingOrderNote}
                     onChange={e => setOrderAdminNoteInput(e.target.value)}
                     className="flex-1 bg-slate-950 border border-emerald-500/20 p-3 rounded-2xl text-white outline-none focus:border-emerald-400"
                   />
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => handleSaveOrderAdminNote(selectedOrderForModal.id)}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-2xl transition cursor-pointer"
+                    disabled={isSavingOrderNote}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-2xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    შენახვა
+                    {isSavingOrderNote ? 'ინახება…' : 'შენახვა'}
                   </button>
                 </div>
               </div>
@@ -2869,6 +3321,12 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
             </h3>
+            {supportTicketsError && (
+              <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+                მხარდაჭერის შეტყობინებების ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული მონაცემები შენარჩუნებულია. დეტალი: {supportTicketsError}
+                <button type="button" onClick={fetchTickets} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
+              </div>
+            )}
             <div className="admin-support-list space-y-4">
               {(!supportTickets || supportTickets.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
@@ -3072,17 +3530,21 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <div className="admin-product-variants-notice bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-2">
-                  <h4 className="text-amber-400 font-black text-sm flex items-center gap-2">
-                    <Layers className="w-4 h-4" />
-                    <span>ინდივიდუალური ვარიანტები დროებით გამორთულია</span>
-                  </h4>
-                  <p className="text-slate-300 text-xs leading-relaxed">
-                    ვარიანტის ცალკე ფასისა და მარაგის სერვერული დამუშავება ჯერ დასრულებული არ არის.
-                    არსებული შენახული ვარიანტები შენარჩუნებულია, მაგრამ ახალი ვარიანტის ფასით შეკვეთის გაფორმება
-                    ხელახლა ჩაირთვება მხოლოდ მას შემდეგ, რაც შეკვეთა, მარაგის ჩამოჭრა, გაუქმება და აღდგენა
-                    ერთიანად იქნება დაცული სერვერზე.
-                  </p>
+                <div className="admin-product-variants-editor bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
+                  <h4 className="text-amber-400 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ინდივიდუალური ვარიანტები</h4>
+                  <p className="text-slate-400 text-xs leading-relaxed">თითოეულ ვარიანტს აქვს საკუთარი ფასი და მარაგი. შეკვეთისას ორივე სერვერზე მოწმდება.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <input value={newVarName} onChange={e => setNewVarName(e.target.value)} maxLength={80} placeholder="ვარიანტის სახელი" className="sm:col-span-2 min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input value={newVarPrice} onChange={e => setNewVarPrice(e.target.value)} inputMode="decimal" placeholder="ფასი ₾" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <input value={newVarStock} onChange={e => setNewVarStock(e.target.value)} inputMode="numeric" placeholder="მარაგი (ც.)" className="min-w-0 bg-slate-900 border border-amber-500/20 p-3 rounded-xl text-white text-xs outline-none" />
+                    <button type="button" onClick={() => handleAddCustomVariant({ preventDefault: () => {} })} className="sm:col-span-4 rounded-xl bg-amber-400 px-4 py-3 text-xs font-black text-slate-950">ვარიანტის დამატება</button>
+                  </div>
+                  {productVariants.length ? <div className="space-y-2">{productVariants.map(variant => (
+                    <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-3 text-xs">
+                      <div className="min-w-0"><b className="text-white">{variant.name}</b><span className="ml-2 text-amber-300">{Number(variant.priceGEL).toFixed(2)} ₾</span><span className="ml-2 text-slate-400">მარაგი: {variant.stock}</span></div>
+                      <button type="button" onClick={() => handleRemoveCustomVariant(variant.id)} className="rounded-lg bg-rose-500/10 px-3 py-2 font-bold text-rose-300">წაშლა</button>
+                    </div>
+                  ))}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
                 </div>
 
                 <div className="admin-product-gallery space-y-3 bg-slate-950 p-5 rounded-3xl border border-emerald-500/20 shadow-inner">
@@ -3227,6 +3689,43 @@ export default function AdminDashboardPro({
           </div>
         )}
 
+        {adminTab === 'messages' && (
+          <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
+              <div>
+                <h3 className="font-black text-white text-base flex items-center gap-2.5">
+                  <HelpCircle className="w-5 h-5 text-emerald-400" /> შენახული მიმოწერები ({legacyMessages.length})
+                </h3>
+                <p className="text-slate-400 text-xs mt-1">არსებული messages ჩანაწერები. განახლება ხდება ავტომატურად ყოველ 15 წამში.</p>
+              </div>
+              <button type="button" onClick={fetchLegacyMessages} className="rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/10">განახლება</button>
+            </div>
+            {legacyMessagesError && (
+              <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+                მიმოწერების ჩატვირთვა ვერ მოხერხდა. არსებული ეკრანის მონაცემები არ შეცვლილა. დეტალი: {legacyMessagesError}
+              </div>
+            )}
+            {legacyMessages.length === 0 ? (
+              <p className="text-slate-400 text-xs py-8 text-center">შენახული მიმოწერები არ მოიძებნა. ახალი მხარდაჭერის მოთხოვნები იხილეთ „მხარდაჭერა“ განყოფილებაში.</p>
+            ) : (
+              <div className="space-y-3">
+                {legacyMessages.map((message) => (
+                  <article key={message.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 sm:p-5 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-black text-white">{message.client_name || 'მომხმარებელი'}</p>
+                      <span className="text-[10px] text-slate-400">{message.created_at ? new Date(message.created_at).toLocaleString('ka-GE') : (message.time || '')}</span>
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wide text-emerald-300">{message.sender || 'უცნობი გამომგზავნი'}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-200">{message.text || 'ტექსტური შეტყობინება არ არის.'}</p>
+                    {message.image && <p className="text-[10px] text-slate-400">მიმაგრებულია სურათი</p>}
+                    <p className="text-[10px] text-slate-500">ჩანაწერის ID: {message.id}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {adminTab === 'discounts' && (
           <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -3261,10 +3760,15 @@ export default function AdminDashboardPro({
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
             </h3>
             <div className="space-y-3">
+              {activityLogsLoading && <p className="text-xs text-slate-400">აქტივობების ისტორია იტვირთება...</p>}
+              {activityLogsError && <p role="alert" className="text-xs text-amber-300 break-words">{activityLogsError}</p>}
+              {!activityLogsLoading && activityLogs.length === 0 && !activityLogsError && (
+                <p className="text-xs text-slate-400">შენახული აქტივობები ჯერ არ არის.</p>
+              )}
               {activityLogs.map(log => (
                 <div key={log.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
-                  <span className="font-bold text-slate-200">{log.action}</span>
-                  <span className="text-slate-500 text-[10px]">{log.time}</span>
+                  <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
+                  <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
               ))}
             </div>
@@ -3336,7 +3840,7 @@ export default function AdminDashboardPro({
               </h3>
               <form onSubmit={handleAddCategory} className="admin-category-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <input type="text" placeholder="სახელწოდება *" required value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" placeholder="სახელწოდება *" required maxLength={60} value={newCatName} onChange={e => setNewCatName(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <select value={selectedParentId} onChange={e => setSelectedParentId(e.target.value)} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer font-bold">
                     <option value="">📁 მთავარი კატეგორია (Parent)</option>
                     {mainCategories.map(cat => (
@@ -3360,7 +3864,7 @@ export default function AdminDashboardPro({
                   </label>
                   <input 
                     type="file" 
-                    accept="image/*" 
+                    accept="image/jpeg,image/png,image/webp,image/gif" 
                     onChange={e => handleCategoryFileChange(e, false)} 
                     className="w-full text-slate-400 text-xs file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400 cursor-pointer" 
                   />
@@ -3384,6 +3888,7 @@ export default function AdminDashboardPro({
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და ფოტოების მართვა</h3>
+              <p className="text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
               <div className="admin-category-tree space-y-4">
                 {mainCategories.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-6">მთავარი კატეგორიები არ არის.</p>
@@ -3411,6 +3916,8 @@ export default function AdminDashboardPro({
                           </div>
 
                           <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => moveCategory(parentCat.id, -1)} disabled={mainCategories[0]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ზემოთ აწევა" aria-label={`კატეგორიის ${parentCat.name} ზემოთ აწევა`}><ChevronUp className="w-4 h-4" /></button>
+                            <button type="button" onClick={() => moveCategory(parentCat.id, 1)} disabled={mainCategories[mainCategories.length - 1]?.id === parentCat.id} className="p-2 bg-slate-900 text-slate-300 border border-slate-700 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed" title="კატეგორიის ქვემოთ ჩამოწევა" aria-label={`კატეგორიის ${parentCat.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-4 h-4" /></button>
                             {!isEditingParent && (
                               <button 
                                 onClick={() => { setEditingCatId(parentCat.id); setEditCatName(parentCat.name); setEditCatIcon(parentCat.icon || 'Shirt'); setEditCatImage(displayImage || ''); }} 
@@ -3431,7 +3938,7 @@ export default function AdminDashboardPro({
                               <div>
                                 <label className="text-slate-400 text-[10px] block mb-1">სახელწოდება</label>
                                 <input 
-                                  type="text" 
+                                  type="text" maxLength={60}
                                   value={editCatName} 
                                   onChange={e => setEditCatName(e.target.value)} 
                                   className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none text-xs"
@@ -3441,7 +3948,7 @@ export default function AdminDashboardPro({
                                 <label className="text-slate-400 text-[10px] block mb-1">ატვირთეთ ახალი ფოტო კომპიუტერიდან</label>
                                 <input 
                                   type="file" 
-                                  accept="image/*" 
+                                  accept="image/jpeg,image/png,image/webp,image/gif" 
                                   onChange={e => handleCategoryFileChange(e, true)} 
                                   className="w-full text-slate-400 text-[10px] file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                 />
@@ -3474,6 +3981,8 @@ export default function AdminDashboardPro({
                                     </div>
 
                                     <div className="flex items-center gap-1.5">
+                                      <button type="button" onClick={() => moveCategory(sub.id, -1)} disabled={subCats[0]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ზემოთ აწევა" aria-label={`სუბკატეგორიის ${sub.name} ზემოთ აწევა`}><ChevronUp className="w-3.5 h-3.5" /></button>
+                                      <button type="button" onClick={() => moveCategory(sub.id, 1)} disabled={subCats[subCats.length - 1]?.id === sub.id} className="p-1.5 bg-slate-900 text-slate-300 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed" title="სუბკატეგორიის ქვემოთ ჩამოწევა" aria-label={`სუბკატეგორიის ${sub.name} ქვემოთ ჩამოწევა`}><ChevronDown className="w-3.5 h-3.5" /></button>
                                       {!isEditingSub && (
                                         <button 
                                           onClick={() => { setEditingCatId(sub.id); setEditCatName(sub.name); setEditCatIcon(sub.icon || 'Shirt'); setEditCatImage(subImg || ''); }} 
@@ -3491,7 +4000,7 @@ export default function AdminDashboardPro({
                                     <div className="bg-slate-900 p-3 rounded-xl border border-amber-500/30 space-y-2.5 animate-in fade-in">
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <input 
-                                          type="text" 
+                                          type="text" maxLength={60}
                                           value={editCatName} 
                                           onChange={e => setEditCatName(e.target.value)} 
                                           placeholder="სახელი"
@@ -3499,7 +4008,7 @@ export default function AdminDashboardPro({
                                         />
                                         <input 
                                           type="file" 
-                                          accept="image/*" 
+                                          accept="image/jpeg,image/png,image/webp,image/gif" 
                                           onChange={e => handleCategoryFileChange(e, true)} 
                                           className="w-full text-slate-400 text-[10px] file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:bg-amber-400 file:text-slate-950 file:font-black cursor-pointer"
                                         />
@@ -3592,13 +4101,16 @@ export default function AdminDashboardPro({
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-emerald-400" /> მრავალფუნქციური CRM მომხმარებლები ({usersList?.length || 0})
+                <Users className="w-5 h-5 text-emerald-400" /> CRM ჩანაწერები — ლოკალური სია ({usersList?.length || 0})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
                 <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
+            <p className="text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
+              ეს არის ძველი CRM სია, რომელიც ინახება მხოლოდ ამ მოწყობილობის ბრაუზერში. VIP/შეზღუდვის ნიშნები აქ მხოლოდ CRM ჩანაწერს ეხება — ისინი არ ცვლიან Supabase Auth ანგარიშის უფლებებს. ჩანაწერის წაშლა არ შლის რეალურ ანგარიშს, შეკვეთებს ან ბაზის მონაცემებს.
+            </p>
 
             <div className="admin-crm-list space-y-4">
               {(!filteredUsers || filteredUsers.length === 0) ? (
@@ -3615,7 +4127,7 @@ export default function AdminDashboardPro({
                           <div className="flex items-center gap-2.5 flex-wrap">
                             <h4 className="font-black text-white text-sm">{u.name}</h4>
                             {u.isVip && <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black flex items-center gap-1"><Star className="w-3 h-3 fill-emerald-400" /> VIP</span>}
-                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">დაბლოკილი</span>}
+                            {u.isBlocked && <span className="bg-rose-500/20 text-rose-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">CRM შეზღუდვის ნიშანი</span>}
                             {u.discountPercent > 0 && <span className="bg-amber-500/20 text-amber-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">ფასდაკლება: {u.discountPercent}%</span>}
                           </div>
                           <p className="text-slate-400 text-[11px] mt-1">📧 {u.email} | 📞 {u.phone || 'მითითებული არ არის'}</p>
@@ -3634,10 +4146,10 @@ export default function AdminDashboardPro({
                           <button 
                             onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
-                            title="ბლოკირება / განბლოკვა"
+                            title="მხოლოდ ლოკალური CRM ჩანაწერის ნიშანი; Auth ანგარიშს არ ბლოკავს"
                           >
                             {u.isBlocked ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
-                            {u.isBlocked ? 'განბლოკვა' : 'დაბლოკვა'}
+                            {u.isBlocked ? 'ნიშნის მოხსნა' : 'CRM-ში შეზღუდულად მონიშვნა'}
                           </button>
 
                           <button 
@@ -3659,7 +4171,7 @@ export default function AdminDashboardPro({
                           <button 
                             onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
-                            title="მომხმარებლის წაშლა"
+                            title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -3749,16 +4261,49 @@ export default function AdminDashboardPro({
               <form onSubmit={handleSaveSettings} className="admin-global-settings-form space-y-4 text-xs">
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold">მაღაზიის დასახელება</label>
-                  <input type="text" value={siteSettings.storeName} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <input type="text" maxLength={60} value={siteSettings?.storeName || 'GEOSTORE'} onChange={e => setSiteSettings({...siteSettings, storeName: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (TopBar)</label>
-                  <input type="text" value={siteSettings.topBarText} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                  <label className="text-slate-400 font-bold">ზედა ზოლის ტექსტი (მაქს. 160)</label>
+                  <input type="text" maxLength={160} value={siteSettings?.topBarText || ''} onChange={e => setSiteSettings({...siteSettings, topBarText: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 font-bold">მთავარი სათაური (მაქს. 120)</label>
+                  <input type="text" maxLength={120} value={siteSettings?.heroTitle || ''} onChange={e => setSiteSettings({...siteSettings, heroTitle: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 font-bold">მთავარი აღწერა (მაქს. 240)</label>
+                  <textarea maxLength={240} rows={3} value={siteSettings?.heroSubtitle || ''} onChange={e => setSiteSettings({...siteSettings, heroSubtitle: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner resize-y" />
                 </div>
                 <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">
                   პარამეტრების შენახვა
                 </button>
               </form>
+              <div className="border-t border-emerald-500/20 pt-5 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-bold text-white">გამოქვეყნების ვერსიების ისტორია</h4>
+                </div>
+                {storefrontVersionsLoading ? (
+                  <p className="text-xs text-slate-400">ვერსიები იტვირთება…</p>
+                ) : storefrontVersionsError ? (
+                  <p role="alert" className="text-xs text-rose-300">{storefrontVersionsError}</p>
+                ) : storefrontVersions.length === 0 ? (
+                  <p className="text-xs text-slate-400">შენახული გამოქვეყნების ვერსიები ჯერ არ არსებობს.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {storefrontVersions.map(version => (
+                      <div key={version.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-700 bg-slate-950/70 p-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white break-words">{version.version_label || 'გამოქვეყნების ვერსია'}</p>
+                          <p className="text-[10px] text-slate-400">{version.created_at ? new Date(version.created_at).toLocaleString('ka-GE') : ''}</p>
+                        </div>
+                        <button type="button" onClick={() => handleRestoreStorefrontVersion(version)} className="shrink-0 rounded-lg border border-emerald-400/40 px-3 py-2 text-[10px] font-bold text-emerald-300 hover:bg-emerald-500/10">მონახაზში აღდგენა</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] leading-5 text-slate-500">აღდგენა მხოლოდ რედაქტორში ჩატვირთავს ძველ ვერსიას. ის ავტომატურად არ გამოქვეყნდება და არსებულ ისტორიას არ წაშლის.</p>
+              </div>
             </div>
           </div>
         )}

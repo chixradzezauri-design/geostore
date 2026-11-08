@@ -1,0 +1,363 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from '../src/utils/cartSafety.js';
+
+const product = {
+  id: 'p-1',
+  name: 'Test jacket',
+  stock: 3,
+  priceGEL: 120,
+  availableSizes: ['S', 'M', 'L'],
+  availableColors: ['Black', 'Blue']
+};
+
+test('adds a product and preserves its selected variant', () => {
+  const result = addProductToCart([], { ...product, selectedSize: 'M', selectedColor: 'Black' }, 1);
+  assert.equal(result.valid, true);
+  assert.equal(result.cart.length, 1);
+  assert.equal(result.cart[0].quantity, 1);
+  assert.equal(result.cart[0].selectedSize, 'M');
+  assert.equal(result.cart[0].selectedColor, 'Black');
+});
+
+test('keeps gift and warranty choices as distinct cart lines for the same product variant', () => {
+  const first = addProductToCart([], { ...product, selectedSize: 'M', giftWrap: true, giftMessage: 'Happy birthday' }, 1);
+  const second = addProductToCart(first.cart, { ...product, selectedSize: 'M', vipWarranty: true }, 1);
+  assert.equal(second.cart.length, 2);
+  assert.equal(second.cart[0].giftWrap, true);
+  assert.equal(second.cart[0].giftMessage, 'Happy birthday');
+  assert.equal(second.cart[1].vipWarranty, true);
+});
+
+test('merges only identical product variants into one cart line', () => {
+  const first = addProductToCart([], { ...product, selectedSize: 'M' }, 1);
+  const second = addProductToCart(first.cart, { ...product, selectedSize: 'M' }, 1);
+  const third = addProductToCart(second.cart, { ...product, selectedSize: 'L' }, 1);
+  assert.equal(third.cart.length, 2);
+  assert.equal(third.cart.find(item => item.selectedSize === 'M').quantity, 2);
+  assert.equal(third.cart.find(item => item.selectedSize === 'L').quantity, 1);
+});
+
+test('enforces stock across all variants of the same product', () => {
+  const first = addProductToCart([], { ...product, selectedSize: 'S' }, 2);
+  const second = addProductToCart(first.cart, { ...product, selectedSize: 'M' }, 1);
+  const rejected = addProductToCart(second.cart, { ...product, selectedSize: 'L' }, 1);
+  assert.equal(second.valid, true);
+  assert.equal(rejected.valid, false);
+  assert.equal(rejected.reason, 'limit');
+  assert.equal(rejected.remaining, 0);
+  assert.equal(rejected.cart, second.cart);
+});
+
+test('does not allow invalid quantity or unavailable stock', () => {
+  assert.equal(addProductToCart([], product, 0).reason, 'quantity');
+  assert.equal(addProductToCart([], product, 1.5).reason, 'quantity');
+  assert.equal(addProductToCart([], { ...product, stock: 0 }, 1).reason, 'stock');
+});
+
+test('treats malformed saved quantities as zero and does not mutate input cart', () => {
+  const savedCart = [{ ...product, quantity: 'bad', selectedSize: 'S' }];
+  const result = addProductToCart(savedCart, { ...product, selectedSize: 'M' }, 1);
+  assert.equal(result.valid, true);
+  assert.equal(result.cart.length, 2);
+  assert.equal(savedCart.length, 1);
+  assert.equal(savedCart[0].quantity, 'bad');
+});
+
+test('keeps different product IDs independent', () => {
+  const first = addProductToCart([], product, 3);
+  const second = addProductToCart(first.cart, { ...product, id: 'p-2', stock: 2 }, 2);
+  assert.equal(second.valid, true);
+  assert.equal(second.cart.length, 2);
+});
+
+test('keeps separately customized gift and warranty options as distinct cart lines', () => {
+  const plain = addProductToCart([], { ...product, name: 'Test jacket (Size: M)', selectedSize: 'M' }, 1);
+  const wrapped = addProductToCart(plain.cart, {
+    ...product,
+    name: 'Test jacket (Size: M) + Premium gift wrapping',
+    priceGEL: 125,
+    selectedSize: 'M'
+  }, 1);
+  assert.equal(wrapped.valid, true);
+  assert.equal(wrapped.cart.length, 2);
+  assert.equal(wrapped.cart[0].priceGEL, 120);
+  assert.equal(wrapped.cart[1].priceGEL, 125);
+});
+
+test('merges customized lines only when their name and price also match', () => {
+  const first = addProductToCart([], { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
+  const second = addProductToCart(first.cart, { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M' }, 1);
+  assert.equal(second.cart.length, 1);
+  assert.equal(second.cart[0].quantity, 2);
+});
+
+test('removes only the exact customized cart line', () => {
+  const plain = { ...product, name: 'Test jacket', selectedSize: 'M', quantity: 1 };
+  const wrapped = { ...product, name: 'Test jacket + gift wrap', priceGEL: 125, selectedSize: 'M', quantity: 1 };
+  const remaining = removeProductFromCart([plain, wrapped], wrapped);
+  assert.deepEqual(remaining, [plain]);
+});
+
+test('updates cart quantity without exceeding shared stock across variants', () => {
+  const cart = [
+    { ...product, selectedSize: 'S', quantity: 2 },
+    { ...product, selectedSize: 'M', quantity: 1 }
+  ];
+  const rejected = updateProductCartQuantity(cart, cart[0], 3);
+  assert.equal(rejected.valid, false);
+  assert.equal(rejected.reason, 'limit');
+  assert.equal(rejected.cart, cart);
+  const reduced = updateProductCartQuantity(cart, cart[0], 1);
+  assert.equal(reduced.valid, true);
+  assert.equal(reduced.cart[0].quantity, 1);
+  assert.equal(reduced.cart[1].quantity, 1);
+});
+
+test('rejects invalid cart quantity updates and preserves the original cart', () => {
+  const cart = [{ ...product, selectedSize: 'M', quantity: 1 }];
+  assert.equal(updateProductCartQuantity(cart, cart[0], 0).reason, 'quantity');
+  assert.equal(updateProductCartQuantity(cart, cart[0], 1.5).reason, 'quantity');
+  assert.equal(cart[0].quantity, 1);
+});
+
+
+test('sanitizes persisted cart snapshots and keeps valid product variants', () => {
+  const saved = [
+    { ...product, selectedSize: ' M ', selectedColor: ' Black ', quantity: '2', priceGEL: '120' },
+    null,
+    { ...product, id: '', quantity: 1 },
+    { ...product, quantity: 0 },
+    { ...product, quantity: 1.5 },
+    { ...product, quantity: 1, priceGEL: 'not-a-price' },
+    { ...product, quantity: 101 },
+    'not-an-item'
+  ];
+  const result = sanitizeCartSnapshot(saved);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].id, 'p-1');
+  assert.equal(result[0].quantity, 2);
+  assert.equal(result[0].priceGEL, 120);
+  assert.equal(result[0].selectedSize, 'M');
+  assert.equal(result[0].selectedColor, 'Black');
+});
+
+test('sanitizes structured add-ons and recovers legacy add-ons from saved cart names', () => {
+  const [modern] = sanitizeCartSnapshot([{
+    ...product, quantity: 1, priceGEL: 140, basePriceGEL: 120,
+    giftWrap: true, vipWarranty: true, giftMessage: ' Happy birthday '
+  }]);
+  assert.equal(modern.priceGEL, 140);
+  assert.equal(modern.basePriceGEL, 120);
+  assert.equal(modern.giftWrap, true);
+  assert.equal(modern.vipWarranty, true);
+  assert.equal(modern.giftMessage, 'Happy birthday');
+
+  const [legacy] = sanitizeCartSnapshot([{
+    ...product, quantity: 1, priceGEL: 140,
+    name: 'Test jacket + სასაჩუქრე პრემიუმ შეფუთვა [სასაჩუქრე ბარათის ტექსტი (უფასო): "Happy birthday"] + VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)'
+  }]);
+  assert.equal(legacy.name, 'Test jacket');
+  assert.equal(legacy.priceGEL, 140);
+  assert.equal(legacy.basePriceGEL, 120);
+  assert.equal(legacy.giftWrap, true);
+  assert.equal(legacy.vipWarranty, true);
+  assert.equal(legacy.giftMessage, 'Happy birthday');
+});
+
+test('returns an empty cart for malformed snapshots and caps oversized snapshots', () => {
+  assert.deepEqual(sanitizeCartSnapshot({ items: [] }), []);
+  assert.deepEqual(sanitizeCartSnapshot(null), []);
+  const oversized = Array.from({ length: 105 }, (_, index) => ({
+    ...product,
+    id: `p-${index}`,
+    quantity: 1
+  }));
+  assert.equal(sanitizeCartSnapshot(oversized).length, 100);
+});
+
+test('normalizes invalid saved stock to zero without trusting it for checkout', () => {
+  const [item] = sanitizeCartSnapshot([{ ...product, stock: 'bad', quantity: 1 }]);
+  assert.equal(item.stock, 0);
+});
+
+
+test('isolates guest and authenticated carts across sign-in and sign-out', () => {
+  const values = new Map([['geostore_cart', JSON.stringify([{ ...product, quantity: 2 }])]]);
+  const storage = {
+    getItem: key => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, String(value))
+  };
+  const guest = switchCartStorageOwner({
+    storage,
+    nextOwnerId: null,
+    currentCart: [],
+    isInitial: true
+  });
+  assert.equal(guest.cart[0].quantity, 2);
+  const userA = switchCartStorageOwner({
+    storage,
+    previousOwnerId: null,
+    nextOwnerId: 'user-a',
+    currentCart: guest.cart
+  });
+  assert.deepEqual(userA.cart, []);
+  const userB = switchCartStorageOwner({
+    storage,
+    previousOwnerId: 'user-a',
+    nextOwnerId: 'user-b',
+    currentCart: [{ ...product, quantity: 3 }]
+  });
+  assert.deepEqual(userB.cart, []);
+  const backToA = switchCartStorageOwner({
+    storage,
+    previousOwnerId: 'user-b',
+    nextOwnerId: 'user-a',
+    currentCart: [{ ...product, quantity: 1 }]
+  });
+  assert.equal(backToA.cart[0].quantity, 3);
+  const backToGuest = switchCartStorageOwner({
+    storage,
+    previousOwnerId: 'user-a',
+    nextOwnerId: null,
+    currentCart: [{ ...product, quantity: 5 }]
+  });
+  assert.equal(backToGuest.cart[0].quantity, 2);
+  assert.equal(JSON.parse(values.get('geostore_cart:user:user-a'))[0].quantity, 5);
+  assert.equal(JSON.parse(values.get('geostore_cart:user:user-b'))[0].quantity, 1);
+});
+
+test('uses distinct storage keys for guest and each authenticated account', () => {
+  assert.equal(getCartStorageKey(null), 'geostore_cart:guest');
+  assert.equal(getCartStorageKey('user/a'), 'geostore_cart:user:user%2Fa');
+  assert.notEqual(getCartStorageKey('user-a'), getCartStorageKey('user-b'));
+});
+
+
+test('blocks cart persistence while auth is loading or the owner is not initialized', async () => {
+  const { canPersistCartForOwner } = await import('../src/utils/cartSafety.js');
+  assert.equal(canPersistCartForOwner({
+    authLoading: true,
+    activeOwner: { initialized: true, userId: 'user-a' },
+    currentUserId: 'user-a'
+  }), false);
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: false, userId: null },
+    currentUserId: null
+  }), false);
+});
+
+test('blocks cart persistence when the active owner differs from the signed-in account', async () => {
+  const { canPersistCartForOwner } = await import('../src/utils/cartSafety.js');
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: true, userId: 'user-a' },
+    currentUserId: 'user-b'
+  }), false);
+});
+
+test('allows cart persistence only for the matching initialized owner, including guest carts', async () => {
+  const { canPersistCartForOwner } = await import('../src/utils/cartSafety.js');
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: true, userId: 'user-a' },
+    currentUserId: 'user-a'
+  }), true);
+  assert.equal(canPersistCartForOwner({
+    authLoading: false,
+    activeOwner: { initialized: true, userId: null },
+    currentUserId: null
+  }), true);
+});
+
+
+test('keeps custom product variants as separate inventory units in the cart', () => {
+  const variants = [
+    { id: 'v-small', name: 'Small pack', priceGEL: 20, stock: 1 },
+    { id: 'v-large', name: 'Large pack', priceGEL: 35, stock: 2 }
+  ];
+  const small = addProductToCart([], { ...product, variants, customVariantId: 'v-small', customVariantName: 'Small pack', stock: 1, priceGEL: 20 }, 1);
+  assert.equal(small.valid, true);
+  const large = addProductToCart(small.cart, { ...product, variants, customVariantId: 'v-large', customVariantName: 'Large pack', stock: 2, priceGEL: 35 }, 1);
+  assert.equal(large.valid, true);
+  assert.equal(large.cart.length, 2);
+  const overSmall = addProductToCart(large.cart, { ...product, variants, customVariantId: 'v-small', customVariantName: 'Small pack', stock: 1, priceGEL: 20 }, 1);
+  assert.equal(overSmall.valid, false);
+  assert.equal(overSmall.reason, 'limit');
+  assert.equal(overSmall.remaining, 0);
+  const remaining = removeProductFromCart(large.cart, large.cart[0]);
+  assert.equal(remaining.length, 1);
+  assert.equal(remaining[0].customVariantId, 'v-large');
+});
+
+
+test('quantity edits use only live catalogue stock, never stale cart snapshots', () => {
+  const savedLine = { ...product, quantity: 1, stock: 20 };
+  assert.equal(getCurrentCartItemStock(null, savedLine), 0);
+  assert.equal(getCurrentCartItemStock({ ...product, id: 'different' }, savedLine), 0);
+  assert.equal(getCurrentCartItemStock({ ...product, stock: 2 }, savedLine), 2);
+});
+
+test('quantity edits fail closed when a selected custom variant is missing or malformed', () => {
+  const line = { ...product, customVariantId: 'v-small', quantity: 1, stock: 50 };
+  const missing = { ...product, variants: [{ id: 'v-large', stock: 8 }] };
+  const malformed = { ...product, variants: [{ id: 'v-small', stock: 'unknown' }] };
+  const valid = { ...product, variants: [{ id: 'v-small', stock: 3 }] };
+  assert.equal(getCurrentCartItemStock(missing, line), 0);
+  assert.equal(getCurrentCartItemStock(malformed, line), 0);
+  assert.equal(getCurrentCartItemStock(valid, line), 3);
+  assert.equal(getCurrentCartItemStock({ ...product, variants: [{ id: 'v-small', stock: 3 }] }, { ...line, customVariantId: null }), 0);
+});
+
+
+test('isolates wishlist and comparison collections between guest and signed-in accounts', () => {
+  const values = new Map([
+    ['geostore_wishlist', JSON.stringify([{ id: 'legacy-wish', name: 'Legacy wish' }])],
+    ['geostore_comparison', JSON.stringify([{ id: 'legacy-compare', name: 'Legacy compare' }])]
+  ]);
+  const storage = {
+    getItem: key => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, String(value))
+  };
+  const guestWishlist = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', nextOwnerId: null, isInitial: true
+  });
+  const guestComparison = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_comparison', nextOwnerId: null, isInitial: true, maxItems: 4
+  });
+  assert.equal(guestWishlist.items[0].id, 'legacy-wish');
+  assert.equal(guestComparison.items[0].id, 'legacy-compare');
+
+  const userA = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: null,
+    nextOwnerId: 'user-a', currentItems: guestWishlist.items
+  });
+  assert.deepEqual(userA.items, []);
+  const userB = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: 'user-a',
+    nextOwnerId: 'user-b', currentItems: [{ id: 'user-a-wish', name: 'A only' }]
+  });
+  assert.deepEqual(userB.items, []);
+  const backToA = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: 'user-b',
+    nextOwnerId: 'user-a', currentItems: [{ id: 'user-b-wish', name: 'B only' }]
+  });
+  assert.equal(backToA.items[0].id, 'user-a-wish');
+  const backToGuest = switchUserScopedCollectionOwner({
+    storage, baseKey: 'geostore_wishlist', previousOwnerId: 'user-a',
+    nextOwnerId: null, currentItems: [{ id: 'updated-a-wish', name: 'A update' }]
+  });
+  assert.equal(backToGuest.items[0].id, 'legacy-wish');
+  assert.equal(JSON.parse(values.get('geostore_wishlist:user:user-a'))[0].id, 'updated-a-wish');
+  assert.equal(JSON.parse(values.get('geostore_wishlist:user:user-b'))[0].id, 'user-b-wish');
+});
+
+test('scoped product collections discard malformed and duplicate entries and enforce limits', () => {
+  assert.deepEqual(sanitizeProductCollection([
+    null, 'invalid', { id: '' }, { id: 'p1' }, { id: 'p1', name: 'duplicate' },
+    { id: 'p2' }, { id: 'p3' }
+  ], 2), [{ id: 'p1' }, { id: 'p2' }]);
+  assert.equal(getUserScopedCollectionStorageKey('geostore_wishlist', null), 'geostore_wishlist:guest');
+  assert.equal(getUserScopedCollectionStorageKey('geostore_wishlist', 'user/a'), 'geostore_wishlist:user:user%2Fa');
+});

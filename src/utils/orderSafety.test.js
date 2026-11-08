@@ -2,11 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  calculateCartSubtotalGEL,
   calculateCheckoutTotals,
   reconcileCartWithCatalog,
   createSecureOrderId,
   groupCheckoutItems,
-  isReusableCheckout
+  isReusableCheckout,
+  normalizeOrderItems,
+  normalizeOrderTotal,
+  validateOrderCreationResponse,
+  CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
 
 test('groups identical product and option combinations', () => {
@@ -17,6 +22,25 @@ test('groups identical product and option combinations', () => {
     ]),
     [{ id: 'p-1', selected_size: 'M', selected_color: 'შავი', quantity: 3 }]
   );
+});
+
+test('includes paid add-ons in checkout fingerprints while keeping plain-order shape stable', () => {
+  const grouped = groupCheckoutItems([
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1 },
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 2, gift_wrap: true, gift_message: 'Happy birthday', vip_warranty: true },
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1, gift_wrap: true, gift_message: 'Happy birthday', vip_warranty: true },
+    { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1, vip_warranty: true }
+  ]);
+  assert.equal(grouped.length, 3);
+  const plain = grouped.find(item => item.gift_wrap === undefined && item.vip_warranty === undefined);
+  const wrapped = grouped.find(item => item.gift_wrap === true);
+  const vipOnly = grouped.find(item => item.vip_warranty === true && item.gift_wrap === false);
+  assert.deepEqual(plain, { id: 'p1', selected_size: 'M', selected_color: 'Black', quantity: 1 });
+  assert.equal(wrapped.quantity, 3);
+  assert.equal(wrapped.gift_message, 'Happy birthday');
+  assert.equal(wrapped.vip_warranty, true);
+  assert.equal(vipOnly.quantity, 1);
+  assert.equal(vipOnly.gift_message, null);
 });
 
 test('keeps different sizes and colors as separate order lines', () => {
@@ -126,6 +150,22 @@ test('reconciles stale cart prices and stock against the latest catalogue', () =
   assert.equal(result.cartItems[2].priceGEL, 25);
 });
 
+test('reconciles the base price without losing server-priced cart add-ons', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'p1', name: 'Jacket', priceGEL: 140, basePriceGEL: 120,
+      giftWrap: true, vipWarranty: true, giftMessage: 'Happy birthday', quantity: 1
+    }],
+    [{ id: 'p1', name: 'Jacket', price_gel: 130, stock: 3 }]
+  );
+  assert.equal(result.hasChanges, true);
+  assert.equal(result.cartItems[0].basePriceGEL, 130);
+  assert.equal(result.cartItems[0].priceGEL, 150);
+  assert.equal(result.cartItems[0].giftWrap, true);
+  assert.equal(result.cartItems[0].vipWarranty, true);
+  assert.equal(result.cartItems[0].giftMessage, 'Happy birthday');
+});
+
 test('does not report a change when cart price and aggregate stock are current', () => {
   const result = reconcileCartWithCatalog(
     [{ id: 'p1', name: 'Current', priceGEL: 35, quantity: 2 }],
@@ -133,4 +173,153 @@ test('does not report a change when cart price and aggregate stock are current',
   );
   assert.equal(result.hasChanges, false);
   assert.deepEqual(result.changes, []);
+});
+
+
+test('flags cart variants that are no longer offered by the latest catalogue', () => {
+  const result = reconcileCartWithCatalog(
+    [
+      { id: 'p1', name: 'Jacket', priceGEL: 120, quantity: 1, selectedSize: 'XXL', selectedColor: 'Red' }
+    ],
+    [
+      { id: 'p1', name: 'Jacket', price_gel: 120, stock: 4, available_sizes: ['S', 'M', 'L'], available_colors: ['Black'] }
+    ]
+  );
+  assert.deepEqual(result.changes.map((change) => change.type), ['variant_size', 'variant_color']);
+  assert.equal(result.hasChanges, true);
+});
+
+test('rejects selected variants when catalogue explicitly configures no options', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p1', name: 'Jacket', priceGEL: 120, quantity: 1, selectedSize: 'M', selectedColor: 'Black' }],
+    [{ id: 'p1', name: 'Jacket', price_gel: 120, stock: 4, available_sizes: [], available_colors: [] }]
+  );
+  assert.deepEqual(result.changes.map((change) => change.type), ['variant_size', 'variant_color']);
+});
+
+test('accepts currently offered cart variants from snake_case catalogue fields', () => {
+  const result = reconcileCartWithCatalog(
+    [
+      { id: 'p1', name: 'Jacket', priceGEL: 120, quantity: 1, selectedSize: 'M', selectedColor: 'Black' }
+    ],
+    [
+      { id: 'p1', name: 'Jacket', price_gel: 120, stock: 4, available_sizes: ['S', 'M', 'L'], available_colors: ['Black'] }
+    ]
+  );
+  assert.equal(result.hasChanges, false);
+});
+
+
+test('normalizes malformed legacy order item arrays without dropping valid lines', () => {
+  const valid = { id: 'p-1', name: 'Jacket', quantity: 1 };
+  assert.deepEqual(normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]), [valid, { id: 'p-2' }]);
+  assert.deepEqual(normalizeOrderItems({ items: [] }), []);
+  assert.deepEqual(normalizeOrderItems(null), []);
+});
+
+
+test('normalizes server order totals to finite nonnegative GEL values', () => {
+  assert.equal(normalizeOrderTotal('123.45'), 123.45);
+  assert.equal(normalizeOrderTotal(0), 0);
+  for (const value of [-1, NaN, Infinity, -Infinity, 'Infinity', 'not-money', null, undefined]) {
+    assert.equal(normalizeOrderTotal(value), 0);
+  }
+});
+
+
+test('does not merge different custom product variants into one order line', () => {
+  const grouped = groupCheckoutItems([
+    { id: 'p-variant', custom_variant_id: 'v-small', quantity: 1 },
+    { id: 'p-variant', custom_variant_id: 'v-large', quantity: 2 },
+    { id: 'p-variant', custom_variant_id: 'v-small', quantity: 3 }
+  ]);
+  assert.equal(grouped.length, 2);
+  assert.deepEqual(grouped, [
+    { id: 'p-variant', selected_size: null, selected_color: null, custom_variant_id: 'v-large', quantity: 2 },
+    { id: 'p-variant', selected_size: null, selected_color: null, custom_variant_id: 'v-small', quantity: 4 }
+  ]);
+});
+
+test('reconciles selected custom variant price and stock against the current catalogue', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p-variant', name: 'Pack', priceGEL: 20, basePriceGEL: 20, quantity: 2, customVariantId: 'v-small', customVariantName: 'Small pack' }],
+    [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 99, variants: [{ id: 'v-small', name: 'Small pack', priceGEL: 24, stock: 1 }] }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['price', 'stock']);
+  assert.equal(result.cartItems[0].basePriceGEL, 24);
+  assert.equal(result.cartItems[0].priceGEL, 24);
+  assert.equal(result.cartItems[0].stock, 1);
+});
+
+test('requires a custom variant selection when the catalogue defines custom variants', () => {
+  const result = reconcileCartWithCatalog(
+    [{ id: 'p-variant', name: 'Pack', priceGEL: 20, quantity: 1 }],
+    [{ id: 'p-variant', name: 'Pack', price_gel: 5, stock: 99, variants: [{ id: 'v1', name: 'One', priceGEL: 20, stock: 2 }] }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['variant_custom_missing']);
+});
+
+
+test('accepts only the exact secure order ID confirmed by the checkout RPC', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, orderId), {
+    valid: true,
+    orderId
+  });
+});
+
+test('rejects missing, malformed, or mismatched checkout order IDs', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  assert.deepEqual(validateOrderCreationResponse(null, orderId), {
+    valid: false,
+    reason: 'missing_order_id'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ order_id: 'ORD-123' }, orderId), {
+    valid: false,
+    reason: 'order_id_mismatch'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId.toLowerCase() }, orderId), {
+    valid: false,
+    reason: 'order_id_mismatch'
+  });
+  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, 'ORD-not-secure'), {
+    valid: false,
+    reason: 'invalid_expected_id'
+  });
+});
+
+
+test('checkout catalogue selection includes custom variants for live cart reconciliation', () => {
+  for (const field of ['id', 'name', 'price_gel', 'stock', 'available_sizes', 'available_colors', 'variants']) {
+    assert.ok(CHECKOUT_CATALOG_SELECT.split(',').includes(field), `missing ${field}`);
+  }
+});
+
+
+test('sums cart line prices in integer tetri without floating-point drift', () => {
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 0.1, quantity: 1 },
+    { priceGEL: 0.2, quantity: 1 },
+    { priceGEL: 0.1, quantity: 3 }
+  ]), 0.6);
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 9.9, quantity: 1 },
+    { priceGEL: 0.1, quantity: 1 }
+  ]), 10);
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 10, quantity: 2 },
+    { priceGEL: -5, quantity: 1 },
+    { priceGEL: 'invalid', quantity: 1 }
+  ]), 20);
+});
+
+test('rounds subtotal and delivery to exact tetri before discount calculation', () => {
+  assert.deepEqual(
+    calculateCheckoutTotals({
+      subtotal: 0.1 + 0.2,
+      discountPercent: 10,
+      deliveryFee: 0.1 + 0.2
+    }),
+    { subtotalGEL: 0.3, discountGEL: 0.03, deliveryGEL: 0.3, totalGEL: 0.57 }
+  );
 });

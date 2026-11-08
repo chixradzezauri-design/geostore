@@ -104,47 +104,60 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
     setWardrobe(prev => prev.filter(item => item.id !== id));
   };
 
-  // 🤖 AI სტილისტის მიერ აუტფიტის გენერაცია
+  // წესებზე დაფუძნებული, გამეორებადი ლუქის შეთავაზება — შემთხვევითი პროდუქტი არ ირჩევა.
   const handleGenerateOutfit = () => {
     setIsGenerating(true);
     setGeneratedOutfit(null);
 
-    setTimeout(() => {
-      // 1. გარდერობიდან ვირჩევთ ტანსაცმელსა და ფეხსაცმელს
-      const clothes = wardrobe.filter(i => i.category === 'ტანსაცმელი');
-      const footwear = wardrobe.filter(i => i.category === 'ფეხსაცმელი');
+    const topItem = wardrobe.find(item => item.category === 'ტანსაცმელი') || null;
+    const shoesItem = wardrobe.find(item => item.category === 'ფეხსაცმელი') || null;
+    const accessoryTerms = ['აქსესუარი', 'ჩანთა', 'ქამარი', 'სათვალე', 'ქუდი', 'accessory', 'bag', 'belt', 'glasses', 'hat'];
+    const eventTerms = event.includes('სპორტული')
+      ? ['სპორტ', 'sport', 'sneaker', 'ბოტასი']
+      : event.includes('ოფიციალური')
+        ? ['კლასიკ', 'საქმიანი', 'formal', 'classic']
+        : event.includes('წვეულება')
+          ? ['საღამო', 'party', 'evening', 'ელეგანტ']
+          : ['ყოველდღ', 'casual', 'basic'];
+    const storeCandidates = products
+      .filter(product => {
+        if (!product || !product.name) return false;
+        const searchable = [product.name, product.category, ...(Array.isArray(product.tags) ? product.tags : [])]
+          .filter(Boolean).join(' ').toLowerCase();
+        const hasRelevantTerm = [...accessoryTerms, ...eventTerms].some(term => searchable.includes(term));
+        const hasAvailableStock = Number(product.stock) > 0 ||
+          (Array.isArray(product.variants) && product.variants.some(variant => Number(variant.stock) > 0));
+        return hasRelevantTerm && hasAvailableStock;
+      })
+      .sort((a, b) => Number(a.priceGEL || 0) - Number(b.priceGEL || 0) ||
+        String(a.name).localeCompare(String(b.name)));
 
-      const topItem = clothes[Math.floor(Math.random() * clothes.length)] || clothes[0];
-      const shoesItem = footwear[Math.floor(Math.random() * footwear.length)] || footwear[0];
+    let advice = `სტილის შეთავაზება (${weather} | ${event}): `;
+    if (weather.includes('წვიმიანი') || weather.includes('ცივი')) {
+      advice += 'ამ პირობებში გაითვალისწინეთ ფენობრივი ჩაცმა და თბილი აქსესუარები.';
+    } else if (weather.includes('ქარიანი')) {
+      advice += 'აირჩიეთ კომფორტული ზედა ფენა და პრაქტიკული ფეხსაცმელი.';
+    } else {
+      advice += 'შეარჩიეთ მსუბუქი და კომფორტული კომბინაცია.';
+    }
+    if (!topItem || !shoesItem) {
+      advice += ' სრული კომბინაციისთვის გარდერობში დაამატეთ ტანსაცმელი და ფეხსაცმელი.';
+    }
 
-      // 2. მაღაზიიდან ვურჩევთ შესაფერის პროდუქტს აუტფიტის სრულყოფისთვის
-      const recommendedStoreProduct = products.length > 0 
-        ? products[Math.floor(Math.random() * products.length)]
-        : null;
-
-      let advice = `AI სტილისტის რჩევა (${weather} | ${event}): `;
-      if (weather.includes('წვიმიანი') || weather.includes('ცივი')) {
-        advice += "გირჩევთ ფენობრივ ჩაცმულობას და თბილ აქსესუარებს. კონტრასტული ფერები შესანიშნავ განწყობას შექმნის!";
-      } else {
-        advice += "მინიმალისტური და ჰაეროვანი კომბინაცია იდეალურია დღევანდელი დღისთვის!";
-      }
-
-      setGeneratedOutfit({
-        top: topItem,
-        shoes: shoesItem,
-        storeAddon: recommendedStoreProduct,
-        advice: advice
-      });
-
-      setIsGenerating(false);
-    }, 1200);
+    setGeneratedOutfit({
+      top: topItem,
+      shoes: shoesItem,
+      storeAddon: storeCandidates[0] || null,
+      advice
+    });
+    setIsGenerating(false);
   };
 
   return (
-    <div className="space-y-8 w-full pb-16 animate-in fade-in duration-500 text-white">
+    <div className="gs-digital-wardrobe space-y-8 w-full pb-16 animate-in fade-in duration-500 text-white">
       
       {/* 🌟 HERO BANNER */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="gs-wardrobe-hero relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-xl text-center md:text-left z-10">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
             <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" /> AI Personal Stylist & Wardrobe
@@ -163,7 +176,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
           </button>
         </div>
 
-        <div className="bg-slate-950/80 border border-emerald-500/20 p-6 rounded-3xl space-y-3 w-full md:w-80 shadow-inner z-10">
+        <div className="gs-wardrobe-summary bg-slate-950/80 border border-emerald-500/20 p-6 rounded-3xl space-y-3 w-full md:w-80 shadow-inner z-10">
           <div className="flex items-center justify-between text-xs border-b border-emerald-500/20 pb-3">
             <span className="text-slate-400 font-bold">სულ გარდერობში:</span>
             <span className="text-emerald-400 font-black text-sm">{wardrobe.length} ნივთი</span>
@@ -183,14 +196,14 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
       </div>
 
       {/* 🤖 AI STYLIST GENERATOR SECTION */}
-      <div className="bg-slate-900/80 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl">
+      <div className="gs-wardrobe-generator bg-slate-900/80 border border-emerald-500/30 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-3xl">
         <div className="flex items-center gap-3 border-b border-emerald-500/20 pb-4">
           <div className="bg-emerald-500/20 p-3 rounded-2xl border border-emerald-500/30">
             <Sparkles className="w-6 h-6 text-emerald-400" />
           </div>
           <div>
             <h2 className="text-lg font-black text-white">AI სტილისტი — აუტფიტის გენერატორი</h2>
-            <p className="text-xs text-slate-400">აირჩიეთ გარემო პირობები და ხელოვნური ინტელექტი შეგირჩევთ საუკეთესო ლუქს</p>
+            <p className="text-xs text-slate-400">აირჩიეთ ამინდი და დრესკოდი — სისტემა გარდერობიდან შეგირჩევთ განმეორებად, წესებზე დაფუძნებულ კომბინაციას</p>
           </div>
         </div>
 
@@ -234,14 +247,14 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl transition shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isGenerating ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-              {isGenerating ? 'AI აანალიზებს გარდერობს...' : 'აუტფიტის გენერაცია 🚀'}
+              {isGenerating ? 'ვაწყობ კომბინაციას...' : 'ლუქის შეთავაზება 🚀'}
             </button>
           </div>
         </div>
 
         {/* 🌟 GENERATED OUTFIT DISPLAY */}
         {generatedOutfit && (
-          <div className="bg-slate-950 p-6 sm:p-8 rounded-[2rem] border border-emerald-500/40 space-y-6 animate-in fade-in duration-300">
+          <div className="gs-wardrobe-result bg-slate-950 p-6 sm:p-8 rounded-[2rem] border border-emerald-500/40 space-y-6 animate-in fade-in duration-300">
             <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl text-emerald-300 text-xs font-bold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-emerald-400 shrink-0" />
               <span>{generatedOutfit.advice}</span>
@@ -250,7 +263,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {/* Top Item */}
               {generatedOutfit.top && (
-                <div className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
+                <div className="gs-wardrobe-result-card bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
                   <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">შენი გარდერობიდან</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
                     {generatedOutfit.top.image ? <img src={generatedOutfit.top.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
@@ -261,7 +274,7 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
 
               {/* Shoes Item */}
               {generatedOutfit.shoes && (
-                <div className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
+                <div className="gs-wardrobe-result-card bg-slate-900 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
                   <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">შენი გარდერობიდან</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
                     {generatedOutfit.shoes.image ? <img src={generatedOutfit.shoes.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
@@ -272,8 +285,8 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
 
               {/* Store Addon Recommendation */}
               {generatedOutfit.storeAddon && (
-                <div className="bg-gradient-to-b from-emerald-950/30 to-slate-900 border border-emerald-500/40 rounded-2xl p-4 text-center space-y-3 relative">
-                  <span className="text-[10px] font-black text-slate-950 bg-emerald-400 px-3 py-1 rounded-full uppercase">💡 AI რეკომენდაცია მაღაზიიდან</span>
+                <div className="gs-wardrobe-result-card gs-wardrobe-result-card--store bg-gradient-to-b from-emerald-950/30 to-slate-900 border border-emerald-500/40 rounded-2xl p-4 text-center space-y-3 relative">
+                  <span className="text-[10px] font-black text-slate-950 bg-emerald-400 px-3 py-1 rounded-full uppercase">💡 კატალოგიდან შერჩეული აქსესუარი</span>
                   <div className="h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center">
                     {generatedOutfit.storeAddon.image ? <img src={generatedOutfit.storeAddon.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain rounded-lg" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                   </div>
@@ -315,9 +328,9 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
             <button onClick={() => setIsAddModalOpen(true)} className="bg-emerald-500 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs">დაამატე პირველი ტანსაცმელი</button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+          <div className="gs-wardrobe-item-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
             {wardrobe.map(item => (
-              <div key={item.id} className="bg-slate-900 border border-emerald-500/20 rounded-2xl p-3.5 space-y-2.5 relative group hover:border-emerald-400 transition shadow-lg">
+              <div key={item.id} className="gs-wardrobe-item-card bg-slate-900 border border-emerald-500/20 rounded-2xl p-3.5 space-y-2.5 relative group hover:border-emerald-400 transition shadow-lg">
                 <div className="h-36 sm:h-40 bg-slate-950 rounded-xl p-2 flex items-center justify-center overflow-hidden">
                   {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" className="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300" /> : <Camera className="w-8 h-8 text-emerald-400/60" />}
                 </div>
@@ -341,8 +354,8 @@ export default function AIDigitalWardrobe({ products = [], addToCart, formatPric
 
       {/* ➕ ADD ITEM MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <form onSubmit={handleAddItem} className="bg-slate-900 border border-emerald-500/40 rounded-[2.5rem] p-6 sm:p-8 max-w-md w-full space-y-4 text-xs shadow-2xl relative">
+        <div className="gs-wardrobe-add-modal fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <form onSubmit={handleAddItem} className="gs-wardrobe-add-form bg-slate-900 border border-emerald-500/40 rounded-[2.5rem] p-6 sm:p-8 max-w-md w-full space-y-4 text-xs shadow-2xl relative">
             <button type="button" onClick={() => setIsAddModalOpen(false)} className="absolute top-5 right-5 text-slate-400 hover:text-white font-bold text-base cursor-pointer">✕</button>
 
             <h3 className="text-base font-black text-white border-b border-emerald-500/20 pb-3">ახალი ნივთის დამატება გარდერობში</h3>

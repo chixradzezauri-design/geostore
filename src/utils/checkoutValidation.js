@@ -1,5 +1,8 @@
 const hasControlCharacters = (value) => /[\u0000-\u001f\u007f]/.test(value);
 
+export const buildOrderDeliveryAddress = ({ address, regionText, deliveryFee }) =>
+  `${String(address ?? '').trim()} (${String(regionText ?? '').trim()}, მიწოდება: ${String(deliveryFee ?? '').trim()} ₾)`;
+
 export const validateCheckoutContact = ({ name, phone, email, address, requireEmail = false }) => {
   const cleanName = String(name ?? '').trim();
   const phoneInput = String(phone ?? '');
@@ -11,7 +14,7 @@ export const validateCheckoutContact = ({ name, phone, email, address, requireEm
   if (cleanName.length < 2 || cleanName.length > 100 || hasControlCharacters(cleanName)) {
     return { valid: false, field: 'name' };
   }
-  if (hasControlCharacters(phoneInput) || !/^[+()\d\s-]+$/.test(rawPhone) || !/^\d{9,15}$/.test(phoneDigits)) {
+  if (hasControlCharacters(phoneInput) || !/^\+?[0-9()\s-]+$/.test(rawPhone) || !/^\d{9,15}$/.test(phoneDigits)) {
     return { valid: false, field: 'phone' };
   }
   if (cleanAddress.length < 3 || cleanAddress.length > 300 || hasControlCharacters(cleanAddress)) {
@@ -42,6 +45,20 @@ export const validateCheckoutItems = (items) => {
     }
     if (size.length > 40 || color.length > 60) {
       return { valid: false, reason: 'variant' };
+    }
+
+    const giftWrap = item?.gift_wrap ?? false;
+    const vipWarranty = item?.vip_warranty ?? false;
+    const rawGiftMessage = item?.gift_message;
+    const giftMessage = rawGiftMessage == null ? '' : rawGiftMessage;
+    if (
+      typeof giftWrap !== 'boolean' ||
+      typeof vipWarranty !== 'boolean' ||
+      typeof giftMessage !== 'string' ||
+      giftMessage.length > 240 ||
+      (giftMessage.trim().length > 0 && !giftWrap)
+    ) {
+      return { valid: false, reason: 'addons' };
     }
 
     const nextTotal = (totalsByProduct.get(id) || 0) + quantity;

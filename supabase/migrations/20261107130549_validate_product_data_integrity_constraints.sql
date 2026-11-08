@@ -1,0 +1,9 @@
+ALTER TABLE public.products VALIDATE CONSTRAINT products_price_gel_valid_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_old_price_gel_valid_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_stock_valid_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_purchase_cost_valid_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_available_sizes_array_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_available_colors_array_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_gallery_array_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_variants_array_check;
+ALTER TABLE public.products VALIDATE CONSTRAINT products_tags_array_check;

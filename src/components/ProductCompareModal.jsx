@@ -1,5 +1,6 @@
 // src/components/ProductCompareModal.jsx - Side-by-Side Product Comparison
 import React from 'react';
+import { getProductAvailableStock, getProductStartingPrice } from '../utils/productVariants.js';
 import { X, ShoppingBag, Trash2, Scale, Check, ShieldCheck } from 'lucide-react';
 
 export default function ProductCompareModal({
@@ -17,11 +18,11 @@ export default function ProductCompareModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
-      <div className="relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-6xl overflow-hidden shadow-2xl p-6 md:p-10 space-y-8">
+    <div className="gs-product-compare-overlay fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
+      <div className="gs-product-compare-dialog relative bg-[#0d0d10] border border-amber-500/40 rounded-[3rem] w-full max-w-6xl overflow-hidden shadow-2xl p-6 md:p-10 space-y-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-amber-500/20 pb-5">
+        <div className="gs-product-compare-header flex justify-between items-center border-b border-amber-500/20 pb-5">
           <div className="flex items-center gap-3">
             <div className="bg-amber-500/10 p-3 rounded-2xl border border-amber-500/30">
               <Scale className="w-6 h-6 text-amber-400" />
@@ -43,10 +44,10 @@ export default function ProductCompareModal({
             <p className="text-xs text-slate-500">დაამატეთ პროდუქტები ვიტრინიდან სასწორის ღილაკით ⚖️</p>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-4">
-            <div className="grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-6">
+          <div className="gs-product-compare-scroll overflow-x-auto pb-4">
+            <div className="gs-product-compare-grid grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-6">
               {comparisonList.map(prod => (
-                <div key={prod.id} className="bg-[#121216] border border-amber-500/20 rounded-[2rem] p-6 space-y-5 shadow-2xl relative flex flex-col justify-between">
+                <div key={prod.id} className="gs-product-compare-card bg-[#121216] border border-amber-500/20 rounded-[2rem] p-6 space-y-5 shadow-2xl relative flex flex-col justify-between">
                   
                   <button 
                     onClick={() => handleRemoveFromCompare(prod.id)}
@@ -57,7 +58,7 @@ export default function ProductCompareModal({
                   </button>
 
                   <div className="space-y-4">
-                    <div className="bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 flex items-center justify-center h-48">
+                    <div className="gs-product-compare-media bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 flex items-center justify-center h-48">
                       {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="max-h-full object-contain" /> : <span className="text-[10px] font-black tracking-[0.2em] text-amber-400/60">GEOSTORE</span>}
                     </div>
 
@@ -66,10 +67,10 @@ export default function ProductCompareModal({
                       <h3 className="font-black text-white text-sm line-clamp-2 pt-1">{prod.name}</h3>
                     </div>
 
-                    <div className="bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 space-y-3 text-xs">
+                    <div className="gs-product-compare-specs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10 space-y-3 text-xs">
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">ფასი:</span>
-                        <span className="text-amber-400 font-black text-sm">{formatPrice(prod.priceGEL)}</span>
+                        <span className="text-amber-400 font-black text-sm">{getProductStartingPrice(prod) === null ? '—' : formatPrice(getProductStartingPrice(prod))}</span>
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">მომწოდებელი:</span>
@@ -77,7 +78,7 @@ export default function ProductCompareModal({
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">მარაგში:</span>
-                        <span className="text-emerald-400 font-bold">{prod.stock || 1} ცალი</span>
+                        <span className="text-emerald-400 font-bold">{getProductAvailableStock(prod)} ცალი</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">SKU:</span>
@@ -85,7 +86,7 @@ export default function ProductCompareModal({
                       </div>
                     </div>
 
-                    <div className="text-slate-300 text-xs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10">
+                    <div className="gs-product-compare-description text-slate-300 text-xs bg-[#08080a] p-4 rounded-2xl border border-amber-500/10">
                       <b className="text-amber-300 block mb-1">აღწერა:</b>
                       <p className="line-clamp-3 leading-relaxed text-slate-400">{prod.description || 'აღწერა არ არის.'}</p>
                     </div>
@@ -93,7 +94,7 @@ export default function ProductCompareModal({
 
                   <button 
                     onClick={() => addToCart(prod)}
-                    className="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer mt-4"
+                    className="gs-product-compare-action w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer mt-4"
                   >
                     <ShoppingBag className="w-4 h-4" /> კალათაში დამატება
                   </button>

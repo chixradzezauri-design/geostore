@@ -11,8 +11,7 @@ export default function ImageSearchModal({
   formatPrice
 }) {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState(null);
+  const [searchNotice, setSearchNotice] = useState('');
   const fileInputRef = useRef(null);
 
   if (!isImageSearchOpen) return null;
@@ -26,7 +25,7 @@ export default function ImageSearchModal({
       const reader = new FileReader();
       reader.onload = () => {
         setSelectedImage(reader.result);
-        setSearchResults(null);
+        setSearchNotice('');
       };
       reader.onerror = () => alert('ფოტოს წაკითხვა ვერ მოხერხდა.');
       reader.readAsDataURL(file);
@@ -37,28 +36,23 @@ export default function ImageSearchModal({
 
   const handleStartVisualSearch = () => {
     if (!selectedImage) return;
-    setIsSearching(true);
-
-    // რეალური ვიზუალური შედარების სიმულაცია პროდუქტების ბაზასთან
-    setTimeout(() => {
-      const shuffled = [...products].sort(() => 0.5 - Math.random());
-      setSearchResults(shuffled.slice(0, 3)); // დავაბრუნოთ ყველაზე მსგავსი 3 პროდუქტი
-      setIsSearching(false);
-    }, 1200);
+    // Do not present random catalogue items as AI visual matches.
+    // Real image similarity requires a configured visual-search model/service.
+    setSearchNotice('ფოტო წარმატებით აიტვირთა, თუმცა რეალური ვიზუალური შედარება ჯერ არ არის ჩართული. ამ ეტაპზე მსგავსი პროდუქტების გამოგონილ შედეგებს არ გაჩვენებთ. გამოიყენეთ კატალოგის ძიება.');
   };
 
   const handleReset = () => {
     setSelectedImage(null);
-    setSearchResults(null);
+    setSearchNotice('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-slate-900/95 border border-slate-800/80 rounded-[2.5rem] max-w-lg w-full flex flex-col p-6 shadow-2xl backdrop-blur-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none">
+    <div className="gs-image-search-overlay fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="gs-image-search-dialog bg-slate-900/95 border border-slate-800/80 rounded-[2.5rem] max-w-lg w-full flex flex-col p-6 shadow-2xl backdrop-blur-2xl relative max-h-[90vh] overflow-y-auto scrollbar-none">
         
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-slate-800/80 pb-4">
+        <div className="gs-image-search-header flex justify-between items-center border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-2.5">
             <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl">
               <Camera className="w-5 h-5 text-emerald-400" />
@@ -77,11 +71,11 @@ export default function ImageSearchModal({
         </div>
 
         {/* Body Content */}
-        <div className="py-6 space-y-5">
+        <div className="gs-image-search-body py-6 space-y-5">
           {!selectedImage ? (
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-700/80 hover:border-emerald-500/60 bg-slate-950/40 rounded-[2rem] p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 group"
+              className="gs-image-search-dropzone border-2 border-dashed border-slate-700/80 hover:border-emerald-500/60 bg-slate-950/40 rounded-[2rem] p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 group"
             >
               <div className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition shadow-inner">
                 <Upload className="w-6 h-6 text-emerald-400" />
@@ -101,7 +95,7 @@ export default function ImageSearchModal({
           ) : (
             <div className="space-y-4">
               {/* Preview */}
-              <div className="relative bg-slate-950/80 border border-slate-800 rounded-3xl p-4 flex items-center justify-center overflow-hidden">
+              <div className="gs-image-search-preview relative bg-slate-950/80 border border-slate-800 rounded-3xl p-4 flex items-center justify-center overflow-hidden">
                 <img src={selectedImage} alt="Upload preview" className="max-h-52 object-contain rounded-2xl shadow-lg" />
                 <button 
                   onClick={handleReset}
@@ -111,61 +105,19 @@ export default function ImageSearchModal({
                 </button>
               </div>
 
-              {!searchResults && !isSearching && (
-                <button 
-                  onClick={handleStartVisualSearch}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" /> ვიზუალური ძიების დაწყება
-                </button>
-              )}
+              <button 
+                onClick={handleStartVisualSearch}
+                className="gs-image-search-action w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer text-xs flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" /> ფოტოს შემოწმება
+              </button>
             </div>
           )}
 
-          {/* Loading Indicator */}
-          {isSearching && (
-            <div className="text-center py-8 space-y-3">
-              <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-xs text-slate-400 font-bold">მიმდინარეობს პროდუქტების ვიზუალური შედარება...</p>
-            </div>
-          )}
-
-          {/* Search Results */}
-          {searchResults && (
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-400" /> ნაპოვნი მსგავსი პროდუქტები:
-              </h4>
-
-              {searchResults.length === 0 ? (
-                <div className="text-center py-6 bg-slate-950/60 rounded-2xl border border-slate-800">
-                  <AlertCircle className="w-6 h-6 text-amber-400 mx-auto mb-2" />
-                  <p className="text-xs text-slate-300 font-bold">ზუსტი ვიზუალური დამთხვევა ვერ მოიძებნა.</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">სცადეთ სხვა ფოტოს ატვირთვა ან გამოიყენეთ ჩვეულებრივი ძიება.</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {searchResults.map(p => (
-                    <div key={p.id} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-inner">
-                      {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-contain bg-slate-900 rounded-xl p-1 border border-slate-800 shrink-0" /> : <div className="w-14 h-14 bg-slate-900 rounded-xl border border-slate-800 shrink-0 flex items-center justify-center text-[8px] font-black text-emerald-400/60">GEO</div>}
-                      <div className="flex-1 min-w-0">
-                        <h5 className="font-bold text-white text-xs truncate">{p.name}</h5>
-                        <p className="text-emerald-400 font-black text-xs mt-0.5">{formatPrice(p.priceGEL)}</p>
-                        <span className="text-[9px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full">მარაგშია: {p.stock || 1} ც.</span>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          addToCart(p);
-                          setIsImageSearchOpen(false);
-                        }}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3.5 py-2.5 rounded-xl text-xs font-black flex items-center gap-1 shrink-0 transition cursor-pointer shadow-md shadow-emerald-500/20"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" /> კალათაში
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {searchNotice && (
+            <div role="status" className="gs-image-search-notice flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-xs leading-relaxed text-amber-100">{searchNotice}</p>
             </div>
           )}
         </div>
