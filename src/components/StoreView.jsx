@@ -640,7 +640,7 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
         </div>
       ) : (
-        <div className="gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7">
+        <div className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${processedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
           {processedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
