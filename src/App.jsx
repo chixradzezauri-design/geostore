@@ -2843,13 +2843,33 @@ export default function App() {
             ) : (
               <div className="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="gs-cart-items-list lg:col-span-2 space-y-3">
-                  {cart.map((item) => (
+                  {cart.map((item) => {
+                    // Older saved cart entries may not contain an image snapshot.
+                    // Fall back to the current catalogue record without changing the saved order/cart data.
+                    const matchingProduct = products.find((product) => String(product.id) === String(item.id));
+                    const itemImage = item.image || item.img || matchingProduct?.image || matchingProduct?.img || matchingProduct?.gallery?.[0] || '';
+
+                    return (
                     <div
                       key={`${item.id}-${item.customVariantId || ''}-${item.name}-${item.selectedSize || ''}-${item.selectedColor || ''}-${item.giftWrap ? 'gift' : ''}-${item.vipWarranty ? 'vip' : ''}-${item.giftMessage || ''}`}
-                      className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex justify-between items-center text-xs backdrop-blur-2xl shadow-xl"
+                      className="gs-cart-item bg-slate-900/40 border border-slate-800/80 p-4 rounded-3xl flex items-start sm:items-center gap-3 text-xs backdrop-blur-2xl shadow-xl"
                     >
-                      <div className="space-y-1">
-                        <h4 className="gs-cart-item-title font-bold text-xs text-white">
+                      <div className="gs-cart-item-media relative flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-950/70">
+                        {itemImage ? (
+                          <img
+                            src={itemImage}
+                            alt={item.name || 'GEOSTORE product'}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-contain p-1"
+                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <span className="text-[9px] font-black tracking-widest text-amber-400/60">GEOSTORE</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <h4 className="gs-cart-item-title break-words font-bold text-xs text-white">
                           {item.name}
                         </h4>
                         {item.customVariantName && <p className="gs-cart-item-variant text-amber-300 text-[11px]">ვარიანტი: {item.customVariantName}</p>}
@@ -2889,12 +2909,13 @@ export default function App() {
                       <button
                         onClick={() => removeFromCart(item)}
                         aria-label={currentLang === 'en' ? `Remove ${item.name} from cart` : currentLang === 'ru' ? `Удалить ${item.name} из корзины` : `წაშალე ${item.name} კალათიდან`}
-                        className="gs-cart-remove text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
+                        className="gs-cart-remove shrink-0 self-start text-rose-400 hover:text-rose-300 font-bold p-2 bg-rose-500/10 rounded-xl transition cursor-pointer"
                       >
                         {t.remove}
                       </button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="gs-cart-summary bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2.5rem] h-fit space-y-5 shadow-2xl backdrop-blur-2xl">
