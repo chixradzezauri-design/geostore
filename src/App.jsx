@@ -2208,6 +2208,7 @@ export default function App() {
       return {
         id: item.id,
         name: item.name,
+        image: catalogProduct?.image || item.image || item.img || '',
         price: Number(item.basePriceGEL ?? item.priceGEL ?? item.price) || 0,
         quantity: Number(quantity ?? 1),
         selected_size: item.selectedSize || null,
