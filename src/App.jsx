@@ -31,7 +31,7 @@ import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwo
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
-import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant } from './utils/productVariants.js';
+import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
@@ -1699,6 +1699,11 @@ export default function App() {
     const selectedColor = String(product?.selectedColor || '').trim();
     const customVariantId = String(product?.customVariantId || '').trim();
     const customVariant = customVariantId ? getCustomProductVariant(product, customVariantId) : null;
+    const sizeColorInventory = hasSizeColorInventory(product);
+    const sizeColorVariant = sizeColorInventory
+      ? getProductSizeColorVariant(product, selectedSize, selectedColor)
+      : null;
+    const selectedInventoryVariant = customVariant || sizeColorVariant;
     const allowedSizes = getAvailableProductSizes(product);
     const allowedColors = getAvailableProductColors(product);
 
@@ -1710,12 +1715,20 @@ export default function App() {
       showToast('არჩეული ფერი ამ პროდუქტისთვის ხელმისაწვდომი არ არის.');
       return false;
     }
-    if (customVariantId && (!customVariant || customVariant.stock <= 0)) {
+    if (sizeColorInventory && (
+      !sizeColorVariant ||
+      sizeColorVariant.stock <= 0 ||
+      sizeColorVariant.id !== customVariantId
+    )) {
+      showToast('არჩეული ზომისა და ფერის კომბინაცია მარაგში აღარ არის.');
+      return false;
+    }
+    if (customVariantId && !selectedInventoryVariant) {
       showToast('არჩეული ვარიანტი აღარ არის ხელმისაწვდომი.');
       return false;
     }
-    if (Array.isArray(product?.variants) && product.variants.length > 0 && !customVariantId) {
-      showToast('შეკვეთამდე აირჩიეთ პროდუქტის ვარიანტი.');
+    if (hasCustomProductVariants(product) && !customVariant) {
+      showToast('შეკვეთამდე აირჩიეთ პროდუქტის ინდივიდუალური ვარიანტი.');
       return false;
     }
 
@@ -1725,9 +1738,9 @@ export default function App() {
       ...product,
       selectedSize: selectedSize || null,
       selectedColor: selectedColor || null,
-      customVariantId: customVariant?.id || null,
-      customVariantName: customVariant?.name || '',
-      stock: customVariant ? customVariant.stock : product.stock
+      customVariantId: selectedInventoryVariant?.id || null,
+      customVariantName: selectedInventoryVariant?.name || '',
+      stock: selectedInventoryVariant ? selectedInventoryVariant.stock : product.stock
     }, requestedQuantity);
 
     if (!result.valid) {
