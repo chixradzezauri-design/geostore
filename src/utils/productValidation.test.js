@@ -52,7 +52,7 @@ test('validates complete size/color stock matrices', () => {
 
 test('rejects duplicate, unknown, malformed, or out-of-range size/color stock rows', () => {
   const base = { id: 'a', name: 'S / Black', variantType: 'size_color', size: 'S', color: 'Black', priceGEL: 20, stock: 3 };
-  assert.equal(validateSizeColorInventoryVariants([base, { ...base, id: 'b' }], ['S'], ['Black']).reason, 'combination');
+  assert.equal(validateSizeColorInventoryVariants([base, { ...base, id: 'b' }], ['S', 'M'], ['Black']).reason, 'combination');
   assert.equal(validateSizeColorInventoryVariants([{ ...base, size: 'XL' }], ['S'], ['Black']).reason, 'combination');
   assert.equal(validateSizeColorInventoryVariants([{ ...base, stock: -1 }], ['S'], ['Black']).reason, 'stock');
   assert.equal(validateSizeColorInventoryVariants([{ ...base, variantType: 'custom' }], ['S'], ['Black']).reason, 'shape');
