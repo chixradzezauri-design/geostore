@@ -9,7 +9,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
-import { validateProductVariants } from '../utils/productValidation';
+import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
@@ -46,6 +46,35 @@ const createAdminId = (prefix) => {
   catch (error) { console.error('GEOSTORE secure identifier generation failed:', error); return null; }
 };
 const secureIdError = 'უსაფრთხო იდენტიფიკატორის შექმნა ვერ მოხერხდა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.';
+
+const buildSizeColorStockVariants = (sizes, colors, existing = [], priceGEL = 0) => {
+  const normalizedSizes = Array.isArray(sizes) ? sizes.map(value => String(value ?? '').trim()).filter(Boolean) : [];
+  const normalizedColors = Array.isArray(colors) ? colors.map(value => String(value ?? '').trim()).filter(Boolean) : [];
+  const pairs = normalizedSizes.length && normalizedColors.length
+    ? normalizedSizes.flatMap(size => normalizedColors.map(color => ({ size, color })))
+    : normalizedSizes.length
+      ? normalizedSizes.map(size => ({ size, color: null }))
+      : normalizedColors.map(color => ({ size: null, color }));
+  const currentRows = Array.isArray(existing) ? existing : [];
+  return pairs.map(({ size, color }) => {
+    const current = currentRows.find(row =>
+      (String(row?.size ?? '').trim() || null) === size &&
+      (String(row?.color ?? '').trim() || null) === color
+    );
+    const label = [size, color].filter(Boolean).join(' / ');
+    return current
+      ? { ...current, name: label, size, color, priceGEL: Number(priceGEL) || 0, variantType: 'size_color' }
+      : {
+          id: createAdminId('szc'),
+          name: label,
+          priceGEL: Number(priceGEL) || 0,
+          stock: 0,
+          variantType: 'size_color',
+          size,
+          color
+        };
+  });
+};
 const PRODUCT_IMAGE_TYPES = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -395,6 +424,7 @@ export default function AdminDashboardPro({
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
+  const [sizeColorStock, setSizeColorStock] = useState(() => buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
   const [newVarName, setNewVarName] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
   const [newVarStock, setNewVarStock] = useState('');
@@ -435,6 +465,42 @@ export default function AdminDashboardPro({
     setProductVariants(prev => prev.filter(v => v.id !== id));
   };
 
+  const handleSizeColorStockChange = (variantId, rawStock) => {
+    const stockText = String(rawStock ?? '');
+    if (stockText !== '' && (!/^\\d+$/.test(stockText) || Number(stockText) > 1000000)) return;
+    setSizeColorStock(prev => prev.map(variant => variant.id === variantId
+      ? { ...variant, stock: stockText === '' ? 0 : Number(stockText) }
+      : variant));
+  };
+
+  const handleEnableSizeColorStock = () => {
+    if (productVariants.length > 0) {
+      return alert('ამ პროდუქტს უკვე აქვს ინდივიდუალური ვარიანტები. ზომებისა და ფერების მარაგის მატრიცა მათთან ერთად არ გამოიყენება.');
+    }
+    const rows = buildSizeColorStockVariants(
+      productForm.availableSizes,
+      productForm.availableColors,
+      sizeColorStock,
+      Number(productForm.priceGEL) || 0
+    );
+    if (!rows.length || rows.length > 50) {
+      return alert('ზომებისა და ფერების კომბინაციები უნდა იყოს 1-დან 50-მდე.');
+    }
+    if (rows.some(row => !row.id)) return alert(secureIdError);
+    setSizeColorStock(rows);
+  };
+
+  const handleProductOptionChange = (field, rawValue) => {
+    const nextOptions = String(rawValue ?? '').split(',').map(value => value.trim()).filter(Boolean);
+    const nextSizes = field === 'availableSizes' ? nextOptions : productForm.availableSizes;
+    const nextColors = field === 'availableColors' ? nextOptions : productForm.availableColors;
+    setProductForm(prev => ({ ...prev, [field]: nextOptions }));
+    if (sizeColorStock.length > 0) {
+      const rows = buildSizeColorStockVariants(nextSizes, nextColors, sizeColorStock, Number(productForm.priceGEL) || 0);
+      setSizeColorStock(rows);
+    }
+  };
+
   const handleCategoryChange = (catName) => {
     const nameLower = catName.toLowerCase();
     let defaultSizes = ['S', 'M', 'L', 'XL'];
@@ -459,6 +525,12 @@ export default function AdminDashboardPro({
       availableSizes: defaultSizes,
       availableColors: defaultColors
     }));
+    const isClothingOrShoes = nameLower.includes('ტანსაცმელ') || nameLower.includes('ჩაცმა') ||
+      nameLower.includes('ქურთუკ') || nameLower.includes('შარვალ') ||
+      nameLower.includes('ფეხსაცმელ') || nameLower.includes('shoe');
+    setSizeColorStock(isClothingOrShoes && productVariants.length === 0
+      ? buildSizeColorStockVariants(defaultSizes, defaultColors, [], Number(productForm.priceGEL) || 0)
+      : []);
   };
 
   const [couponForm, setCouponForm] = useState({ code: '', discountPercent: '', minOrderGEL: '' });
@@ -1358,7 +1430,9 @@ export default function AdminDashboardPro({
       isFeatured: Boolean(p.isFeatured ?? p.is_featured)
     });
     setSelectedImages(p.gallery?.length ? p.gallery : (p.image ? [p.image] : []));
-    setProductVariants(Array.isArray(p.variants) ? p.variants : []);
+    const savedVariants = Array.isArray(p.variants) ? p.variants : [];
+    setProductVariants(savedVariants.filter(variant => variant?.variantType !== 'size_color'));
+    setSizeColorStock(savedVariants.filter(variant => variant?.variantType === 'size_color'));
     document.getElementById('geostore-product-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -1367,6 +1441,7 @@ export default function AdminDashboardPro({
     setProductForm(productFormInitial);
     setSelectedImages([]);
     setProductVariants([]);
+    setSizeColorStock(buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
   };
 
   const handleSaveProduct = async (e) => {
@@ -1412,7 +1487,32 @@ export default function AdminDashboardPro({
         new Set(tagsArray.map(tag => tag.toLocaleLowerCase())).size !== tagsArray.length) {
       return alert('ტეგები უნდა იყოს უნიკალური: მაქსიმუმ 30 ტეგი, თითოეული არაუმეტეს 40 სიმბოლოსი.');
     }
-    const variantsValidation = validateProductVariants(productVariants);
+    const isSizeColorInventoryCategory = /ტანსაცმელ|ჩაცმა|ქურთუკ|შარვალ|ფეხსაცმელ|shoe/i.test(String(productForm.category || ''));
+    if (sizeColorStock.length > 0 && !isSizeColorInventoryCategory) {
+      return alert('ზომებისა და ფერების მარაგი გამოიყენება მხოლოდ ტანსაცმლისა და ფეხსაცმლის კატეგორიებისთვის.');
+    }
+    if (sizeColorStock.length > 0 && productVariants.length > 0) {
+      return alert('ერთი პროდუქტი გამოიყენებს ან ზომა/ფერის მარაგის მატრიცას, ან ინდივიდუალურ ვარიანტებს — ორივეს ერთად არა.');
+    }
+    const normalizedSizeColorStock = sizeColorStock.map(variant => ({
+      ...variant,
+      priceGEL: priceValue,
+      stock: Number(variant.stock)
+    }));
+    const sizeColorValidation = validateSizeColorInventoryVariants(normalizedSizeColorStock, availableSizes, availableColors);
+    if (!sizeColorValidation.valid) {
+      const sizeColorErrors = {
+        count: 'ზომისა და ფერის მარაგის კომბინაციები მაქსიმუმ 50 უნდა იყოს.',
+        coverage: 'მარაგის ცხრილში ყველა ზომისა და ფერის კომბინაცია უნდა იყოს მითითებული. გადაამოწმეთ ზომები და ფერები.',
+        shape: 'ზომისა და ფერის მარაგის ჩანაწერი არასწორია.',
+        identity: 'თითოეულ კომბინაციას უნდა ჰქონდეს უნიკალური ID და სახელი.',
+        combination: 'ზომისა და ფერის კომბინაცია დუბლირებულია ან აღარ არის ხელმისაწვდომი.',
+        price: 'კომბინაციის ფასი არასწორია.',
+        stock: 'თითოეული კომბინაციის მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.'
+      };
+      return alert(sizeColorErrors[sizeColorValidation.reason] || 'ზომისა და ფერის მარაგის შემოწმება ვერ მოხერხდა.');
+    }
+    const variantsValidation = validateProductVariants([...productVariants, ...normalizedSizeColorStock]);
     if (!variantsValidation.valid) {
       const variantErrors = {
         count: 'ერთ პროდუქტზე მაქსიმუმ 50 ვარიანტია დაშვებული.',
@@ -1458,14 +1558,16 @@ export default function AdminDashboardPro({
       price_gel: priceValue,
       old_price_gel: originalPrice > 0 ? originalPrice : null,
       purchase_cost: purchaseCost,
-      stock: productForm.stock === '' ? 1 : Number(productForm.stock),
+      stock: normalizedSizeColorStock.length > 0
+        ? normalizedSizeColorStock.reduce((total, variant) => total + variant.stock, 0)
+        : (productForm.stock === '' ? 1 : Number(productForm.stock)),
       image: mainImage,
       gallery: galleryImages,
       tags: tagsArray,
       description: productForm.description || '',
       available_sizes: availableSizes,
       available_colors: availableColors,
-      variants: productVariants,
+      variants: [...productVariants, ...normalizedSizeColorStock],
       material: productForm.material || '',
       durability: productForm.durability || '',
       brand: productForm.brand || 'GEOSTORE',
@@ -1508,6 +1610,23 @@ export default function AdminDashboardPro({
           throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
         }
       }
+      if (normalizedSizeColorStock.length > 0) {
+        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stocks', {
+          method: 'POST',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({
+            p_product_id: prodId,
+            p_variant_stocks: normalizedSizeColorStock.map(variant => ({ id: variant.id, stock: variant.stock }))
+          })
+        });
+        if (!stockResponse.ok) {
+          throw new Error('ზომებისა და ფერების მარაგი პროდუქტში შეინახა ვერ მოხერხდა: ' + await stockResponse.text());
+        }
+        const stockResult = await stockResponse.json();
+        if (!stockResult || Number(stockResult.updated) !== normalizedSizeColorStock.length) {
+          throw new Error('ზომებისა და ფერების მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
+        }
+      }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
       let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
@@ -1520,16 +1639,23 @@ export default function AdminDashboardPro({
           imageCleanupWarning = !(await deleteProductImages(removedImages, prodId));
         }
       }
+      const savedVariants = Array.isArray(savedProductRow?.variants) ? savedProductRow.variants : newProdPayload.variants;
+      const localVariants = savedVariants.map(variant => {
+        const stockRow = normalizedSizeColorStock.find(entry => entry.id === variant.id);
+        return stockRow ? { ...variant, ...stockRow } : variant;
+      });
       const localProdObject = {
         id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
         oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
-        stock: editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock,
+        stock: normalizedSizeColorStock.length > 0
+          ? normalizedSizeColorStock.reduce((total, variant) => total + variant.stock, 0)
+          : (editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock),
         image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
         description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
         availableColors: newProdPayload.available_colors,
-        variants: Array.isArray(savedProductRow?.variants) ? savedProductRow.variants : productVariants,
+        variants: localVariants,
         material: newProdPayload.material, durability: newProdPayload.durability,
         brand: newProdPayload.brand, isFeatured: newProdPayload.is_featured,
         model: newProdPayload.model, cpu: newProdPayload.cpu, ram: newProdPayload.ram,
@@ -3452,7 +3578,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მასალა</label>
@@ -3460,7 +3586,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
@@ -3469,7 +3595,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები (EU)</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მასალა</label>
@@ -3477,7 +3603,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
@@ -3503,7 +3629,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მეხსიერება</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
@@ -3511,7 +3637,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
@@ -3520,15 +3646,43 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => setProductForm({...productForm, availableSizes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => setProductForm({...productForm, availableColors: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
                 </div>
+
+                {(isClothing || isShoes) && (
+                  <div className="admin-size-color-stock-editor bg-slate-950 p-5 rounded-3xl border border-cyan-500/30 space-y-3">
+                    <h4 className="text-cyan-300 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ზომისა და ფერის მიხედვით მარაგი</h4>
+                    <p className="text-slate-400 text-xs leading-relaxed">თითოეულ კომბინაციას აქვს დამოუკიდებელი რაოდენობა. 0 ნიშნავს, რომ ეს ზომა/ფერი მყიდველისთვის მიუწვდომელია. ძველი საერთო მარაგი ავტომატურად არ ნაწილდება.</p>
+                    {sizeColorStock.length === 0 ? (
+                      <button type="button" onClick={handleEnableSizeColorStock} className="w-full rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-xs font-black text-cyan-200">შექმენი ზომებისა და ფერების მარაგის ცხრილი</button>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {sizeColorStock.map(variant => (
+                            <div key={variant.id} className="flex items-center justify-between gap-3 rounded-xl border border-cyan-500/20 bg-slate-900 p-3">
+                              <div className="min-w-0">
+                                <b className="block text-white text-xs">{variant.size || '—'} / {variant.color || '—'}</b>
+                                <span className="text-[10px] text-slate-500">{Number(variant.priceGEL ?? productForm.priceGEL ?? 0).toFixed(2)} ₾</span>
+                              </div>
+                              <label className="flex items-center gap-2 text-[10px] text-slate-400 shrink-0">
+                                მარაგი
+                                <input type="number" min="0" max="1000000" step="1" inputMode="numeric" value={variant.stock} onChange={event => handleSizeColorStockChange(variant.id, event.target.value)} className="w-20 bg-slate-950 border border-cyan-500/30 p-2 rounded-lg text-white text-xs outline-none" />
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" onClick={handleEnableSizeColorStock} className="w-full rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-xs font-bold text-cyan-200">ზომებისა და ფერების კომბინაციების განახლება</button>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 <div className="admin-product-variants-editor bg-slate-950 p-5 rounded-3xl border border-amber-500/30 space-y-3">
                   <h4 className="text-amber-400 font-black text-sm flex items-center gap-2"><Layers className="w-4 h-4" /> ინდივიდუალური ვარიანტები</h4>
