@@ -218,7 +218,7 @@ begin
     if coalesce(trim(v_item.product_id), '') = '' or v_item.quantity is null or v_item.quantity <= 0 or v_item.quantity > 100 then
       raise exception 'პროდუქტის ID ან რაოდენობა არასწორია.';
     end if;
-    select id, name, price_gel, stock, purchase_cost, vendor, category, variants into v_product
+    select id, name, image, price_gel, stock, purchase_cost, vendor, category, variants into v_product
       from public.products where id = v_item.product_id for update;
     if not found then raise exception 'პროდუქტი ვერ მოიძებნა: %', v_item.product_id; end if;
     if v_item.custom_variant_id is null then
@@ -310,6 +310,7 @@ begin
     v_line := jsonb_build_object(
       'id', v_product.id,
       'name', v_product.name,
+      'image', v_product.image,
       'price', v_variant_price + v_item.addon_fee,
       'base_price', v_variant_price,
       'customVariantId', v_item.custom_variant_id,
