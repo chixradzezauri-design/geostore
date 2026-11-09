@@ -9228,3 +9228,56 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size: 10px !important;
   }
 }
+
+
+/* GEOSTORE final mobile usability pass for catalogue and product editing. */
+@media (max-width: 760px) {
+  .geostore-fashion-store .gs-catalog-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-card {
+    min-width: 0 !important;
+    border-radius: 14px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-media {
+    aspect-ratio: 4 / 5 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-info {
+    min-width: 0 !important;
+    padding: 11px 11px 10px !important;
+    gap: 8px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-title {
+    min-height: 2.8em !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-price p:first-child {
+    font-size: 15px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-cta {
+    width: calc(100% - 20px) !important;
+    min-height: 42px !important;
+    margin: 0 10px 10px !important;
+    padding: 9px 7px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  .geostore-fashion-store .gs-size-option,
+  .geostore-fashion-store .gs-color-option {
+    min-height: 40px !important;
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+  }
+}
+@media (max-width: 640px) {
+  .geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-option-input {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+}
