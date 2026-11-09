@@ -1426,7 +1426,7 @@ export default function AdminDashboardPro({
     const currentValue = current[column] ?? current[field];
     const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + compareFilter, {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + compareFilter + '&select=id,price_gel,stock,old_price_gel', {
         method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify({ [column]: val })
       });
       if (!response.ok) throw new Error(await response.text());
@@ -1434,7 +1434,7 @@ export default function AdminDashboardPro({
       if (!Array.isArray(savedRows) || savedRows.length !== 1) {
         throw new Error('მონაცემი პარალელურად შეიცვალა. განაახლეთ პროდუქტის სია და სცადეთ ხელახლა.');
       }
-      const savedValue = Number(savedRows[0][column]);
+      const savedValue = field === 'purchaseCost' ? val : Number(savedRows[0][column]);
       if (!Number.isFinite(savedValue) || savedValue < 0 || (field === 'stock' && !Number.isInteger(savedValue))) {
         throw new Error('სერვერმა არასწორი მნიშვნელობა დააბრუნა. განაახლეთ პროდუქტის სია.');
       }
@@ -1671,7 +1671,7 @@ export default function AdminDashboardPro({
         const updatePayload = { ...newProdPayload };
         delete updatePayload.id;
         delete updatePayload.stock;
-        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)), {
+        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)) + '&select=id,created_at,variants,stock', {
           method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
         });
         if (!updateResponse.ok) throw new Error(await updateResponse.text());
