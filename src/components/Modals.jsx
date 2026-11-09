@@ -1,5 +1,5 @@
 // src/components/Modals.jsx - GEOSTORE checkout, account and customer dialogs
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
@@ -287,7 +287,17 @@ export default function Modals({
   const [isSearchingOrder, setIsSearchingOrder] = useState(false);
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
+  const trackerFeedbackRef = useRef(null);
 
+  useEffect(() => {
+    if (!isTrackerOpen || (!trackerError && !trackedOrder)) return undefined;
+    const target = trackerFeedbackRef.current;
+    if (!target) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isTrackerOpen, trackerError, trackedOrder]);
 
   const handleSearchOrder = async (e) => {
     e.preventDefault();
@@ -525,11 +535,11 @@ export default function Modals({
             </form>
 
             {trackerError && (
-              <p role="alert" aria-live="polite" className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{localizeMessage(trackerError)}</p>
+              <p ref={trackerFeedbackRef} role="alert" aria-live="polite" className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{localizeMessage(trackerError)}</p>
             )}
 
             {trackedOrder ? (
-              <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              <div ref={trackerFeedbackRef} className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
                 <div className="gs-order-tracker-summary bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20 space-y-3">
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
