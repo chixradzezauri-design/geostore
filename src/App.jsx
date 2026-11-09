@@ -2424,7 +2424,10 @@ export default function App() {
       const checkoutCart = quickBuyProduct ? [quickBuyProduct] : cart;
       const reconciliation = reconcileCartWithCatalog(checkoutCart, latestCatalogue);
       if (reconciliation.hasChanges) {
-        if (!quickBuyProduct) setCart(reconciliation.cartItems);
+        if (!quickBuyProduct) {
+          cartRef.current = reconciliation.cartItems;
+          setCart(reconciliation.cartItems);
+        }
         setProducts((previous) => previous.map((product) => {
           const current = latestCatalogue.find((entry) => String(entry.id) === String(product.id));
           if (!current) return product;
@@ -2719,6 +2722,7 @@ export default function App() {
     } catch {
       // Confirmation is already committed; storage cleanup must not block checkout.
     }
+    cartRef.current = [];
     setCart([]);
     setAppliedCoupon(null);
 
