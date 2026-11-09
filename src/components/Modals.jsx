@@ -288,13 +288,21 @@ export default function Modals({
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
   const trackerFeedbackRef = useRef(null);
+  const trackerDialogRef = useRef(null);
 
   useEffect(() => {
     if (!isTrackerOpen || (!trackerError && !trackedOrder)) return undefined;
-    const target = trackerFeedbackRef.current;
-    if (!target) return undefined;
     const frame = window.requestAnimationFrame(() => {
-      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const dialog = trackerDialogRef.current;
+      const target = trackerFeedbackRef.current;
+      if (!dialog || !target) return;
+      const dialogRect = dialog.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const targetTop = dialog.scrollTop + targetRect.top - dialogRect.top;
+      dialog.scrollTo({
+        top: Math.max(0, targetTop - 18),
+        behavior: 'smooth'
+      });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [isTrackerOpen, trackerError, trackedOrder]);
@@ -507,7 +515,7 @@ export default function Modals({
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
       {isTrackerOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--tracker fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+          <div ref={trackerDialogRef} className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
