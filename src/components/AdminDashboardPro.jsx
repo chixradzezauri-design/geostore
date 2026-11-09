@@ -3512,6 +3512,24 @@ export default function AdminDashboardPro({
               <div className="admin-order-financials bg-slate-900/80 p-5 rounded-3xl border border-emerald-500/20 space-y-2">
                 <h4 className="font-black text-emerald-400 text-sm mb-2">💳 შეკვეთის თანხა</h4>
                 <p className="text-slate-400 text-[11px] leading-relaxed">გადახდის მეთოდი და გადახდის სტატუსი ამ შეკვეთის მონაცემებში ხელმისაწვდომი არ არის.</p>
+                {selectedOrderForModal.checkoutBreakdown && (
+                  <div className="space-y-2 border-y border-slate-800 py-3 text-sm">
+                    <div className="flex justify-between gap-3 text-slate-300">
+                      <span>პროდუქტებისა და დამატებითი სერვისების ჯამი:</span>
+                      <b>{formatPrice ? formatPrice(selectedOrderForModal.checkoutBreakdown.subtotalGEL) : selectedOrderForModal.checkoutBreakdown.subtotalGEL.toFixed(2) + ' ₾'}</b>
+                    </div>
+                    {selectedOrderForModal.checkoutBreakdown.discountGEL > 0 && (
+                      <div className="flex justify-between gap-3 text-emerald-300">
+                        <span>ფასდაკლება{selectedOrderForModal.checkoutBreakdown.couponCode ? ` (${selectedOrderForModal.checkoutBreakdown.couponCode})` : ''}:</span>
+                        <b>−{formatPrice ? formatPrice(selectedOrderForModal.checkoutBreakdown.discountGEL) : selectedOrderForModal.checkoutBreakdown.discountGEL.toFixed(2) + ' ₾'}</b>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-3 text-slate-300">
+                      <span>მიტანის საფასური:</span>
+                      <b>{formatPrice ? formatPrice(selectedOrderForModal.checkoutBreakdown.deliveryGEL) : selectedOrderForModal.checkoutBreakdown.deliveryGEL.toFixed(2) + ' ₾'}</b>
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-between text-base font-black text-white pt-2 border-t border-slate-800">
                   <span>შეკვეთის ჯამი:</span>
                   <span className="text-emerald-400 text-lg">{formatPrice ? formatPrice(selectedOrderForModal.totalGEL) : selectedOrderForModal.totalGEL + ' ₾'}</span>
