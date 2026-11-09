@@ -1238,6 +1238,28 @@ export default function App() {
       if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
       setOrders(data.map((o) => {
         const items = normalizeOrderItems(o.items);
+        const checkoutResult = o.checkout_result && typeof o.checkout_result === 'object' && !Array.isArray(o.checkout_result)
+          ? o.checkout_result
+          : null;
+        const checkoutRequest = o.checkout_request && typeof o.checkout_request === 'object' && !Array.isArray(o.checkout_request)
+          ? o.checkout_request
+          : null;
+        const optionalAmount = (value) => {
+          if (value === null || value === undefined || value === '') return null;
+          const amount = Number(value);
+          return Number.isFinite(amount) && amount >= 0 ? amount : null;
+        };
+        const subtotalGEL = optionalAmount(checkoutResult?.subtotal_gel);
+        const discountGEL = optionalAmount(checkoutResult?.discount_gel);
+        const deliveryGEL = optionalAmount(checkoutResult?.delivery_gel);
+        const checkoutBreakdown = subtotalGEL !== null && discountGEL !== null && deliveryGEL !== null
+          ? {
+              subtotalGEL,
+              discountGEL,
+              deliveryGEL,
+              couponCode: String(checkoutRequest?.coupon_code || '').trim()
+            }
+          : null;
         return {
           id: o.id,
           created_at: o.created_at || null,
@@ -1248,6 +1270,7 @@ export default function App() {
           phone: o.phone || '',
           address: o.address || '',
           totalGEL: normalizeOrderTotal(o.total_gel),
+          checkoutBreakdown,
           status: o.status || 'ახალი',
           adminNote: o.admin_note || '',
           items,
@@ -2612,6 +2635,12 @@ export default function App() {
       items: confirmedItems,
       totalGEL: safeConfirmedTotal,
       total_gel: safeConfirmedTotal,
+      checkoutBreakdown: {
+        subtotalGEL: Number(serverOrderResult.subtotal_gel),
+        discountGEL: Number(serverOrderResult.discount_gel),
+        deliveryGEL: safeConfirmedDelivery,
+        couponCode: String(eligibleAppliedCoupon?.code || '').trim()
+      },
       status: 'ახალი',
       itemSummary: confirmedItems.length > 0
         ? confirmedItems.map((item) => `${item.name || 'პროდუქტი'}${item.customVariantName ? ` — ${item.customVariantName}` : ''} (x${item.quantity || 1})`).join(', ')
