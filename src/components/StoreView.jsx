@@ -1,6 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
+import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
@@ -89,10 +90,8 @@ export default function StoreView({
   // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი
   const isClothingOrFootwear = (prod) => {
     if (!prod) return false;
-    const cat = (prod.category || '').toLowerCase();
-    const name = (prod.name || '').toLowerCase();
-    const keywords = ['ტანსაცმელ', 'ფეხსაცმელ', 'შარვალ', 'ქურთუკ', 'პერანგ', 'შორტ', 'კაბა', 'shoe', 'cloth', 'shirt', 'jacket', 'pant', 'sneaker', 'ბათინკ', 'ქუდ', 'майк'];
-    return keywords.some(kw => cat.includes(kw) || name.includes(kw));
+    return supportsSizeColorInventoryCategory(prod.category) ||
+      supportsSizeColorInventoryCategory(prod.name);
   };
 
   const handleOpenProduct = (prod) => {
@@ -127,8 +126,8 @@ export default function StoreView({
     if (!h || !w) return;
 
     let rec = 'M';
-    const cat = (selectedProduct?.category || '').toLowerCase();
-    const isShoe = cat.includes('ფეხსაცმელ') || cat.includes('shoe');
+    const isShoe = isShoesProductCategory(selectedProduct?.category) ||
+      isShoesProductCategory(selectedProduct?.name);
 
     if (isShoe) {
       if (h < 165) rec = '39';
