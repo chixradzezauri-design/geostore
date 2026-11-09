@@ -9427,3 +9427,75 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     z-index: 140 !important;
   }
 }
+
+
+/* GEOSTORE scroll repair — single scroll owner for floating support and tracking dialogs. */
+/* The support panel itself scrolls. Its heading stays visible and its
+   multiple forms no longer compete as separate nested scroll areas. */
+.geostore-fashion-store .gs-floating-support .gs-support-panel {
+  box-sizing: border-box !important;
+  max-height: min(78dvh, calc(100dvh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel-heading {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+  background: #fffdfa !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-form {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-submit {
+  position: static !important;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-support .gs-support-panel {
+    width: min(360px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: min(78dvh, calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+    padding: 12px !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-panel-heading {
+    flex: 0 0 auto !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-form {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* The tracker overlay must not become a second scroll container. */
+.geostore-fashion-store .gs-commerce-overlay--tracker {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+.geostore-fashion-store .gs-order-tracker-dialog {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth;
+  scroll-padding-block: 18px;
+}
+.geostore-fashion-store .gs-order-tracker-dialog > form,
+.geostore-fashion-store .gs-order-tracker-dialog > [role="alert"],
+.geostore-fashion-store .gs-order-tracker-dialog > div {
+  min-width: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .geostore-fashion-store .gs-order-tracker-dialog {
+    scroll-behavior: auto !important;
+  }
+}
+
