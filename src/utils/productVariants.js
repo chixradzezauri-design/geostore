@@ -126,9 +126,8 @@ export const getProductStartingPrice = (product) => {
     return prices.length ? Math.min(...prices) : null;
   }
   if (hasSizeColorInventory(product)) {
-    const rawPrice = product?.priceGEL ?? product?.price_gel;
-    const price = Number(rawPrice);
-    return rawPrice != null && String(rawPrice).trim() !== '' && Number.isFinite(price) && price >= 0 ? price : null;
+    const prices = getSizeColorInventoryVariants(product).map(variant => variant.priceGEL);
+    return prices.length ? Math.min(...prices) : null;
   }
   if (Array.isArray(product?.variants) && product.variants.length > 0) return null;
   const rawPrice = product?.priceGEL ?? product?.price_gel;
