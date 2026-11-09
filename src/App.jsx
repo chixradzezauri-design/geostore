@@ -1153,7 +1153,8 @@ export default function App() {
       } catch (error) {
         if (isCurrentOwner()) {
           console.error('My orders fetch error:', error);
-          setMyOrders([]);
+          // Preserve the last successful order snapshot during transient failures.
+          // Account changes and sign-out clear this private state separately.
           setMyOrdersError(currentLang === 'en'
             ? 'Order history is temporarily unavailable. Please try again shortly.'
             : currentLang === 'ru'
