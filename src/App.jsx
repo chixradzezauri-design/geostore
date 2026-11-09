@@ -599,6 +599,13 @@ export default function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
   const [supportSubmission, setSupportSubmission] = useState(null);
+  const [supportLookupTicketId, setSupportLookupTicketId] = useState('');
+  const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
+  const [supportThreadMessages, setSupportThreadMessages] = useState([]);
+  const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
+  const [supportThreadLoading, setSupportThreadLoading] = useState(false);
+  const [supportThreadSending, setSupportThreadSending] = useState(false);
+  const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
 
@@ -3367,6 +3374,161 @@ export default function App() {
               </button>
             </form>
             )}
+
+            <div className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3">
+              <p className="text-sm font-bold text-white">
+                {currentLang === 'en' ? 'Continue an existing conversation' : currentLang === 'ru' ? 'Продолжить переписку' : 'არსებული მიმოწერის გაგრძელება'}
+              </p>
+              <p className="text-xs text-slate-400">
+                {currentLang === 'en' ? 'Enter your ticket number and private access code.' : currentLang === 'ru' ? 'Введите номер обращения и личный код доступа.' : 'შეიყვანე მიმართვის ნომერი და პირადი წვდომის კოდი.'}
+              </p>
+              <form
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  if (supportThreadLoading) return;
+                  const ticketId = supportLookupTicketId.trim();
+                  const accessToken = supportLookupAccessToken.trim();
+                  if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+                    setSupportThreadError(currentLang === 'en' ? 'Check the ticket number and access code.' : currentLang === 'ru' ? 'Проверьте номер обращения и код доступа.' : 'შეამოწმე მიმართვის ნომერი და წვდომის კოდი.');
+                    setSupportThreadLoaded(false);
+                    setSupportThreadMessages([]);
+                    return;
+                  }
+                  setSupportThreadLoading(true);
+                  setSupportThreadError('');
+                  setSupportThreadLoaded(false);
+                  try {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
+                      method: 'POST',
+                      headers: await getSupabaseHeaders({ authenticated: true }),
+                      body: JSON.stringify({ p_ticket_id: ticketId, p_access_token: accessToken })
+                    });
+                    if (!response.ok) throw new Error('ACCESS_DENIED');
+                    const rows = await response.json();
+                    if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                    setSupportThreadMessages(rows);
+                    setSupportThreadLoaded(true);
+                  } catch (error) {
+                    console.error('Support conversation lookup error:', error);
+                    setSupportThreadMessages([]);
+                    setSupportThreadLoaded(false);
+                    setSupportThreadError(currentLang === 'en'
+                      ? 'Conversation not found or the access details are incorrect.'
+                      : currentLang === 'ru'
+                        ? 'Переписка не найдена или данные доступа неверны.'
+                        : 'მიმოწერა ვერ მოიძებნა ან წვდომის მონაცემები არასწორია.');
+                  } finally {
+                    setSupportThreadLoading(false);
+                  }
+                }}
+                className="space-y-2"
+              >
+                <input
+                  type="text"
+                  value={supportLookupTicketId}
+                  onChange={(event) => setSupportLookupTicketId(event.target.value)}
+                  placeholder={currentLang === 'en' ? 'Ticket number (t-...)' : currentLang === 'ru' ? 'Номер обращения (t-...)' : 'მიმართვის ნომერი (t-...)'}
+                  aria-label={currentLang === 'en' ? 'Ticket number' : currentLang === 'ru' ? 'Номер обращения' : 'მიმართვის ნომერი'}
+                  autoComplete="off"
+                  maxLength={34}
+                  className="gs-support-field w-full"
+                  required
+                />
+                <input
+                  type="password"
+                  value={supportLookupAccessToken}
+                  onChange={(event) => setSupportLookupAccessToken(event.target.value)}
+                  placeholder={currentLang === 'en' ? 'Private access code' : currentLang === 'ru' ? 'Личный код доступа' : 'პირადი წვდომის კოდი'}
+                  aria-label={currentLang === 'en' ? 'Private access code' : currentLang === 'ru' ? 'Личный код доступа' : 'პირადი წვდომის კოდი'}
+                  autoComplete="off"
+                  maxLength={64}
+                  className="gs-support-field w-full"
+                  required
+                />
+                <button type="submit" disabled={supportThreadLoading} className="gs-support-submit disabled:opacity-60">
+                  {supportThreadLoading
+                    ? (currentLang === 'en' ? 'Loading…' : currentLang === 'ru' ? 'Загрузка…' : 'იტვირთება…')
+                    : (currentLang === 'en' ? 'Open conversation' : currentLang === 'ru' ? 'Открыть переписку' : 'მიმოწერის გახსნა')}
+                </button>
+              </form>
+
+              {supportThreadError && <p role="alert" className="text-xs text-rose-300">{supportThreadError}</p>}
+
+              {supportThreadLoaded && (
+                <div className="space-y-3">
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
+                    {supportThreadMessages.length ? supportThreadMessages.map((item) => (
+                      <div key={item.id} className={`rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <strong className="text-slate-100">{item.sender_role === 'admin' ? (currentLang === 'en' ? 'GEOSTORE Support' : currentLang === 'ru' ? 'Поддержка GEOSTORE' : 'GEOSTORE მხარდაჭერა') : (item.sender_name || (currentLang === 'en' ? 'You' : currentLang === 'ru' ? 'Вы' : 'თქვენ'))}</strong>
+                          <time className="text-[10px] text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : ''}</time>
+                        </div>
+                        <p className="text-slate-200 whitespace-pre-wrap break-words">{item.message}</p>
+                      </div>
+                    )) : <p className="text-xs text-slate-400">{currentLang === 'en' ? 'No messages yet.' : currentLang === 'ru' ? 'Сообщений пока нет.' : 'შეტყობინებები ჯერ არ არის.'}</p>}
+                  </div>
+                  <form
+                    onSubmit={async (event) => {
+                      event.preventDefault();
+                      if (supportThreadSending) return;
+                      const message = String(new FormData(event.currentTarget).get('supportReply') || '').trim();
+                      if (!message || message.length > 4000) return;
+                      setSupportThreadSending(true);
+                      setSupportThreadError('');
+                      try {
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message`, {
+                          method: 'POST',
+                          headers: await getSupabaseHeaders({ authenticated: true }),
+                          body: JSON.stringify({
+                            p_ticket_id: supportLookupTicketId.trim(),
+                            p_message: message,
+                            p_access_token: supportLookupAccessToken.trim()
+                          })
+                        });
+                        if (!response.ok) throw new Error(await response.text());
+                        const refreshResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
+                          method: 'POST',
+                          headers: await getSupabaseHeaders({ authenticated: true }),
+                          body: JSON.stringify({
+                            p_ticket_id: supportLookupTicketId.trim(),
+                            p_access_token: supportLookupAccessToken.trim()
+                          })
+                        });
+                        if (!refreshResponse.ok) throw new Error('REFRESH_FAILED');
+                        const rows = await refreshResponse.json();
+                        if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                        setSupportThreadMessages(rows);
+                        event.currentTarget.reset();
+                      } catch (error) {
+                        console.error('Support reply error:', error);
+                        setSupportThreadError(currentLang === 'en'
+                          ? 'Your reply could not be sent. Please try again.'
+                          : currentLang === 'ru'
+                            ? 'Не удалось отправить ответ. Попробуйте ещё раз.'
+                            : 'პასუხის გაგზავნა ვერ მოხერხდა. სცადე ხელახლა.');
+                      } finally {
+                        setSupportThreadSending(false);
+                      }
+                    }}
+                    className="space-y-2"
+                  >
+                    <textarea
+                      name="supportReply"
+                      rows={2}
+                      maxLength={4000}
+                      required
+                      placeholder={currentLang === 'en' ? 'Write a reply…' : currentLang === 'ru' ? 'Напишите ответ…' : 'დაწერე პასუხი…'}
+                      className="gs-support-field w-full"
+                    />
+                    <button type="submit" disabled={supportThreadSending} className="gs-support-submit disabled:opacity-60">
+                      {supportThreadSending
+                        ? (currentLang === 'en' ? 'Sending…' : currentLang === 'ru' ? 'Отправка…' : 'იგზავნება…')
+                        : (currentLang === 'en' ? 'Send reply' : currentLang === 'ru' ? 'Отправить ответ' : 'პასუხის გაგზავნა')}
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <button
