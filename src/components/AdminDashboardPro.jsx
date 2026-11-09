@@ -438,6 +438,7 @@ export default function AdminDashboardPro({
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
   const [sizeColorStock, setSizeColorStock] = useState(() => buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
+  const [initialSizeColorStock, setInitialSizeColorStock] = useState([]);
   const [newVarName, setNewVarName] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
   const [newVarStock, setNewVarStock] = useState('');
@@ -1511,8 +1512,13 @@ export default function AdminDashboardPro({
     });
     setSelectedImages(p.gallery?.length ? p.gallery : (p.image ? [p.image] : []));
     const savedVariants = Array.isArray(p.variants) ? p.variants : [];
+    const savedSizeColorVariants = savedVariants.filter(variant => variant?.variantType === 'size_color');
+    setInitialSizeColorStock(savedSizeColorVariants.map(variant => ({
+      id: String(variant.id),
+      stock: Number(variant.stock)
+    })));
     setProductVariants(savedVariants.filter(variant => variant?.variantType !== 'size_color'));
-    setSizeColorStock(savedVariants.filter(variant => variant?.variantType === 'size_color'));
+    setSizeColorStock(savedSizeColorVariants);
     document.getElementById('geostore-product-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -1525,6 +1531,7 @@ export default function AdminDashboardPro({
     });
     setSelectedImages([]);
     setProductVariants([]);
+    setInitialSizeColorStock([]);
     setSizeColorStock(buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
   };
 
@@ -1590,6 +1597,18 @@ export default function AdminDashboardPro({
       priceGEL: priceValue,
       stock: Number(variant.stock)
     }));
+    const initialStockByVariantId = new Map(initialSizeColorStock.map(variant => [
+      String(variant.id),
+      Number(variant.stock)
+    ]));
+    const changedSizeColorStocks = normalizedSizeColorStock
+      .filter(variant => {
+        const initialStock = initialStockByVariantId.get(String(variant.id));
+        return initialStock === undefined
+          ? Number(variant.stock) > 0
+          : initialStock !== Number(variant.stock);
+      })
+      .map(variant => ({ id: variant.id, stock: Number(variant.stock) }));
     const sizeColorValidation = validateSizeColorInventoryVariants(normalizedSizeColorStock, availableSizes, availableColors);
     if (!sizeColorValidation.valid) {
       const sizeColorErrors = {
@@ -1701,21 +1720,21 @@ export default function AdminDashboardPro({
           throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
         }
       }
-      if (normalizedSizeColorStock.length > 0) {
+      if (editingProductId && changedSizeColorStocks.length > 0) {
         const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stocks', {
           method: 'POST',
           headers: await getSupabaseHeaders(),
           body: JSON.stringify({
             p_product_id: prodId,
-            p_variant_stocks: normalizedSizeColorStock.map(variant => ({ id: variant.id, stock: variant.stock }))
+            p_variant_stocks: changedSizeColorStocks
           })
         });
         if (!stockResponse.ok) {
           throw new Error('ზომებისა და ფერების მარაგი პროდუქტში შეინახა ვერ მოხერხდა: ' + await stockResponse.text());
         }
         const stockResult = await stockResponse.json();
-        if (!stockResult || Number(stockResult.updated) !== normalizedSizeColorStock.length) {
-          throw new Error('ზომებისა და ფერების მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
+        if (!stockResult || Number(stockResult.updated) !== changedSizeColorStocks.length) {
+          throw new Error('ზომებისა და ფერების შეცვლილი მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
         }
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
