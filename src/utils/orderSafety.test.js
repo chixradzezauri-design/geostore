@@ -364,6 +364,30 @@ test('rejects size/color cart lines when the inventory ID does not match the sel
   assert.deepEqual(result.changes.map(change => change.type), ['variant_size_color_missing']);
 });
 
+
+test('reconciles size/color cart lines using the selected variant price, not the product base price', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, basePriceGEL: 30,
+      quantity: 1, selectedSize: 'M', selectedColor: 'Black',
+      customVariantId: 'shirt-m-black', customVariantName: 'M / Black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 0,
+      available_sizes: ['M'], available_colors: ['Black'],
+      variants: [{
+        id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color',
+        size: 'M', color: 'Black', priceGEL: 45, stock: 4
+      }]
+    }]
+  );
+
+  assert.deepEqual(result.changes.map(change => change.type), ['price']);
+  assert.equal(result.cartItems[0].basePriceGEL, 45);
+  assert.equal(result.cartItems[0].priceGEL, 45);
+  assert.equal(result.cartItems[0].stock, 4);
+});
+
 test('rejects size/color inventory lines that exceed the selected combination stock', () => {
   const result = reconcileCartWithCatalog(
     [{
