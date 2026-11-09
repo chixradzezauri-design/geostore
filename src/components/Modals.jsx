@@ -697,10 +697,10 @@ export default function Modals({
 
       {/* 4. Supabase email/password sign-in and registration */}
       {isAuthOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center overflow-y-auto p-3 py-4 sm:p-4 animate-in fade-in duration-300">
+          <div role="dialog" aria-modal="true" aria-labelledby="geostore-auth-dialog-title" className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
+              <h3 id="geostore-auth-dialog-title" className="font-black text-white text-base flex items-center gap-2.5">
                 <Lock className="w-5 h-5 text-amber-400" />
                 {authMode === 'login' ? copy.auth : authMode === 'register' ? copy.register : authMode === 'reset-request' ? copy.forgotPassword : copy.resetPassword}
               </h3>
