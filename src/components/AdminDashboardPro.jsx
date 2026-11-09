@@ -11,7 +11,7 @@ import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
-import { collectReferencedProductImageUrls } from '../utils/productImageCleanup';
+import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
@@ -154,7 +154,29 @@ const deleteProductImages = async (imageUrls, productId) => {
     if (!referenceResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
     const productRows = await referenceResponse.json();
     if (!Array.isArray(productRows)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+
+    // Historical order snapshots are independent references to their original
+    // photos. Never remove a Storage object while any order still references it.
+    const orderRows = [];
+    const pageSize = 1000;
+    for (let offset = 0; offset < 100000; offset += pageSize) {
+      const orderHeaders = await getSupabaseHeaders();
+      orderHeaders.Range = `${offset}-${offset + pageSize - 1}`;
+      orderHeaders['Range-Unit'] = 'items';
+      const orderResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/orders?select=items&order=created_at.asc,id.asc`,
+        { headers: orderHeaders }
+      );
+      if (!orderResponse.ok) throw new Error('შეკვეთებში ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
+      const page = await orderResponse.json();
+      if (!Array.isArray(page)) throw new Error('შეკვეთების ფოტოების სია არასწორია.');
+      orderRows.push(...page);
+      if (page.length < pageSize) break;
+      if (offset + pageSize >= 100000) throw new Error('შეკვეთების სრული სიის შემოწმება ვერ დასრულდა; ფოტოს წაშლა შეჩერდა.');
+    }
+
     const referencedUrls = collectReferencedProductImageUrls(productRows, productId);
+    for (const orderUrl of collectReferencedOrderImageUrls(orderRows)) referencedUrls.add(orderUrl);
     const safePaths = paths.filter(path => {
       const canonicalUrl = publicPrefix + path.split('/').map(encodeURIComponent).join('/');
       return !referencedUrls.has(canonicalUrl);
