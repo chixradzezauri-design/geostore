@@ -2364,6 +2364,11 @@ export default function App() {
         id: item.id,
         name: item.name,
         image: catalogProduct?.image || item.image || item.img || '',
+        // Keep the full image set in the order snapshot so historical order photos
+        // remain available after the catalogue gallery is edited.
+        gallery: Array.isArray(catalogProduct?.gallery)
+          ? [...catalogProduct.gallery]
+          : (Array.isArray(item.gallery) ? [...item.gallery] : []),
         price: Number(item.basePriceGEL ?? item.priceGEL ?? item.price) || 0,
         quantity: Number(quantity ?? 1),
         selected_size: item.selectedSize || null,
