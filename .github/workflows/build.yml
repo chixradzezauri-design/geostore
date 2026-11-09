@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'maintenance/**'
+      - 'feature/support-ticket-backend-2026-11-09'
   pull_request:
     branches:
       - main
