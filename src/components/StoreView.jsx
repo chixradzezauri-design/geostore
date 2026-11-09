@@ -143,7 +143,9 @@ export default function StoreView({
       else rec = 'XXL';
     }
 
-    const available = getAvailableProductSizes(selectedProduct);
+    const available = hasSizeColorInventory(selectedProduct)
+      ? getAvailableSizeColorSizes(selectedProduct, selectedColor)
+      : getAvailableProductSizes(selectedProduct);
     if (!available.length) return;
     if (!available.includes(rec)) {
       rec = available[0];
