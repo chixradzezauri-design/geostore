@@ -420,6 +420,11 @@ export default function AdminDashboardPro({
   };
 
   const [productForm, setProductForm] = useState(productFormInitial);
+  // Keep comma-separated text drafts separate from parsed arrays so typing does not reset the caret.
+  const [productOptionDrafts, setProductOptionDrafts] = useState({
+    availableSizes: productFormInitial.availableSizes.join(', '),
+    availableColors: productFormInitial.availableColors.join(', ')
+  });
   const [stockDrafts, setStockDrafts] = useState({});
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
@@ -494,10 +499,10 @@ export default function AdminDashboardPro({
   };
 
   const handleProductOptionChange = (field, rawValue) => {
-    const nextOptions = String(rawValue ?? '').split(',').map(value => value.trim()).filter(Boolean);
+    if (field !== 'availableSizes' && field !== 'availableColors') return;
+    const nextOptions = [...new Set(String(rawValue ?? '').split(',').map(value => value.trim()).filter(Boolean))];
     const nextSizes = field === 'availableSizes' ? nextOptions : productForm.availableSizes;
     const nextColors = field === 'availableColors' ? nextOptions : productForm.availableColors;
-    setProductForm(prev => ({ ...prev, [field]: nextOptions }));
     if (sizeColorStock.length > 0) {
       const rows = buildSizeColorStockVariants(nextSizes, nextColors, sizeColorStock, Number(productForm.priceGEL) || 0);
       if (rows.length > 50) {
@@ -506,6 +511,7 @@ export default function AdminDashboardPro({
       }
       setSizeColorStock(rows);
     }
+    setProductForm(prev => ({ ...prev, [field]: nextOptions }));
   };
 
   const handleCategoryChange = (catName) => {
@@ -532,6 +538,10 @@ export default function AdminDashboardPro({
       availableSizes: defaultSizes,
       availableColors: defaultColors
     }));
+    setProductOptionDrafts({
+      availableSizes: defaultSizes.join(', '),
+      availableColors: defaultColors.join(', ')
+    });
     const isClothingOrShoes = nameLower.includes('ტანსაცმელ') || nameLower.includes('ჩაცმა') ||
       nameLower.includes('ქურთუკ') || nameLower.includes('შარვალ') ||
       nameLower.includes('ფეხსაცმელ') || nameLower.includes('shoe');
@@ -1423,7 +1433,17 @@ export default function AdminDashboardPro({
   };
 
   const handleEditProduct = (p) => {
+    const savedSizes = Array.isArray(p.availableSizes)
+      ? p.availableSizes
+      : Array.isArray(p.available_sizes) ? p.available_sizes : [];
+    const savedColors = Array.isArray(p.availableColors)
+      ? p.availableColors
+      : Array.isArray(p.available_colors) ? p.available_colors : [];
     setEditingProductId(String(p.id));
+    setProductOptionDrafts({
+      availableSizes: savedSizes.join(', '),
+      availableColors: savedColors.join(', ')
+    });
     setProductForm({
       ...productFormInitial, name: p.name || '', category: p.category || productFormInitial.category,
       priceGEL: String(p.priceGEL ?? p.price_gel ?? ''), oldPriceGEL: String(p.oldPriceGEL ?? p.old_price_gel ?? ''),
@@ -1432,8 +1452,8 @@ export default function AdminDashboardPro({
       material: p.material || '', durability: p.durability || '', brand: p.brand || '',
       model: p.model || '', cpu: p.cpu || '', ram: p.ram || '', storage: p.storage || '',
       gpu: p.gpu || '', screenSize: p.screenSize || p.screen_size || '', os: p.os || '',
-      availableSizes: p.availableSizes || p.available_sizes || [],
-      availableColors: p.availableColors || p.available_colors || [],
+      availableSizes: savedSizes,
+      availableColors: savedColors,
       isFeatured: Boolean(p.isFeatured ?? p.is_featured)
     });
     setSelectedImages(p.gallery?.length ? p.gallery : (p.image ? [p.image] : []));
@@ -1446,6 +1466,10 @@ export default function AdminDashboardPro({
   const resetProductEditor = () => {
     setEditingProductId(null);
     setProductForm(productFormInitial);
+    setProductOptionDrafts({
+      availableSizes: productFormInitial.availableSizes.join(', '),
+      availableColors: productFormInitial.availableColors.join(', ')
+    });
     setSelectedImages([]);
     setProductVariants([]);
     setSizeColorStock(buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
@@ -3585,7 +3609,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მასალა</label>
@@ -3593,7 +3617,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
@@ -3602,7 +3626,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები (EU)</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მასალა</label>
@@ -3610,7 +3634,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
@@ -3636,7 +3660,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მეხსიერება</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
@@ -3644,7 +3668,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
@@ -3653,11 +3677,11 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები</label>
-                        <input type="text" value={productForm.availableSizes.join(', ')} onChange={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productForm.availableColors.join(', ')} onChange={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                       </div>
                     </div>
                   )}
