@@ -700,6 +700,27 @@ export default function AdminDashboardPro({
   }, [adminLoggedIn]);
 
   useEffect(() => {
+    if (!adminLoggedIn) return undefined;
+    const channel = supabase
+      .channel('geostore-admin-legacy-messages')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'messages' },
+        () => {
+          void fetchLegacyMessages();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && adminLoggedIn) {
+          void fetchLegacyMessages();
+        }
+      });
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
     let active = true;
     if (!adminLoggedIn) {
       setStorefrontVersions([]);
