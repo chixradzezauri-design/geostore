@@ -622,6 +622,54 @@ export default function App() {
   }, [supportOpen, supportThreadLoaded, supportThreadMessages]);
 
   useEffect(() => {
+    if (!supportOpen || !supportThreadLoaded || supportThreadSending) return undefined;
+
+    const ticketId = String(supportLookupTicketId || '').trim();
+    const accessToken = String(supportLookupAccessToken || '').trim();
+    if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+      return undefined;
+    }
+
+    let active = true;
+    let requestInFlight = false;
+    const refreshSupportThread = async () => {
+      if (!active || requestInFlight || document.visibilityState !== 'visible') return;
+      requestInFlight = true;
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({ p_ticket_id: ticketId, p_access_token: accessToken })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw new Error('Invalid support conversation response');
+        if (active) setSupportThreadMessages(rows);
+      } catch (error) {
+        // Keep the last successfully loaded conversation visible during a
+        // temporary network failure; the next poll will retry automatically.
+        if (active) console.error('Support conversation refresh failed:', error);
+      } finally {
+        requestInFlight = false;
+      }
+    };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refreshSupportThread();
+    };
+
+    void refreshSupportThread();
+    const interval = window.setInterval(() => void refreshSupportThread(), 15000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken]);
+
+  useEffect(() => {
     if (!adminLoggedIn) return undefined;
     let active = true;
     const loadStorefrontDraft = async () => {
