@@ -3615,7 +3615,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები</label>
-                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მასალა</label>
@@ -3623,7 +3623,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                     </div>
                   )}
@@ -3632,7 +3632,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები (EU)</label>
-                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მასალა</label>
@@ -3640,7 +3640,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                     </div>
                   )}
@@ -3666,7 +3666,7 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">მეხსიერება</label>
-                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
@@ -3674,7 +3674,7 @@ export default function AdminDashboardPro({
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                     </div>
                   )}
@@ -3683,11 +3683,11 @@ export default function AdminDashboardPro({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ზომები</label>
-                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
-                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] outline-none focus:border-emerald-400" />
+                        <input type="text" value={productOptionDrafts.availableColors} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableColors: e.target.value }))} onBlur={e => handleProductOptionChange('availableColors', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                     </div>
                   )}
