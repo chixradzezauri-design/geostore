@@ -4,15 +4,32 @@ const normalizeOptions = (values) => {
 };
 
 // Accept both normalized frontend keys and raw Supabase/PostgREST keys.
-export const getAvailableProductSizes = (product) => normalizeOptions(
-  product?.availableSizes ?? product?.available_sizes
-);
+// For size/color inventory products, the variant matrix is the source of truth.
+// This avoids stale or missing available_sizes / available_colors fields hiding real options
+// or showing options that do not exist in the saved inventory matrix.
+export const getAvailableProductSizes = (product) => {
+  const inventoryRows = Array.isArray(product?.variants)
+    ? product.variants.filter(variant => variant?.variantType === 'size_color')
+    : [];
+  if (inventoryRows.length > 0) {
+    return normalizeOptions(inventoryRows.map(variant => variant?.size));
+  }
+  return normalizeOptions(product?.availableSizes ?? product?.available_sizes);
+};
 
-export const getAvailableProductColors = (product) => normalizeOptions(
-  (product?.availableColors?.length ? product.availableColors : undefined) ??
-  (product?.available_colors?.length ? product.available_colors : undefined) ??
-  product?.colors
-);
+export const getAvailableProductColors = (product) => {
+  const inventoryRows = Array.isArray(product?.variants)
+    ? product.variants.filter(variant => variant?.variantType === 'size_color')
+    : [];
+  if (inventoryRows.length > 0) {
+    return normalizeOptions(inventoryRows.map(variant => variant?.color));
+  }
+  return normalizeOptions(
+    (product?.availableColors?.length ? product.availableColors : undefined) ??
+    (product?.available_colors?.length ? product.available_colors : undefined) ??
+    product?.colors
+  );
+};
 
 const isSizeColorInventoryRow = (variant) => (
   variant && typeof variant === 'object' && !Array.isArray(variant) &&
