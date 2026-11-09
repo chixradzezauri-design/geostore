@@ -598,6 +598,7 @@ export default function App() {
   const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
+  const [supportSubmission, setSupportSubmission] = useState(null);
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
 
@@ -3212,6 +3213,33 @@ export default function App() {
                 <X aria-hidden="true" />
               </button>
             </div>
+            {supportSubmission ? (
+              <div className="gs-support-form space-y-3" role="status" aria-live="polite">
+                <p className="text-emerald-300 font-bold">
+                  {currentLang === 'en' ? 'Your support request was sent.' : currentLang === 'ru' ? 'Ваше обращение отправлено.' : 'მოთხოვნა წარმატებით გაიგზავნა.'}
+                </p>
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  {currentLang === 'en' ? 'Save these details. The access code is shown only once and is needed to reopen this conversation.' : currentLang === 'ru' ? 'Сохраните эти данные. Код доступа показывается только один раз и нужен для повторного открытия переписки.' : 'შეინახე ეს მონაცემები. წვდომის კოდი მხოლოდ ერთხელ ჩანს და საჭიროა მიმოწერის ხელახლა გასახსნელად.'}
+                </p>
+                <label className="block text-xs text-slate-300">
+                  {currentLang === 'en' ? 'Ticket number' : currentLang === 'ru' ? 'Номер обращения' : 'მიმართვის ნომერი'}
+                  <input readOnly value={supportSubmission.ticketId} onFocus={(event) => event.target.select()} className="gs-support-field mt-1 w-full" />
+                </label>
+                <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(supportSubmission.ticketId); alert(currentLang === 'en' ? 'Ticket number copied.' : currentLang === 'ru' ? 'Номер скопирован.' : 'ნომერი დაკოპირდა.'); } catch { alert(currentLang === 'en' ? 'Select and copy the ticket number above.' : currentLang === 'ru' ? 'Выделите и скопируйте номер выше.' : 'მონიშნე და დააკოპირე ზემოთ მოცემული ნომერი.'); } }} className="gs-support-submit">
+                  {currentLang === 'en' ? 'Copy ticket number' : currentLang === 'ru' ? 'Копировать номер' : 'ნომრის კოპირება'}
+                </button>
+                <label className="block text-xs text-slate-300">
+                  {currentLang === 'en' ? 'Private access code' : currentLang === 'ru' ? 'Личный код доступа' : 'პირადი წვდომის კოდი'}
+                  <input readOnly value={supportSubmission.accessToken} onFocus={(event) => event.target.select()} className="gs-support-field mt-1 w-full" />
+                </label>
+                <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(supportSubmission.accessToken); alert(currentLang === 'en' ? 'Access code copied.' : currentLang === 'ru' ? 'Код доступа скопирован.' : 'წვდომის კოდი დაკოპირდა.'); } catch { alert(currentLang === 'en' ? 'Select and copy the access code above.' : currentLang === 'ru' ? 'Выделите и скопируйте код выше.' : 'მონიშნე და დააკოპირე ზემოთ მოცემული კოდი.'); } }} className="gs-support-submit">
+                  {currentLang === 'en' ? 'Copy access code' : currentLang === 'ru' ? 'Копировать код' : 'წვდომის კოდის კოპირება'}
+                </button>
+                <button type="button" onClick={() => setSupportSubmission(null)} className="w-full rounded-xl border border-slate-700 px-4 py-3 text-slate-200 font-bold">
+                  {currentLang === 'en' ? 'Send another request' : currentLang === 'ru' ? 'Отправить ещё одно обращение' : 'ახალი მიმართვის გაგზავნა'}
+                </button>
+              </div>
+            ) : (
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -3237,20 +3265,22 @@ export default function App() {
                   window.crypto.getRandomValues(ticketBytes);
                   const ticketId = `t-${Array.from(ticketBytes, byte => byte.toString(16).padStart(2, '0')).join('')}`;
 
+                  const accessBytes = new Uint8Array(32);
+                  window.crypto.getRandomValues(accessBytes);
+                  const accessToken = Array.from(accessBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+
                   const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/support_tickets`,
+                    `${SUPABASE_URL}/rest/v1/rpc/create_support_ticket`,
                     {
                       method: 'POST',
-                      headers: {
-                        ...(await getSupabaseHeaders()),
-                        Prefer: 'return=minimal'
-                      },
+                      headers: await getSupabaseHeaders({ authenticated: true }),
                       body: JSON.stringify({
-                        id: ticketId,
-                        customer_name: name,
-                        email: email || null,
-                        subject: subject || null,
-                        message
+                        p_id: ticketId,
+                        p_customer_name: name,
+                        p_email: email || null,
+                        p_subject: subject || null,
+                        p_message: message,
+                        p_access_token: accessToken
                       })
                     }
                   );
@@ -3270,14 +3300,8 @@ export default function App() {
                         : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
                   }
 
-                  alert(currentLang === 'en'
-                    ? 'Support request sent successfully.'
-                    : currentLang === 'ru'
-                      ? 'Обращение в поддержку успешно отправлено.'
-                      : 'მხარდაჭერის მოთხოვნა წარმატებით გაიგზავნა.');
-
+                  setSupportSubmission({ ticketId, accessToken });
                   e.target.reset();
-                  setSupportOpen(false);
                 } catch (error) {
                   console.error('Support ticket error:', error);
                   alert(
@@ -3342,11 +3366,12 @@ export default function App() {
                   : t.sendMessage}
               </button>
             </form>
+            )}
           </div>
         ) : (
           <button
             type="button"
-            onClick={() => setSupportOpen(true)}
+            onClick={() => { setSupportSubmission(null); setSupportOpen(true); }}
             className="gs-floating-action gs-floating-action--support"
             aria-label={currentLang === 'en' ? 'Open support chat' : currentLang === 'ru' ? 'Открыть чат поддержки' : 'მხარდაჭერის ჩატის გახსნა'}
           >
