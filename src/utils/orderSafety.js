@@ -168,8 +168,11 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       : null;
     const selectedInventoryVariant = customVariant || sizeColorVariant;
     const hasCustomVariants = variants.some(variant => variant?.variantType !== 'size_color');
+    // Variant prices are authoritative for both custom options and
+    // size/color inventory rows. The parent product price is only a legacy
+    // fallback when an older size/color row has no own price field.
     const currentPrice = sizeColorVariant
-      ? Number(product.price_gel)
+      ? Number(sizeColorVariant.priceGEL ?? sizeColorVariant.price_gel ?? product.price_gel)
       : customVariantId
         ? Number(customVariant?.priceGEL ?? customVariant?.price_gel)
         : Number(product.price_gel);
