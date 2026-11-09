@@ -5,7 +5,7 @@ export const isClothingProductCategory = (value) => (
 );
 
 export const isShoesProductCategory = (value) => (
-  /ფეხსაცმელ|shoe|sneaker|trainer|boot|სანდალ|კედი|ჩექმა/i.test(normalizeCategoryName(value))
+  /ფეხსაცმელ|shoe|sneaker|trainer|boot|სანდლ|კედი|ჩექმა/i.test(normalizeCategoryName(value))
 );
 
 export const supportsSizeColorInventoryCategory = (value) => (
