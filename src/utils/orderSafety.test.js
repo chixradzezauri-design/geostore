@@ -260,9 +260,18 @@ test('requires a custom variant selection when the catalogue defines custom vari
 });
 
 
-test('accepts only the exact secure order ID confirmed by the checkout RPC', () => {
+test('accepts the exact secure order ID with server-confirmed items, stock and totals', () => {
   const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
-  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, orderId), {
+  const response = {
+    order_id: orderId,
+    stock_deducted: true,
+    items: [{ id: 'p1', quantity: 2, price: 50 }],
+    subtotal_gel: 100,
+    discount_gel: 10,
+    delivery_gel: 5,
+    total_gel: 95
+  };
+  assert.deepEqual(validateOrderCreationResponse(response, orderId), {
     valid: true,
     orderId
   });
@@ -286,6 +295,39 @@ test('rejects missing, malformed, or mismatched checkout order IDs', () => {
     valid: false,
     reason: 'invalid_expected_id'
   });
+});
+
+test('rejects checkout responses that do not confirm stock deduction or items', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  const response = {
+    order_id: orderId,
+    stock_deducted: true,
+    items: [{ id: 'p1', quantity: 1, price: 20 }],
+    subtotal_gel: 20,
+    discount_gel: 0,
+    delivery_gel: 0,
+    total_gel: 20
+  };
+  assert.equal(validateOrderCreationResponse({ ...response, stock_deducted: false }, orderId).reason, 'stock_not_confirmed');
+  assert.equal(validateOrderCreationResponse({ ...response, items: [] }, orderId).reason, 'invalid_items');
+  assert.equal(validateOrderCreationResponse({ ...response, items: [{ id: 'p1', quantity: 0, price: 20 }] }, orderId).reason, 'invalid_items');
+});
+
+test('rejects missing, negative, or inconsistent server-calculated checkout totals', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  const response = {
+    order_id: orderId,
+    stock_deducted: true,
+    items: [{ id: 'p1', quantity: 2, price: 50 }],
+    subtotal_gel: 100,
+    discount_gel: 10,
+    delivery_gel: 5,
+    total_gel: 95
+  };
+  assert.equal(validateOrderCreationResponse({ ...response, total_gel: undefined }, orderId).reason, 'invalid_totals');
+  assert.equal(validateOrderCreationResponse({ ...response, discount_gel: 101 }, orderId).reason, 'invalid_discount');
+  assert.equal(validateOrderCreationResponse({ ...response, total_gel: 999 }, orderId).reason, 'inconsistent_totals');
+  assert.equal(validateOrderCreationResponse({ ...response, subtotal_gel: 99 }, orderId).reason, 'inconsistent_totals');
 });
 
 
