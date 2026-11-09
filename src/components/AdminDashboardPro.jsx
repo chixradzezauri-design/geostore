@@ -564,6 +564,10 @@ export default function AdminDashboardPro({
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [supportTicketsError, setSupportTicketsError] = useState('');
+  const [selectedSupportTicketId, setSelectedSupportTicketId] = useState(null);
+  const [supportTicketThreads, setSupportTicketThreads] = useState({});
+  const [supportTicketThreadLoading, setSupportTicketThreadLoading] = useState({});
+  const [supportTicketThreadErrors, setSupportTicketThreadErrors] = useState({});
   const [legacyMessages, setLegacyMessages] = useState([]);
   const [legacyMessagesError, setLegacyMessagesError] = useState('');
   const [replyInputs, setReplyInputs] = useState({});
@@ -596,6 +600,49 @@ export default function AdminDashboardPro({
       setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
     }
   };
+
+  const fetchSupportTicketThread = async (ticketId) => {
+    const normalizedTicketId = String(ticketId || '').trim();
+    if (!normalizedTicketId) return;
+    setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: true }));
+    setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: '' }));
+    try {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_support_ticket_messages', {
+        method: 'POST', headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_ticket_id: normalizedTicketId })
+      });
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || ('HTTP ' + response.status));
+      }
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error('მიმოწერის პასუხის ფორმატი არასწორია.');
+      setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: rows }));
+    } catch (error) {
+      console.error('GEOSTORE support ticket thread fetch failed:', error);
+      setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
+    } finally {
+      setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
+    }
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      setSelectedSupportTicketId(null);
+      setSupportTicketThreads({});
+      setSupportTicketThreadErrors({});
+      return undefined;
+    }
+    const channel = supabase
+      .channel('geostore-admin-support-ticket-messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_messages' }, payload => {
+        const changedTicketId = payload?.new?.ticket_ref || payload?.old?.ticket_ref;
+        fetchTickets();
+        if (changedTicketId && String(changedTicketId) === String(selectedSupportTicketId)) fetchSupportTicketThread(changedTicketId);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [adminLoggedIn, selectedSupportTicketId]);
 
   useEffect(() => {
     if (!adminLoggedIn) return undefined;
@@ -1969,17 +2016,24 @@ export default function AdminDashboardPro({
     if (!replyText || !replyText.trim()) return;
 
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
-        method: 'PATCH',
-        headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ reply: replyText.trim(), status: 'მოგვარებული' })
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message', {
+        method: 'POST', headers: await getSupabaseHeaders(),
+        body: JSON.stringify({ p_ticket_id: String(ticketId), p_message: replyText.trim() })
       });
-      if (!response.ok) throw new Error('ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
+      }
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
       fetchTickets();
+      setSelectedSupportTicketId(String(ticketId));
+      fetchSupportTicketThread(ticketId);
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
-      alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის ტიკეტში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
-    } catch { alert('შეცდომა პასუხის გაგზავნისას'); }
+      alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის მიმოწერაში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
+    } catch (error) {
+      console.error('GEOSTORE support ticket reply failed:', error);
+      alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+    }
   };
 
   const handleDeleteTicket = async (ticketId) => {
@@ -3509,6 +3563,13 @@ export default function AdminDashboardPro({
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'მუშავდება')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მუშავდება' ? 'bg-emerald-500/80 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                           <button onClick={() => handleUpdateTicketStatus(t.id, 'მოგვარებული')} className={`px-3 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition ${t.status === 'მოგვარებული' ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მოგვარებული</button>
                         </div>
+                        <button type="button" onClick={() => {
+                          const ticketId = String(t.id);
+                          if (String(selectedSupportTicketId) === ticketId) setSelectedSupportTicketId(null);
+                          else { setSelectedSupportTicketId(ticketId); fetchSupportTicketThread(ticketId); }
+                        }} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
+                          {String(selectedSupportTicketId) === String(t.id) ? 'მიმოწერის დამალვა' : 'მიმოწერის ნახვა'}
+                        </button>
                         <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
@@ -3524,6 +3585,35 @@ export default function AdminDashboardPro({
                       <div className="admin-support-ticket-reply bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-1 shadow">
                         <b className="text-emerald-400 block text-xs">ადმინისტრატორის პასუხი:</b>
                         <p className="text-slate-200">{t.reply}</p>
+                      </div>
+                    )}
+
+                    {String(selectedSupportTicketId) === String(t.id) && (
+                      <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-4 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <b className="text-cyan-200 text-xs">მიმოწერის სრული ისტორია</b>
+                          <button type="button" onClick={() => fetchSupportTicketThread(t.id)} className="text-cyan-300 underline underline-offset-2">განახლება</button>
+                        </div>
+                        {supportTicketThreadLoading[String(t.id)] ? <p className="text-slate-400 py-3">მიმოწერა იტვირთება…</p>
+                          : supportTicketThreadErrors[String(t.id)] ? (
+                            <div role="alert" className="text-rose-300 space-y-2">
+                              <p>{supportTicketThreadErrors[String(t.id)]}</p>
+                              <button type="button" onClick={() => fetchSupportTicketThread(t.id)} className="underline underline-offset-2">ხელახლა ცდა</button>
+                            </div>
+                          ) : (supportTicketThreads[String(t.id)] || []).length === 0 ? <p className="text-slate-400 py-3">მიმოწერის ჩანაწერები ჯერ არ არის.</p>
+                          : (
+                            <div className="space-y-2.5 max-h-96 overflow-y-auto">
+                              {(supportTicketThreads[String(t.id)] || []).map(entry => (
+                                <div key={entry.id} className={`rounded-xl border p-3 ${entry.sender_role === 'admin' ? 'border-emerald-500/30 bg-emerald-950/20' : 'border-slate-700 bg-slate-950/70'}`}>
+                                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                                    <b className={entry.sender_role === 'admin' ? 'text-emerald-300' : 'text-cyan-200'}>{entry.sender_role === 'admin' ? 'ადმინისტრატორი' : (entry.sender_name || 'მომხმარებელი')}</b>
+                                    <span className="text-[10px] text-slate-500">{entry.created_at ? new Date(entry.created_at).toLocaleString('ka-GE') : ''}</span>
+                                  </div>
+                                  <p className="text-slate-200 whitespace-pre-wrap break-words">{entry.message}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     )}
 
