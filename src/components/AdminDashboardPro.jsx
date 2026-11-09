@@ -209,6 +209,13 @@ const resolveOrderItemImage = (item, products) => {
   const savedOrderImage = String(item?.image || item?.image_url || item?.imageUrl || '').trim();
   if (savedOrderImage) return savedOrderImage;
 
+  // Order snapshots retain the original gallery even if the catalogue product
+  // is later edited or removed. Prefer that historical image before live data.
+  const savedGalleryImage = Array.isArray(item?.gallery)
+    ? item.gallery.find(image => String(image ?? '').trim())
+    : '';
+  if (savedGalleryImage) return String(savedGalleryImage).trim();
+
   const productId = String(item?.id ?? item?.product_id ?? '').trim();
   if (!productId || !Array.isArray(products)) return '';
 
@@ -1912,7 +1919,10 @@ export default function AdminDashboardPro({
     const safeOrderItems = normalizeOrderItems(order.items);
     const itemsRows = safeOrderItems.length > 0
       ? safeOrderItems.map((item) => {
-          const imageSrc = safeImageSrc(item.image);
+          const imageSrc = safeImageSrc(
+            item.image || item.image_url || item.imageUrl ||
+            (Array.isArray(item.gallery) ? item.gallery[0] : '')
+          );
           const quantity = Math.max(1, Math.floor(numericValue(item.quantity) || 1));
           const unitPrice = numericValue(item.priceGEL ?? item.price);
           return `
