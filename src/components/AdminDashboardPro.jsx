@@ -1720,6 +1720,7 @@ export default function AdminDashboardPro({
           throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
         }
       }
+      let savedVariantStockResult = null;
       if (editingProductId && changedSizeColorStocks.length > 0) {
         const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stocks', {
           method: 'POST',
@@ -1732,9 +1733,10 @@ export default function AdminDashboardPro({
         if (!stockResponse.ok) {
           throw new Error('ზომებისა და ფერების მარაგი პროდუქტში შეინახა ვერ მოხერხდა: ' + await stockResponse.text());
         }
-        const stockResult = await stockResponse.json();
-        if (!stockResult || Number(stockResult.updated) !== changedSizeColorStocks.length) {
-          throw new Error('ზომებისა და ფერების შეცვლილი მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
+        savedVariantStockResult = await stockResponse.json();
+        if (!savedVariantStockResult || Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
+            Number(savedVariantStockResult.stock) < 0 || !Number.isSafeInteger(Number(savedVariantStockResult.stock))) {
+          throw new Error('ზომებისა და ფერების შეცვლილი მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტების სია.');
         }
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
@@ -1750,17 +1752,24 @@ export default function AdminDashboardPro({
         }
       }
       const savedVariants = Array.isArray(savedProductRow?.variants) ? savedProductRow.variants : newProdPayload.variants;
+      // Keep the database's latest stock for untouched variants. The editor may
+      // have been open while checkout deducted stock, so only overlay quantities
+      // that the admin explicitly changed and the stock RPC confirmed.
+      const explicitlyChangedStockById = new Map(
+        changedSizeColorStocks.map(variant => [String(variant.id), Number(variant.stock)])
+      );
       const localVariants = savedVariants.map(variant => {
-        const stockRow = normalizedSizeColorStock.find(entry => entry.id === variant.id);
-        return stockRow ? { ...variant, ...stockRow } : variant;
+        const changedStock = explicitlyChangedStockById.get(String(variant.id));
+        return changedStock === undefined ? variant : { ...variant, stock: changedStock };
       });
+      const localSizeColorStock = localVariants.filter(variant => variant?.variantType === 'size_color');
       const localProdObject = {
         id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
         oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
-        stock: normalizedSizeColorStock.length > 0
-          ? normalizedSizeColorStock.reduce((total, variant) => total + variant.stock, 0)
+        stock: localSizeColorStock.length > 0
+          ? localSizeColorStock.reduce((total, variant) => total + (Number(variant.stock) || 0), 0)
           : (editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock),
         image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
         description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
