@@ -1452,6 +1452,9 @@ export default function AdminDashboardPro({
   const handleQuickUpdateProduct = async (id, field, value) => {
     const current = (products || []).find(p => String(p.id) === String(id));
     if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+    if (field === 'stock' && Array.isArray(current.variants) && current.variants.length > 0) {
+      return alert('ამ პროდუქტს აქვს ზომის/ფერის ან ინდივიდუალური ვარიანტები. მარაგი შეცვალეთ პროდუქტის რედაქტირების ფანჯარაში თითოეული ვარიანტისთვის.');
+    }
     const columnByField = { priceGEL: 'price_gel', purchaseCost: 'purchase_cost', stock: 'stock' };
     const column = columnByField[field];
     if (!column) return;
@@ -4063,6 +4066,8 @@ export default function AdminDashboardPro({
                           step="1"
                           inputMode="numeric"
                           aria-label={`მარაგი: ${p.name}`}
+                          disabled={Array.isArray(p.variants) && p.variants.length > 0}
+                          title={Array.isArray(p.variants) && p.variants.length > 0 ? 'ვარიანტების მარაგი შეცვალეთ პროდუქტის რედაქტირების ფანჯარაში.' : 'მარაგის სწრაფი შეცვლა'}
                           value={stockDrafts[String(p.id)] ?? String(p.stock ?? 0)}
                           onChange={e => setStockDrafts(prev => ({ ...prev, [String(p.id)]: e.target.value }))}
                           onBlur={e => {
@@ -4078,7 +4083,7 @@ export default function AdminDashboardPro({
                             if (e.key === 'Enter') e.currentTarget.blur();
                             if (e.key === 'Escape') setStockDrafts(prev => { const next = { ...prev }; delete next[String(p.id)]; return next; });
                           }}
-                          className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400"
+                          className="w-16 bg-slate-950 border border-emerald-500/20 rounded-xl p-2 text-center font-black text-white outline-none focus:border-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <span className={`text-[10px] font-black whitespace-nowrap ${Number(p.stock ?? 0) <= 0 ? 'text-rose-400' : Number(p.stock ?? 0) <= 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
                           {Number(p.stock ?? 0) <= 0 ? 'არ არის' : Number(p.stock ?? 0) <= 3 ? 'ცოტაა' : 'მარაგშია'}
