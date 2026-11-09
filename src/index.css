@@ -9415,3 +9415,15 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     min-width: 0;
   }
 }
+
+
+/* GEOSTORE support chat — keep the customer consultation launcher available on mobile.
+   The AI launcher stays hidden on small screens; the support chat remains reachable. */
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-support {
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 140 !important;
+  }
+}
