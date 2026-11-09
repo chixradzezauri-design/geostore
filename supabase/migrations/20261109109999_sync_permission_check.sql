@@ -1,0 +1,1 @@
+-- Temporary sync permission check. No database changes.
