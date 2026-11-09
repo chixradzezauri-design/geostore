@@ -437,6 +437,7 @@ export default function AdminDashboardPro({
   const [editingProductId, setEditingProductId] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [productVariants, setProductVariants] = useState([]);
+  const [initialCustomVariantStock, setInitialCustomVariantStock] = useState([]);
   const [sizeColorStock, setSizeColorStock] = useState(() => buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
   const [initialSizeColorStock, setInitialSizeColorStock] = useState([]);
   const [newVarName, setNewVarName] = useState('');
@@ -486,6 +487,14 @@ export default function AdminDashboardPro({
     const stockText = String(rawStock ?? '');
     if (stockText !== '' && (!/^\d+$/.test(stockText) || Number(stockText) > 1000000)) return;
     setSizeColorStock(prev => prev.map(variant => variant.id === variantId
+      ? { ...variant, stock: stockText === '' ? 0 : Number(stockText) }
+      : variant));
+  };
+
+  const handleCustomVariantStockChange = (variantId, rawStock) => {
+    const stockText = String(rawStock ?? '');
+    if (stockText !== '' && (!/^\d+$/.test(stockText) || Number(stockText) > 1000000)) return;
+    setProductVariants(prev => prev.map(variant => String(variant.id) === String(variantId)
       ? { ...variant, stock: stockText === '' ? 0 : Number(stockText) }
       : variant));
   };
@@ -1517,7 +1526,12 @@ export default function AdminDashboardPro({
       id: String(variant.id),
       stock: Number(variant.stock)
     })));
-    setProductVariants(savedVariants.filter(variant => variant?.variantType !== 'size_color'));
+    const savedCustomVariants = savedVariants.filter(variant => variant?.variantType !== 'size_color');
+    setInitialCustomVariantStock(savedCustomVariants.map(variant => ({
+      id: String(variant.id),
+      stock: Number(variant.stock)
+    })));
+    setProductVariants(savedCustomVariants);
     setSizeColorStock(savedSizeColorVariants);
     document.getElementById('geostore-product-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -1531,6 +1545,7 @@ export default function AdminDashboardPro({
     });
     setSelectedImages([]);
     setProductVariants([]);
+    setInitialCustomVariantStock([]);
     setInitialSizeColorStock([]);
     setSizeColorStock(buildSizeColorStockVariants(productFormInitial.availableSizes, productFormInitial.availableColors, [], 0));
   };
@@ -1609,6 +1624,15 @@ export default function AdminDashboardPro({
           : initialStock !== Number(variant.stock);
       })
       .map(variant => ({ id: variant.id, stock: Number(variant.stock) }));
+    const initialCustomStockByVariantId = new Map(initialCustomVariantStock.map(variant => [
+      String(variant.id), Number(variant.stock)
+    ]));
+    const changedCustomVariantStocks = productVariants
+      .filter(variant => {
+        const initialStock = initialCustomStockByVariantId.get(String(variant.id));
+        return initialStock === undefined || initialStock !== Number(variant.stock);
+      })
+      .map(variant => ({ id: String(variant.id), stock: Number(variant.stock) }));
     const sizeColorValidation = validateSizeColorInventoryVariants(normalizedSizeColorStock, availableSizes, availableColors);
     if (!sizeColorValidation.valid) {
       const sizeColorErrors = {
@@ -1721,6 +1745,7 @@ export default function AdminDashboardPro({
         }
       }
       let savedVariantStockResult = null;
+      let savedCustomVariantStockResult = null;
       if (editingProductId && changedSizeColorStocks.length > 0) {
         const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stocks', {
           method: 'POST',
@@ -1739,6 +1764,24 @@ export default function AdminDashboardPro({
           throw new Error('ზომებისა და ფერების შეცვლილი მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტების სია.');
         }
       }
+      if (editingProductId && changedCustomVariantStocks.length > 0) {
+        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_custom_variant_stocks', {
+          method: 'POST',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({
+            p_product_id: prodId,
+            p_variant_stocks: changedCustomVariantStocks
+          })
+        });
+        if (!stockResponse.ok) {
+          throw new Error('ინდივიდუალური ვარიანტების მარაგი ვერ შეინახა: ' + await stockResponse.text());
+        }
+        savedCustomVariantStockResult = await stockResponse.json();
+        if (!savedCustomVariantStockResult || Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
+            Number(savedCustomVariantStockResult.stock) < 0 || !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))) {
+          throw new Error('ინდივიდუალური ვარიანტების მარაგის ცვლილება სერვერმა სრულად ვერ დაადასტურა. განაახლეთ პროდუქტის სია.');
+        }
+      }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
       let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
@@ -1755,9 +1798,10 @@ export default function AdminDashboardPro({
       // Keep the database's latest stock for untouched variants. The editor may
       // have been open while checkout deducted stock, so only overlay quantities
       // that the admin explicitly changed and the stock RPC confirmed.
-      const explicitlyChangedStockById = new Map(
-        changedSizeColorStocks.map(variant => [String(variant.id), Number(variant.stock)])
-      );
+      const explicitlyChangedStockById = new Map([
+        ...changedSizeColorStocks,
+        ...changedCustomVariantStocks
+      ].map(variant => [String(variant.id), Number(variant.stock)]));
       const localVariants = savedVariants.map(variant => {
         const changedStock = explicitlyChangedStockById.get(String(variant.id));
         return changedStock === undefined ? variant : { ...variant, stock: changedStock };
@@ -1768,8 +1812,8 @@ export default function AdminDashboardPro({
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
         oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
-        stock: localSizeColorStock.length > 0
-          ? localSizeColorStock.reduce((total, variant) => total + (Number(variant.stock) || 0), 0)
+        stock: localVariants.length > 0
+          ? localVariants.reduce((total, variant) => total + (Number(variant.stock) || 0), 0)
           : (editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock),
         image: newProdPayload.image, gallery: galleryImages, tags: tagsArray,
         description: newProdPayload.description, availableSizes: newProdPayload.available_sizes,
@@ -3878,7 +3922,11 @@ export default function AdminDashboardPro({
                   </div>
                   {productVariants.length ? <div className="space-y-2">{productVariants.map(variant => (
                     <div key={variant.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900 p-3 text-xs">
-                      <div className="min-w-0"><b className="text-white">{variant.name}</b><span className="ml-2 text-amber-300">{Number(variant.priceGEL).toFixed(2)} ₾</span><span className="ml-2 text-slate-400">მარაგი: {variant.stock}</span></div>
+                      <div className="min-w-0 flex-1"><b className="text-white">{variant.name}</b><span className="ml-2 text-amber-300">{Number(variant.priceGEL).toFixed(2)} ₾</span></div>
+                      <label className="flex items-center gap-2 text-[10px] text-slate-400 shrink-0">
+                        მარაგი
+                        <input type="number" min="0" max="1000000" step="1" inputMode="numeric" value={variant.stock} onChange={event => handleCustomVariantStockChange(variant.id, event.target.value)} className="w-20 bg-slate-950 border border-amber-500/30 p-2 rounded-lg text-white text-xs outline-none" />
+                      </label>
                       <button type="button" onClick={() => handleRemoveCustomVariant(variant.id)} className="rounded-lg bg-rose-500/10 px-3 py-2 font-bold text-rose-300">წაშლა</button>
                     </div>
                   ))}</div> : <p className="text-slate-500 text-xs">ვარიანტები ჯერ არ არის დამატებული.</p>}
