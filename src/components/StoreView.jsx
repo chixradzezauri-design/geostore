@@ -320,7 +320,7 @@ export default function StoreView({
         ? getAvailableSizeColorSizes(selectedProduct, selectedColor)
         : getAvailableProductSizes(selectedProduct))
     : [];
-  const currentBasePrice = selectedCustomVariant?.priceGEL ?? selectedProduct?.priceGEL ?? 0;
+  const currentBasePrice = selectedSizeColorVariant?.priceGEL ?? selectedCustomVariant?.priceGEL ?? selectedProduct?.priceGEL ?? 0;
   const currentAvailableStock = !selectedProduct
     ? 0
     : hasSizeColorInventory(selectedProduct)
