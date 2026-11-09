@@ -110,7 +110,7 @@ export default function AiAssistantModal({
   const [isTyping, setIsTyping] = useState(false);
   const [pendingOrderCode, setPendingOrderCode] = useState('');
   const [liveProducts, setLiveProducts] = useState(products);
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     if (isAiAssistantOpen) {
@@ -199,7 +199,12 @@ export default function AiAssistantModal({
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    });
   };
 
   useEffect(() => {
@@ -641,7 +646,7 @@ export default function AiAssistantModal({
             <span>{uiText.welcome}</span>
           </div>
 
-          <div className="gs-ai-messages" role="log" aria-live="polite" aria-relevant="additions text">
+          <div ref={messagesContainerRef} className="gs-ai-messages" role="log" aria-live="polite" aria-relevant="additions text">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -714,7 +719,7 @@ export default function AiAssistantModal({
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
+            <div aria-hidden="true" />
           </div>
         </div>
 
