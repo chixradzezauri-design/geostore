@@ -2361,7 +2361,7 @@ export default function AdminDashboardPro({
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_order_status`, {
         method: 'POST',
-        headers: await getSupabaseHeaders(),
+        headers: await getSupabaseHeaders({ authenticated: true }),
         body: JSON.stringify({
           p_order_id: orderId,
           p_new_status: newStatus
