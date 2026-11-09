@@ -1178,14 +1178,19 @@ export default function App() {
     const refreshWhenVisible = () => {
       if (document.visibilityState === 'visible') void loadOwnOrders();
     };
+    const refreshFromRealtimeOrder = () => {
+      if (document.visibilityState === 'visible') void loadOwnOrders();
+    };
     void loadOwnOrders();
     const interval = window.setInterval(() => void loadOwnOrders(), 30000);
     document.addEventListener('visibilitychange', refreshWhenVisible);
+    window.addEventListener('geostore:customer-order-updated', refreshFromRealtimeOrder);
 
     return () => {
       active = false;
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
+      window.removeEventListener('geostore:customer-order-updated', refreshFromRealtimeOrder);
     };
   }, [currentUser?.id, activeTab, currentLang]);
 
@@ -1254,6 +1259,28 @@ export default function App() {
       return () => { active = false; };
     }
     void loadNotifications();
+    const notificationChannel = supabase
+      .channel(`geostore-customer-order-notifications-${requestOwnerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'order_notifications',
+          filter: `recipient_user_id=eq.${requestOwnerId}`
+        },
+        () => {
+          if (!isCurrentOwner()) return;
+          void loadNotifications();
+          window.dispatchEvent(new Event('geostore:customer-order-updated'));
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && isCurrentOwner()) {
+          void loadNotifications();
+          window.dispatchEvent(new Event('geostore:customer-order-updated'));
+        }
+      });
     const interval = window.setInterval(() => void loadNotifications(), 30000);
     const refreshWhenVisible = () => {
       if (document.visibilityState === 'visible') void loadNotifications();
@@ -1263,6 +1290,7 @@ export default function App() {
       active = false;
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
+      void supabase.removeChannel(notificationChannel);
     };
   }, [currentUser?.id, currentLang]);
 
