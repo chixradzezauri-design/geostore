@@ -261,7 +261,8 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
 };
 
 
-// Accept a checkout response only when it confirms the exact secure ID sent by the client.
+// Accept checkout only when the RPC confirms the exact order, deducted stock,
+// valid item snapshots, and internally consistent server-calculated totals.
 export const validateOrderCreationResponse = (serverResult, expectedOrderId) => {
   const expectedId = String(expectedOrderId || '').trim();
   const receivedId = String(serverResult?.order_id || '').trim();
@@ -270,6 +271,53 @@ export const validateOrderCreationResponse = (serverResult, expectedOrderId) => 
   }
   if (!receivedId) return { valid: false, reason: 'missing_order_id' };
   if (receivedId !== expectedId) return { valid: false, reason: 'order_id_mismatch' };
+  if (serverResult?.stock_deducted !== true) {
+    return { valid: false, reason: 'stock_not_confirmed' };
+  }
+  if (!Array.isArray(serverResult?.items) || serverResult.items.length < 1) {
+    return { valid: false, reason: 'invalid_items' };
+  }
+
+  const toCents = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const amount = Number(value);
+    return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) : null;
+  };
+  const subtotalCents = toCents(serverResult.subtotal_gel);
+  const discountCents = toCents(serverResult.discount_gel);
+  const deliveryCents = toCents(serverResult.delivery_gel);
+  const totalCents = toCents(serverResult.total_gel);
+  if ([subtotalCents, discountCents, deliveryCents, totalCents].some((value) => value === null)) {
+    return { valid: false, reason: 'invalid_totals' };
+  }
+  if (discountCents > subtotalCents) {
+    return { valid: false, reason: 'invalid_discount' };
+  }
+
+  let itemsSubtotalCents = 0;
+  for (const item of serverResult.items) {
+    const quantity = Number(item?.quantity);
+    const unitPriceCents = toCents(item?.price);
+    if (
+      !item ||
+      typeof item !== 'object' ||
+      !String(item.id || '').trim() ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 100 ||
+      unitPriceCents === null
+    ) {
+      return { valid: false, reason: 'invalid_items' };
+    }
+    itemsSubtotalCents += unitPriceCents * quantity;
+  }
+
+  const expectedTotalCents = Math.max(0, subtotalCents - discountCents) + deliveryCents;
+  if (Math.abs(itemsSubtotalCents - subtotalCents) > 1 ||
+      Math.abs(totalCents - expectedTotalCents) > 1) {
+    return { valid: false, reason: 'inconsistent_totals' };
+  }
+
   return { valid: true, orderId: receivedId };
 };
 
