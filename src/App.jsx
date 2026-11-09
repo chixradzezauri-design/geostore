@@ -1234,7 +1234,7 @@ export default function App() {
       } catch (error) {
         if (isCurrentOwner()) {
           console.error('Order notifications fetch failed:', error);
-          setNotifications([]);
+          // Keep the last successful notification snapshot during temporary network failures.
           setNotificationsError(currentLang === 'en'
             ? 'Notifications are temporarily unavailable. Please try again shortly.'
             : currentLang === 'ru'
@@ -3238,11 +3238,11 @@ export default function App() {
               </h3>
 
               <div className="space-y-3">
-                {myOrdersLoading ? (
+                {myOrdersLoading && myOrders.length === 0 ? (
                   <p className="text-slate-500 text-xs py-6 text-center">
                     {currentLang === 'en' ? 'Loading orders…' : currentLang === 'ru' ? 'Загрузка заказов…' : 'შეკვეთები იტვირთება…'}
                   </p>
-                ) : myOrdersError ? (
+                ) : myOrdersError && myOrders.length === 0 ? (
                   <p role="status" className="text-amber-300 text-xs py-6 text-center">
                     {myOrdersError}
                   </p>
