@@ -603,11 +603,23 @@ export default function App() {
   const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
+  const supportThreadMessagesRef = useRef(null);
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
   const [supportThreadSending, setSupportThreadSending] = useState(false);
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
+
+  useEffect(() => {
+    if (!supportOpen || !supportThreadLoaded) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const container = supportThreadMessagesRef.current;
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [supportOpen, supportThreadLoaded, supportThreadMessages]);
 
   useEffect(() => {
     if (!adminLoggedIn) return undefined;
@@ -3456,7 +3468,7 @@ export default function App() {
 
               {supportThreadLoaded && (
                 <div className="space-y-3">
-                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
+                  <div ref={supportThreadMessagesRef} className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
                     {supportThreadMessages.length ? supportThreadMessages.map((item) => (
                       <div key={item.id} className={`rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
                         <div className="flex items-center justify-between gap-2 mb-1">
