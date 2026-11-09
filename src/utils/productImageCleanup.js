@@ -37,3 +37,22 @@ export const collectReferencedOrderImageUrls = (orders) => {
 
   return referenced;
 };
+
+export const collectOrderProductIdsWithoutImageSnapshot = (orders) => {
+  const referenced = new Set();
+  if (!Array.isArray(orders)) return referenced;
+
+  for (const order of orders) {
+    const items = Array.isArray(order?.items) ? order.items : [];
+    for (const item of items) {
+      const productId = String(item?.id ?? item?.product_id ?? '').trim();
+      if (!productId) continue;
+      const hasImage = [item?.image, item?.image_url, item?.imageUrl]
+        .some(url => typeof url === 'string' && url.trim()) ||
+        (Array.isArray(item?.gallery) && item.gallery.some(url => typeof url === 'string' && url.trim()));
+      if (!hasImage) referenced.add(productId);
+    }
+  }
+
+  return referenced;
+};
