@@ -3471,7 +3471,8 @@ export default function App() {
                     onSubmit={async (event) => {
                       event.preventDefault();
                       if (supportThreadSending) return;
-                      const message = String(new FormData(event.currentTarget).get('supportReply') || '').trim();
+                      const replyForm = event.currentTarget;
+                      const message = String(new FormData(replyForm).get('supportReply') || '').trim();
                       if (!message || message.length > 4000) return;
                       setSupportThreadSending(true);
                       setSupportThreadError('');
@@ -3498,7 +3499,7 @@ export default function App() {
                         const rows = await refreshResponse.json();
                         if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
                         setSupportThreadMessages(rows);
-                        event.currentTarget.reset();
+                        replyForm.reset();
                       } catch (error) {
                         console.error('Support reply error:', error);
                         setSupportThreadError(currentLang === 'en'
