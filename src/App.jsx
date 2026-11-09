@@ -2355,13 +2355,33 @@ export default function App() {
         if (!quickBuyProduct) setCart(reconciliation.cartItems);
         setProducts((previous) => previous.map((product) => {
           const current = latestCatalogue.find((entry) => String(entry.id) === String(product.id));
-          return current
-            ? { ...product, name: current.name || product.name, priceGEL: Number(current.price_gel), stock: Math.max(0, Math.floor(Number(current.stock) || 0)) }
-            : product;
+          if (!current) return product;
+
+          const latestVariants = Array.isArray(current.variants) ? current.variants : [];
+          const hasSizeColorInventory = latestVariants.some((variant) => variant?.variantType === 'size_color');
+          const latestStock = hasSizeColorInventory
+            ? latestVariants.reduce((total, variant) => {
+                const quantity = Number(variant?.stock);
+                return total + (Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0);
+              }, 0)
+            : Math.max(0, Math.floor(Number(current.stock) || 0));
+
+          // Keep the in-memory catalogue in sync with the exact option matrix
+          // used by checkout, so customers can select a newly available variant
+          // without refreshing the entire page.
+          return {
+            ...product,
+            name: current.name || product.name,
+            priceGEL: Number(current.price_gel),
+            stock: latestStock,
+            availableSizes: Array.isArray(current.available_sizes) ? current.available_sizes : [],
+            availableColors: Array.isArray(current.available_colors) ? current.available_colors : [],
+            variants: latestVariants
+          };
         }));
         const changedNames = [...new Set(reconciliation.changes.map((change) => change.name).filter(Boolean))].slice(0, 3).join(', ');
         const hasVariantChange = reconciliation.changes.some((change) =>
-          change.type === 'variant_size' || change.type === 'variant_color'
+          String(change.type || '').startsWith('variant_')
         );
         const message = currentLang === 'en'
           ? hasVariantChange
