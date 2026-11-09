@@ -11,7 +11,7 @@ import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
 import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
-import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls } from '../utils/productImageCleanup';
+import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
@@ -177,7 +177,11 @@ const deleteProductImages = async (imageUrls, productId) => {
 
     const referencedUrls = collectReferencedProductImageUrls(productRows, productId);
     for (const orderUrl of collectReferencedOrderImageUrls(orderRows)) referencedUrls.add(orderUrl);
-    const safePaths = paths.filter(path => {
+    // Older orders may not contain an image snapshot. Their detail view falls
+    // back to the catalogue photo, so retain this product's existing images.
+    const legacyOrderProductIds = collectOrderProductIdsWithoutImageSnapshot(orderRows);
+    const hasLegacyOrderFallback = legacyOrderProductIds.has(String(productId));
+    const safePaths = hasLegacyOrderFallback ? [] : paths.filter(path => {
       const canonicalUrl = publicPrefix + path.split('/').map(encodeURIComponent).join('/');
       return !referencedUrls.has(canonicalUrl);
     });
