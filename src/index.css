@@ -9281,3 +9281,137 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     line-height: 1.4 !important;
   }
 }
+
+
+/* GEOSTORE responsive containment: prevent long labels and nested flex/grid items
+   from widening the viewport on phones without clipping vertical content. */
+.geostore-shell,
+.geostore-fashion-store,
+.geostore-fashion-store .geostore-storefront {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.geostore-shell { overflow-x: clip; }
+.geostore-shell :where(img, video, canvas, svg) { max-width: 100%; }
+.geostore-fashion-store .geostore-storefront :where(.grid, .flex, [class*="grid-cols-"]) > * {
+  min-width: 0;
+}
+.geostore-fashion-store .geostore-storefront :where(h1,h2,h3,h4,p,a,label,b,strong,small) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.admin-dashboard-pro,
+.admin-dashboard-pro :where(.grid, .flex, form, section, article) {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro :where(h1,h2,h3,h4,p,label,b,strong,small,span) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (max-width: 760px) {
+  .geostore-fashion-store .geostore-storefront {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 8px;
+    overflow-x: clip;
+  }
+  .geostore-fashion-store .geostore-storefront :where(section,article,form,aside,header,footer) {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .geostore-fashion-store .geostore-storefront :where(h1,h2,h3,h4,p,a,label,b,strong,small,span) {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: auto;
+  }
+  .geostore-fashion-store .geostore-storefront button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .geostore-fashion-store .gs-fashion-hero__content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .geostore-fashion-store .gs-category-breadcrumb,
+  .geostore-fashion-store .gs-product-modal-header,
+  .geostore-fashion-store .gs-product-price-panel,
+  .geostore-fashion-store .gs-product-review-upload {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .geostore-fashion-store .gs-product-modal {
+    align-items: flex-start;
+    padding: 8px;
+    overflow-x: clip;
+  }
+  .geostore-fashion-store .gs-product-dialog {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    max-height: calc(100dvh - 16px);
+    margin: auto 0;
+  }
+  .geostore-fashion-store .gs-product-modal-body {
+    min-width: 0;
+    max-width: 100%;
+    padding: 12px;
+    overflow-x: hidden;
+  }
+  .geostore-fashion-store .gs-product-detail-info,
+  .geostore-fashion-store .gs-product-gallery,
+  .geostore-fashion-store .gs-product-option-card,
+  .geostore-fashion-store .gs-size-selector,
+  .geostore-fashion-store .gs-color-selector {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .geostore-fashion-store .gs-product-option-card > div:first-child {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+  .geostore-fashion-store .gs-modal-add-to-cart {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    white-space: normal;
+  }
+  .geostore-fashion-store .gs-modal-add-label {
+    flex: 1 1 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .geostore-fashion-store .gs-modal-add-price {
+    flex: 0 0 auto;
+  }
+  .admin-dashboard-pro {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .admin-dashboard-pro :where(input,select,textarea) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro :where(.grid,.flex) > * {
+    min-width: 0;
+  }
+}
