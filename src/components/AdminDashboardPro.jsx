@@ -2111,6 +2111,27 @@ export default function AdminDashboardPro({
       ? escapeHtml(formatPrice(order.totalGEL))
       : `${numericValue(order.totalGEL).toFixed(2)} ₾`;
 
+    // Keep invoice totals consistent with the server-calculated checkout breakdown.
+    // Older orders may not have a persisted breakdown, so retain their total-only invoice.
+    const breakdown = order.checkoutBreakdown && typeof order.checkoutBreakdown === 'object'
+      ? order.checkoutBreakdown
+      : null;
+    const breakdownRows = breakdown
+      && Number.isFinite(Number(breakdown.subtotalGEL))
+      && Number(breakdown.subtotalGEL) >= 0
+      && Number.isFinite(Number(breakdown.discountGEL))
+      && Number(breakdown.discountGEL) >= 0
+      && Number.isFinite(Number(breakdown.deliveryGEL))
+      && Number(breakdown.deliveryGEL) >= 0
+      ? `
+          <div class="totals-breakdown">
+            <div><span>პროდუქტებისა და დამატებითი სერვისების ჯამი:</span><b>${escapeHtml(formatPrice ? formatPrice(breakdown.subtotalGEL) : numericValue(breakdown.subtotalGEL).toFixed(2) + ' ₾')}</b></div>
+            ${numericValue(breakdown.discountGEL) > 0 ? `<div class="discount"><span>ფასდაკლება${breakdown.couponCode ? ' (' + escapeHtml(breakdown.couponCode) + ')' : ''}:</span><b>−${escapeHtml(formatPrice ? formatPrice(breakdown.discountGEL) : numericValue(breakdown.discountGEL).toFixed(2) + ' ₾')}</b></div>` : ''}
+            <div><span>მიტანის საფასური:</span><b>${escapeHtml(formatPrice ? formatPrice(breakdown.deliveryGEL) : numericValue(breakdown.deliveryGEL).toFixed(2) + ' ₾')}</b></div>
+          </div>
+        `
+      : '';
+
     const htmlContent = `
       <!doctype html>
       <html lang="ka">
@@ -2126,7 +2147,10 @@ export default function AdminDashboardPro({
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
             th { background-color: #f8fafc; }
-            .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; }
+            .totals-breakdown { max-width: 420px; margin: 20px 0 0 auto; display: grid; gap: 8px; font-size: 13px; }
+            .totals-breakdown > div { display: flex; justify-content: space-between; gap: 16px; }
+            .totals-breakdown .discount { color: #059669; }
+            .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 14px; }
           </style>
         </head>
         <body>
@@ -2160,6 +2184,7 @@ export default function AdminDashboardPro({
               ${itemsRows}
             </tbody>
           </table>
+          ${breakdownRows}
           <div class="total">
             სულ გადასახდელი: ${formattedTotal}
           </div>
