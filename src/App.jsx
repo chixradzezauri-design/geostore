@@ -634,8 +634,15 @@ export default function App() {
 
     let active = true;
     let requestInFlight = false;
+    let refreshRequested = false;
     const refreshSupportThread = async () => {
-      if (!active || requestInFlight || document.visibilityState !== 'visible') return;
+      if (!active || document.visibilityState !== 'visible') return;
+      if (requestInFlight) {
+        // Do not lose a Realtime notification that arrives during an in-flight
+        // snapshot request; run one more read after the current request settles.
+        refreshRequested = true;
+        return;
+      }
       requestInFlight = true;
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
@@ -646,19 +653,50 @@ export default function App() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const rows = await response.json();
         if (!Array.isArray(rows)) throw new Error('Invalid support conversation response');
-        if (active) setSupportThreadMessages(rows);
+        if (active) {
+          const uniqueRows = [...new Map(rows.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
+          uniqueRows.sort((a, b) => {
+            const aTime = Date.parse(a.created_at || '') || 0;
+            const bTime = Date.parse(b.created_at || '') || 0;
+            return aTime - bTime || String(a.id).localeCompare(String(b.id));
+          });
+          setSupportThreadMessages(uniqueRows);
+        }
       } catch (error) {
         // Keep the last successfully loaded conversation visible during a
         // temporary network failure; the next poll will retry automatically.
         if (active) console.error('Support conversation refresh failed:', error);
       } finally {
         requestInFlight = false;
+        if (active && refreshRequested && document.visibilityState === 'visible') {
+          refreshRequested = false;
+          void refreshSupportThread();
+        } else if (!active) {
+          refreshRequested = false;
+        }
       }
     };
 
     const refreshWhenVisible = () => {
       if (document.visibilityState === 'visible') void refreshSupportThread();
     };
+
+    const channel = supabase
+      .channel(`geostore-customer-support-${ticketId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'support_ticket_messages',
+          filter: `ticket_ref=eq.${ticketId}`
+        },
+        () => void refreshSupportThread()
+      )
+      .subscribe(status => {
+        // SUBSCRIBED fires both on first connection and after a reconnect.
+        if (status === 'SUBSCRIBED' && active) void refreshSupportThread();
+      });
 
     void refreshSupportThread();
     const interval = window.setInterval(() => void refreshSupportThread(), 15000);
@@ -668,6 +706,7 @@ export default function App() {
       active = false;
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
+      void supabase.removeChannel(channel);
     };
   }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken]);
 
