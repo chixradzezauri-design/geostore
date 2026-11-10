@@ -566,6 +566,9 @@ export default function App() {
 
   const [orders, setOrders] = useState([]);
   const adminOrdersFetchLock = useRef(false);
+  // Remember refreshes requested while a previous order snapshot is still loading.
+  // Store the session version so a queued read cannot cross an admin logout/login boundary.
+  const adminOrdersFetchQueuedVersion = useRef(null);
   const adminOrdersSessionActive = useRef(false);
   const adminOrdersSessionVersion = useRef(0);
   const [myOrders, setMyOrders] = useState([]);
@@ -1337,8 +1340,12 @@ export default function App() {
   }, [currentUser?.id, currentLang]);
 
   const fetchOrders = async () => {
-    // Prevent overlapping 15-second refreshes from applying stale order snapshots.
-    if (!adminOrdersSessionActive.current || adminOrdersFetchLock.current) return;
+    if (!adminOrdersSessionActive.current) return;
+    // Coalesce overlapping refreshes instead of dropping a Realtime event.
+    if (adminOrdersFetchLock.current) {
+      adminOrdersFetchQueuedVersion.current = adminOrdersSessionVersion.current;
+      return;
+    }
     const requestSessionVersion = adminOrdersSessionVersion.current;
     adminOrdersFetchLock.current = true;
     try {
@@ -1405,6 +1412,13 @@ export default function App() {
       console.error('Orders fetch error:', error);
     } finally {
       adminOrdersFetchLock.current = false;
+      const queuedSessionVersion = adminOrdersFetchQueuedVersion.current;
+      if (queuedSessionVersion !== null) {
+        adminOrdersFetchQueuedVersion.current = null;
+        if (adminOrdersSessionActive.current && queuedSessionVersion === adminOrdersSessionVersion.current) {
+          void fetchOrders();
+        }
+      }
     }
   };
 
