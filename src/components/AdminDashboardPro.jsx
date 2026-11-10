@@ -1716,6 +1716,9 @@ export default function AdminDashboardPro({
     let galleryImages = [];
     let newlyUploadedImages = [];
     let newProdPayload;
+    // Once the catalogue row is committed, uploaded photos may already be live references.
+    // Never roll them back if a later variant-stock step fails.
+    let productSaveCommitted = false;
 
     try {
       const sourceImages = selectedImages.length > 0 ? selectedImages : [];
@@ -1775,6 +1778,7 @@ export default function AdminDashboardPro({
           method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
         });
         if (!updateResponse.ok) throw new Error(await updateResponse.text());
+        productSaveCommitted = true;
         const updatedRows = await updateResponse.json();
         if (!Array.isArray(updatedRows) || updatedRows.length !== 1) throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
         savedProductRow = updatedRows[0];
@@ -1783,6 +1787,7 @@ export default function AdminDashboardPro({
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
         });
         if (!createResponse.ok) throw new Error(await createResponse.text());
+        productSaveCommitted = true;
         const createdResult = await createResponse.json();
         savedProductRow = Array.isArray(createdResult) ? createdResult[0] : createdResult;
         if (
@@ -1887,7 +1892,9 @@ export default function AdminDashboardPro({
           : 'პროდუქტი დაემატა, მაგრამ ძველი ფოტოების ნაწილი Storage-დან ვერ წაიშალა.')
         : (wasEditing ? 'პროდუქტი სრულად განახლდა! მარაგი შენარჩუნებულია.' : 'პროდუქტი წარმატებით დაემატა!'));
     } catch (error) {
-      if (newlyUploadedImages.length > 0) await deleteProductImages(newlyUploadedImages, prodId);
+      if (!productSaveCommitted && newlyUploadedImages.length > 0) {
+        await deleteProductImages(newlyUploadedImages, prodId);
+      }
       alert(error.message || 'პროდუქტის ან ფოტოს შენახვა ვერ მოხერხდა.');
     }
   };
