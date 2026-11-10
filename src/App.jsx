@@ -3634,19 +3634,32 @@ export default function App() {
                           })
                         });
                         if (!response.ok) throw new Error(await response.text());
-                        const refreshResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
-                          method: 'POST',
-                          headers: await getSupabaseHeaders({ authenticated: true }),
-                          body: JSON.stringify({
-                            p_ticket_id: supportLookupTicketId.trim(),
-                            p_access_token: supportLookupAccessToken.trim()
-                          })
-                        });
-                        if (!refreshResponse.ok) throw new Error('REFRESH_FAILED');
-                        const rows = await refreshResponse.json();
-                        if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
-                        setSupportThreadMessages(rows);
+
+                        // The message is already committed. Clear the composer now so
+                        // a refresh failure cannot make the customer resend a duplicate.
                         replyForm.reset();
+
+                        try {
+                          const refreshResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
+                            method: 'POST',
+                            headers: await getSupabaseHeaders({ authenticated: true }),
+                            body: JSON.stringify({
+                              p_ticket_id: supportLookupTicketId.trim(),
+                              p_access_token: supportLookupAccessToken.trim()
+                            })
+                          });
+                          if (!refreshResponse.ok) throw new Error('REFRESH_FAILED');
+                          const rows = await refreshResponse.json();
+                          if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                          setSupportThreadMessages(rows);
+                        } catch (refreshError) {
+                          console.warn('Support reply saved but conversation refresh failed:', refreshError);
+                          setSupportThreadError(currentLang === 'en'
+                            ? 'Your reply was sent, but the conversation could not refresh. Reopen it or try refreshing.'
+                            : currentLang === 'ru'
+                              ? 'Ответ отправлен, но переписка не обновилась. Откройте её заново или обновите.'
+                              : 'პასუხი გაიგზავნა, მაგრამ მიმოწერის განახლება ვერ მოხერხდა. ხელახლა გახსენი ან განაახლე.');
+                        }
                       } catch (error) {
                         console.error('Support reply error:', error);
                         setSupportThreadError(currentLang === 'en'
