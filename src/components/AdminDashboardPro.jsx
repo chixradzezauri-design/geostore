@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
-import { getLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
+import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { createSecureId } from '../utils/secureId.js';
@@ -1176,6 +1176,10 @@ export default function AdminDashboardPro({
   }, [orders, expenses, products, analyticsPeriod]);
 
   const financialOverview = analyticsData;
+  const lowStockGroups = useMemo(
+    () => groupLowStockInventory(financialOverview.lowStockProducts),
+    [financialOverview.lowStockProducts]
+  );
   const incomeSources = analyticsData.incomeSources;
   const expenseBreakdown = analyticsData.expenseBreakdown;
 
@@ -3056,17 +3060,57 @@ export default function AdminDashboardPro({
                 )}
                 <p className="text-[10px] text-slate-400">ჯამური ბრუნვა: <b className="text-cyan-300">{financialOverview.salesTrend.reduce((sum, point) => sum + point.revenue, 0).toFixed(2)} ₾</b> · ჩაბარებული შეკვეთები: {financialOverview.salesTrend.reduce((sum, point) => sum + point.orders, 0)}</p>
               </div>
-              <div className="bg-slate-900/80 border border-amber-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between gap-3 border-b border-amber-500/20 pb-3">
-                  <h3 className="font-black text-white text-sm">მარაგის გაფრთხილებები</h3>
-                  <span className="text-[10px] text-slate-400">ზღვარი: 5 ცალი</span>
-                </div>
-                {financialOverview.lowStockProducts.length === 0 ? <p className="text-emerald-300 text-xs py-6">ყველა პროდუქტს საკმარისი მარაგი აქვს ან მარაგი მითითებული არ არის.</p> : financialOverview.lowStockProducts.map(product => (
-                  <div key={product._inventoryKey} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
-                    <div className="min-w-0"><b className="text-white block truncate">{product.name || 'უსახელო პროდუქტი'}{product.variantName ? ` · ${product.variantName}` : ''}</b><span className="text-slate-500">{product.sku || product.category || 'პროდუქტი'}{product.variantName ? ' · ვარიანტი' : ''}</span></div>
-                    <span className={product._stockValue === 0 ? 'text-rose-300 font-black whitespace-nowrap' : 'text-amber-300 font-black whitespace-nowrap'}>{product._stockValue === 0 ? 'არ არის მარაგში' : `${product._stockValue} ცალი დარჩა`}</span>
+              <div className="min-w-0 bg-slate-900/80 border border-amber-500/30 p-3 sm:p-4 rounded-2xl space-y-3 shadow-xl">
+                <div className="flex items-start justify-between gap-2 border-b border-amber-500/20 pb-2">
+                  <div className="min-w-0">
+                    <h3 className="font-black text-white text-sm">მარაგის გაფრთხილებები</h3>
+                    <p className="text-[10px] text-slate-500 mt-1">მხოლოდ 5 ან ნაკლები ერთეული</p>
                   </div>
-                ))}
+                  <div className="shrink-0 text-right">
+                    <b className="block text-amber-300 text-sm tabular-nums">{lowStockGroups.length}</b>
+                    <span className="text-[9px] text-slate-500">პროდუქტი</span>
+                  </div>
+                </div>
+                {financialOverview.lowStockProducts.length === 0 ? (
+                  <p className="text-emerald-300 text-xs py-3">ყველა პროდუქტს საკმარისი მარაგი აქვს ან მარაგი მითითებული არ არის.</p>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                      <span>{financialOverview.lowStockProducts.length} დაბალი მარაგის პოზიცია</span>
+                      <span>დააჭირე პროდუქტს დეტალებისთვის</span>
+                    </div>
+                    <div className="max-h-[320px] overflow-y-auto overscroll-contain pr-1 space-y-1.5">
+                      {lowStockGroups.map(group => {
+                        const zeroCount = group.positions.filter(position => position._stockValue === 0).length;
+                        return (
+                          <details key={group.key} className="group rounded-xl border border-slate-800 bg-slate-950/50">
+                            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-2 px-3 py-2.5">
+                              <div className="min-w-0 flex-1">
+                                <b className="block truncate text-xs text-slate-100">{group.name}</b>
+                                <span className="block truncate text-[10px] text-slate-500">{group.sku} · {group.positions.length} ვარიანტი</span>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                {zeroCount > 0 && <span className="rounded-full bg-rose-500/10 px-2 py-1 text-[9px] font-bold text-rose-300">{zeroCount} ნული</span>}
+                                <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300">{group.positions.length} პოზ.</span>
+                                <ChevronDown className="h-3.5 w-3.5 text-slate-500 transition-transform group-open:rotate-180" />
+                              </div>
+                            </summary>
+                            <div className="border-t border-slate-800 px-3 py-2 space-y-1.5">
+                              {group.positions.map(position => (
+                                <div key={position._inventoryKey} className="flex items-center justify-between gap-3 text-[11px]">
+                                  <span className="min-w-0 truncate text-slate-400">{position.variantName || 'საერთო მარაგი'}</span>
+                                  <span className={position._stockValue === 0 ? 'shrink-0 font-bold text-rose-300' : 'shrink-0 font-bold text-amber-300'}>
+                                    {position._stockValue === 0 ? 'ნულოვანი მარაგი' : `${position._stockValue} ცალი`}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
