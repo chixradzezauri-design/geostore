@@ -606,6 +606,7 @@ export default function App() {
   const supportThreadMessagesRef = useRef(null);
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
   const [supportThreadSending, setSupportThreadSending] = useState(false);
+  const supportReplyRequestRef = useRef(null);
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
@@ -3624,13 +3625,20 @@ export default function App() {
                       setSupportThreadSending(true);
                       setSupportThreadError('');
                       try {
-                        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message`, {
+                        if (!supportReplyRequestRef.current || supportReplyRequestRef.current.message !== message) {
+                          if (!window.crypto?.randomUUID) {
+                            throw new Error('უსაფრთხო მოთხოვნის ID ვერ შეიქმნა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
+                          }
+                          supportReplyRequestRef.current = { id: window.crypto.randomUUID(), message };
+                        }
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message_idempotent`, {
                           method: 'POST',
                           headers: await getSupabaseHeaders({ authenticated: true }),
                           body: JSON.stringify({
                             p_ticket_id: supportLookupTicketId.trim(),
                             p_message: message,
-                            p_access_token: supportLookupAccessToken.trim()
+                            p_access_token: supportLookupAccessToken.trim(),
+                            p_request_id: supportReplyRequestRef.current.id
                           })
                         });
                         if (!response.ok) throw new Error(await response.text());
@@ -3638,6 +3646,7 @@ export default function App() {
                         // The message is already committed. Clear the composer now so
                         // a refresh failure cannot make the customer resend a duplicate.
                         replyForm.reset();
+                        supportReplyRequestRef.current = null;
 
                         try {
                           const refreshResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
