@@ -1,6 +1,7 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
+import { getPaginationItems } from '../utils/pagination.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
 import { 
@@ -37,6 +38,8 @@ export default function StoreView({
 
   const [sortBy, setSortBy] = useState('default');
   const [minPrice, setMinPrice] = useState('');
+  const [productPage, setProductPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 12;
   const [maxPrice, setMaxPrice] = useState('');
 
   const [selectedSize, setSelectedSize] = useState('M');
@@ -56,6 +59,10 @@ export default function StoreView({
 
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [openParentCatId, setOpenParentCatId] = useState(null);
+
+  useEffect(() => {
+    setProductPage(1);
+  }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy]);
 
   const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
 
@@ -274,6 +281,27 @@ export default function StoreView({
 
     return result;
   }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang]);
+
+  const totalProductPages = Math.max(1, Math.ceil(processedProducts.length / PRODUCTS_PER_PAGE));
+  const safeProductPage = Math.min(Math.max(1, productPage), totalProductPages);
+  const paginatedProducts = processedProducts.slice(
+    (safeProductPage - 1) * PRODUCTS_PER_PAGE,
+    safeProductPage * PRODUCTS_PER_PAGE
+  );
+  const productPaginationItems = getPaginationItems(safeProductPage, totalProductPages);
+  const paginationLabels = currentLang === 'en'
+    ? { showing: 'Showing', of: 'of', products: 'products', previous: 'Previous', next: 'Next', aria: 'Product pages' }
+    : currentLang === 'ru'
+      ? { showing: 'Показано', of: 'из', products: 'товаров', previous: 'Назад', next: 'Далее', aria: 'Страницы товаров' }
+      : { showing: 'ნაჩვენებია', of: '/', products: 'პროდუქტი', previous: 'წინა', next: 'შემდეგი', aria: 'პროდუქტების გვერდები' };
+
+  const handleProductPageChange = (nextPage) => {
+    const targetPage = Math.min(totalProductPages, Math.max(1, Number(nextPage) || 1));
+    setProductPage(targetPage);
+    if (typeof document !== 'undefined') {
+      document.getElementById('gs-catalog-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const flashSaleProducts = useMemo(() => {
     return activeProducts.filter(p => {
@@ -655,8 +683,8 @@ export default function StoreView({
           <p className="text-slate-400 text-sm font-bold">{storeText.noFilterResults}</p>
         </div>
       ) : (
-        <div className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${processedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
-          {processedProducts.map(prod => {
+        <div id="gs-catalog-products" className={`gs-catalog-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7${paginatedProducts.length === 1 ? " gs-catalog-product-grid--single" : ""}`}>
+          {paginatedProducts.map(prod => {
             const isWish = wishlist.some(w => w.id === prod.id);
             const isCompared = comparisonList.some(c => c.id === prod.id);
             const prodReviews = allReviews[prod.id] || [];
@@ -731,6 +759,39 @@ export default function StoreView({
               </article>
             );
           })}
+        </div>
+      )}
+
+      {processedProducts.length > 0 && totalProductPages > 1 && (
+        <div className="gs-storefront-pagination flex flex-col sm:flex-row items-center justify-between gap-3 mt-7 pt-5 border-t border-amber-500/20">
+          <p className="text-[11px] text-slate-400 text-center sm:text-left">
+            {paginationLabels.showing} {(safeProductPage - 1) * PRODUCTS_PER_PAGE + 1}–{Math.min(safeProductPage * PRODUCTS_PER_PAGE, processedProducts.length)} {paginationLabels.of} {processedProducts.length} {paginationLabels.products}
+          </p>
+          <nav aria-label={paginationLabels.aria} className="flex flex-wrap items-center justify-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => handleProductPageChange(safeProductPage - 1)}
+              disabled={safeProductPage === 1}
+              className="rounded-xl border border-amber-500/25 px-3 py-2.5 text-[11px] font-bold text-slate-200 transition hover:border-amber-400 disabled:opacity-35 disabled:cursor-not-allowed"
+            >{paginationLabels.previous}</button>
+            {productPaginationItems.map((page, index) => page === '…' ? (
+              <span key={`page-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+            ) : (
+              <button
+                key={page}
+                type="button"
+                onClick={() => handleProductPageChange(page)}
+                aria-current={safeProductPage === page ? 'page' : undefined}
+                className={`min-w-9 rounded-xl border px-3 py-2.5 text-[11px] font-black transition ${safeProductPage === page ? 'border-amber-400 bg-amber-400 text-slate-950' : 'border-amber-500/25 text-slate-200 hover:border-amber-400'}`}
+              >{page}</button>
+            ))}
+            <button
+              type="button"
+              onClick={() => handleProductPageChange(safeProductPage + 1)}
+              disabled={safeProductPage === totalProductPages}
+              className="rounded-xl border border-amber-500/25 px-3 py-2.5 text-[11px] font-bold text-slate-200 transition hover:border-amber-400 disabled:opacity-35 disabled:cursor-not-allowed"
+            >{paginationLabels.next}</button>
+          </nav>
         </div>
       )}
 
