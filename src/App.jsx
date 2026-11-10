@@ -3689,10 +3689,10 @@ export default function App() {
                     onSubmit={async (event) => {
                       event.preventDefault();
                       if (supportReplyInFlightRef.current || supportThreadSending) return;
-                      supportReplyInFlightRef.current = true;
                       const replyForm = event.currentTarget;
                       const message = String(new FormData(replyForm).get('supportReply') || '').trim();
                       if (!message || message.length > 4000) return;
+                      supportReplyInFlightRef.current = true;
                       setSupportThreadSending(true);
                       setSupportThreadError('');
                       try {
