@@ -1,5 +1,5 @@
 // src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
@@ -614,6 +614,8 @@ export default function AdminDashboardPro({
   const [legacyMessages, setLegacyMessages] = useState([]);
   const [legacyMessagesError, setLegacyMessagesError] = useState('');
   const [replyInputs, setReplyInputs] = useState({});
+  const [replySending, setReplySending] = useState({});
+  const supportReplyInFlight = useRef(new Set());
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
@@ -2153,27 +2155,32 @@ export default function AdminDashboardPro({
   };
 
   const handleSendTicketReply = async (ticketId) => {
-    const replyText = replyInputs[ticketId];
-    if (!replyText || !replyText.trim()) return;
+    const normalizedTicketId = String(ticketId);
+    const replyText = String(replyInputs[ticketId] || '').trim();
+    if (!replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId)) return;
 
+    supportReplyInFlight.current.add(normalizedTicketId);
+    setReplySending(prev => ({ ...prev, [normalizedTicketId]: true }));
     try {
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message', {
         method: 'POST', headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_ticket_id: String(ticketId), p_message: replyText.trim() })
+        body: JSON.stringify({ p_ticket_id: normalizedTicketId, p_message: replyText })
       });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       }
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
-      fetchTickets();
-      setSelectedSupportTicketId(String(ticketId));
-      fetchSupportTicketThread(ticketId);
-      logActivity(`გაიგზავნა პასუხი ტიგეტზე #${ticketId}`);
+      setSelectedSupportTicketId(normalizedTicketId);
+      await Promise.allSettled([fetchTickets(), fetchSupportTicketThread(normalizedTicketId)]);
+      logActivity(`გაიგზავნა პასუხი ტიგეტზე #${normalizedTicketId}`);
       alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის მიმოწერაში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
     } catch (error) {
       console.error('GEOSTORE support ticket reply failed:', error);
       alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+    } finally {
+      supportReplyInFlight.current.delete(normalizedTicketId);
+      setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
     }
   };
 
@@ -3786,10 +3793,13 @@ export default function AdminDashboardPro({
                         className="flex-1 bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner"
                       />
                       <button 
+                        type="button"
                         onClick={() => handleSendTicketReply(t.id)}
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20"
+                        disabled={!!replySending[String(t.id)] || !String(replyInputs[t.id] || '').trim()}
+                        aria-busy={!!replySending[String(t.id)]}
+                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Send className="w-4 h-4" /> გაგზავნა
+                        <Send className="w-4 h-4" /> {replySending[String(t.id)] ? 'იგზავნება…' : 'გაგზავნა'}
                       </button>
                     </div>
                   </div>
