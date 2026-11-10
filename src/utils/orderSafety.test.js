@@ -212,7 +212,29 @@ test('accepts currently offered cart variants from snake_case catalogue fields',
 
 test('normalizes malformed legacy order item arrays without dropping valid lines', () => {
   const valid = { id: 'p-1', name: 'Jacket', quantity: 1 };
-  assert.deepEqual(normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]), [valid, { id: 'p-2' }]);
+  assert.deepEqual(
+    normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]),
+    [
+      {
+        ...valid,
+        selectedSize: null,
+        selectedColor: null,
+        customVariantId: null,
+        customVariantName: null,
+        image: '',
+        gallery: []
+      },
+      {
+        id: 'p-2',
+        selectedSize: null,
+        selectedColor: null,
+        customVariantId: null,
+        customVariantName: null,
+        image: '',
+        gallery: []
+      }
+    ]
+  );
   assert.deepEqual(normalizeOrderItems({ items: [] }), []);
   assert.deepEqual(normalizeOrderItems(null), []);
 });
