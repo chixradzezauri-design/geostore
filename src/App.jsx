@@ -1524,7 +1524,8 @@ export default function App() {
           gpu: p.gpu || '',
           screenSize: p.screen_size || '',
           os: p.os || '',
-          isFeatured: Boolean(p.is_featured)
+          isFeatured: Boolean(p.is_featured),
+          isPublished: p.is_published !== false
         }));
 
         // Keep product order deterministic when several rows share a timestamp.
