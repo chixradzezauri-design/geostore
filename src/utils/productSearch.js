@@ -2,10 +2,10 @@ const normalizeSearchValue = (value) => String(value ?? '')
   .normalize('NFKC')
   .toLocaleLowerCase()
   .normalize('NFD')
-  .replace(/[\u0300-\u036f]/g, '')
-  .replace(/[^\p{L}\p{N}]+/gu, ' ')
+  .replace(/[\\u0300-\\u036f]/g, '')
+  .replace(/[^\\p{L}\\p{N}]+/gu, ' ')
   .trim()
-  .replace(/\s+/g, ' ');
+  .replace(/\\s+/g, ' ');
 
 const collectSearchableValues = (product) => {
   if (!product || typeof product !== 'object') return [];
@@ -17,6 +17,7 @@ const collectSearchableValues = (product) => {
     product.name_en,
     product.name_ru,
     product.category,
+    product.brand,
     product.vendor,
     product.sku,
     product.barcode,
@@ -26,6 +27,13 @@ const collectSearchableValues = (product) => {
     product.description_ru,
     product.material,
     product.durability,
+    product.model,
+    product.cpu,
+    product.ram,
+    product.storage,
+    product.gpu,
+    product.screen_size,
+    product.os,
     product.tags,
     product.availableSizes,
     product.availableColors
@@ -33,7 +41,9 @@ const collectSearchableValues = (product) => {
 
   if (Array.isArray(product.variants)) {
     for (const variant of product.variants) {
-      if (variant && typeof variant === 'object') values.push(variant.name, variant.sku);
+      if (variant && typeof variant === 'object') {
+        values.push(variant.name, variant.sku, variant.color, variant.size);
+      }
     }
   }
 
