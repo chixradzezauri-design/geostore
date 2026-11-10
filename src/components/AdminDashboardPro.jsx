@@ -1801,40 +1801,37 @@ export default function AdminDashboardPro({
       }
       let savedVariantStockResult = null;
       let savedCustomVariantStockResult = null;
-      if (editingProductId && changedSizeColorStocks.length > 0) {
-        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stocks', {
+      if (editingProductId && (changedSizeColorStocks.length > 0 || changedCustomVariantStocks.length > 0)) {
+        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stock_batches', {
           method: 'POST',
           headers: await getSupabaseHeaders(),
           body: JSON.stringify({
             p_product_id: prodId,
-            p_variant_stocks: changedSizeColorStocks
+            p_size_color_stocks: changedSizeColorStocks,
+            p_custom_variant_stocks: changedCustomVariantStocks
           })
         });
         if (!stockResponse.ok) {
-          throw new Error('ზომებისა და ფერების მარაგი პროდუქტში შეინახა ვერ მოხერხდა: ' + await stockResponse.text());
+          throw new Error('ვარიანტების მარაგის ერთიანი შენახვა ვერ მოხერხდა: ' + await stockResponse.text());
         }
-        savedVariantStockResult = await stockResponse.json();
-        if (!savedVariantStockResult || Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
-            Number(savedVariantStockResult.stock) < 0 || !Number.isSafeInteger(Number(savedVariantStockResult.stock))) {
-          throw new Error('ზომებისა და ფერების შეცვლილი მარაგის ყველა ჩანაწერი ვერ დადასტურდა. განაახლეთ პროდუქტების სია.');
+        const stockBatchResult = await stockResponse.json();
+        savedVariantStockResult = stockBatchResult?.size_color ?? null;
+        savedCustomVariantStockResult = stockBatchResult?.custom ?? null;
+        if (changedSizeColorStocks.length > 0 && (
+          !savedVariantStockResult ||
+          Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
+          Number(savedVariantStockResult.stock) < 0 ||
+          !Number.isSafeInteger(Number(savedVariantStockResult.stock))
+        )) {
+          throw new Error('ზომებისა და ფერების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
         }
-      }
-      if (editingProductId && changedCustomVariantStocks.length > 0) {
-        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_custom_variant_stocks', {
-          method: 'POST',
-          headers: await getSupabaseHeaders(),
-          body: JSON.stringify({
-            p_product_id: prodId,
-            p_variant_stocks: changedCustomVariantStocks
-          })
-        });
-        if (!stockResponse.ok) {
-          throw new Error('ინდივიდუალური ვარიანტების მარაგი ვერ შეინახა: ' + await stockResponse.text());
-        }
-        savedCustomVariantStockResult = await stockResponse.json();
-        if (!savedCustomVariantStockResult || Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
-            Number(savedCustomVariantStockResult.stock) < 0 || !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))) {
-          throw new Error('ინდივიდუალური ვარიანტების მარაგის ცვლილება სერვერმა სრულად ვერ დაადასტურა. განაახლეთ პროდუქტის სია.');
+        if (changedCustomVariantStocks.length > 0 && (
+          !savedCustomVariantStockResult ||
+          Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
+          Number(savedCustomVariantStockResult.stock) < 0 ||
+          !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))
+        )) {
+          throw new Error('ინდივიდუალური ვარიანტების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
         }
       }
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
