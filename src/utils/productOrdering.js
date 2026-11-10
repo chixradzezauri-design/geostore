@@ -48,3 +48,26 @@ export const getLowStockInventory = (products, threshold = 5) => {
     String(a.variantName || '').localeCompare(String(b.variantName || ''))
   );
 };
+
+
+/** Groups low-stock positions by product without dropping individual variant details. */
+export const groupLowStockInventory = (positions) => {
+  if (!Array.isArray(positions)) return [];
+
+  const groups = new Map();
+  positions.forEach((position) => {
+    if (!position || typeof position !== 'object') return;
+    const key = String(position.id ?? position.sku ?? position.name ?? position._inventoryKey ?? 'product');
+    const group = groups.get(key) || {
+      key,
+      id: position.id ?? null,
+      name: position.name || 'უსახელო პროდუქტი',
+      sku: position.sku || position.category || 'პროდუქტი',
+      positions: []
+    };
+    group.positions.push(position);
+    groups.set(key, group);
+  });
+
+  return Array.from(groups.values());
+};
