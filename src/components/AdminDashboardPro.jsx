@@ -616,6 +616,7 @@ export default function AdminDashboardPro({
   const [replyInputs, setReplyInputs] = useState({});
   const [replySending, setReplySending] = useState({});
   const supportReplyInFlight = useRef(new Set());
+  const supportThreadFetchInFlight = useRef(new Set());
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
@@ -648,7 +649,8 @@ export default function AdminDashboardPro({
 
   const fetchSupportTicketThread = async (ticketId) => {
     const normalizedTicketId = String(ticketId || '').trim();
-    if (!normalizedTicketId) return;
+    if (!normalizedTicketId || supportThreadFetchInFlight.current.has(normalizedTicketId)) return;
+    supportThreadFetchInFlight.current.add(normalizedTicketId);
     setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: true }));
     setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: '' }));
     try {
@@ -667,6 +669,7 @@ export default function AdminDashboardPro({
       console.error('GEOSTORE support ticket thread fetch failed:', error);
       setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
     } finally {
+      supportThreadFetchInFlight.current.delete(normalizedTicketId);
       setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
     }
   };
@@ -696,10 +699,14 @@ export default function AdminDashboardPro({
 
   useEffect(() => {
     if (!adminLoggedIn) return undefined;
-    fetchTickets();
-    const interval = setInterval(fetchTickets, 15000);
+    const refreshAdminSupport = () => {
+      void fetchTickets();
+      if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
+    };
+    refreshAdminSupport();
+    const interval = setInterval(refreshAdminSupport, 15000);
     return () => clearInterval(interval);
-  }, [adminLoggedIn]);
+  }, [adminLoggedIn, selectedSupportTicketId]);
 
   const fetchLegacyMessages = async () => {
     try {
