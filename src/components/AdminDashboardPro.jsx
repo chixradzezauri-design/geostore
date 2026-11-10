@@ -683,6 +683,11 @@ export default function AdminDashboardPro({
         fetchTickets();
         if (changedTicketId && String(changedTicketId) === String(selectedSupportTicketId)) fetchSupportTicketThread(changedTicketId);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+        // Ticket status and assignment changes should appear without waiting
+        // for the 15-second recovery poll. Fetch through the existing REST/RLS path.
+        void fetchTickets();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [adminLoggedIn, selectedSupportTicketId]);
