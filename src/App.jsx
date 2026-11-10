@@ -3692,23 +3692,33 @@ export default function App() {
                       const replyForm = event.currentTarget;
                       const message = String(new FormData(replyForm).get('supportReply') || '').trim();
                       if (!message || message.length > 4000) return;
+                      const ticketId = String(supportLookupTicketId || '').trim();
+                      const accessToken = String(supportLookupAccessToken || '').trim();
+                      if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+                        setSupportThreadError(currentLang === 'en'
+                          ? 'The support ticket access details are invalid. Reopen the ticket and try again.'
+                          : currentLang === 'ru'
+                            ? 'Данные доступа к обращению недействительны. Откройте обращение заново.'
+                            : 'მხარდაჭერის მოთხოვნის წვდომის მონაცემები არასწორია. ხელახლა გახსენი მოთხოვნა.');
+                        return;
+                      }
                       supportReplyInFlightRef.current = true;
                       setSupportThreadSending(true);
                       setSupportThreadError('');
                       try {
-                        if (!supportReplyRequestRef.current || supportReplyRequestRef.current.message !== message) {
+                        if (!supportReplyRequestRef.current || supportReplyRequestRef.current.ticketId !== ticketId || supportReplyRequestRef.current.message !== message) {
                           if (!window.crypto?.randomUUID) {
                             throw new Error('უსაფრთხო მოთხოვნის ID ვერ შეიქმნა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
                           }
-                          supportReplyRequestRef.current = { id: window.crypto.randomUUID(), message };
+                          supportReplyRequestRef.current = { id: window.crypto.randomUUID(), ticketId, message };
                         }
                         const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message_idempotent`, {
                           method: 'POST',
                           headers: await getSupabaseHeaders({ authenticated: true }),
                           body: JSON.stringify({
-                            p_ticket_id: supportLookupTicketId.trim(),
+                            p_ticket_id: ticketId,
                             p_message: message,
-                            p_access_token: supportLookupAccessToken.trim(),
+                            p_access_token: accessToken,
                             p_request_id: supportReplyRequestRef.current.id
                           })
                         });
