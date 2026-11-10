@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getLowStockInventory, resolveProductCreatedAt } from './productOrdering.js';
+import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from './productOrdering.js';
 
 test('preserves a missing creation timestamp when editing a legacy product', () => {
   assert.equal(resolveProductCreatedAt({
@@ -73,4 +73,27 @@ test('ignores missing, malformed, negative and above-threshold stock values', ()
     { id: 'zero', stock: 0 }
   ]);
   assert.deepEqual(result.map(item => item.id), ['zero']);
+});
+
+
+test('groups low-stock variant positions under one product', () => {
+  const positions = getLowStockInventory([
+    {
+      id: 'shoe-1',
+      sku: 'SHOE-1',
+      name: 'Sneaker',
+      variants: [
+        { id: 'size-40', name: '40 / Black', stock: 1 },
+        { id: 'size-41', name: '41 / Black', stock: 0 }
+      ]
+    },
+    { id: 'shirt-1', sku: 'SHIRT-1', name: 'T-Shirt', stock: 3, variants: [] }
+  ]);
+  const groups = groupLowStockInventory(positions);
+
+  assert.equal(groups.length, 2);
+  assert.equal(groups[0].name, 'Sneaker');
+  assert.deepEqual(groups[0].positions.map(item => item.variantName), ['41 / Black', '40 / Black']);
+  assert.equal(groups[1].positions[0]._stockValue, 3);
+  assert.equal(positions.length, 3);
 });
