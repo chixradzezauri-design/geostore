@@ -13,6 +13,7 @@ import { validateProductVariants, validateSizeColorInventoryVariants } from '../
 import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { getPaginationItems } from '../utils/pagination.js';
 import { createSecureId } from '../utils/secureId.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 
@@ -310,6 +311,8 @@ export default function AdminDashboardPro({
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
+  const [productPage, setProductPage] = useState(1);
   const [productPublishBusyIds, setProductPublishBusyIds] = useState({});
   const [quickProductDrafts, setQuickProductDrafts] = useState({});
 
@@ -318,6 +321,7 @@ export default function AdminDashboardPro({
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
   const ORDERS_PER_PAGE = 5;
+  const PRODUCTS_PER_PAGE = 10;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
@@ -2875,10 +2879,22 @@ export default function AdminDashboardPro({
     u.phone?.toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
-  const filteredProducts = (products || []).filter(p =>
-    p.name?.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(productSearchQuery.toLowerCase())
-  ).sort((left, right) => {
+  const normalizedProductSearch = String(productSearchQuery || '').trim().toLocaleLowerCase();
+  const selectedProductCategory = safeCategories.find(category => category.name === productCategoryFilter);
+  const productCategoryNames = productCategoryFilter === 'ყველა'
+    ? null
+    : selectedProductCategory && !selectedProductCategory.parentId
+      ? [selectedProductCategory.name, ...safeCategories.filter(category => category.parentId === selectedProductCategory.id).map(category => category.name)]
+      : [productCategoryFilter];
+
+  const filteredProducts = (products || []).filter(product => {
+    const matchesSearch = !normalizedProductSearch || [product.name, product.sku].some(value =>
+      String(value ?? '').toLocaleLowerCase().includes(normalizedProductSearch)
+    );
+    const matchesCategory = !productCategoryNames ||
+      productCategoryNames.includes(String(product.category || '').trim());
+    return matchesSearch && matchesCategory;
+  }).sort((left, right) => {
     // Keep the admin catalogue in a deterministic order even when the
     // server returns rows with identical timestamps in a different order.
     const leftTime = Date.parse(left.createdAt || left.created_at || '') || 0;
@@ -2887,14 +2903,32 @@ export default function AdminDashboardPro({
       String(left.id ?? '').localeCompare(String(right.id ?? ''));
   });
 
+  const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const safeProductPage = Math.min(Math.max(1, productPage), totalProductPages);
+  const paginatedProducts = filteredProducts.slice(
+    (safeProductPage - 1) * PRODUCTS_PER_PAGE,
+    safeProductPage * PRODUCTS_PER_PAGE
+  );
+  const productPaginationItems = getPaginationItems(safeProductPage, totalProductPages);
+
   // Keep this as a derived value, not a hook: the login view returns
   // before this section, so a useMemo here would change hook order
   // when adminLoggedIn switches from false to true and crash React.
+  const normalizedOrderSearch = String(orderSearchQuery || '').trim().toLocaleLowerCase();
   const filteredOrders = (orders || []).filter(o => {
-    const matchesSearch =
-      String(o.id ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-      String(o.customerName ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-      String(o.phone ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase());
+    const orderItems = normalizeOrderItems(o.items);
+    const searchableOrderValues = [
+      o.id,
+      o.customerName,
+      o.phone,
+      o.user_email,
+      o.email,
+      o.address,
+      ...orderItems.flatMap(item => [item.name, item.sku, item.selectedSize, item.selectedColor, item.customVariantName, item.custom_variant_name])
+    ];
+    const matchesSearch = !normalizedOrderSearch || searchableOrderValues.some(value =>
+      String(value ?? '').toLocaleLowerCase().includes(normalizedOrderSearch)
+    );
 
     // Legacy English/Russian status values must appear in the same filter
     // bucket as their Georgian equivalents, rather than disappearing from
@@ -3694,7 +3728,7 @@ export default function AdminDashboardPro({
                             </span>
                           )
                         ) : (
-                          <div className="admin-order-status-actions flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 overflow-x-auto">
+                          <div className="admin-order-status-actions flex flex-wrap items-center justify-start sm:justify-end gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 w-full sm:w-auto">
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
@@ -3725,8 +3759,8 @@ export default function AdminDashboardPro({
 
         {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
-          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
-            <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-3xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[92vh] overflow-y-auto">
+          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
+            <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 max-w-3xl w-full space-y-5 sm:space-y-6 text-xs text-white shadow-2xl relative max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain">
               
               <div className="admin-order-detail-header flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <div className="flex items-center gap-3">
@@ -3829,7 +3863,7 @@ export default function AdminDashboardPro({
               {/* 4. ადმინისტრატორის პირადი შენიშვნა */}
               <div className="admin-order-note-editor space-y-2">
                 <label className="text-slate-300 font-bold block">📝 ადმინისტრატორის პირადი შენიშვნა შეკვეთაზე:</label>
-                <div className="admin-order-note-controls flex gap-2">
+                <div className="admin-order-note-controls flex flex-col sm:flex-row gap-2">
                   <input 
                     type="text" 
                     maxLength={5000}
@@ -3851,7 +3885,7 @@ export default function AdminDashboardPro({
               </div>
 
               {/* მოდალის ქვედა ღილაკები */}
-              <div className="admin-order-detail-footer flex gap-3 pt-2">
+              <div className="admin-order-detail-footer flex flex-col sm:flex-row gap-3 pt-2">
                 <button 
                   onClick={() => handlePrintInvoice(selectedOrderForModal)} 
                   className="flex-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black py-3.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
@@ -4206,14 +4240,39 @@ export default function AdminDashboardPro({
                     {' · '}დამალული: {(products || []).filter(product => (product.isPublished ?? product.is_published) === false).length}
                   </p>
                 </div>
-                <div className="admin-product-search relative w-full sm:w-72">
-                  <input type="text" placeholder="ძებნა პროდუქტებში..." value={productSearchQuery} onChange={e => setProductSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
+                <div className="admin-product-list-filters flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <select
+                    aria-label="პროდუქტის კატეგორიის ფილტრი"
+                    value={productCategoryFilter}
+                    onChange={e => { setProductCategoryFilter(e.target.value); setProductPage(1); }}
+                    className="w-full sm:w-52 bg-slate-950 border border-emerald-500/20 rounded-2xl px-3 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner"
+                  >
+                    <option value="ყველა">ყველა კატეგორია</option>
+                    {safeCategories.map(category => (
+                      <option key={category.id} value={category.name}>
+                        {category.parentId ? '↳ ' : ''}{category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="admin-product-search relative w-full sm:w-72">
+                    <input
+                      type="text"
+                      placeholder="ძებნა პროდუქტებში..."
+                      value={productSearchQuery}
+                      onChange={e => { setProductSearchQuery(e.target.value); setProductPage(1); }}
+                      className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner"
+                    />
+                    <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
+                  </div>
                 </div>
               </div>
 
               <div className="admin-products-list space-y-3.5">
-                {filteredProducts?.map(p => (
+                {filteredProducts.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-emerald-500/20 px-4 py-10 text-center text-xs text-slate-400">
+                    არჩეულ კატეგორიაში პროდუქტები ვერ მოიძებნა.
+                  </div>
+                ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
                     <div className="admin-product-identity flex items-center gap-3.5">
                       {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
@@ -4331,6 +4390,40 @@ export default function AdminDashboardPro({
                   </div>
                 ))}
               </div>
+              {filteredProducts.length > 0 && (
+                <div className="admin-product-pagination flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-emerald-500/15 pt-4">
+                  <p className="text-[10px] text-slate-400 text-center sm:text-left">
+                    ნაჩვენებია {(safeProductPage - 1) * PRODUCTS_PER_PAGE + 1}–{Math.min(safeProductPage * PRODUCTS_PER_PAGE, filteredProducts.length)} / {filteredProducts.length}
+                  </p>
+                  {totalProductPages > 1 && (
+                    <nav aria-label="პროდუქტების გვერდები" className="flex flex-wrap items-center justify-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setProductPage(Math.max(1, safeProductPage - 1))}
+                        disabled={safeProductPage === 1}
+                        className="rounded-xl border border-emerald-500/20 px-3 py-2 text-[10px] font-bold text-slate-200 disabled:opacity-35 disabled:cursor-not-allowed hover:border-emerald-400"
+                      >წინა</button>
+                      {productPaginationItems.map((page, index) => page === '…' ? (
+                        <span key={`gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                      ) : (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setProductPage(page)}
+                          aria-current={safeProductPage === page ? 'page' : undefined}
+                          className={`min-w-9 rounded-xl border px-3 py-2 text-[10px] font-black transition ${safeProductPage === page ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-emerald-500/20 text-slate-200 hover:border-emerald-400'}`}
+                        >{page}</button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setProductPage(Math.min(totalProductPages, safeProductPage + 1))}
+                        disabled={safeProductPage === totalProductPages}
+                        className="rounded-xl border border-emerald-500/20 px-3 py-2 text-[10px] font-bold text-slate-200 disabled:opacity-35 disabled:cursor-not-allowed hover:border-emerald-400"
+                      >შემდეგი</button>
+                    </nav>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
