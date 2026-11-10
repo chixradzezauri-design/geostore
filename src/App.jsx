@@ -606,6 +606,7 @@ export default function App() {
   const supportThreadMessagesRef = useRef(null);
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
   const [supportThreadSending, setSupportThreadSending] = useState(false);
+  const supportReplyInFlightRef = useRef(false);
   const supportReplyRequestRef = useRef(null);
   const supportCreateRequestRef = useRef(null);
   const [supportThreadError, setSupportThreadError] = useState('');
@@ -3687,7 +3688,8 @@ export default function App() {
                   <form
                     onSubmit={async (event) => {
                       event.preventDefault();
-                      if (supportThreadSending) return;
+                      if (supportReplyInFlightRef.current || supportThreadSending) return;
+                      supportReplyInFlightRef.current = true;
                       const replyForm = event.currentTarget;
                       const message = String(new FormData(replyForm).get('supportReply') || '').trim();
                       if (!message || message.length > 4000) return;
@@ -3746,6 +3748,7 @@ export default function App() {
                             ? 'Не удалось отправить ответ. Попробуйте ещё раз.'
                             : 'პასუხის გაგზავნა ვერ მოხერხდა. სცადე ხელახლა.');
                       } finally {
+                        supportReplyInFlightRef.current = false;
                         setSupportThreadSending(false);
                       }
                     }}
