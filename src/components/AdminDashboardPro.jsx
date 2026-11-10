@@ -3735,8 +3735,8 @@ export default function AdminDashboardPro({
 
         {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
-          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
-            <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-[2.5rem] p-6 sm:p-8 max-w-3xl w-full space-y-6 text-xs text-white shadow-2xl relative max-h-[92vh] overflow-y-auto">
+          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
+            <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 max-w-3xl w-full space-y-5 sm:space-y-6 text-xs text-white shadow-2xl relative max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain">
               
               <div className="admin-order-detail-header flex justify-between items-center border-b border-emerald-500/20 pb-4">
                 <div className="flex items-center gap-3">
@@ -3839,7 +3839,7 @@ export default function AdminDashboardPro({
               {/* 4. ადმინისტრატორის პირადი შენიშვნა */}
               <div className="admin-order-note-editor space-y-2">
                 <label className="text-slate-300 font-bold block">📝 ადმინისტრატორის პირადი შენიშვნა შეკვეთაზე:</label>
-                <div className="admin-order-note-controls flex gap-2">
+                <div className="admin-order-note-controls flex flex-col sm:flex-row gap-2">
                   <input 
                     type="text" 
                     maxLength={5000}
@@ -3861,7 +3861,7 @@ export default function AdminDashboardPro({
               </div>
 
               {/* მოდალის ქვედა ღილაკები */}
-              <div className="admin-order-detail-footer flex gap-3 pt-2">
+              <div className="admin-order-detail-footer flex flex-col sm:flex-row gap-3 pt-2">
                 <button 
                   onClick={() => handlePrintInvoice(selectedOrderForModal)} 
                   className="flex-1 bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 font-black py-3.5 rounded-2xl transition cursor-pointer flex items-center justify-center gap-2"
