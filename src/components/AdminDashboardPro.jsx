@@ -309,7 +309,9 @@ export default function AdminDashboardPro({
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [productSearchQuery, setProductSearchQuery] = useState('');  const [quickProductDrafts, setQuickProductDrafts] = useState({});
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productPublishBusyIds, setProductPublishBusyIds] = useState({});
+  const [quickProductDrafts, setQuickProductDrafts] = useState({});
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
@@ -1524,6 +1526,51 @@ export default function AdminDashboardPro({
     } catch (error) { alert('წაშლა ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა')); }
   };
 
+  const handleToggleProductPublished = async (id) => {
+    const product = (products || []).find(item => String(item.id) === String(id));
+    if (!product) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ სია და სცადეთ თავიდან.');
+    const key = String(id);
+    if (productPublishBusyIds[key]) return;
+
+    const currentPublished = product.isPublished !== false && product.is_published !== false;
+    const nextPublished = !currentPublished;
+    setProductPublishBusyIds(prev => ({ ...prev, [key]: true }));
+
+    try {
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(key) +
+        '&is_published=eq.' + String(currentPublished) + '&select=id,is_published',
+        {
+          method: 'PATCH',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({ is_published: nextPublished })
+        }
+      );
+      if (!response.ok) throw new Error(await response.text());
+      const savedRows = await response.json();
+      if (!Array.isArray(savedRows) || savedRows.length !== 1 ||
+          String(savedRows[0].id) !== key || savedRows[0].is_published !== nextPublished) {
+        throw new Error('სტატუსი ვერ დადასტურდა. შესაძლოა პროდუქტი სხვა ადმინისტრატორმა პარალელურად შეცვალა. განაახლეთ სია.');
+      }
+
+      if (typeof setProducts === 'function') {
+        setProducts(prev => (prev || []).map(item => String(item.id) === key
+          ? { ...item, isPublished: nextPublished, is_published: nextPublished }
+          : item
+        ));
+      }
+      logActivity((nextPublished ? 'გამოქვეყნდა' : 'დაიმალა') + ' პროდუქტი: ' + (product.name || key));
+    } catch (error) {
+      alert('პროდუქტის გამოქვეყნების სტატუსი ვერ შეიცვალა: ' + (error.message || 'ქსელის შეცდომა'));
+    } finally {
+      setProductPublishBusyIds(prev => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
   const handleQuickUpdateProduct = async (id, field, value) => {
     const current = (products || []).find(p => String(p.id) === String(id));
     if (!current) return alert('პროდუქტი ვერ მოიძებნა. განაახლეთ გვერდი და სცადეთ თავიდან.');
@@ -1922,6 +1969,7 @@ export default function AdminDashboardPro({
         variants: localVariants,
         material: newProdPayload.material, durability: newProdPayload.durability,
         brand: newProdPayload.brand, isFeatured: newProdPayload.is_featured,
+        isPublished: existingProduct ? (existingProduct.isPublished ?? existingProduct.is_published ?? true) !== false : true,
         model: newProdPayload.model, cpu: newProdPayload.cpu, ram: newProdPayload.ram,
         storage: newProdPayload.storage, gpu: newProdPayload.gpu,
         screenSize: newProdPayload.screen_size, os: newProdPayload.os
@@ -4151,7 +4199,13 @@ export default function AdminDashboardPro({
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
-                <h3 className="admin-product-inventory-title font-black text-white text-base">ბაზაში არსებული პროდუქტები & COGS ({products?.length || 0})</h3>
+                <div>
+                  <h3 className="admin-product-inventory-title font-black text-white text-base">ბაზაში არსებული პროდუქტები & COGS ({products?.length || 0})</h3>
+                  <p className="mt-1 text-[10px] text-slate-400">
+                    გამოქვეყნებული: {(products || []).filter(product => (product.isPublished ?? product.is_published) !== false).length}
+                    {' · '}დამალული: {(products || []).filter(product => (product.isPublished ?? product.is_published) === false).length}
+                  </p>
+                </div>
                 <div className="admin-product-search relative w-full sm:w-72">
                   <input type="text" placeholder="ძებნა პროდუქტებში..." value={productSearchQuery} onChange={e => setProductSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                   <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
@@ -4166,6 +4220,9 @@ export default function AdminDashboardPro({
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
                         <p className="text-slate-400 text-[11px] mt-0.5">კატეგორია: {p.category} | SKU: {p.sku || 'N/A'}</p>
+                        <span className={`inline-flex mt-1 rounded-full px-2 py-1 text-[10px] font-bold ${(p.isPublished ?? p.is_published) === false ? 'bg-amber-500/10 text-amber-300 border border-amber-400/20' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-400/20'}`}>
+                          {(p.isPublished ?? p.is_published) === false ? 'დამალულია მაღაზიაში' : 'გამოქვეყნებულია'}
+                        </span>
                       </div>
                     </div>
 
@@ -4258,6 +4315,16 @@ export default function AdminDashboardPro({
                         </span>
                       </div>
 
+                      <button
+                        type="button"
+                        onClick={() => handleToggleProductPublished(p.id)}
+                        disabled={Boolean(productPublishBusyIds[String(p.id)])}
+                        className={`inline-flex items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-[10px] font-bold transition disabled:opacity-50 disabled:cursor-wait ${(p.isPublished ?? p.is_published) === false ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}
+                        title={(p.isPublished ?? p.is_published) === false ? 'პროდუქტის მაღაზიაში გამოქვეყნება' : 'პროდუქტის მაღაზიიდან დამალვა'}
+                      >
+                        {(p.isPublished ?? p.is_published) === false ? <Eye className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                        {productPublishBusyIds[String(p.id)] ? 'ინახება…' : (p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}
+                      </button>
                       <button type="button" onClick={() => handleEditProduct(p)} className="text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4" /></button>
                       <button type="button" onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
