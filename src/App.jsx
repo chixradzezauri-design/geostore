@@ -607,6 +607,7 @@ export default function App() {
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
   const [supportThreadSending, setSupportThreadSending] = useState(false);
   const supportReplyRequestRef = useRef(null);
+  const supportCreateRequestRef = useRef(null);
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
@@ -3416,16 +3417,34 @@ export default function App() {
                         ? 'Создание безопасного номера обращения недоступно в этом браузере.'
                         : 'ამ ბრაუზერში მიმართვის უსაფრთხო ნომრის შექმნა მიუწვდომელია.');
                   }
-                  const ticketBytes = new Uint8Array(16);
-                  window.crypto.getRandomValues(ticketBytes);
-                  const ticketId = `t-${Array.from(ticketBytes, byte => byte.toString(16).padStart(2, '0')).join('')}`;
+                  const requestSignature = JSON.stringify([name, email || null, subject || null, message]);
+                  let pendingRequest = supportCreateRequestRef.current;
 
-                  const accessBytes = new Uint8Array(32);
-                  window.crypto.getRandomValues(accessBytes);
-                  const accessToken = Array.from(accessBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+                  // Reuse the same ticket ID, access code and request key when
+                  // the same form is retried after a timeout or lost response.
+                  if (!pendingRequest || pendingRequest.signature !== requestSignature) {
+                    const ticketBytes = new Uint8Array(16);
+                    window.crypto.getRandomValues(ticketBytes);
+                    const ticketId = `t-${Array.from(ticketBytes, byte => byte.toString(16).padStart(2, '0')).join('')}`;
 
+                    const accessBytes = new Uint8Array(32);
+                    window.crypto.getRandomValues(accessBytes);
+                    const accessToken = Array.from(accessBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+
+                    const requestBytes = new Uint8Array(16);
+                    window.crypto.getRandomValues(requestBytes);
+                    requestBytes[6] = (requestBytes[6] & 0x0f) | 0x40;
+                    requestBytes[8] = (requestBytes[8] & 0x3f) | 0x80;
+                    const requestHex = Array.from(requestBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+                    const requestId = `${requestHex.slice(0, 8)}-${requestHex.slice(8, 12)}-${requestHex.slice(12, 16)}-${requestHex.slice(16, 20)}-${requestHex.slice(20)}`;
+
+                    pendingRequest = { signature: requestSignature, ticketId, accessToken, requestId };
+                    supportCreateRequestRef.current = pendingRequest;
+                  }
+
+                  const { ticketId, accessToken, requestId } = pendingRequest;
                   const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/rpc/create_support_ticket`,
+                    `${SUPABASE_URL}/rest/v1/rpc/create_support_ticket_idempotent`,
                     {
                       method: 'POST',
                       headers: await getSupabaseHeaders({ authenticated: true }),
@@ -3435,7 +3454,8 @@ export default function App() {
                         p_email: email || null,
                         p_subject: subject || null,
                         p_message: message,
-                        p_access_token: accessToken
+                        p_access_token: accessToken,
+                        p_request_id: requestId
                       })
                     }
                   );
@@ -3455,6 +3475,16 @@ export default function App() {
                         : 'მხარდაჭერის შეტყობინების გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით.');
                   }
 
+                  const createdTicket = await response.json();
+                  if (!createdTicket || createdTicket.ticket_id !== ticketId) {
+                    throw new Error(currentLang === 'en'
+                      ? 'The support request response could not be verified. Please retry.'
+                      : currentLang === 'ru'
+                        ? 'Не удалось проверить ответ сервера. Повторите попытку.'
+                        : 'სერვერის პასუხის გადამოწმება ვერ მოხერხდა. ხელახლა სცადე.');
+                  }
+
+                  supportCreateRequestRef.current = null;
                   setSupportSubmission({ ticketId, accessToken });
                   e.target.reset();
                 } catch (error) {
