@@ -9,7 +9,19 @@ export const normalizeOrderTotal = (value) => {
 
 export const normalizeOrderItems = (items) => (
   Array.isArray(items)
-    ? items.filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    ? items
+        .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+        .map((item) => ({
+          ...item,
+          // Checkout snapshots use snake_case; legacy UI snapshots used camelCase.
+          // Expose both shapes without overwriting an existing non-empty value.
+          selectedSize: item.selectedSize ?? item.selected_size ?? null,
+          selectedColor: item.selectedColor ?? item.selected_color ?? null,
+          customVariantId: item.customVariantId ?? item.custom_variant_id ?? null,
+          customVariantName: item.customVariantName ?? item.custom_variant_name ?? null,
+          image: item.image ?? item.image_url ?? item.imageUrl ?? '',
+          gallery: Array.isArray(item.gallery) ? item.gallery : []
+        }))
     : []
 );
 
@@ -155,20 +167,50 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
     }
 
     const customVariantId = String(item?.customVariantId ?? '').trim();
-    const customVariant = customVariantId && Array.isArray(product.variants)
-      ? product.variants.find(variant => String(variant?.id ?? '') === customVariantId)
+    const selectedSize = String(item?.selectedSize ?? item?.selected_size ?? '').trim();
+    const selectedColor = String(item?.selectedColor ?? item?.selected_color ?? '').trim();
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    const sizeColorVariants = variants.filter(variant => variant?.variantType === 'size_color');
+    const hasSizeColorStock = sizeColorVariants.length > 0;
+    const customVariant = customVariantId
+      ? variants.find(variant => String(variant?.id ?? '') === customVariantId && variant?.variantType !== 'size_color')
       : null;
-    const hasCustomVariants = Array.isArray(product.variants) && product.variants.length > 0;
-    const currentPrice = customVariantId ? Number(customVariant?.priceGEL ?? customVariant?.price_gel) : Number(product.price_gel);
-    const currentStock = customVariantId ? Number(customVariant?.stock ?? 0) : Number(product.stock ?? 0);
+    const sizeColorVariant = customVariantId && hasSizeColorStock
+      ? sizeColorVariants.find(variant => String(variant?.id ?? '') === customVariantId)
+      : null;
+    const selectedInventoryVariant = customVariant || sizeColorVariant;
+    const hasCustomVariants = variants.some(variant => variant?.variantType !== 'size_color');
+    // Variant prices are authoritative for both custom options and
+    // size/color inventory rows. The parent product price is only a legacy
+    // fallback when an older size/color row has no own price field.
+    const currentPrice = sizeColorVariant
+      ? Number(sizeColorVariant.priceGEL ?? sizeColorVariant.price_gel ?? product.price_gel)
+      : customVariantId
+        ? Number(customVariant?.priceGEL ?? customVariant?.price_gel)
+        : Number(product.price_gel);
+    const currentStock = selectedInventoryVariant ? Number(selectedInventoryVariant.stock ?? 0) : Number(product.stock ?? 0);
     const safeStock = Number.isFinite(currentStock) ? Math.max(0, Math.floor(currentStock)) : 0;
     const oldPrice = Number(item?.basePriceGEL ?? item?.priceGEL ?? item?.price);
-    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0 && (!customVariantId || Boolean(customVariant));
+    const hasValidPrice = Number.isFinite(currentPrice) && currentPrice >= 0 &&
+      (!customVariantId || Boolean(selectedInventoryVariant));
+    if (hasCustomVariants && hasSizeColorStock) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_inventory_configuration' });
+      return item;
+    }
     if (hasCustomVariants && !customVariantId) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_custom_missing' });
       return item;
     }
-    if (customVariantId && !customVariant) {
+    if (hasSizeColorStock && (
+      !customVariantId ||
+      !sizeColorVariant ||
+      String(sizeColorVariant.size ?? '').trim() !== selectedSize ||
+      String(sizeColorVariant.color ?? '').trim() !== selectedColor
+    )) {
+      changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_size_color_missing', selectedSize, selectedColor });
+      return item;
+    }
+    if (customVariantId && !selectedInventoryVariant) {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'variant_custom_unavailable', selected: customVariantId });
       return item;
     }
@@ -176,9 +218,6 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       changes.push({ id: item?.id, name: product.name || item?.name || '', type: 'invalid_price' });
       return item;
     }
-
-    const selectedSize = String(item?.selectedSize ?? item?.selected_size ?? '').trim();
-    const selectedColor = String(item?.selectedColor ?? item?.selected_color ?? '').trim();
     const sizeOptions = Array.isArray(product.available_sizes)
       ? product.available_sizes.map((value) => String(value ?? '').trim()).filter(Boolean)
       : Array.isArray(product.availableSizes)
@@ -226,7 +265,7 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
       priceGEL: currentPrice + (item?.giftWrap === true ? 5 : 0) + (item?.vipWarranty === true ? 15 : 0),
       basePriceGEL: currentPrice,
       stock: safeStock,
-      customVariantName: customVariant ? String(customVariant.name || '') : ''
+      customVariantName: selectedInventoryVariant ? String(selectedInventoryVariant.name || '') : ''
     };
   });
 
@@ -234,7 +273,8 @@ export const reconcileCartWithCatalog = (cartItems, catalogProducts) => {
 };
 
 
-// Accept a checkout response only when it confirms the exact secure ID sent by the client.
+// Accept checkout only when the RPC confirms the exact order, deducted stock,
+// valid item snapshots, and internally consistent server-calculated totals.
 export const validateOrderCreationResponse = (serverResult, expectedOrderId) => {
   const expectedId = String(expectedOrderId || '').trim();
   const receivedId = String(serverResult?.order_id || '').trim();
@@ -243,6 +283,53 @@ export const validateOrderCreationResponse = (serverResult, expectedOrderId) => 
   }
   if (!receivedId) return { valid: false, reason: 'missing_order_id' };
   if (receivedId !== expectedId) return { valid: false, reason: 'order_id_mismatch' };
+  if (serverResult?.stock_deducted !== true) {
+    return { valid: false, reason: 'stock_not_confirmed' };
+  }
+  if (!Array.isArray(serverResult?.items) || serverResult.items.length < 1) {
+    return { valid: false, reason: 'invalid_items' };
+  }
+
+  const toCents = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const amount = Number(value);
+    return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) : null;
+  };
+  const subtotalCents = toCents(serverResult.subtotal_gel);
+  const discountCents = toCents(serverResult.discount_gel);
+  const deliveryCents = toCents(serverResult.delivery_gel);
+  const totalCents = toCents(serverResult.total_gel);
+  if ([subtotalCents, discountCents, deliveryCents, totalCents].some((value) => value === null)) {
+    return { valid: false, reason: 'invalid_totals' };
+  }
+  if (discountCents > subtotalCents) {
+    return { valid: false, reason: 'invalid_discount' };
+  }
+
+  let itemsSubtotalCents = 0;
+  for (const item of serverResult.items) {
+    const quantity = Number(item?.quantity);
+    const unitPriceCents = toCents(item?.price);
+    if (
+      !item ||
+      typeof item !== 'object' ||
+      !String(item.id || '').trim() ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 100 ||
+      unitPriceCents === null
+    ) {
+      return { valid: false, reason: 'invalid_items' };
+    }
+    itemsSubtotalCents += unitPriceCents * quantity;
+  }
+
+  const expectedTotalCents = Math.max(0, subtotalCents - discountCents) + deliveryCents;
+  if (Math.abs(itemsSubtotalCents - subtotalCents) > 1 ||
+      Math.abs(totalCents - expectedTotalCents) > 1) {
+    return { valid: false, reason: 'inconsistent_totals' };
+  }
+
   return { valid: true, orderId: receivedId };
 };
 

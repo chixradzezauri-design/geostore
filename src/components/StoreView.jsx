@@ -1,7 +1,8 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
-import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants } from '../utils/productVariants.js';
+import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
+import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -89,10 +90,8 @@ export default function StoreView({
   // 🌟 შემოწმება: არის თუ არა პროდუქტი ტანსაცმელი ან ფეხსაცმელი
   const isClothingOrFootwear = (prod) => {
     if (!prod) return false;
-    const cat = (prod.category || '').toLowerCase();
-    const name = (prod.name || '').toLowerCase();
-    const keywords = ['ტანსაცმელ', 'ფეხსაცმელ', 'შარვალ', 'ქურთუკ', 'პერანგ', 'შორტ', 'კაბა', 'shoe', 'cloth', 'shirt', 'jacket', 'pant', 'sneaker', 'ბათინკ', 'ქუდ', 'майк'];
-    return keywords.some(kw => cat.includes(kw) || name.includes(kw));
+    return supportsSizeColorInventoryCategory(prod.category) ||
+      supportsSizeColorInventoryCategory(prod.name);
   };
 
   const handleOpenProduct = (prod) => {
@@ -100,9 +99,10 @@ export default function StoreView({
     setActiveImage(prod.image || prod.gallery?.[0] || null);
     
     const availableSizes = getAvailableProductSizes(prod);
-    setSelectedSize(availableSizes[0] || '');
     const availableColors = getAvailableProductColors(prod);
-    setSelectedColor(availableColors[0] || '');
+    const firstSizeColorVariant = getFirstAvailableSizeColorVariant(prod);
+    setSelectedSize(firstSizeColorVariant?.size || availableSizes[0] || '');
+    setSelectedColor(firstSizeColorVariant?.color || availableColors[0] || '');
     const customVariants = getCustomProductVariants(prod);
     setSelectedCustomVariantId(customVariants.find(variant => variant.stock > 0)?.id || '');
 
@@ -126,8 +126,8 @@ export default function StoreView({
     if (!h || !w) return;
 
     let rec = 'M';
-    const cat = (selectedProduct?.category || '').toLowerCase();
-    const isShoe = cat.includes('ფეხსაცმელ') || cat.includes('shoe');
+    const isShoe = isShoesProductCategory(selectedProduct?.category) ||
+      isShoesProductCategory(selectedProduct?.name);
 
     if (isShoe) {
       if (h < 165) rec = '39';
@@ -143,7 +143,9 @@ export default function StoreView({
       else rec = 'XXL';
     }
 
-    const available = getAvailableProductSizes(selectedProduct);
+    const available = hasSizeColorInventory(selectedProduct)
+      ? getAvailableSizeColorSizes(selectedProduct, selectedColor)
+      : getAvailableProductSizes(selectedProduct);
     if (!available.length) return;
     if (!available.includes(rec)) {
       rec = available[0];
@@ -311,10 +313,23 @@ export default function StoreView({
   };
 
   const selectedCustomVariant = selectedProduct ? getCustomProductVariant(selectedProduct, selectedCustomVariantId) : null;
-  const currentBasePrice = selectedCustomVariant?.priceGEL ?? selectedProduct?.priceGEL ?? 0;
-  const currentAvailableStock = selectedProduct && Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0
-    ? (selectedCustomVariant?.stock ?? 0)
-    : Number(selectedProduct?.stock ?? 0);
+  const selectedSizeColorVariant = selectedProduct && hasSizeColorInventory(selectedProduct)
+    ? getProductSizeColorVariant(selectedProduct, selectedSize, selectedColor)
+    : null;
+  const selectedInventoryVariant = selectedSizeColorVariant || selectedCustomVariant;
+  const availableSizesForSelectedColor = selectedProduct
+    ? (hasSizeColorInventory(selectedProduct)
+        ? getAvailableSizeColorSizes(selectedProduct, selectedColor)
+        : getAvailableProductSizes(selectedProduct))
+    : [];
+  const currentBasePrice = selectedSizeColorVariant?.priceGEL ?? selectedCustomVariant?.priceGEL ?? selectedProduct?.priceGEL ?? 0;
+  const currentAvailableStock = !selectedProduct
+    ? 0
+    : hasSizeColorInventory(selectedProduct)
+      ? (selectedSizeColorVariant?.stock ?? 0)
+      : hasCustomProductVariants(selectedProduct)
+        ? (selectedCustomVariant?.stock ?? 0)
+        : Number(selectedProduct.stock ?? 0);
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
@@ -811,7 +826,7 @@ export default function StoreView({
                     </div>
                   )}
 
-                  {getAvailableProductSizes(selectedProduct).length > 0 && (
+                  {availableSizesForSelectedColor.length > 0 && (
                     <div className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="text-slate-300 font-bold">{storeText.sizePrompt} <b className="text-amber-400">{selectedSize}</b></span>
@@ -833,14 +848,21 @@ export default function StoreView({
                       )}
 
                       <div className="flex flex-wrap gap-2 w-full">
-                        {getAvailableProductSizes(selectedProduct).map(size => {
+                        {availableSizesForSelectedColor.map(size => {
                           return (
                             <button
                               key={size}
                               type="button"
-                              onClick={() => setSelectedSize(size)}
+                              onClick={() => {
+                                setSelectedSize(size);
+                                if (hasSizeColorInventory(selectedProduct)) {
+                                  const availableColors = getAvailableSizeColorColors(selectedProduct, size);
+                                  if (!availableColors.includes(selectedColor)) setSelectedColor(availableColors[0] || '');
+                                }
+                              }}
                               aria-pressed={selectedSize === size}
-                              className={`gs-size-option px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
+                              disabled={!getAvailableSizeColorSizes(selectedProduct).includes(size) && hasSizeColorInventory(selectedProduct)}
+                              className={`gs-size-option px-3.5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer border disabled:opacity-30 disabled:cursor-not-allowed ${selectedSize === size ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md scale-105' : 'bg-[#08080a] text-slate-300 border-amber-500/20 hover:text-white'}`}
                             >
                               {size}
                             </button>
@@ -858,9 +880,16 @@ export default function StoreView({
                           <button
                             key={colName}
                             type="button"
-                            onClick={() => setSelectedColor(colName)}
+                            onClick={() => {
+                              setSelectedColor(colName);
+                              if (hasSizeColorInventory(selectedProduct)) {
+                                const availableSizes = getAvailableSizeColorSizes(selectedProduct, colName);
+                                if (!availableSizes.includes(selectedSize)) setSelectedSize(availableSizes[0] || '');
+                              }
+                            }}
                             aria-pressed={selectedColor === colName}
-                            className={`gs-color-option flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${selectedColor === colName ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
+                            disabled={!getAvailableSizeColorColors(selectedProduct).includes(colName) && hasSizeColorInventory(selectedProduct)}
+                            className={`gs-color-option flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${selectedColor === colName ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow' : 'border-amber-500/20 bg-[#08080a] text-slate-400'}`}
                           >
                             <span
                               className="gs-color-swatch w-3.5 h-3.5 rounded-full border border-black/15"
@@ -1027,7 +1056,7 @@ export default function StoreView({
 
             <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
-                disabled={currentAvailableStock <= 0 || (Array.isArray(selectedProduct.variants) && selectedProduct.variants.length > 0 && !selectedCustomVariant)}
+                disabled={currentAvailableStock <= 0 || (hasCustomProductVariants(selectedProduct) && !selectedCustomVariant) || (hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant)}
                 onClick={() => { 
                   const isCf = isClothingOrFootwear(selectedProduct);
 
@@ -1039,18 +1068,18 @@ export default function StoreView({
                     giftWrap: isGiftWrapped === true,
                     vipWarranty: hasVipWarranty === true,
                     giftMessage: isGiftWrapped ? giftMessage.trim().slice(0, 240) : '',
-                    selectedSize: getAvailableProductSizes(selectedProduct).length > 0 && selectedSize ? selectedSize : null,
+                    selectedSize: availableSizesForSelectedColor.length > 0 && selectedSize ? selectedSize : null,
                     selectedColor: selectedColor,
-                    customVariantId: selectedCustomVariant?.id || null,
-                    customVariantName: selectedCustomVariant?.name || '',
-                    stock: selectedCustomVariant ? selectedCustomVariant.stock : selectedProduct.stock
+                    customVariantId: selectedInventoryVariant?.id || null,
+                    customVariantName: selectedInventoryVariant?.name || '',
+                    stock: selectedInventoryVariant ? selectedInventoryVariant.stock : selectedProduct.stock
                   }); 
                   if (added !== false) setSelectedProduct(null); 
                 }} 
                 className="gs-modal-add-to-cart w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-4 rounded-2xl text-sm transition-all shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span className="gs-modal-add-label">{storeText.addToCart}{selectedCustomVariant ? ` · ${selectedCustomVariant.name}` : getAvailableProductSizes(selectedProduct).length > 0 ? ` · ${selectedSize}` : ''}</span>
+                <span className="gs-modal-add-label">{storeText.addToCart}{selectedCustomVariant ? ` · ${selectedCustomVariant.name}` : selectedSizeColorVariant ? ` · ${[selectedSize, selectedColor].filter(Boolean).join(' / ')}` : availableSizesForSelectedColor.length > 0 ? ` · ${selectedSize}` : ''}</span>
                 <span className="gs-modal-add-price">{formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}</span>
               </button>
             </div>

@@ -212,7 +212,29 @@ test('accepts currently offered cart variants from snake_case catalogue fields',
 
 test('normalizes malformed legacy order item arrays without dropping valid lines', () => {
   const valid = { id: 'p-1', name: 'Jacket', quantity: 1 };
-  assert.deepEqual(normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]), [valid, { id: 'p-2' }]);
+  assert.deepEqual(
+    normalizeOrderItems([null, 'invalid', 4, [], valid, { id: 'p-2' }]),
+    [
+      {
+        ...valid,
+        selectedSize: null,
+        selectedColor: null,
+        customVariantId: null,
+        customVariantName: null,
+        image: '',
+        gallery: []
+      },
+      {
+        id: 'p-2',
+        selectedSize: null,
+        selectedColor: null,
+        customVariantId: null,
+        customVariantName: null,
+        image: '',
+        gallery: []
+      }
+    ]
+  );
   assert.deepEqual(normalizeOrderItems({ items: [] }), []);
   assert.deepEqual(normalizeOrderItems(null), []);
 });
@@ -260,9 +282,18 @@ test('requires a custom variant selection when the catalogue defines custom vari
 });
 
 
-test('accepts only the exact secure order ID confirmed by the checkout RPC', () => {
+test('accepts the exact secure order ID with server-confirmed items, stock and totals', () => {
   const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
-  assert.deepEqual(validateOrderCreationResponse({ order_id: orderId }, orderId), {
+  const response = {
+    order_id: orderId,
+    stock_deducted: true,
+    items: [{ id: 'p1', quantity: 2, price: 50 }],
+    subtotal_gel: 100,
+    discount_gel: 10,
+    delivery_gel: 5,
+    total_gel: 95
+  };
+  assert.deepEqual(validateOrderCreationResponse(response, orderId), {
     valid: true,
     orderId
   });
@@ -286,6 +317,39 @@ test('rejects missing, malformed, or mismatched checkout order IDs', () => {
     valid: false,
     reason: 'invalid_expected_id'
   });
+});
+
+test('rejects checkout responses that do not confirm stock deduction or items', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  const response = {
+    order_id: orderId,
+    stock_deducted: true,
+    items: [{ id: 'p1', quantity: 1, price: 20 }],
+    subtotal_gel: 20,
+    discount_gel: 0,
+    delivery_gel: 0,
+    total_gel: 20
+  };
+  assert.equal(validateOrderCreationResponse({ ...response, stock_deducted: false }, orderId).reason, 'stock_not_confirmed');
+  assert.equal(validateOrderCreationResponse({ ...response, items: [] }, orderId).reason, 'invalid_items');
+  assert.equal(validateOrderCreationResponse({ ...response, items: [{ id: 'p1', quantity: 0, price: 20 }] }, orderId).reason, 'invalid_items');
+});
+
+test('rejects missing, negative, or inconsistent server-calculated checkout totals', () => {
+  const orderId = `ORD-${'A1B2C3D4'.repeat(4)}`;
+  const response = {
+    order_id: orderId,
+    stock_deducted: true,
+    items: [{ id: 'p1', quantity: 2, price: 50 }],
+    subtotal_gel: 100,
+    discount_gel: 10,
+    delivery_gel: 5,
+    total_gel: 95
+  };
+  assert.equal(validateOrderCreationResponse({ ...response, total_gel: undefined }, orderId).reason, 'invalid_totals');
+  assert.equal(validateOrderCreationResponse({ ...response, discount_gel: 101 }, orderId).reason, 'invalid_discount');
+  assert.equal(validateOrderCreationResponse({ ...response, total_gel: 999 }, orderId).reason, 'inconsistent_totals');
+  assert.equal(validateOrderCreationResponse({ ...response, subtotal_gel: 99 }, orderId).reason, 'inconsistent_totals');
 });
 
 
@@ -322,4 +386,85 @@ test('rounds subtotal and delivery to exact tetri before discount calculation', 
     }),
     { subtotalGEL: 0.3, discountGEL: 0.03, deliveryGEL: 0.3, totalGEL: 0.57 }
   );
+});
+
+
+test('reconciles a size/color stock row using its own inventory and the product base price', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, basePriceGEL: 30,
+      quantity: 2, selectedSize: 'M', selectedColor: 'Black',
+      customVariantId: 'shirt-m-black', customVariantName: 'M / Black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 0,
+      available_sizes: ['S', 'M'], available_colors: ['Black', 'White'],
+      variants: [
+        { id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 30, stock: 4 },
+        { id: 'shirt-m-white', name: 'M / White', variantType: 'size_color', size: 'M', color: 'White', priceGEL: 30, stock: 1 }
+      ]
+    }]
+  );
+  assert.equal(result.hasChanges, false);
+  assert.equal(result.cartItems[0].stock, 4);
+  assert.equal(result.cartItems[0].customVariantName, 'M / Black');
+});
+
+test('rejects size/color cart lines when the inventory ID does not match the selected combination', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, quantity: 1,
+      selectedSize: 'M', selectedColor: 'Black', customVariantId: 'shirt-s-black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 99,
+      available_sizes: ['S', 'M'], available_colors: ['Black'],
+      variants: [
+        { id: 'shirt-s-black', name: 'S / Black', variantType: 'size_color', size: 'S', color: 'Black', priceGEL: 30, stock: 5 },
+        { id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 30, stock: 3 }
+      ]
+    }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['variant_size_color_missing']);
+});
+
+
+test('reconciles size/color cart lines using the selected variant price, not the product base price', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, basePriceGEL: 30,
+      quantity: 1, selectedSize: 'M', selectedColor: 'Black',
+      customVariantId: 'shirt-m-black', customVariantName: 'M / Black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 0,
+      available_sizes: ['M'], available_colors: ['Black'],
+      variants: [{
+        id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color',
+        size: 'M', color: 'Black', priceGEL: 45, stock: 4
+      }]
+    }]
+  );
+
+  assert.deepEqual(result.changes.map(change => change.type), ['price']);
+  assert.equal(result.cartItems[0].basePriceGEL, 45);
+  assert.equal(result.cartItems[0].priceGEL, 45);
+  assert.equal(result.cartItems[0].stock, 4);
+});
+
+test('rejects size/color inventory lines that exceed the selected combination stock', () => {
+  const result = reconcileCartWithCatalog(
+    [{
+      id: 'shirt-1', name: 'Shirt', priceGEL: 30, quantity: 3,
+      selectedSize: 'M', selectedColor: 'Black', customVariantId: 'shirt-m-black'
+    }],
+    [{
+      id: 'shirt-1', name: 'Shirt', price_gel: 30, stock: 99,
+      available_sizes: ['M'], available_colors: ['Black'],
+      variants: [
+        { id: 'shirt-m-black', name: 'M / Black', variantType: 'size_color', size: 'M', color: 'Black', priceGEL: 30, stock: 2 }
+      ]
+    }]
+  );
+  assert.deepEqual(result.changes.map(change => change.type), ['stock']);
 });

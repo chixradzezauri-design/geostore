@@ -1,0 +1,31 @@
+-- Keep the public catalogue readable while hiding internal purchase cost.
+REVOKE SELECT ON TABLE public.products FROM anon;
+GRANT SELECT (
+  id,
+  sku,
+  name,
+  category,
+  brand,
+  vendor,
+  price_gel,
+  old_price_gel,
+  stock,
+  image,
+  description,
+  available_sizes,
+  available_colors,
+  material,
+  durability,
+  created_at,
+  gallery,
+  variants,
+  tags,
+  model,
+  cpu,
+  ram,
+  storage,
+  gpu,
+  screen_size,
+  os,
+  is_featured
+) ON TABLE public.products TO anon;

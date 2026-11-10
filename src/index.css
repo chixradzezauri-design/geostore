@@ -9228,3 +9228,274 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size: 10px !important;
   }
 }
+
+
+/* GEOSTORE final mobile usability pass for catalogue and product editing. */
+@media (max-width: 760px) {
+  .geostore-fashion-store .gs-catalog-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-card {
+    min-width: 0 !important;
+    border-radius: 14px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-media {
+    aspect-ratio: 4 / 5 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-info {
+    min-width: 0 !important;
+    padding: 11px 11px 10px !important;
+    gap: 8px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-title {
+    min-height: 2.8em !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-price p:first-child {
+    font-size: 15px !important;
+  }
+  .geostore-fashion-store .gs-catalog-product-cta {
+    width: calc(100% - 20px) !important;
+    min-height: 42px !important;
+    margin: 0 10px 10px !important;
+    padding: 9px 7px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  .geostore-fashion-store .gs-size-option,
+  .geostore-fashion-store .gs-color-option {
+    min-height: 40px !important;
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+  }
+}
+@media (max-width: 640px) {
+  .geostore-shell .admin-dashboard-pro .admin-product-form .admin-product-option-input {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+
+/* GEOSTORE responsive containment: prevent long labels and nested flex/grid items
+   from widening the viewport on phones without clipping vertical content. */
+.geostore-shell,
+.geostore-fashion-store,
+.geostore-fashion-store .geostore-storefront {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.geostore-shell { overflow-x: clip; }
+.geostore-shell :where(img, video, canvas, svg) { max-width: 100%; }
+.geostore-fashion-store .geostore-storefront :where(.grid, .flex, [class*="grid-cols-"]) > * {
+  min-width: 0;
+}
+.geostore-fashion-store .geostore-storefront :where(h1,h2,h3,h4,p,a,label,b,strong,small) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.admin-dashboard-pro,
+.admin-dashboard-pro :where(.grid, .flex, form, section, article) {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro :where(h1,h2,h3,h4,p,label,b,strong,small,span) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+@media (max-width: 760px) {
+  .geostore-fashion-store .geostore-storefront {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 8px;
+    overflow-x: clip;
+  }
+  .geostore-fashion-store .geostore-storefront :where(section,article,form,aside,header,footer) {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .geostore-fashion-store .geostore-storefront :where(h1,h2,h3,h4,p,a,label,b,strong,small,span) {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: auto;
+  }
+  .geostore-fashion-store .geostore-storefront button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .geostore-fashion-store .gs-fashion-hero__content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .geostore-fashion-store .gs-category-breadcrumb,
+  .geostore-fashion-store .gs-product-modal-header,
+  .geostore-fashion-store .gs-product-price-panel,
+  .geostore-fashion-store .gs-product-review-upload {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .geostore-fashion-store .gs-product-modal {
+    align-items: flex-start;
+    padding: 8px;
+    overflow-x: clip;
+  }
+  .geostore-fashion-store .gs-product-dialog {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    max-height: calc(100dvh - 16px);
+    margin: auto 0;
+  }
+  .geostore-fashion-store .gs-product-modal-body {
+    min-width: 0;
+    max-width: 100%;
+    padding: 12px;
+    overflow-x: hidden;
+  }
+  .geostore-fashion-store .gs-product-detail-info,
+  .geostore-fashion-store .gs-product-gallery,
+  .geostore-fashion-store .gs-product-option-card,
+  .geostore-fashion-store .gs-size-selector,
+  .geostore-fashion-store .gs-color-selector {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .geostore-fashion-store .gs-product-option-card > div:first-child {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+  .geostore-fashion-store .gs-modal-add-to-cart {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    white-space: normal;
+  }
+  .geostore-fashion-store .gs-modal-add-label {
+    flex: 1 1 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .geostore-fashion-store .gs-modal-add-price {
+    flex: 0 0 auto;
+  }
+  .admin-dashboard-pro {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .admin-dashboard-pro :where(input,select,textarea) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro :where(.grid,.flex) > * {
+    min-width: 0;
+  }
+}
+
+
+/* GEOSTORE support chat — keep the customer consultation launcher available on mobile.
+   The AI launcher stays hidden on small screens; the support chat remains reachable. */
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-support {
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 140 !important;
+  }
+}
+
+
+/* GEOSTORE scroll repair — single scroll owner for floating support and tracking dialogs. */
+/* The support panel itself scrolls. Its heading stays visible and its
+   multiple forms no longer compete as separate nested scroll areas. */
+.geostore-fashion-store .gs-floating-support .gs-support-panel {
+  box-sizing: border-box !important;
+  max-height: min(78dvh, calc(100dvh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel-heading {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+  background: #fffdfa !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-form {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-submit {
+  position: static !important;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-support .gs-support-panel {
+    width: min(360px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: min(78dvh, calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+    padding: 12px !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-panel-heading {
+    flex: 0 0 auto !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-form {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* The tracker overlay must not become a second scroll container. */
+.geostore-fashion-store .gs-commerce-overlay--tracker {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+.geostore-fashion-store .gs-order-tracker-dialog {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth;
+  scroll-padding-block: 18px;
+}
+.geostore-fashion-store .gs-order-tracker-dialog > form,
+.geostore-fashion-store .gs-order-tracker-dialog > [role="alert"],
+.geostore-fashion-store .gs-order-tracker-dialog > div {
+  min-width: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .geostore-fashion-store .gs-order-tracker-dialog {
+    scroll-behavior: auto !important;
+  }
+}
+

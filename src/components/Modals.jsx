@@ -1,5 +1,5 @@
 // src/components/Modals.jsx - GEOSTORE checkout, account and customer dialogs
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, FileText, ShoppingBag, Lock, User, Phone, MapPin, Truck, 
@@ -273,7 +273,9 @@ export default function Modals({
     const key = String(status || '').trim().toLowerCase();
     const labels = {
       'ახალი': ['ახალი', 'New', 'Новый'], new: ['ახალი', 'New', 'Новый'], 'новый': ['ახალი', 'New', 'Новый'],
+      'მზადდება': ['მზადდება', 'Preparing', 'Готовится'],
       'მუშავდება': ['მუშავდება', 'Processing', 'В обработке'], processing: ['მუშავდება', 'Processing', 'В обработке'], 'в обработке': ['მუშავდება', 'Processing', 'В обработке'],
+      'კურიერთან': ['კურიერთან', 'With courier', 'У курьера'],
       'გაგზავნილი': ['გაგზავნილი', 'Shipped', 'Отправлен'], shipped: ['გაგზავნილი', 'Shipped', 'Отправлен'], 'გზაშია': ['გზაშია', 'On the way', 'В пути'], 'on the way': ['გზაშია', 'On the way', 'В пути'], 'в пути': ['გზაშია', 'On the way', 'В пути'], 'отправлен': ['გაგზავნილი', 'Shipped', 'Отправлен'],
       'დასრულებული': ['ჩაბარებულია', 'Delivered', 'Доставлен'], completed: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'ჩაბარებულია': ['ჩაბარებულია', 'Delivered', 'Доставлен'], delivered: ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'доставлен': ['ჩაბარებულია', 'Delivered', 'Доставлен'], 'завершён': ['ჩაბარებულია', 'Delivered', 'Доставлен'],
       'გაუქმებული': ['გაუქმებული', 'Cancelled', 'Отменён'], cancelled: ['გაუქმებული', 'Cancelled', 'Отменён'], canceled: ['გაუქმებული', 'Cancelled', 'Отменён'], 'отменён': ['გაუქმებული', 'Cancelled', 'Отменён']
@@ -287,7 +289,25 @@ export default function Modals({
   const [isSearchingOrder, setIsSearchingOrder] = useState(false);
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [trackerError, setTrackerError] = useState('');
+  const trackerFeedbackRef = useRef(null);
+  const trackerDialogRef = useRef(null);
 
+  useEffect(() => {
+    if (!isTrackerOpen || (!trackerError && !trackedOrder)) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const dialog = trackerDialogRef.current;
+      const target = trackerFeedbackRef.current;
+      if (!dialog || !target) return;
+      const dialogRect = dialog.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const targetTop = dialog.scrollTop + targetRect.top - dialogRect.top;
+      dialog.scrollTo({
+        top: Math.max(0, targetTop - 18),
+        behavior: 'smooth'
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isTrackerOpen, trackerError, trackedOrder]);
 
   const handleSearchOrder = async (e) => {
     e.preventDefault();
@@ -340,6 +360,23 @@ export default function Modals({
     if (['გზაშია', 'გაგზავნილი', 'კურიერთან', 'shipped', 'on the way', 'в пути', 'отправлен'].includes(s)) return 75;
     if (['მზადდება', 'მუშავდება', 'processing', 'в обработке'].includes(s)) return 40;
     return 15;
+  };
+
+  const getTrackerStatusClasses = (status) => {
+    const s = String(status || '').trim().toLowerCase();
+    if (['გაუქმებული', 'cancelled', 'canceled', 'отменён'].includes(s)) {
+      return 'bg-rose-500/10 text-rose-300 border border-rose-500/30';
+    }
+    if (['ჩაბარებულია', 'დასრულებული', 'delivered', 'completed', 'доставлен', 'завершён'].includes(s)) {
+      return 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30';
+    }
+    if (['გზაშია', 'გაგზავნილი', 'კურიერთან', 'shipped', 'on the way', 'в пути', 'отправлен'].includes(s)) {
+      return 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30';
+    }
+    if (['მზადდება', 'მუშავდება', 'processing', 'в обработке'].includes(s)) {
+      return 'bg-amber-500/10 text-amber-300 border border-amber-500/30';
+    }
+    return 'bg-blue-500/10 text-blue-300 border border-blue-500/30';
   };
 
   return (
@@ -497,7 +534,7 @@ export default function Modals({
       {/* 📍 2. LIVE ORDER TRACKER MAP MODAL */}
       {isTrackerOpen && (
         <div className="gs-commerce-overlay gs-commerce-overlay--tracker fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
+          <div ref={trackerDialogRef} className="gs-commerce-dialog gs-commerce-dialog--tracker gs-order-tracker-dialog bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col overflow-y-auto scrollbar-none">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
                 <PackageCheck className="w-5 h-5 text-amber-400" /> {copy.trackerTitle}
@@ -525,19 +562,19 @@ export default function Modals({
             </form>
 
             {trackerError && (
-              <p role="alert" aria-live="polite" className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{localizeMessage(trackerError)}</p>
+              <p ref={trackerFeedbackRef} role="alert" aria-live="polite" className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 rounded-xl border border-rose-500/20">{localizeMessage(trackerError)}</p>
             )}
 
             {trackedOrder ? (
-              <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              <div ref={trackerFeedbackRef} className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
                 <div className="gs-order-tracker-summary bg-[#121216] p-4 sm:p-5 rounded-3xl border border-amber-500/20 space-y-3">
                   <div className="flex justify-between items-center border-b border-amber-500/10 pb-3">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold block" >{copy.orderCode}</span>
                       <b className="text-amber-400 text-sm font-black break-all">#{trackedOrder.id}</b>
                     </div>
-                    <span className="bg-amber-500/10 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold">
-                      🟢 {localizedStatus(trackedOrder.status)}
+                    <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${getTrackerStatusClasses(trackedOrder.status)}`}>
+                      {localizedStatus(trackedOrder.status)}
                     </span>
                   </div>
 
@@ -660,10 +697,10 @@ export default function Modals({
 
       {/* 4. Supabase email/password sign-in and registration */}
       {isAuthOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300">
-          <div className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center overflow-y-auto p-3 py-4 sm:p-4 animate-in fade-in duration-300">
+          <div role="dialog" aria-modal="true" aria-labelledby="geostore-auth-dialog-title" className="gs-commerce-dialog gs-commerce-dialog--account bg-[#0d0d10] border border-amber-500/30 rounded-[2rem] sm:rounded-[2.5rem] max-w-sm w-full p-6 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl relative max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain">
             <div className="flex justify-between items-center border-b border-amber-500/20 pb-4">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5">
+              <h3 id="geostore-auth-dialog-title" className="font-black text-white text-base flex items-center gap-2.5">
                 <Lock className="w-5 h-5 text-amber-400" />
                 {authMode === 'login' ? copy.auth : authMode === 'register' ? copy.register : authMode === 'reset-request' ? copy.forgotPassword : copy.resetPassword}
               </h3>
