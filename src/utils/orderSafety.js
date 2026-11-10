@@ -9,7 +9,19 @@ export const normalizeOrderTotal = (value) => {
 
 export const normalizeOrderItems = (items) => (
   Array.isArray(items)
-    ? items.filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+    ? items
+        .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+        .map((item) => ({
+          ...item,
+          // Checkout snapshots use snake_case; legacy UI snapshots used camelCase.
+          // Expose both shapes without overwriting an existing non-empty value.
+          selectedSize: item.selectedSize ?? item.selected_size ?? null,
+          selectedColor: item.selectedColor ?? item.selected_color ?? null,
+          customVariantId: item.customVariantId ?? item.custom_variant_id ?? null,
+          customVariantName: item.customVariantName ?? item.custom_variant_name ?? null,
+          image: item.image ?? item.image_url ?? item.imageUrl ?? '',
+          gallery: Array.isArray(item.gallery) ? item.gallery : []
+        }))
     : []
 );
 
