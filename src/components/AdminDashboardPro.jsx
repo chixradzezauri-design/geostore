@@ -616,6 +616,7 @@ export default function AdminDashboardPro({
   const [replyInputs, setReplyInputs] = useState({});
   const [replySending, setReplySending] = useState({});
   const supportReplyInFlight = useRef(new Set());
+  const supportReplyRequestIds = useRef({});
   const supportThreadFetchInFlight = useRef(new Set());
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
@@ -2169,15 +2170,31 @@ export default function AdminDashboardPro({
     supportReplyInFlight.current.add(normalizedTicketId);
     setReplySending(prev => ({ ...prev, [normalizedTicketId]: true }));
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message', {
+      const pendingRequest = supportReplyRequestIds.current[normalizedTicketId];
+      if (!pendingRequest || pendingRequest.message !== replyText) {
+        if (!window.crypto?.randomUUID) {
+          throw new Error('უსაფრთხო მოთხოვნის ID ვერ შეიქმნა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
+        }
+        supportReplyRequestIds.current[normalizedTicketId] = {
+          id: window.crypto.randomUUID(),
+          message: replyText
+        };
+      }
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message_idempotent', {
         method: 'POST', headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_ticket_id: normalizedTicketId, p_message: replyText })
+        body: JSON.stringify({
+          p_ticket_id: normalizedTicketId,
+          p_message: replyText,
+          p_access_token: null,
+          p_request_id: supportReplyRequestIds.current[normalizedTicketId].id
+        })
       });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       }
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
+      delete supportReplyRequestIds.current[normalizedTicketId];
       setSelectedSupportTicketId(normalizedTicketId);
       await Promise.allSettled([fetchTickets(), fetchSupportTicketThread(normalizedTicketId)]);
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${normalizedTicketId}`);
