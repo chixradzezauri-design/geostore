@@ -618,6 +618,7 @@ export default function AdminDashboardPro({
   const supportReplyInFlight = useRef(new Set());
   const supportReplyRequestIds = useRef({});
   const supportThreadFetchInFlight = useRef(new Set());
+  const supportThreadRefreshPending = useRef(new Set());
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
@@ -650,7 +651,11 @@ export default function AdminDashboardPro({
 
   const fetchSupportTicketThread = async (ticketId) => {
     const normalizedTicketId = String(ticketId || '').trim();
-    if (!normalizedTicketId || supportThreadFetchInFlight.current.has(normalizedTicketId)) return;
+    if (!normalizedTicketId) return;
+    if (supportThreadFetchInFlight.current.has(normalizedTicketId)) {
+      supportThreadRefreshPending.current.add(normalizedTicketId);
+      return;
+    }
     supportThreadFetchInFlight.current.add(normalizedTicketId);
     setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: true }));
     setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: '' }));
@@ -665,13 +670,24 @@ export default function AdminDashboardPro({
       }
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('მიმოწერის პასუხის ფორმატი არასწორია.');
-      setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: rows }));
+      const uniqueRows = [...new Map(rows.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
+      uniqueRows.sort((a, b) => {
+        const aTime = Date.parse(a.created_at || '') || 0;
+        const bTime = Date.parse(b.created_at || '') || 0;
+        return aTime - bTime || String(a.id).localeCompare(String(b.id));
+      });
+      setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: uniqueRows }));
     } catch (error) {
       console.error('GEOSTORE support ticket thread fetch failed:', error);
       setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
     } finally {
       supportThreadFetchInFlight.current.delete(normalizedTicketId);
       setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
+      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
+        // If a Realtime event arrived while this fetch was running, make one
+        // follow-up read so the newest message cannot be hidden until polling.
+        void Promise.resolve().then(() => fetchSupportTicketThread(normalizedTicketId));
+      }
     }
   };
 
@@ -680,6 +696,7 @@ export default function AdminDashboardPro({
       setSelectedSupportTicketId(null);
       setSupportTicketThreads({});
       setSupportTicketThreadErrors({});
+      supportThreadRefreshPending.current.clear();
       return undefined;
     }
     const channel = supabase
@@ -694,8 +711,14 @@ export default function AdminDashboardPro({
         // for the 15-second recovery poll. Fetch through the existing REST/RLS path.
         void fetchTickets();
       })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      .subscribe(status => {
+        // A new SUBSCRIBED status is also emitted after websocket recovery.
+        if (status === 'SUBSCRIBED' && adminLoggedIn) {
+          void fetchTickets();
+          if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
+        }
+      });
+    return () => { void supabase.removeChannel(channel); };
   }, [adminLoggedIn, selectedSupportTicketId]);
 
   useEffect(() => {
@@ -706,7 +729,14 @@ export default function AdminDashboardPro({
     };
     refreshAdminSupport();
     const interval = setInterval(refreshAdminSupport, 15000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') refreshAdminSupport();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, [adminLoggedIn, selectedSupportTicketId]);
 
   const fetchLegacyMessages = async () => {
