@@ -2890,11 +2890,21 @@ export default function AdminDashboardPro({
   // Keep this as a derived value, not a hook: the login view returns
   // before this section, so a useMemo here would change hook order
   // when adminLoggedIn switches from false to true and crash React.
+  const normalizedOrderSearch = String(orderSearchQuery || '').trim().toLocaleLowerCase();
   const filteredOrders = (orders || []).filter(o => {
-    const matchesSearch =
-      String(o.id ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-      String(o.customerName ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-      String(o.phone ?? '').toLowerCase().includes(orderSearchQuery.toLowerCase());
+    const orderItems = normalizeOrderItems(o.items);
+    const searchableOrderValues = [
+      o.id,
+      o.customerName,
+      o.phone,
+      o.user_email,
+      o.email,
+      o.address,
+      ...orderItems.flatMap(item => [item.name, item.sku, item.selectedSize, item.selectedColor, item.customVariantName, item.custom_variant_name])
+    ];
+    const matchesSearch = !normalizedOrderSearch || searchableOrderValues.some(value =>
+      String(value ?? '').toLocaleLowerCase().includes(normalizedOrderSearch)
+    );
 
     // Legacy English/Russian status values must appear in the same filter
     // bucket as their Georgian equivalents, rather than disappearing from
