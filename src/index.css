@@ -9499,3 +9499,30 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
   }
 }
 
+
+
+/* GEOSTORE verified mobile catalogue image-frame correction.
+   Match the storefront selector specificity of later cascade rules.
+   Remove artificial frame inset while retaining contain to avoid cropping products. */
+@media (max-width: 767px) {
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media {
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 4 / 5 !important;
+    padding: 0 !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-image {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+}
+@media (max-width: 360px) {
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media {
+    aspect-ratio: 4 / 5 !important;
+    padding: 0 !important;
+  }
+}
