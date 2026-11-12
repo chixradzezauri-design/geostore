@@ -25,7 +25,9 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
+import { attachSupportImageUrls, uploadSupportAttachment, validateSupportAttachment } from './utils/supportAttachments';
+import { fetchMySupportTickets, fetchSupportTicketMessages, fetchSupportTicketStatus, markSupportTicketMessagesRead } from './utils/supportThreadApi';
+import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, formatOrderItemLabel, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
@@ -33,6 +35,10 @@ import { isAuthRestoreCurrent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
+import { sanitizePublicProductCache } from './utils/publishedProducts.js';
+import { buildProductRoutePath, parseProductRoute } from './utils/productRoutes.js';
+import { resolveAdminStorefrontSnapshot } from './utils/storefrontSnapshots.js';
+import { saveStorefrontDraftSection } from './utils/storefrontDraftStorage.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -43,6 +49,9 @@ const AiAssistantModal = lazy(() => import('./components/AiAssistantModal'));
 const Modals = lazy(() => import('./components/Modals'));
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
+const APP_IMAGE_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231e293b'/%3E%3Cpath d='M12 46l12-14 9 10 7-8 12 12H12z' fill='%2364758b'/%3E%3Ccircle cx='22' cy='21' r='5' fill='%2364758b'/%3E%3C/svg%3E";
+// Accept both current 32-hex ticket IDs and older short IDs already stored in Supabase.
+const SUPPORT_TICKET_ID_PATTERN = /^t-[a-z0-9][a-z0-9-]{0,61}$/i;
 
 // ეს გასაღები მხოლოდ Supabase-ის საჯარო anon/publishable გასაღები უნდა იყოს.
 // არასოდეს გამოიყენო აქ service_role გასაღები.
@@ -120,16 +129,22 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
   headers['Content-Type'] = mimeType;
   headers['x-upsert'] = 'false';
 
-  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${STOREFRONT_MEDIA_BUCKET}/${path}`, {
-    method: 'POST',
-    headers,
-    body: new Blob([bytes], { type: mimeType })
-  });
-  if (!response.ok) throw new Error('ფოტოს ატვირთვა ვერ მოხერხდა: ' + (await response.text()));
-
   const encodedPath = path.split('/').map(encodeURIComponent).join('/');
   const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${STOREFRONT_MEDIA_BUCKET}/${encodedPath}`;
+  let response;
+  // Track the unique path before sending the request. A failed HTTP response
+  // can still be ambiguous if a proxy fails after Storage accepted the object.
   uploadedAssets.push({ path, publicUrl });
+  try {
+    response = await fetch(`${SUPABASE_URL}/storage/v1/object/${STOREFRONT_MEDIA_BUCKET}/${path}`, {
+      method: 'POST',
+      headers,
+      body: new Blob([bytes], { type: mimeType })
+    });
+  } catch (error) {
+    throw error;
+  }
+  if (!response.ok) throw new Error('ფოტოს ატვირთვა ვერ მოხერხდა: ' + (await response.text()));
 
   const metadataResponse = await fetch(`${SUPABASE_URL}/rest/v1/storefront_media`, {
     method: 'POST',
@@ -439,9 +454,20 @@ export default function App() {
     loadSafeStorage('geostore_vendors', DEFAULT_VENDORS)
   );
 
-  const [products, setProducts] = useState(() =>
-    loadSafeStorage('geostore_products', DEFAULT_PRODUCTS)
-  );
+  const [products, setProducts] = useState(() => {
+    const cachedPublicProducts = sanitizePublicProductCache(
+      loadSafeStorage('geostore_products', DEFAULT_PRODUCTS)
+    );
+    // Remove any legacy admin-only fields already written by older app versions.
+    try {
+      localStorage.setItem('geostore_products', JSON.stringify(cachedPublicProducts));
+    } catch {}
+    return cachedPublicProducts;
+  });
+  const [productsError, setProductsError] = useState('');
+  // Public product surfaces wait for a catalogue response from the current
+  // auth epoch; cached admin rows are never trusted as public catalogue data.
+  const [productsVerifiedAccessEpoch, setProductsVerifiedAccessEpoch] = useState(-1);
 
   const [coupons, setCoupons] = useState(() =>
     loadSafeStorage('geostore_coupons', DEFAULT_COUPONS).filter((coupon) =>
@@ -453,6 +479,37 @@ export default function App() {
   const [bannersList, setBannersList] = useState(() =>
     loadSafeStorage('geostore_banners', [])
   );
+
+  // Keep the administrator's unpublished editor state separate from the
+  // public storefront snapshot. Draft edits must never leak to visitors.
+  const [draftCategories, setDraftCategories] = useState(() =>
+    loadSafeStorage('geostore_cats_draft', categories)
+  );
+  const [draftBanners, setDraftBanners] = useState(() => {
+    const savedDraft = loadSafeStorage('geostore_banners_draft', bannersList);
+    return Array.isArray(savedDraft) ? savedDraft : bannersList;
+  });
+  const [draftSiteSettings, setDraftSiteSettings] = useState(() => {
+    const savedDraft = loadSafeStorage('geostore_site_settings_draft', siteSettings);
+    return savedDraft && typeof savedDraft === 'object' && !Array.isArray(savedDraft)
+      ? { ...siteSettings, ...savedDraft }
+      : siteSettings;
+  });
+
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+
+  // Persist only the administrator's private editor drafts. Public cache keys
+  // remain untouched, and a failed browser write never changes published data.
+  useEffect(() => {
+    if (!adminLoggedIn) return;
+    try {
+      saveStorefrontDraftSection(window.localStorage, 'categories', draftCategories);
+      saveStorefrontDraftSection(window.localStorage, 'banners', draftBanners);
+      saveStorefrontDraftSection(window.localStorage, 'siteSettings', draftSiteSettings);
+    } catch (error) {
+      console.warn('GEOSTORE local storefront draft cache could not be updated:', error);
+    }
+  }, [adminLoggedIn, draftCategories, draftBanners, draftSiteSettings]);
 
   // Notifications are server-owned and scoped to the authenticated account.
   const [notifications, setNotifications] = useState([]);
@@ -474,6 +531,35 @@ export default function App() {
       );
     }
   }, []);
+
+  const [productRouteId, setProductRouteId] = useState(() => parseProductRoute(window.location.pathname)?.productId || null);
+  useEffect(() => {
+    const syncProductRoute = () => setProductRouteId(parseProductRoute(window.location.pathname)?.productId || null);
+    if (parseProductRoute(window.location.pathname)?.productId) {
+      window.history.replaceState({ ...(window.history.state || {}), geostoreProductModal: false }, '', window.location.href);
+    }
+    window.addEventListener('popstate', syncProductRoute);
+    return () => window.removeEventListener('popstate', syncProductRoute);
+  }, []);
+  const openProductRoute = (productId) => {
+    const nextPath = buildProductRoutePath(productId);
+    if (!nextPath) return;
+    const normalizedId = String(productId);
+    if (parseProductRoute(window.location.pathname)?.productId === normalizedId) {
+      setProductRouteId(normalizedId);
+      return;
+    }
+    window.history.pushState({ ...(window.history.state || {}), geostoreProductModal: true }, '', `${nextPath}${window.location.search}${window.location.hash}`);
+    setProductRouteId(normalizedId);
+  };
+  const closeProductRoute = () => {
+    if (window.history.state?.geostoreProductModal === true) {
+      window.history.back();
+      return;
+    }
+    window.history.replaceState({ ...(window.history.state || {}), geostoreProductModal: false }, '', `/${window.location.search}${window.location.hash}`);
+    setProductRouteId(null);
+  };
 
   const [selectedVendorFilter] = useState('ყველა');
   const [selectedCategory, setSelectedCategory] = useState('ყველა');
@@ -541,7 +627,6 @@ export default function App() {
 
   // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
   // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   // Serialize catalogue refreshes and discard results from a previous admin session.
   const productsFetchLock = useRef(false);
   const productsFetchQueued = useRef(false);
@@ -556,6 +641,15 @@ export default function App() {
   const storefrontSaveLock = useRef(false);
   const storefrontPublishLock = useRef(false);
 
+  useEffect(() => {
+    if (adminLoggedIn) return;
+    // Release UI locks on logout. Older requests are fenced by productsAccessEpoch.
+    storefrontSaveLock.current = false;
+    storefrontPublishLock.current = false;
+    setStorefrontDraftBusy(false);
+    setStorefrontPublishBusy(false);
+  }, [adminLoggedIn]);
+
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
     password: '',
@@ -565,6 +659,7 @@ export default function App() {
   const [adminError, setAdminError] = useState('');
 
   const [orders, setOrders] = useState([]);
+  const [ordersError, setOrdersError] = useState('');
   const adminOrdersFetchLock = useRef(false);
   // Remember refreshes requested while a previous order snapshot is still loading.
   // Store the session version so a queued read cannot cross an admin logout/login boundary.
@@ -605,6 +700,11 @@ export default function App() {
   const [supportLookupTicketId, setSupportLookupTicketId] = useState('');
   const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
+  const [supportTicketStatus, setSupportTicketStatus] = useState(null);
+  const [mySupportTickets, setMySupportTickets] = useState([]);
+  const [mySupportTicketsLoading, setMySupportTicketsLoading] = useState(false);
+  const [mySupportTicketsError, setMySupportTicketsError] = useState('');
+  const [mySupportTicketsUnavailable, setMySupportTicketsUnavailable] = useState(false);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
   const supportThreadMessagesRef = useRef(null);
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
@@ -615,6 +715,46 @@ export default function App() {
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
+
+  useEffect(() => {
+    if (!supportOpen || !currentUser?.id) {
+      setMySupportTickets([]);
+      setMySupportTicketsError('');
+      setMySupportTicketsUnavailable(false);
+      return undefined;
+    }
+    let active = true;
+    let inFlight = false;
+    const refreshMySupportTickets = async () => {
+      if (!active || inFlight || document.visibilityState !== 'visible') return;
+      inFlight = true;
+      setMySupportTicketsLoading(true);
+      try {
+        const headers = await getSupabaseHeaders({ authenticated: true });
+        const rows = await fetchMySupportTickets({ supabaseUrl: SUPABASE_URL, headers });
+        if (active) {
+          setMySupportTicketsUnavailable(rows === null);
+          if (rows !== null) setMySupportTickets(rows);
+          setMySupportTicketsError('');
+        }
+      } catch (error) {
+        console.error('My support tickets load failed:', error);
+        if (active) setMySupportTicketsError(currentLang === 'en' ? 'Your requests could not be loaded.' : currentLang === 'ru' ? 'Не удалось загрузить ваши обращения.' : 'მიმართვების ჩატვირთვა ვერ მოხერხდა.');
+      } finally {
+        inFlight = false;
+        if (active) setMySupportTicketsLoading(false);
+      }
+    };
+    const refreshWhenVisible = () => { if (document.visibilityState === 'visible') void refreshMySupportTickets(); };
+    void refreshMySupportTickets();
+    const interval = window.setInterval(() => void refreshMySupportTickets(), 30000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [supportOpen, currentUser?.id, currentLang]);
 
   useEffect(() => {
     if (!supportOpen || !supportThreadLoaded) return undefined;
@@ -632,7 +772,9 @@ export default function App() {
 
     const ticketId = String(supportLookupTicketId || '').trim();
     const accessToken = String(supportLookupAccessToken || '').trim();
-    if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+    const hasValidAccessToken = /^[a-f0-9]{64}$/i.test(accessToken);
+    const hasAuthenticatedAccount = Boolean(currentUser?.id && currentUser?.email);
+    if (!SUPPORT_TICKET_ID_PATTERN.test(ticketId) || (!hasValidAccessToken && !hasAuthenticatedAccount)) {
       return undefined;
     }
 
@@ -649,22 +791,45 @@ export default function App() {
       }
       requestInFlight = true;
       try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
-          method: 'POST',
-          headers: await getSupabaseHeaders({ authenticated: true }),
-          body: JSON.stringify({ p_ticket_id: ticketId, p_access_token: accessToken })
+        const headers = await getSupabaseHeaders({ authenticated: true });
+        const rows = await fetchSupportTicketMessages({
+          supabaseUrl: SUPABASE_URL,
+          headers,
+          ticketId,
+          accessToken
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const rows = await response.json();
-        if (!Array.isArray(rows)) throw new Error('Invalid support conversation response');
+        const statusSnapshot = await fetchSupportTicketStatus({
+          supabaseUrl: SUPABASE_URL,
+          headers,
+          ticketId,
+          accessToken
+        }).catch(error => {
+          console.warn('Support ticket status refresh failed:', error);
+          return null;
+        });
+        const rowsWithImages = await attachSupportImageUrls({
+          rows,
+          supabaseUrl: SUPABASE_URL,
+          headers,
+          ticketId,
+          accessToken
+        });
+
+        await markSupportTicketMessagesRead({
+          supabaseUrl: SUPABASE_URL,
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          ticketId,
+          accessToken
+        });
         if (active) {
-          const uniqueRows = [...new Map(rows.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
+          const uniqueRows = [...new Map(rowsWithImages.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
           uniqueRows.sort((a, b) => {
             const aTime = Date.parse(a.created_at || '') || 0;
             const bTime = Date.parse(b.created_at || '') || 0;
             return aTime - bTime || String(a.id).localeCompare(String(b.id));
           });
           setSupportThreadMessages(uniqueRows);
+          setSupportTicketStatus(statusSnapshot);
         }
       } catch (error) {
         // Keep the last successfully loaded conversation visible during a
@@ -712,7 +877,7 @@ export default function App() {
       document.removeEventListener('visibilitychange', refreshWhenVisible);
       void supabase.removeChannel(channel);
     };
-  }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken]);
+  }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken, currentUser?.id, currentUser?.email]);
 
   useEffect(() => {
     if (!adminLoggedIn) return undefined;
@@ -720,18 +885,22 @@ export default function App() {
     const loadStorefrontDraft = async () => {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config`,
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config,published_config,is_published`,
           { headers: await getSupabaseHeaders({ authenticated: true }) }
         );
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
-        const draft = rows?.[0]?.draft_config;
-        if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
-        if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
-        if (Array.isArray(draft.banners)) setBannersList(draft.banners);
-        if (draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings)) {
-          setSiteSettings(draft.siteSettings);
-        }
+        if (!active) return;
+        const snapshot = resolveAdminStorefrontSnapshot(rows?.[0], {
+          // Keep unpublished category edits in a separate local cache. The
+          // public geostore_cats key remains the last published/legacy fallback.
+          categories: loadSafeStorage('geostore_cats_draft', categories),
+          banners: loadSafeStorage('geostore_banners_draft', bannersList),
+          siteSettings: loadSafeStorage('geostore_site_settings_draft', siteSettings)
+        });
+        setDraftCategories(snapshot.categories);
+        setDraftBanners(snapshot.banners);
+        setDraftSiteSettings(snapshot.siteSettings);
       } catch (error) {
         console.error('Storefront draft load error:', error);
       }
@@ -754,10 +923,19 @@ export default function App() {
         if (!response.ok) return;
         const rows = await response.json();
         const config = rows?.[0]?.is_published ? rows[0].published_config : null;
-        if (!active || !config || typeof config !== 'object') return;
-        if (Array.isArray(config.categories)) setCategoriesList(config.categories);
-        if (Array.isArray(config.banners)) setBannersList(config.banners);
-        if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) setSiteSettings(config.siteSettings);
+        if (!active || !config || typeof config !== 'object' || Array.isArray(config)) return;
+        if (Array.isArray(config.categories)) {
+          setCategoriesList(config.categories);
+          setDraftCategories(config.categories);
+        }
+        if (Array.isArray(config.banners)) {
+          setBannersList(config.banners);
+          setDraftBanners(config.banners);
+        }
+        if (config.siteSettings && typeof config.siteSettings === 'object' && !Array.isArray(config.siteSettings)) {
+          setSiteSettings(config.siteSettings);
+          setDraftSiteSettings(config.siteSettings);
+        }
       } catch (error) {
         console.error('Published storefront config load error:', error);
       }
@@ -1003,48 +1181,60 @@ export default function App() {
     return notifications.filter((n) => !n.read).length;
   }, [notifications]);
 
-  const handleSaveStorefrontDraft = async (settingsOverride = siteSettings) => {
-    if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
+  const handleSaveStorefrontDraft = async (settingsOverride = draftSiteSettings) => {
+    if (!adminAccessRef.current || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
+    const requestEpoch = productsAccessEpoch.current;
+    const isCurrentSession = () => adminAccessRef.current && requestEpoch === productsAccessEpoch.current;
     storefrontSaveLock.current = true;
     setStorefrontDraftBusy(true);
     const uploadedAssets = [];
+    let draftSaveRequestStarted = false;
+    let draftSaved = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა. ხელახლა შედით.');
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) {
         throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
       }
 
-      const validatedCategories = validateStorefrontCategorySnapshot(categories, products);
-      const draftCategories = [];
+      const validatedCategories = validateStorefrontCategorySnapshot(draftCategories, products);
+      const uploadedDraftCategories = [];
       for (let index = 0; index < validatedCategories.length; index += 1) {
         const category = validatedCategories[index];
         const image = category.image || category.img || '';
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
         const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
-        draftCategories.push({ ...category, image: uploaded, img: uploaded });
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
+        uploadedDraftCategories.push({ ...category, image: uploaded, img: uploaded });
       }
 
-      const draftBanners = [];
-      const validatedBanners = validateStorefrontBannerSnapshot(bannersList);
+      const uploadedDraftBanners = [];
+      const validatedBanners = validateStorefrontBannerSnapshot(draftBanners);
       for (let index = 0; index < validatedBanners.length; index += 1) {
         const banner = validatedBanners[index];
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
         const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
-        draftBanners.push({ ...banner, image });
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
+        uploadedDraftBanners.push({ ...banner, image });
       }
 
       const snapshot = {
-        categories: draftCategories,
-        banners: draftBanners,
+        categories: uploadedDraftCategories,
+        banners: uploadedDraftBanners,
         siteSettings: validateStorefrontSiteSettings(settingsOverride)
       };
       const savedAt = new Date().toISOString();
+      const draftHeaders = {
+        ...(await getSupabaseHeaders({ authenticated: true })),
+        Prefer: 'resolution=merge-duplicates,return=representation'
+      };
+      if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
+      draftSaveRequestStarted = true;
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
         {
           method: 'POST',
-          headers: {
-            ...(await getSupabaseHeaders({ authenticated: true })),
-            Prefer: 'resolution=merge-duplicates,return=representation'
-          },
+          headers: draftHeaders,
           body: JSON.stringify({
             config_key: 'storefront',
             draft_config: snapshot,
@@ -1053,22 +1243,70 @@ export default function App() {
           })
         }
       );
-      if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        // Once sent, even a non-2xx response may be ambiguous at the proxy
+        // boundary. Retain uploaded files rather than risk deleting a committed draft.
+        throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + detail);
+      }
 
-      setCategoriesList(draftCategories);
-      setBannersList(draftBanners);
+      // The database may already have committed even if response parsing fails.
+      // Keep the newly uploaded assets once the server confirms the write.
+      draftSaved = true;
+      const savedRows = await response.json();
+      if (!isCurrentSession()) return false;
+      if (
+        !Array.isArray(savedRows) ||
+        savedRows.length !== 1 ||
+        savedRows[0]?.config_key !== 'storefront' ||
+        !savedRows[0]?.draft_config ||
+        typeof savedRows[0].draft_config !== 'object' ||
+        Array.isArray(savedRows[0].draft_config) ||
+        savedRows[0]?.updated_by !== session.user.id
+      ) {
+        throw new Error('მონახაზის შენახვა სერვერმა მიიღო, მაგრამ საბოლოო ჩანაწერი ვერ დადასტურდა. განაახლეთ მონახაზის სია.');
+      }
+
+      setDraftCategories(uploadedDraftCategories);
+      setDraftBanners(uploadedDraftBanners);
+      setDraftSiteSettings(snapshot.siteSettings);
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({ p_action: 'შეინახა საიტის კონფიგურაციის მონახაზი Supabase-ში' })
+        }).then(response => {
+          if (!response.ok) throw new Error('Audit log write failed: ' + response.status);
+        });
+      } catch (logError) {
+        console.error('GEOSTORE storefront draft audit log failed:', logError);
+      }
       alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
+      return true;
     } catch (error) {
-      if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
-      alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+      if (uploadedAssets.length && !draftSaved) {
+        if (draftSaveRequestStarted) {
+          // The request outcome is ambiguous. Retain files rather than risk
+          // deleting images referenced by a draft that may have committed.
+          console.warn('Storefront draft save outcome is unknown; uploaded assets were retained for safety.');
+        } else {
+          await cleanupStorefrontUploads(uploadedAssets);
+        }
+      }
+      if (isCurrentSession()) alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+      return false;
     } finally {
-      storefrontSaveLock.current = false;
-      setStorefrontDraftBusy(false);
+      if (isCurrentSession()) {
+        storefrontSaveLock.current = false;
+        setStorefrontDraftBusy(false);
+      }
     }
   };
 
   const handlePublishStorefront = async () => {
-    if (!adminLoggedIn || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
+    if (!adminAccessRef.current || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
+    const requestEpoch = productsAccessEpoch.current;
+    const isCurrentSession = () => adminAccessRef.current && requestEpoch === productsAccessEpoch.current;
     storefrontPublishLock.current = true;
     setStorefrontPublishBusy(true);
     const uploadedAssets = [];
@@ -1076,37 +1314,44 @@ export default function App() {
     let publishRequestStarted = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა. ხელახლა შედით.');
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
 
-      const validatedCategories = validateStorefrontCategorySnapshot(categories, products);
+      const validatedCategories = validateStorefrontCategorySnapshot(draftCategories, products);
       const publishedCategories = [];
       for (let index = 0; index < validatedCategories.length; index += 1) {
         const category = validatedCategories[index];
         const image = category.image || category.img || '';
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
         const uploaded = await uploadStorefrontImage(image, 'categories', index, session.user.id, uploadedAssets);
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
         publishedCategories.push({ ...category, image: uploaded, img: uploaded });
       }
 
       const publishedBanners = [];
-      const validatedBanners = validateStorefrontBannerSnapshot(bannersList);
+      const validatedBanners = validateStorefrontBannerSnapshot(draftBanners);
       for (let index = 0; index < validatedBanners.length; index += 1) {
         const banner = validatedBanners[index];
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
         const image = await uploadStorefrontImage(banner.image || '', 'banners', index, session.user.id, uploadedAssets);
+        if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
         publishedBanners.push({ ...banner, image });
       }
 
       const snapshot = {
         categories: publishedCategories,
         banners: publishedBanners,
-        siteSettings: validateStorefrontSiteSettings(siteSettings)
+        siteSettings: validateStorefrontSiteSettings(draftSiteSettings)
       };
       const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
+      const publishHeaders = await getSupabaseHeaders({ authenticated: true });
+      if (!isCurrentSession()) throw new Error('ადმინისტრატორის სესია დასრულდა.');
       publishRequestStarted = true;
       const publishResponse = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/publish_storefront_config`,
         {
           method: 'POST',
-          headers: await getSupabaseHeaders({ authenticated: true }),
+          headers: publishHeaders,
           body: JSON.stringify({
             p_snapshot: snapshot,
             p_version_label: versionLabel
@@ -1114,8 +1359,8 @@ export default function App() {
         }
       );
       if (!publishResponse.ok) {
-        // A definitive HTTP error means Postgres rejected and rolled back the transaction.
-        publishRequestStarted = false;
+        // The RPC was sent; a non-2xx response does not prove that a proxy did
+        // not fail after commit. Keep uploaded assets until the outcome is verified.
         throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + (await publishResponse.text()));
       }
       // The database transaction has committed both the published config
@@ -1123,12 +1368,28 @@ export default function App() {
       // if response parsing or a later UI update fails.
       storefrontPublished = true;
       const publishResult = await publishResponse.json();
+      if (!isCurrentSession()) return;
       if (!publishResult?.version_id) {
         throw new Error('საიტი გამოქვეყნდა, თუმცა ვერსიის დადასტურების პასუხი ვერ მივიღეთ. განაახლეთ ისტორიის სია.');
       }
 
       setCategoriesList(publishedCategories);
       setBannersList(publishedBanners);
+      setSiteSettings(snapshot.siteSettings);
+      setDraftCategories(publishedCategories);
+      setDraftBanners(publishedBanners);
+      setDraftSiteSettings(snapshot.siteSettings);
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
+          method: 'POST',
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({ p_action: `გამოქვეყნდა საიტის კონფიგურაცია (ვერსია: ${publishResult.version_id})` })
+        }).then(response => {
+          if (!response.ok) throw new Error('Audit log write failed: ' + response.status);
+        });
+      } catch (logError) {
+        console.error('GEOSTORE storefront publish audit log failed:', logError);
+      }
       alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
     } catch (error) {
       if (!storefrontPublished && uploadedAssets.length) {
@@ -1140,16 +1401,19 @@ export default function App() {
           await cleanupStorefrontUploads(uploadedAssets);
         }
       }
-      alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
+      if (isCurrentSession()) alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
     } finally {
-      storefrontPublishLock.current = false;
-      setStorefrontPublishBusy(false);
+      if (isCurrentSession()) {
+        storefrontPublishLock.current = false;
+        setStorefrontPublishBusy(false);
+      }
     }
   };
 
   useEffect(() => {
     let active = true;
     let requestInFlight = false;
+    let refreshRequested = false;
     const requestOwnerId = currentUser?.id || null;
     const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
       String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
@@ -1160,7 +1424,11 @@ export default function App() {
         setMyOrdersLoading(false);
         return;
       }
-      if (requestInFlight) return;
+      if (requestInFlight) {
+        // Preserve a Realtime refresh arriving during the current snapshot read.
+        refreshRequested = true;
+        return;
+      }
       requestInFlight = true;
       setMyOrdersLoading(true);
       try {
@@ -1209,6 +1477,14 @@ export default function App() {
       } finally {
         requestInFlight = false;
         if (isCurrentOwner()) setMyOrdersLoading(false);
+        if (active && refreshRequested && isCurrentOwner()) {
+          refreshRequested = false;
+          void Promise.resolve().then(() => {
+            if (active && isCurrentOwner()) void loadOwnOrders();
+          });
+        } else if (!active) {
+          refreshRequested = false;
+        }
       }
     };
 
@@ -1242,6 +1518,7 @@ export default function App() {
   useEffect(() => {
     let active = true;
     let requestInFlight = false;
+    let refreshRequested = false;
     const requestOwnerId = currentUser?.id || null;
     const isCurrentOwner = () => Boolean(active) && Boolean(requestOwnerId) &&
       String(activeCartOwnerRef.current.userId ?? '') === String(requestOwnerId);
@@ -1251,7 +1528,11 @@ export default function App() {
         setNotificationsLoading(false);
         return;
       }
-      if (requestInFlight) return;
+      if (requestInFlight) {
+        // Do not drop a Realtime event while a notification snapshot is loading.
+        refreshRequested = true;
+        return;
+      }
       requestInFlight = true;
       setNotificationsLoading(true);
       try {
@@ -1294,6 +1575,14 @@ export default function App() {
       } finally {
         requestInFlight = false;
         if (isCurrentOwner()) setNotificationsLoading(false);
+        if (active && refreshRequested && isCurrentOwner()) {
+          refreshRequested = false;
+          void Promise.resolve().then(() => {
+            if (active && isCurrentOwner()) void loadNotifications();
+          });
+        } else if (!active) {
+          refreshRequested = false;
+        }
       }
     };
 
@@ -1349,19 +1638,39 @@ export default function App() {
     const requestSessionVersion = adminOrdersSessionVersion.current;
     adminOrdersFetchLock.current = true;
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
-        { headers: await getSupabaseHeaders({ authenticated: true }) }
-      );
-      if (!res.ok) {
-        const errorBody = await res.text().catch(() => '');
-        throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
+      // PostgREST applies a default row cap to a single response. Fetch every
+      // page with a stable order so older orders do not silently disappear
+      // once the store grows beyond that cap.
+      const orderRows = [];
+      const pageSize = 1000;
+      const maxRows = 100000;
+      for (let offset = 0; offset < maxRows; offset += pageSize) {
+        const headers = await getSupabaseHeaders({ authenticated: true });
+        headers.Range = `${offset}-${offset + pageSize - 1}`;
+        headers['Range-Unit'] = 'items';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
+          { headers }
+        );
+        if (!res.ok) {
+          const errorBody = await res.text().catch(() => '');
+          throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
+        }
+
+        const page = await res.json();
+        if (!Array.isArray(page)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
+        // Stop fetching immediately if the administrator logs out mid-pagination.
+        if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
+        orderRows.push(...page);
+        if (page.length < pageSize) break;
+        if (offset + pageSize >= maxRows) {
+          throw new Error('შეკვეთების სრული სიის ჩატვირთვა ვერ დასრულდა: 100,000 ჩანაწერის უსაფრთხო ზღვარი მიღწეულია.');
+        }
       }
 
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
-      // Do not restore private admin data after logout while a request is pending.
-      if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
+      // Keep the previous successful snapshot if any page failed; publish only
+      // after the complete ordered result has been collected.
+      const data = orderRows;
       setOrders(data.map((o) => {
         const items = normalizeOrderItems(o.items);
         const checkoutResult = o.checkout_result && typeof o.checkout_result === 'object' && !Array.isArray(o.checkout_result)
@@ -1387,12 +1696,15 @@ export default function App() {
             }
           : null;
         return {
+          // Preserve every database order field for the admin detail view.
+          // The normalized fields below still take precedence for stable UI values.
+          ...o,
           id: o.id,
           created_at: o.created_at || null,
           date: o.created_at ? new Date(o.created_at).toLocaleDateString('ka-GE') : 'დღეს',
           time: o.created_at ? new Date(o.created_at).toLocaleTimeString('ka-GE') : '',
           customerName: o.customer_name || '',
-          user_email: o.customer_email || o.user_email || '',
+          user_email: o.customer_email || (o.user_email && o.user_email !== 'guest' ? o.user_email : ''),
           phone: o.phone || '',
           address: o.address || '',
           totalGEL: normalizeOrderTotal(o.total_gel),
@@ -1404,11 +1716,15 @@ export default function App() {
           stock_restored_at: o.stock_restored_at || null,
           status_changed_at: o.status_changed_at || null,
           itemSummary: items.length > 0
-            ? items.map((i) => `${i.name || 'პროდუქტი'} (x${i.quantity || 1})`).join(', ')
+            ? items.map((i) => formatOrderItemLabel(i, 'ka')).join(', ')
             : 'პროდუქტები'
         };
       }));
+       setOrdersError('');
     } catch (error) {
+      if (adminOrdersSessionActive.current && requestSessionVersion === adminOrdersSessionVersion.current) {
+        setOrdersError(error?.message || 'შეკვეთების ჩატვირთვა ვერ მოხერხდა.');
+      }
       console.error('Orders fetch error:', error);
     } finally {
       adminOrdersFetchLock.current = false;
@@ -1498,10 +1814,12 @@ export default function App() {
           category: p.category || 'ტანსაცმელი',
           priceGEL: Number(p.price_gel),
           oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
-          stock: Array.isArray(p.variants) && p.variants.some(variant => variant?.variantType === 'size_color')
-            ? p.variants.filter(variant => variant?.variantType === 'size_color').reduce((total, variant) => {
+          // Keep the storefront aggregate aligned with the database trigger,
+          // which stores the sum of every configured variant in products.stock.
+          stock: Array.isArray(p.variants) && p.variants.length > 0
+            ? p.variants.reduce((total, variant) => {
                 const quantity = Number(variant?.stock);
-                return total + (Number.isSafeInteger(quantity) && quantity > 0 ? quantity : 0);
+                return total + (Number.isSafeInteger(quantity) && quantity >= 0 ? quantity : 0);
               }, 0)
             : (p.stock === null || p.stock === undefined ? 0 : Number(p.stock)),
           vendor: p.vendor || 'GEOSTORE',
@@ -1543,8 +1861,15 @@ export default function App() {
 
         // The products state persistence effect below owns the local cache write.
         setProducts(formatted);
+        setProductsVerifiedAccessEpoch(requestAccessEpoch);
+        setProductsError('');
+      } else {
+        throw new Error('პროდუქტების სია არასწორ ფორმატში დაბრუნდა.');
       }
     } catch (error) {
+      if (requestAccessEpoch === productsAccessEpoch.current) {
+        setProductsError(error?.message || 'პროდუქტების ჩატვირთვა ვერ მოხერხდა.');
+      }
       console.error('Products fetch error:', error);
     } finally {
       productsFetchLock.current = false;
@@ -1698,13 +2023,16 @@ export default function App() {
   }, [usersList]);
 
   useEffect(() => {
+    // Persist only the public catalogue projection. Admin-only drafts and
+    // purchase costs must never remain in the browser's shared local cache.
+    if (productsVerifiedAccessEpoch !== productsAccessEpoch.current) return;
     try {
       localStorage.setItem(
         'geostore_products',
-        JSON.stringify(products)
+        JSON.stringify(sanitizePublicProductCache(products))
       );
     } catch {}
-  }, [products]);
+  }, [products, productsVerifiedAccessEpoch, adminLoggedIn]);
 
   useEffect(() => {
     try {
@@ -2373,12 +2701,25 @@ export default function App() {
     const customerPhone = checkoutForm.phone?.trim() || '';
     const customerEmail = checkoutForm.email?.trim().toLowerCase() || '';
     const customerAddress = checkoutForm.address?.trim() || '';
+    const regionText =
+      selectedRegion === 'tbilisi'
+        ? t.tbilisiDelivery
+        : selectedRegion === 'bigCities'
+          ? t.bigCitiesDelivery
+          : t.otherDelivery;
+    // Validate the exact address string sent to the database, including the
+    // delivery-region/fee suffix, against the server's 300-character limit.
+    const deliveryAddress = buildOrderDeliveryAddress({
+      address: customerAddress,
+      regionText,
+      deliveryFee: currentDeliveryCost
+    });
 
     const contactValidation = validateCheckoutContact({
       name: customerName,
       phone: customerPhone,
       email: currentUser?.email || customerEmail,
-      address: customerAddress,
+      address: deliveryAddress,
       requireEmail: !currentUser?.email
     });
 
@@ -2472,13 +2813,6 @@ export default function App() {
       orderSubmitLock.current = false;
       return;
     }
-
-    const regionText =
-      selectedRegion === 'tbilisi'
-        ? t.tbilisiDelivery
-        : selectedRegion === 'bigCities'
-          ? t.bigCitiesDelivery
-          : t.otherDelivery;
 
     let orderUserEmail = 'guest';
     let serverOrderResult = null;
@@ -2723,7 +3057,7 @@ export default function App() {
               id: orderId,
               customer_name: customerName,
               phone: customerPhone,
-              address: buildOrderDeliveryAddress({ address: customerAddress, regionText, deliveryFee: currentDeliveryCost }),
+              address: deliveryAddress,
               // სტუმრის იდენტობა ბაზის ფუნქციას ცალკე sentinel-ით გადაეცემა;
               // საკონტაქტო ელფოსტა ინახება customer_email ველში.
               user_email: orderSession?.user?.email || 'guest',
@@ -2822,8 +3156,28 @@ export default function App() {
   // Category and subcategory filtering belongs to StoreView, which has the
   // parent/child category tree. Filtering by the parent name here first would
   // discard products assigned to its subcategories before StoreView can include them.
+  // The local product cache may contain admin-only drafts from an earlier
+  // session. Public-facing surfaces must only receive rows with an explicit
+  // published flag; database-loaded public rows are normalized to true.
+  const publishedProducts = useMemo(() => {
+    if (productsVerifiedAccessEpoch !== productsAccessEpoch.current) return [];
+    return sanitizePublicProductCache(products);
+  }, [products, productsVerifiedAccessEpoch, adminLoggedIn]);
+  const publishedProductById = useMemo(
+    () => new Map(publishedProducts.map(product => [String(product.id), product])),
+    [publishedProducts]
+  );
+  const visibleWishlist = useMemo(
+    () => (wishlist || []).map(item => publishedProductById.get(String(item?.id))).filter(Boolean),
+    [wishlist, publishedProductById]
+  );
+  const visibleComparisonList = useMemo(
+    () => (comparisonList || []).map(item => publishedProductById.get(String(item?.id))).filter(Boolean),
+    [comparisonList, publishedProductById]
+  );
+
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    return publishedProducts.filter((p) => {
       const matchesVendor =
         selectedVendorFilter === t.allVendors ||
         selectedVendorFilter === 'ყველა' ||
@@ -2832,7 +3186,7 @@ export default function App() {
       return matchesVendor && matchesProductSearch(p, searchQuery);
     });
   }, [
-    products,
+    publishedProducts,
     selectedVendorFilter,
     searchQuery,
     t
@@ -2854,12 +3208,12 @@ export default function App() {
           siteSettings={siteSettings}
           setActiveTab={setActiveTab}
           activeTab={activeTab}
-          wishlistCount={wishlist.length}
+          wishlistCount={visibleWishlist.length}
           cartCount={cart.reduce(
             (a, b) => a + b.quantity,
             0
           )}
-          comparisonCount={comparisonList.length}
+          comparisonCount={visibleComparisonList.length}
           currentUser={currentUser}
           setIsAuthOpen={setIsAuthOpen}
           setAuthMode={setAuthMode}
@@ -2914,12 +3268,19 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
-            wishlist={wishlist}
+            wishlist={visibleWishlist}
             toggleWishlist={toggleWishlist}
-            comparisonList={comparisonList}
+            comparisonList={visibleComparisonList}
             toggleComparison={toggleComparison}
             addToCart={addToCart}
             formatPrice={formatPrice}
+            catalogueReady={productsVerifiedAccessEpoch === productsAccessEpoch.current}
+            productsError={productsError}
+            onRetryProducts={fetchProductsFromDatabase}
+            productRouteId={productRouteId}
+            routeProduct={productRouteId ? publishedProductById.get(String(productRouteId)) || null : null}
+            onOpenProductRoute={openProductRoute}
+            onCloseProductRoute={closeProductRoute}
           />
           </Suspense>
         )}
@@ -2927,7 +3288,7 @@ export default function App() {
         {activeTab === 'wardrobe' && (
           <Suspense fallback={null}>
             <AIDigitalWardrobe
-              products={products}
+              products={publishedProducts}
               addToCart={addToCart}
               formatPrice={formatPrice}
             />
@@ -2951,25 +3312,29 @@ export default function App() {
             handleLogout={handleLogout}
             adminError={adminError}
             orders={orders || []}
+             ordersError={ordersError}
+             onRefreshOrders={fetchOrders}
             setOrders={setOrders}
             usersList={usersList || []}
             setUsersList={setUsersList}
             products={products || []}
+             productsError={productsError}
+             onRefreshProducts={fetchProductsFromDatabase}
             setProducts={setProducts}
             vendorsList={vendorsList || []}
             setVendorsList={setVendorsList}
             coupons={coupons || []}
             setCoupons={setCoupons}
-            categoriesList={categories}
-            setCategoriesList={setCategoriesList}
-            bannersList={bannersList || []}
-            setBannersList={setBannersList}
+            categoriesList={draftCategories}
+            setCategoriesList={setDraftCategories}
+            bannersList={draftBanners || []}
+            setBannersList={setDraftBanners}
             onSaveStorefrontDraft={handleSaveStorefrontDraft}
             storefrontDraftBusy={storefrontDraftBusy}
             onPublishStorefront={handlePublishStorefront}
             storefrontPublishBusy={storefrontPublishBusy}
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
+            siteSettings={draftSiteSettings}
+            setSiteSettings={setDraftSiteSettings}
             formatPrice={formatPrice}
             deliveryFees={deliveryFees}
             setDeliveryFees={setDeliveryFees}
@@ -3011,6 +3376,7 @@ export default function App() {
                       <img
                         src={prod.image}
                         alt=""
+                        onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = APP_IMAGE_FALLBACK; }}
                         className="gs-wishlist-image w-16 h-16 object-contain bg-slate-950/80 rounded-2xl p-1.5 border border-slate-800/80 shadow-inner"
                       />
 
@@ -3074,7 +3440,7 @@ export default function App() {
                             loading="lazy"
                             decoding="async"
                             className="h-full w-full object-contain p-1"
-                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                            onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = APP_IMAGE_FALLBACK; }}
                           />
                         ) : (
                           <span className="text-[9px] font-black tracking-widest text-amber-400/60">GEOSTORE</span>
@@ -3362,7 +3728,7 @@ export default function App() {
                           {Array.isArray(order.items) && order.items.length > 0 && (
                             <p className="text-slate-300 text-[11px] leading-relaxed break-words">
                               {order.items.slice(0, 3).map((item) =>
-                                `${item.name || (currentLang === 'en' ? 'Product' : currentLang === 'ru' ? 'Товар' : 'პროდუქტი')}${item.customVariantName ? ` — ${item.customVariantName}` : ''} ×${Math.max(1, Number(item.quantity) || 1)}`
+                                formatOrderItemLabel(item, currentLang)
                               ).join(' · ')}
                               {order.items.length > 3 ? ` +${order.items.length - 3}` : ''}
                             </p>
@@ -3608,42 +3974,122 @@ export default function App() {
             </form>
             )}
 
+            {currentUser?.id && (
+              <div className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold text-white">{currentLang === 'en' ? 'My support requests' : currentLang === 'ru' ? 'Мои обращения' : 'ჩემი მიმართვები'}</p>
+                  <span className="text-[10px] text-slate-400">{mySupportTickets.length}</span>
+                </div>
+                <p className="text-xs text-slate-400">{currentLang === 'en' ? 'Only requests created while signed in to this account are listed here.' : currentLang === 'ru' ? 'Здесь показаны только обращения, созданные после входа в этот аккаунт.' : 'აქ ჩანს მხოლოდ ამ ანგარიშში ავტორიზებულ მდგომარეობაში შექმნილი მიმართვები.'}</p>
+                {mySupportTicketsLoading && <p className="text-xs text-slate-400">{currentLang === 'en' ? 'Loading requests…' : currentLang === 'ru' ? 'Загрузка обращений…' : 'მიმართვები იტვირთება…'}</p>}
+                {mySupportTicketsError && <p role="alert" className="text-xs text-rose-300">{mySupportTicketsError}</p>}
+                {mySupportTicketsUnavailable && <p className="text-xs text-amber-300">{currentLang === 'en' ? 'This feature will appear after the support update is installed.' : currentLang === 'ru' ? 'Список появится после установки обновления поддержки.' : 'მიმართვების სია გამოჩნდება მხარდაჭერის განახლების ჩართვის შემდეგ.'}</p>}
+                {!mySupportTicketsUnavailable && !mySupportTicketsLoading && !mySupportTicketsError && mySupportTickets.length === 0 && (
+                  <p className="text-xs text-slate-400">{currentLang === 'en' ? 'No account-linked requests yet.' : currentLang === 'ru' ? 'Пока нет обращений, связанных с аккаунтом.' : 'ამ ანგარიშზე მიბმული მიმართვები ჯერ არ არის.'}</p>
+                )}
+                <div className="space-y-2 max-h-44 overflow-y-auto">
+                  {mySupportTickets.map(ticket => (
+                    <div key={ticket.ticket_id} className="rounded-xl border border-slate-700 bg-slate-900/60 p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-100 break-all">{ticket.subject || (currentLang === 'en' ? 'Support request' : currentLang === 'ru' ? 'Обращение в поддержку' : 'მხარდაჭერის მიმართვა')}</p>
+                          <p className="text-[10px] text-slate-400">{ticket.ticket_id}</p>
+                        </div>
+                        <div className="shrink-0 flex flex-wrap items-center justify-end gap-1.5">
+                          <span className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] text-cyan-200">{ticket.status === 'ღია' ? (currentLang === 'en' ? 'Open' : currentLang === 'ru' ? 'Открыто' : 'ღია') : ticket.status === 'მუშავდება' ? (currentLang === 'en' ? 'In progress' : currentLang === 'ru' ? 'В работе' : 'მუშავდება') : ticket.status === 'მოგვარებული' ? (currentLang === 'en' ? 'Resolved' : currentLang === 'ru' ? 'Решено' : 'მოგვარებული') : ticket.status}</span>
+                          {Number(ticket.unread_count) > 0 && <span className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[10px] font-bold text-rose-200" aria-label={currentLang === 'en' ? `${ticket.unread_count} unread replies` : currentLang === 'ru' ? `Непрочитанных ответов: ${ticket.unread_count}` : `წაუკითხავი პასუხები: ${ticket.unread_count}`}>{currentLang === 'en' ? `New reply · ${ticket.unread_count}` : currentLang === 'ru' ? `Новый ответ · ${ticket.unread_count}` : `ახალი პასუხი · ${ticket.unread_count}`}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-slate-500">{ticket.last_message_at ? new Date(ticket.last_message_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : ''}</span>
+                        <button type="button" disabled={supportThreadLoading} onClick={async () => {
+                          setSupportLookupTicketId(ticket.ticket_id);
+                          setSupportLookupAccessToken('');
+                          setSupportThreadLoading(true);
+                          setSupportThreadError('');
+                          setSupportThreadLoaded(false);
+                          setSupportTicketStatus(null);
+                          try {
+                            const headers = await getSupabaseHeaders({ authenticated: true });
+                            const rows = await fetchSupportTicketMessages({ supabaseUrl: SUPABASE_URL, headers, ticketId: ticket.ticket_id, accessToken: '' });
+                            const statusSnapshot = await fetchSupportTicketStatus({ supabaseUrl: SUPABASE_URL, headers, ticketId: ticket.ticket_id, accessToken: '' }).catch(() => null);
+                            const rowsWithImages = await attachSupportImageUrls({ rows, supabaseUrl: SUPABASE_URL, headers, ticketId: ticket.ticket_id, accessToken: '' });
+                            setSupportThreadMessages(rowsWithImages);
+                            setSupportTicketStatus(statusSnapshot);
+                            setSupportThreadLoaded(true);
+                          } catch (error) {
+                            console.error('Account-linked support ticket open failed:', error);
+                            setSupportThreadError(currentLang === 'en' ? 'This request could not be opened.' : currentLang === 'ru' ? 'Не удалось открыть это обращение.' : 'მიმართვის გახსნა ვერ მოხერხდა.');
+                          } finally {
+                            setSupportThreadLoading(false);
+                          }
+                        }} className="text-xs font-bold text-cyan-300 disabled:opacity-50">{currentLang === 'en' ? 'Open conversation' : currentLang === 'ru' ? 'Открыть переписку' : 'მიმოწერის გახსნა'}</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3">
               <p className="text-sm font-bold text-white">
                 {currentLang === 'en' ? 'Continue an existing conversation' : currentLang === 'ru' ? 'Продолжить переписку' : 'არსებული მიმოწერის გაგრძელება'}
               </p>
               <p className="text-xs text-slate-400">
-                {currentLang === 'en' ? 'Enter your ticket number and private access code.' : currentLang === 'ru' ? 'Введите номер обращения и личный код доступа.' : 'შეიყვანე მიმართვის ნომერი და პირადი წვდომის კოდი.'}
+                {currentUser?.id && currentUser?.email
+                  ? (currentLang === 'en' ? 'Enter your ticket number. Your signed-in account email can verify ownership; guests must use their private access code.' : currentLang === 'ru' ? 'Введите номер обращения. Владелец может подтвердить доступ через email аккаунта; гостям нужен личный код.' : 'შეიყვანე მიმართვის ნომერი. ავტორიზებული მომხმარებლის წვდომა ანგარიშის ელფოსტით მოწმდება; სტუმარს პირადი კოდი სჭირდება.')
+                  : (currentLang === 'en' ? 'Enter your ticket number and private access code.' : currentLang === 'ru' ? 'Введите номер обращения и личный код доступа.' : 'შეიყვანე მიმართვის ნომერი და პირადი წვდომის კოდი.')}
               </p>
               <form
                 onSubmit={async (event) => {
                   event.preventDefault();
                   if (supportThreadLoading) return;
                   const ticketId = supportLookupTicketId.trim();
-                  const accessToken = supportLookupAccessToken.trim();
-                  if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
-                    setSupportThreadError(currentLang === 'en' ? 'Check the ticket number and access code.' : currentLang === 'ru' ? 'Проверьте номер обращения и код доступа.' : 'შეამოწმე მიმართვის ნომერი და წვდომის კოდი.');
+                  const enteredAccessToken = supportLookupAccessToken.trim();
+                  const hasValidAccessToken = /^[a-f0-9]{64}$/i.test(enteredAccessToken);
+                  const hasAuthenticatedAccount = Boolean(currentUser?.id && currentUser?.email);
+                  if (!SUPPORT_TICKET_ID_PATTERN.test(ticketId) || (!hasValidAccessToken && !hasAuthenticatedAccount)) {
+                    setSupportThreadError(currentLang === 'en' ? 'Check the ticket number and sign in with the account email used for this request, or enter the private access code.' : currentLang === 'ru' ? 'Проверьте номер обращения и войдите с email, указанным в заявке, либо введите личный код доступа.' : 'შეამოწმე მიმართვის ნომერი და შედი იმ ანგარიშით, რომლის ელფოსტაც მიმართვაში მიუთითე, ან შეიყვანე პირადი წვდომის კოდი.');
                     setSupportThreadLoaded(false);
                     setSupportThreadMessages([]);
                     return;
                   }
+                  const accessToken = hasValidAccessToken ? enteredAccessToken : '';
                   setSupportThreadLoading(true);
                   setSupportThreadError('');
                   setSupportThreadLoaded(false);
+                  setSupportTicketStatus(null);
                   try {
-                    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
-                      method: 'POST',
-                      headers: await getSupabaseHeaders({ authenticated: true }),
-                      body: JSON.stringify({ p_ticket_id: ticketId, p_access_token: accessToken })
+                    const headers = await getSupabaseHeaders({ authenticated: true });
+                    const rows = await fetchSupportTicketMessages({
+                      supabaseUrl: SUPABASE_URL,
+                      headers,
+                      ticketId,
+                      accessToken
                     });
-                    if (!response.ok) throw new Error('ACCESS_DENIED');
-                    const rows = await response.json();
-                    if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
-                    setSupportThreadMessages(rows);
+                    const statusSnapshot = await fetchSupportTicketStatus({
+                      supabaseUrl: SUPABASE_URL,
+                      headers,
+                      ticketId,
+                      accessToken
+                    }).catch(error => {
+                      console.warn('Support ticket status lookup failed:', error);
+                      return null;
+                    });
+                    const rowsWithImages = await attachSupportImageUrls({
+                      rows,
+                      supabaseUrl: SUPABASE_URL,
+                      headers,
+                      ticketId,
+                      accessToken
+                    });
+                    setSupportThreadMessages(rowsWithImages);
+                    setSupportTicketStatus(statusSnapshot);
                     setSupportThreadLoaded(true);
                   } catch (error) {
                     console.error('Support conversation lookup error:', error);
                     setSupportThreadMessages([]);
+                    setSupportTicketStatus(null);
                     setSupportThreadLoaded(false);
                     setSupportThreadError(currentLang === 'en'
                       ? 'Conversation not found or the access details are incorrect.'
@@ -3663,7 +4109,7 @@ export default function App() {
                   placeholder={currentLang === 'en' ? 'Ticket number (t-...)' : currentLang === 'ru' ? 'Номер обращения (t-...)' : 'მიმართვის ნომერი (t-...)'}
                   aria-label={currentLang === 'en' ? 'Ticket number' : currentLang === 'ru' ? 'Номер обращения' : 'მიმართვის ნომერი'}
                   autoComplete="off"
-                  maxLength={34}
+                  maxLength={64}
                   className="gs-support-field w-full"
                   required
                 />
@@ -3671,12 +4117,14 @@ export default function App() {
                   type="password"
                   value={supportLookupAccessToken}
                   onChange={(event) => setSupportLookupAccessToken(event.target.value)}
-                  placeholder={currentLang === 'en' ? 'Private access code' : currentLang === 'ru' ? 'Личный код доступа' : 'პირადი წვდომის კოდი'}
+                  placeholder={currentUser?.id && currentUser?.email
+                    ? (currentLang === 'en' ? 'Private access code (optional when signed in)' : currentLang === 'ru' ? 'Личный код (необязательно после входа)' : 'პირადი კოდი (ავტორიზაციისას არასავალდებულო)')
+                    : (currentLang === 'en' ? 'Private access code' : currentLang === 'ru' ? 'Личный код доступа' : 'პირადი წვდომის კოდი')}
                   aria-label={currentLang === 'en' ? 'Private access code' : currentLang === 'ru' ? 'Личный код доступа' : 'პირადი წვდომის კოდი'}
                   autoComplete="off"
                   maxLength={64}
                   className="gs-support-field w-full"
-                  required
+                  required={!(currentUser?.id && currentUser?.email)}
                 />
                 <button type="submit" disabled={supportThreadLoading} className="gs-support-submit disabled:opacity-60">
                   {supportThreadLoading
@@ -3689,6 +4137,28 @@ export default function App() {
 
               {supportThreadLoaded && (
                 <div className="space-y-3">
+                  {supportTicketStatus?.status && (
+                    <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-xs space-y-1" role="status" aria-live="polite">
+                      <p className="text-slate-300">
+                        {currentLang === 'en' ? 'Request status:' : currentLang === 'ru' ? 'Статус обращения:' : 'მიმართვის სტატუსი:'}{' '}
+                        <strong className={supportTicketStatus.status === 'მოგვარებული' ? 'text-emerald-300' : 'text-cyan-200'}>
+                          {supportTicketStatus.status === 'ღია'
+                            ? (currentLang === 'en' ? 'Open' : currentLang === 'ru' ? 'Открыто' : 'ღია')
+                            : supportTicketStatus.status === 'მუშავდება'
+                              ? (currentLang === 'en' ? 'In progress' : currentLang === 'ru' ? 'В работе' : 'მუშავდება')
+                              : supportTicketStatus.status === 'მოგვარებული'
+                                ? (currentLang === 'en' ? 'Resolved' : currentLang === 'ru' ? 'Решено' : 'მოგვარებული')
+                                : supportTicketStatus.status}
+                        </strong>
+                      </p>
+                      {supportTicketStatus.last_message_at && (
+                        <p className="text-[10px] text-slate-400">
+                          {currentLang === 'en' ? 'Last update:' : currentLang === 'ru' ? 'Последнее обновление:' : 'ბოლო განახლება:'}{' '}
+                          {new Date(supportTicketStatus.last_message_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div ref={supportThreadMessagesRef} className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
                     {supportThreadMessages.length ? supportThreadMessages.map((item) => (
                       <div key={item.id} className={`rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
@@ -3697,6 +4167,12 @@ export default function App() {
                           <time className="text-[10px] text-slate-400">{item.created_at ? new Date(item.created_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : ''}</time>
                         </div>
                         <p className="text-slate-200 whitespace-pre-wrap break-words">{item.message}</p>
+                        {item.attachment_url && (
+                          <a href={item.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-block mt-2">
+                            <img src={item.attachment_url} alt="მიმოწერის მიმაგრებული ფოტო" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = APP_IMAGE_FALLBACK; event.currentTarget.closest('a')?.removeAttribute('href'); }} className="max-h-56 max-w-full rounded-xl border border-slate-600 object-contain" />
+                          </a>
+                        )}
+                        {item.attachment_path && !item.attachment_url && <p className="mt-2 text-xs text-amber-300">ფოტოს დროებითი ბმული ვერ ჩაიტვირთა.</p>}
                       </div>
                     )) : <p className="text-xs text-slate-400">{currentLang === 'en' ? 'No messages yet.' : currentLang === 'ru' ? 'Сообщений пока нет.' : 'შეტყობინებები ჯერ არ არის.'}</p>}
                   </div>
@@ -3705,39 +4181,67 @@ export default function App() {
                       event.preventDefault();
                       if (supportReplyInFlightRef.current || supportThreadSending) return;
                       const replyForm = event.currentTarget;
-                      const message = String(new FormData(replyForm).get('supportReply') || '').trim();
-                      if (!message || message.length > 4000) return;
-                      const ticketId = String(supportLookupTicketId || '').trim();
-                      const accessToken = String(supportLookupAccessToken || '').trim();
-                      if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
-                        setSupportThreadError(currentLang === 'en'
-                          ? 'The support ticket access details are invalid. Reopen the ticket and try again.'
-                          : currentLang === 'ru'
-                            ? 'Данные доступа к обращению недействительны. Откройте обращение заново.'
-                            : 'მხარდაჭერის მოთხოვნის წვდომის მონაცემები არასწორია. ხელახლა გახსენი მოთხოვნა.');
+                      const replyData = new FormData(replyForm);
+                      const message = String(replyData.get('supportReply') || '').trim();
+                      const attachment = replyData.get('supportAttachment');
+                      const file = attachment instanceof File && attachment.size > 0 ? attachment : null;
+                      const attachmentError = validateSupportAttachment(file);
+                      if (attachmentError) {
+                        setSupportThreadError(attachmentError);
                         return;
                       }
+                      if ((!message && !file) || message.length > 4000) return;
+                      const ticketId = String(supportLookupTicketId || '').trim();
+                      const enteredAccessToken = String(supportLookupAccessToken || '').trim();
+                      const hasValidAccessToken = /^[a-f0-9]{64}$/i.test(enteredAccessToken);
+                      const hasAuthenticatedAccount = Boolean(currentUser?.id && currentUser?.email);
+                      if (!SUPPORT_TICKET_ID_PATTERN.test(ticketId) || (!hasValidAccessToken && !hasAuthenticatedAccount)) {
+                        setSupportThreadError(currentLang === 'en'
+                          ? 'The ticket number or access details are invalid. Sign in with the account email used for this request, or reopen it with the private access code.'
+                          : currentLang === 'ru'
+                            ? 'Номер или данные доступа неверны. Войдите с email, указанным в заявке, либо используйте личный код.'
+                            : 'მიმართვის ნომერი ან წვდომის მონაცემები არასწორია. შედი მიმართვაში მითითებული ელფოსტით ან გამოიყენე პირადი კოდი.');
+                        return;
+                      }
+                      const accessToken = hasValidAccessToken ? enteredAccessToken : '';
                       supportReplyInFlightRef.current = true;
                       setSupportThreadSending(true);
                       setSupportThreadError('');
                       try {
-                        if (!supportReplyRequestRef.current || supportReplyRequestRef.current.ticketId !== ticketId || supportReplyRequestRef.current.message !== message) {
+                        const fileSignature = file ? [file.name, file.size, file.lastModified, file.type].join(':') : '';
+                        if (!supportReplyRequestRef.current
+                          || supportReplyRequestRef.current.ticketId !== ticketId
+                          || supportReplyRequestRef.current.message !== message
+                          || supportReplyRequestRef.current.fileSignature !== fileSignature) {
                           if (!window.crypto?.randomUUID) {
                             throw new Error('უსაფრთხო მოთხოვნის ID ვერ შეიქმნა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
                           }
-                          supportReplyRequestRef.current = { id: window.crypto.randomUUID(), ticketId, message };
+                          supportReplyRequestRef.current = { id: window.crypto.randomUUID(), ticketId, message, fileSignature };
                         }
-                        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message_idempotent`, {
-                          method: 'POST',
-                          headers: await getSupabaseHeaders({ authenticated: true }),
-                          body: JSON.stringify({
-                            p_ticket_id: ticketId,
-                            p_message: message,
-                            p_access_token: accessToken,
-                            p_request_id: supportReplyRequestRef.current.id
-                          })
-                        });
-                        if (!response.ok) throw new Error(await response.text());
+                        const headers = await getSupabaseHeaders({ authenticated: true });
+                        if (file) {
+                          await uploadSupportAttachment({
+                            supabaseUrl: SUPABASE_URL,
+                            headers,
+                            ticketId,
+                            accessToken,
+                            message,
+                            requestId: supportReplyRequestRef.current.id,
+                            file
+                          });
+                        } else {
+                          const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message_idempotent`, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({
+                              p_ticket_id: ticketId,
+                              p_message: message,
+                              p_access_token: accessToken,
+                              p_request_id: supportReplyRequestRef.current.id
+                            })
+                          });
+                          if (!response.ok) throw new Error(await response.text());
+                        }
 
                         // The message is already committed. Clear the composer now so
                         // a refresh failure cannot make the customer resend a duplicate.
@@ -3745,18 +4249,33 @@ export default function App() {
                         supportReplyRequestRef.current = null;
 
                         try {
-                          const refreshResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
-                            method: 'POST',
-                            headers: await getSupabaseHeaders({ authenticated: true }),
-                            body: JSON.stringify({
-                              p_ticket_id: supportLookupTicketId.trim(),
-                              p_access_token: supportLookupAccessToken.trim()
-                            })
+                          const ticketId = supportLookupTicketId.trim();
+                          const accessToken = supportLookupAccessToken.trim();
+                          const headers = await getSupabaseHeaders({ authenticated: true });
+                          const rows = await fetchSupportTicketMessages({
+                            supabaseUrl: SUPABASE_URL,
+                            headers,
+                            ticketId,
+                            accessToken
                           });
-                          if (!refreshResponse.ok) throw new Error('REFRESH_FAILED');
-                          const rows = await refreshResponse.json();
-                          if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
-                          setSupportThreadMessages(rows);
+                          const statusSnapshot = await fetchSupportTicketStatus({
+                            supabaseUrl: SUPABASE_URL,
+                            headers,
+                            ticketId,
+                            accessToken
+                          }).catch(error => {
+                            console.warn('Support ticket status refresh after reply failed:', error);
+                            return null;
+                          });
+                          const rowsWithImages = await attachSupportImageUrls({
+                            rows,
+                            supabaseUrl: SUPABASE_URL,
+                            headers,
+                            ticketId,
+                            accessToken
+                          });
+                          setSupportThreadMessages(rowsWithImages);
+                          setSupportTicketStatus(statusSnapshot);
                         } catch (refreshError) {
                           console.warn('Support reply saved but conversation refresh failed:', refreshError);
                           setSupportThreadError(currentLang === 'en'
@@ -3783,10 +4302,16 @@ export default function App() {
                       name="supportReply"
                       rows={2}
                       maxLength={4000}
-                      required
                       placeholder={currentLang === 'en' ? 'Write a reply…' : currentLang === 'ru' ? 'Напишите ответ…' : 'დაწერე პასუხი…'}
                       className="gs-support-field w-full"
                     />
+                    <label className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                      <span className="rounded-lg border border-slate-600 px-3 py-2 cursor-pointer hover:border-cyan-400">
+                        {currentLang === 'en' ? 'Attach photo' : currentLang === 'ru' ? 'Прикрепить фото' : 'ფოტოს მიმაგრება'}
+                        <input name="supportAttachment" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" />
+                      </span>
+                      <span>{currentLang === 'en' ? 'JPG, PNG or WEBP · up to 5 MB' : currentLang === 'ru' ? 'JPG, PNG или WEBP · до 5 МБ' : 'JPG, PNG ან WEBP · მაქს. 5 MB'}</span>
+                    </label>
                     <button type="submit" disabled={supportThreadSending} className="gs-support-submit disabled:opacity-60">
                       {supportThreadSending
                         ? (currentLang === 'en' ? 'Sending…' : currentLang === 'ru' ? 'Отправка…' : 'იგზავნება…')
@@ -3861,7 +4386,7 @@ export default function App() {
           <ImageSearchModal
             isImageSearchOpen={isImageSearchOpen}
             setIsImageSearchOpen={setIsImageSearchOpen}
-            products={products}
+            products={publishedProducts}
             addToCart={addToCart}
             formatPrice={formatPrice}
           />
@@ -3874,7 +4399,7 @@ export default function App() {
         currentLang={currentLang}
         isAiAssistantOpen={isAiAssistantOpen}
         setIsAiAssistantOpen={setIsAiAssistantOpen}
-        products={products}
+        products={publishedProducts}
         categories={categories}
         vendorsList={vendorsList}
         lookupOrderForTracking={lookupOrderForTracking}
@@ -3892,7 +4417,7 @@ export default function App() {
           <ProductCompareModal
             isComparisonOpen={isComparisonOpen}
             setIsComparisonOpen={setIsComparisonOpen}
-            comparisonList={comparisonList}
+            comparisonList={visibleComparisonList}
             setComparisonList={setComparisonList}
             addToCart={addToCart}
             formatPrice={formatPrice}

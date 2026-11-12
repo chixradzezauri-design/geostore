@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildOrderDeliveryAddress,
   validateCheckoutContact,
   validateCheckoutItems
 } from '../src/utils/checkoutValidation.js';
@@ -41,6 +42,21 @@ test('validates name, address and optional/required email consistently', () => {
   assert.deepEqual(validateCheckoutContact({ ...validContact, email: 'bad-email' }), { valid: false, field: 'email' });
   assert.deepEqual(validateCheckoutContact({ ...validContact, email: '', requireEmail: false }), { valid: true });
   assert.deepEqual(validateCheckoutContact({ ...validContact, email: '', requireEmail: true }), { valid: false, field: 'email' });
+});
+
+
+test('validates the final delivery address after the region and fee suffix is added', () => {
+  const deliveryAddress = buildOrderDeliveryAddress({
+    address: 'A'.repeat(280),
+    regionText: 'თბილისი',
+    deliveryFee: 10
+  });
+
+  assert.ok(deliveryAddress.length > 300);
+  assert.deepEqual(
+    validateCheckoutContact({ ...validContact, address: deliveryAddress }),
+    { valid: false, field: 'address' }
+  );
 });
 
 test('rejects malformed cart collections and product quantities', () => {

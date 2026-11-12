@@ -1,0 +1,7 @@
+# GEOSTORE review/photo moderation audit — 2026-11-12
+
+Production Supabase project `xmtnszxtnfxnrojionoa` was checked read-only. The `public.product_reviews` table, public/private moderation RPCs, rate-limit RPC, private `product-review-images` bucket and `product-reviews` Edge Function are absent. Production migration ledger ends at `20261110133651`; staged migration `20261110194917_product_reviews.sql` is not applied.
+
+The audit branch already contains customer review submission/display, private image signing, validation, UUID idempotency, rate limiting, admin moderation and tests. The migration constrains review rating/text/name, restricts public reads to approved reviews for published products, denies direct public writes, and limits moderation to the fixed primary admin identity. Images are private and signed URLs are short-lived. Product deletion is restricted while review history exists.
+
+This is a deployment-readiness blocker, not a reason to invent or duplicate a second review system. The staged feature is not live until its SQL migration and Edge Function are deployed together. No Production schema, Storage, Edge Function, review, image, order or product data was modified. No tests, build or browser E2E were run in this stage. Rollout requires a verified restorable backup, isolated Supabase validation, Edge Function secret verification, coordinated frontend/backend release, and explicit Production approval. No blanket migration push.

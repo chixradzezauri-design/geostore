@@ -1,0 +1,65 @@
+name: Supabase database backup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: geostore-supabase-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Create and upload private database backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Validate required secrets
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL" || { echo "::error::Missing SUPABASE_DB_URL secret"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::Missing SUPABASE_SERVICE_ROLE_KEY secret"; exit 1; }
+
+      - name: Create full PostgreSQL custom-format dump
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          docker run --rm \
+            -e SUPABASE_DB_URL \
+            -v "$PWD/backup:/backup" \
+            postgres:17 \
+            sh -euc 'pg_dump "$SUPABASE_DB_URL" --format=custom --no-owner --no-acl --file=/backup/geostore.dump'
+          test -s backup/geostore.dump
+          docker run --rm -v "$PWD/backup:/backup" postgres:17 pg_restore --list /backup/geostore.dump > backup/restore-list.txt
+          test -s backup/restore-list.txt
+          sha256sum backup/geostore.dump > backup/SHA256SUMS
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > backup/created-at.txt
+
+      - name: Upload dump to private Supabase Storage bucket
+        shell: bash
+        env:
+          SUPABASE_URL: https://xmtnszxtnfxnrojionoa.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          OBJECT_PATH="database/geostore-$(date -u +'%Y%m%dT%H%M%SZ').dump"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --url "$SUPABASE_URL/storage/v1/object/geostore-backups-private/$OBJECT_PATH" \
+            --header "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "Content-Type: application/octet-stream" \
+            --header "x-upsert: false" \
+            --data-binary "@backup/geostore.dump"
+          echo "Backup uploaded to private bucket: $OBJECT_PATH"
+          echo "SHA256:"
+          cat backup/SHA256SUMS

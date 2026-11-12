@@ -1,0 +1,10 @@
+[functions.support-attachments]
+verify_jwt = false
+
+[functions.product-reviews]
+# Guest reviews are allowed. The function verifies any supplied user JWT itself.
+verify_jwt = false
+
+[functions.admin-announcements]
+# The function validates the bearer with Auth getUser() and enforces the fixed primary-admin identity itself.
+verify_jwt = false

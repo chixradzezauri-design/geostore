@@ -33,6 +33,7 @@ const collectSearchableValues = (product) => {
     product.storage,
     product.gpu,
     product.screen_size,
+    product.screenSize,
     product.os,
     product.tags,
     product.availableSizes,

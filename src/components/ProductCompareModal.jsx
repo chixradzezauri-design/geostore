@@ -1,6 +1,6 @@
 // src/components/ProductCompareModal.jsx - Side-by-Side Product Comparison
 import React from 'react';
-import { getProductAvailableStock, getProductStartingPrice } from '../utils/productVariants.js';
+import { getProductAvailableStock, getProductStartingPrice, getAvailableCustomProductVariants, getSizeColorInventoryVariants, getAvailableProductSizes, getAvailableProductColors, hasCustomProductVariants, hasSizeColorInventory } from '../utils/productVariants.js';
 import { X, ShoppingBag, Trash2, Scale, Check, ShieldCheck } from 'lucide-react';
 
 export default function ProductCompareModal({
@@ -11,6 +11,10 @@ export default function ProductCompareModal({
   addToCart,
   formatPrice
 }) {
+  const [selectedVariantIds, setSelectedVariantIds] = React.useState({});
+  const [selectedSizes, setSelectedSizes] = React.useState({});
+  const [selectedColors, setSelectedColors] = React.useState({});
+
   if (!isComparisonOpen) return null;
 
   const handleRemoveFromCompare = (id) => {
@@ -46,7 +50,27 @@ export default function ProductCompareModal({
         ) : (
           <div className="gs-product-compare-scroll overflow-x-auto pb-4">
             <div className="gs-product-compare-grid grid grid-flow-col auto-cols-[minmax(260px,1fr)] gap-6">
-              {comparisonList.map(prod => (
+              {comparisonList.map(prod => {
+                const hasCustomVariants = hasCustomProductVariants(prod);
+                const hasSizeColorVariants = hasSizeColorInventory(prod);
+                const availableSizes = getAvailableProductSizes(prod);
+                const availableColors = getAvailableProductColors(prod);
+                const needsLegacySize = !hasCustomVariants && !hasSizeColorVariants && availableSizes.length > 0;
+                const needsLegacyColor = !hasCustomVariants && !hasSizeColorVariants && availableColors.length > 0;
+                const needsVariant = hasCustomVariants || hasSizeColorVariants || needsLegacySize || needsLegacyColor;
+                const variantOptions = hasCustomProductVariants(prod)
+                  ? getAvailableCustomProductVariants(prod)
+                  : hasSizeColorInventory(prod)
+                    ? getSizeColorInventoryVariants(prod).filter(variant => variant.stock > 0)
+                    : [];
+                const selectedVariant = variantOptions.find(variant => variant.id === selectedVariantIds[String(prod.id)]) || null;
+                const selectedSize = selectedSizes[String(prod.id)] || '';
+                const selectedColor = selectedColors[String(prod.id)] || '';
+                const canAddSelectedVariant = hasCustomVariants || hasSizeColorVariants
+                  ? Boolean(selectedVariant)
+                  : (!needsLegacySize || Boolean(selectedSize)) && (!needsLegacyColor || Boolean(selectedColor));
+                const availableStock = getProductAvailableStock(prod);
+                return (
                 <div key={prod.id} className="gs-product-compare-card bg-[#121216] border border-amber-500/20 rounded-[2rem] p-6 space-y-5 shadow-2xl relative flex flex-col justify-between">
                   
                   <button 
@@ -78,7 +102,7 @@ export default function ProductCompareModal({
                       </div>
                       <div className="flex justify-between border-b border-amber-500/10 pb-2">
                         <span className="text-slate-400">მარაგში:</span>
-                        <span className="text-emerald-400 font-bold">{getProductAvailableStock(prod)} ცალი</span>
+                        <span className={`${availableStock > 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold`}>{availableStock > 0 ? `${availableStock} ცალი` : 'არ არის მარაგში'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">SKU:</span>
@@ -90,17 +114,74 @@ export default function ProductCompareModal({
                       <b className="text-amber-300 block mb-1">აღწერა:</b>
                       <p className="line-clamp-3 leading-relaxed text-slate-400">{prod.description || 'აღწერა არ არის.'}</p>
                     </div>
+                    {needsVariant && (
+                      <div className="space-y-3">
+                      {(hasCustomVariants || hasSizeColorVariants) && (
+                      <label className="block space-y-2 text-xs text-slate-300">
+                        <span className="font-bold text-amber-300">აირჩიეთ პროდუქტის ვარიანტი</span>
+                        <select
+                          value={selectedVariant?.id || ''}
+                          onChange={event => setSelectedVariantIds(current => ({ ...current, [String(prod.id)]: event.target.value }))}
+                          className="w-full rounded-xl border border-amber-500/30 bg-[#08080a] px-3 py-3 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
+                          aria-label={`${prod.name}: აირჩიეთ ვარიანტი`}
+                        >
+                          <option value="">აირჩიეთ ხელმისაწვდომი ვარიანტი</option>
+                          {variantOptions.map(variant => (
+                            <option key={variant.id} value={variant.id}>
+                              {hasSizeColorInventory(prod) && !hasCustomProductVariants(prod)
+                                ? [variant.size, variant.color].filter(Boolean).join(' / ')
+                                : variant.name}
+                              {' — '}{formatPrice(variant.priceGEL)} · {variant.stock} ცალი
+                            </option>
+                          ))}
+                        </select>
+                        {variantOptions.length === 0 && (
+                          <span className="block text-rose-400">ამჟამად ხელმისაწვდომი ვარიანტი არ არის.</span>
+                        )}
+                      </label>
+                      )}
+                      {needsLegacySize && (
+                        <label className="block space-y-2 text-xs text-slate-300">
+                          <span className="font-bold text-amber-300">ზომა</span>
+                          <select value={selectedSize} onChange={event => setSelectedSizes(current => ({ ...current, [String(prod.id)]: event.target.value }))} className="w-full rounded-xl border border-amber-500/30 bg-[#08080a] px-3 py-3 text-white" aria-label={`${prod.name}: ზომა`}>
+                            <option value="">აირჩიეთ ზომა</option>
+                            {availableSizes.map(size => <option key={size} value={size}>{size}</option>)}
+                          </select>
+                        </label>
+                      )}
+                      {needsLegacyColor && (
+                        <label className="block space-y-2 text-xs text-slate-300">
+                          <span className="font-bold text-amber-300">ფერი</span>
+                          <select value={selectedColor} onChange={event => setSelectedColors(current => ({ ...current, [String(prod.id)]: event.target.value }))} className="w-full rounded-xl border border-amber-500/30 bg-[#08080a] px-3 py-3 text-white" aria-label={`${prod.name}: ფერი`}>
+                            <option value="">აირჩიეთ ფერი</option>
+                            {availableColors.map(color => <option key={color} value={color}>{color}</option>)}
+                          </select>
+                        </label>
+                      )}
+                      </div>
+                    )}
                   </div>
 
-                  <button 
-                    onClick={() => addToCart(prod)}
-                    className="gs-product-compare-action w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer mt-4"
+                  <button
+                    type="button"
+                    disabled={(needsVariant && !canAddSelectedVariant) || availableStock <= 0}
+                    onClick={() => addToCart(selectedVariant ? {
+                      ...prod,
+                      selectedSize: selectedVariant.size || null,
+                      selectedColor: selectedVariant.color || null,
+                      customVariantId: selectedVariant.id,
+                      customVariantName: selectedVariant.name || '',
+                      priceGEL: selectedVariant.priceGEL,
+                      stock: selectedVariant.stock
+                    } : { ...prod, selectedSize: selectedSize || null, selectedColor: selectedColor || null })}
+                    className="gs-product-compare-action w-full bg-amber-400 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50 text-slate-950 font-black py-3.5 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer mt-4"
                   >
-                    <ShoppingBag className="w-4 h-4" /> კალათაში დამატება
+                    <ShoppingBag className="w-4 h-4" /> {availableStock <= 0 ? 'მარაგში არ არის' : needsVariant && !canAddSelectedVariant ? 'აირჩიეთ ვარიანტი' : 'კალათაში დამატება'}
                   </button>
 
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

@@ -7,6 +7,21 @@ export const normalizeOrderTotal = (value) => {
   return Number.isFinite(total) && total >= 0 ? total : 0;
 };
 
+
+export const formatOrderItemLabel = (item, language = 'ka') => {
+  const fallbackName = language === 'en' ? 'Product' : language === 'ru' ? 'Товар' : 'პროდუქტი';
+  const name = String(item?.name || fallbackName).trim() || fallbackName;
+  const customVariantName = String(item?.customVariantName ?? item?.custom_variant_name ?? '').trim();
+  const selectedSize = String(item?.selectedSize ?? item?.selected_size ?? '').trim();
+  const selectedColor = String(item?.selectedColor ?? item?.selected_color ?? '').trim();
+  const sizeLabel = language === 'en' ? 'Size' : language === 'ru' ? 'Размер' : 'ზომა';
+  const colorLabel = language === 'en' ? 'Color' : language === 'ru' ? 'Цвет' : 'ფერი';
+  const quantityValue = Number(item?.quantity);
+  const quantity = Number.isSafeInteger(quantityValue) && quantityValue > 0 ? quantityValue : 1;
+
+  return `${name}${customVariantName ? ` — ${customVariantName}` : ''}${selectedSize ? ` · ${sizeLabel}: ${selectedSize}` : ''}${selectedColor ? ` · ${colorLabel}: ${selectedColor}` : ''} ×${quantity}`;
+};
+
 export const normalizeOrderItems = (items) => (
   Array.isArray(items)
     ? items
