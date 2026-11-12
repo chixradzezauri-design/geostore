@@ -9628,3 +9628,92 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     padding-inline: 8px !important;
   }
 }
+
+
+/* GEOSTORE compact homepage hero — reduce first-screen height while preserving
+   the existing image, copy, CTA, stamp, and responsive behavior. */
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero{
+  min-height:clamp(320px,32vw,430px)!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-content{
+  padding:clamp(24px,3.5vw,52px)!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-content .gs-fashion-eyebrow{
+  margin-bottom:10px!important;
+  padding:6px 9px!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-content h1{
+  margin-bottom:12px!important;
+  font-size:clamp(36px,4.3vw,60px)!important;
+  line-height:1.04!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-content .gs-fashion-hero__description{
+  font-size:13px!important;
+  line-height:1.6!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-actions{
+  margin-top:16px!important;
+  gap:12px!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-actions .gs-fashion-primary{
+  min-height:42px!important;
+  padding:0 17px!important;
+}
+.geostore-fashion-store .geostore-storefront .gs-editorial-hero-stamp{
+  right:clamp(14px,3vw,42px)!important;
+  bottom:clamp(14px,3vw,34px)!important;
+  padding:10px 12px!important;
+}
+@media(max-width:760px){
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero{
+    min-height:340px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content{
+    padding:18px 16px 19px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content .gs-fashion-eyebrow{
+    margin-bottom:8px!important;
+    padding:5px 8px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content .gs-fashion-kicker{
+    margin-bottom:6px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content h1{
+    margin-bottom:9px!important;
+    font-size:clamp(30px,7.6vw,42px)!important;
+    line-height:1.05!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content .gs-fashion-hero__description{
+    font-size:11px!important;
+    line-height:1.5!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-actions{
+    margin-top:12px!important;
+    gap:9px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-actions .gs-fashion-primary{
+    min-height:38px!important;
+    padding:0 13px!important;
+    font-size:10px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-stamp{
+    top:10px!important;
+    right:10px!important;
+    bottom:auto!important;
+    padding:6px 8px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-stamp strong{
+    font-size:12px!important;
+  }
+}
+@media(max-width:380px){
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero{
+    min-height:320px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content{
+    padding:16px 13px 17px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-editorial-hero-content h1{
+    font-size:29px!important;
+  }
+}
