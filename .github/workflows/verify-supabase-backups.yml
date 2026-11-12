@@ -1,0 +1,111 @@
+name: Verify Supabase backups
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/verify-supabase-backups.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify private backup objects without restoring production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Download existing private backups
+        shell: bash
+        env:
+          SUPABASE_URL: https://xmtnszxtnfxnrojionoa.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_SERVICE_ROLE_KEY"
+          mkdir -p backup
+          curl --fail-with-body --silent --show-error \
+            --url "$SUPABASE_URL/storage/v1/object/authenticated/geostore-backups-private/storage/geostore-storage-20261112T233019Z.tar.gz" \
+            --header "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            --output backup/geostore-storage.tar.gz
+          curl --fail-with-body --silent --show-error \
+            --url "$SUPABASE_URL/storage/v1/object/authenticated/geostore-backups-private/database/geostore-20261112T232557Z.dump" \
+            --header "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            --output backup/geostore.dump
+          test -s backup/geostore-storage.tar.gz
+          test -s backup/geostore.dump
+          sha256sum backup/geostore-storage.tar.gz backup/geostore.dump
+
+      - name: Verify Storage archive contents and every object checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -tzf backup/geostore-storage.tar.gz > backup/archive-list.txt
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import tarfile
+
+          root = pathlib.Path("backup/verified")
+          root.mkdir(parents=True, exist_ok=True)
+          with tarfile.open("backup/geostore-storage.tar.gz", "r:gz") as archive:
+              for member in archive.getmembers():
+                  path = pathlib.PurePosixPath(member.name)
+                  if path.is_absolute() or ".." in path.parts:
+                      raise SystemExit(f"Unsafe archive path: {member.name}")
+                  if not (member.isfile() or member.isdir()):
+                      raise SystemExit(f"Unexpected archive entry type: {member.name}")
+              archive.extractall(root, filter="data")
+
+          manifest_file = root / "manifest.json"
+          if not manifest_file.is_file():
+              raise SystemExit("manifest.json missing")
+          manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+          if manifest.get("project") != "xmtnszxtnfxnrojionoa":
+              raise SystemExit("Wrong project ID in manifest")
+          if manifest.get("excluded_bucket") != "geostore-backups-private":
+              raise SystemExit("Unexpected excluded bucket marker")
+
+          count = 0
+          total = 0
+          for bucket in manifest.get("buckets", []):
+              bucket_id = bucket.get("id")
+              if not bucket_id or bucket_id == "geostore-backups-private":
+                  raise SystemExit("Invalid bucket in manifest")
+              for item in bucket.get("objects", []):
+                  rel = pathlib.PurePosixPath(item["path"])
+                  if rel.is_absolute() or ".." in rel.parts:
+                      raise SystemExit(f"Unsafe object path: {item['path']}")
+                  path = root / "storage" / bucket_id / pathlib.Path(*rel.parts)
+                  if not path.is_file():
+                      raise SystemExit(f"Missing object: {bucket_id}/{item['path']}")
+                  size = path.stat().st_size
+                  if size != item["size"]:
+                      raise SystemExit(f"Size mismatch: {bucket_id}/{item['path']}")
+                  digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                  if digest != item["sha256"]:
+                      raise SystemExit(f"SHA256 mismatch: {bucket_id}/{item['path']}")
+                  count += 1
+                  total += size
+
+          if count == 0 or count != manifest.get("total_objects"):
+              raise SystemExit("Storage object count mismatch or empty manifest")
+          if total != manifest.get("total_bytes"):
+              raise SystemExit("Storage byte total mismatch")
+          print(f"PASS: {count} Storage objects verified")
+          print(f"PASS: {total} original object bytes verified")
+          print("PASS: every object matches its SHA256 manifest")
+          PY
+
+      - name: Verify database dump readability
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD/backup:/backup" postgres:17 \
+            pg_restore --list /backup/geostore.dump > backup/database-restore-list.txt
+          test -s backup/database-restore-list.txt
+          echo "PASS: database custom-format dump is readable by pg_restore"
+          echo "No restore was performed against production."
