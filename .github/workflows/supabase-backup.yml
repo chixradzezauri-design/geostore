@@ -33,8 +33,25 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p backup
+          NORMALIZED_DB_URL="$(python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+
+          raw = os.environ["SUPABASE_DB_URL"]
+          parts = urlsplit(raw)
+          query = parse_qsl(parts.query, keep_blank_values=True)
+          database_values = [value for key, value in query if key.lower() == "database"]
+          query = [(key, value) for key, value in query if key.lower() != "database"]
+
+          path = parts.path
+          if database_values and not path.strip("/"):
+              path = "/" + database_values[-1]
+
+          print(urlunsplit((parts.scheme, parts.netloc, path, urlencode(query), parts.fragment)))
+          PY
+          )"
           docker run --rm \
-            -e SUPABASE_DB_URL \
+            -e "SUPABASE_DB_URL=$NORMALIZED_DB_URL" \
             -v "$PWD/backup:/backup" \
             postgres:17 \
             sh -euc 'pg_dump "$SUPABASE_DB_URL" --format=custom --no-owner --no-acl --file=/backup/geostore.dump'
