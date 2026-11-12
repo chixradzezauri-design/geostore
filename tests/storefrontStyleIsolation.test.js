@@ -140,3 +140,19 @@ test('mobile floating assistance controls collapse to a non-obstructive stacked 
   assert.match(dockStyles, /\.gs-floating-action-arrow[\s\S]*?display:\s*none\s*!important;/);
   assert.match(dockStyles, /width:\s*48px\s*!important;[\s\S]*?height:\s*48px\s*!important;[\s\S]*?border-radius:\s*50%\s*!important;/);
 });
+
+
+test('catalogue product image has a keyboard-accessible detail button without nesting wishlist or comparison controls', () => {
+  const mediaStart = storeView.indexOf('<div className="gs-catalog-product-media');
+  const mediaEnd = storeView.indexOf('<div className="gs-catalog-product-info', mediaStart);
+  assert.ok(mediaStart >= 0 && mediaEnd > mediaStart);
+  const media = storeView.slice(mediaStart, mediaEnd);
+  assert.doesNotMatch(media, /<div\\s+onClick=/);
+  assert.ok(media.includes('<button\n                    type="button"\n                    onClick={() => handleOpenProduct(prod)}'));
+  assert.ok(media.includes('aria-label={`${storeText.viewDetails}: ${prod.name || \'product\'}`}'));
+  assert.ok(media.includes('gs-catalog-image-open pointer-events-auto absolute inset-0'));
+  assert.ok(media.includes('aria-hidden="true"'));
+  assert.ok(media.includes('gs-catalog-image-overlay pointer-events-none'));
+  assert.ok(media.includes('aria-label={storeText.wishlistTitle}'));
+  assert.ok(media.includes('aria-label={storeText.compareTitle}'));
+});

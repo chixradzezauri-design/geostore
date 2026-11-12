@@ -2,9 +2,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createSecureOrderId,
+  formatOrderItemLabel,
   groupCheckoutItems,
   isReusableCheckout
 } from '../src/utils/orderSafety.js';
+
+
+test('formats order history items with custom variant, size, color, and localized labels', () => {
+  assert.equal(
+    formatOrderItemLabel({
+      name: 'ჰუდი', customVariantName: 'Premium', selectedSize: 'L',
+      selectedColor: 'შავი', quantity: 2
+    }),
+    'ჰუდი — Premium · ზომა: L · ფერი: შავი ×2'
+  );
+  assert.equal(
+    formatOrderItemLabel({
+      name: 'Sneakers', selected_size: '42', selected_color: 'Black', quantity: '1'
+    }, 'en'),
+    'Sneakers · Size: 42 · Color: Black ×1'
+  );
+  assert.equal(formatOrderItemLabel({ name: 'Item', quantity: 'invalid' }, 'ru'), 'Item ×1');
+});
 
 test('groups repeated product lines only when size and color also match', () => {
   const result = groupCheckoutItems([

@@ -52,6 +52,10 @@ test('search is case-insensitive and ignores repeated whitespace', () => {
   assert.equal(matchesProductSearch(product, '  CLASSIC   LEATHER  '), true);
 });
 
+test('search matches normalized camelCase screenSize from the storefront product mapper', () => {
+  assert.equal(matchesProductSearch({ name: 'Laptop', screenSize: '14 inch' }, '14 inch'), true);
+});
+
 test('all query terms must match searchable product content', () => {
   assert.equal(matchesProductSearch(product, 'leather boots'), false);
 });
