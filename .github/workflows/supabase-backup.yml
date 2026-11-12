@@ -3,6 +3,8 @@ name: Supabase database backup
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '30 1 * * 1'
 
 permissions:
   contents: read
