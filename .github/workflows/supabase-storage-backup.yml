@@ -1,0 +1,229 @@
+name: Supabase Storage files backup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: geostore-supabase-storage-backup
+  cancel-in-progress: false
+
+jobs:
+  storage-backup:
+    name: Archive and upload Supabase Storage files
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Validate required secret
+        shell: bash
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || {
+            echo "::error::Missing SUPABASE_SERVICE_ROLE_KEY secret"
+            exit 1
+          }
+
+      - name: Download all Storage objects and create archive
+        shell: bash
+        env:
+          SUPABASE_URL: https://xmtnszxtnfxnrojionoa.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import tarfile
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          base_url = os.environ["SUPABASE_URL"].rstrip("/")
+          service_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+          backup_bucket = "geostore-backups-private"
+          work = pathlib.Path("backup/storage-files")
+          work.mkdir(parents=True, exist_ok=True)
+
+          headers = {
+              "Authorization": f"Bearer {service_key}",
+              "apikey": service_key,
+          }
+
+          def request_json(method, path, payload=None):
+              data = None if payload is None else json.dumps(payload).encode("utf-8")
+              request_headers = dict(headers)
+              if data is not None:
+                  request_headers["Content-Type"] = "application/json"
+              req = urllib.request.Request(
+                  base_url + path, data=data, headers=request_headers, method=method
+              )
+              with urllib.request.urlopen(req, timeout=120) as response:
+                  raw = response.read()
+              return json.loads(raw.decode("utf-8"))
+
+          def safe_relative_path(value):
+              path = pathlib.PurePosixPath(value)
+              if path.is_absolute() or any(part in ("", ".", "..") for part in path.parts):
+                  raise RuntimeError(f"Unsafe Storage object path: {value!r}")
+              return path
+
+          buckets = request_json("GET", "/storage/v1/bucket")
+          if not isinstance(buckets, list):
+              raise RuntimeError("Supabase Storage bucket listing returned an unexpected response")
+
+          manifest = {
+              "project": "xmtnszxtnfxnrojionoa",
+              "created_at_utc": __import__("datetime").datetime.now(
+                  __import__("datetime").timezone.utc
+              ).isoformat(),
+              "excluded_bucket": backup_bucket,
+              "buckets": [],
+              "total_objects": 0,
+              "total_bytes": 0,
+          }
+
+          def list_prefix(bucket_id, prefix):
+              files = []
+              folders = []
+              offset = 0
+              page_size = 1000
+              while True:
+                  rows = request_json(
+                      "POST",
+                      "/storage/v1/object/list/" + urllib.parse.quote(bucket_id, safe=""),
+                      {
+                          "prefix": prefix,
+                          "limit": page_size,
+                          "offset": offset,
+                          "sortBy": {"column": "name", "order": "asc"},
+                      },
+                  )
+                  if not isinstance(rows, list):
+                      raise RuntimeError(f"Unexpected list response for bucket {bucket_id}")
+                  for item in rows:
+                      name = item.get("name")
+                      if not isinstance(name, str) or not name:
+                          raise RuntimeError(f"Invalid object entry in bucket {bucket_id}")
+                      key = prefix + name if prefix else name
+                      if item.get("id") is None and item.get("metadata") is None:
+                          folders.append(key.rstrip("/") + "/")
+                      else:
+                          files.append(key)
+                  if len(rows) < page_size:
+                      break
+                  offset += len(rows)
+              return files, folders
+
+          for bucket in buckets:
+              bucket_id = bucket.get("id")
+              if not bucket_id or bucket_id == backup_bucket:
+                  continue
+
+              bucket_record = {
+                  "id": bucket_id,
+                  "public": bool(bucket.get("public", False)),
+                  "objects": [],
+              }
+              pending = [""]
+              visited = set()
+              object_keys = []
+
+              while pending:
+                  prefix = pending.pop()
+                  if prefix in visited:
+                      continue
+                  visited.add(prefix)
+                  files, folders = list_prefix(bucket_id, prefix)
+                  object_keys.extend(files)
+                  pending.extend(folder for folder in folders if folder not in visited)
+
+              for key in sorted(set(object_keys)):
+                  relative = safe_relative_path(key)
+                  destination = work / bucket_id / pathlib.Path(*relative.parts)
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+
+                  encoded_key = urllib.parse.quote(key, safe="/")
+                  path = (
+                      "/storage/v1/object/authenticated/"
+                      + urllib.parse.quote(bucket_id, safe="")
+                      + "/"
+                      + encoded_key
+                  )
+                  req = urllib.request.Request(base_url + path, headers=headers, method="GET")
+                  digest = hashlib.sha256()
+                  size = 0
+                  with urllib.request.urlopen(req, timeout=180) as response, destination.open("wb") as output:
+                      while True:
+                          chunk = response.read(1024 * 1024)
+                          if not chunk:
+                              break
+                          output.write(chunk)
+                          digest.update(chunk)
+                          size += len(chunk)
+
+                  bucket_record["objects"].append({
+                      "path": key,
+                      "size": size,
+                      "sha256": digest.hexdigest(),
+                  })
+                  manifest["total_objects"] += 1
+                  manifest["total_bytes"] += size
+
+              manifest["buckets"].append(bucket_record)
+
+          if manifest["total_objects"] == 0:
+              raise RuntimeError("No Storage objects were found; refusing to upload an empty archive")
+
+          manifest_path = pathlib.Path("backup/storage-manifest.json")
+          manifest_path.write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+
+          archive_path = pathlib.Path("backup/geostore-storage.tar.gz")
+          with tarfile.open(archive_path, "w:gz") as archive:
+              archive.add(work, arcname="storage")
+              archive.add(manifest_path, arcname="manifest.json")
+
+          if not archive_path.is_file() or archive_path.stat().st_size == 0:
+              raise RuntimeError("Storage archive was not created")
+
+          checksum = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+          pathlib.Path("backup/storage-SHA256.txt").write_text(
+              checksum + "  geostore-storage.tar.gz\n", encoding="utf-8"
+          )
+
+          print(f"Storage objects archived: {manifest['total_objects']}")
+          print(f"Original bytes archived: {manifest['total_bytes']}")
+          print(f"Archive bytes: {archive_path.stat().st_size}")
+          print(f"Archive SHA256: {checksum}")
+          PY
+
+      - name: Upload archive to private backup bucket
+        shell: bash
+        env:
+          SUPABASE_URL: https://xmtnszxtnfxnrojionoa.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          OBJECT_PATH="storage/geostore-storage-$(date -u +'%Y%m%dT%H%M%SZ').tar.gz"
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --url "$SUPABASE_URL/storage/v1/object/geostore-backups-private/$OBJECT_PATH" \
+            --header "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "Content-Type: application/gzip" \
+            --header "x-upsert: false" \
+            --data-binary "@backup/geostore-storage.tar.gz"
+
+          echo "Storage archive uploaded: $OBJECT_PATH"
+          cat backup/storage-SHA256.txt
