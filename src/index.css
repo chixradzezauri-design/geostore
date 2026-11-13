@@ -9717,3 +9717,233 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     font-size:29px!important;
   }
 }
+
+
+/* ==========================================================================
+   GEOSTORE UI REVOLUTION — STAGE 01
+   Premium customer support chat. Visual-only overrides: no behavior or data
+   flow changes. Kept isolated at the end so existing responsive fixes remain.
+   ========================================================================== */
+.geostore-fashion-store .gs-floating-support .gs-support-panel {
+  width: min(420px, calc(100vw - 32px)) !important;
+  max-height: min(82dvh, calc(100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+  gap: 18px !important;
+  padding: 20px !important;
+  border: 1px solid rgba(197, 160, 111, .42) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(222, 194, 157, .22), transparent 42%),
+    linear-gradient(155deg, #fffefa 0%, #fbf7f0 58%, #f5eee4 100%) !important;
+  box-shadow:
+    0 30px 90px rgba(30, 24, 18, .24),
+    0 8px 24px rgba(30, 24, 18, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .95) !important;
+  backdrop-filter: blur(22px) saturate(1.15);
+  -webkit-backdrop-filter: blur(22px) saturate(1.15);
+  scrollbar-color: rgba(143, 111, 76, .42) transparent;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel-heading {
+  gap: 13px !important;
+  padding: 0 0 16px !important;
+  border-bottom: 1px solid rgba(160, 132, 101, .20) !important;
+  background: linear-gradient(155deg, #fffefa 0%, #fbf7f0 100%) !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-heading-icon {
+  position: relative;
+  flex-basis: 46px !important;
+  width: 46px !important;
+  height: 46px !important;
+  overflow: hidden;
+  border: 1px solid rgba(239, 216, 184, .35) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(145deg, #3a3027 0%, #171411 100%) !important;
+  color: #e7c89e !important;
+  box-shadow: 0 8px 18px rgba(35, 27, 19, .18) !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-heading-icon::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-heading-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-heading-copy {
+  gap: 5px !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-heading-copy strong {
+  color: #211c17 !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.025em !important;
+  line-height: 1.25 !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-heading-copy small {
+  color: #8c7964 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  letter-spacing: .045em !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-close {
+  flex-basis: 38px !important;
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid rgba(151, 126, 98, .20) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, .72) !important;
+  color: #65513c !important;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-close:hover {
+  transform: rotate(90deg);
+  border-color: rgba(151, 126, 98, .42) !important;
+  background: #f0e6d8 !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-form {
+  gap: 12px !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-field {
+  min-height: 48px !important;
+  padding: 13px 14px !important;
+  border: 1px solid rgba(154, 129, 101, .22) !important;
+  border-radius: 13px !important;
+  background: rgba(255, 255, 255, .78) !important;
+  color: #29231f !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  box-shadow: 0 2px 7px rgba(46, 35, 23, .025), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-field::placeholder {
+  color: #9a8d7d !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-field:focus {
+  border-color: #b38b5c !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(179, 139, 92, .13), 0 5px 15px rgba(46, 35, 23, .05) !important;
+}
+.geostore-fashion-store .gs-floating-support textarea.gs-support-field {
+  min-height: 112px !important;
+  line-height: 1.6 !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-submit {
+  min-height: 49px !important;
+  padding: 13px 18px !important;
+  border: 1px solid rgba(226, 195, 153, .30) !important;
+  border-radius: 13px !important;
+  background: linear-gradient(135deg, #393027 0%, #211b16 62%, #15120f 100%) !important;
+  color: #fffaf2 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: .015em !important;
+  box-shadow: 0 8px 18px rgba(35, 27, 19, .16), inset 0 1px 0 rgba(255, 255, 255, .10) !important;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+  box-shadow: 0 12px 24px rgba(35, 27, 19, .22), inset 0 1px 0 rgba(255, 255, 255, .12) !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+.geostore-fashion-store .gs-floating-support .gs-support-submit:focus-visible,
+.geostore-fashion-store .gs-floating-support .gs-support-close:focus-visible {
+  outline: 3px solid rgba(179, 139, 92, .45) !important;
+  outline-offset: 3px !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel > .gs-support-form[role="status"] {
+  padding: 15px !important;
+  border: 1px solid rgba(160, 132, 101, .18) !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, .62) !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel > .gs-support-form[role="status"] p:first-child {
+  color: #286b4d !important;
+  font-size: 13px !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel [aria-live="polite"] > div.rounded-xl {
+  border-radius: 14px !important;
+  box-shadow: 0 3px 12px rgba(35, 27, 19, .045) !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-support-panel [aria-live="polite"] > div.rounded-xl p {
+  font-size: 12px !important;
+  line-height: 1.65 !important;
+}
+.geostore-fashion-store .gs-floating-support .gs-floating-action--support,
+.geostore-fashion-store .gs-floating-support > .gs-floating-action {
+  border: 1px solid rgba(197, 160, 111, .48) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #fffefa 0%, #f5ecdf 100%) !important;
+  box-shadow: 0 14px 34px rgba(30, 24, 18, .19), inset 0 1px 0 rgba(255, 255, 255, .95) !important;
+}
+.geostore-fashion-store .gs-floating-support > .gs-floating-action .gs-floating-action-icon {
+  border: 1px solid rgba(173, 137, 93, .18) !important;
+  border-radius: 12px !important;
+  background: linear-gradient(145deg, #ead7bc 0%, #d3b48a 100%) !important;
+  color: #493723 !important;
+}
+.geostore-fashion-store .gs-floating-support > .gs-floating-action .gs-floating-action-copy strong {
+  color: #29231f !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+.geostore-fashion-store .gs-floating-support > .gs-floating-action .gs-floating-action-copy small {
+  color: #796852 !important;
+  font-size: 9px !important;
+  opacity: 1 !important;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-support .gs-support-panel {
+    width: min(390px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: min(78dvh, calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom))) !important;
+    padding: 15px !important;
+    gap: 15px !important;
+    border-radius: 20px !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-panel-heading {
+    gap: 10px !important;
+    padding-bottom: 13px !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-heading-icon {
+    flex-basis: 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-heading-copy strong {
+    font-size: 14px !important;
+  }
+  .geostore-fashion-store .gs-floating-support .gs-support-field {
+    min-height: 47px !important;
+    padding: 12px 13px !important;
+    font-size: 16px !important;
+  }
+  .geostore-fashion-store .gs-floating-support textarea.gs-support-field {
+    min-height: 96px !important;
+    max-height: 28dvh !important;
+  }
+  .geostore-fashion-store .gs-floating-support > .gs-floating-action {
+    min-height: 54px !important;
+    border-radius: 15px !important;
+  }
+}
+@media (max-width: 360px) {
+  .geostore-fashion-store .gs-floating-support .gs-support-panel {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    padding: 12px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .geostore-fashion-store .gs-floating-support .gs-support-close,
+  .geostore-fashion-store .gs-floating-support .gs-support-field,
+  .geostore-fashion-store .gs-floating-support .gs-support-submit {
+    transition: none !important;
+  }
+}
