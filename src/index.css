@@ -15293,3 +15293,182 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 19: Admin AI business analyst */
+.admin-dashboard-pro .admin-ai-analyst {
+  --admin-ai-accent: #34d399;
+  min-width: 0;
+  gap: 20px;
+  padding: clamp(18px, 2.4vw, 32px) !important;
+  border-color: rgba(52,211,153,.22) !important;
+  border-radius: 26px !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(16,185,129,.12), transparent 44%), radial-gradient(ellipse at 0% 100%, rgba(34,211,238,.055), transparent 42%), linear-gradient(145deg, rgba(15,23,42,.98), rgba(2,6,23,.96)) !important;
+  box-shadow: 0 22px 54px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.045);
+}
+.admin-dashboard-pro .admin-ai-analyst > h3 {
+  min-width: 0;
+  gap: 12px;
+  padding-bottom: 17px;
+  border-color: rgba(52,211,153,.2) !important;
+  color: #f8fafc;
+  font-size: 15px;
+  letter-spacing: -.025em;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-ai-analyst > h3 svg {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 10px rgba(52,211,153,.3));
+}
+.admin-dashboard-pro .admin-ai-chat {
+  min-width: 0;
+  min-height: 230px;
+  max-height: min(520px, 62vh) !important;
+  padding: clamp(14px, 2vw, 22px) !important;
+  border-color: rgba(52,211,153,.18) !important;
+  border-radius: 21px !important;
+  background: radial-gradient(ellipse at 50% 0%, rgba(16,185,129,.055), transparent 55%), rgba(2,6,23,.86) !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52,211,153,.35) rgba(15,23,42,.6);
+  overscroll-behavior: contain;
+}
+.admin-dashboard-pro .admin-ai-chat::-webkit-scrollbar { width: 7px; }
+.admin-dashboard-pro .admin-ai-chat::-webkit-scrollbar-track {
+  border-radius: 99px;
+  background: rgba(15,23,42,.65);
+}
+.admin-dashboard-pro .admin-ai-chat::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(52,211,153,.35);
+}
+.admin-dashboard-pro .admin-ai-message {
+  min-width: 0;
+  animation: adminAiMessageIn .24s ease-out both;
+}
+.admin-dashboard-pro .admin-ai-bubble {
+  min-width: 0;
+  max-width: min(88%, 760px) !important;
+  padding: 14px 17px !important;
+  border-radius: 18px !important;
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  box-shadow: 0 8px 22px rgba(0,0,0,.15);
+}
+.admin-dashboard-pro .admin-ai-message:has(.admin-ai-bubble.bg-emerald-500) .admin-ai-bubble {
+  border: 1px solid rgba(167,243,208,.28);
+  border-bottom-right-radius: 6px !important;
+  background: linear-gradient(135deg, #6ee7b7, #34d399 62%, #10b981) !important;
+  color: #052e25 !important;
+}
+.admin-dashboard-pro .admin-ai-message:not(:has(.admin-ai-bubble.bg-emerald-500)) .admin-ai-bubble {
+  border: 1px solid rgba(52,211,153,.16);
+  border-bottom-left-radius: 6px !important;
+  background: linear-gradient(145deg, rgba(15,23,42,.98), rgba(15,23,42,.78)) !important;
+  color: #e2e8f0 !important;
+}
+.admin-dashboard-pro .admin-ai-composer {
+  min-width: 0;
+  align-items: stretch;
+  gap: 10px;
+  padding: 7px;
+  border: 1px solid rgba(52,211,153,.2);
+  border-radius: 19px;
+  background: rgba(2,6,23,.78);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.025);
+}
+.admin-dashboard-pro .admin-ai-composer input {
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 13px !important;
+  background: transparent !important;
+  color: #f8fafc !important;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: none !important;
+  transition: border-color .18s ease, background .18s ease;
+}
+.admin-dashboard-pro .admin-ai-composer input::placeholder { color: #64748b; }
+.admin-dashboard-pro .admin-ai-composer input:focus {
+  border-color: rgba(52,211,153,.25) !important;
+  outline: none;
+  background: rgba(15,23,42,.55) !important;
+}
+.admin-dashboard-pro .admin-ai-composer button {
+  flex: 0 0 auto;
+  min-width: 112px;
+  min-height: 48px;
+  padding: 12px 19px !important;
+  border-radius: 13px !important;
+  background: linear-gradient(135deg,#6ee7b7,#34d399 60%,#10b981) !important;
+  color: #052e25 !important;
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 8px 20px rgba(16,185,129,.17);
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-ai-composer button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 25px rgba(16,185,129,.24);
+}
+.admin-dashboard-pro .admin-ai-composer button:active { transform: translateY(0); }
+.admin-dashboard-pro .admin-ai-analyst [class*="italic"] {
+  padding: 10px 13px;
+  border: 1px solid rgba(52,211,153,.14);
+  border-radius: 12px;
+  background: rgba(16,185,129,.055);
+  line-height: 1.5;
+}
+@keyframes adminAiMessageIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro .admin-ai-analyst {
+    gap: 15px;
+    padding: 16px !important;
+    border-radius: 21px !important;
+  }
+  .admin-dashboard-pro .admin-ai-analyst > h3 {
+    font-size: 13px;
+    padding-bottom: 13px;
+  }
+  .admin-dashboard-pro .admin-ai-chat {
+    min-height: 210px;
+    max-height: 54vh !important;
+    padding: 12px !important;
+    border-radius: 17px !important;
+  }
+  .admin-dashboard-pro .admin-ai-bubble {
+    max-width: 94% !important;
+    padding: 12px 13px !important;
+    font-size: 11px;
+  }
+  .admin-dashboard-pro .admin-ai-composer {
+    flex-direction: column;
+    padding: 8px;
+    gap: 7px;
+  }
+  .admin-dashboard-pro .admin-ai-composer input {
+    width: 100%;
+    min-height: 46px;
+    padding-inline: 11px !important;
+  }
+  .admin-dashboard-pro .admin-ai-composer button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-ai-analyst { padding: 13px !important; }
+  .admin-dashboard-pro .admin-ai-chat { padding: 9px !important; }
+  .admin-dashboard-pro .admin-ai-bubble { max-width: 97% !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-ai-message { animation: none !important; }
+  .admin-dashboard-pro .admin-ai-composer button { transition: none !important; }
+}
