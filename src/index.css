@@ -17309,3 +17309,164 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 31: Staff directory and permissions workspace */
+.admin-dashboard-pro .admin-staff-list-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(16,185,129,.22) !important;
+  border-radius: 24px !important;
+  padding: clamp(17px,2.2vw,28px) !important;
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.075),transparent 42%),
+    linear-gradient(145deg,rgba(15,23,42,.97),rgba(2,6,23,.96)) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.19),inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.admin-dashboard-pro .admin-staff-list-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(16,185,129,.16);
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-staff-cards-list {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-staff-card {
+  min-width: 0;
+  border: 1px solid rgba(148,163,184,.15) !important;
+  border-radius: 18px !important;
+  padding: 17px !important;
+  background: linear-gradient(115deg,rgba(15,23,42,.96),rgba(2,6,23,.88)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  transition: border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-staff-card:hover {
+  border-color: rgba(52,211,153,.3) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(0,0,0,.17);
+}
+.admin-dashboard-pro .admin-staff-card b {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-staff-member-email {
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.admin-dashboard-pro .admin-staff-actions {
+  flex-wrap: wrap;
+  gap: 8px !important;
+}
+.admin-dashboard-pro .admin-staff-actions button {
+  min-height: 40px;
+  border-radius: 11px !important;
+  padding: 9px 12px !important;
+  transition: border-color .18s ease,background .18s ease,transform .18s ease;
+}
+.admin-dashboard-pro .admin-staff-actions button:hover {
+  transform: translateY(-1px);
+}
+.admin-dashboard-pro .admin-staff-permissions {
+  min-width: 0;
+  border: 1px solid rgba(52,211,153,.2) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  background: rgba(2,6,23,.72) !important;
+}
+.admin-dashboard-pro .admin-staff-permissions > span {
+  color: #a8b7c9 !important;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.admin-dashboard-pro .admin-staff-permission-grid {
+  gap: 10px !important;
+}
+.admin-dashboard-pro .admin-staff-permission-grid label {
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid rgba(148,163,184,.13);
+  border-radius: 11px;
+  padding: 9px 10px;
+  background: rgba(15,23,42,.68);
+  font-size: 11px;
+  line-height: 1.5;
+  transition: border-color .18s ease,background .18s ease;
+}
+.admin-dashboard-pro .admin-staff-permission-grid label:has(input:checked) {
+  border-color: rgba(52,211,153,.4);
+  background: rgba(16,185,129,.1);
+  color: #d1fae5;
+}
+.admin-dashboard-pro .admin-staff-permission-grid input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  accent-color: #10b981;
+}
+.admin-dashboard-pro .admin-staff-permission-grid input:focus-visible,
+.admin-dashboard-pro .admin-staff-actions button:focus-visible {
+  outline: 3px solid rgba(110,231,183,.5);
+  outline-offset: 3px;
+}
+.admin-dashboard-pro .admin-staff-card input,
+.admin-dashboard-pro .admin-staff-card select {
+  min-width: 0;
+  min-height: 42px;
+  border-radius: 11px !important;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-staff-list-panel {
+    border-radius: 19px !important;
+    padding: 16px !important;
+  }
+  .admin-dashboard-pro .admin-staff-card {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro .admin-staff-card > div:first-child {
+    align-items: stretch !important;
+  }
+  .admin-dashboard-pro .admin-staff-actions {
+    width: 100%;
+    justify-content: flex-start !important;
+  }
+  .admin-dashboard-pro .admin-staff-actions button {
+    flex: 1 1 130px;
+    justify-content: center;
+  }
+  .admin-dashboard-pro .admin-staff-permission-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-staff-permission-grid label {
+    min-height: 44px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-staff-list-panel {
+    padding: 13px !important;
+  }
+  .admin-dashboard-pro .admin-staff-card {
+    padding: 12px !important;
+    border-radius: 15px !important;
+  }
+  .admin-dashboard-pro .admin-staff-actions button {
+    flex-basis: 100%;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-staff-card,
+  .admin-dashboard-pro .admin-staff-actions button,
+  .admin-dashboard-pro .admin-staff-permission-grid label {
+    transition: none !important;
+  }
+  .admin-dashboard-pro .admin-staff-card:hover,
+  .admin-dashboard-pro .admin-staff-actions button:hover {
+    transform: none !important;
+  }
+}
