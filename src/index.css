@@ -16755,3 +16755,171 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 28: Financial analytics visual hierarchy */
+.admin-dashboard-pro .admin-analytics {
+  min-width: 0;
+  color: #e2e8f0;
+}
+.admin-dashboard-pro .admin-analytics-toolbar {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(16,185,129,.24) !important;
+  border-radius: 22px !important;
+  padding: clamp(15px,2vw,22px) !important;
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.1),transparent 40%),
+    linear-gradient(135deg,rgba(15,23,42,.98),rgba(2,6,23,.96)) !important;
+  box-shadow: 0 15px 38px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.admin-dashboard-pro .admin-analytics-toolbar select {
+  min-width: 150px;
+  min-height: 44px;
+  border-radius: 12px !important;
+  padding: 11px 13px !important;
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+  border-color: rgba(16,185,129,.3) !important;
+}
+.admin-dashboard-pro .admin-analytics-toolbar button {
+  min-height: 44px;
+  border-radius: 12px !important;
+  padding: 11px 15px !important;
+  font-size: 11px !important;
+  box-shadow: 0 8px 20px rgba(16,185,129,.15);
+}
+.admin-dashboard-pro .admin-analytics-kpis {
+  align-items: stretch;
+  gap: 14px !important;
+}
+.admin-dashboard-pro .admin-analytics-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 142px;
+  border: 1px solid rgba(148,163,184,.15) !important;
+  border-radius: 22px !important;
+  padding: 19px !important;
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.08),transparent 48%),
+    linear-gradient(145deg,rgba(15,23,42,.97),rgba(2,6,23,.94)) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035) !important;
+  transition: transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.admin-dashboard-pro .admin-analytics-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52,211,153,.32) !important;
+  box-shadow: 0 18px 38px rgba(0,0,0,.23),0 0 24px rgba(16,185,129,.06) !important;
+}
+.admin-dashboard-pro .admin-analytics-card > p:first-child {
+  min-height: 20px;
+  color: #a8b7c9 !important;
+  font-size: 11px !important;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-analytics-card > p:nth-child(2) {
+  overflow-wrap: anywhere;
+  font-size: clamp(23px,2.2vw,31px) !important;
+  line-height: 1.15;
+  letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro .admin-analytics-card > span {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 3px;
+  white-space: normal;
+  line-height: 1.55;
+}
+.admin-dashboard-pro .admin-analytics > .grid > div,
+.admin-dashboard-pro .admin-analytics > .grid > section {
+  min-width: 0;
+  border-radius: 22px !important;
+  box-shadow: 0 14px 36px rgba(0,0,0,.17),inset 0 1px 0 rgba(255,255,255,.025);
+}
+.admin-dashboard-pro .admin-analytics > .grid h3 {
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-analytics details {
+  transition: border-color .18s ease,background .18s ease;
+}
+.admin-dashboard-pro .admin-analytics details[open] {
+  border-color: rgba(52,211,153,.3) !important;
+  background: rgba(15,23,42,.78) !important;
+}
+.admin-dashboard-pro .admin-analytics details summary:focus-visible {
+  outline: 2px solid rgba(52,211,153,.75);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.admin-dashboard-pro .admin-analytics .admin-analytics-toolbar button:focus-visible,
+.admin-dashboard-pro .admin-analytics .admin-analytics-toolbar select:focus-visible {
+  outline: 3px solid rgba(110,231,183,.48);
+  outline-offset: 3px;
+}
+.admin-dashboard-pro .admin-analytics .admin-analytics-toolbar button:active {
+  transform: translateY(1px);
+}
+.admin-dashboard-pro .admin-analytics .admin-analytics-card svg {
+  flex: 0 0 auto;
+}
+.admin-dashboard-pro .admin-analytics .admin-analytics-card,
+.admin-dashboard-pro .admin-analytics .admin-analytics-toolbar {
+  backdrop-filter: blur(16px);
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-analytics {
+    gap: 16px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-toolbar {
+    align-items: stretch;
+    gap: 11px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-toolbar select,
+  .admin-dashboard-pro .admin-analytics-toolbar button {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro .admin-analytics-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-card {
+    min-height: 128px;
+    padding: 15px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-card > p:nth-child(2) {
+    font-size: clamp(20px,5vw,26px) !important;
+  }
+  .admin-dashboard-pro .admin-analytics > .grid {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 13px !important;
+  }
+  .admin-dashboard-pro .admin-analytics > .grid > div {
+    padding: 16px !important;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-analytics-kpis {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-analytics-card {
+    min-height: 112px;
+    padding: 16px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-toolbar {
+    padding: 13px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-analytics-card,
+  .admin-dashboard-pro .admin-analytics details {
+    transition: none !important;
+  }
+  .admin-dashboard-pro .admin-analytics-card:hover {
+    transform: none !important;
+  }
+}
