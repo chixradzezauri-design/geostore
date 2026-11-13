@@ -12272,3 +12272,264 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     transition-duration: .01ms !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 07: Admin workspace */
+.admin-dashboard-pro {
+  --gs-admin-ink: #29251f;
+  --gs-admin-muted: #81766a;
+  --gs-admin-line: #e8e0d7;
+  --gs-admin-paper: #fffdfa;
+  --gs-admin-soft: #f7f3ed;
+  --gs-admin-accent: #8c7053;
+  color: var(--gs-admin-ink) !important;
+  gap: clamp(16px, 2vw, 28px) !important;
+}
+.admin-dashboard-pro .admin-dashboard-shell {
+  min-width: 0 !important;
+}
+.admin-dashboard-pro :is(.admin-analytics, .admin-profit-calculator, .admin-expenses,
+.admin-staff-panel, .admin-orders-panel, .admin-support-panel, .admin-products-panel,
+.admin-discounts-panel, .admin-banners, .admin-category-manager, .admin-coupons-panel,
+.admin-vendors-panel, .admin-crm-panel, .admin-settings-panel, .admin-ai-analyst) {
+  min-width: 0 !important;
+  border: 1px solid var(--gs-admin-line) !important;
+  border-radius: 7px !important;
+  background: var(--gs-admin-paper) !important;
+  color: var(--gs-admin-ink) !important;
+  box-shadow: 0 8px 28px rgba(47, 37, 26, .045) !important;
+}
+.admin-dashboard-pro :is(.admin-analytics, .admin-profit-calculator, .admin-expenses,
+.admin-staff-panel, .admin-orders-panel, .admin-support-panel, .admin-products-panel,
+.admin-discounts-panel, .admin-banners, .admin-category-manager, .admin-coupons-panel,
+.admin-vendors-panel, .admin-crm-panel, .admin-settings-panel, .admin-ai-analyst) h1,
+.admin-dashboard-pro :is(.admin-analytics, .admin-profit-calculator, .admin-expenses,
+.admin-staff-panel, .admin-orders-panel, .admin-support-panel, .admin-products-panel,
+.admin-discounts-panel, .admin-banners, .admin-category-manager, .admin-coupons-panel,
+.admin-vendors-panel, .admin-crm-panel, .admin-settings-panel, .admin-ai-analyst) h2,
+.admin-dashboard-pro :is(.admin-analytics, .admin-profit-calculator, .admin-expenses,
+.admin-staff-panel, .admin-orders-panel, .admin-support-panel, .admin-products-panel,
+.admin-discounts-panel, .admin-banners, .admin-category-manager, .admin-coupons-panel,
+.admin-vendors-panel, .admin-crm-panel, .admin-settings-panel, .admin-ai-analyst) h3 {
+  color: var(--gs-admin-ink) !important;
+  letter-spacing: -.018em !important;
+}
+.admin-dashboard-pro :is(.admin-orders-heading, .admin-staff-list-title,
+.admin-product-inventory-title) {
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -.025em !important;
+}
+.admin-dashboard-pro :is(.admin-analytics-toolbar, .admin-orders-header,
+.admin-orders-toolbar, .admin-orders-controls, .admin-order-card-heading,
+.admin-order-card-footer, .admin-order-detail-header, .admin-order-detail-footer,
+.admin-support-ticket-header, .admin-support-ticket-meta, .admin-product-list-filters,
+.admin-product-controls, .admin-staff-actions) {
+  min-width: 0 !important;
+}
+.admin-dashboard-pro :is(.admin-analytics-kpis, .admin-analytics-card,
+.admin-calculator-results, .admin-expense-row, .admin-staff-card,
+.admin-order-card, .admin-support-ticket, .admin-product-row,
+.admin-banner-card, .admin-category-card, .admin-subcategory-card,
+.admin-coupon-card, .admin-vendor-card) {
+  border-color: var(--gs-admin-line) !important;
+  border-radius: 5px !important;
+  background: var(--gs-admin-soft) !important;
+  color: var(--gs-admin-ink) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro :is(.admin-order-card, .admin-product-row, .admin-staff-card,
+.admin-support-ticket, .admin-banner-card, .admin-category-card, .admin-coupon-card,
+.admin-vendor-card) {
+  transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease !important;
+}
+.admin-dashboard-pro :is(.admin-order-card, .admin-product-row, .admin-staff-card,
+.admin-support-ticket, .admin-banner-card, .admin-category-card, .admin-coupon-card,
+.admin-vendor-card):hover {
+  border-color: #cbb9a5 !important;
+  background: #fffdfa !important;
+  box-shadow: 0 5px 18px rgba(47, 37, 26, .055) !important;
+}
+.admin-dashboard-pro :is(.admin-orders-search, .admin-order-search, .admin-product-search,
+.admin-crm-search, input, select, textarea) {
+  accent-color: var(--gs-admin-accent);
+}
+.admin-dashboard-pro :is(input:not([type="checkbox"]):not([type="radio"]),
+select, textarea) {
+  max-width: 100%;
+  border-color: #ded4c9 !important;
+  border-radius: 4px !important;
+  background-color: #fffdfa !important;
+  color: var(--gs-admin-ink) !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro :is(input:not([type="checkbox"]):not([type="radio"]),
+select, textarea)::placeholder {
+  color: #a29689 !important;
+}
+.admin-dashboard-pro :is(input, select, textarea):focus-visible {
+  outline: 2px solid #b49a7d !important;
+  outline-offset: 2px !important;
+  border-color: #a98c6c !important;
+}
+.admin-dashboard-pro button {
+  max-width: 100%;
+  border-radius: 4px !important;
+  transition: background-color .16s ease, border-color .16s ease,
+    color .16s ease, box-shadow .16s ease, transform .16s ease !important;
+}
+.admin-dashboard-pro button:focus-visible,
+.admin-dashboard-pro a:focus-visible {
+  outline: 2px solid #a98c6c !important;
+  outline-offset: 3px !important;
+}
+.admin-dashboard-pro :is(.admin-order-actions, .admin-order-status-actions,
+.admin-support-status-actions, .admin-product-controls, .admin-staff-actions) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+.admin-dashboard-pro :is(.admin-order-search, .admin-orders-search,
+.admin-product-search, .admin-crm-search) {
+  min-width: 0 !important;
+}
+.admin-dashboard-pro :is(.admin-order-detail-overlay) {
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+  backdrop-filter: blur(10px) !important;
+}
+.admin-dashboard-pro .admin-order-detail-modal {
+  width: min(100%, 920px) !important;
+  max-height: min(92dvh, 960px) !important;
+  overflow: auto !important;
+  border: 1px solid var(--gs-admin-line) !important;
+  border-radius: 7px !important;
+  background: var(--gs-admin-paper) !important;
+  color: var(--gs-admin-ink) !important;
+  box-shadow: 0 28px 90px rgba(20, 15, 11, .25) !important;
+  scrollbar-width: thin;
+  scrollbar-color: #cbb9a5 #f5f0e9;
+}
+.admin-dashboard-pro :is(.admin-order-detail-header, .admin-order-detail-footer,
+.admin-order-note-controls) {
+  border-color: var(--gs-admin-line) !important;
+}
+.admin-dashboard-pro :is(.admin-order-items-section, .admin-order-financials,
+.admin-order-note-editor) {
+  border-color: var(--gs-admin-line) !important;
+  border-radius: 5px !important;
+}
+.admin-dashboard-pro .admin-order-item {
+  min-width: 0 !important;
+  border-color: var(--gs-admin-line) !important;
+  background: #faf7f2 !important;
+}
+.admin-dashboard-pro :is(.admin-order-item-info, .admin-order-card-customer,
+.admin-staff-member-email, .admin-support-ticket-content) {
+  overflow-wrap: anywhere !important;
+}
+.admin-dashboard-pro .admin-product-form {
+  gap: 18px !important;
+}
+.admin-dashboard-pro :is(.admin-product-attributes, .admin-size-color-stock-editor,
+.admin-product-variants-editor, .admin-product-gallery, .admin-expense-form,
+.admin-staff-existing-form, .admin-staff-create-form, .admin-staff-permissions,
+.admin-staff-edit-panel, .admin-flash-sale-form, .admin-banner-form,
+.admin-category-form, .admin-coupon-form, .admin-vendor-form,
+.admin-delivery-settings, .admin-global-settings-form) {
+  min-width: 0 !important;
+  border-color: var(--gs-admin-line) !important;
+  border-radius: 5px !important;
+}
+.admin-dashboard-pro :is(.admin-size-color-stock-editor, .admin-product-variants-editor,
+.admin-product-gallery) {
+  background: #faf7f2 !important;
+}
+.admin-dashboard-pro :is(.admin-product-row, .admin-order-card,
+.admin-support-ticket, .admin-expense-row) img {
+  max-width: 100%;
+  border-radius: 4px !important;
+}
+.admin-dashboard-pro :is(.admin-orders-pagination, .admin-product-pagination) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 7px !important;
+}
+.admin-dashboard-pro :is(.admin-order-stock-warning, .admin-security-notice) {
+  border-radius: 4px !important;
+}
+.admin-dashboard-pro .admin-ai-chat {
+  border: 1px solid var(--gs-admin-line) !important;
+  border-radius: 6px !important;
+  background: #faf7f2 !important;
+}
+.admin-dashboard-pro .admin-ai-composer {
+  border-color: var(--gs-admin-line) !important;
+  background: var(--gs-admin-paper) !important;
+}
+@media (max-width: 1023px) {
+  .admin-dashboard-pro {
+    gap: 16px !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+  .admin-dashboard-pro :is(.admin-orders-toolbar, .admin-orders-controls,
+  .admin-analytics-toolbar, .admin-product-list-filters) {
+    flex-wrap: wrap !important;
+  }
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro {
+    padding-bottom: max(28px, env(safe-area-inset-bottom)) !important;
+  }
+  .admin-dashboard-pro :is(.admin-analytics, .admin-profit-calculator, .admin-expenses,
+  .admin-staff-panel, .admin-orders-panel, .admin-support-panel, .admin-products-panel,
+  .admin-discounts-panel, .admin-banners, .admin-category-manager, .admin-coupons-panel,
+  .admin-vendors-panel, .admin-crm-panel, .admin-settings-panel, .admin-ai-analyst) {
+    border-radius: 5px !important;
+  }
+  .admin-dashboard-pro :is(.admin-orders-header, .admin-order-card-heading,
+  .admin-order-card-footer, .admin-support-ticket-header, .admin-support-ticket-meta) {
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 9px !important;
+  }
+  .admin-dashboard-pro :is(.admin-order-actions, .admin-order-status-actions,
+  .admin-support-status-actions, .admin-product-controls, .admin-staff-actions) button {
+    min-height: 38px !important;
+    font-size: 11px !important;
+  }
+  .admin-dashboard-pro .admin-order-detail-modal {
+    width: 100% !important;
+    max-height: 94dvh !important;
+    border-radius: 6px !important;
+  }
+  .admin-dashboard-pro :is(.admin-orders-pagination, .admin-product-pagination) button {
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro :is(.admin-orders-toolbar, .admin-orders-controls,
+  .admin-product-list-filters) > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .admin-dashboard-pro :is(.admin-order-actions, .admin-order-status-actions,
+  .admin-support-status-actions) button {
+    padding-right: 9px !important;
+    padding-left: 9px !important;
+    font-size: 10px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro *,
+  .admin-dashboard-pro *::before,
+  .admin-dashboard-pro *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
