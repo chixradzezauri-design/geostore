@@ -11970,3 +11970,305 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
     transition-duration: .01ms !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 06: Checkout, account & order experience */
+.gs-commerce-overlay {
+  z-index: 10000 !important;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+  background: rgba(28, 23, 19, .66) !important;
+  backdrop-filter: blur(12px) saturate(.82) !important;
+  overscroll-behavior: contain !important;
+}
+.gs-commerce-dialog {
+  color: #302820 !important;
+  border: 1px solid #e8ded3 !important;
+  border-radius: 8px !important;
+  background: #fffdfa !important;
+  box-shadow: 0 28px 90px rgba(20, 15, 11, .28) !important;
+  scrollbar-width: thin;
+  scrollbar-color: #cbb9a5 #f5f0e9;
+}
+.gs-commerce-dialog button {
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease !important;
+}
+.gs-commerce-dialog button:focus-visible,
+.gs-commerce-dialog input:focus-visible,
+.gs-commerce-dialog select:focus-visible,
+.gs-commerce-dialog textarea:focus-visible {
+  outline: 2px solid #9a7857 !important;
+  outline-offset: 3px !important;
+}
+.gs-commerce-dialog h1,
+.gs-commerce-dialog h2,
+.gs-commerce-dialog h3 {
+  color: #302820 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  letter-spacing: -.02em !important;
+}
+.gs-commerce-dialog--checkout,
+.gs-checkout-dialog {
+  max-width: 660px !important;
+  max-height: min(92dvh, 900px) !important;
+  border-radius: 8px !important;
+}
+.gs-checkout-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+  padding: 22px clamp(18px, 4vw, 30px) !important;
+  border-bottom: 1px solid #ece4dc !important;
+  background: rgba(255, 253, 250, .97) !important;
+  color: #302820 !important;
+  backdrop-filter: blur(14px) !important;
+}
+.gs-checkout-header p,
+.gs-checkout-dialog label,
+.gs-checkout-dialog .text-neutral-500,
+.gs-checkout-dialog .text-neutral-600 {
+  color: #7e7063 !important;
+}
+.gs-checkout-form {
+  gap: 18px !important;
+  padding: 22px clamp(18px, 4vw, 30px) 26px !important;
+  background: #fffdfa !important;
+}
+.gs-checkout-form input,
+.gs-checkout-form select,
+.gs-checkout-form textarea,
+.gs-commerce-dialog--account input,
+.gs-commerce-dialog--account select {
+  min-height: 46px !important;
+  border: 1px solid #e4d9ce !important;
+  border-radius: 3px !important;
+  background: #faf7f2 !important;
+  color: #302820 !important;
+  box-shadow: none !important;
+}
+.gs-checkout-form textarea { min-height: 86px !important; }
+.gs-checkout-form input::placeholder,
+.gs-checkout-form textarea::placeholder,
+.gs-commerce-dialog--account input::placeholder {
+  color: #a29384 !important;
+}
+.gs-checkout-contact-grid { gap: 13px !important; }
+.gs-checkout-error {
+  border: 1px solid #e8c9c2 !important;
+  border-radius: 3px !important;
+  background: #fff4f1 !important;
+  color: #a33e32 !important;
+}
+.gs-checkout-submit-area {
+  margin-top: 4px !important;
+  padding-top: 18px !important;
+  border-color: #e9e0d7 !important;
+}
+.gs-checkout-submit-area button,
+.gs-checkout-dialog button[type="submit"] {
+  min-height: 48px !important;
+  border: 1px solid #302820 !important;
+  border-radius: 3px !important;
+  background: #302820 !important;
+  color: #fffaf3 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .08em !important;
+  box-shadow: none !important;
+}
+.gs-checkout-submit-area button:hover,
+.gs-checkout-dialog button[type="submit"]:hover {
+  background: #5c4938 !important;
+  transform: translateY(-1px) !important;
+}
+.gs-commerce-overlay--success { background: rgba(28, 23, 19, .72) !important; }
+.gs-order-success-dialog {
+  max-width: 480px !important;
+  padding: clamp(22px, 5vw, 36px) !important;
+  border-radius: 8px !important;
+}
+.gs-order-code-panel {
+  border: 1px solid #e6d9cb !important;
+  border-radius: 4px !important;
+  background: #f7f2eb !important;
+}
+.gs-order-code-value {
+  color: #302820 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  letter-spacing: .08em !important;
+  overflow-wrap: anywhere !important;
+}
+.gs-order-success-dialog button {
+  min-height: 44px !important;
+  border-radius: 3px !important;
+}
+.gs-commerce-dialog--tracker,
+.gs-order-tracker-dialog,
+.gs-commerce-dialog--notifications,
+.gs-commerce-dialog--account,
+.gs-warranty-dialog {
+  border: 1px solid #e6dbcf !important;
+  border-radius: 8px !important;
+  background: #fffdfa !important;
+  color: #302820 !important;
+  box-shadow: 0 28px 90px rgba(20, 15, 11, .28) !important;
+}
+.gs-order-tracker-dialog,
+.gs-commerce-dialog--notifications,
+.gs-commerce-dialog--account,
+.gs-warranty-dialog {
+  padding: clamp(18px, 4vw, 30px) !important;
+}
+.gs-order-tracker-dialog > div:first-child,
+.gs-commerce-dialog--notifications > div:first-child,
+.gs-commerce-dialog--account > div:first-child,
+.gs-warranty-dialog > div:first-child {
+  border-color: #e9e0d7 !important;
+}
+.gs-order-tracker-dialog [class*="bg-[#121216]"],
+.gs-commerce-dialog--notifications [class*="bg-[#121216]"],
+.gs-commerce-dialog--account [class*="bg-[#121216]"],
+.gs-warranty-dialog [class*="bg-[#121216]"] {
+  border-color: #e9e0d7 !important;
+  border-radius: 4px !important;
+  background: #f8f4ee !important;
+  color: #302820 !important;
+}
+.gs-order-tracker-dialog [class*="text-white"],
+.gs-commerce-dialog--notifications [class*="text-white"],
+.gs-commerce-dialog--account [class*="text-white"],
+.gs-warranty-dialog [class*="text-white"] {
+  color: #302820 !important;
+}
+.gs-order-tracker-dialog [class*="text-slate-"],
+.gs-commerce-dialog--notifications [class*="text-slate-"],
+.gs-commerce-dialog--account [class*="text-slate-"],
+.gs-warranty-dialog [class*="text-slate-"] {
+  color: #7e7063 !important;
+}
+.gs-order-tracker-dialog [class*="border-amber-"],
+.gs-commerce-dialog--notifications [class*="border-amber-"],
+.gs-commerce-dialog--account [class*="border-amber-"],
+.gs-warranty-dialog [class*="border-amber-"] {
+  border-color: #e5d8c8 !important;
+}
+.gs-order-tracker-dialog [class*="bg-amber-"],
+.gs-commerce-dialog--notifications [class*="bg-amber-"],
+.gs-commerce-dialog--account [class*="bg-amber-"],
+.gs-warranty-dialog [class*="bg-amber-"] {
+  background: #efe4d7 !important;
+  color: #6d543d !important;
+}
+.gs-order-tracker-dialog button,
+.gs-commerce-dialog--notifications button,
+.gs-commerce-dialog--account button,
+.gs-warranty-dialog button {
+  border-radius: 3px !important;
+}
+.gs-order-tracker-dialog input,
+.gs-order-tracker-dialog textarea,
+.gs-commerce-dialog--account input {
+  min-height: 44px !important;
+  border: 1px solid #e4d9ce !important;
+  border-radius: 3px !important;
+  background: #faf7f2 !important;
+  color: #302820 !important;
+}
+.gs-order-tracker-form button,
+.gs-commerce-dialog--account button[type="submit"],
+.gs-order-tracker-dialog button[type="submit"] {
+  min-height: 44px !important;
+  border: 1px solid #302820 !important;
+  border-radius: 3px !important;
+  background: #302820 !important;
+  color: #fffaf3 !important;
+}
+.gs-order-tracker-progress [class*="bg-amber-"] {
+  background: #9b8065 !important;
+}
+.gs-commerce-dialog--notifications [class*="hover:border-amber-"]:hover {
+  border-color: #b49a7e !important;
+  background: #f5eee6 !important;
+}
+.gs-terms-dialog {
+  border: 1px solid #e6dbcf !important;
+  border-radius: 8px !important;
+  background: #fffdfa !important;
+  color: #302820 !important;
+  box-shadow: 0 28px 90px rgba(20, 15, 11, .28) !important;
+}
+.gs-terms-header {
+  border-color: #e9e0d7 !important;
+  background: #fffdfa !important;
+}
+.gs-terms-header-icon {
+  border: 1px solid #e6d8c8 !important;
+  background: #f4ede4 !important;
+  color: #765c43 !important;
+}
+.gs-terms-eyebrow,
+.gs-terms-section-label {
+  color: #92795f !important;
+}
+.gs-terms-section {
+  border-color: #eee6de !important;
+}
+.gs-terms-section-number {
+  color: #a48a6d !important;
+}
+.gs-terms-footer {
+  border-color: #e9e0d7 !important;
+  background: #faf7f2 !important;
+}
+@media (max-width: 640px) {
+  .gs-commerce-overlay {
+    align-items: flex-end !important;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  .gs-commerce-dialog--checkout,
+  .gs-checkout-dialog {
+    width: 100% !important;
+    max-height: min(94dvh, 900px) !important;
+    border-radius: 8px 8px 4px 4px !important;
+  }
+  .gs-checkout-header {
+    padding: 17px 16px !important;
+  }
+  .gs-checkout-form {
+    gap: 15px !important;
+    padding: 17px 16px max(20px, env(safe-area-inset-bottom)) !important;
+  }
+  .gs-checkout-contact-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .gs-commerce-dialog--account,
+  .gs-commerce-dialog--notifications,
+  .gs-order-tracker-dialog,
+  .gs-warranty-dialog {
+    width: 100% !important;
+    max-width: 520px !important;
+    max-height: min(90dvh, 820px) !important;
+    margin: auto 0 !important;
+    padding: 18px !important;
+  }
+  .gs-order-success-dialog {
+    max-width: 100% !important;
+    margin: auto 0 !important;
+    padding: 22px 18px !important;
+  }
+}
+@media (max-width: 380px) {
+  .gs-checkout-header,
+  .gs-checkout-form { padding-right: 13px !important; padding-left: 13px !important; }
+  .gs-commerce-dialog--account,
+  .gs-commerce-dialog--notifications,
+  .gs-order-tracker-dialog,
+  .gs-warranty-dialog { padding: 15px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-commerce-dialog *,
+  .gs-commerce-overlay * {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
