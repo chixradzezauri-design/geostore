@@ -4515,14 +4515,26 @@ export default function AdminDashboardPro({
                   <p className="text-slate-500 text-xs text-center py-4">ხარჯები ჯერ არ არის დამატებული.</p>
                 ) : (
                   expenses.map(exp => (
-                    <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
-                      <div>
-                        <b className="text-white">{exp.description}</b> <span className="text-slate-400">({exp.category})</span> 
-                        <span className="text-slate-500 text-[10px] ml-2">{exp.date}</span>
+                    <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 text-xs shadow-inner">
+                      <div className="admin-expense-details min-w-0">
+                        <div className="admin-expense-heading flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
+                          <b className="admin-expense-description text-white break-words">{exp.description || 'ხარჯი'}</b>
+                          <span className="admin-expense-category text-slate-300 break-words">({exp.category || 'კატეგორია უცნობია'})</span>
+                        </div>
+                        <span className="admin-expense-date block text-slate-400 text-[11px] mt-2">{exp.date || 'თარიღი მითითებული არ არის'}</span>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-black text-rose-400">-{exp.amount} ₾</span>
-                        <span className="text-[10px] text-slate-500" title="ხარჯის ისტორია დაცულია და პირდაპირი წაშლა გამორთულია">ისტორიული ჩანაწერი</span>
+                      <div className="admin-expense-actions flex items-center gap-3">
+                        <span className="admin-expense-amount font-black text-rose-300 whitespace-nowrap">-{(Number(exp.amount) || 0).toFixed(2)} ₾</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExpense(exp.id)}
+                          className="admin-expense-delete"
+                          aria-label={`ხარჯის წაშლა: ${exp.description || exp.id}`}
+                          title="ხარჯის წაშლა"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>წაშლა</span>
+                        </button>
                       </div>
                     </div>
                   ))
