@@ -14888,3 +14888,180 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 17: Global settings & security workspace */
+.admin-dashboard-pro .admin-settings-panel {
+  --settings-accent: #34d399;
+  gap: 18px;
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-settings-panel > div {
+  min-width: 0;
+  padding: clamp(18px, 2.2vw, 30px) !important;
+  border-radius: 23px !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(16,185,129,.075), transparent 43%), linear-gradient(145deg, rgba(15,23,42,.97), rgba(2,6,23,.94)) !important;
+  box-shadow: 0 16px 42px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.admin-dashboard-pro .admin-security-notice {
+  border-color: rgba(251,191,36,.28) !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(245,158,11,.09), transparent 48%), linear-gradient(145deg, rgba(30,25,18,.72), rgba(15,23,42,.96)) !important;
+}
+.admin-dashboard-pro .admin-security-notice h3,
+.admin-dashboard-pro .admin-delivery-settings h3,
+.admin-dashboard-pro .admin-global-settings h3 {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 42px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148,163,184,.16);
+  color: #f8fafc;
+  letter-spacing: -.025em;
+  line-height: 1.45;
+}
+.admin-dashboard-pro .admin-security-notice p {
+  max-width: 920px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-security-notice p + p {
+  padding: 12px 14px;
+  border: 1px solid rgba(251,191,36,.16);
+  border-radius: 13px;
+  background: rgba(245,158,11,.055);
+}
+.admin-dashboard-pro .admin-delivery-fee-fields {
+  gap: 12px;
+}
+.admin-dashboard-pro .admin-delivery-fee-fields > div {
+  min-width: 0;
+  padding: 17px !important;
+  border-color: rgba(148,163,184,.17) !important;
+  border-radius: 17px !important;
+  background: rgba(2,6,23,.58) !important;
+}
+.admin-dashboard-pro .admin-delivery-fee-fields label {
+  display: block;
+  min-height: 34px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-delivery-fee-fields input,
+.admin-dashboard-pro .admin-global-settings-form input,
+.admin-dashboard-pro .admin-global-settings-form textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid rgba(148,163,184,.2) !important;
+  border-radius: 13px !important;
+  background: rgba(2,6,23,.82) !important;
+  color: #f8fafc !important;
+  font-size: 13px;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.admin-dashboard-pro .admin-delivery-fee-fields input {
+  color: #6ee7b7 !important;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro .admin-delivery-fee-fields input:focus,
+.admin-dashboard-pro .admin-global-settings-form input:focus,
+.admin-dashboard-pro .admin-global-settings-form textarea:focus {
+  border-color: rgba(52,211,153,.72) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.11);
+  background: rgba(2,6,23,.98) !important;
+}
+.admin-dashboard-pro .admin-delivery-settings > button,
+.admin-dashboard-pro .admin-global-settings-form > button {
+  min-height: 46px;
+  border: 1px solid rgba(167,243,208,.26);
+  border-radius: 13px !important;
+  background: linear-gradient(135deg,#34d399,#10b981 58%,#059669) !important;
+  color: #052e25 !important;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(16,185,129,.15);
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-delivery-settings > button:hover,
+.admin-dashboard-pro .admin-global-settings-form > button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 13px 28px rgba(16,185,129,.21);
+}
+.admin-dashboard-pro .admin-global-settings-form {
+  gap: 16px;
+}
+.admin-dashboard-pro .admin-global-settings-form > div {
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-global-settings-form label {
+  display: block;
+  margin-bottom: 7px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-global-settings-form input,
+.admin-dashboard-pro .admin-global-settings-form textarea {
+  padding: 13px 15px !important;
+}
+.admin-dashboard-pro .admin-global-settings-form textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.65;
+}
+.admin-dashboard-pro .admin-global-settings > div:last-child {
+  border-color: rgba(148,163,184,.16) !important;
+}
+.admin-dashboard-pro .admin-global-settings > div:last-child h4 {
+  color: #f1f5f9;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-global-settings > div:last-child > div > div {
+  min-width: 0;
+  padding: 13px !important;
+  border-color: rgba(148,163,184,.17) !important;
+  border-radius: 13px !important;
+  background: rgba(2,6,23,.58) !important;
+}
+.admin-dashboard-pro .admin-global-settings > div:last-child button {
+  min-height: 36px;
+  border-radius: 10px;
+  transition: background .18s ease, border-color .18s ease;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-settings-panel { gap: 14px; }
+  .admin-dashboard-pro .admin-settings-panel > div {
+    padding: 17px !important;
+    border-radius: 19px !important;
+  }
+  .admin-dashboard-pro .admin-delivery-fee-fields {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-delivery-fee-fields > div {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro .admin-delivery-fee-fields label {
+    min-height: 0;
+  }
+  .admin-dashboard-pro .admin-delivery-settings > button,
+  .admin-dashboard-pro .admin-global-settings-form > button {
+    width: 100%;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-settings-panel > div { padding: 13px !important; }
+  .admin-dashboard-pro .admin-global-settings-form input,
+  .admin-dashboard-pro .admin-global-settings-form textarea { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-delivery-settings > button,
+  .admin-dashboard-pro .admin-global-settings-form > button,
+  .admin-dashboard-pro .admin-delivery-fee-fields input,
+  .admin-dashboard-pro .admin-global-settings-form input,
+  .admin-dashboard-pro .admin-global-settings-form textarea {
+    transition: none !important;
+    transform: none !important;
+  }
+}
