@@ -15910,3 +15910,166 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 22: Advertising banners workspace */
+.admin-dashboard-pro .admin-banners {
+  min-width: 0;
+  gap: 20px;
+}
+.admin-dashboard-pro .admin-banners > div {
+  min-width: 0;
+  padding: clamp(17px,2.2vw,28px) !important;
+  border: 1px solid rgba(52,211,153,.18) !important;
+  border-radius: 22px !important;
+  background: radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.075),transparent 45%),linear-gradient(145deg,rgba(15,23,42,.97),rgba(2,6,23,.94)) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035);
+}
+.admin-dashboard-pro .admin-banners > div > h3 {
+  padding-bottom: 15px;
+  border-color: rgba(52,211,153,.18) !important;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.admin-dashboard-pro .admin-banner-form {
+  min-width: 0;
+  gap: 14px;
+}
+.admin-dashboard-pro .admin-banner-fields {
+  min-width: 0;
+  gap: 11px;
+}
+.admin-dashboard-pro .admin-banner-form input:not([type="file"]),
+.admin-dashboard-pro .admin-banner-form textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px 14px !important;
+  border: 1px solid rgba(148,163,184,.2) !important;
+  border-radius: 12px !important;
+  background: rgba(2,6,23,.84) !important;
+  color: #f1f5f9 !important;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: border-color .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-banner-form input:focus,
+.admin-dashboard-pro .admin-banner-form textarea:focus {
+  border-color: rgba(52,211,153,.65) !important;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.1);
+}
+.admin-dashboard-pro .admin-banner-form input::placeholder {
+  color: #8292a8;
+  opacity: 1;
+}
+.admin-dashboard-pro .admin-banner-form > button[type="submit"] {
+  min-height: 47px;
+  padding: 12px 20px !important;
+  border-radius: 12px !important;
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 9px 22px rgba(16,185,129,.15);
+  transition: transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-banner-form > button[type="submit"]:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 26px rgba(16,185,129,.2);
+}
+.admin-dashboard-pro .admin-banner-list {
+  min-width: 0;
+  gap: 13px;
+}
+.admin-dashboard-pro .admin-banner-card {
+  min-width: 0;
+  padding: 13px !important;
+  border-color: rgba(52,211,153,.17) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg,rgba(15,23,42,.88),rgba(2,6,23,.76)) !important;
+  transition: border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-banner-card:hover {
+  border-color: rgba(52,211,153,.36) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(0,0,0,.2);
+}
+.admin-dashboard-pro .admin-banner-card > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.admin-dashboard-pro .admin-banner-card img {
+  width: 88px !important;
+  height: 64px !important;
+  flex: 0 0 88px;
+  border-radius: 11px !important;
+  border-color: rgba(52,211,153,.22) !important;
+  background: rgba(15,23,42,.8);
+  object-fit: cover;
+}
+.admin-dashboard-pro .admin-banner-card h4 {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.admin-dashboard-pro .admin-banner-card p {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-banner-card > button {
+  flex: 0 0 auto;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(251,113,133,.15);
+  border-radius: 11px !important;
+  transition: background .18s ease,transform .18s ease;
+}
+.admin-dashboard-pro .admin-banner-card > button:hover {
+  transform: translateY(-1px);
+  background: rgba(244,63,94,.2);
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-banners { gap: 14px; }
+  .admin-dashboard-pro .admin-banners > div {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro .admin-banner-fields {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-banner-form > button[type="submit"] {
+    width: 100%;
+    justify-content: center;
+  }
+  .admin-dashboard-pro .admin-banner-list {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-banner-card {
+    align-items: center;
+    padding: 11px !important;
+  }
+  .admin-dashboard-pro .admin-banner-card img {
+    width: 76px !important;
+    height: 58px !important;
+    flex-basis: 76px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-banners > div { padding: 13px !important; }
+  .admin-dashboard-pro .admin-banner-card { gap: 8px; }
+  .admin-dashboard-pro .admin-banner-card img {
+    width: 62px !important;
+    height: 52px !important;
+    flex-basis: 62px;
+  }
+  .admin-dashboard-pro .admin-banner-card > button {
+    min-width: 34px;
+    min-height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-banner-card,
+  .admin-dashboard-pro .admin-banner-card > button,
+  .admin-dashboard-pro .admin-banner-form > button[type="submit"] {
+    transition: none !important;
+    transform: none !important;
+  }
+}
