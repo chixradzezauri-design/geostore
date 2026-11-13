@@ -16073,3 +16073,168 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 23: Discounts & coupon management */
+.admin-dashboard-pro .admin-discounts-panel,
+.admin-dashboard-pro .admin-coupons-panel > div {
+  min-width: 0;
+  padding: clamp(17px,2.2vw,28px) !important;
+  border: 1px solid rgba(52,211,153,.18) !important;
+  border-radius: 22px !important;
+  background: radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.075),transparent 45%),linear-gradient(145deg,rgba(15,23,42,.97),rgba(2,6,23,.94)) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035);
+}
+.admin-dashboard-pro .admin-discounts-panel > h3,
+.admin-dashboard-pro .admin-coupons-panel > div > h3 {
+  padding-bottom: 15px;
+  border-color: rgba(52,211,153,.18) !important;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.admin-dashboard-pro .admin-flash-sale-form,
+.admin-dashboard-pro .admin-coupon-form {
+  min-width: 0;
+  gap: 12px;
+}
+.admin-dashboard-pro .admin-flash-sale-fields {
+  min-width: 0;
+  gap: 12px;
+}
+.admin-dashboard-pro .admin-flash-sale-fields > div {
+  min-width: 0;
+  gap: 8px;
+}
+.admin-dashboard-pro .admin-flash-sale-fields label {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: .015em;
+}
+.admin-dashboard-pro .admin-flash-sale-form input,
+.admin-dashboard-pro .admin-flash-sale-form select,
+.admin-dashboard-pro .admin-coupon-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px 14px !important;
+  border: 1px solid rgba(148,163,184,.2) !important;
+  border-radius: 12px !important;
+  background: rgba(2,6,23,.84) !important;
+  color: #f1f5f9 !important;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: border-color .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-flash-sale-form input:focus,
+.admin-dashboard-pro .admin-flash-sale-form select:focus,
+.admin-dashboard-pro .admin-coupon-form input:focus {
+  border-color: rgba(52,211,153,.65) !important;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.1);
+}
+.admin-dashboard-pro .admin-flash-sale-form input::placeholder,
+.admin-dashboard-pro .admin-coupon-form input::placeholder {
+  color: #8292a8;
+  opacity: 1;
+}
+.admin-dashboard-pro .admin-flash-sale-submit,
+.admin-dashboard-pro .admin-coupon-form button[type="submit"] {
+  min-height: 47px;
+  padding: 12px 19px !important;
+  border-radius: 12px !important;
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 9px 22px rgba(16,185,129,.15);
+  transition: transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-flash-sale-submit:hover:not(:disabled),
+.admin-dashboard-pro .admin-coupon-form button[type="submit"]:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 26px rgba(16,185,129,.2);
+}
+.admin-dashboard-pro .admin-flash-sale-submit:disabled {
+  cursor: wait;
+  filter: saturate(.65);
+}
+.admin-dashboard-pro .admin-coupon-list {
+  min-width: 0;
+  gap: 12px;
+}
+.admin-dashboard-pro .admin-coupon-card {
+  min-width: 0;
+  padding: 14px !important;
+  border-color: rgba(52,211,153,.17) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg,rgba(15,23,42,.88),rgba(2,6,23,.76)) !important;
+  gap: 12px;
+  transition: border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-coupon-card:hover {
+  border-color: rgba(52,211,153,.34) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(0,0,0,.2);
+}
+.admin-dashboard-pro .admin-coupon-card > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.admin-dashboard-pro .admin-coupon-card h4 {
+  overflow-wrap: anywhere;
+  letter-spacing: .08em;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-coupon-card p {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-coupon-card > button {
+  flex: 0 0 auto;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(251,113,133,.15);
+  border-radius: 11px !important;
+  transition: background .18s ease,transform .18s ease;
+}
+.admin-dashboard-pro .admin-coupon-card > button:hover {
+  transform: translateY(-1px);
+  background: rgba(244,63,94,.2);
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-discounts-panel,
+  .admin-dashboard-pro .admin-coupons-panel > div {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro .admin-flash-sale-fields,
+  .admin-dashboard-pro .admin-coupon-form {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-flash-sale-submit,
+  .admin-dashboard-pro .admin-coupon-form button[type="submit"] {
+    width: 100%;
+    justify-content: center;
+  }
+  .admin-dashboard-pro .admin-coupon-list {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-coupon-card { padding: 12px !important; }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-discounts-panel,
+  .admin-dashboard-pro .admin-coupons-panel > div { padding: 13px !important; }
+  .admin-dashboard-pro .admin-coupon-card { gap: 8px; padding: 10px !important; }
+  .admin-dashboard-pro .admin-coupon-card > button {
+    min-width: 34px;
+    min-height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-coupon-card,
+  .admin-dashboard-pro .admin-coupon-card > button,
+  .admin-dashboard-pro .admin-flash-sale-submit,
+  .admin-dashboard-pro .admin-coupon-form button[type="submit"] {
+    transition: none !important;
+    transform: none !important;
+  }
+}
