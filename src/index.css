@@ -13423,3 +13423,318 @@ select, textarea)::placeholder {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 11: Support inbox & conversations */
+.admin-dashboard-pro .admin-support-panel {
+  padding: clamp(16px, 2.5vw, 30px) !important;
+  border: 1px solid #e7ddd1 !important;
+  border-radius: 8px !important;
+  background: #fffdfa !important;
+  color: #4b4035 !important;
+  box-shadow: 0 14px 40px rgba(50, 38, 25, .06) !important;
+  backdrop-filter: none !important;
+}
+.admin-dashboard-pro .admin-support-panel > h3 {
+  align-items: center !important;
+  padding-bottom: 17px !important;
+  border-color: #e9e1d8 !important;
+  color: #302820 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: clamp(17px, 2vw, 21px) !important;
+  letter-spacing: -.02em !important;
+}
+.admin-dashboard-pro .admin-support-panel > h3 svg {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 8px !important;
+  border: 1px solid #e5d9cb !important;
+  border-radius: 5px !important;
+  background: #f4ede4 !important;
+  color: #80664b !important;
+}
+.admin-dashboard-pro .admin-support-panel > [role="alert"] {
+  border-color: #ecd2ca !important;
+  border-radius: 5px !important;
+  background: #fff4f0 !important;
+  color: #98584c !important;
+  line-height: 1.65 !important;
+}
+.admin-dashboard-pro .admin-support-panel > [role="alert"] button {
+  color: #8d5145 !important;
+  font-weight: 800 !important;
+}
+.admin-dashboard-pro .admin-support-list {
+  display: grid !important;
+  gap: 13px !important;
+}
+.admin-dashboard-pro .admin-support-list > p {
+  padding: 34px 16px !important;
+  border: 1px dashed #dfd3c6 !important;
+  border-radius: 6px !important;
+  background: #faf7f2 !important;
+  color: #928373 !important;
+}
+.admin-dashboard-pro .admin-support-ticket {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 15px !important;
+  padding: clamp(14px, 2vw, 21px) !important;
+  border: 1px solid #e9e0d6 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #625649 !important;
+  box-shadow: 0 3px 14px rgba(47, 37, 26, .035) !important;
+}
+.admin-dashboard-pro .admin-support-ticket-header {
+  align-items: center !important;
+  padding-bottom: 13px !important;
+  border-color: #eee7df !important;
+}
+.admin-dashboard-pro .admin-support-ticket-meta {
+  gap: 9px !important;
+}
+.admin-dashboard-pro .admin-support-ticket-meta > span:first-child {
+  padding: 5px 8px !important;
+  border: 1px solid #e5d8c8 !important;
+  border-radius: 4px !important;
+  background: #f5eee6 !important;
+  color: #80664b !important;
+  font-size: 11px !important;
+}
+.admin-dashboard-pro .admin-support-ticket-meta > span:nth-child(2) {
+  color: #342b23 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-meta > span:nth-child(3) {
+  color: #998b7d !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-support-ticket-controls {
+  gap: 8px !important;
+}
+.admin-dashboard-pro .admin-support-status-actions {
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  border: 1px solid #e9e0d6 !important;
+  border-radius: 5px !important;
+  background: #faf7f2 !important;
+}
+.admin-dashboard-pro .admin-support-status-actions button {
+  min-height: 32px !important;
+  padding: 7px 10px !important;
+  border-radius: 4px !important;
+  color: #827465 !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-support-status-actions button[class*="bg-emerald"] {
+  border: 1px solid #d7e2d0 !important;
+  background: #eaf1e6 !important;
+  color: #526c49 !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro .admin-support-ticket-controls > button:not(:last-child) {
+  min-height: 37px !important;
+  padding: 8px 12px !important;
+  border: 1px solid #d8e1e5 !important;
+  border-radius: 5px !important;
+  background: #f1f6f7 !important;
+  color: #4e717a !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-support-ticket-controls > button:not(:last-child):hover {
+  background: #e7f0f2 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-controls > button:last-child {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border: 1px solid #efd9d4 !important;
+  border-radius: 5px !important;
+  background: #fff4f1 !important;
+  color: #a65c50 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-content {
+  display: grid !important;
+  gap: 9px !important;
+  color: #75685a !important;
+  line-height: 1.65 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-content > p:first-child b {
+  color: #3b3229 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-message {
+  margin-top: 0 !important;
+  padding: 14px 16px !important;
+  border: 1px solid #e9e1d8 !important;
+  border-left: 3px solid #b49a7b !important;
+  border-radius: 5px !important;
+  background: #faf7f2 !important;
+  color: #51463a !important;
+  line-height: 1.75 !important;
+  overflow-wrap: anywhere !important;
+}
+.admin-dashboard-pro .admin-support-ticket-message b {
+  margin-bottom: 5px !important;
+  color: #80664b !important;
+  font-size: 10px !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+.admin-dashboard-pro .admin-support-ticket-reply {
+  padding: 14px 16px !important;
+  border: 1px solid #dce6d7 !important;
+  border-left: 3px solid #829a76 !important;
+  border-radius: 5px !important;
+  background: #f4f8f1 !important;
+  color: #4d6247 !important;
+  box-shadow: none !important;
+  line-height: 1.7 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-reply b {
+  color: #607b58 !important;
+}
+.admin-dashboard-pro .admin-support-ticket-reply p {
+  color: #4e5e49 !important;
+  overflow-wrap: anywhere !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 {
+  padding: clamp(12px, 2vw, 18px) !important;
+  border: 1px solid #dce5e7 !important;
+  border-radius: 5px !important;
+  background: #f7faf9 !important;
+  color: #596d70 !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 > div:first-child {
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid #e4ebeb !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 b {
+  color: #45676d !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 button {
+  color: #547d82 !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+  max-height: min(420px, 52dvh) !important;
+  padding: 3px 3px 3px 0 !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #c9d5d4 transparent !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 > div {
+  max-width: 88% !important;
+  padding: 11px 13px !important;
+  border: 1px solid #e2e8e7 !important;
+  border-radius: 5px 12px 12px 12px !important;
+  background: #fff !important;
+  color: #5b6968 !important;
+  box-shadow: 0 2px 7px rgba(40, 60, 58, .035) !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 > div:has(b.text-emerald-300) {
+  align-self: flex-end !important;
+  border-color: #dce7d7 !important;
+  border-radius: 12px 5px 12px 12px !important;
+  background: #f2f7ef !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 > div b {
+  color: #587b6c !important;
+  font-size: 11px !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 > div span {
+  color: #a09385 !important;
+  font-size: 9px !important;
+}
+.admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 > div p {
+  color: #4f5d59 !important;
+  line-height: 1.7 !important;
+  overflow-wrap: anywhere !important;
+}
+.admin-dashboard-pro .admin-support-reply-form {
+  gap: 9px !important;
+  padding-top: 5px !important;
+}
+.admin-dashboard-pro .admin-support-reply-form input {
+  min-width: 0 !important;
+  min-height: 45px !important;
+  padding: 12px 14px !important;
+  border: 1px solid #e5dbd0 !important;
+  border-radius: 5px !important;
+  background: #faf7f2 !important;
+  color: #302820 !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro .admin-support-reply-form input::placeholder {
+  color: #a09283 !important;
+}
+.admin-dashboard-pro .admin-support-reply-form input:focus {
+  border-color: #a88c6d !important;
+  outline: 3px solid rgba(168, 140, 109, .13) !important;
+}
+.admin-dashboard-pro .admin-support-reply-form button {
+  min-height: 45px !important;
+  padding: 10px 19px !important;
+  border: 1px solid #80664b !important;
+  border-radius: 5px !important;
+  background: #80664b !important;
+  color: #fffaf3 !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+}
+.admin-dashboard-pro .admin-support-reply-form button:hover:not(:disabled) {
+  background: #6d563f !important;
+}
+.admin-dashboard-pro .admin-support-reply-form button:disabled {
+  opacity: .48 !important;
+}
+@media (max-width: 700px) {
+  .admin-dashboard-pro .admin-support-panel {
+    padding: 14px !important;
+    border-radius: 6px !important;
+  }
+  .admin-dashboard-pro .admin-support-ticket {
+    padding: 13px !important;
+  }
+  .admin-dashboard-pro .admin-support-ticket-header {
+    align-items: stretch !important;
+  }
+  .admin-dashboard-pro .admin-support-ticket-controls {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+  }
+  .admin-dashboard-pro .admin-support-status-actions {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .admin-dashboard-pro .admin-support-status-actions button {
+    padding-inline: 5px !important;
+    font-size: 9px !important;
+  }
+  .admin-dashboard-pro .admin-support-ticket-controls > button:not(:last-child) {
+    width: 100% !important;
+  }
+  .admin-dashboard-pro .admin-support-ticket > div.rounded-2xl.border-cyan-500\/20 .max-h-96 > div {
+    max-width: 96% !important;
+  }
+  .admin-dashboard-pro .admin-support-reply-form {
+    flex-direction: column !important;
+  }
+  .admin-dashboard-pro .admin-support-reply-form input,
+  .admin-dashboard-pro .admin-support-reply-form button {
+    width: 100% !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-support-ticket,
+  .admin-dashboard-pro .admin-support-ticket-controls button {
+    transition-duration: .01ms !important;
+  }
+}
