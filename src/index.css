@@ -17752,3 +17752,80 @@ select, textarea)::placeholder {
     animation: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 34: Audit log timeline refinement */
+.admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div {
+  position: relative;
+  padding-left: 42px !important;
+  isolation: isolate;
+}
+.admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 18px;
+  left: 17px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(167,243,208,.9);
+  border-radius: 50%;
+  background: #064e3b;
+  box-shadow: 0 0 0 4px rgba(16,185,129,.1),0 0 14px rgba(52,211,153,.24);
+  pointer-events: none;
+}
+.admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: -11px;
+  left: 21px;
+  width: 1px;
+  background: linear-gradient(180deg,rgba(52,211,153,.38),rgba(52,211,153,.08));
+  pointer-events: none;
+}
+.admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div:last-child::after {
+  display: none;
+}
+.admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div > span:first-child {
+  position: relative;
+  z-index: 1;
+}
+.admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div > span:last-child {
+  align-self: flex-start;
+  margin-top: 1px;
+  border-color: rgba(52,211,153,.2);
+  background: rgba(6,78,59,.24);
+  color: #a7f3d0 !important;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div {
+    padding-left: 39px !important;
+  }
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div::before {
+    left: 15px;
+  }
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div::after {
+    left: 19px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div {
+    padding: 12px 10px 12px 36px !important;
+  }
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div::before {
+    left: 13px;
+    width: 9px;
+    height: 9px;
+  }
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div::after {
+    left: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro > div:has(> h3 svg.lucide-activity) > div > div {
+    transition: none !important;
+    transform: none !important;
+  }
+}
