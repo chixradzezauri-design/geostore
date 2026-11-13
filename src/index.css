@@ -15472,3 +15472,245 @@ select, textarea)::placeholder {
   .admin-dashboard-pro .admin-ai-message { animation: none !important; }
   .admin-dashboard-pro .admin-ai-composer button { transition: none !important; }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 20: Staff & permissions workspace */
+.admin-dashboard-pro .admin-staff {
+  --staff-accent: #34d399;
+  min-width: 0;
+  gap: 18px;
+}
+.admin-dashboard-pro .admin-staff > [role="note"] {
+  padding: 15px 18px !important;
+  border-radius: 17px !important;
+  border-color: rgba(245,158,11,.3) !important;
+  background: linear-gradient(110deg,rgba(245,158,11,.09),rgba(15,23,42,.72)) !important;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-staff > [role="note"] strong {
+  color: #fde68a;
+  font-size: 12px;
+  letter-spacing: -.01em;
+}
+.admin-dashboard-pro .admin-staff-panel,
+.admin-dashboard-pro .admin-staff-list-panel {
+  min-width: 0;
+  padding: clamp(17px,2.2vw,27px) !important;
+  border-color: rgba(52,211,153,.19) !important;
+  border-radius: 22px !important;
+  background: radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.065),transparent 48%),linear-gradient(145deg,rgba(15,23,42,.96),rgba(2,6,23,.94)) !important;
+  box-shadow: 0 16px 38px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035);
+}
+.admin-dashboard-pro .admin-staff-panel > h3 {
+  min-width: 0;
+  padding-bottom: 15px;
+  border-color: rgba(52,211,153,.18) !important;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-staff-panel > h3 svg {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 8px rgba(52,211,153,.2));
+}
+.admin-dashboard-pro .admin-staff-existing-form,
+.admin-dashboard-pro .admin-staff-create-form {
+  min-width: 0;
+  gap: 12px;
+}
+.admin-dashboard-pro .admin-staff-existing-form select,
+.admin-dashboard-pro .admin-staff-create-form input,
+.admin-dashboard-pro .admin-staff-create-form select,
+.admin-dashboard-pro .admin-staff-edit-panel input {
+  width: 100%;
+  min-width: 0;
+  min-height: 45px;
+  padding: 11px 13px !important;
+  border: 1px solid rgba(148,163,184,.19) !important;
+  border-radius: 12px !important;
+  background: rgba(2,6,23,.82) !important;
+  color: #f1f5f9 !important;
+  font-size: 12px;
+  outline: none;
+  transition: border-color .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-staff-existing-form select:focus,
+.admin-dashboard-pro .admin-staff-create-form input:focus,
+.admin-dashboard-pro .admin-staff-create-form select:focus,
+.admin-dashboard-pro .admin-staff-edit-panel input:focus {
+  border-color: rgba(52,211,153,.65) !important;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.1);
+}
+.admin-dashboard-pro .admin-staff-existing-form button,
+.admin-dashboard-pro .admin-staff-create-form > button {
+  min-height: 45px;
+  border-radius: 12px !important;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(16,185,129,.12);
+  transition: transform .18s ease,filter .18s ease;
+}
+.admin-dashboard-pro .admin-staff-existing-form button:hover,
+.admin-dashboard-pro .admin-staff-create-form > button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.admin-dashboard-pro .admin-staff-permissions {
+  padding: 16px !important;
+  border-color: rgba(52,211,153,.16) !important;
+  border-radius: 16px !important;
+  background: rgba(2,6,23,.58) !important;
+}
+.admin-dashboard-pro .admin-staff-permission-grid,
+.admin-dashboard-pro .admin-staff-edit-permissions {
+  gap: 10px 14px;
+}
+.admin-dashboard-pro .admin-staff-permission-grid label,
+.admin-dashboard-pro .admin-staff-edit-permissions label {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(148,163,184,.1);
+  border-radius: 10px;
+  background: rgba(15,23,42,.55);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  transition: border-color .18s ease,background .18s ease;
+}
+.admin-dashboard-pro .admin-staff-permission-grid label:has(input:checked),
+.admin-dashboard-pro .admin-staff-edit-permissions label:has(input:checked) {
+  border-color: rgba(52,211,153,.25);
+  background: rgba(16,185,129,.075);
+}
+.admin-dashboard-pro .admin-staff-permission-grid input,
+.admin-dashboard-pro .admin-staff-edit-permissions input {
+  flex: 0 0 auto;
+  accent-color: #34d399;
+}
+.admin-dashboard-pro .admin-staff-list-title {
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(52,211,153,.15);
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-staff-cards-list { min-width: 0; }
+.admin-dashboard-pro .admin-staff-card {
+  min-width: 0;
+  padding: 17px !important;
+  border-color: rgba(148,163,184,.14) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg,rgba(15,23,42,.88),rgba(2,6,23,.76)) !important;
+  transition: border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-staff-card:hover {
+  border-color: rgba(52,211,153,.27) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+.admin-dashboard-pro .admin-staff-card > div:first-child {
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-staff-card > div:first-child > div:first-child {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.admin-dashboard-pro .admin-staff-card > div:first-child b {
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-staff-member-email {
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.admin-dashboard-pro .admin-staff-actions {
+  flex-wrap: wrap;
+}
+.admin-dashboard-pro .admin-staff-actions button {
+  min-height: 38px;
+  border-radius: 11px !important;
+  transition: filter .18s ease,transform .18s ease;
+}
+.admin-dashboard-pro .admin-staff-actions button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+.admin-dashboard-pro .admin-staff-permission-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-staff-edit-panel {
+  min-width: 0;
+  padding: 16px !important;
+  border-color: rgba(251,191,36,.25) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(145deg,rgba(30,41,59,.85),rgba(15,23,42,.9)) !important;
+}
+.admin-dashboard-pro .admin-staff-edit-panel label,
+.admin-dashboard-pro .admin-staff-edit-panel > div > span {
+  display: block;
+  margin-bottom: 7px;
+}
+.admin-dashboard-pro .admin-staff-edit-panel .admin-staff-edit-permissions label {
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+.admin-dashboard-pro .admin-staff-edit-panel > div:last-child button {
+  min-height: 37px;
+  padding-inline: 14px !important;
+  border-radius: 10px !important;
+  font-weight: 850;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-staff { gap: 14px; }
+  .admin-dashboard-pro .admin-staff-panel,
+  .admin-dashboard-pro .admin-staff-list-panel {
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro .admin-staff-existing-form,
+  .admin-dashboard-pro .admin-staff-create-form > div:first-child {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-staff-existing-form select { grid-column: auto !important; }
+  .admin-dashboard-pro .admin-staff-permission-grid,
+  .admin-dashboard-pro .admin-staff-edit-permissions {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px;
+  }
+  .admin-dashboard-pro .admin-staff-card {
+    padding: 14px !important;
+    border-radius: 15px !important;
+  }
+  .admin-dashboard-pro .admin-staff-actions {
+    width: 100%;
+    justify-content: flex-start !important;
+  }
+  .admin-dashboard-pro .admin-staff-actions button:first-child {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-staff-panel,
+  .admin-dashboard-pro .admin-staff-list-panel { padding: 13px !important; }
+  .admin-dashboard-pro .admin-staff-permission-grid,
+  .admin-dashboard-pro .admin-staff-edit-permissions {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-staff-card { padding: 12px !important; }
+  .admin-dashboard-pro .admin-staff-actions button:first-child {
+    font-size: 11px;
+    padding-inline: 9px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-staff-card,
+  .admin-dashboard-pro .admin-staff-actions button,
+  .admin-dashboard-pro .admin-staff-existing-form button,
+  .admin-dashboard-pro .admin-staff-create-form > button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
