@@ -17631,3 +17631,124 @@ select, textarea)::placeholder {
     scroll-behavior: auto;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 33: Banner campaign cards and publishing controls */
+.admin-dashboard-pro .admin-banners > div:first-child {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.admin-dashboard-pro .admin-banners > div:first-child::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -88px;
+  right: -76px;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgba(52,211,153,.12);
+  border-radius: 50%;
+  box-shadow: 0 0 0 22px rgba(52,211,153,.025),0 0 0 46px rgba(52,211,153,.018);
+  pointer-events: none;
+}
+.admin-dashboard-pro .admin-banner-form > input[type="text"] {
+  min-height: 48px;
+  letter-spacing: .005em;
+}
+.admin-dashboard-pro .admin-banner-form > input[type="text"]:focus-visible,
+.admin-dashboard-pro .admin-banner-fields input:focus-visible,
+.admin-dashboard-pro .admin-banner-form > button[type="submit"]:focus-visible {
+  outline: 3px solid rgba(110,231,183,.48);
+  outline-offset: 3px;
+}
+.admin-dashboard-pro .admin-banner-list {
+  align-items: stretch;
+}
+.admin-dashboard-pro .admin-banner-card {
+  position: relative;
+  overflow: hidden;
+  align-items: stretch;
+  min-height: 104px;
+  gap: 12px !important;
+}
+.admin-dashboard-pro .admin-banner-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(180deg,rgba(52,211,153,.65),rgba(52,211,153,0));
+  opacity: .65;
+  pointer-events: none;
+}
+.admin-dashboard-pro .admin-banner-card > div:first-child {
+  align-items: center;
+  gap: 13px !important;
+}
+.admin-dashboard-pro .admin-banner-card img {
+  aspect-ratio: 4 / 3;
+  object-position: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.2);
+}
+.admin-dashboard-pro .admin-banner-card > div:first-child > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+.admin-dashboard-pro .admin-banner-card h4 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 12px;
+  letter-spacing: .01em;
+}
+.admin-dashboard-pro .admin-banner-card p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: #94a3b8 !important;
+}
+.admin-dashboard-pro .admin-banner-card > button {
+  align-self: center;
+  position: relative;
+  z-index: 1;
+}
+.admin-dashboard-pro .admin-banner-card > button:focus-visible {
+  outline: 3px solid rgba(251,113,133,.5);
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-banner-card {
+    min-height: 92px;
+  }
+  .admin-dashboard-pro .admin-banner-card > div:first-child {
+    align-items: center;
+    gap: 10px !important;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-banner-card {
+    min-height: 82px;
+    gap: 7px !important;
+  }
+  .admin-dashboard-pro .admin-banner-card > div:first-child {
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro .admin-banner-card h4 {
+    font-size: 11px;
+  }
+  .admin-dashboard-pro .admin-banner-card p {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-banner-card::before,
+  .admin-dashboard-pro .admin-banners > div:first-child::before {
+    transition: none !important;
+    animation: none !important;
+  }
+}
