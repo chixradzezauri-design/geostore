@@ -17121,3 +17121,191 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 30: Admin AI analyst conversation */
+.admin-dashboard-pro .admin-ai-analyst {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(16,185,129,.25) !important;
+  border-radius: 26px !important;
+  padding: clamp(17px,2.4vw,30px) !important;
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(16,185,129,.1),transparent 42%),
+    linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.97)) !important;
+  box-shadow: 0 18px 46px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.admin-dashboard-pro .admin-ai-analyst > h3 {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-bottom: 17px !important;
+  border-color: rgba(16,185,129,.2) !important;
+  color: #f8fafc;
+  font-size: 15px !important;
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-ai-analyst > h3 svg {
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 9px rgba(52,211,153,.38));
+}
+.admin-dashboard-pro .admin-ai-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 15px !important;
+  min-width: 0;
+  min-height: 220px;
+  max-height: min(480px,58vh) !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(52,211,153,.35) rgba(2,6,23,.4);
+  border: 1px solid rgba(148,163,184,.13) !important;
+  border-radius: 21px !important;
+  padding: clamp(14px,2vw,22px) !important;
+  background:
+    radial-gradient(ellipse at 0% 0%,rgba(16,185,129,.045),transparent 40%),
+    rgba(2,6,23,.78) !important;
+}
+.admin-dashboard-pro .admin-ai-chat::-webkit-scrollbar {
+  width: 7px;
+}
+.admin-dashboard-pro .admin-ai-chat::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(52,211,153,.3);
+}
+.admin-dashboard-pro .admin-ai-message {
+  width: 100%;
+  min-width: 0;
+  align-items: flex-end;
+  gap: 8px;
+}
+.admin-dashboard-pro .admin-ai-message > .admin-ai-bubble {
+  max-width: min(86%,720px) !important;
+  min-width: 0;
+  padding: 13px 16px !important;
+  border-radius: 18px !important;
+  font-size: 12px !important;
+  line-height: 1.75 !important;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  box-shadow: 0 8px 22px rgba(0,0,0,.15);
+}
+.admin-dashboard-pro .admin-ai-message:has(.admin-ai-bubble.bg-emerald-500) > .admin-ai-bubble {
+  border: 1px solid rgba(167,243,208,.28);
+  border-bottom-right-radius: 6px !important;
+  background: linear-gradient(135deg,#34d399,#10b981) !important;
+  color: #022c22 !important;
+}
+.admin-dashboard-pro .admin-ai-message:has(.admin-ai-bubble.bg-slate-900) > .admin-ai-bubble {
+  border: 1px solid rgba(52,211,153,.18) !important;
+  border-bottom-left-radius: 6px !important;
+  background: linear-gradient(145deg,rgba(30,41,59,.96),rgba(15,23,42,.96)) !important;
+  color: #e2e8f0 !important;
+}
+.admin-dashboard-pro .admin-ai-chat > div:last-child:not(.admin-ai-message) {
+  align-self: flex-start;
+  border: 1px solid rgba(52,211,153,.16);
+  border-radius: 13px;
+  padding: 9px 12px;
+  background: rgba(16,185,129,.07);
+  line-height: 1.6;
+}
+.admin-dashboard-pro .admin-ai-composer {
+  align-items: stretch;
+  gap: 10px !important;
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-ai-composer input {
+  min-width: 0;
+  min-height: 50px;
+  border: 1px solid rgba(148,163,184,.2) !important;
+  border-radius: 14px !important;
+  padding: 13px 16px !important;
+  background: rgba(2,6,23,.88) !important;
+  color: #f8fafc !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  transition: border-color .18s ease,box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-ai-composer input::placeholder {
+  color: #718096 !important;
+}
+.admin-dashboard-pro .admin-ai-composer input:focus {
+  border-color: rgba(52,211,153,.7) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.12) !important;
+}
+.admin-dashboard-pro .admin-ai-composer button {
+  flex: 0 0 auto;
+  min-width: 104px;
+  min-height: 50px;
+  border: 1px solid rgba(167,243,208,.32);
+  border-radius: 14px !important;
+  padding: 12px 18px !important;
+  background: linear-gradient(135deg,#34d399,#10b981) !important;
+  color: #022c22 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  box-shadow: 0 10px 24px rgba(16,185,129,.17);
+  transition: transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+.admin-dashboard-pro .admin-ai-composer button:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(16,185,129,.23);
+}
+.admin-dashboard-pro .admin-ai-composer button:focus-visible {
+  outline: 3px solid rgba(110,231,183,.55);
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-ai-analyst {
+    gap: 16px !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+  .admin-dashboard-pro .admin-ai-chat {
+    min-height: 190px;
+    max-height: 52vh !important;
+    padding: 13px !important;
+    border-radius: 17px !important;
+  }
+  .admin-dashboard-pro .admin-ai-message > .admin-ai-bubble {
+    max-width: 92% !important;
+    padding: 11px 13px !important;
+    font-size: 12px !important;
+  }
+  .admin-dashboard-pro .admin-ai-composer {
+    flex-direction: column;
+  }
+  .admin-dashboard-pro .admin-ai-composer input,
+  .admin-dashboard-pro .admin-ai-composer button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-ai-analyst {
+    padding: 13px !important;
+  }
+  .admin-dashboard-pro .admin-ai-analyst > h3 {
+    font-size: 13px !important;
+  }
+  .admin-dashboard-pro .admin-ai-chat {
+    padding: 10px !important;
+  }
+  .admin-dashboard-pro .admin-ai-message > .admin-ai-bubble {
+    max-width: 96% !important;
+    font-size: 11px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-ai-composer input,
+  .admin-dashboard-pro .admin-ai-composer button {
+    transition: none !important;
+  }
+  .admin-dashboard-pro .admin-ai-composer button:hover {
+    transform: none !important;
+  }
+}
