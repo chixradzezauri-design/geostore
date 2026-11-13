@@ -15065,3 +15065,231 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 18: Financial analytics & reporting */
+.admin-dashboard-pro .admin-analytics {
+  --analytics-accent: #34d399;
+  min-width: 0;
+  gap: 18px;
+}
+.admin-dashboard-pro .admin-analytics-toolbar {
+  min-width: 0;
+  padding: 17px !important;
+  border-color: rgba(52,211,153,.2) !important;
+  border-radius: 19px !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(16,185,129,.08), transparent 48%), rgba(15,23,42,.88) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+.admin-dashboard-pro .admin-analytics-toolbar > div { min-width: 0; }
+.admin-dashboard-pro .admin-analytics-toolbar h3 {
+  color: #f8fafc;
+  font-size: 13px;
+  letter-spacing: -.015em;
+}
+.admin-dashboard-pro .admin-analytics-toolbar p {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-analytics-toolbar select {
+  min-height: 44px;
+  min-width: 150px;
+  border-color: rgba(52,211,153,.26) !important;
+  border-radius: 12px !important;
+  background: rgba(2,6,23,.82) !important;
+  color: #f8fafc !important;
+}
+.admin-dashboard-pro .admin-analytics-toolbar button {
+  min-height: 44px;
+  border-radius: 12px !important;
+  font-weight: 850;
+  box-shadow: 0 9px 22px rgba(16,185,129,.14);
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-analytics-toolbar button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 12px 26px rgba(16,185,129,.2);
+}
+.admin-dashboard-pro .admin-analytics > [role="status"] {
+  border-radius: 16px !important;
+  line-height: 1.7;
+  background: rgba(245,158,11,.075) !important;
+}
+.admin-dashboard-pro .admin-analytics-kpis {
+  align-items: stretch;
+  gap: 14px;
+}
+.admin-dashboard-pro .admin-analytics-card {
+  position: relative;
+  min-width: 0;
+  min-height: 148px;
+  overflow: hidden;
+  padding: 20px !important;
+  border-color: rgba(148,163,184,.16) !important;
+  border-radius: 20px !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(52,211,153,.075), transparent 55%), linear-gradient(145deg, rgba(15,23,42,.94), rgba(2,6,23,.86)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 12px 28px rgba(0,0,0,.15);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.admin-dashboard-pro .admin-analytics-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52,211,153,.35) !important;
+  box-shadow: 0 16px 34px rgba(0,0,0,.22);
+}
+.admin-dashboard-pro .admin-analytics-card > p:first-child {
+  min-height: 25px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-analytics-card > p:nth-child(2) {
+  font-size: clamp(21px, 2.2vw, 30px);
+  line-height: 1.2;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-analytics-card > span {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 3px;
+  line-height: 1.5;
+  white-space: normal;
+}
+.admin-dashboard-pro .admin-profit-calculator {
+  min-width: 0;
+  border-radius: 23px !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(16,185,129,.075), transparent 45%), linear-gradient(145deg, rgba(15,23,42,.97), rgba(2,6,23,.94)) !important;
+}
+.admin-dashboard-pro .admin-calculator-layout { align-items: stretch; }
+.admin-dashboard-pro .admin-calculator-layout input {
+  min-width: 0;
+  min-height: 44px;
+  border-color: rgba(148,163,184,.2) !important;
+  border-radius: 12px !important;
+  background: rgba(2,6,23,.82) !important;
+}
+.admin-dashboard-pro .admin-calculator-layout input:focus {
+  border-color: rgba(52,211,153,.68) !important;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.1);
+}
+.admin-dashboard-pro .admin-calculator-results {
+  min-width: 0;
+  border-color: rgba(52,211,153,.22) !important;
+  border-radius: 19px !important;
+}
+.admin-dashboard-pro .admin-calculator-results > div {
+  gap: 12px;
+  padding-block: 7px;
+  border-bottom: 1px solid rgba(148,163,184,.1);
+  line-height: 1.5;
+}
+.admin-dashboard-pro .admin-calculator-results > div:last-child { border-bottom: 0; }
+.admin-dashboard-pro .admin-calculator-results > div span { color: #94a3b8; }
+.admin-dashboard-pro .admin-calculator-results > div b {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro .admin-expenses .admin-staff-panel,
+.admin-dashboard-pro .admin-expenses > div:last-child {
+  min-width: 0;
+  border-radius: 22px !important;
+  background: linear-gradient(145deg, rgba(15,23,42,.96), rgba(2,6,23,.92)) !important;
+}
+.admin-dashboard-pro .admin-expense-form {
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-expense-form input,
+.admin-dashboard-pro .admin-expense-form select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border-color: rgba(148,163,184,.2) !important;
+  border-radius: 13px !important;
+  background: rgba(2,6,23,.82) !important;
+  color: #f8fafc !important;
+}
+.admin-dashboard-pro .admin-expense-form input:focus,
+.admin-dashboard-pro .admin-expense-form select:focus {
+  border-color: rgba(52,211,153,.68) !important;
+  box-shadow: 0 0 0 3px rgba(16,185,129,.1);
+}
+.admin-dashboard-pro .admin-expense-form button {
+  min-height: 44px;
+  border-radius: 13px !important;
+  font-weight: 900;
+  transition: transform .18s ease, filter .18s ease;
+}
+.admin-dashboard-pro .admin-expense-form button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+.admin-dashboard-pro .admin-expense-row {
+  min-width: 0;
+  gap: 14px;
+  border-color: rgba(148,163,184,.15) !important;
+  border-radius: 15px !important;
+  background: rgba(2,6,23,.58) !important;
+}
+.admin-dashboard-pro .admin-expense-row > div:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+.admin-dashboard-pro .admin-expense-row > div:last-child {
+  flex-shrink: 0;
+  gap: 12px;
+}
+.admin-dashboard-pro .admin-expense-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-analytics-toolbar {
+    align-items: stretch;
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-toolbar select,
+  .admin-dashboard-pro .admin-analytics-toolbar button { width: 100%; }
+  .admin-dashboard-pro .admin-analytics-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 10px;
+  }
+  .admin-dashboard-pro .admin-analytics-card {
+    min-height: 132px;
+    padding: 14px !important;
+    border-radius: 16px !important;
+  }
+  .admin-dashboard-pro .admin-analytics-card > p:nth-child(2) {
+    font-size: clamp(19px,5vw,25px);
+  }
+  .admin-dashboard-pro .admin-calculator-layout { gap: 16px; }
+  .admin-dashboard-pro .admin-calculator-results { padding: 17px !important; }
+  .admin-dashboard-pro .admin-expense-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .admin-dashboard-pro .admin-expense-row > div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-analytics-kpis {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .admin-dashboard-pro .admin-analytics-card { min-height: 116px; }
+  .admin-dashboard-pro .admin-analytics-toolbar { padding: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-analytics-card,
+  .admin-dashboard-pro .admin-analytics-toolbar button,
+  .admin-dashboard-pro .admin-expense-form button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
