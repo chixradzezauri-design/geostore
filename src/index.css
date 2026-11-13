@@ -18005,3 +18005,34 @@ select, textarea)::placeholder {
     scroll-behavior: auto !important;
   }
 }
+
+
+
+/* GEOSTORE mobile AI launcher repair — keep the AI assistant reachable on phones.
+   The support launcher remains in its own lower position; admin views stay excluded. */
+@media (max-width: 640px) {
+  .geostore-fashion-store .gs-floating-ai {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+    bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+    z-index: 141 !important;
+    width: 48px !important;
+    max-width: 48px !important;
+  }
+  .geostore-fashion-store .gs-floating-ai > .gs-floating-action {
+    display: grid !important;
+    place-items: center !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+  }
+}
