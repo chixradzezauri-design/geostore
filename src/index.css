@@ -3777,7 +3777,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
 }
 @media(max-width:380px){
  .geostore-shell .admin-dashboard-pro .admin-order-actions{grid-template-columns:minmax(0,1fr)}
- .geostore-shell .admin-dashboard-pro .admin-order-status-actions button{padding:7px 8px!important;font-size:9px!important}
+ .geostore-shell .admin-dashboard-pro .admin-order-status-actions button{padding:7px 8px!important;font-size:11px!important}
 }
 
 /* Order detail content hierarchy and compact mobile layout. */
@@ -7634,7 +7634,7 @@ textarea.gs-support-field { min-height: 92px !important; resize: vertical !impor
  .geostore-shell .admin-dashboard-pro .admin-order-card{padding:12px!important}
 }
 @media(max-width:360px){
- .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button{font-size:9px!important;gap:4px!important}
+ .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button{font-size:11px!important;gap:4px!important}
  .geostore-shell .admin-dashboard-pro>div:first-child>div:nth-child(2)>button>div{gap:6px!important}
  .geostore-shell .admin-dashboard-pro>div:nth-child(2)>div:first-child h2{font-size:14px!important}
 }
