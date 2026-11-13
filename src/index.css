@@ -14587,3 +14587,173 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 15: Vendor management workspace */
+.admin-dashboard-pro .admin-vendors-panel > div {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(18px, 2.2vw, 30px) !important;
+  border: 1px solid rgba(148, 163, 184, .16) !important;
+  border-radius: 24px !important;
+  background: radial-gradient(ellipse at 100% 0%, rgba(16, 185, 129, .09), transparent 44%), linear-gradient(145deg, rgba(15, 23, 42, .97), rgba(8, 15, 29, .96)) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+}
+.admin-dashboard-pro .admin-vendors-panel > div > h3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  color: #f8fafc !important;
+  letter-spacing: -.025em;
+  border-color: rgba(148, 163, 184, .15) !important;
+}
+.admin-dashboard-pro .admin-vendors-panel > div > h3 svg {
+  flex: 0 0 auto;
+  color: #6ee7b7 !important;
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, .25));
+}
+.admin-dashboard-pro .admin-vendor-form {
+  align-items: stretch;
+  gap: 14px;
+}
+.admin-dashboard-pro .admin-vendor-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 13px 15px !important;
+  border: 1px solid rgba(148, 163, 184, .22) !important;
+  border-radius: 14px !important;
+  background: rgba(2, 6, 23, .78) !important;
+  color: #f8fafc !important;
+  font-size: 13px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .2);
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.admin-dashboard-pro .admin-vendor-form input::placeholder {
+  color: #64748b !important;
+}
+.admin-dashboard-pro .admin-vendor-form input:focus {
+  border-color: rgba(52, 211, 153, .72) !important;
+  background: rgba(2, 6, 23, .96) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .12), 0 0 24px rgba(16, 185, 129, .08);
+}
+.admin-dashboard-pro .admin-vendor-form button {
+  min-height: 50px;
+  justify-content: center;
+  border: 1px solid rgba(167, 243, 208, .34);
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #34d399, #10b981 58%, #059669) !important;
+  color: #052e25 !important;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, .16), inset 0 1px 0 rgba(255, 255, 255, .22) !important;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-vendor-form button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 14px 28px rgba(16, 185, 129, .23), inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+}
+.admin-dashboard-pro .admin-vendor-list {
+  align-items: stretch;
+}
+.admin-dashboard-pro .admin-vendor-card {
+  min-width: 0;
+  min-height: 96px;
+  gap: 14px;
+  padding: 17px !important;
+  border: 1px solid rgba(52, 211, 153, .18) !important;
+  border-radius: 18px !important;
+  background: radial-gradient(circle at 0 0, rgba(16, 185, 129, .1), transparent 58%), rgba(2, 6, 23, .64) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.admin-dashboard-pro .admin-vendor-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52, 211, 153, .4) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+}
+.admin-dashboard-pro .admin-vendor-card > div {
+  min-width: 0;
+}
+.admin-dashboard-pro .admin-vendor-card h4 {
+  color: #f8fafc !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro .admin-vendor-card p {
+  color: #6ee7b7 !important;
+  font-size: 11px;
+  font-weight: 750;
+}
+.admin-dashboard-pro .admin-vendor-card > div:last-child {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-dashboard-pro .admin-vendor-card > div:last-child span {
+  padding: 6px 10px !important;
+  border: 1px solid rgba(52, 211, 153, .25) !important;
+  border-radius: 999px !important;
+  background: rgba(16, 185, 129, .1) !important;
+  color: #a7f3d0 !important;
+  font-size: 10px !important;
+  letter-spacing: .02em;
+}
+.admin-dashboard-pro .admin-vendor-card button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid rgba(251, 113, 133, .2);
+  border-radius: 12px !important;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.admin-dashboard-pro .admin-vendor-card button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(251, 113, 133, .48);
+  background: rgba(244, 63, 94, .16) !important;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-vendors-panel > div {
+    padding: 18px !important;
+    border-radius: 19px !important;
+  }
+  .admin-dashboard-pro .admin-vendor-form {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .admin-dashboard-pro .admin-vendor-form button {
+    width: 100%;
+  }
+  .admin-dashboard-pro .admin-vendor-list {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .admin-dashboard-pro .admin-vendor-card {
+    align-items: flex-start;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-vendors-panel > div {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro .admin-vendor-card {
+    padding: 13px !important;
+    gap: 9px;
+  }
+  .admin-dashboard-pro .admin-vendor-card > div:last-child {
+    gap: 7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-vendor-form button,
+  .admin-dashboard-pro .admin-vendor-card,
+  .admin-dashboard-pro .admin-vendor-card button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
