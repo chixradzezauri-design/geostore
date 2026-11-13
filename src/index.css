@@ -17939,3 +17939,69 @@ select, textarea)::placeholder {
     transform: none !important;
   }
 }
+
+
+
+/* GEOSTORE ADMIN ACCESSIBILITY — STAGE 36: High-contrast admin readability */
+.admin-dashboard-pro {
+  color: #f8fafc !important;
+  color-scheme: dark;
+}
+.admin-dashboard-pro :is(h1,h2,h3,h4,h5,h6) {
+  color: #f8fafc !important;
+  text-shadow: none !important;
+}
+.admin-dashboard-pro :is(.text-slate-950,.text-slate-900,.text-slate-800,.text-gray-950,.text-gray-900,.text-gray-800) {
+  color: #f8fafc !important;
+}
+.admin-dashboard-pro :is(.text-slate-700,.text-slate-600,.text-gray-700,.text-gray-600) {
+  color: #e2e8f0 !important;
+}
+.admin-dashboard-pro :is(.text-slate-500,.text-slate-400,.text-gray-500,.text-gray-400) {
+  color: #cbd5e1 !important;
+}
+.admin-dashboard-pro :is(.placeholder-slate-500,.placeholder-slate-400,.placeholder-gray-500,.placeholder-gray-400)::placeholder {
+  color: #aebed0 !important;
+  opacity: 1 !important;
+}
+.admin-dashboard-pro :is([class*="bg-slate-700"],[class*="bg-slate-800"],[class*="bg-slate-900"],[class*="bg-gray-700"],[class*="bg-gray-800"],[class*="bg-gray-900"]) {
+  background-color: #111c2e !important;
+}
+.admin-dashboard-pro :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  background-color: #0b1424 !important;
+  color: #f8fafc !important;
+  border-color: #64748b !important;
+}
+.admin-dashboard-pro :is(input,select,textarea)::placeholder {
+  color: #aebed0 !important;
+  opacity: 1 !important;
+}
+.admin-dashboard-pro :is(input,select,textarea):focus-visible {
+  outline: 2px solid #67e8f9 !important;
+  outline-offset: 2px !important;
+  border-color: #67e8f9 !important;
+}
+.admin-dashboard-pro :is(table th,table td) {
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+.admin-dashboard-pro :is(button,a,[role="button"]):focus-visible {
+  outline: 3px solid #67e8f9 !important;
+  outline-offset: 3px !important;
+}
+.admin-dashboard-pro :is(.text-slate-300,.text-slate-200,.text-slate-100,.text-gray-300,.text-gray-200,.text-gray-100) {
+  color: #f1f5f9 !important;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro :is(p,span,label,small,li,th,td) {
+    text-shadow: none !important;
+  }
+  .admin-dashboard-pro :is(.text-slate-500,.text-slate-400,.text-gray-500,.text-gray-400) {
+    color: #d5deea !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro * {
+    scroll-behavior: auto !important;
+  }
+}
