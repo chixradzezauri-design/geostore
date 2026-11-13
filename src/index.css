@@ -18005,3 +18005,169 @@ select, textarea)::placeholder {
     scroll-behavior: auto !important;
   }
 }
+
+
+
+/* GEOSTORE ADMIN AUDIT — STAGE 40: Expense history card layout, readable wrapping and accessible delete action. */
+.admin-dashboard-pro .admin-expenses,
+.admin-dashboard-pro .admin-expenses > * {
+  min-width: 0 !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro .admin-expense-form :is(input,select) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.admin-dashboard-pro .admin-expense-row {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) minmax(112px,max-content) !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  border: 1px solid rgba(100,116,139,.42) !important;
+  border-radius: 16px !important;
+  background: #0b1728 !important;
+  color: #e8eef7 !important;
+}
+.admin-dashboard-pro .admin-expense-details,
+.admin-dashboard-pro .admin-expense-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 5px 8px;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.admin-dashboard-pro .admin-expense-description,
+.admin-dashboard-pro .admin-expense-category {
+  max-width: 100%;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+  line-height: 1.55 !important;
+}
+.admin-dashboard-pro .admin-expense-description {
+  color: #f8fbff !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+.admin-dashboard-pro .admin-expense-category,
+.admin-dashboard-pro .admin-expense-date {
+  color: #cbd5e1 !important;
+}
+.admin-dashboard-pro .admin-expense-date {
+  display: block !important;
+  width: 100%;
+  margin-top: 7px !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+.admin-dashboard-pro .admin-expense-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+.admin-dashboard-pro .admin-expense-amount {
+  color: #fda4af !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums;
+}
+.admin-dashboard-pro .admin-expense-delete {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  min-width: 84px !important;
+  min-height: 44px !important;
+  padding: 9px 12px !important;
+  border: 1px solid rgba(251,113,133,.48) !important;
+  border-radius: 12px !important;
+  background: rgba(159,18,57,.18) !important;
+  color: #fecdd3 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+.admin-dashboard-pro .admin-expense-delete:hover {
+  background: rgba(159,18,57,.3) !important;
+  border-color: rgba(251,113,133,.78) !important;
+}
+.admin-dashboard-pro .admin-expense-delete:focus-visible {
+  outline: 2px solid #fda4af !important;
+  outline-offset: 3px !important;
+}
+@media (max-width: 720px) {
+  .admin-dashboard-pro .admin-expenses {
+    gap: 14px !important;
+  }
+  .admin-dashboard-pro .admin-expenses > div {
+    padding: 15px !important;
+    border-radius: 19px !important;
+  }
+  .admin-dashboard-pro .admin-expense-form {
+    gap: 12px !important;
+  }
+  .admin-dashboard-pro .admin-expense-form > div {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 10px !important;
+  }
+  .admin-dashboard-pro .admin-expense-form :is(input,select) {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+  .admin-dashboard-pro .admin-expense-form > button {
+    width: 100% !important;
+    min-height: 48px !important;
+    white-space: normal !important;
+    line-height: 1.35 !important;
+  }
+  .admin-dashboard-pro .admin-expense-row {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro .admin-expense-actions {
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding-top: 10px !important;
+    border-top: 1px solid rgba(148,163,184,.24) !important;
+  }
+  .admin-dashboard-pro .admin-expense-delete {
+    min-width: 96px !important;
+    min-height: 46px !important;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro .admin-expenses > div {
+    padding: 12px !important;
+  }
+  .admin-dashboard-pro .admin-expense-row {
+    padding: 12px !important;
+  }
+  .admin-dashboard-pro .admin-expense-description {
+    font-size: 12px !important;
+  }
+  .admin-dashboard-pro .admin-expense-actions {
+    gap: 8px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-expense-delete {
+    transition: none !important;
+  }
+}
