@@ -12533,3 +12533,237 @@ select, textarea)::placeholder {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 08: Admin navigation & responsive workspace */
+.admin-dashboard-pro > div:first-child {
+  position: sticky !important;
+  top: 18px !important;
+  z-index: 20 !important;
+  width: 288px !important;
+  max-width: 288px !important;
+  max-height: calc(100dvh - 36px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  padding: 20px !important;
+  overflow: hidden !important;
+  border: 1px solid #e7ded3 !important;
+  border-radius: 8px !important;
+  background: rgba(255, 253, 250, .97) !important;
+  color: #29251f !important;
+  box-shadow: 0 12px 36px rgba(47, 37, 26, .07) !important;
+  backdrop-filter: blur(18px) !important;
+}
+.admin-dashboard-pro > div:first-child > div:first-child {
+  flex: 0 0 auto !important;
+  gap: 12px !important;
+  padding: 0 0 16px !important;
+  border-color: #e8e0d7 !important;
+}
+.admin-dashboard-pro > div:first-child > div:first-child > div:first-child {
+  border: 1px solid #e6d9c9 !important;
+  border-radius: 6px !important;
+  background: #f4ede4 !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro > div:first-child > div:first-child svg {
+  color: #80664b !important;
+}
+.admin-dashboard-pro > div:first-child > div:first-child h3 {
+  color: #302820 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 15px !important;
+  letter-spacing: -.02em !important;
+}
+.admin-dashboard-pro > div:first-child > div:first-child p {
+  color: #92795f !important;
+  font-size: 9px !important;
+  letter-spacing: .12em !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) {
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  padding: 2px 3px 8px 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbb9a5 transparent !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button {
+  min-height: 43px !important;
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  border: 1px solid #eee7df !important;
+  border-radius: 5px !important;
+  background: #faf7f2 !important;
+  color: #75695d !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button:hover {
+  border-color: #cdbba7 !important;
+  background: #f4ede4 !important;
+  color: #302820 !important;
+  transform: translateX(2px) !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button > div:first-child {
+  min-width: 0 !important;
+  gap: 9px !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button > div:first-child > span {
+  min-width: 0 !important;
+  line-height: 1.35 !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button svg {
+  flex: 0 0 auto !important;
+  color: #94795d !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button > span {
+  flex: 0 0 auto !important;
+  border: 1px solid #e6dbcf !important;
+  border-radius: 4px !important;
+  background: #f1e9df !important;
+  color: #725a42 !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] {
+  border-color: #8c7053 !important;
+  background: #80664b !important;
+  color: #fffaf3 !important;
+  box-shadow: 0 5px 14px rgba(128, 102, 75, .2) !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] svg {
+  color: #fffaf3 !important;
+}
+.admin-dashboard-pro > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] > span {
+  border-color: rgba(255,255,255,.2) !important;
+  background: rgba(255,255,255,.14) !important;
+  color: #fffaf3 !important;
+}
+.admin-dashboard-pro > div:first-child > button:last-child {
+  flex: 0 0 auto !important;
+  min-height: 43px !important;
+  margin-top: 0 !important;
+  border: 1px solid #ead8d3 !important;
+  border-radius: 5px !important;
+  background: #fff5f2 !important;
+  color: #a34f43 !important;
+  font-size: 11px !important;
+}
+.admin-dashboard-pro > div:first-child > button:last-child:hover {
+  border-color: #d7aaa1 !important;
+  background: #fbe9e5 !important;
+}
+.admin-dashboard-pro > div:nth-child(2) {
+  min-width: 0 !important;
+  width: auto !important;
+  gap: 22px !important;
+}
+.admin-dashboard-pro > div:nth-child(2) > div:first-child {
+  position: relative !important;
+  gap: 14px !important;
+  padding: 18px 22px !important;
+  border: 1px solid #e8e0d7 !important;
+  border-radius: 7px !important;
+  background: #fffdfa !important;
+  box-shadow: 0 8px 28px rgba(47, 37, 26, .045) !important;
+}
+.admin-dashboard-pro > div:nth-child(2) > div:first-child h2 {
+  color: #302820 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: clamp(16px, 1.5vw, 21px) !important;
+  letter-spacing: -.025em !important;
+}
+.admin-dashboard-pro > div:nth-child(2) > div:first-child p {
+  color: #897b6c !important;
+}
+.admin-dashboard-pro > div:nth-child(2) > div:first-child > div:last-child {
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+}
+.admin-dashboard-pro > div:nth-child(2) > div:first-child > div:last-child > div {
+  border-color: #e8e0d7 !important;
+  border-radius: 5px !important;
+  background: #f8f4ee !important;
+}
+.admin-dashboard-pro > div:nth-child(2) > div:first-child > div:last-child > div span:last-child {
+  color: #75695d !important;
+}
+@media (max-width: 1023px) {
+  .admin-dashboard-pro > div:first-child {
+    position: relative !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 15px !important;
+    gap: 13px !important;
+  }
+  .admin-dashboard-pro > div:first-child > div:nth-child(2) {
+    flex-direction: row !important;
+    gap: 8px !important;
+    padding: 2px 2px 9px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x proximity !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .admin-dashboard-pro > div:first-child > div:nth-child(2) > button {
+    width: max-content !important;
+    min-width: max-content !important;
+    min-height: 40px !important;
+    padding: 9px 12px !important;
+    scroll-snap-align: start !important;
+  }
+  .admin-dashboard-pro > div:first-child > div:nth-child(2) > button:hover {
+    transform: none !important;
+  }
+  .admin-dashboard-pro > div:nth-child(2) {
+    width: 100% !important;
+  }
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro > div:first-child {
+    padding: 13px !important;
+    border-radius: 6px !important;
+  }
+  .admin-dashboard-pro > div:first-child > div:first-child {
+    padding-bottom: 12px !important;
+  }
+  .admin-dashboard-pro > div:first-child > div:nth-child(2) > button {
+    min-height: 39px !important;
+    font-size: 10px !important;
+  }
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child {
+    align-items: stretch !important;
+    padding: 15px !important;
+    border-radius: 6px !important;
+  }
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child > div:last-child {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child > div:last-child > button,
+  .admin-dashboard-pro > div:nth-child(2) > div:first-child > div:last-child > div {
+    min-width: 0 !important;
+    flex: 1 1 100% !important;
+    justify-content: center !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro > div:first-child > div:nth-child(2) > button {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
