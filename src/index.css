@@ -12767,3 +12767,322 @@ select, textarea)::placeholder {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* GEOSTORE UI REVOLUTION — STAGE 09: Admin order management workspace */
+.admin-dashboard-pro .admin-orders-panel {
+  padding: clamp(16px, 2.2vw, 30px) !important;
+  gap: 22px !important;
+  border: 1px solid #e7ded3 !important;
+  border-radius: 8px !important;
+  background: #fffdfa !important;
+  color: #302820 !important;
+  box-shadow: 0 12px 34px rgba(47, 37, 26, .055) !important;
+  backdrop-filter: none !important;
+}
+.admin-dashboard-pro .admin-orders-header {
+  align-items: center !important;
+  padding-bottom: 18px !important;
+  border-color: #e9e1d8 !important;
+}
+.admin-dashboard-pro .admin-orders-header h3 {
+  color: #302820 !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: clamp(17px, 1.8vw, 22px) !important;
+  line-height: 1.3 !important;
+  letter-spacing: -.025em !important;
+}
+.admin-dashboard-pro .admin-orders-header h3 svg {
+  color: #8b7054 !important;
+}
+.admin-dashboard-pro .admin-orders-header p {
+  margin-top: 6px !important;
+  color: #897b6c !important;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+}
+.admin-dashboard-pro .admin-orders-header > button {
+  min-height: 42px !important;
+  border: 1px solid #d8c8b7 !important;
+  border-radius: 5px !important;
+  background: #f5eee6 !important;
+  color: #70583f !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro .admin-orders-header > button:hover {
+  border-color: #b99e80 !important;
+  background: #eee2d4 !important;
+}
+.admin-dashboard-pro .admin-orders-toolbar {
+  align-items: stretch !important;
+  gap: 12px !important;
+}
+.admin-dashboard-pro .admin-order-search {
+  min-width: min(100%, 250px) !important;
+}
+.admin-dashboard-pro .admin-order-search input {
+  min-height: 44px !important;
+  padding-left: 42px !important;
+  border: 1px solid #e5dbd0 !important;
+  border-radius: 5px !important;
+  background: #faf7f2 !important;
+  color: #302820 !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+}
+.admin-dashboard-pro .admin-order-search input::placeholder {
+  color: #a09283 !important;
+}
+.admin-dashboard-pro .admin-order-search input:focus {
+  border-color: #a88c6d !important;
+  outline: 3px solid rgba(168, 140, 109, .13) !important;
+}
+.admin-dashboard-pro .admin-order-search > svg {
+  color: #92795f !important;
+}
+.admin-dashboard-pro .admin-order-status-filters {
+  max-width: 100% !important;
+  min-height: 44px !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  border: 1px solid #e8dfd5 !important;
+  border-radius: 5px !important;
+  background: #f7f2ec !important;
+  scrollbar-width: thin !important;
+}
+.admin-dashboard-pro .admin-order-status-filters button {
+  min-height: 34px !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  color: #796c5e !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-order-status-filters button[class*="bg-emerald-500"] {
+  background: #80664b !important;
+  color: #fffaf3 !important;
+  box-shadow: 0 2px 7px rgba(128, 102, 75, .18) !important;
+}
+.admin-dashboard-pro .admin-order-status-filters button:hover:not([class*="bg-emerald-500"]) {
+  background: #eee5da !important;
+  color: #3f3429 !important;
+}
+.admin-dashboard-pro .admin-orders-list {
+  gap: 13px !important;
+}
+.admin-dashboard-pro .admin-order-card {
+  gap: 15px !important;
+  padding: clamp(14px, 1.8vw, 21px) !important;
+  border: 1px solid #e9e1d8 !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: #554a3e !important;
+  box-shadow: 0 4px 15px rgba(47, 37, 26, .035) !important;
+}
+.admin-dashboard-pro .admin-order-card:hover {
+  border-color: #cdbba7 !important;
+  box-shadow: 0 9px 24px rgba(47, 37, 26, .07) !important;
+}
+.admin-dashboard-pro .admin-order-card-heading {
+  padding-bottom: 13px !important;
+  border-color: #eee8e1 !important;
+}
+.admin-dashboard-pro .admin-order-card-heading > div:first-child > span:first-child {
+  color: #80664b !important;
+  font-size: 13px !important;
+  letter-spacing: .015em !important;
+}
+.admin-dashboard-pro .admin-order-card-heading > div:first-child > span:last-child {
+  color: #998b7d !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-order-card-heading > div:last-child > span {
+  color: #302820 !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+}
+.admin-dashboard-pro .admin-order-card-customer {
+  gap: 9px 18px !important;
+  color: #76695b !important;
+  line-height: 1.55 !important;
+}
+.admin-dashboard-pro .admin-order-card-customer b {
+  color: #3c3329 !important;
+  font-weight: 750 !important;
+  overflow-wrap: anywhere !important;
+}
+.admin-dashboard-pro .admin-order-card-customer p:nth-child(2) b {
+  color: #80664b !important;
+}
+.admin-dashboard-pro .admin-order-stock-warning {
+  border-color: #ead7b6 !important;
+  border-radius: 5px !important;
+  background: #fff8e9 !important;
+  color: #856332 !important;
+}
+.admin-dashboard-pro .admin-order-card-footer {
+  gap: 12px !important;
+  padding-top: 13px !important;
+  border-color: #eee8e1 !important;
+}
+.admin-dashboard-pro .admin-order-card-footer > div:first-child > span:first-child {
+  color: #948577 !important;
+}
+.admin-dashboard-pro .admin-order-status-badge {
+  border: 1px solid #e7d8c5 !important;
+  border-radius: 4px !important;
+  background: #f5eee5 !important;
+  color: #745a3e !important;
+  padding: 5px 9px !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-order-actions {
+  gap: 7px !important;
+}
+.admin-dashboard-pro .admin-order-actions > button {
+  min-height: 37px !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro .admin-order-actions > button:first-child {
+  border-color: #cbb69e !important;
+  background: #f3ece3 !important;
+  color: #71583f !important;
+}
+.admin-dashboard-pro .admin-order-actions > button:first-child svg {
+  color: #80664b !important;
+}
+.admin-dashboard-pro .admin-order-actions > button:nth-child(2) {
+  border-color: #e4dbd1 !important;
+  background: #faf7f2 !important;
+  color: #75695d !important;
+}
+.admin-dashboard-pro .admin-order-actions > button:hover {
+  filter: brightness(.97) !important;
+  transform: translateY(-1px) !important;
+}
+.admin-dashboard-pro .admin-order-status-actions {
+  gap: 3px !important;
+  padding: 4px !important;
+  border: 1px solid #e9e1d8 !important;
+  border-radius: 5px !important;
+  background: #f8f4ee !important;
+}
+.admin-dashboard-pro .admin-order-status-actions button {
+  min-height: 30px !important;
+  padding: 6px 9px !important;
+  border-radius: 4px !important;
+  color: #796c5e !important;
+  font-size: 10px !important;
+}
+.admin-dashboard-pro .admin-order-status-actions button[class*="bg-blue-400"] {
+  background: #e5edf7 !important;
+  color: #365a80 !important;
+}
+.admin-dashboard-pro .admin-order-status-actions button[class*="bg-amber-400"] {
+  background: #f7edd8 !important;
+  color: #89652b !important;
+}
+.admin-dashboard-pro .admin-order-status-actions button[class*="bg-cyan-400"] {
+  background: #e2f1f2 !important;
+  color: #356c70 !important;
+}
+.admin-dashboard-pro .admin-order-status-actions button[class*="bg-emerald-400"] {
+  background: #e4eee5 !important;
+  color: #456d4b !important;
+}
+.admin-dashboard-pro .admin-order-status-actions button:disabled {
+  opacity: .42 !important;
+}
+.admin-dashboard-pro .admin-orders-pagination {
+  gap: 12px !important;
+  border-color: #e9e1d8 !important;
+}
+.admin-dashboard-pro .admin-orders-pagination p {
+  color: #8b7d6e !important;
+}
+.admin-dashboard-pro .admin-orders-pagination button {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border-color: #e5dbd0 !important;
+  border-radius: 4px !important;
+  background: #faf7f2 !important;
+  color: #75695d !important;
+}
+.admin-dashboard-pro .admin-orders-pagination button[class*="bg-emerald-500"] {
+  border-color: #80664b !important;
+  background: #80664b !important;
+  color: #fffaf3 !important;
+}
+.admin-dashboard-pro .admin-orders-pagination button:disabled {
+  opacity: .35 !important;
+}
+@media (max-width: 1023px) {
+  .admin-dashboard-pro .admin-orders-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .admin-dashboard-pro .admin-order-search {
+    width: 100% !important;
+  }
+  .admin-dashboard-pro .admin-order-status-filters {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro .admin-orders-panel {
+    padding: 15px !important;
+    gap: 17px !important;
+  }
+  .admin-dashboard-pro .admin-orders-header {
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .admin-dashboard-pro .admin-orders-header > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .admin-dashboard-pro .admin-order-card {
+    padding: 14px !important;
+    border-radius: 6px !important;
+  }
+  .admin-dashboard-pro .admin-order-card-footer {
+    align-items: stretch !important;
+  }
+  .admin-dashboard-pro .admin-order-actions {
+    justify-content: flex-start !important;
+  }
+  .admin-dashboard-pro .admin-order-actions > button {
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+  }
+  .admin-dashboard-pro .admin-order-status-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .admin-dashboard-pro .admin-order-status-actions button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+  .admin-dashboard-pro .admin-orders-pagination {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+  .admin-dashboard-pro .admin-orders-pagination > div {
+    justify-content: flex-start !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 3px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro .admin-order-card,
+  .admin-dashboard-pro .admin-order-actions > button {
+    transition-duration: .01ms !important;
+  }
+}
