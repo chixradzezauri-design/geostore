@@ -377,6 +377,7 @@ export default function AdminDashboardPro({
   });
 
   const [expenses, setExpenses] = useState([]);
+  const [expensesError, setExpensesError] = useState('');
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
 
   const [aiQuery, setAiQuery] = useState('');
@@ -394,11 +395,17 @@ export default function AdminDashboardPro({
   const fetchExpenses = async () => {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setExpenses(data || []);
-      }
-    } catch {}
+      if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+      const data = await res.json();
+      if (!Array.isArray(data)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
+      setExpenses(data);
+      setExpensesError('');
+      return true;
+    } catch (error) {
+      console.error('GEOSTORE expense history fetch failed:', error);
+      setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -1317,23 +1324,27 @@ export default function AdminDashboardPro({
   };
 
   const handleDeleteExpense = async (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${id}`, {
-          method: 'DELETE',
-          headers: await getSupabaseHeaders()
-        });
-
-        if (res.ok) {
-          setExpenses(prev => prev.filter(e => e.id !== id));
-          logActivity(`წაიშალა ხარჯი (ID: ${id})`);
-          alert('✅ ხარჯი წარმატებით წაიშალა!');
-        } else {
-          alert('შეცდომა წაშლისას');
-        }
-      } catch {
-        alert('ქსელის შეცდომა');
+    const normalizedId = String(id ?? '').trim();
+    if (!normalizedId || !window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
+    try {
+      const headers = new Headers(await getSupabaseHeaders());
+      headers.set('Prefer', 'return=representation');
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(normalizedId)}&select=id`, {
+        method: 'DELETE',
+        headers
+      });
+      if (!res.ok) throw new Error(`ხარჯის წაშლა ვერ მოხერხდა (HTTP ${res.status}).`);
+      const deletedRows = await res.json();
+      if (!Array.isArray(deletedRows) || deletedRows.length !== 1 || String(deletedRows[0]?.id) !== normalizedId) {
+        throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა. სია უცვლელი დარჩა; განაახლეთ ისტორია.');
       }
+      setExpenses(prev => prev.filter(expense => String(expense.id) !== normalizedId));
+      setExpensesError('');
+      logActivity(`წაიშალა ხარჯი (ID: ${normalizedId})`);
+      alert('✅ ხარჯი წარმატებით წაიშალა!');
+    } catch (error) {
+      console.error('GEOSTORE expense delete failed:', error);
+      alert(error?.message || 'ხარჯის წაშლისას ქსელის შეცდომა მოხდა.');
     }
   };
 
@@ -3385,19 +3396,31 @@ export default function AdminDashboardPro({
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
+              {expensesError && (
+                <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-3 text-xs leading-relaxed text-rose-200">
+                  ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული ჩანაწერები შენარჩუნებულია. დეტალი: {expensesError}
+                  <button type="button" onClick={fetchExpenses} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
+                </div>
+              )}
               <div className="space-y-3">
                 {expenses.length === 0 ? (
                   <p className="text-slate-500 text-xs text-center py-4">ხარჯები ჯერ არ არის დამატებული.</p>
                 ) : (
                   expenses.map(exp => (
-                    <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
-                      <div>
-                        <b className="text-white">{exp.description}</b> <span className="text-slate-400">({exp.category})</span> 
-                        <span className="text-slate-500 text-[10px] ml-2">{exp.date}</span>
+                    <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 text-xs shadow-inner">
+                      <div className="admin-expense-details min-w-0">
+                        <div className="admin-expense-heading flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
+                          <b className="admin-expense-description text-white break-words">{exp.description || 'ხარჯი'}</b>
+                          <span className="admin-expense-category text-slate-300 break-words">({exp.category || 'კატეგორია უცნობია'})</span>
+                        </div>
+                        <span className="admin-expense-date block text-slate-400 text-[11px] mt-2">{exp.date || 'თარიღი მითითებული არ არის'}</span>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-black text-rose-400">-{exp.amount} ₾</span>
-                        <button onClick={() => handleDeleteExpense(exp.id)} className="text-rose-400 hover:text-rose-300 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                      <div className="admin-expense-actions flex items-center gap-3">
+                        <span className="admin-expense-amount font-black text-rose-300 whitespace-nowrap">-{(Number(exp.amount) || 0).toFixed(2)} ₾</span>
+                        <button type="button" onClick={() => handleDeleteExpense(exp.id)} className="admin-expense-delete" aria-label={`ხარჯის წაშლა: ${exp.description || exp.id}`} title="ხარჯის წაშლა">
+                          <Trash2 className="w-4 h-4" />
+                          <span>წაშლა</span>
+                        </button>
                       </div>
                     </div>
                   ))
