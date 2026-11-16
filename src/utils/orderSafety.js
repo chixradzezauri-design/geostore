@@ -7,6 +7,53 @@ export const normalizeOrderTotal = (value) => {
   return Number.isFinite(total) && total >= 0 ? total : 0;
 };
 
+/**
+ * Split the amount actually paid for an order into product, paid add-on and
+ * delivery revenue. Coupon discounts are allocated proportionally across
+ * product/add-on lines. Add-on revenue is reported separately because its
+ * fulfilment cost is not currently captured in product purchase-cost data.
+ */
+export const splitOrderRevenue = (items, orderTotal, deliveryCharge) => {
+  const lines = (Array.isArray(items) ? items : [])
+    .filter(item => item && typeof item === 'object' && !Array.isArray(item))
+    .map(item => {
+      const quantityValue = Number(item.quantity ?? 1);
+      const quantity = Number.isFinite(quantityValue) ? Math.max(1, Math.floor(quantityValue)) : 1;
+      const rawPrice = Number(item.priceGEL ?? item.price ?? item.base_price ?? item.basePrice);
+      const price = Number.isFinite(rawPrice) ? Math.max(0, rawPrice) : 0;
+      const rawAddon = item.addon_total ?? item.addonTotal;
+      const addonFromFlags =
+        ((item.gift_wrap === true || item.giftWrap === true) ? 5 : 0) +
+        ((item.vip_warranty === true || item.vipWarranty === true) ? 15 : 0);
+      const parsedAddon = rawAddon === null || rawAddon === undefined || rawAddon === ''
+        ? addonFromFlags
+        : Number(rawAddon);
+      const addonUnit = Number.isFinite(parsedAddon) ? Math.min(price, Math.max(0, parsedAddon)) : 0;
+      const rawBase = item.base_price ?? item.basePrice;
+      const parsedBase = rawBase === null || rawBase === undefined || rawBase === ''
+        ? price - addonUnit
+        : Number(rawBase);
+      const baseUnit = Number.isFinite(parsedBase) ? Math.max(0, parsedBase) : Math.max(0, price - addonUnit);
+      return { baseGross: baseUnit * quantity, addonGross: addonUnit * quantity };
+    });
+
+  const productGross = lines.reduce((sum, line) => sum + line.baseGross, 0);
+  const addonGross = lines.reduce((sum, line) => sum + line.addonGross, 0);
+  const itemGross = productGross + addonGross;
+  const total = normalizeOrderTotal(orderTotal);
+  const delivery = Math.min(total, normalizeOrderTotal(deliveryCharge));
+  const paidForItems = Math.max(0, total - delivery);
+  const discountFactor = itemGross > 0 ? Math.min(1, paidForItems / itemGross) : 0;
+  const itemProductRevenue = lines.map(line => line.baseGross * discountFactor);
+
+  return {
+    productRevenue: productGross * discountFactor,
+    addonRevenue: addonGross * discountFactor,
+    deliveryRevenue: delivery,
+    itemProductRevenue
+  };
+};
+
 export const normalizeOrderItems = (items) => (
   Array.isArray(items)
     ? items
