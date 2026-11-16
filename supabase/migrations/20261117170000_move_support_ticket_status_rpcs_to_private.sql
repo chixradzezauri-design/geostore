@@ -209,6 +209,9 @@ REVOKE ALL ON FUNCTION private.get_support_ticket_status(text, text) FROM PUBLIC
 REVOKE ALL ON FUNCTION private.get_support_ticket_unread_counts() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION private.mark_support_ticket_messages_read(text, text) FROM PUBLIC, anon, authenticated;
 
+-- SECURITY INVOKER wrappers execute with the API caller's privileges, so the
+-- caller needs EXECUTE on the private implementation. Keep private excluded
+-- from PostgREST's exposed schemas; these grants are only for wrapper calls.
 GRANT EXECUTE ON FUNCTION private.get_my_support_tickets(integer) TO authenticated;
 GRANT EXECUTE ON FUNCTION private.get_support_ticket_status(text, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION private.get_support_ticket_unread_counts() TO authenticated;
