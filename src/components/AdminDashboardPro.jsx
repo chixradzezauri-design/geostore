@@ -1,5 +1,5 @@
 // src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
@@ -16,6 +16,8 @@ import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { createSecureId } from '../utils/secureId.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
+import { mergeCrmCustomersFromOrders } from '../utils/adminCrm.js';
+import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -308,8 +310,14 @@ export default function AdminDashboardPro({
   deliveryFees,
   setDeliveryFees
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); 
+  const [adminTab, setAdminTab] = useState('analytics');
+  const adminSessionVersion = useRef(0);
+  const adminSessionActiveRef = useRef(Boolean(adminLoggedIn));
+  const isCurrentAdminSession = (version) => adminSessionActiveRef.current && version === adminSessionVersion.current;
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [serverCustomers, setServerCustomers] = useState([]);
+  const [crmLoading, setCrmLoading] = useState(false);
+  const [crmError, setCrmError] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
   const [productPage, setProductPage] = useState(1);
@@ -392,16 +400,77 @@ export default function AdminDashboardPro({
     } catch {}
   }, [staffList]);
 
+  useLayoutEffect(() => {
+    adminSessionActiveRef.current = Boolean(adminLoggedIn);
+    adminSessionVersion.current += 1;
+    if (adminLoggedIn) return;
+
+    // Clear private admin snapshots immediately when the verified session ends.
+    setExpenses([]);
+    setExpensesError('');
+    setServerCustomers([]);
+    setCrmLoading(false);
+    setCrmError('');
+    setSupportTickets([]);
+    setSupportTicketsError('');
+    setSelectedSupportTicketId(null);
+    setSupportTicketThreads({});
+    setSupportTicketThreadLoading({});
+    setSupportTicketThreadErrors({});
+    setLegacyMessages([]);
+    setLegacyMessagesError('');
+    setReplyInputs({});
+    setReplySending({});
+    setActivityLogs([]);
+    setActivityLogsLoading(false);
+    setActivityLogsError('');
+    setStorefrontVersions([]);
+    setStorefrontVersionsLoading(false);
+    setStorefrontVersionsError('');
+    setSelectedOrderForModal(null);
+    setOrderAdminNoteInput('');
+    setReactivationOrder(null);
+    setReactivationPassword('');
+    setReactivationError('');
+    supportThreadFetchInFlight.current.clear();
+    supportThreadRefreshPending.current.clear();
+  }, [adminLoggedIn]);
+
+  const fetchAdminCustomers = async () => {
+    const version = adminSessionVersion.current;
+    if (!adminSessionActiveRef.current) return false;
+    setCrmLoading(true);
+    try {
+      const rows = await fetchAdminCustomerDirectory({ supabaseUrl: SUPABASE_URL, headers: await getSupabaseHeaders() });
+      if (!isCurrentAdminSession(version)) return false;
+      setServerCustomers(rows); setCrmError(''); return true;
+    } catch (error) {
+      if (!isCurrentAdminSession(version)) return false;
+      console.error('GEOSTORE persistent CRM fetch failed:', error);
+      setCrmError(error?.message || 'CRM მომხმარებლების ჩატვირთვა ვერ მოხერხდა.'); return false;
+    } finally { if (isCurrentAdminSession(version)) setCrmLoading(false); }
+  };
+  useEffect(() => {
+    if (!adminLoggedIn) { setServerCustomers([]); setCrmLoading(false); setCrmError(''); return undefined; }
+    void fetchAdminCustomers();
+    const interval = setInterval(() => { void fetchAdminCustomers(); }, 30000);
+    return () => clearInterval(interval);
+  }, [adminLoggedIn]);
+
   const fetchExpenses = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminSessionActiveRef.current) return false;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return false;
       setExpenses(data);
       setExpensesError('');
       return true;
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return false;
       console.error('GEOSTORE expense history fetch failed:', error);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
@@ -664,6 +733,8 @@ export default function AdminDashboardPro({
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
   const fetchTickets = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminSessionActiveRef.current) return;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (!res.ok) {
@@ -672,6 +743,7 @@ export default function AdminDashboardPro({
       }
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setSupportTickets(data.map(t => ({
         id: t.id,
         customerName: t.customer_name,
@@ -684,12 +756,15 @@ export default function AdminDashboardPro({
       })));
       setSupportTicketsError('');
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       console.error('GEOSTORE support tickets fetch failed:', error);
       setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
     }
   };
 
   const fetchSupportTicketThread = async (ticketId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminSessionActiveRef.current) return;
     const normalizedTicketId = String(ticketId || '').trim();
     if (!normalizedTicketId) return;
     if (supportThreadFetchInFlight.current.has(normalizedTicketId)) {
@@ -716,14 +791,18 @@ export default function AdminDashboardPro({
         const bTime = Date.parse(b.created_at || '') || 0;
         return aTime - bTime || String(a.id).localeCompare(String(b.id));
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: uniqueRows }));
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       console.error('GEOSTORE support ticket thread fetch failed:', error);
       setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
     } finally {
-      supportThreadFetchInFlight.current.delete(normalizedTicketId);
-      setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
-      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        supportThreadFetchInFlight.current.delete(normalizedTicketId);
+        setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
+      }
+      if (isCurrentAdminSession(requestSessionVersion) && supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
         // If a Realtime event arrived while this fetch was running, make one
         // follow-up read so the newest message cannot be hidden until polling.
         void Promise.resolve().then(() => fetchSupportTicketThread(normalizedTicketId));
@@ -780,6 +859,8 @@ export default function AdminDashboardPro({
   }, [adminLoggedIn, selectedSupportTicketId]);
 
   const fetchLegacyMessages = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminSessionActiveRef.current) return;
     try {
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/messages?select=id,created_at,client_name,sender,text,image,time&order=created_at.desc&limit=100`,
@@ -791,9 +872,11 @@ export default function AdminDashboardPro({
       }
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('მიმოწერების მონაცემების ფორმატი არასწორია.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setLegacyMessages(rows);
       setLegacyMessagesError('');
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       console.error('GEOSTORE legacy messages fetch failed:', error);
       setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
     }
@@ -867,6 +950,8 @@ export default function AdminDashboardPro({
   const [activityLogsError, setActivityLogsError] = useState('');
 
   const fetchActivityLogs = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminSessionActiveRef.current) return;
     setActivityLogsLoading(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
@@ -877,6 +962,7 @@ export default function AdminDashboardPro({
       if (!response.ok) throw new Error(await response.text());
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('აქტივობების ისტორიის ფორმატი არასწორია.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setActivityLogs(rows.map(log => ({
         id: String(log.id),
         action: log.action,
@@ -884,9 +970,11 @@ export default function AdminDashboardPro({
       })));
       setActivityLogsError('');
     } catch (error) {
-      setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      }
     } finally {
-      setActivityLogsLoading(false);
+      if (isCurrentAdminSession(requestSessionVersion)) setActivityLogsLoading(false);
     }
   };
 
@@ -902,7 +990,8 @@ export default function AdminDashboardPro({
 
   const logActivity = async (actionText) => {
     const action = String(actionText || '').trim().slice(0, 500);
-    if (!action) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!action || !adminLoggedIn) return;
 
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
@@ -914,6 +1003,7 @@ export default function AdminDashboardPro({
       const rows = await response.json();
       const saved = Array.isArray(rows) ? rows[0] : rows;
       if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setActivityLogs(prev => [{
         id: String(saved.id),
         action: saved.action,
@@ -921,6 +1011,7 @@ export default function AdminDashboardPro({
       }, ...(prev || [])].slice(0, 100));
       setActivityLogsError('');
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
       console.error('GEOSTORE admin activity log write failed:', error);
     }
@@ -2110,7 +2201,7 @@ export default function AdminDashboardPro({
       }
 
       if (updatedCount === 0) {
-        alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა.');
+        alert('მასობრივი ფასდაკლებისთვის შესაფერისი პროდუქტები ვერ მოიძებნა. გაითვალისწინეთ: ინდივიდუალური ვარიანტების მქონე პროდუქტები ამ აქციაში არ შედის.');
         return;
       }
 
@@ -2310,6 +2401,8 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
         method: 'PATCH',
@@ -2317,12 +2410,15 @@ export default function AdminDashboardPro({
         body: JSON.stringify({ status: newStatus })
       });
       if (!response.ok) throw new Error('ტიკეტის სტატუსის განახლება ვერ მოხერხდა.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       fetchTickets();
       logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
-    } catch { alert('შეცდომა სტატუსის განახლებისას'); }
+    } catch { if (isCurrentAdminSession(requestSessionVersion)) alert('შეცდომა სტატუსის განახლებისას'); }
   };
 
   const handleSendTicketReply = async (ticketId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     const normalizedTicketId = String(ticketId);
     const replyText = String(replyInputs[ticketId] || '').trim();
     if (!replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId)) return;
@@ -2353,6 +2449,7 @@ export default function AdminDashboardPro({
         const detail = await response.text().catch(() => '');
         throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       }
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
       delete supportReplyRequestIds.current[normalizedTicketId];
       setSelectedSupportTicketId(normalizedTicketId);
@@ -2360,27 +2457,18 @@ export default function AdminDashboardPro({
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${normalizedTicketId}`);
       alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის მიმოწერაში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
     } catch (error) {
-      console.error('GEOSTORE support ticket reply failed:', error);
-      alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        console.error('GEOSTORE support ticket reply failed:', error);
+        alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+      }
     } finally {
       supportReplyInFlight.current.delete(normalizedTicketId);
-      setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
+      }
     }
   };
 
-  const handleDeleteTicket = async (ticketId) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
-          method: 'DELETE',
-          headers: await getSupabaseHeaders()
-        });
-        if (!response.ok) throw new Error('ტიკეტის წაშლა ვერ მოხერხდა.');
-        fetchTickets();
-        logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
-      } catch { alert('შეცდომა ტიგეტის წაშლისას'); }
-    }
-  };
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
@@ -2839,21 +2927,26 @@ export default function AdminDashboardPro({
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
-  const handleToggleVipUser = (userId) => {
-    if (typeof setUsersList === 'function') {
-      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
-    }
+  const persistServerCustomerProfile = async (customer, changes = {}) => {
+    const profile = { id: customer.id, isVip: Boolean(changes.isVip ?? customer.isVip), isBlocked: Boolean(changes.isBlocked ?? customer.isBlocked), discountPercent: Number(changes.discountPercent ?? customer.discountPercent) || 0, adminNotes: String(changes.adminNotes ?? customer.adminNotes ?? '') };
+    const saved = await saveAdminCustomerCrmProfile({ supabaseUrl: SUPABASE_URL, headers: await getSupabaseHeaders(), profile });
+    setServerCustomers(prev => prev.map(row => String(row.id) === String(customer.id) ? { ...row, isVip: Boolean(saved?.is_vip ?? profile.isVip), isBlocked: Boolean(saved?.is_blocked ?? profile.isBlocked), discountPercent: Number(saved?.discount_percent ?? profile.discountPercent) || 0, adminNotes: String(saved?.admin_notes ?? profile.adminNotes) } : row));
+  };
+  const handleToggleVipUser = async (userId) => {
+    const customer = crmUsers.find(u => u.id === userId || u.email === userId);
+    if (customer?.isServerCustomer) { try { await persistServerCustomerProfile(customer, { isVip: !customer.isVip }); } catch (error) { alert(error?.message || 'VIP სტატუსის შენახვა ვერ მოხერხდა.'); return; } }
+    else if (typeof setUsersList === 'function') setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
     logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
   };
-
-  const handleToggleBlockUser = (userId) => {
-    if (typeof setUsersList === 'function') {
-      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
-    }
+  const handleToggleBlockUser = async (userId) => {
+    const customer = crmUsers.find(u => u.id === userId || u.email === userId);
+    if (customer?.isServerCustomer) { try { await persistServerCustomerProfile(customer, { isBlocked: !customer.isBlocked }); } catch (error) { alert(error?.message || 'CRM ნიშნის შენახვა ვერ მოხერხდა.'); return; } }
+    else if (typeof setUsersList === 'function') setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
     logActivity(`შეიცვალა მხოლოდ CRM ჩანაწერის შეზღუდვის ნიშანი (ID: ${userId})`);
   };
 
   const handleDeleteUser = (userId, userName) => {
+    if (crmUsers.some(u => u.isServerCustomer && (u.id === userId || u.email === userId))) { alert('რეალური Supabase Auth მომხმარებლის ანგარიშის წაშლა CRM-იდან დაუშვებელია.'); return; }
     if (window.confirm(`წაიშლება მხოლოდ ამ მოწყობილობაზე შენახული CRM ჩანაწერი "${userName || userId}". Supabase Auth ანგარიში და შეკვეთები არ წაიშლება. გავაგრძელოთ?`)) {
       if (typeof setUsersList === 'function') {
         setUsersList(prev => (prev || []).filter(u => u.id !== userId && u.email !== userId));
@@ -2862,7 +2955,15 @@ export default function AdminDashboardPro({
     }
   };
 
-  const handleSaveUserCrm = (userId) => {
+  const handleSaveUserCrm = async (userId) => {
+    const customer = crmUsers.find(u => u.id === userId || u.email === userId);
+    if (customer?.isServerCustomer) {
+      try { await persistServerCustomerProfile(customer, { discountPercent: editUserDiscount, adminNotes: editUserNotes }); }
+      catch (error) { alert(error?.message || 'CRM მონაცემების შენახვა ვერ მოხერხდა.'); return; }
+      setEditingUserId(null); setEditUserDiscount(''); setEditUserNotes('');
+      logActivity(`განახლდა ბაზაში შენახული CRM მონაცემები (ID: ${userId})`);
+      alert('CRM მონაცემები წარმატებით შეინახა Supabase-ში!'); return;
+    }
     if (typeof setUsersList === 'function') {
       setUsersList(prev => (prev || []).map(u => {
         if (u.id === userId || u.email === userId) {
@@ -2922,11 +3023,14 @@ export default function AdminDashboardPro({
     await onSaveStorefrontDraft(normalized);
   };
 
-  const filteredUsers = (usersList || []).filter(u => 
-    u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
-    u.email?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    u.phone?.toLowerCase().includes(userSearchQuery.toLowerCase())
-  );
+  const crmUsers = useMemo(() => {
+    const merged = mergeCrmCustomersFromOrders([...(Array.isArray(usersList) ? usersList : []), ...(Array.isArray(serverCustomers) ? serverCustomers : [])], Array.isArray(orders) ? orders : []);
+    return merged.map(customer => {
+      const server = serverCustomers.find(row => String(row.id) === String(customer.id) || (row.email && String(row.email).toLowerCase() === String(customer.email || '').toLowerCase()));
+      return server ? { ...customer, ...server, isServerCustomer: true } : customer;
+    });
+  }, [usersList, serverCustomers, orders]);
+  const filteredUsers = crmUsers.filter(u => String(u.name || '').toLowerCase().includes(userSearchQuery.toLowerCase()) || String(u.email || '').toLowerCase().includes(userSearchQuery.toLowerCase()) || String(u.phone || '').toLowerCase().includes(userSearchQuery.toLowerCase()));
 
   const normalizedProductSearch = String(productSearchQuery || '').trim().toLocaleLowerCase();
   const selectedProductCategory = safeCategories.find(category => category.name === productCategoryFilter);
@@ -3039,7 +3143,7 @@ export default function AdminDashboardPro({
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
-            { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
+            { id: 'users', label: '👥 CRM მომხმარებლები', count: crmUsers.length, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].map(tab => {
             const IconComp = tab.icon;
@@ -4002,7 +4106,6 @@ export default function AdminDashboardPro({
                         }} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
                           {String(selectedSupportTicketId) === String(t.id) ? 'მიმოწერის დამალვა' : 'მიმოწერის ნახვა'}
                         </button>
-                        <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
@@ -4171,31 +4274,55 @@ export default function AdminDashboardPro({
                   )}
 
                   {isLaptop && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">პროცესორი (CPU)</label>
-                        <input type="text" placeholder="Apple M3 / Intel i7" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="Apple M3 / Intel i7" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
-                        <input type="text" placeholder="16GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="16GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">SSD</label>
-                        <input type="text" placeholder="512GB" value={productForm.storage} onChange={e => setProductForm({...productForm, storage: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="512GB" value={productForm.storage} onChange={e => setProductForm({...productForm, storage: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">გრაფიკა (GPU)</label>
+                        <input type="text" placeholder="NVIDIA RTX 4060 / Integrated" value={productForm.gpu} onChange={e => setProductForm({...productForm, gpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ეკრანის ზომა</label>
+                        <input type="text" placeholder="15.6 inch" value={productForm.screenSize} onChange={e => setProductForm({...productForm, screenSize: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ოპერაციული სისტემა</label>
+                        <input type="text" placeholder="Windows 11 / macOS" value={productForm.os} onChange={e => setProductForm({...productForm, os: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                     </div>
                   )}
 
                   {isPhone && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                       <div>
-                        <label className="text-slate-400 font-bold block mb-1">მეხსიერება</label>
+                        <label className="text-slate-400 font-bold block mb-1">პროცესორი (CPU)</label>
+                        <input type="text" placeholder="Snapdragon / Apple A-series" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">მეხსიერების ვარიანტები</label>
                         <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
-                        <input type="text" placeholder="8GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="8GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ეკრანის ზომა</label>
+                        <input type="text" placeholder="6.7 inch" value={productForm.screenSize} onChange={e => setProductForm({...productForm, screenSize: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ოპერაციული სისტემა</label>
+                        <input type="text" placeholder="Android / iOS" value={productForm.os} onChange={e => setProductForm({...productForm, os: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
@@ -4575,6 +4702,9 @@ export default function AdminDashboardPro({
               <p className="admin-flash-sale-expiry-note text-[11px] leading-relaxed text-emerald-100/70">
                 აქციის დასრულებისას სისტემა ავტომატურად დააბრუნებს პროდუქტების წინა ფასებს. დრო ბაზაში ინახება და გვერდის განახლება ათვლას აღარ გაანულებს.
               </p>
+              <p className="text-amber-300/90 text-xs leading-relaxed">
+                მასობრივი აქცია ვრცელდება მხოლოდ პროდუქტებზე, რომლებსაც ცალკე ვარიანტების ფასები არ აქვთ. ზომის/ფერის ან სხვა ინდივიდუალური ვარიანტების მქონე პროდუქტები უსაფრთხოების მიზნით გამოტოვებულია, რათა მათი ფასები და მარაგი არ შეიცვალოს.
+              </p>
             </form>
           </div>
         )}
@@ -4926,16 +5056,18 @@ export default function AdminDashboardPro({
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-emerald-400" /> CRM ჩანაწერები — ლოკალური სია ({usersList?.length || 0})
+                <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
                 <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
-            <p className="text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
-              ეს არის ძველი CRM სია, რომელიც ინახება მხოლოდ ამ მოწყობილობის ბრაუზერში. VIP/შეზღუდვის ნიშნები აქ მხოლოდ CRM ჩანაწერს ეხება — ისინი არ ცვლიან Supabase Auth ანგარიშის უფლებებს. ჩანაწერის წაშლა არ შლის რეალურ ანგარიშს, შეკვეთებს ან ბაზის მონაცემებს.
+            <p className="text-slate-300 text-[11px] leading-relaxed bg-slate-950/70 border border-emerald-500/20 rounded-xl px-3 py-2">
+              რეგისტრირებული მომხმარებლები და CRM პროფილები იტვირთება Supabase-იდან. ძველი ლოკალური CRM ჩანაწერები შენარჩუნებულია და გაერთიანებულია სიაში; CRM შეზღუდვის ნიშანი არ ცვლის Auth ანგარიშის უფლებებს.
             </p>
+            {crmLoading && <p className="text-emerald-300 text-xs">CRM მონაცემები იტვირთება...</p>}
+            {crmError && <p className="text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">Supabase CRM: {crmError} ძველი ლოკალური ჩანაწერები არ შეცვლილა.</p>}
 
             <div className="admin-crm-list space-y-4">
               {(!filteredUsers || filteredUsers.length === 0) ? (
@@ -4971,7 +5103,7 @@ export default function AdminDashboardPro({
                           <button 
                             onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
-                            title="მხოლოდ ლოკალური CRM ჩანაწერის ნიშანი; Auth ანგარიშს არ ბლოკავს"
+                            title="CRM შეზღუდვის ნიშანი; Supabase Auth ანგარიშს არ ბლოკავს"
                           >
                             {u.isBlocked ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
                             {u.isBlocked ? 'ნიშნის მოხსნა' : 'CRM-ში შეზღუდულად მონიშვნა'}
@@ -4993,13 +5125,13 @@ export default function AdminDashboardPro({
                             <Edit3 className="w-4 h-4" />
                           </button>
 
-                          <button 
+                          {!u.isServerCustomer && <button 
                             onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </button>}
                         </div>
                       </div>
 

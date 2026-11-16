@@ -19219,3 +19219,79 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     padding: 4px 7px !important;
   }
 }
+
+
+/* GEOSTORE ADMIN DESIGN — STAGE 47: keep the desktop navigation available while the admin workspace scrolls. */
+@media (min-width: 1024px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    position: sticky !important;
+    top: 16px !important;
+    align-self: flex-start !important;
+    max-height: calc(100dvh - 32px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(148, 163, 184, .42) transparent !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) {
+    min-height: 0 !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child::-webkit-scrollbar {
+    width: 6px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, .42);
+    border-radius: 999px;
+  }
+}
+
+
+/* GEOSTORE ADMIN DESIGN — STAGE 48: align the active navigation accent with the admin emerald palette. */
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] {
+  background: #10b981 !important;
+  color: #06251b !important;
+  border-color: #6ee7b7 !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, .2) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"]:hover {
+  background: #34d399 !important;
+  color: #06251b !important;
+  border-color: #a7f3d0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] > div:first-child > svg {
+  color: #06251b !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] > span {
+  background: #06251b !important;
+  color: #a7f3d0 !important;
+  border-color: #145a45 !important;
+}
+
+
+/* GEOSTORE ADMIN DESIGN — STAGE 49: unify the admin welcome bar with the dark navy workspace. */
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+  background: #0d192a !important;
+  border-color: #34465e !important;
+  border-radius: 20px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18) !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child h2 {
+  color: #f8fbff !important;
+  -webkit-text-fill-color: #f8fbff !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child p {
+  color: #bdcadd !important;
+  -webkit-text-fill-color: #bdcadd !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div {
+  background: #071321 !important;
+  border-color: #34465e !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div span:last-child {
+  color: #6ee7b7 !important;
+  -webkit-text-fill-color: #6ee7b7 !important;
+}
