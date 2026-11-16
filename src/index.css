@@ -19248,3 +19248,25 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     border-radius: 999px;
   }
 }
+
+
+/* GEOSTORE ADMIN DESIGN — STAGE 48: align the active navigation accent with the admin emerald palette. */
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] {
+  background: #10b981 !important;
+  color: #06251b !important;
+  border-color: #6ee7b7 !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, .2) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"]:hover {
+  background: #34d399 !important;
+  color: #06251b !important;
+  border-color: #a7f3d0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] > div:first-child > svg {
+  color: #06251b !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] > span {
+  background: #06251b !important;
+  color: #a7f3d0 !important;
+  border-color: #145a45 !important;
+}
