@@ -2246,8 +2246,22 @@ export default function AdminDashboardPro({
           <title>ინვოისი #${escapeHtml(order.id)}</title>
           <style>
             body { font-family: 'Noto Sans Georgian', sans-serif; padding: 30px; color: #111; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
+            .header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
             .store-name { font-size: 24px; font-weight: 900; color: #059669; }
+            @media screen and (max-width: 640px) {
+              body { padding: 12px; }
+              .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+              .header > div:last-child { text-align: left !important; }
+              table { display: block; width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+              th, td { white-space: nowrap; padding: 8px; font-size: 12px; }
+              .totals-breakdown { width: 100%; max-width: 100%; }
+              .total { font-size: 16px; }
+            }
+            @media print {
+              body { padding: 12mm; }
+              table { display: table; width: 100%; overflow: visible; }
+              th, td { white-space: normal; }
+            }
             .order-info { margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
