@@ -433,3 +433,114 @@
     justify-content: space-between;
   }
 }
+
+
+/* STAGE 66 — campaigns, banners, categories and coupon responsive layouts */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-discounts-panel,
+  .admin-flash-sale-form,
+  .admin-flash-sale-fields,
+  .admin-banners,
+  .admin-banner-form,
+  .admin-banner-fields,
+  .admin-banner-list,
+  .admin-banner-card,
+  .admin-category-manager,
+  .admin-category-form,
+  .admin-category-tree,
+  .admin-category-card,
+  .admin-subcategory-list,
+  .admin-subcategory-card,
+  .admin-coupons-panel,
+  .admin-coupon-form,
+  .admin-coupon-list,
+  .admin-coupon-card
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-banner-card,
+  .admin-category-card,
+  .admin-subcategory-card,
+  .admin-coupon-card
+) {
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-banner-card > div,
+.admin-dashboard-pro.admin-dashboard-shell .admin-coupon-card > div,
+.admin-dashboard-pro.admin-dashboard-shell .admin-subcategory-identity {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-banner-card h4,
+  .admin-banner-card p,
+  .admin-category-card h4,
+  .admin-subcategory-card h4,
+  .admin-coupon-card h4
+) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-banner-card button,
+  .admin-coupon-card button,
+  .admin-category-card button,
+  .admin-subcategory-card button
+) {
+  min-height: 40px;
+  flex: 0 0 auto;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-discounts-panel,
+    .admin-banners > div,
+    .admin-category-manager > div,
+    .admin-coupons-panel > div
+  ) {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-flash-sale-submit {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    text-align: center;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-banner-card,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-coupon-card {
+    align-items: flex-start;
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-banner-card > div {
+    flex: 1 1 auto;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-category-form > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-category-card,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-subcategory-card {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-subcategory-list {
+    margin-left: 4px;
+    padding-left: 12px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-banner-card button,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-coupon-card button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-banner-card {
+    flex-wrap: wrap;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-banner-card > button {
+    margin-left: auto;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-subcategory-list {
+    padding-left: 8px;
+  }
+}
