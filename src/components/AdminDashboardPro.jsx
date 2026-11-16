@@ -618,6 +618,33 @@ export default function AdminDashboardPro({
   const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა', durationHours: '12' });
   const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
 
+  const [flashSaleStatusClock, setFlashSaleStatusClock] = useState(() => Date.now());
+  const flashSaleAdminSummary = useMemo(() => {
+    const now = flashSaleStatusClock;
+    const activeProducts = (Array.isArray(products) ? products : []).filter(product => {
+      const endsAt = Date.parse(product?.flashSaleEndsAt || '');
+      const originalPrice = Number(product?.oldPriceGEL);
+      const salePrice = Number(product?.priceGEL);
+      const hasOnlyBasePricing = !Array.isArray(product?.variants) || product.variants.length === 0;
+      return hasOnlyBasePricing
+        && Number.isFinite(endsAt)
+        && endsAt > now
+        && Number.isFinite(originalPrice)
+        && Number.isFinite(salePrice)
+        && originalPrice > salePrice;
+    });
+    const endTimes = activeProducts.map(product => Date.parse(product.flashSaleEndsAt));
+    return {
+      count: activeProducts.length,
+      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null
+    };
+  }, [products, flashSaleStatusClock]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setFlashSaleStatusClock(Date.now()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
   const [supportTickets, setSupportTickets] = useState([]);
   const [supportTicketsError, setSupportTicketsError] = useState('');
   const [selectedSupportTicketId, setSelectedSupportTicketId] = useState(null);
@@ -4504,6 +4531,17 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
             </h3>
+            {flashSaleAdminSummary.count > 0 && (
+              <div className="gs-admin-flash-sale-active" aria-live="polite">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.14em]">მოქმედი ფლეშ-აქცია</span>
+                  <strong>{flashSaleAdminSummary.count} პროდუქტი</strong>
+                </div>
+                {flashSaleAdminSummary.nextEndsAt !== null && (
+                  <p>უახლოესი დასრულება: {new Date(flashSaleAdminSummary.nextEndsAt).toLocaleString('ka-GE')}</p>
+                )}
+              </div>
+            )}
             <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
               <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div className="space-y-1.5">

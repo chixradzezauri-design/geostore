@@ -18721,3 +18721,27 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     transition:none!important;transform:none!important;
   }
 }
+
+
+/* GEOSTORE — stage 42: admin flash-sale status and accessible countdown */
+.geostore-fashion-store .gs-flash-sale-countdown{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:8px!important;max-width:100%!important;padding:7px!important;
+  border:1px solid rgba(215,171,98,.22)!important;border-radius:19px!important;
+  background:rgba(7,7,9,.42)!important;
+}
+.geostore-fashion-store .gs-flash-sale-countdown .gs-flash-sale-timer{
+  min-width:56px!important;font-variant-numeric:tabular-nums!important;
+}
+.gs-admin-flash-sale-active{
+  display:grid!important;gap:6px!important;padding:13px 15px!important;
+  border:1px solid rgba(16,185,129,.28)!important;border-radius:16px!important;
+  background:linear-gradient(110deg,rgba(16,185,129,.12),rgba(15,23,42,.42))!important;
+  color:#d1fae5!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.gs-admin-flash-sale-active strong{color:#6ee7b7!important;font-size:13px!important}
+.gs-admin-flash-sale-active p{color:#a7b6b1!important;font-size:11px!important;line-height:1.5!important}
+@media(max-width:640px){
+  .geostore-fashion-store .gs-flash-sale-countdown{width:100%!important;gap:6px!important}
+  .geostore-fashion-store .gs-flash-sale-countdown .gs-flash-sale-timer{min-width:0!important;flex:1 1 0!important}
+}
