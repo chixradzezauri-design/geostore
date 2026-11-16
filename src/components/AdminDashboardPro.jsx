@@ -1,5 +1,5 @@
 // src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
@@ -393,7 +393,7 @@ export default function AdminDashboardPro({
     } catch {}
   }, [staffList]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     adminSessionVersion.current += 1;
     if (adminLoggedIn) return;
 
@@ -421,6 +421,7 @@ export default function AdminDashboardPro({
     setReactivationOrder(null);
     setReactivationPassword('');
     setReactivationError('');
+    supportThreadFetchInFlight.current.clear();
     supportThreadRefreshPending.current.clear();
   }, [adminLoggedIn]);
 
@@ -765,8 +766,8 @@ export default function AdminDashboardPro({
       console.error('GEOSTORE support ticket thread fetch failed:', error);
       setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
     } finally {
-      supportThreadFetchInFlight.current.delete(normalizedTicketId);
       if (requestSessionVersion === adminSessionVersion.current) {
+        supportThreadFetchInFlight.current.delete(normalizedTicketId);
         setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
       }
       if (requestSessionVersion === adminSessionVersion.current && supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
