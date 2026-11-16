@@ -306,7 +306,8 @@ export default function AdminDashboardPro({
   setSiteSettings,
   formatPrice,
   deliveryFees,
-  setDeliveryFees
+  setDeliveryFees,
+  onFlashSaleChanged
 }) {
   const [adminTab, setAdminTab] = useState('analytics'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -642,6 +643,33 @@ export default function AdminDashboardPro({
       cancelled = true;
       clearInterval(interval);
     };
+  }, []);
+
+  const [flashSaleStatusClock, setFlashSaleStatusClock] = useState(() => Date.now());
+  const flashSaleAdminSummary = useMemo(() => {
+    const now = flashSaleStatusClock;
+    const activeProducts = (Array.isArray(products) ? products : []).filter(product => {
+      const endsAt = Date.parse(product?.flashSaleEndsAt || '');
+      const originalPrice = Number(product?.oldPriceGEL);
+      const salePrice = Number(product?.priceGEL);
+      const hasOnlyBasePricing = !Array.isArray(product?.variants) || product.variants.length === 0;
+      return hasOnlyBasePricing
+        && Number.isFinite(endsAt)
+        && endsAt > now
+        && Number.isFinite(originalPrice)
+        && Number.isFinite(salePrice)
+        && originalPrice > salePrice;
+    });
+    const endTimes = activeProducts.map(product => Date.parse(product.flashSaleEndsAt));
+    return {
+      count: activeProducts.length,
+      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null
+    };
+  }, [products, flashSaleStatusClock]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setFlashSaleStatusClock(Date.now()), 30000);
+    return () => clearInterval(timer);
   }, []);
 
   const [supportTickets, setSupportTickets] = useState([]);
@@ -2063,29 +2091,25 @@ export default function AdminDashboardPro({
     const category = String(flashSaleForm.category || 'ყველა').trim();
     const durationMinutes = Number(flashSaleForm.durationMinutes);
 
-    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\d+(?:\.\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\\d+(?:\\.\\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
       alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
       return;
     }
-
     if (!category) {
       alert('აირჩიეთ პროდუქტის კატეგორია.');
       return;
     }
-
     if (![15, 30, 60, 180, 360, 720, 1440].includes(durationMinutes)) {
       alert('აირჩიეთ აქციის სწორი ხანგრძლივობა.');
       return;
     }
-
     if (typeof setProducts !== 'function') {
       alert('პროდუქტების განახლება ამჟამად მიუწვდომელია. განაახლეთ გვერდი და სცადეთ თავიდან.');
       return;
     }
-
     if (isApplyingFlashSale) return;
-    setIsApplyingFlashSale(true);
 
+    setIsApplyingFlashSale(true);
     try {
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_create_flash_sale', {
         method: 'POST',
@@ -2096,7 +2120,6 @@ export default function AdminDashboardPro({
           p_duration_minutes: durationMinutes
         })
       });
-
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         throw new Error(errorText || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
@@ -2108,7 +2131,6 @@ export default function AdminDashboardPro({
       if (!Number.isInteger(updatedCount) || updatedCount < 0) {
         throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
       }
-
       if (updatedCount === 0 || !campaign?.ends_at) {
         alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა. არსებული აქცია არ შეცვლილა.');
         return;
@@ -2116,12 +2138,10 @@ export default function AdminDashboardPro({
 
       setFlashSaleStatus(campaign);
 
-      // Re-read the server's final values: some products may be skipped when
-      // rounding would leave their price unchanged, and concurrent admin edits may occur.
       let refreshedRows = null;
       try {
         const refreshResponse = await fetch(
-          SUPABASE_URL + '/rest/v1/products?select=id,price_gel,old_price_gel,stock&' +
+          SUPABASE_URL + '/rest/v1/products?select=id,price_gel,old_price_gel,flash_sale_started_at,flash_sale_ends_at,flash_sale_percent,stock&' +
           (category === 'ყველა' ? 'order=id.asc' : 'category=eq.' + encodeURIComponent(category) + '&order=id.asc'),
           { headers: await getSupabaseHeaders() }
         );
@@ -2144,11 +2164,15 @@ export default function AdminDashboardPro({
             price_gel: Number(saved.price_gel),
             oldPriceGEL: saved.old_price_gel == null ? null : Number(saved.old_price_gel),
             old_price_gel: saved.old_price_gel,
+            flashSaleStartedAt: saved.flash_sale_started_at || null,
+            flashSaleEndsAt: saved.flash_sale_ends_at || null,
+            flashSalePercent: saved.flash_sale_percent == null ? null : Number(saved.flash_sale_percent),
             stock: saved.stock
           };
         }));
       }
 
+      await onFlashSaleChanged?.();
       const endLabel = new Date(campaign.ends_at).toLocaleString('ka-GE');
       logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; ხანგრძლივობა: ${durationMinutes} წუთი; განახლდა ${updatedCount} პროდუქტი`);
       alert(refreshedRows
@@ -4531,6 +4555,17 @@ export default function AdminDashboardPro({
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
             </h3>
+            {flashSaleAdminSummary.count > 0 && (
+              <div className="gs-admin-flash-sale-active" aria-live="polite">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.14em]">მოქმედი ფლეშ-აქცია</span>
+                  <strong>{flashSaleAdminSummary.count} პროდუქტი</strong>
+                </div>
+                {flashSaleAdminSummary.nextEndsAt !== null && (
+                  <p>უახლოესი დასრულება: {new Date(flashSaleAdminSummary.nextEndsAt).toLocaleString('ka-GE')}</p>
+                )}
+              </div>
+            )}
             <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
               {flashSaleStatus && (
                 <div className="gs-admin-flash-sale-status rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 space-y-1.5">
@@ -4542,9 +4577,9 @@ export default function AdminDashboardPro({
                   <p className="text-[11px] text-slate-400">დასრულდება: {new Date(flashSaleStatus.ends_at).toLocaleString('ka-GE')}</p>
                 </div>
               )}
-              <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">ფასდაკლება (%)</label>
+                  <label className="text-slate-400 font-bold">ფასდაკლება პროცენტულად (%)</label>
                   <input type="number" placeholder="მაგ: 20" required min="0.01" max="99.99" step="0.01" inputMode="decimal" value={flashSaleForm.discountPercent} onChange={e => setFlashSaleForm({...flashSaleForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
@@ -4572,6 +4607,9 @@ export default function AdminDashboardPro({
               <button type="submit" disabled={isApplyingFlashSale} className="admin-flash-sale-submit bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2 cursor-pointer">
                 <Zap className="w-4 h-4" /> {isApplyingFlashSale ? 'მუშავდება...' : 'ფასდაკლების მასობრივად გააქტიურება'}
               </button>
+              <p className="admin-flash-sale-expiry-note text-[11px] leading-relaxed text-emerald-100/70">
+                აქციის დასრულებისას სისტემა ავტომატურად დააბრუნებს პროდუქტების წინა ფასებს. დრო ბაზაში ინახება და გვერდის განახლება ათვლას აღარ გაანულებს.
+              </p>
             </form>
           </div>
         )}
