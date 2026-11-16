@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
-import { fetchMySupportTickets } from './utils/supportTicketHistory';
+import { fetchMySupportTickets, mergeSupportTicketPages } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
@@ -627,7 +627,11 @@ export default function App() {
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
   const [mySupportTickets, setMySupportTickets] = useState([]);
   const [mySupportTicketsLoading, setMySupportTicketsLoading] = useState(false);
+  const [mySupportTicketsLoadingMore, setMySupportTicketsLoadingMore] = useState(false);
+  const [mySupportTicketsHasMore, setMySupportTicketsHasMore] = useState(false);
+  const [mySupportTicketsCursor, setMySupportTicketsCursor] = useState(null);
   const [mySupportTicketsError, setMySupportTicketsError] = useState('');
+  const hasLoadedMoreSupportTicketsRef = useRef(false);
   const [supportTicketStatus, setSupportTicketStatus] = useState(null);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
   const supportThreadMessagesRef = useRef(null);
@@ -643,8 +647,12 @@ export default function App() {
   useEffect(() => {
     if (!supportOpen || !currentUser?.id) {
       setMySupportTickets([]);
-      setMySupportTicketsError('');
+      setMySupportTicketsCursor(null);
+      setMySupportTicketsHasMore(false);
       setMySupportTicketsLoading(false);
+      setMySupportTicketsLoadingMore(false);
+      setMySupportTicketsError('');
+      hasLoadedMoreSupportTicketsRef.current = false;
       return undefined;
     }
     let active = true;
@@ -654,20 +662,29 @@ export default function App() {
       requestInFlight = true;
       setMySupportTicketsLoading(true);
       try {
-        const rows = await fetchMySupportTickets({
+        const page = await fetchMySupportTickets({
           supabaseUrl: SUPABASE_URL,
           headers: await getSupabaseHeaders({ authenticated: true })
         });
         if (active) {
-          if (rows === null) {
+          if (page === null) {
             setMySupportTickets([]);
+            setMySupportTicketsCursor(null);
+            setMySupportTicketsHasMore(false);
+            hasLoadedMoreSupportTicketsRef.current = false;
             setMySupportTicketsError(currentLang === 'en'
               ? 'Support history will appear after the support database update is installed.'
               : currentLang === 'ru'
                 ? 'История обращений появится после установки обновления базы поддержки.'
                 : 'მიმართვების ისტორია გამოჩნდება მხარდაჭერის მონაცემთა ბაზის განახლების შემდეგ.');
           } else {
-            setMySupportTickets(rows);
+            if (hasLoadedMoreSupportTicketsRef.current) {
+              setMySupportTickets(previous => mergeSupportTicketPages(previous, page.rows));
+            } else {
+              setMySupportTickets(page.rows);
+              setMySupportTicketsCursor(page.nextCursor);
+              setMySupportTicketsHasMore(Boolean(page.nextCursor));
+            }
             setMySupportTicketsError('');
           }
         }
@@ -3785,6 +3802,51 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+                {mySupportTicketsHasMore && (
+                  <button
+                    type="button"
+                    disabled={mySupportTicketsLoadingMore || mySupportTicketsLoading}
+                    onClick={async () => {
+                      if (!mySupportTicketsCursor || mySupportTicketsLoadingMore) return;
+                      setMySupportTicketsLoadingMore(true);
+                      setMySupportTicketsError('');
+                      try {
+                        const page = await fetchMySupportTickets({
+                          supabaseUrl: SUPABASE_URL,
+                          headers: await getSupabaseHeaders({ authenticated: true }),
+                          cursor: mySupportTicketsCursor
+                        });
+                        if (page === null) {
+                          setMySupportTicketsHasMore(false);
+                          setMySupportTicketsError(currentLang === 'en'
+                            ? 'Support history pagination is not available until the database update is installed.'
+                            : currentLang === 'ru'
+                              ? 'Постраничная история обращений станет доступна после обновления базы данных.'
+                              : 'მიმართვების გვერდებად ჩატვირთვა მონაცემთა ბაზის განახლების შემდეგ იქნება ხელმისაწვდომი.');
+                        } else {
+                          hasLoadedMoreSupportTicketsRef.current = true;
+                          setMySupportTickets(previous => mergeSupportTicketPages(previous, page.rows));
+                          setMySupportTicketsCursor(page.nextCursor);
+                          setMySupportTicketsHasMore(Boolean(page.nextCursor));
+                        }
+                      } catch (error) {
+                        console.warn('Could not load the next support history page:', error);
+                        setMySupportTicketsError(currentLang === 'en'
+                          ? 'Could not load more requests. Please try again.'
+                          : currentLang === 'ru'
+                            ? 'Не удалось загрузить следующие обращения. Попробуйте ещё раз.'
+                            : 'შემდეგი მიმართვების ჩატვირთვა ვერ მოხერხდა. სცადე ხელახლა.');
+                      } finally {
+                        setMySupportTicketsLoadingMore(false);
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {mySupportTicketsLoadingMore
+                      ? (currentLang === 'en' ? 'Loading…' : currentLang === 'ru' ? 'Загрузка…' : 'იტვირთება…')
+                      : (currentLang === 'en' ? 'Load more requests' : currentLang === 'ru' ? 'Загрузить ещё' : 'მეტის ჩატვირთვა')}
+                  </button>
+                )}
               </section>
               )}
             <div className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3">
