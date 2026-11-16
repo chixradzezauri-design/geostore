@@ -1,6 +1,9 @@
 begin;
 -- Authenticated users may list only tickets explicitly linked to their own
 -- Supabase Auth UUID. Guest/email-only tickets remain on the ticket-number/code flow.
+alter table public.support_ticket_messages
+  add column if not exists customer_read_at timestamptz;
+
 create or replace function public.get_my_support_tickets(p_limit integer default 50)
 returns table(ticket_id text, subject text, status text, created_at timestamptz, last_message_at timestamptz, unread_count bigint)
 language plpgsql stable security definer set search_path to ''
