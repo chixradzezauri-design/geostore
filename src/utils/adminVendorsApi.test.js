@@ -47,6 +47,7 @@ test('remote version wins over stale local data and archived records stay archiv
     ],
     [
       { id: 'v1', name: 'Current name', commission: 10, updated_at: '2026-11-02T00:00:00.000Z' },
+      { id: 'v2', name: 'Old server copy', commission: 1, updated_at: '2026-11-02T00:00:00.000Z' },
       { id: 'v3', name: 'Archived', commission: 0, status: 'არქივირებული', archived_at: '2026-11-02T00:00:00.000Z', updated_at: '2026-11-02T00:00:00.000Z' }
     ]
   );
