@@ -1445,17 +1445,37 @@ export default function App() {
     const requestSessionVersion = adminOrdersSessionVersion.current;
     adminOrdersFetchLock.current = true;
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
-        { headers: await getSupabaseHeaders({ authenticated: true }) }
-      );
-      if (!res.ok) {
-        const errorBody = await res.text().catch(() => '');
-        throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
+      // PostgREST commonly caps responses at 1,000 rows. Load the complete
+      // admin order ledger in stable pages so older delivered/cancelled orders
+      // remain available to finance, analytics and CSV exports.
+      const allOrderRows = [];
+      const pageSize = 1000;
+      let completed = false;
+      for (let offset = 0; offset < 100000; offset += pageSize) {
+        const headers = await getSupabaseHeaders({ authenticated: true });
+        headers.Range = `${offset}-${offset + pageSize - 1}`;
+        headers['Range-Unit'] = 'items';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/orders?select=*&order=created_at.desc,id.asc`,
+          { headers }
+        );
+        if (!res.ok) {
+          const errorBody = await res.text().catch(() => '');
+          throw new Error(errorBody || `შეკვეთების მიღება ვერ მოხერხდა (HTTP ${res.status}).`);
+        }
+        const page = await res.json();
+        if (!Array.isArray(page)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
+        allOrderRows.push(...page);
+        if (page.length < pageSize) {
+          completed = true;
+          break;
+        }
+        if (offset + pageSize >= 100000) {
+          throw new Error('შეკვეთების სრული ისტორიის შემოწმება ვერ დასრულდა; ბოლო წარმატებული სია შენარჩუნებულია.');
+        }
       }
-
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('შეკვეთების სია არასწორ ფორმატში დაბრუნდა.');
+      if (!completed) throw new Error('შეკვეთების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      const data = allOrderRows;
       // Do not restore private admin data after logout while a request is pending.
       if (!adminOrdersSessionActive.current || requestSessionVersion !== adminOrdersSessionVersion.current) return;
       setOrders(data.map((o) => {
