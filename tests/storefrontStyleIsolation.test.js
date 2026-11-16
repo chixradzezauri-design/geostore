@@ -178,3 +178,14 @@ test('product option selectors have accessible responsive touch targets and clea
   assert.match(stage40, /:focus-visible/);
   assert.match(stage40, /:disabled/);
 });
+
+
+test('stage 43 repairs the mobile size-selector header and compacts the single-item flash sale', () => {
+  const stage43 = css.slice(css.lastIndexOf('GEOSTORE — stage 43: repair mobile product selectors'));
+  assert.ok(stage43.length > 0);
+  assert.match(storeView, /className="gs-size-options-grid flex flex-wrap gap-2 w-full"/);
+  assert.match(stage43, /\.gs-size-selector>div\.gs-size-options-grid\{[\s\S]*?grid-template-columns:repeat\(auto-fill,minmax\(48px,1fr\)\)!important;/);
+  assert.match(stage43, /\.gs-size-selector>div:first-child\{[\s\S]*?flex-direction:row!important;/);
+  assert.match(stage43, /\.gs-flash-sale-card:only-child\{[\s\S]*?grid-template-columns:minmax\(0,112px\) minmax\(0,1fr\)!important;/);
+  assert.match(stage43, /\.gs-product-dialog\{[^}]*max-height:min\(92dvh,900px\)!important;/);
+});
