@@ -73,6 +73,38 @@ test('client requests cursor pages and validates ticket identifiers and timestam
   }
 });
 
+test('client falls back to the existing first-page RPC until pagination migration is installed', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  const ticketId = `t-${'c'.repeat(32)}`;
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options });
+    if (String(url).endsWith('/get_my_support_tickets_page')) {
+      return new Response('{"code":"PGRST202","message":"function not found"}', { status: 404 });
+    }
+    return new Response(JSON.stringify([{
+      ticket_id: ticketId,
+      subject: 'Legacy history',
+      status: 'ღია',
+      created_at: '2026-11-15T10:00:00.000Z',
+      last_message_at: '2026-11-15T10:00:00.000Z',
+      unread_count: 0
+    }]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  try {
+    const page = await fetchMySupportTickets({
+      supabaseUrl: 'https://example.supabase.co',
+      headers: { Authorization: 'Bearer test' }
+    });
+    assert.equal(calls.length, 2);
+    assert.match(calls[1].url, /get_my_support_tickets$/);
+    assert.equal(page.rows[0].ticket_id, ticketId);
+    assert.equal(page.nextCursor, null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('support history page merging deduplicates ticket IDs and keeps latest metadata', () => {
   const idA = `t-${'a'.repeat(32)}`;
   const idB = `t-${'b'.repeat(32)}`;
