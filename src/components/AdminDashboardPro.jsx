@@ -2549,7 +2549,7 @@ export default function AdminDashboardPro({
   };
 
   const handleDeleteVendor = (id) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
+    if (window.confirm('ნამდვილად გსურთ ვენდორის არქივში გადატანა? ისტორიული ჩანაწერები შენარჩუნდება.')) {
       if (typeof setVendorsList === 'function') {
         const archivedAt = new Date().toISOString();
         setVendorsList(prev => (prev || []).map(v => v.id === id ? {
@@ -2559,7 +2559,7 @@ export default function AdminDashboardPro({
           updated_at: archivedAt
         } : v));
       }
-      logActivity(`წაიშალა ვენდორი (ID: ${id})`);
+      logActivity(`დაარქივდა ვენდორი (ID: ${id})`);
     }
   };
 
