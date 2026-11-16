@@ -38,6 +38,10 @@ test('anonymous access remains limited to ticket-token status and read-receipt R
   assert.match(migration, /grant execute on function public\.get_my_support_tickets\(integer\) to authenticated/i);
   assert.match(migration, /grant execute on function public\.get_support_ticket_unread_counts\(\) to authenticated/i);
   assert.match(migration, /revoke all on function public\.get_my_support_tickets\(integer\) from public, anon, authenticated/i);
+  assert.match(migration, /grant execute on function private\.get_support_ticket_status\(text, text\) to anon, authenticated/i);
+  assert.match(migration, /grant execute on function private\.mark_support_ticket_messages_read\(text, text\) to anon, authenticated/i);
+  assert.match(migration, /grant execute on function private\.get_my_support_tickets\(integer\) to authenticated/i);
+  assert.match(migration, /grant execute on function private\.get_support_ticket_unread_counts\(\) to authenticated/i);
 });
 
 test('the migration preserves ticket authorization checks and token hashing', () => {
