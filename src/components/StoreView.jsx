@@ -400,14 +400,14 @@ export default function StoreView({
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
-        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6">
+        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
                 <Timer className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                <h3 id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
                   ⚡ FLASH SALE <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{storeText.limitedOffer}</span>
                 </h3>
                 <p className="text-slate-400 text-xs">{storeText.hurryDiscount}</p>
@@ -419,7 +419,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-black">
+            <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" role="timer" aria-live="off" aria-label={`დარჩენილია ${timeLeft.hours} საათი ${timeLeft.minutes} წუთი ${timeLeft.seconds} წამი`}>
               <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.hours}</span>
