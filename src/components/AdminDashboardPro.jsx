@@ -1097,6 +1097,11 @@ export default function AdminDashboardPro({
       return inPeriod(reportingDate);
     });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
+    const cancelledOrders = periodOrders.filter(isCancelled);
+    const cancelledOrderValue = cancelledOrders.reduce(
+      (sum, order) => sum + normalizeOrderTotal(order.totalGEL ?? order.total_gel),
+      0
+    );
     const pipelineOrders = periodOrders.filter(order => !isCancelled(order) && !isDelivered(order));
     // Legacy rows may predate status/stock audit columns. Keep them in sales
     // history, but expose the missing audit metadata instead of implying it exists.
@@ -1226,7 +1231,7 @@ export default function AdminDashboardPro({
     });
 
     return {
-      periodOrders, deliveredOrders, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
+      periodOrders, deliveredOrders, cancelledOrders, cancelledOrderValue, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
       deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
       totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
@@ -1280,6 +1285,8 @@ export default function AdminDashboardPro({
       ['მაჩვენებელი', 'თანხა (GEL)'],
       [
         ['ჩაბარებული შეკვეთები', financialOverview.deliveredOrders.length],
+        ['გაუქმებული შეკვეთები', financialOverview.cancelledOrders.length],
+        ['გაუქმებული შეკვეთების ნომინალური ღირებულება (არ არის დაბრუნების თანხა)', financialOverview.cancelledOrderValue.toFixed(2)],
         ['ბრუნვა', financialOverview.totalSalesRevenue.toFixed(2)],
         ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
         ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
@@ -1314,6 +1321,7 @@ export default function AdminDashboardPro({
       const qLower = userQuestion.toLowerCase();
       if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
       else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
+      else if (qLower.includes('გაუქმ')) answer = `🛑 გაუქმებულია ${financialOverview.cancelledOrders.length} შეკვეთა, ნომინალური ღირებულებით ${financialOverview.cancelledOrderValue.toFixed(2)} ₾. ეს თანხა არ ითვლება გაყიდვად ან დადასტურებულ დაბრუნებად.`;
       else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
@@ -3223,6 +3231,11 @@ export default function AdminDashboardPro({
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-blue-400" /> ჩაბარებული შეკვეთები</p>
                 <p className="text-2xl sm:text-3xl font-black text-blue-400">{financialOverview.deliveredOrders.length}</p>
                 <span className="text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
+              </div>
+              <div className="admin-analytics-card bg-slate-900/80 border border-rose-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><X className="w-4 h-4 text-rose-400" /> გაუქმებული შეკვეთები</p>
+                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.cancelledOrders.length}</p>
+                <span className="text-[10px] text-rose-300">ნომინალური ღირებულება: {financialOverview.cancelledOrderValue.toFixed(2)} ₾ · არ არის დადასტურებული დაბრუნება</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> საშუალო შეკვეთა</p>
