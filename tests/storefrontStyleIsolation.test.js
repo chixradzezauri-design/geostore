@@ -189,3 +189,12 @@ test('stage 43 repairs the mobile size-selector header and compacts the single-i
   assert.match(stage43, /\.gs-flash-sale-card:only-child\{[\s\S]*?grid-template-columns:minmax\(0,112px\) minmax\(0,1fr\)!important;/);
   assert.match(stage43, /\.gs-product-dialog\{[^}]*max-height:min\(92dvh,900px\)!important;/);
 });
+
+
+test('single flash-sale product spans the full mobile grid width and keeps text horizontal', () => {
+  const mobileFix = css.slice(css.lastIndexOf('GEOSTORE — Stage 43.1: full-width single flash-sale card on mobile'));
+  assert.ok(mobileFix.length > 0);
+  assert.match(mobileFix, /\.gs-flash-sale-card:only-child\{[\s\S]*?grid-column:1 \/ -1!important;/);
+  assert.match(mobileFix, /\.gs-flash-sale-card:only-child>\.py-3 h4\{[\s\S]*?writing-mode:horizontal-tb!important;/);
+  assert.match(mobileFix, /\.gs-flash-sale-card:only-child>button\{[\s\S]*?writing-mode:horizontal-tb!important;/);
+});
