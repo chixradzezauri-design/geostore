@@ -406,11 +406,34 @@ export default function AdminDashboardPro({
 
   const fetchExpenses = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
-      setExpenses(data);
+      // PostgREST commonly caps one response at 1,000 rows. Fetch the complete
+      // expense ledger in stable pages so older expenses are not silently
+      // omitted from financial-period totals or CSV exports.
+      const allExpenses = [];
+      const pageSize = 1000;
+      let completed = false;
+      for (let offset = 0; offset < 100000; offset += pageSize) {
+        const headers = await getSupabaseHeaders();
+        headers.Range = `${offset}-${offset + pageSize - 1}`;
+        headers['Range-Unit'] = 'items';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc,id.desc`,
+          { headers }
+        );
+        if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+        const page = await res.json();
+        if (!Array.isArray(page)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
+        allExpenses.push(...page);
+        if (page.length < pageSize) {
+          completed = true;
+          break;
+        }
+        if (offset + pageSize >= 100000) {
+          throw new Error('ხარჯების სრული ისტორიის შემოწმება ვერ დასრულდა; ნაჩვენებია ბოლო წარმატებული სია.');
+        }
+      }
+      if (!completed) throw new Error('ხარჯების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      setExpenses(allExpenses);
       setExpensesError('');
       return true;
     } catch (error) {
