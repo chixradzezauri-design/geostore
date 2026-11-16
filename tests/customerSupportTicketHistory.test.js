@@ -33,5 +33,5 @@ test('authenticated account history opens owner-linked tickets and keeps guest r
   assert.match(app, /ჩემი მხარდაჭერის მიმართვები/);
   assert.match(app, /Continue an existing conversation/);
   assert.match(app, /p_access_token: null/);
-  assert.match(app, /required=!currentUser\?\.id/);
+  assert.match(app, /required=\\{!currentUser\\?\\.id\\}/);
 });
