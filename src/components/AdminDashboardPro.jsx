@@ -2063,7 +2063,7 @@ export default function AdminDashboardPro({
     const category = String(flashSaleForm.category || 'ყველა').trim();
     const durationMinutes = Number(flashSaleForm.durationMinutes);
 
-    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\\d+(?:\\.\\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\d+(?:\.\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
       alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
       return;
     }
@@ -4559,6 +4559,7 @@ export default function AdminDashboardPro({
                 <div className="space-y-1.5">
                   <label className="text-slate-400 font-bold">აქციის ხანგრძლივობა</label>
                   <select value={flashSaleForm.durationMinutes} onChange={e => setFlashSaleForm({...flashSaleForm, durationMinutes: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                    <option value="15">15 წუთი</option>
                     <option value="30">30 წუთი</option>
                     <option value="60">1 საათი</option>
                     <option value="180">3 საათი</option>
