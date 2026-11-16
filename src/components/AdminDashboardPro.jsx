@@ -700,14 +700,36 @@ export default function AdminDashboardPro({
 
   const fetchTickets = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (!res.ok) {
-        const detail = await res.text().catch(() => '');
-        throw new Error(detail || `HTTP ${res.status}`);
+      // PostgREST may cap a response at 1,000 rows. Read the complete ticket
+      // history in stable pages so older open/unread tickets remain visible.
+      const allTickets = [];
+      const pageSize = 1000;
+      let completed = false;
+      for (let offset = 0; offset < 100000; offset += pageSize) {
+        const headers = await getSupabaseHeaders();
+        headers.Range = `${offset}-${offset + pageSize - 1}`;
+        headers['Range-Unit'] = 'items';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc,id.asc`,
+          { headers }
+        );
+        if (!res.ok) {
+          const detail = await res.text().catch(() => '');
+          throw new Error(detail || `HTTP ${res.status}`);
+        }
+        const page = await res.json();
+        if (!Array.isArray(page)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
+        allTickets.push(...page);
+        if (page.length < pageSize) {
+          completed = true;
+          break;
+        }
+        if (offset + pageSize >= 100000) {
+          throw new Error('მხარდაჭერის ტიკეტების სრული ისტორიის შემოწმება ვერ დასრულდა; ბოლო წარმატებული სია შენარჩუნებულია.');
+        }
       }
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
-      setSupportTickets(data.map(t => ({
+      if (!completed) throw new Error('მხარდაჭერის ტიკეტების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      setSupportTickets(allTickets.map(t => ({
         id: t.id,
         customerName: t.customer_name,
         email: t.email,
