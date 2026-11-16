@@ -206,3 +206,84 @@
     font-size: 10px;
   }
 }
+
+
+/* STAGE 63 — support ticket and conversation readability */
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-header,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-meta,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-controls,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-reply-form {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-meta > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-status-actions {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-status-actions > button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-message,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-reply,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-reply-form > input {
+  min-width: 0;
+  width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-reply-form > button {
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-status-actions {
+    width: 100%;
+    justify-content: flex-start;
+    padding-bottom: 4px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-controls > button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-reply-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-reply-form > button {
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-meta {
+    align-items: flex-start;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-meta {
+    gap: 7px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-message,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-ticket-reply {
+    padding: 12px !important;
+  }
+}
