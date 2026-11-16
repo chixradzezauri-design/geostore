@@ -154,3 +154,32 @@ Only then request approval to merge and deploy.
 ### Verification remaining
 - Run the new test, full test suite, production build, dependency audit and CodeQL on the updated PR head.
 - Verify admin read receipts against staging with an unread customer message, including a hidden tab and a different unselected ticket.
+
+
+## Stage 71 — product catalog, variants and inventory safety audit
+
+### Areas inspected
+- Category-aware product fields for clothing, footwear, phones, laptops and accessories.
+- Size/color option parsing, duplicate detection and variant-matrix coverage.
+- Custom variant identity, price and stock validation.
+- Product image/gallery upload and replacement flow.
+- Product edit requests and the database stock-preservation trigger.
+- Atomic stock updates and protection for variants referenced by order history.
+
+### Verified safeguards
+- Clothing and footwear use a dedicated size/color inventory matrix; each combination is independently stocked and validated, with a maximum of 50 variants.
+- Phones expose memory/RAM/color fields; laptops expose CPU/RAM/SSD fields; clothing and footwear retain their respective size/material/color fields.
+- Product edits do not directly overwrite the parent stock value. Changed variant stock is submitted through the authenticated atomic batch RPC.
+- The database `preserve_product_variant_stock` trigger restores the current database stock for existing variant IDs during ordinary product metadata/variant edits. This prevents a stale admin form from undoing stock deductions made by checkout while the editor was open.
+- The trigger rejects removal of custom variants referenced by order history and rejects reuse of variant IDs already present in order history.
+- Atomic batch updates apply size/color and custom variant stock changes in one transaction and validate the primary administrator identity.
+
+### Change in this stage
+- Added `tests/adminProductVariantSafety.test.js` to protect the verified stock-preservation, order-history, atomic update and category-field safeguards.
+- No product records, images, variant quantities, order records, migrations, live Supabase settings or production deployment were changed.
+
+### Remaining verification
+- Run the new regression test, full suite, production build, dependency audit and CodeQL.
+- Test create/edit of a new clothing product, footwear size/color combinations, a phone, a laptop and an accessory against staging.
+- Test simultaneous checkout and product editing with staging data to verify stock cannot be restored from an old form snapshot.
+- Confirm historical order snapshots and image references remain available after safe product edits.
