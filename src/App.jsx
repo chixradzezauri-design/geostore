@@ -638,7 +638,19 @@ export default function App() {
           supabaseUrl: SUPABASE_URL,
           headers: await getSupabaseHeaders({ authenticated: true })
         });
-        if (active) { setMySupportTickets(rows); setMySupportTicketsError(''); }
+        if (active) {
+          if (rows === null) {
+            setMySupportTickets([]);
+            setMySupportTicketsError(currentLang === 'en'
+              ? 'Support history will appear after the support database update is installed.'
+              : currentLang === 'ru'
+                ? 'История обращений появится после установки обновления базы поддержки.'
+                : 'მიმართვების ისტორია გამოჩნდება მხარდაჭერის მონაცემთა ბაზის განახლების შემდეგ.');
+          } else {
+            setMySupportTickets(rows);
+            setMySupportTicketsError('');
+          }
+        }
       } catch (error) {
         if (active) {
           console.warn('Customer support ticket history unavailable:', error);
