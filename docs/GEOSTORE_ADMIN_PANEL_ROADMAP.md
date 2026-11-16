@@ -183,3 +183,28 @@ Only then request approval to merge and deploy.
 - Test create/edit of a new clothing product, footwear size/color combinations, a phone, a laptop and an accessory against staging.
 - Test simultaneous checkout and product editing with staging data to verify stock cannot be restored from an old form snapshot.
 - Confirm historical order snapshots and image references remain available after safe product edits.
+
+
+## Stage 72 — product image and gallery lifecycle audit
+
+### Verified behavior
+- Product images are uploaded to the `storefront-media` bucket under product-specific paths, with random suffixes and no overwrite.
+- Upload validation checks the declared MIME type, file signature and a 5 MB per-image limit; the gallery is limited to 10 images.
+- Checkout stores image and gallery snapshots on order items. Admin order details prefer the historical snapshot before looking at the current catalogue.
+- Image cleanup checks other product references, historical order image URLs and legacy orders that do not have image snapshots. If a reference scan fails, cleanup fails closed and does not delete Storage objects.
+- Product deletion is guarded by the database RPC; the UI removes the product row only after the RPC confirms success.
+
+### Verified defect and fix
+- The catalogue image-reference scan previously relied on one PostgREST request. With a default server row cap, catalogues larger than 1,000 products could be only partially scanned, potentially missing a reference held by a later product.
+- Updated cleanup to page through products in stable `id.asc` order, using 1,000-row ranges, matching the existing historical-order scan.
+- If either scan reaches the 100,000-row safety bound without a final short page, cleanup stops and retains the files.
+- Added `tests/productImageStorageCleanup.test.js` for complete pagination, fail-closed behavior, order snapshots and legacy fallback protection.
+
+### Safety boundary
+- No Storage object, product image URL, gallery entry, product, order or historical snapshot was deleted or modified during this stage.
+- No bucket policy, live Supabase configuration, production data or deployment was changed.
+
+### Remaining verification
+- Run the new test, full test suite, production build, dependency audit and CodeQL.
+- Verify upload, edit, replace, remove and product-delete flows against staging with both shared product references and historical order snapshots.
+- Verify the storefront-media bucket's actual policies and storage object ownership against staging before release.
