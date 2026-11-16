@@ -3704,7 +3704,8 @@ export default function App() {
             </form>
             )}
 
-              <section className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3" aria-labelledby="gs-my-support-tickets-title">
+              {currentUser?.id && (
+<section className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3" aria-labelledby="gs-my-support-tickets-title">
                 <div className="flex items-center justify-between gap-2">
                   <p id="gs-my-support-tickets-title" className="text-sm font-bold text-white">
                     {currentLang === 'en' ? 'My support requests' : currentLang === 'ru' ? 'Мои обращения' : 'ჩემი მხარდაჭერის მიმართვები'}
@@ -3762,6 +3763,7 @@ export default function App() {
                   ))}
                 </div>
               </section>
+              )}
             <div className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3">
               <p className="text-sm font-bold text-white">
                 {currentLang === 'en' ? 'Continue an existing conversation' : currentLang === 'ru' ? 'Продолжить переписку' : 'არსებული მიმოწერის გაგრძელება'}
