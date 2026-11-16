@@ -98,4 +98,6 @@ test('authenticated account history opens owner-linked tickets and retains guest
   assert.match(app, /Load more requests/);
   assert.match(app, /მეტის ჩატვირთვა/);
   assert.match(app, /mergeSupportTicketPages/);
+  assert.match(app, /supportHistoryOwnerRef\.current !== ownerId/);
+  assert.match(app, /supportHistoryOwnerRef\.current === requestOwnerId/);
 });
