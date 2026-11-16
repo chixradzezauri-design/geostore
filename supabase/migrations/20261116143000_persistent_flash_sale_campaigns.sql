@@ -137,7 +137,7 @@ BEGIN
     RAISE EXCEPTION 'Category is required' USING ERRCODE = '22023';
   END IF;
 
-  IF p_duration_minutes NOT IN (15, 30, 60, 180, 360, 720, 1440) THEN
+  IF p_duration_minutes IS NULL OR p_duration_minutes NOT IN (15, 30, 60, 180, 360, 720, 1440) THEN
     RAISE EXCEPTION 'Flash-sale duration must be one of the supported minute values'
       USING ERRCODE = '22023';
   END IF;
