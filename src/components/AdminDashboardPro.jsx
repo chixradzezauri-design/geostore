@@ -957,7 +957,8 @@ export default function AdminDashboardPro({
 
   const logActivity = async (actionText) => {
     const action = String(actionText || '').trim().slice(0, 500);
-    if (!action) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!action || !adminLoggedIn) return;
 
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
@@ -969,6 +970,7 @@ export default function AdminDashboardPro({
       const rows = await response.json();
       const saved = Array.isArray(rows) ? rows[0] : rows;
       if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       setActivityLogs(prev => [{
         id: String(saved.id),
         action: saved.action,
@@ -976,6 +978,7 @@ export default function AdminDashboardPro({
       }, ...(prev || [])].slice(0, 100));
       setActivityLogsError('');
     } catch (error) {
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
       console.error('GEOSTORE admin activity log write failed:', error);
     }
