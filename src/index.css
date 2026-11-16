@@ -18446,3 +18446,58 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     transition: none !important;
   }
 }
+
+
+/* GEOSTORE — stage 38: product detail gallery refinement */
+.geostore-fashion-store .gs-product-gallery{min-width:0!important}
+.geostore-fashion-store .gs-product-detail-image-stage{
+  position:relative!important;min-width:0!important;overflow:hidden!important;
+  isolation:isolate!important;scroll-margin-top:16px!important;
+}
+.geostore-fashion-store .gs-product-detail-image-stage .gs-product-detail-image__media{
+  display:block!important;width:100%!important;height:100%!important;
+  object-fit:contain!important;object-position:center!important;
+  user-select:none!important;-webkit-user-drag:none!important;
+}
+.geostore-fashion-store .gs-product-gallery-thumbnails{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  max-width:100%!important;padding:5px 4px 10px!important;
+  overscroll-behavior-x:contain!important;scroll-snap-type:x proximity!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+.geostore-fashion-store .gs-product-gallery-thumb{
+  display:grid!important;place-items:center!important;flex:0 0 72px!important;
+  width:72px!important;height:72px!important;min-width:72px!important;min-height:72px!important;
+  padding:7px!important;border:1px solid #ded4c8!important;border-radius:12px!important;
+  background:#f4f0eb!important;box-shadow:none!important;scroll-snap-align:start!important;
+  touch-action:manipulation!important;
+}
+.geostore-fashion-store .gs-product-gallery-thumb img{
+  display:block!important;width:100%!important;height:100%!important;
+  object-fit:contain!important;border-radius:7px!important;
+}
+.geostore-fashion-store .gs-product-gallery-thumb[aria-pressed="true"]{
+  border:2px solid #80684f!important;background:#fffdfa!important;
+  box-shadow:0 0 0 2px rgba(128,104,79,.16)!important;transform:translateY(-1px)!important;
+}
+.geostore-fashion-store .gs-product-gallery-thumb:focus-visible,
+.geostore-fashion-store .gs-product-modal-header button:focus-visible{
+  outline:3px solid #80684f!important;outline-offset:3px!important;
+}
+.geostore-fashion-store .gs-product-modal-header button{
+  display:grid!important;place-items:center!important;width:44px!important;height:44px!important;
+  min-width:44px!important;min-height:44px!important;
+}
+@media(max-width:700px){
+  .geostore-fashion-store .gs-product-gallery-thumbnails{gap:8px!important;margin-inline:-2px!important}
+  .geostore-fashion-store .gs-product-gallery-thumb{
+    flex-basis:68px!important;width:68px!important;height:68px!important;
+    min-width:68px!important;min-height:68px!important;
+  }
+  .geostore-fashion-store .gs-product-modal-header button{width:44px!important;height:44px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .geostore-fashion-store .gs-product-gallery-thumb{
+    scroll-behavior:auto!important;transform:none!important;transition:none!important;
+  }
+}
