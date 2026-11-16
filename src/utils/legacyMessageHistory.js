@@ -22,9 +22,9 @@ export const buildLegacyMessagesPageUrl = (supabaseUrl, cursor = null, pageSize 
     if (!isValidCursor(cursor)) throw new Error('მიმოწერის ისტორიის გვერდის კურსორი არასწორია.');
     const timestamp = cursor.created_at;
     const id = String(cursor.id);
-    params.set('or', `(created_at.lt.${timestamp},and(created_at.eq.${timestamp},id.gt.${id}))`);
+    params.set('or', \`(created_at.lt.\${timestamp},and(created_at.eq.\${timestamp},id.gt.\${id}))\`);
   }
-  return `${String(supabaseUrl || '').replace(/\\/+$/, '')}/rest/v1/messages?${params.toString()}`;
+  return \`\${String(supabaseUrl || '').replace(/\/+$/, '')}/rest/v1/messages?\${params.toString()}\`;
 };
 
 export const getLegacyMessageCursor = rows => {
@@ -38,7 +38,7 @@ export const mergeLegacyMessagePages = (existing, incoming) => {
   const byId = new Map();
   const append = row => {
     if (!row || typeof row !== 'object') return;
-    const key = row.id === null || row.id === undefined ? `legacy-row-${byId.size}` : String(row.id);
+    const key = row.id === null || row.id === undefined ? \`legacy-row-\${byId.size}\` : String(row.id);
     byId.set(key, row);
   };
   (Array.isArray(existing) ? existing : []).forEach(append);
