@@ -1023,9 +1023,9 @@ export default function StoreView({
                     <input type="checkbox" checked={hasVipWarranty} onChange={() => setHasVipWarranty(!hasVipWarranty)} aria-label={storeText.vipWarranty} className="gs-product-option-checkbox w-4 h-4 accent-amber-400 cursor-pointer" />
                   </label>
 
-                  <div className="space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
-                    <span className="text-amber-300 font-bold block text-sm">{storeText.description}</span>
-                    <p className="text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
+                  <div className="gs-product-description-panel space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
+                    <span className="gs-product-description-label text-amber-300 font-bold block text-sm">{storeText.description}</span>
+                    <p className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
                   </div>
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
