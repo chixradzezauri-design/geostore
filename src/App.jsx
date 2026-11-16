@@ -60,6 +60,24 @@ const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
   };
 };
 
+// Mark administrator replies as read only after the customer conversation has
+// been successfully loaded while the support panel is visible. Older database
+// deployments may not have the additive read-receipt RPC yet.
+const markCustomerSupportMessagesRead = async (ticketId, accessToken) => {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/mark_support_ticket_messages_read`, {
+    method: 'POST',
+    headers: await getSupabaseHeaders({ authenticated: true }),
+    body: JSON.stringify({ p_ticket_id: ticketId, p_access_token: accessToken })
+  });
+
+  if (response.ok) return true;
+  const detail = await response.text().catch(() => '');
+  if (response.status === 404 && /PGRST202|could not find the function|function .* does not exist|schema cache/i.test(detail)) {
+    return false;
+  }
+  throw new Error(detail || `Support read receipt failed (HTTP ${response.status}).`);
+};
+
 const STOREFRONT_MEDIA_BUCKET = 'storefront-media';
 const STOREFRONT_IMAGE_TYPES = {
   'image/jpeg': 'jpg',
@@ -665,6 +683,12 @@ export default function App() {
             return aTime - bTime || String(a.id).localeCompare(String(b.id));
           });
           setSupportThreadMessages(uniqueRows);
+          try {
+            await markCustomerSupportMessagesRead(ticketId, accessToken);
+          } catch (readReceiptError) {
+            // Read receipts must never hide or interrupt an otherwise valid conversation.
+            console.warn('Support read receipt update failed:', readReceiptError);
+          }
         }
       } catch (error) {
         // Keep the last successfully loaded conversation visible during a
