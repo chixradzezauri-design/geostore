@@ -24,7 +24,7 @@ test('phone, laptop, and accessory categories keep their category-specific optio
   assert.match(admin, /catLower\.includes\('ლეპტოპ'\)/);
   assert.match(admin, /catLower\.includes\('კომპიუტერ'\)/);
   assert.match(admin, /\['128GB', '256GB', '512GB', '1TB'\]/);
-  assert.match(admin, /RAM/);
+  assert.match(admin, /\['8GB RAM \/ 256GB SSD', '16GB RAM \/ 512GB SSD', '32GB RAM \/ 1TB SSD'\]/);
   assert.match(admin, /\['Standard \/ One Size'\]/);
   assert.match(admin, /პროცესორი \(CPU\)/);
   assert.match(admin, /RAM/);
