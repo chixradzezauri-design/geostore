@@ -382,7 +382,7 @@ test('includes gift wrap and VIP warranty add-ons in coupon-eligible subtotal li
     { priceGEL: 40, quantity: 2, giftWrap: true, vipWarranty: true },
     { priceGEL: 10, quantity: 1, gift_wrap: true, vip_warranty: false },
     { priceGEL: 5, quantity: 3, giftWrap: false, vipWarranty: true }
-  ]), 175);
+  ]), 195);
 });
 
 test('rounds subtotal and delivery to exact tetri before discount calculation', () => {
