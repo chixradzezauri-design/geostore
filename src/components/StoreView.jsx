@@ -4,6 +4,7 @@ import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
+import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown } from '../utils/flashSaleTime.js';
 import { 
   Heart, ShoppingBag, Sparkles, ArrowUpRight, ShieldCheck, Zap, X, Tag, 
   CheckCircle2, Eye, Award, Star, Smartphone, Laptop, Headphones, Watch, 
@@ -64,21 +65,12 @@ export default function StoreView({
     setProductPage(1);
   }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy]);
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
+  // Countdown is always derived from the server-persisted end timestamp.
+  // Refreshing or reopening the storefront never starts a new sale timer.
+  const [flashSaleClock, setFlashSaleClock] = useState(() => Date.now());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        }
-        return { hours: 12, minutes: 0, seconds: 0 };
-      });
-    }, 1000);
+    const timer = setInterval(() => setFlashSaleClock(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -303,14 +295,12 @@ export default function StoreView({
     }
   };
 
-  const flashSaleProducts = useMemo(() => {
-    return activeProducts.filter(p => {
-      if (hasCustomProductVariants(p)) return false;
-      const oldPrice = Number(p?.oldPriceGEL);
-      const currentPrice = Number(p?.priceGEL);
-      return Number.isFinite(oldPrice) && Number.isFinite(currentPrice) && oldPrice > currentPrice;
-    }).slice(0, 4);
-  }, [activeProducts]);
+  const flashSaleProducts = useMemo(
+    () => getActiveFlashSaleProducts(activeProducts, flashSaleClock),
+    [activeProducts, flashSaleClock]
+  );
+  const flashSaleEndAt = getEarliestFlashSaleEnd(flashSaleProducts);
+  const timeLeft = getFlashSaleCountdown(flashSaleEndAt, flashSaleClock);
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
@@ -421,6 +411,11 @@ export default function StoreView({
                   ⚡ FLASH SALE <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{storeText.limitedOffer}</span>
                 </h3>
                 <p className="text-slate-400 text-xs">{storeText.hurryDiscount}</p>
+                {flashSaleEndAt !== null && (
+                  <p className="gs-flash-sale-deadline text-[10px] sm:text-xs text-amber-200/75 mt-1">
+                    დასრულდება: {new Date(flashSaleEndAt).toLocaleString('ka-GE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -444,11 +439,21 @@ export default function StoreView({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {flashSaleProducts.map(prod => {
+              const originalPrice = Number(prod.oldPriceGEL);
+              const salePrice = Number(prod.priceGEL);
+              const savedAmount = Math.max(0, originalPrice - salePrice);
+              const calculatedDiscount = originalPrice > 0
+                ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
+                : 0;
+              const discountPercent = Number(prod.flashSalePercent) > 0
+                ? Math.round(Number(prod.flashSalePercent))
+                : calculatedDiscount;
+              const availableStock = getProductAvailableStock(prod);
               return (
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
                     {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
-                    <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
+                    <span className="gs-flash-sale-discount absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE −{discountPercent}%</span>
                   </div>
                   <div className="py-3 space-y-1.5">
                     <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
@@ -456,6 +461,8 @@ export default function StoreView({
                       <span className="text-amber-400 font-black text-sm">{formatPrice(getProductStartingPrice(prod))}</span>
                       {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <span className="text-slate-500 font-bold text-[11px] line-through">{formatPrice(prod.oldPriceGEL)}</span>}
                     </div>
+                    {savedAmount > 0 && <span className="gs-flash-sale-savings">ზოგავ {formatPrice(savedAmount)}</span>}
+                    {availableStock > 0 && availableStock <= 5 && <span className="gs-flash-sale-stock-note">ბოლო {availableStock} ცალი</span>}
                   </div>
                   <button onClick={() => (isClothingOrFootwear(prod) || hasProductVariantOptions(prod) ? handleOpenProduct(prod) : addToCart(prod))} disabled={getProductAvailableStock(prod) <= 0} className="w-full bg-[#16161a] hover:bg-amber-400 hover:text-slate-950 text-white font-black py-2.5 rounded-xl text-xs transition border border-amber-500/20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
                     {storeText.addToCartShort}
