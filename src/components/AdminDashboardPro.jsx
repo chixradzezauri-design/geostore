@@ -12,7 +12,7 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
 import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
-import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
@@ -1117,6 +1117,7 @@ export default function AdminDashboardPro({
     let totalSalesRevenue = 0;
     let totalDeliveryRevenue = 0;
     let totalProductRevenue = 0;
+    let totalAddonRevenue = 0;
     let totalCogs = 0;
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
@@ -1131,12 +1132,12 @@ export default function AdminDashboardPro({
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const lineGross = items.reduce((sum, item) => sum + (Math.max(0, Number(item.priceGEL ?? item.price) || 0) * Math.max(1, Number(item.quantity) || 1)), 0);
       const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
       const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
-      const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
-      totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
-      totalProductRevenue += productNetRevenue;
+      const revenueSplit = splitOrderRevenue(items, orderTotal, deliveryCharge);
+      totalDeliveryRevenue += revenueSplit.deliveryRevenue;
+      totalProductRevenue += revenueSplit.productRevenue;
+      totalAddonRevenue += revenueSplit.addonRevenue;
 
       if (!items.length) {
         const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
@@ -1145,12 +1146,11 @@ export default function AdminDashboardPro({
         return;
       }
 
-      items.forEach(item => {
+      items.forEach((item, itemIndex) => {
         const productId = item.id ?? item.product_id;
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = Math.max(1, Number(item.quantity) || 1);
-        const itemGross = Math.max(0, Number(item.priceGEL ?? item.price) || 0) * quantity;
-        const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
+        const allocatedRevenue = revenueSplit.itemProductRevenue[itemIndex] || 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
         const label = `${vendor} · ${category}`;
@@ -1193,7 +1193,12 @@ export default function AdminDashboardPro({
         if (isEstimatedCost) vendorEntry.estimatedCostItems += quantity;
         vendorProfitTotals.set(vendor, vendorEntry);
       });
-      if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
+      if (revenueSplit.addonRevenue > 0) {
+        incomeTotals.set('დამატებითი მომსახურებები', (incomeTotals.get('დამატებითი მომსახურებები') || 0) + revenueSplit.addonRevenue);
+      }
+      if (revenueSplit.deliveryRevenue > 0) {
+        incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + revenueSplit.deliveryRevenue);
+      }
     });
 
     const trendBuckets = new Map();
@@ -1217,8 +1222,8 @@ export default function AdminDashboardPro({
       .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
     const lowStockProducts = getLowStockInventory(products, 5);
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-    // Gross profit is product revenue less product cost. Delivery fees are
-    // tracked separately and added to net operating result, not product margin.
+    // Add-on revenue is disclosed separately but excluded from profit until
+    // its fulfilment costs can be recorded. Delivery is tracked separately.
     const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
     const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
@@ -1233,7 +1238,7 @@ export default function AdminDashboardPro({
     return {
       periodOrders, deliveredOrders, cancelledOrders, cancelledOrderValue, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
       deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
-      totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
+      totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue, totalAddonRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
       averageOrderValue: deliveredOrders.length ? totalSalesRevenue / deliveredOrders.length : 0,
@@ -1289,6 +1294,7 @@ export default function AdminDashboardPro({
         ['გაუქმებული შეკვეთების ნომინალური ღირებულება (არ არის დაბრუნების თანხა)', financialOverview.cancelledOrderValue.toFixed(2)],
         ['ბრუნვა', financialOverview.totalSalesRevenue.toFixed(2)],
         ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
+        ['დამატებითი მომსახურებების შემოსავალი (მოგებაში არ არის ჩათვლილი)', financialOverview.totalAddonRevenue.toFixed(2)],
         ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
         ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.estimatedCogsItems ? 'შეფასებულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
@@ -3350,7 +3356,7 @@ export default function AdminDashboardPro({
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">შემოსავლის წყაროები</h3>
-                  <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთები · პროდუქტი და მიწოდება</span>
+                  <span className="text-[10px] text-slate-400">პროდუქტი, დამატებითი მომსახურება და მიწოდება</span>
                 </div>
                 {incomeSources.length === 0 ? <p className="text-slate-500 text-xs py-4">შემოსავლის წყარო ჯერ არ არის.</p> : incomeSources.map(source => (
                   <div key={source.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
