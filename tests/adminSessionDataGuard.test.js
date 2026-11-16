@@ -20,7 +20,10 @@ test('private admin reads reject responses from an earlier login session', () =>
   }
 });
 
-test('ending an admin session clears private snapshots and increments the session version', () => {
+test('ending an admin session clears private snapshots before paint and increments the version', () => {
+  assert.match(admin, /import React, \{[^}]*useLayoutEffect/);
+  assert.match(admin, /useLayoutEffect\(\(\) => \{\s*adminSessionVersion\.current \+= 1/);
+  assert.match(admin, /supportThreadFetchInFlight\.current\.clear\(\)/);
   assert.match(admin, /adminSessionVersion\.current \+= 1/);
   for (const statement of [
     'setExpenses([])',
