@@ -308,7 +308,8 @@ export default function AdminDashboardPro({
   deliveryFees,
   setDeliveryFees
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); 
+  const [adminTab, setAdminTab] = useState('analytics');
+  const adminSessionVersion = useRef(0);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
@@ -392,16 +393,51 @@ export default function AdminDashboardPro({
     } catch {}
   }, [staffList]);
 
+  useEffect(() => {
+    adminSessionVersion.current += 1;
+    if (adminLoggedIn) return;
+
+    // Clear private admin snapshots immediately when the verified session ends.
+    setExpenses([]);
+    setExpensesError('');
+    setSupportTickets([]);
+    setSupportTicketsError('');
+    setSelectedSupportTicketId(null);
+    setSupportTicketThreads({});
+    setSupportTicketThreadLoading({});
+    setSupportTicketThreadErrors({});
+    setLegacyMessages([]);
+    setLegacyMessagesError('');
+    setReplyInputs({});
+    setReplySending({});
+    setActivityLogs([]);
+    setActivityLogsLoading(false);
+    setActivityLogsError('');
+    setStorefrontVersions([]);
+    setStorefrontVersionsLoading(false);
+    setStorefrontVersionsError('');
+    setSelectedOrderForModal(null);
+    setOrderAdminNoteInput('');
+    setReactivationOrder(null);
+    setReactivationPassword('');
+    setReactivationError('');
+    supportThreadRefreshPending.current.clear();
+  }, [adminLoggedIn]);
+
   const fetchExpenses = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminLoggedIn) return false;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
+      if (requestSessionVersion !== adminSessionVersion.current) return false;
       setExpenses(data);
       setExpensesError('');
       return true;
     } catch (error) {
+      if (requestSessionVersion !== adminSessionVersion.current) return false;
       console.error('GEOSTORE expense history fetch failed:', error);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
@@ -664,6 +700,8 @@ export default function AdminDashboardPro({
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
   const fetchTickets = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminLoggedIn) return;
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
       if (!res.ok) {
@@ -672,6 +710,7 @@ export default function AdminDashboardPro({
       }
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       setSupportTickets(data.map(t => ({
         id: t.id,
         customerName: t.customer_name,
@@ -684,12 +723,15 @@ export default function AdminDashboardPro({
       })));
       setSupportTicketsError('');
     } catch (error) {
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       console.error('GEOSTORE support tickets fetch failed:', error);
       setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
     }
   };
 
   const fetchSupportTicketThread = async (ticketId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminLoggedIn) return;
     const normalizedTicketId = String(ticketId || '').trim();
     if (!normalizedTicketId) return;
     if (supportThreadFetchInFlight.current.has(normalizedTicketId)) {
@@ -716,14 +758,18 @@ export default function AdminDashboardPro({
         const bTime = Date.parse(b.created_at || '') || 0;
         return aTime - bTime || String(a.id).localeCompare(String(b.id));
       });
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: uniqueRows }));
     } catch (error) {
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       console.error('GEOSTORE support ticket thread fetch failed:', error);
       setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
     } finally {
       supportThreadFetchInFlight.current.delete(normalizedTicketId);
-      setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
-      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
+      if (requestSessionVersion === adminSessionVersion.current) {
+        setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
+      }
+      if (requestSessionVersion === adminSessionVersion.current && supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
         // If a Realtime event arrived while this fetch was running, make one
         // follow-up read so the newest message cannot be hidden until polling.
         void Promise.resolve().then(() => fetchSupportTicketThread(normalizedTicketId));
@@ -780,6 +826,8 @@ export default function AdminDashboardPro({
   }, [adminLoggedIn, selectedSupportTicketId]);
 
   const fetchLegacyMessages = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminLoggedIn) return;
     try {
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/messages?select=id,created_at,client_name,sender,text,image,time&order=created_at.desc&limit=100`,
@@ -791,9 +839,11 @@ export default function AdminDashboardPro({
       }
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('მიმოწერების მონაცემების ფორმატი არასწორია.');
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       setLegacyMessages(rows);
       setLegacyMessagesError('');
     } catch (error) {
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       console.error('GEOSTORE legacy messages fetch failed:', error);
       setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
     }
@@ -867,6 +917,8 @@ export default function AdminDashboardPro({
   const [activityLogsError, setActivityLogsError] = useState('');
 
   const fetchActivityLogs = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!adminLoggedIn) return;
     setActivityLogsLoading(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
@@ -877,6 +929,7 @@ export default function AdminDashboardPro({
       if (!response.ok) throw new Error(await response.text());
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('აქტივობების ისტორიის ფორმატი არასწორია.');
+      if (requestSessionVersion !== adminSessionVersion.current) return;
       setActivityLogs(rows.map(log => ({
         id: String(log.id),
         action: log.action,
@@ -884,9 +937,11 @@ export default function AdminDashboardPro({
       })));
       setActivityLogsError('');
     } catch (error) {
-      setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      if (requestSessionVersion === adminSessionVersion.current) {
+        setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      }
     } finally {
-      setActivityLogsLoading(false);
+      if (requestSessionVersion === adminSessionVersion.current) setActivityLogsLoading(false);
     }
   };
 
