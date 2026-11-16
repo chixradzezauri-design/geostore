@@ -685,3 +685,24 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
 - Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
 - No Vercel deployment or production database changes were made.
+
+## Stage 56 — move support-ticket privileged RPC implementations out of public schema — 2026-11-17
+
+### Read-only finding
+- Supabase Security Advisor reported four public-schema SECURITY DEFINER RPCs: `get_my_support_tickets`, `get_support_ticket_status`, `get_support_ticket_unread_counts`, and `mark_support_ticket_messages_read`.
+- Two endpoints intentionally support guest access via a 64-character ticket access token. The implementations validate the token hash against the selected ticket; that customer-facing behavior must remain intact.
+- The other two endpoints are restricted to the authenticated customer owner or the fixed primary admin.
+- The existing implementation pins an empty search_path and validates the caller, but keeping SECURITY DEFINER functions in the exposed public schema makes the privileged implementation itself directly discoverable/callable.
+
+### Staged correction
+- Added private-schema SECURITY DEFINER implementations for all four RPCs, preserving the current authorization predicates, return columns, argument names/defaults, and access-token hashing behavior.
+- Replaced public implementations with SECURITY INVOKER wrappers using the same RPC names and request/response contracts, so existing frontend calls remain unchanged.
+- Explicitly grants anonymous execution only to the ticket-token status and read-receipt wrappers; account ticket history and admin unread counts remain authenticated-only.
+- Added static migration regression tests for wrapper type, permissions, token validation, and preservation of support-ticket history.
+
+### Verification and safety boundary
+- The migration is staged on `maintenance/stage-56-private-support-ticket-rpcs-2026-11-17`; no production Supabase migration was applied.
+- Existing support tickets, messages, read receipts, customer identities, and access-token hashes were not modified.
+- Security Advisor was read-only. Before this staged change, it reported two RLS-enabled tables without policies (private-by-RPC flash-sale tables), four public SECURITY DEFINER RPC findings, and leaked-password protection disabled.
+- The leaked-password protection warning is an Auth dashboard setting and is not changed by this SQL migration.
+- Run the CI suite and review the migration on a Supabase staging database before merging or applying it. Confirm the guest ticket-token status and read-receipt flows, authenticated owner history, admin unread counts, and unauthorized caller denials.
