@@ -166,3 +166,15 @@ test('product detail information uses responsive wrapping and readable descripti
   assert.match(stage39, /\.gs-product-detail-specs\{[^}]*min-width:0!important;/);
   assert.match(stage39, /@media\(max-width:700px\)[\s\S]*?\.gs-product-description-copy\{[^}]*font-size:13px!important;/);
 });
+
+
+test('product option selectors have accessible responsive touch targets and clear states', () => {
+  const stage40 = css.slice(css.lastIndexOf('GEOSTORE — stage 40: responsive product option selectors'));
+  assert.ok(stage40.length > 0);
+  assert.match(stage40, /\.gs-custom-variant-selector[\s\S]*?grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,220px\),1fr\)\)!important;/);
+  assert.match(stage40, /\.gs-size-option\{[\s\S]*?min-height:48px!important;/);
+  assert.match(stage40, /\.gs-size-option\[aria-pressed="true"\]/);
+  assert.match(stage40, /\.gs-color-option\{[\s\S]*?min-height:44px!important;/);
+  assert.match(stage40, /:focus-visible/);
+  assert.match(stage40, /:disabled/);
+});
