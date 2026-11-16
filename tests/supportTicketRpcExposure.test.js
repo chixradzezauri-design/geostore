@@ -17,20 +17,20 @@ const rpcNames = [
 test('privileged support-ticket implementations live in the private schema', () => {
   for (const name of rpcNames) {
     const pattern = new RegExp(
-      \`create or replace function private\\.\${name}\\([\\s\\S]*?security definer[\\s\\S]*?set search_path = ''\`,
+      'create or replace function private\\.' + name + '\\([\\s\\S]*?security definer[\\s\\S]*?set search_path = \\'\\'',
       'i'
     );
-    assert.match(migration, pattern, \`\${name} must remain a private SECURITY DEFINER implementation\`);
+    assert.match(migration, pattern, name + ' must remain a private SECURITY DEFINER implementation');
   }
 });
 
 test('public RPC contracts are invoker-only wrappers with unchanged function names', () => {
   for (const name of rpcNames) {
     const pattern = new RegExp(
-      \`create or replace function public\\.\${name}\\([\\s\\S]*?security invoker[\\s\\S]*?(?:select\\s+\\*\\s+from|select)\\s+private\\.\${name}\`,
+      'create or replace function public\\.' + name + '\\([\\s\\S]*?security invoker[\\s\\S]*?(?:select\\s+\\*\\s+from|select)\\s+private\\.' + name,
       'i'
     );
-    assert.match(migration, pattern, \`\${name} must expose only a SECURITY INVOKER wrapper\`);
+    assert.match(migration, pattern, name + ' must expose only a SECURITY INVOKER wrapper');
   }
 });
 
