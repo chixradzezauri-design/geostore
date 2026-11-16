@@ -8,11 +8,11 @@ const source = await readFile(
 );
 
 test('admin CSV export writes real CRLF row separators', () => {
-  assert.ok(source.includes(String.raw\`join('\\r\\n')\`));
-  assert.ok(!source.includes(String.raw\`join('\\\\r\\\\n')\`));
+  assert.ok(source.includes("join('\\r\\n')"));
+  assert.ok(!source.includes("join('\\\\r\\\\n')"));
 });
 
 test('admin CSV export prefixes a real UTF-8 BOM character', () => {
-  assert.ok(source.includes(String.raw\`new Blob(['\\uFEFF', csv]\`));
-  assert.ok(!source.includes(String.raw\`new Blob(['\\\\uFEFF', csv]\`));
+  assert.ok(source.includes("new Blob(['\\uFEFF', csv]"));
+  assert.ok(!source.includes("new Blob(['\\\\uFEFF', csv]"));
 });
