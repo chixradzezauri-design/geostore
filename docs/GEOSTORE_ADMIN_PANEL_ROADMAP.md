@@ -358,3 +358,27 @@ Only then request approval to merge and deploy.
 - Run the new regression test, full test suite, production build, dependency audit and CodeQL on the updated PR head.
 - Confirm the `get_support_ticket_messages` RPC returns complete threads for long-running tickets; this stage changes only the ticket index, not the RPC contract or thread pagination.
 
+
+
+## Stage 81 — complete customer support ticket history
+
+### Verified defect
+- The authenticated customer history RPC returned at most 50 tickets and the client requested only that first page. Customers with more than 50 account-linked requests could not reach older tickets from the support panel.
+- The individual ticket conversation RPC returns the selected ticket's complete message thread; no message-row limit was found in its SQL implementation. This is separate from the 50-ticket list limit.
+
+### Change
+- Added `get_my_support_tickets_page`, an authenticated, owner-scoped RPC with a maximum page size of 50 and a deterministic keyset cursor using latest-message timestamp plus ticket ID.
+- The new RPC requires both cursor fields together, validates the ticket ID shape, and filters every page by `auth.uid()` and `customer_user_id`. Anonymous access is revoked; only authenticated users may execute it.
+- Kept the original `get_my_support_tickets(integer)` RPC unchanged for older clients.
+- Updated the customer support panel to load additional pages on demand, merge pages by ticket ID, and retain already loaded older pages during periodic refreshes.
+- Guest ticket-number/access-code recovery and the existing full per-ticket conversation view remain unchanged.
+- Added regression tests for owner scoping, bounded page size, deterministic cursor ordering, client cursor parameters, deduplication and the load-more UI.
+
+### Safety boundary
+- No existing support ticket, message, customer, access-token hash, read receipt or other user data was changed or deleted.
+- No live Supabase migration was applied, no production setting was changed, and no deployment or merge was performed.
+
+### Verification remaining
+- Run the new regression test, full test suite, production build, dependency audit and CodeQL on the updated draft PR head.
+- Apply the new migration only after checking the live migration ledger and confirming the `private` schema exposure configuration remains appropriate.
+- Verify account A cannot read account B's history, test more than 50 tickets across multiple pages, and confirm guest access-code recovery and full thread loading against staging.
