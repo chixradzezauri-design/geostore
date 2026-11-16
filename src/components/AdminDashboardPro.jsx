@@ -4229,31 +4229,55 @@ export default function AdminDashboardPro({
                   )}
 
                   {isLaptop && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">პროცესორი (CPU)</label>
-                        <input type="text" placeholder="Apple M3 / Intel i7" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="Apple M3 / Intel i7" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
-                        <input type="text" placeholder="16GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="16GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">SSD</label>
-                        <input type="text" placeholder="512GB" value={productForm.storage} onChange={e => setProductForm({...productForm, storage: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="512GB" value={productForm.storage} onChange={e => setProductForm({...productForm, storage: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">გრაფიკა (GPU)</label>
+                        <input type="text" placeholder="NVIDIA RTX 4060 / Integrated" value={productForm.gpu} onChange={e => setProductForm({...productForm, gpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ეკრანის ზომა</label>
+                        <input type="text" placeholder="15.6 inch" value={productForm.screenSize} onChange={e => setProductForm({...productForm, screenSize: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ოპერაციული სისტემა</label>
+                        <input type="text" placeholder="Windows 11 / macOS" value={productForm.os} onChange={e => setProductForm({...productForm, os: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                     </div>
                   )}
 
                   {isPhone && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                       <div>
-                        <label className="text-slate-400 font-bold block mb-1">მეხსიერება</label>
+                        <label className="text-slate-400 font-bold block mb-1">პროცესორი (CPU)</label>
+                        <input type="text" placeholder="Snapdragon / Apple A-series" value={productForm.cpu} onChange={e => setProductForm({...productForm, cpu: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">მეხსიერების ვარიანტები</label>
                         <input type="text" value={productOptionDrafts.availableSizes} onChange={e => setProductOptionDrafts(prev => ({ ...prev, availableSizes: e.target.value }))} onBlur={e => handleProductOptionChange('availableSizes', e.target.value)} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white text-base sm:text-xs min-h-[48px] admin-product-option-input outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">RAM</label>
-                        <input type="text" placeholder="8GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                        <input type="text" placeholder="8GB" value={productForm.ram} onChange={e => setProductForm({...productForm, ram: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ეკრანის ზომა</label>
+                        <input type="text" placeholder="6.7 inch" value={productForm.screenSize} onChange={e => setProductForm({...productForm, screenSize: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 font-bold block mb-1">ოპერაციული სისტემა</label>
+                        <input type="text" placeholder="Android / iOS" value={productForm.os} onChange={e => setProductForm({...productForm, os: e.target.value})} className="w-full bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-white min-h-[48px] outline-none focus:border-emerald-400" />
                       </div>
                       <div>
                         <label className="text-slate-400 font-bold block mb-1">ფერები</label>
