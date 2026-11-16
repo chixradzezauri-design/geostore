@@ -377,6 +377,14 @@ test('sums cart line prices in integer tetri without floating-point drift', () =
   ]), 20);
 });
 
+test('includes gift wrap and VIP warranty add-ons in coupon-eligible subtotal like server checkout', () => {
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 40, quantity: 2, giftWrap: true, vipWarranty: true },
+    { priceGEL: 10, quantity: 1, gift_wrap: true, vip_warranty: false },
+    { priceGEL: 5, quantity: 3, giftWrap: false, vipWarranty: true }
+  ]), 175);
+});
+
 test('rounds subtotal and delivery to exact tetri before discount calculation', () => {
   assert.deepEqual(
     calculateCheckoutTotals({
