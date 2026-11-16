@@ -1,0 +1,254 @@
+/* GEOSTORE ADMIN VISUAL REFINEMENT — STAGE 58
+   A small, isolated design layer for the admin workspace.
+   Existing dashboard state, actions, tab IDs, data flows and order styling remain untouched. */
+
+.admin-dashboard-pro.admin-dashboard-shell {
+  --admin-bg: #0a1422;
+  --admin-surface: #101f32;
+  --admin-surface-raised: #172a40;
+  --admin-surface-hover: #203750;
+  --admin-border: #344b64;
+  --admin-border-soft: rgba(126, 157, 187, .2);
+  --admin-text: #f4f8fc;
+  --admin-muted: #b9c9d9;
+  --admin-accent: #5ee0b0;
+  --admin-accent-strong: #2fc994;
+  --admin-focus: #8de8f4;
+  color: var(--admin-text);
+  border-color: var(--admin-border-soft);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .22);
+  isolation: isolate;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+  position: sticky;
+  top: max(12px, env(safe-area-inset-top));
+  align-self: flex-start;
+  max-height: calc(100dvh - 24px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #526b83 transparent;
+  background: linear-gradient(155deg, #14263b 0%, #0e1b2c 100%) !important;
+  border-color: var(--admin-border) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .2) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child::-webkit-scrollbar-thumb {
+  background: #526b83;
+  border-radius: 999px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:first-child {
+  border-color: var(--admin-border-soft) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:first-child > div:first-child {
+  background: linear-gradient(145deg, rgba(94, 224, 176, .18), rgba(94, 224, 176, .06)) !important;
+  border-color: rgba(94, 224, 176, .36) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:first-child svg {
+  color: var(--admin-accent) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) {
+  scrollbar-width: thin;
+  scrollbar-color: #526b83 transparent;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button {
+  min-height: 44px;
+  border-radius: 13px !important;
+  letter-spacing: -.01em;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) {
+  background: rgba(7, 18, 31, .72) !important;
+  border-color: rgba(115, 145, 174, .22) !important;
+  color: #dce8f4 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]):hover {
+  background: var(--admin-surface-hover) !important;
+  border-color: rgba(94, 224, 176, .48) !important;
+  color: #ffffff !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] {
+  background: linear-gradient(115deg, #78edc4 0%, #38d49e 100%) !important;
+  border: 1px solid rgba(167, 255, 220, .72) !important;
+  color: #08251d !important;
+  box-shadow: 0 8px 22px rgba(47, 201, 148, .2) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button > div:first-child {
+  min-width: 0;
+  gap: 10px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button > div:first-child > span {
+  white-space: normal;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button > span {
+  flex: 0 0 auto;
+  min-width: 24px;
+  text-align: center;
+  background: rgba(7, 18, 31, .48) !important;
+  border: 1px solid rgba(130, 160, 188, .2);
+  color: #f3f8fc !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button[class*="bg-emerald-500"] > span {
+  background: rgba(8, 37, 29, .12) !important;
+  border-color: rgba(8, 37, 29, .16);
+  color: #08251d !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > button {
+  min-height: 44px;
+  border-radius: 13px !important;
+  border-color: rgba(251, 113, 133, .32) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+  background: linear-gradient(120deg, #14263b 0%, #102034 100%) !important;
+  border-color: var(--admin-border) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .16) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+  min-height: 42px;
+  border-radius: 12px !important;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid var(--admin-focus) !important;
+  outline-offset: 3px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input, select, textarea) {
+  accent-color: var(--admin-accent-strong);
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    position: relative;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 14px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch;
+    gap: 8px !important;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 3px 2px 10px !important;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button {
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    min-width: max-content !important;
+    max-width: min(86vw, 340px) !important;
+    min-height: 44px;
+    padding: 10px 13px !important;
+    scroll-snap-align: start;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button > div:first-child > span {
+    white-space: nowrap;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    border-radius: 18px !important;
+    padding: 11px !important;
+    gap: 13px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    border-radius: 18px !important;
+    padding: 12px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:first-child {
+    gap: 10px;
+    padding-bottom: 12px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button {
+    min-height: 44px;
+    padding: 9px 11px !important;
+    font-size: 11px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    padding: 15px !important;
+    border-radius: 18px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child {
+    width: 100%;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    padding: 8px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    padding: 10px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button {
+    max-width: 82vw !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro.admin-dashboard-shell *,
+  .admin-dashboard-pro.admin-dashboard-shell *::before,
+  .admin-dashboard-pro.admin-dashboard-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
