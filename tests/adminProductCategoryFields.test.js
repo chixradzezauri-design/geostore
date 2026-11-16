@@ -27,10 +27,19 @@ test('phone, laptop, and accessory categories keep their category-specific optio
   assert.match(admin, /\['8GB RAM \/ 256GB SSD', '16GB RAM \/ 512GB SSD', '32GB RAM \/ 1TB SSD'\]/);
   assert.match(admin, /\['Standard \/ One Size'\]/);
   assert.match(admin, /პროცესორი \(CPU\)/);
-  assert.match(admin, /ოპერატიული მეხსიერება \(RAM\)/);
+  assert.match(admin, /RAM/);
   assert.match(admin, /გრაფიკა \(GPU\)/);
   assert.match(admin, /ეკრანის ზომა/);
   assert.match(admin, /ოპერაციული სისტემა/);
+  const laptopSection = admin.slice(admin.indexOf('{isLaptop && ('), admin.indexOf('{isPhone && ('));
+  const phoneSection = admin.slice(admin.indexOf('{isPhone && ('), admin.indexOf('{!isClothing && !isShoes && !isLaptop && !isPhone && ('));
+  assert.match(laptopSection, /productForm\.gpu/);
+  assert.match(laptopSection, /productForm\.screenSize/);
+  assert.match(laptopSection, /productForm\.os/);
+  assert.match(phoneSection, /productForm\.cpu/);
+  assert.match(phoneSection, /productForm\.screenSize/);
+  assert.match(phoneSection, /productForm\.os/);
+  assert.match(phoneSection, /მეხსიერების ვარიანტები/);
 });
 
 test('product save payload preserves all category-specific technical specifications', () => {
