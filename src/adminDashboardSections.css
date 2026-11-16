@@ -544,3 +544,114 @@
     padding-left: 8px;
   }
 }
+
+
+/* STAGE 67 — finance, analytics and expense management responsive layouts */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-analytics,
+  .admin-analytics-toolbar,
+  .admin-analytics-kpis,
+  .admin-analytics-card,
+  .admin-profit-calculator,
+  .admin-calculator-layout,
+  .admin-calculator-results,
+  .admin-expenses,
+  .admin-expense-form,
+  .admin-expense-row,
+  .admin-expense-details,
+  .admin-expense-heading,
+  .admin-expense-actions
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card {
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card > * {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics-toolbar select,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics-toolbar button {
+  max-width: 100%;
+  min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-expense-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-expense-actions {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-expense-delete {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-profit-calculator,
+    .admin-expenses > div
+  ) {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-toolbar {
+    align-items: stretch;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-toolbar select,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-toolbar button {
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card :is(p, span) {
+    overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-calculator-results {
+    padding: 16px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-row {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-delete {
+    min-width: 44px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-form > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-form > button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expense-amount {
+    white-space: normal;
+  }
+}
