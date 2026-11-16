@@ -103,7 +103,12 @@ export const calculateCartSubtotalGEL = (items) => {
     const quantity = Number.isFinite(rawQuantity) ? Math.max(1, Math.floor(rawQuantity)) : 1;
     if (!Number.isFinite(price) || price < 0) return sum;
     const priceCents = Math.round((price + Number.EPSILON) * 100);
-    return sum + priceCents * quantity;
+    // Match private.create_order_with_stock: paid add-ons are part of the
+    // coupon-eligible subtotal and receive the same percentage discount.
+    const giftWrap = item?.gift_wrap === true || item?.giftWrap === true;
+    const vipWarranty = item?.vip_warranty === true || item?.vipWarranty === true;
+    const addonCents = (giftWrap ? 500 : 0) + (vipWarranty ? 1500 : 0);
+    return sum + (priceCents + addonCents) * quantity;
   }, 0);
   return totalCents / 100;
 };
