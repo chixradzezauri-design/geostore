@@ -74,9 +74,12 @@ BEGIN
   END IF;
 
   IF p_vendors IS NULL
-     OR pg_catalog.jsonb_typeof(p_vendors) IS DISTINCT FROM 'array'
-     OR pg_catalog.jsonb_array_length(p_vendors) > 500 THEN
+     OR pg_catalog.jsonb_typeof(p_vendors) IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'ვენდორების სია არასწორია.' USING ERRCODE = '22023';
+  END IF;
+
+  IF pg_catalog.jsonb_array_length(p_vendors) > 500 THEN
+    RAISE EXCEPTION 'ვენდორების სია ზედმეტად დიდია.' USING ERRCODE = '22023';
   END IF;
 
   FOR v_item IN SELECT value FROM pg_catalog.jsonb_array_elements(p_vendors)
