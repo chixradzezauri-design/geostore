@@ -17,7 +17,7 @@ test('finance uses checkout snapshots to split base product and add-on amounts',
 
 test('un-costed add-on revenue is disclosed separately and excluded from calculated profit', () => {
   assert.match(admin, /totalProductRevenue \+= revenueSplit\.productRevenue/);
-  assert.match(admin, /totalAddonRevenue,\\s*totalExpenses, totalCogs, grossProfit, netProfit/);
+  assert.match(admin, /totalAddonRevenue,\s*totalExpenses, totalCogs, grossProfit, netProfit/);
   assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 \? totalProductRevenue - totalCogs : null/);
   assert.match(admin, /const netProfit = grossProfit === null \? null : grossProfit \+ totalDeliveryRevenue - totalExpenses/);
   assert.match(admin, /დამატებითი მომსახურებების შემოსავალი \(მოგებაში არ არის ჩათვლილი\)/);
