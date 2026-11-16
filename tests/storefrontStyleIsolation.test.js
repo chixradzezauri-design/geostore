@@ -140,3 +140,17 @@ test('mobile floating assistance controls collapse to a non-obstructive stacked 
   assert.match(dockStyles, /\.gs-floating-action-arrow[\s\S]*?display:\s*none\s*!important;/);
   assert.match(dockStyles, /width:\s*48px\s*!important;[\s\S]*?height:\s*48px\s*!important;[\s\S]*?border-radius:\s*50%\s*!important;/);
 });
+
+
+test('product detail gallery has responsive touch targets and clear selected-image state', () => {
+  const stage38 = css.slice(css.lastIndexOf('GEOSTORE — stage 38: product detail gallery refinement'));
+  assert.ok(stage38.length > 0);
+  assert.match(stage38, /\.gs-product-gallery-thumbnails\{[\s\S]*?scroll-snap-type:x proximity!important;/);
+  assert.match(stage38, /\.gs-product-gallery-thumb\{[\s\S]*?min-width:72px!important;[\s\S]*?min-height:72px!important;/);
+  assert.match(stage38, /\.gs-product-gallery-thumb\[aria-pressed="true"\]\{[\s\S]*?border:2px solid #80684f!important;/);
+  assert.match(stage38, /\.gs-product-gallery-thumb:focus-visible/);
+  assert.match(stage38, /\.gs-product-modal-header button\{[\s\S]*?width:44px!important;[\s\S]*?height:44px!important;/);
+  assert.match(stage38, /@media\(max-width:700px\)[\s\S]*?\.gs-product-gallery-thumb\{[\s\S]*?width:68px!important;/);
+  assert.match(stage38, /@media\(prefers-reduced-motion:reduce\)[\s\S]*?\.gs-product-gallery-thumb\{[\s\S]*?transition:none!important;/);
+  assert.match(storeView, /aria-pressed=\{activeImage === img\}/);
+});
