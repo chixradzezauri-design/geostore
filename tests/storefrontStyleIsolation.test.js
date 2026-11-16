@@ -140,3 +140,15 @@ test('mobile floating assistance controls collapse to a non-obstructive stacked 
   assert.match(dockStyles, /\.gs-floating-action-arrow[\s\S]*?display:\s*none\s*!important;/);
   assert.match(dockStyles, /width:\s*48px\s*!important;[\s\S]*?height:\s*48px\s*!important;[\s\S]*?border-radius:\s*50%\s*!important;/);
 });
+
+
+test('catalogue product actions keep accessible touch targets on narrow phones', () => {
+  const stage37 = css.slice(css.lastIndexOf('GEOSTORE — stage 37: accessible product-card touch targets'));
+  assert.ok(stage37.length > 0);
+  assert.match(stage37, /\.gs-catalog-product-cta\{[\s\S]*?min-height:44px!important;[\s\S]*?white-space:normal!important;/);
+  assert.match(stage37, /\.gs-catalog-product-cta svg\{[\s\S]*?flex:0 0 16px!important;/);
+  assert.match(stage37, /@media\(max-width:760px\)[\s\S]*?\.gs-catalog-product-media>button\{[\s\S]*?width:44px!important;[\s\S]*?height:44px!important;/);
+  assert.match(stage37, /@media\(max-width:380px\)[\s\S]*?\.gs-catalog-product-cta\{[\s\S]*?min-height:46px!important;/);
+  assert.match(stage37, /@media\(hover:hover\) and \(pointer:fine\)[\s\S]*?\.gs-catalog-product-cta:hover/);
+  assert.match(stage37, /@media\(prefers-reduced-motion:reduce\)[\s\S]*?\.gs-catalog-product-cta\{[\s\S]*?transition:none!important;/);
+});
