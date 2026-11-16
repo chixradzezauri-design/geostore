@@ -384,3 +384,26 @@ Only then request approval to merge and deploy.
 - Run the new regression test, full test suite, production build, dependency audit and CodeQL on the updated draft PR head.
 - Apply the new migration only after checking the live migration ledger; verify the public RPC is installed with only authenticated execute permission and test owner isolation against staging.
 - Verify account A cannot read account B's history, test more than 50 tickets across multiple pages, and confirm guest access-code recovery and full thread loading against staging.
+
+## Stage 82 — admin legacy customer message history
+
+### Verified defect
+- The admin legacy `public.messages` view requested only the newest 100 rows and had no way to load older records.
+- The same view already refreshed every 15 seconds and subscribed to Postgres Changes; those refreshes previously replaced the whole visible list.
+
+### Change
+- Added stable keyset pagination using `created_at.desc,id.asc` and a strict timestamp-plus-ID cursor, with a hard maximum of 100 rows per request.
+- Added an explicit “load older messages” control; the existing manual refresh, 15-second refresh and Realtime subscription remain enabled.
+- Realtime/poll refreshes merge newly received rows by message ID and retain already loaded older history. Duplicate IDs are collapsed and updated row metadata is refreshed.
+- Serialized concurrent fetches and queue one newest-page refresh when a Realtime/poll event arrives during another request.
+- Guarded responses by admin-session generation so a late request cannot repopulate the message panel after the admin session closes.
+- Added helper and component regression tests for bounded pages, deterministic cursor ordering, malformed cursor rejection, page merging, refresh preservation and stale-session protection.
+
+### Safety boundary
+- The legacy messages view remains read-only; no message row, image, customer record, ticket, order or other database data was modified or deleted.
+- No schema migration or live Supabase change is required.
+- No merge or production deployment was performed.
+
+### Verification remaining
+- Run focused tests, full `npm test`, production build, dependency audit and CodeQL on the updated draft PR head.
+- Verify more than 100 legacy messages across several pages against staging, including equal timestamps, new Realtime inserts while paging, manual refresh, and admin logout during a pending request.
