@@ -3,6 +3,17 @@ const SUPPORT_TICKET_HISTORY_PAGE_SIZE = 50;
 const isMissingSupportTicketHistoryRpc = (status, detail) =>
   status === 404 && /PGRST202|could not find the function|function .* does not exist|schema cache/i.test(String(detail || ''));
 
+const normalizeSupportTicketRows = rows => {
+  if (!Array.isArray(rows)) throw new Error('Invalid support ticket history response');
+  return rows.filter(row =>
+    row &&
+    typeof row.ticket_id === 'string' &&
+    /^t-[a-f0-9]{32}$/i.test(row.ticket_id) &&
+    typeof row.last_message_at === 'string' &&
+    Number.isFinite(Date.parse(row.last_message_at))
+  );
+};
+
 export const mergeSupportTicketPages = (existing, incoming) => {
   const byTicketId = new Map();
   for (const ticket of Array.isArray(existing) ? existing : []) {
@@ -30,17 +41,22 @@ export const fetchMySupportTickets = async ({ supabaseUrl, headers, cursor = nul
     })
   });
   const detail = response.ok ? '' : await response.text().catch(() => '');
-  if (!response.ok && isMissingSupportTicketHistoryRpc(response.status, detail)) return null;
+  if (!response.ok && isMissingSupportTicketHistoryRpc(response.status, detail)) {
+    // Keep the existing first-page history working until the pagination
+    // migration is installed; older deployments already expose this RPC.
+    if (safeCursor) return { rows: [], nextCursor: null };
+    const legacyResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/get_my_support_tickets`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ p_limit: SUPPORT_TICKET_HISTORY_PAGE_SIZE })
+    });
+    const legacyDetail = legacyResponse.ok ? '' : await legacyResponse.text().catch(() => '');
+    if (!legacyResponse.ok && isMissingSupportTicketHistoryRpc(legacyResponse.status, legacyDetail)) return null;
+    if (!legacyResponse.ok) throw new Error(legacyDetail || `HTTP ${legacyResponse.status}`);
+    return { rows: normalizeSupportTicketRows(await legacyResponse.json()), nextCursor: null };
+  }
   if (!response.ok) throw new Error(detail || `HTTP ${response.status}`);
-  const rows = await response.json();
-  if (!Array.isArray(rows)) throw new Error('Invalid support ticket history response');
-  const validRows = rows.filter(row =>
-    row &&
-    typeof row.ticket_id === 'string' &&
-    /^t-[a-f0-9]{32}$/i.test(row.ticket_id) &&
-    typeof row.last_message_at === 'string' &&
-    Number.isFinite(Date.parse(row.last_message_at))
-  );
+  const validRows = normalizeSupportTicketRows(await response.json());
   const last = validRows[validRows.length - 1];
   return {
     rows: validRows,
