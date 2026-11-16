@@ -13,7 +13,7 @@ function readFunction(name) {
 }
 
 test('private admin reads reject responses from an earlier login session', () => {
-  for (const name of ['fetchExpenses', 'fetchTickets', 'fetchSupportTicketThread', 'fetchLegacyMessages', 'fetchActivityLogs']) {
+  for (const name of ['fetchExpenses', 'fetchTickets', 'fetchSupportTicketThread', 'fetchLegacyMessages', 'fetchActivityLogs', 'logActivity']) {
     const body = readFunction(name);
     assert.match(body, /const requestSessionVersion = adminSessionVersion\.current/);
     assert.match(body, /requestSessionVersion !== adminSessionVersion\.current/);
