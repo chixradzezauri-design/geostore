@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
+import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
@@ -58,6 +59,24 @@ const getSupabaseHeaders = async ({ authenticated = false } = {}) => {
     Authorization: `Bearer ${authenticated && session?.access_token ? session.access_token : SUPABASE_ANON_KEY}`,
     'Content-Type': 'application/json'
   };
+};
+
+// Mark administrator replies as read only after the customer conversation has
+// been successfully loaded while the support panel is visible. Older database
+// deployments may not have the additive read-receipt RPC yet.
+const markCustomerSupportMessagesRead = async (ticketId, accessToken) => {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/mark_support_ticket_messages_read`, {
+    method: 'POST',
+    headers: await getSupabaseHeaders({ authenticated: true }),
+    body: JSON.stringify({ p_ticket_id: ticketId, p_access_token: accessToken })
+  });
+
+  if (response.ok) return true;
+  const detail = await response.text().catch(() => '');
+  if (response.status === 404 && /PGRST202|could not find the function|function .* does not exist|schema cache/i.test(detail)) {
+    return false;
+  }
+  throw new Error(detail || `Support read receipt failed (HTTP ${response.status}).`);
 };
 
 const STOREFRONT_MEDIA_BUCKET = 'storefront-media';
@@ -605,6 +624,7 @@ export default function App() {
   const [supportLookupTicketId, setSupportLookupTicketId] = useState('');
   const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
+  const [supportTicketStatus, setSupportTicketStatus] = useState(null);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
   const supportThreadMessagesRef = useRef(null);
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
@@ -657,6 +677,15 @@ export default function App() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const rows = await response.json();
         if (!Array.isArray(rows)) throw new Error('Invalid support conversation response');
+        const statusSnapshot = await fetchSupportTicketStatus({
+          supabaseUrl: SUPABASE_URL,
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          ticketId,
+          accessToken
+        }).catch(error => {
+          console.warn('Support ticket status refresh failed:', error);
+          return null;
+        });
         if (active) {
           const uniqueRows = [...new Map(rows.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
           uniqueRows.sort((a, b) => {
@@ -665,6 +694,13 @@ export default function App() {
             return aTime - bTime || String(a.id).localeCompare(String(b.id));
           });
           setSupportThreadMessages(uniqueRows);
+          try {
+            await markCustomerSupportMessagesRead(ticketId, accessToken);
+          } catch (readReceiptError) {
+            // Read receipts must never hide or interrupt an otherwise valid conversation.
+            console.warn('Support read receipt update failed:', readReceiptError);
+          }
+          setSupportTicketStatus(statusSnapshot);
         }
       } catch (error) {
         // Keep the last successfully loaded conversation visible during a
@@ -3625,6 +3661,7 @@ export default function App() {
                     setSupportThreadError(currentLang === 'en' ? 'Check the ticket number and access code.' : currentLang === 'ru' ? 'Проверьте номер обращения и код доступа.' : 'შეამოწმე მიმართვის ნომერი და წვდომის კოდი.');
                     setSupportThreadLoaded(false);
                     setSupportThreadMessages([]);
+                    setSupportTicketStatus(null);
                     return;
                   }
                   setSupportThreadLoading(true);
@@ -3639,11 +3676,22 @@ export default function App() {
                     if (!response.ok) throw new Error('ACCESS_DENIED');
                     const rows = await response.json();
                     if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                    const statusSnapshot = await fetchSupportTicketStatus({
+                      supabaseUrl: SUPABASE_URL,
+                      headers: await getSupabaseHeaders({ authenticated: true }),
+                      ticketId,
+                      accessToken
+                    }).catch(error => {
+                      console.warn('Support ticket status lookup failed:', error);
+                      return null;
+                    });
+                    setSupportTicketStatus(statusSnapshot);
                     setSupportThreadMessages(rows);
                     setSupportThreadLoaded(true);
                   } catch (error) {
                     console.error('Support conversation lookup error:', error);
                     setSupportThreadMessages([]);
+                    setSupportTicketStatus(null);
                     setSupportThreadLoaded(false);
                     setSupportThreadError(currentLang === 'en'
                       ? 'Conversation not found or the access details are incorrect.'
@@ -3689,6 +3737,28 @@ export default function App() {
 
               {supportThreadLoaded && (
                 <div className="space-y-3">
+                  {supportTicketStatus?.status && (
+                    <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-xs space-y-1" role="status" aria-live="polite">
+                      <p className="text-slate-300">
+                        {currentLang === 'en' ? 'Request status:' : currentLang === 'ru' ? 'Статус обращения:' : 'მიმართვის სტატუსი:'}{' '}
+                        <strong className={supportTicketStatus.status === 'მოგვარებული' ? 'text-emerald-300' : 'text-cyan-200'}>
+                          {supportTicketStatus.status === 'ღია'
+                            ? (currentLang === 'en' ? 'Open' : currentLang === 'ru' ? 'Открыто' : 'ღია')
+                            : supportTicketStatus.status === 'მუშავდება'
+                              ? (currentLang === 'en' ? 'In progress' : currentLang === 'ru' ? 'В работе' : 'მუშავდება')
+                              : supportTicketStatus.status === 'მოგვარებული'
+                                ? (currentLang === 'en' ? 'Resolved' : currentLang === 'ru' ? 'Решено' : 'მოგვარებული')
+                                : supportTicketStatus.status}
+                        </strong>
+                      </p>
+                      {supportTicketStatus.last_message_at && (
+                        <p className="text-[10px] text-slate-400">
+                          {currentLang === 'en' ? 'Last update:' : currentLang === 'ru' ? 'Последнее обновление:' : 'ბოლო განახლება:'}{' '}
+                          {new Date(supportTicketStatus.last_message_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div ref={supportThreadMessagesRef} className="max-h-64 overflow-y-auto space-y-2 pr-1" aria-live="polite">
                     {supportThreadMessages.length ? supportThreadMessages.map((item) => (
                       <div key={item.id} className={`rounded-xl p-3 text-xs ${item.sender_role === 'admin' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800 border border-slate-700'}`}>
