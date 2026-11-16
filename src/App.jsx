@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 
 import { translations } from './utils/translations';
+import { fetchMySupportTickets } from './utils/supportTicketHistory';
 import { fetchSupportTicketStatus } from './utils/supportTicketStatus';
 import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId, groupCheckoutItems, isReusableCheckout, normalizeOrderItems, normalizeOrderTotal, normalizeTrackingLookup, reconcileCartWithCatalog, validateOrderCreationResponse, CHECKOUT_CATALOG_SELECT } from './utils/orderSafety';
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
@@ -624,6 +625,9 @@ export default function App() {
   const [supportLookupTicketId, setSupportLookupTicketId] = useState('');
   const [supportLookupAccessToken, setSupportLookupAccessToken] = useState('');
   const [supportThreadMessages, setSupportThreadMessages] = useState([]);
+  const [mySupportTickets, setMySupportTickets] = useState([]);
+  const [mySupportTicketsLoading, setMySupportTicketsLoading] = useState(false);
+  const [mySupportTicketsError, setMySupportTicketsError] = useState('');
   const [supportTicketStatus, setSupportTicketStatus] = useState(null);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
   const supportThreadMessagesRef = useRef(null);
@@ -635,6 +639,62 @@ export default function App() {
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
+
+  useEffect(() => {
+    if (!supportOpen || !currentUser?.id) {
+      setMySupportTickets([]);
+      setMySupportTicketsError('');
+      setMySupportTicketsLoading(false);
+      return undefined;
+    }
+    let active = true;
+    let requestInFlight = false;
+    const loadMySupportTickets = async () => {
+      if (!active || requestInFlight || document.visibilityState !== 'visible') return;
+      requestInFlight = true;
+      setMySupportTicketsLoading(true);
+      try {
+        const rows = await fetchMySupportTickets({
+          supabaseUrl: SUPABASE_URL,
+          headers: await getSupabaseHeaders({ authenticated: true })
+        });
+        if (active) {
+          if (rows === null) {
+            setMySupportTickets([]);
+            setMySupportTicketsError(currentLang === 'en'
+              ? 'Support history will appear after the support database update is installed.'
+              : currentLang === 'ru'
+                ? 'История обращений появится после установки обновления базы поддержки.'
+                : 'მიმართვების ისტორია გამოჩნდება მხარდაჭერის მონაცემთა ბაზის განახლების შემდეგ.');
+          } else {
+            setMySupportTickets(rows);
+            setMySupportTicketsError('');
+          }
+        }
+      } catch (error) {
+        if (active) {
+          console.warn('Customer support ticket history unavailable:', error);
+          setMySupportTicketsError(currentLang === 'en'
+            ? 'Your account-linked support history is temporarily unavailable.'
+            : currentLang === 'ru'
+              ? 'История обращений аккаунта временно недоступна.'
+              : 'ანგარიშთან დაკავშირებული მიმართვების ისტორია დროებით მიუწვდომელია.');
+        }
+      } finally {
+        requestInFlight = false;
+        if (active) setMySupportTicketsLoading(false);
+      }
+    };
+    loadMySupportTickets();
+    const interval = window.setInterval(loadMySupportTickets, 30000);
+    const onVisibility = () => { if (document.visibilityState === 'visible') loadMySupportTickets(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [supportOpen, currentUser?.id, currentLang]);
 
   useEffect(() => {
     if (!supportOpen || !supportThreadLoaded) return undefined;
@@ -652,7 +712,7 @@ export default function App() {
 
     const ticketId = String(supportLookupTicketId || '').trim();
     const accessToken = String(supportLookupAccessToken || '').trim();
-    if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+    if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || (!/^[a-f0-9]{64}$/i.test(accessToken) && !currentUser?.id)) {
       return undefined;
     }
 
@@ -748,7 +808,7 @@ export default function App() {
       document.removeEventListener('visibilitychange', refreshWhenVisible);
       void supabase.removeChannel(channel);
     };
-  }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken]);
+  }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken, currentUser?.id]);
 
   useEffect(() => {
     if (!adminLoggedIn) return undefined;
@@ -3644,6 +3704,64 @@ export default function App() {
             </form>
             )}
 
+              <section className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3" aria-labelledby="gs-my-support-tickets-title">
+                <div className="flex items-center justify-between gap-2">
+                  <p id="gs-my-support-tickets-title" className="text-sm font-bold text-white">
+                    {currentLang === 'en' ? 'My support requests' : currentLang === 'ru' ? 'Мои обращения' : 'ჩემი მხარდაჭერის მიმართვები'}
+                  </p>
+                  <span className="text-[10px] text-slate-400">{mySupportTickets.length}</span>
+                </div>
+                {mySupportTicketsLoading && !mySupportTickets.length && <p className="text-xs text-slate-400">{currentLang === 'en' ? 'Loading requests…' : currentLang === 'ru' ? 'Загрузка обращений…' : 'მიმართვები იტვირთება…'}</p>}
+                {mySupportTicketsError && <p role="alert" className="text-xs text-rose-300">{mySupportTicketsError}</p>}
+                {!mySupportTicketsLoading && !mySupportTicketsError && mySupportTickets.length === 0 && (
+                  <p className="text-xs text-slate-400">{currentLang === 'en' ? 'No account-linked requests yet. Guest requests can still be opened below with their ticket number and access code.' : currentLang === 'ru' ? 'Пока нет обращений, связанных с аккаунтом. Гостевые обращения можно открыть ниже по номеру и коду доступа.' : 'ანგარიშთან დაკავშირებული მიმართვები ჯერ არ გაქვს. სტუმრის მიმართვის გახსნა კვლავ შეგიძლია ქვემოთ ნომრითა და წვდომის კოდით.'}</p>
+                )}
+                <div className="space-y-2">
+                  {mySupportTickets.map((ticket) => (
+                    <div key={ticket.ticket_id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-white break-words">{ticket.subject || (currentLang === 'en' ? 'Support request' : currentLang === 'ru' ? 'Обращение в поддержку' : 'მხარდაჭერის მიმართვა')}</p>
+                          <p className="text-[10px] text-slate-400 mt-1">{ticket.ticket_id}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] text-cyan-200">
+                          {ticket.status === 'მუშავდება' ? (currentLang === 'en' ? 'In progress' : currentLang === 'ru' ? 'В работе' : 'მუშავდება') : ticket.status === 'მოგვარებული' ? (currentLang === 'en' ? 'Resolved' : currentLang === 'ru' ? 'Решено' : 'მოგვარებული') : ticket.status === 'ღია' ? (currentLang === 'en' ? 'Open' : currentLang === 'ru' ? 'Открыто' : 'ღია') : ticket.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-slate-400">
+                          {ticket.last_message_at ? new Date(ticket.last_message_at).toLocaleString(currentLang === 'en' ? 'en-US' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE') : ''}
+                          {Number(ticket.unread_count) > 0 ? ` · ${currentLang === 'en' ? 'New reply' : currentLang === 'ru' ? 'Новый ответ' : 'ახალი პასუხი'}` : ''}
+                        </span>
+                        <button type="button" disabled={supportThreadLoading} onClick={async () => {
+                          setSupportLookupTicketId(ticket.ticket_id);
+                          setSupportLookupAccessToken('');
+                          setSupportThreadError('');
+                          setSupportThreadLoaded(false);
+                          setSupportThreadLoading(true);
+                          try {
+                            const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
+                              method: 'POST',
+                              headers: await getSupabaseHeaders({ authenticated: true }),
+                              body: JSON.stringify({ p_ticket_id: ticket.ticket_id, p_access_token: null })
+                            });
+                            if (!response.ok) throw new Error('ACCESS_DENIED');
+                            const rows = await response.json();
+                            if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                            setSupportThreadMessages(rows);
+                            setSupportThreadLoaded(true);
+                          } catch (error) {
+                            console.error('Account-linked support conversation open failed:', error);
+                            setSupportThreadError(currentLang === 'en' ? 'Could not open this request. Please try again.' : currentLang === 'ru' ? 'Не удалось открыть обращение. Попробуйте ещё раз.' : 'მიმართვის გახსნა ვერ მოხერხდა. სცადე ხელახლა.');
+                          } finally { setSupportThreadLoading(false); }
+                        }} className="rounded-lg border border-cyan-500/30 px-3 py-1.5 text-[10px] font-bold text-cyan-200 disabled:opacity-50">
+                          {currentLang === 'en' ? 'Open' : currentLang === 'ru' ? 'Открыть' : 'გახსნა'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
             <div className="gs-support-form mt-4 border-t border-slate-700 pt-4 space-y-3">
               <p className="text-sm font-bold text-white">
                 {currentLang === 'en' ? 'Continue an existing conversation' : currentLang === 'ru' ? 'Продолжить переписку' : 'არსებული მიმოწერის გაგრძელება'}
@@ -3657,7 +3775,7 @@ export default function App() {
                   if (supportThreadLoading) return;
                   const ticketId = supportLookupTicketId.trim();
                   const accessToken = supportLookupAccessToken.trim();
-                  if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+                  if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || (!/^[a-f0-9]{64}$/i.test(accessToken) && !currentUser?.id)) {
                     setSupportThreadError(currentLang === 'en' ? 'Check the ticket number and access code.' : currentLang === 'ru' ? 'Проверьте номер обращения и код доступа.' : 'შეამოწმე მიმართვის ნომერი და წვდომის კოდი.');
                     setSupportThreadLoaded(false);
                     setSupportThreadMessages([]);
@@ -3724,7 +3842,7 @@ export default function App() {
                   autoComplete="off"
                   maxLength={64}
                   className="gs-support-field w-full"
-                  required
+                  required={!currentUser?.id}
                 />
                 <button type="submit" disabled={supportThreadLoading} className="gs-support-submit disabled:opacity-60">
                   {supportThreadLoading
@@ -3779,7 +3897,7 @@ export default function App() {
                       if (!message || message.length > 4000) return;
                       const ticketId = String(supportLookupTicketId || '').trim();
                       const accessToken = String(supportLookupAccessToken || '').trim();
-                      if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || !/^[a-f0-9]{64}$/i.test(accessToken)) {
+                      if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || (!/^[a-f0-9]{64}$/i.test(accessToken) && !currentUser?.id)) {
                         setSupportThreadError(currentLang === 'en'
                           ? 'The support ticket access details are invalid. Reopen the ticket and try again.'
                           : currentLang === 'ru'
