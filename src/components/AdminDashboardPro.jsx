@@ -2537,7 +2537,8 @@ export default function AdminDashboardPro({
       id: vendorId,
       name: vendorName,
       commission,
-      status: 'აქტიური'
+      status: 'აქტიური',
+      updated_at: new Date().toISOString()
     };
     if (typeof setVendorsList === 'function') {
       setVendorsList(prev => [...(prev || []), newV]);
@@ -2550,7 +2551,13 @@ export default function AdminDashboardPro({
   const handleDeleteVendor = (id) => {
     if (window.confirm('ნამდვილად გსურთ ამ ვენდორის წაშლა?')) {
       if (typeof setVendorsList === 'function') {
-        setVendorsList(prev => (prev || []).filter(v => v.id !== id));
+        const archivedAt = new Date().toISOString();
+        setVendorsList(prev => (prev || []).map(v => v.id === id ? {
+          ...v,
+          status: 'არქივირებული',
+          archived_at: archivedAt,
+          updated_at: archivedAt
+        } : v));
       }
       logActivity(`წაიშალა ვენდორი (ID: ${id})`);
     }
@@ -3038,7 +3045,7 @@ export default function AdminDashboardPro({
             { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0, icon: Megaphone },
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
-            { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
+            { id: 'vendors', label: '🏪 ვენდორები', count: (vendorsList || []).filter(v => !v?.archived_at && v?.status !== 'არქივირებული').length, icon: Store }
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].map(tab => {
@@ -4903,9 +4910,9 @@ export default function AdminDashboardPro({
               </form>
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">აქტიური ვენდორები ({vendorsList?.length || 0})</h3>
+              <h3 className="font-black text-white text-base">აქტიური ვენდორები ({(vendorsList || []).filter(v => !v?.archived_at && v?.status !== 'არქივირებული').length})</h3>
               <div className="admin-vendor-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {(vendorsList || []).map(v => (
+                {(vendorsList || []).filter(v => !v?.archived_at && v?.status !== 'არქივირებული').map(v => (
                   <div key={v.id} className="admin-vendor-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
                     <div>
                       <h4 className="font-bold text-white text-sm">{v.name}</h4>
