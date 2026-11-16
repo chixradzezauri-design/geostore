@@ -1,5 +1,5 @@
 // src/components/StoreView.jsx - Premium Category & Subcategory UI/UX Redesign Edition (100% Full & Safe with Category Image Support)
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
@@ -18,6 +18,8 @@ export default function StoreView({
   selectedCategory,
   setSelectedCategory,
   filteredProducts: initialFilteredProducts,
+  activeFlashSale = null,
+  onFlashSaleExpired,
   wishlist,
   toggleWishlist,
   comparisonList = [],
@@ -64,23 +66,41 @@ export default function StoreView({
     setProductPage(1);
   }, [selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy]);
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 45, seconds: 30 });
+  const [timeLeft, setTimeLeft] = useState(null);
+  const flashSaleExpiryCallbackRef = useRef(onFlashSaleExpired);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        }
-        return { hours: 12, minutes: 0, seconds: 0 };
+    flashSaleExpiryCallbackRef.current = onFlashSaleExpired;
+  }, [onFlashSaleExpired]);
+
+  useEffect(() => {
+    const endsAt = Date.parse(activeFlashSale?.ends_at || '');
+    if (!Number.isFinite(endsAt)) {
+      setTimeLeft(null);
+      return undefined;
+    }
+
+    let expiryNotified = false;
+    const updateCountdown = () => {
+      const remainingSeconds = Math.max(0, Math.floor((endsAt - Date.now()) / 1000));
+      setTimeLeft({
+        hours: Math.floor(remainingSeconds / 3600),
+        minutes: Math.floor((remainingSeconds % 3600) / 60),
+        seconds: remainingSeconds % 60
       });
-    }, 1000);
+
+      if (remainingSeconds === 0 && !expiryNotified) {
+        expiryNotified = true;
+        Promise.resolve(flashSaleExpiryCallbackRef.current?.()).catch(error => {
+          console.error('Flash-sale expiry refresh failed:', error);
+        });
+      }
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeFlashSale?.ends_at]);
 
   const [allReviews, setAllReviews] = useState(() => {
     try { const saved = localStorage.getItem('geostore_product_reviews'); return saved ? JSON.parse(saved) : {}; } catch { return {}; }
@@ -304,13 +324,15 @@ export default function StoreView({
   };
 
   const flashSaleProducts = useMemo(() => {
+    if (!activeFlashSale || !Array.isArray(activeFlashSale.product_ids)) return [];
+    const campaignProductIds = new Set(activeFlashSale.product_ids.map(id => String(id)));
     return activeProducts.filter(p => {
-      if (hasCustomProductVariants(p)) return false;
+      if (!campaignProductIds.has(String(p?.id)) || hasCustomProductVariants(p)) return false;
       const oldPrice = Number(p?.oldPriceGEL);
       const currentPrice = Number(p?.priceGEL);
       return Number.isFinite(oldPrice) && Number.isFinite(currentPrice) && oldPrice > currentPrice;
     }).slice(0, 4);
-  }, [activeProducts]);
+  }, [activeProducts, activeFlashSale]);
 
   const getCategoryIcon = (catName) => {
     const name = (catName || '').toLowerCase();
@@ -409,22 +431,25 @@ export default function StoreView({
       )}
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
-      {flashSaleProducts.length > 0 && (
-        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6">
+      {activeFlashSale && timeLeft && flashSaleProducts.length > 0 && (
+        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title" data-flash-sale-id={activeFlashSale.id}>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
                 <Timer className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
-                  ⚡ FLASH SALE <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{storeText.limitedOffer}</span>
+                <h3 id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                  ⚡ FLASH SALE
+                  <span className="gs-flash-sale-discount-badge">{Number(activeFlashSale.discount_percent)}% OFF</span>
+                  <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{storeText.limitedOffer}</span>
                 </h3>
-                <p className="text-slate-400 text-xs">{storeText.hurryDiscount}</p>
+                <p className="text-slate-300 text-xs">{activeFlashSale.category === 'ყველა' ? (currentLang === 'en' ? 'All categories' : currentLang === 'ru' ? 'Все категории' : 'ყველა კატეგორია') : activeFlashSale.category} · {storeText.hurryDiscount}</p>
+                <p className="gs-flash-sale-ends-at">დასრულდება: {new Date(activeFlashSale.ends_at).toLocaleString(currentLang === 'en' ? 'en-GB' : currentLang === 'ru' ? 'ru-RU' : 'ka-GE')}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-black">
+            <div className="gs-flash-sale-countdown flex items-center gap-2 text-xs font-black" role="timer" aria-live="off" aria-label={`დარჩენილია ${timeLeft.hours} საათი ${timeLeft.minutes} წუთი ${timeLeft.seconds} წამი`}>
               <div className="gs-flash-sale-timer bg-[#141418] border border-amber-500/30 px-3.5 py-2 rounded-2xl text-amber-400 shadow-inner text-center">
                 <span className="text-sm sm:text-base">{String(timeLeft.hours).padStart(2, '0')}</span>
                 <span className="block text-[8px] sm:text-[9px] text-slate-400 uppercase">{storeText.hours}</span>
@@ -448,7 +473,7 @@ export default function StoreView({
                 <div key={`flash-${prod.id}`} className="gs-flash-sale-card group bg-[#060608] border border-amber-500/20 rounded-3xl p-4 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xl">
                   <div onClick={() => handleOpenProduct(prod)} className="gs-flash-sale-media relative bg-[#0d0d12] rounded-2xl p-4 h-40 sm:h-44 flex items-center justify-center cursor-pointer overflow-hidden">
                     {prod.image ? <img src={prod.image} alt="" loading="lazy" decoding="async" className="h-full object-contain group-hover:scale-110 transition-transform duration-500" /> : <div className="flex flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-8 h-8" /><span className="text-[10px] font-black tracking-[0.2em]">GEOSTORE</span></div>}
-                    <span className="absolute top-3 left-3 bg-rose-500 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase">SALE</span>
+                    <span className="gs-flash-sale-product-badge">{Number(activeFlashSale.discount_percent)}% OFF</span>
                   </div>
                   <div className="py-3 space-y-1.5">
                     <h4 onClick={() => handleOpenProduct(prod)} className="font-black text-white text-xs line-clamp-1 cursor-pointer hover:text-amber-300">{prod.name}</h4>
