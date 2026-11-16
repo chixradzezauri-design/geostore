@@ -163,7 +163,7 @@ test('product detail information uses responsive wrapping and readable descripti
   assert.match(storeView, /gs-product-description-copy/);
   assert.match(stage39, /\.gs-product-detail-title\{[^}]*overflow-wrap:anywhere!important;/);
   assert.match(stage39, /\.gs-product-price-panel\{[^}]*flex-wrap:wrap!important;/);
-  assert.match(stage39, /\.gs-product-detail-specs\{[^}]*min-width:0!important;/);
+  assert.match(stage39, /\\.gs-product-detail-specs\\{[^}]*min-width:0!important(?:;|\\})/);
   assert.match(stage39, /@media\(max-width:700px\)[\s\S]*?\.gs-product-description-copy\{[^}]*font-size:13px!important;/);
 });
 
