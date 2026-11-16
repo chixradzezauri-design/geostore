@@ -20,7 +20,7 @@ test('order search, filters, status actions, pagination, export and details rema
   assert.match(admin, /setOrderStatusFilter\(st\)/);
   assert.match(admin, /handleUpdateOrderStatus\(o\.id,/);
   assert.match(admin, /setCurrentOrderPage\(page\)/);
-  assert.match(admin, /setSelectedOrderForModal\(o\)/);
+  assert.match(admin, /setSelectedOrderForModal\(o\);/);
   assert.match(admin, /handleSaveOrderAdminNote\(selectedOrderForModal\.id\)/);
 });
 
