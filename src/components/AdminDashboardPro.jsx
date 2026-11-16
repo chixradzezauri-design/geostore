@@ -615,8 +615,34 @@ export default function AdminDashboardPro({
 
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', image: '', link: '' });
   const [broadcastForm, setBroadcastForm] = useState({ title: '', message: '' });
-  const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა' });
+  const [flashSaleForm, setFlashSaleForm] = useState({ discountPercent: '', category: 'ყველა', durationMinutes: '720' });
   const [isApplyingFlashSale, setIsApplyingFlashSale] = useState(false);
+  const [flashSaleStatus, setFlashSaleStatus] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadActiveFlashSale = async () => {
+      try {
+        const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_active_flash_sale', {
+          method: 'POST',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({})
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (!cancelled) setFlashSaleStatus(result?.campaign || null);
+      } catch (error) {
+        console.warn('Active flash-sale status could not be loaded:', error);
+      }
+    };
+
+    void loadActiveFlashSale();
+    const interval = setInterval(loadActiveFlashSale, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   const [supportTickets, setSupportTickets] = useState([]);
   const [supportTicketsError, setSupportTicketsError] = useState('');
@@ -2035,14 +2061,20 @@ export default function AdminDashboardPro({
 
     const percent = Number(flashSaleForm.discountPercent);
     const category = String(flashSaleForm.category || 'ყველა').trim();
+    const durationMinutes = Number(flashSaleForm.durationMinutes);
 
-    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\d+(?:\.\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
+    if (!Number.isFinite(percent) || percent <= 0 || percent >= 100 || !/^\\d+(?:\\.\\d{1,2})?$/.test(String(flashSaleForm.discountPercent).trim())) {
       alert('ფასდაკლება უნდა იყოს 0%-ზე მეტი და 100%-ზე ნაკლები.');
       return;
     }
 
     if (!category) {
       alert('აირჩიეთ პროდუქტის კატეგორია.');
+      return;
+    }
+
+    if (![15, 30, 60, 180, 360, 720, 1440].includes(durationMinutes)) {
+      alert('აირჩიეთ აქციის სწორი ხანგრძლივობა.');
       return;
     }
 
@@ -2055,12 +2087,13 @@ export default function AdminDashboardPro({
     setIsApplyingFlashSale(true);
 
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_apply_flash_sale', {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_create_flash_sale', {
         method: 'POST',
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({
           p_discount_percent: percent,
-          p_category: category
+          p_category: category,
+          p_duration_minutes: durationMinutes
         })
       });
 
@@ -2069,15 +2102,19 @@ export default function AdminDashboardPro({
         throw new Error(errorText || 'ფასდაკლების შენახვა ვერ მოხერხდა.');
       }
 
-      const updatedCount = Number(await response.json());
+      const result = await response.json();
+      const updatedCount = Number(result?.updated_count);
+      const campaign = result?.campaign || null;
       if (!Number.isInteger(updatedCount) || updatedCount < 0) {
         throw new Error('სერვერისგან მიღებულია არასწორი განახლების პასუხი.');
       }
 
-      if (updatedCount === 0) {
-        alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა.');
+      if (updatedCount === 0 || !campaign?.ends_at) {
+        alert('არჩეულ კატეგორიაში ფასდაკლებისთვის პროდუქტები ვერ მოიძებნა. არსებული აქცია არ შეცვლილა.');
         return;
       }
+
+      setFlashSaleStatus(campaign);
 
       // Re-read the server's final values: some products may be skipped when
       // rounding would leave their price unchanged, and concurrent admin edits may occur.
@@ -2112,11 +2149,12 @@ export default function AdminDashboardPro({
         }));
       }
 
-      logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; განახლდა ${updatedCount} პროდუქტი`);
+      const endLabel = new Date(campaign.ends_at).toLocaleString('ka-GE');
+      logActivity(`გააქტიურდა ფლეშ-აქცია (${percent}%) კატეგორიისთვის: ${category}; ხანგრძლივობა: ${durationMinutes} წუთი; განახლდა ${updatedCount} პროდუქტი`);
       alert(refreshedRows
-        ? `⚡ ფასდაკლება ბაზაში წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი.`
-        : `ფასდაკლება ბაზაში შენახულია (${updatedCount} პროდუქტი), თუმცა სიის განახლება ვერ მოხერხდა. განაახლეთ გვერდი, რომ ფასები ზუსტად გამოჩნდეს.`);
-      setFlashSaleForm({ discountPercent: '', category: 'ყველა' });
+        ? `⚡ ფლეშ-აქცია წარმატებით შეინახა! განახლდა ${updatedCount} პროდუქტი. დასრულდება: ${endLabel}`
+        : `ფლეშ-აქცია ბაზაში შენახულია (${updatedCount} პროდუქტი), დასრულდება: ${endLabel}. ფასების განახლებისთვის განაახლეთ გვერდი.`);
+      setFlashSaleForm({ discountPercent: '', category: 'ყველა', durationMinutes: '720' });
     } catch (error) {
       console.error('Flash sale update failed:', error);
       alert('ფასდაკლების შენახვა ვერ მოხერხდა: ' + (error?.message || 'ქსელის შეცდომა'));
@@ -4494,9 +4532,19 @@ export default function AdminDashboardPro({
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
             </h3>
             <form onSubmit={handleApplyFlashSale} className="admin-flash-sale-form space-y-4 text-xs">
-              <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {flashSaleStatus && (
+                <div className="gs-admin-flash-sale-status rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">მიმდინარე ფლეშ-აქცია</span>
+                    <strong className="text-lg font-black text-emerald-300">{Number(flashSaleStatus.discount_percent)}% OFF</strong>
+                  </div>
+                  <p className="text-xs text-slate-200">{flashSaleStatus.category === 'ყველა' ? 'ყველა კატეგორია' : flashSaleStatus.category} · {(flashSaleStatus.product_ids || []).length} პროდუქტი</p>
+                  <p className="text-[11px] text-slate-400">დასრულდება: {new Date(flashSaleStatus.ends_at).toLocaleString('ka-GE')}</p>
+                </div>
+              )}
+              <div className="admin-flash-sale-fields grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-slate-400 font-bold">ფასდაკლება პროცენტულად (%)</label>
+                  <label className="text-slate-400 font-bold">ფასდაკლება (%)</label>
                   <input type="number" placeholder="მაგ: 20" required min="0.01" max="99.99" step="0.01" inputMode="decimal" value={flashSaleForm.discountPercent} onChange={e => setFlashSaleForm({...flashSaleForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
@@ -4506,6 +4554,17 @@ export default function AdminDashboardPro({
                     {safeCategories.map(cat => (
                       <option key={cat.id} value={cat.name}>{cat.name}</option>
                     ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-slate-400 font-bold">აქციის ხანგრძლივობა</label>
+                  <select value={flashSaleForm.durationMinutes} onChange={e => setFlashSaleForm({...flashSaleForm, durationMinutes: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
+                    <option value="30">30 წუთი</option>
+                    <option value="60">1 საათი</option>
+                    <option value="180">3 საათი</option>
+                    <option value="360">6 საათი</option>
+                    <option value="720">12 საათი</option>
+                    <option value="1440">24 საათი</option>
                   </select>
                 </div>
               </div>
