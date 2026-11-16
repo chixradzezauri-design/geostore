@@ -1660,6 +1660,10 @@ export default function AdminDashboardPro({
     if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
+    const activeFlashSaleEnd = Date.parse(current.flashSaleEndsAt ?? current.flash_sale_ends_at ?? '');
+    if (field === 'priceGEL' && Number.isFinite(activeFlashSaleEnd) && activeFlashSaleEnd > Date.now()) {
+      return alert('პროდუქტზე მოქმედებს ფლეშ-აქცია. ფასის სწრაფი შეცვლა შესაძლებელი იქნება აქციის დასრულების შემდეგ, რათა ავტომატურმა აღდგენამ ახალი ფასი არ გადაფაროს.');
+    }
     const currentValue = current[column] ?? current[field];
     const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
@@ -1813,6 +1817,25 @@ export default function AdminDashboardPro({
     const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
     if (!Number.isFinite(originalPrice) || originalPrice < 0 || originalPrice > 1000000000 || (productForm.oldPriceGEL !== '' && !/^\d+(?:\.\d{1,2})?$/.test(String(productForm.oldPriceGEL).trim()))) return alert('ძველი ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
     if (originalPrice > 0 && originalPrice <= priceValue) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
+    const editingProductForPriceGuard = editingProductId
+      ? (products || []).find(product => String(product.id) === String(editingProductId))
+      : null;
+    const activeFlashSaleEnd = Date.parse(
+      editingProductForPriceGuard?.flashSaleEndsAt ??
+      editingProductForPriceGuard?.flash_sale_ends_at ??
+      ''
+    );
+    if (
+      editingProductForPriceGuard &&
+      Number.isFinite(activeFlashSaleEnd) &&
+      activeFlashSaleEnd > Date.now() &&
+      (
+        priceValue !== Number(editingProductForPriceGuard.priceGEL ?? editingProductForPriceGuard.price_gel) ||
+        originalPrice !== Number(editingProductForPriceGuard.oldPriceGEL ?? editingProductForPriceGuard.old_price_gel ?? 0)
+      )
+    ) {
+      return alert('პროდუქტზე მოქმედებს ფლეშ-აქცია. მიმდინარე ან ძველი ფასის შეცვლა შესაძლებელი იქნება აქციის დასრულების შემდეგ, რათა ავტომატურმა აღდგენამ ახალი ფასი არ გადაფაროს.');
+    }
     if (productForm.stock !== '' && (!/^\d+$/.test(String(productForm.stock).trim()) || !Number.isSafeInteger(Number(productForm.stock)) || Number(productForm.stock) > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
 
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
