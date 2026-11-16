@@ -85,7 +85,7 @@ test('storefront, admin and database all use the persisted flash-sale deadline',
   const admin = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
   const migration = readFileSync(
-    new URL('../supabase/migrations/20261116150000_persist_flash_sale_expiry_and_auto_restore.sql', import.meta.url),
+    new URL('../supabase/migrations/20261116132211_persist_flash_sale_expiry_and_auto_restore.sql', import.meta.url),
     'utf8'
   );
 
