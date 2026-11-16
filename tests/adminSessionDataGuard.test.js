@@ -13,7 +13,7 @@ function readFunction(name) {
 }
 
 test('private admin reads reject responses from an earlier login session', () => {
-  for (const name of ['fetchExpenses', 'fetchTickets', 'fetchSupportTicketThread', 'fetchLegacyMessages', 'fetchActivityLogs', 'logActivity']) {
+  for (const name of ['fetchExpenses', 'fetchTickets', 'fetchSupportTicketThread', 'fetchLegacyMessages', 'fetchActivityLogs', 'logActivity', 'handleUpdateTicketStatus', 'handleSendTicketReply']) {
     const body = readFunction(name);
     assert.match(body, /const requestSessionVersion = adminSessionVersion\.current/);
     assert.match(body, /requestSessionVersion !== adminSessionVersion\.current/);
@@ -22,6 +22,9 @@ test('private admin reads reject responses from an earlier login session', () =>
 
 test('ending an admin session clears private snapshots before paint and increments the version', () => {
   assert.match(admin, /import React, \{[^}]*useLayoutEffect/);
+  assert.match(admin, /const adminSessionActiveRef = useRef\(Boolean\(adminLoggedIn\)\)/);
+  assert.match(admin, /const isCurrentAdminSession = \(version\) => adminSessionActiveRef\.current && version === adminSessionVersion\.current/);
+  assert.match(admin, /adminSessionActiveRef\.current = Boolean\(adminLoggedIn\)/);
   assert.match(admin, /useLayoutEffect\(\(\) => \{\s*adminSessionVersion\.current \+= 1/);
   assert.match(admin, /supportThreadFetchInFlight\.current\.clear\(\)/);
   assert.match(admin, /adminSessionVersion\.current \+= 1/);
