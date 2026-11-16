@@ -5,6 +5,7 @@ import { fetchMySupportTickets, mergeSupportTicketPages } from '../src/utils/sup
 
 const migration = await readFile(new URL('../supabase/migrations/20261116170000_customer_support_ticket_history.sql', import.meta.url), 'utf8');
 const paginationMigration = await readFile(new URL('../supabase/migrations/20261117190000_customer_support_ticket_history_pagination.sql', import.meta.url), 'utf8');
+const threadMigration = await readFile(new URL('../supabase/migrations/20261116071600_harden_support_ticket_authorization_and_admin_reply_status.sql', import.meta.url), 'utf8');
 const helper = await readFile(new URL('../src/utils/supportTicketHistory.js', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
@@ -25,6 +26,18 @@ test('new history page RPC keeps owner scoping and a bounded deterministic curso
   assert.match(paginationMigration, /from public, anon/i);
   assert.match(paginationMigration, /to authenticated/i);
   assert.match(paginationMigration, /p_before_last_message_at is null\) <> \(p_before_ticket_id is null/i);
+});
+
+test('per-ticket conversation RPC returns the full authorized thread without a row limit', () => {
+  const functionStart = threadMigration.indexOf('CREATE OR REPLACE FUNCTION private.get_support_ticket_messages');
+  const functionEnd = threadMigration.indexOf('$function$;', functionStart);
+  assert.ok(functionStart >= 0 && functionEnd > functionStart);
+  const definition = threadMigration.slice(functionStart, functionEnd);
+  assert.match(definition, /v_is_customer IS NOT TRUE/i);
+  assert.match(definition, /v_is_admin IS NOT TRUE/i);
+  assert.match(definition, /where m\.ticket_ref = p_ticket_id/i);
+  assert.match(definition, /order by m\.created_at, m\.id/i);
+  assert.doesNotMatch(definition, /\blimit\s+\d+/i);
 });
 
 test('history RPC returns minimal ticket metadata and retains customer read receipts', () => {
