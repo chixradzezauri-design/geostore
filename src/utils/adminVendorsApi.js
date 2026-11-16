@@ -32,10 +32,18 @@ export const normalizeAdminVendor = (vendor) => {
   };
 };
 
-export const normalizeAdminVendors = (vendors) =>
-  (Array.isArray(vendors) ? vendors : [])
-    .map(normalizeAdminVendor)
-    .filter(Boolean);
+export const normalizeAdminVendors = (vendors) => {
+  const byId = new Map();
+  (Array.isArray(vendors) ? vendors : []).forEach((rawVendor) => {
+    const vendor = normalizeAdminVendor(rawVendor);
+    if (!vendor) return;
+    const existing = byId.get(vendor.id);
+    const vendorTime = Date.parse(vendor.updated_at || '') || 0;
+    const existingTime = Date.parse(existing?.updated_at || '') || 0;
+    if (!existing || vendorTime > existingTime) byId.set(vendor.id, vendor);
+  });
+  return [...byId.values()];
+};
 
 const timestamp = (value) => {
   const parsed = Date.parse(value || '');
