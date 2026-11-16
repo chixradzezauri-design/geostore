@@ -371,6 +371,7 @@ Only then request approval to merge and deploy.
 - The new RPC requires both cursor fields together, validates the ticket ID shape, and filters every page by `auth.uid()` and `customer_user_id`. Anonymous access is revoked; only authenticated users may execute it.
 - Kept the original `get_my_support_tickets(integer)` RPC unchanged for older clients.
 - Updated the customer support panel to load additional pages on demand, merge pages by ticket ID, and retain already loaded older pages during periodic refreshes.
+- Reset account-linked history when the signed-in user changes, and guard in-flight page responses so one account's history cannot be merged into another account's view.
 - Guest ticket-number/access-code recovery and the existing full per-ticket conversation view remain unchanged.
 - Added regression tests for owner scoping, bounded page size, deterministic cursor ordering, client cursor parameters, deduplication and the load-more UI.
 
