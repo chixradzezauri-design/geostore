@@ -12,7 +12,7 @@ test('only the canonical product-level flash-sale expiry job remains active', ()
   assert.match(migration, /geostore_expire_flash_sales/);
   assert.match(migration, /cron\.unschedule\(v_job_id\)/);
   assert.match(migration, /SELECT private\.expire_flash_sales\(\)/);
-  assert.match(migration, /count\(\)[\s\S]*?Expected exactly one active GEOSTORE flash-sale expiry job/);
+  assert.match(migration, /count\\(\\*\\)[\s\S]*?Expected exactly one active GEOSTORE flash-sale expiry job/);
 });
 
 test('unused campaign RPCs remain inaccessible to client roles', () => {
