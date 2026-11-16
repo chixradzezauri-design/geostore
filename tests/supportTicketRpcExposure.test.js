@@ -19,7 +19,7 @@ test('privileged support-ticket implementations live in the private schema', () 
     assert.ok(migration.includes('CREATE OR REPLACE FUNCTION private.' + name));
     assert.ok(migration.includes('REVOKE ALL ON FUNCTION private.' + name));
   }
-  assert.equal((migration.match(/^\\s*SECURITY DEFINER\\s*$/gim) || []).length, 4);
+  assert.equal(migration.split('\n').filter((line) => line.trim().toUpperCase() === 'SECURITY DEFINER').length, 4);
   assert.match(migration, /SET search_path = ''/i);
 });
 
@@ -29,7 +29,7 @@ test('public RPC contracts are invoker-only wrappers with unchanged function nam
     assert.ok(migration.includes('SECURITY INVOKER'));
     assert.ok(migration.includes('private.' + name));
   }
-  assert.equal((migration.match(/^\\s*SECURITY INVOKER\\s*$/gim) || []).length, 4);
+  assert.equal(migration.split('\n').filter((line) => line.trim().toUpperCase() === 'SECURITY INVOKER').length, 4);
 });
 
 test('anonymous access remains limited to ticket-token status and read-receipt RPCs', () => {
@@ -38,10 +38,14 @@ test('anonymous access remains limited to ticket-token status and read-receipt R
   assert.match(migration, /grant execute on function public\.get_my_support_tickets\(integer\) to authenticated/i);
   assert.match(migration, /grant execute on function public\.get_support_ticket_unread_counts\(\) to authenticated/i);
   assert.match(migration, /revoke all on function public\.get_my_support_tickets\(integer\) from public, anon, authenticated/i);
+});
+
+test('private implementation grants support the invoker wrappers without public exposure', () => {
   assert.match(migration, /grant execute on function private\.get_support_ticket_status\(text, text\) to anon, authenticated/i);
   assert.match(migration, /grant execute on function private\.mark_support_ticket_messages_read\(text, text\) to anon, authenticated/i);
   assert.match(migration, /grant execute on function private\.get_my_support_tickets\(integer\) to authenticated/i);
   assert.match(migration, /grant execute on function private\.get_support_ticket_unread_counts\(\) to authenticated/i);
+  assert.match(migration, /revoke all on function private\.get_my_support_tickets\(integer\) from public, anon, authenticated/i);
 });
 
 test('the migration preserves ticket authorization checks and token hashing', () => {
