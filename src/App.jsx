@@ -31,6 +31,7 @@ import { calculateCartSubtotalGEL, calculateCheckoutTotals, createSecureOrderId,
 import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutItems } from './utils/checkoutValidation';
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
+import { syncAdminVendors, persistAdminVendors } from './utils/adminVendorsApi';
 import { isAuthRestoreCurrent } from './utils/authSafety';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
@@ -458,6 +459,8 @@ export default function App() {
   const [vendorsList, setVendorsList] = useState(() =>
     loadSafeStorage('geostore_vendors', DEFAULT_VENDORS)
   );
+  const vendorsRemoteReadyRef = useRef(false);
+  const vendorsLocalSnapshotRef = useRef(vendorsList);
 
   const [products, setProducts] = useState(() =>
     loadSafeStorage('geostore_products', DEFAULT_PRODUCTS)
@@ -1815,6 +1818,10 @@ export default function App() {
   }, [categories]);
 
   useEffect(() => {
+    vendorsLocalSnapshotRef.current = vendorsList;
+  }, [vendorsList]);
+
+  useEffect(() => {
     try {
       localStorage.setItem(
         'geostore_vendors',
@@ -1822,6 +1829,55 @@ export default function App() {
       );
     } catch {}
   }, [vendorsList]);
+
+  // Sync the legacy device list with the private, admin-only Supabase store.
+  // Existing local records are imported only when their stable IDs are absent;
+  // newer remote records win over stale copies from another browser.
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      vendorsRemoteReadyRef.current = false;
+      return undefined;
+    }
+
+    let active = true;
+    let syncing = false;
+    const syncVendors = async () => {
+      if (!active || syncing) return;
+      syncing = true;
+      try {
+        const result = await syncAdminVendors(vendorsLocalSnapshotRef.current);
+        if (!active || !result.supported) return;
+        vendorsRemoteReadyRef.current = true;
+        setVendorsList((current) =>
+          JSON.stringify(current) === JSON.stringify(result.vendors) ? current : result.vendors
+        );
+      } catch (error) {
+        console.warn('GEOSTORE vendor sync failed:', error);
+      } finally {
+        syncing = false;
+      }
+    };
+
+    void syncVendors();
+    const interval = setInterval(syncVendors, 30000);
+    return () => {
+      active = false;
+      syncing = false;
+      vendorsRemoteReadyRef.current = false;
+      clearInterval(interval);
+    };
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
+    if (!adminLoggedIn || !vendorsRemoteReadyRef.current) return undefined;
+    let active = true;
+    void persistAdminVendors(vendorsList).catch((error) => {
+      if (active) console.warn('GEOSTORE vendor save failed:', error);
+    });
+    return () => {
+      active = false;
+    };
+  }, [vendorsList, adminLoggedIn]);
 
   useEffect(() => {
     const activeOwner = activeCartOwnerRef.current;
@@ -4069,7 +4125,7 @@ export default function App() {
         setIsAiAssistantOpen={setIsAiAssistantOpen}
         products={products}
         categories={categories}
-        vendorsList={vendorsList}
+        vendorsList={(vendorsList || []).filter(v => !v?.archived_at && v?.status !== 'არქივირებული')}
         lookupOrderForTracking={lookupOrderForTracking}
         coupons={coupons}
         siteSettings={siteSettings}

@@ -685,3 +685,24 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
 - Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
 - No Vercel deployment or production database changes were made.
+
+## Stage 55 — persistent admin vendors and safe legacy synchronization — 2026-11-17
+
+### Finding
+- The admin vendor list was initialized from and persisted only to browser `localStorage` under `geostore_vendors`.
+- The connected Supabase project had no vendor table or vendor RPCs. The live project contained 8 products and 2 orders at the time of this read-only check.
+- Vendor names are also used in product and historical profitability/order contexts; deleting vendor rows or rewriting product/order snapshots would risk breaking historical reporting.
+
+### Staged correction
+- Added a private `private.admin_vendors` table with stable text IDs, validated name/commission/status fields, timestamps, and an archive timestamp.
+- Added primary-admin-only list/save RPCs. Direct table access is revoked; the private implementation checks both the immutable primary-admin Auth UID and trusted `app_metadata.role = admin`.
+- Added client synchronization that imports legacy local entries only when their IDs are absent remotely, lets the newer timestamped record win, and retains localStorage as a compatibility fallback while the migration is not yet installed.
+- Added a 30-second authenticated refresh so changes made from another admin browser/device are pulled without relying on private-schema Realtime.
+- Changed the vendor delete action to soft-archive the record. Archived vendors disappear from the active list but remain stored; product/order/finance history is not rewritten.
+- Added unit tests for legacy normalization, stale/newer record merging, archived record retention, migration-not-applied fallback, and RPC persistence.
+
+### Verification boundary
+- Changes are staged on branch `maintenance/stage-55-persistent-vendors-2026-11-17`; they are not merged into `main`.
+- The SQL migration has NOT been applied to the live Supabase project. No live database schema or records were changed.
+- No product, order, customer, message, or finance records were modified or deleted.
+- Run the repository CI test/build workflow and review the migration before release. Do not claim this stage is live until the migration is deliberately applied and the admin sync is verified against the live authenticated session.
