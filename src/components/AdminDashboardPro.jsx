@@ -2368,19 +2368,6 @@ export default function AdminDashboardPro({
     }
   };
 
-  const handleDeleteTicket = async (ticketId) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
-          method: 'DELETE',
-          headers: await getSupabaseHeaders()
-        });
-        if (!response.ok) throw new Error('ტიკეტის წაშლა ვერ მოხერხდა.');
-        fetchTickets();
-        logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
-      } catch { alert('შეცდომა ტიგეტის წაშლისას'); }
-    }
-  };
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
@@ -4002,7 +3989,6 @@ export default function AdminDashboardPro({
                         }} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
                           {String(selectedSupportTicketId) === String(t.id) ? 'მიმოწერის დამალვა' : 'მიმოწერის ნახვა'}
                         </button>
-                        <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
