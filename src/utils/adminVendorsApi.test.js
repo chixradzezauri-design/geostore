@@ -28,6 +28,17 @@ test('normalizes legacy vendor fields and preserves stable IDs and commission', 
   assert.equal(result[0].archived_at, null);
 });
 
+test('normalization keeps only the newest record when legacy storage repeats an ID', () => {
+  const result = normalizeAdminVendors([
+    { id: 'v-repeat', name: 'Older', commission: 1, updated_at: '2026-11-01T00:00:00.000Z' },
+    { id: 'v-repeat', name: 'Newer', commission: 9, updated_at: '2026-11-02T00:00:00.000Z' }
+  ]);
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0].name, 'Newer');
+  assert.equal(result[0].commission, 9);
+});
+
 test('remote version wins over stale local data and archived records stay archived', () => {
   const merged = mergeAdminVendors(
     [
