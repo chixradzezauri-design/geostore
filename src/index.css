@@ -18811,3 +18811,32 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 @media(prefers-reduced-motion:reduce){
  .geostore-fashion-store .gs-flash-sale-section *, .geostore-fashion-store .gs-product-modal *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+
+/* GEOSTORE ADMIN VISUAL AUDIT — STAGE 44: unify sidebar navigation with the dark admin workspace.
+   The earlier warm sidebar button surface survived later dark-theme text overrides,
+   producing pale text on a light button (insufficient contrast). Keep this scoped to
+   inactive navigation buttons; active state, tab actions, counts and data are unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) {
+  background: #17263b !important;
+  color: #dbe6f2 !important;
+  border-color: #3b506a !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]):hover {
+  background: #223650 !important;
+  color: #ffffff !important;
+  border-color: #7890aa !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) > div:first-child > svg {
+  color: #d6b58a !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:not([class*="bg-emerald-500"]) > span {
+  background: #263b54 !important;
+  color: #f1f5f9 !important;
+  border-color: #536982 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button:focus-visible {
+  outline: 3px solid #8dd8e8 !important;
+  outline-offset: 2px !important;
+}
