@@ -341,3 +341,20 @@ Only then request approval to merge and deploy.
 - No database migration, live Supabase setting or Production deployment was changed.
 - Verify against staging with more than 1,000 orders, including same-timestamp records and Realtime inserts while paging; confirm the complete admin order list, financial KPIs and CSV export.
 
+## Stage 79 — complete admin support-ticket history
+
+### Audit finding and change
+- The administrator support-ticket list previously fetched `support_tickets` in one PostgREST request. With the default 1,000-row response cap, older tickets could be omitted from the admin list even though their records remained in the database.
+- Updated `fetchTickets` to request stable 1,000-row pages ordered by `created_at DESC, id ASC`, and only replace the displayed ticket list after the complete scan succeeds.
+- Added a 100,000-row safety bound. If a page fails, the response is malformed, or the bound is reached without a final short page, the previous successful ticket list is retained and an error is surfaced.
+- Added `tests/adminSupportTicketPagination.test.js` to protect pagination, stable ordering and fail-safe behavior.
+
+### Safety boundary
+- No support tickets, messages, read receipts, customer records, database schema, RLS policies or live settings were changed.
+- The existing per-ticket message-thread RPC, realtime refresh, read-receipt handling and 15-second recovery polling remain unchanged.
+- The legacy messages panel still explicitly requests its latest 100 records; this is a separate bounded view and is not represented as a complete message archive.
+
+### Verification
+- Run the new regression test, full test suite, production build, dependency audit and CodeQL on the updated PR head.
+- Confirm the `get_support_ticket_messages` RPC returns complete threads for long-running tickets; this stage changes only the ticket index, not the RPC contract or thread pagination.
+
