@@ -87,7 +87,7 @@ BEGIN
     RAISE EXCEPTION 'Category is required' USING ERRCODE = '22023';
   END IF;
 
-  IF p_duration_hours NOT IN (1, 3, 6, 12, 24, 48) THEN
+  IF p_duration_hours IS NULL OR p_duration_hours NOT IN (1, 3, 6, 12, 24, 48) THEN
     RAISE EXCEPTION 'Flash sale duration must be one of 1, 3, 6, 12, 24, or 48 hours'
       USING ERRCODE = '22023';
   END IF;
