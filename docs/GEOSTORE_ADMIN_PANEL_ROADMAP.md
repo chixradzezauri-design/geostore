@@ -258,3 +258,29 @@ Only then request approval to merge and deploy.
 - No migration was added/applied and no production deployment was made.
 - Run all tests, build, dependency audit and CodeQL on this head.
 - Staging verification still required for coupon min-order boundary, 100% discount, disabled/deleted coupon, fee changes between page load and checkout, and authenticated/guest checkout paths.
+
+
+## Stage 75 — financial accounting, cancellations and returns audit
+
+### Verified existing accounting rules
+- Financial revenue, product COGS, delivery income and operating expenses are calculated from delivered orders in the selected reporting period.
+- Cancelled orders are excluded from delivered revenue, gross profit and net profit.
+- Order cancellation restores stock through the protected status transition RPC; completed/shipped orders cannot be rolled back to cancellation as a substitute for a return.
+- Historical order-item purchase-cost snapshots are preferred; missing or estimated COGS prevents the dashboard from presenting a misleading definitive profit figure.
+
+### Gap found and improvement
+- Cancelled orders were silently omitted from the analytics KPI and financial CSV. This made cancellation volume and its nominal value hard to audit, even though cancelled orders were correctly excluded from sales.
+- Added a separate cancelled-orders KPI showing count and nominal order value, added both values to the financial CSV, and taught the admin analyst to answer cancellation questions.
+- The label explicitly says nominal cancelled order value is not a confirmed refund and is not sales revenue. This avoids representing a cancellation as a cash refund.
+
+### Returns limitation — not implemented
+- Current order lifecycle intentionally blocks status rollback for shipped/completed orders and contains no separate return/refund ledger or return status.
+- Therefore the dashboard must not infer refunds from order status, and must not change delivered revenue or profit for a hypothetical return without a verified return/refund record.
+- A real returns feature needs a separate audited workflow: return authorization, returned item/quantity, stock disposition (resalable/damaged), refund amount/method/status, timestamps, and transactional links to the original order. This requires a separately reviewed schema and customer/admin flows; no such schema or data was changed in this stage.
+
+### Regression coverage and safety
+- Added `tests/adminCancelledOrderAnalytics.test.js` for separate cancelled-order reporting, exclusion from sales, clear nominal-value labeling, and the protected shipped/completed status transitions.
+- No existing orders, expenses, products, stock, customer data, financial records or order statuses were changed.
+- No database migration was added/applied and no Production deployment was made.
+- Run full test suite, build, dependency audit and CodeQL on the updated PR head.
+- Staging verification still required for delivered/cancelled historical records, missing COGS cases, expense date boundaries and future return/refund workflow design.
