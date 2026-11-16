@@ -22,7 +22,7 @@ test('cancellation validates every stored item before restoring stock atomically
 
 test('reactivation requires fresh password authentication and sufficient stock', () => {
   assert.match(migration, /auth\.jwt\(\)->'amr'/);
-  assert.match(migration, /extract\(epoch from now\(\)::bigint - v_password_auth_time > 300/i);
+  assert.match(migration, /extract\\(epoch from now\\(\\)\\)::bigint - v_password_auth_time > 300/i);
   assert.match(migration, /stock = coalesce\(stock, 0\) - v_item\.quantity/);
   assert.match(migration, /coalesce\(stock, 0\) >= v_item\.quantity/);
   assert.match(migration, /set_config\('geostore\.order_reactivation', 'on', true\)/);
