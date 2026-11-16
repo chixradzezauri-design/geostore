@@ -717,6 +717,27 @@ export default function AdminDashboardPro({
         return aTime - bTime || String(a.id).localeCompare(String(b.id));
       });
       setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: uniqueRows }));
+
+      // Mark customer messages as read only while this administrator has the
+      // matching conversation open and the page is visible. A receipt failure
+      // must never hide the already-loaded conversation.
+      if (adminLoggedIn
+        && String(selectedSupportTicketId || '') === normalizedTicketId
+        && document.visibilityState === 'visible') {
+        try {
+          const readResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/mark_support_ticket_messages_read', {
+            method: 'POST',
+            headers: await getSupabaseHeaders(),
+            body: JSON.stringify({ p_ticket_id: normalizedTicketId, p_access_token: null })
+          });
+          if (!readResponse.ok) {
+            const detail = await readResponse.text().catch(() => '');
+            throw new Error(detail || ('HTTP ' + readResponse.status));
+          }
+        } catch (readError) {
+          console.warn('GEOSTORE admin support read receipt failed:', readError);
+        }
+      }
     } catch (error) {
       console.error('GEOSTORE support ticket thread fetch failed:', error);
       setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
