@@ -148,3 +148,61 @@
     padding: 13px !important;
   }
 }
+
+
+/* STAGE 62 — compact filters and long-list navigation */
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters {
+  min-width: 0;
+  max-width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #526b83 transparent;
+  scroll-snap-type: x proximity;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters > button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  scroll-snap-align: start;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-list-filters {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-list-filters > select,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-list-filters > .admin-product-search {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-search > input {
+  min-width: 0;
+  padding-right: 12px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-list,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-list {
+  min-width: 0;
+  width: 100%;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-list-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-list-filters > select,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-list-filters > .admin-product-search {
+    width: 100%;
+    min-width: 0;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters {
+    width: 100%;
+    justify-content: flex-start;
+    padding-bottom: 7px;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters > button {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 10px;
+  }
+}
