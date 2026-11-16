@@ -16,6 +16,7 @@ import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../
 import { getPaginationItems } from '../utils/pagination.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
+import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -688,6 +689,13 @@ export default function AdminDashboardPro({
   const [supportTicketThreadErrors, setSupportTicketThreadErrors] = useState({});
   const [legacyMessages, setLegacyMessages] = useState([]);
   const [legacyMessagesError, setLegacyMessagesError] = useState('');
+  const [legacyMessagesHasMore, setLegacyMessagesHasMore] = useState(false);
+  const [legacyMessagesLoadingMore, setLegacyMessagesLoadingMore] = useState(false);
+  const legacyMessagesCursorRef = useRef(null);
+  const legacyMessagesLoadedMoreRef = useRef(false);
+  const legacyMessagesFetchInFlightRef = useRef(false);
+  const legacyMessagesRefreshPendingRef = useRef(false);
+  const legacyMessagesSessionRef = useRef(0);
   const [replyInputs, setReplyInputs] = useState({});
   const [replySending, setReplySending] = useState({});
   const supportReplyInFlight = useRef(new Set());
@@ -857,35 +865,80 @@ export default function AdminDashboardPro({
     };
   }, [adminLoggedIn, selectedSupportTicketId]);
 
-  const fetchLegacyMessages = async () => {
+  const fetchLegacyMessages = async ({ loadMore = false, sessionId = legacyMessagesSessionRef.current } = {}) => {
+    if (sessionId !== legacyMessagesSessionRef.current) return;
+    if (legacyMessagesFetchInFlightRef.current) {
+      if (!loadMore) legacyMessagesRefreshPendingRef.current = true;
+      return;
+    }
+    const cursor = loadMore ? legacyMessagesCursorRef.current : null;
+    if (loadMore && !cursor) return;
+    legacyMessagesFetchInFlightRef.current = true;
+    if (loadMore) setLegacyMessagesLoadingMore(true);
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/messages?select=id,created_at,client_name,sender,text,image,time&order=created_at.desc&limit=100`,
-        { headers: await getSupabaseHeaders() }
-      );
+      const response = await fetch(buildLegacyMessagesPageUrl(SUPABASE_URL, cursor, 100), {
+        headers: await getSupabaseHeaders()
+      });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         throw new Error(detail || `HTTP ${response.status}`);
       }
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('მიმოწერების მონაცემების ფორმატი არასწორია.');
-      setLegacyMessages(rows);
+      const nextCursor = getLegacyMessageCursor(rows);
+      if (rows.length === 100 && !nextCursor) throw new Error('მიმოწერის ისტორიის შემდეგი გვერდის კურსორი ვერ დადასტურდა.');
+      if (sessionId !== legacyMessagesSessionRef.current) return;
+      if (loadMore) {
+        setLegacyMessages(previous => mergeLegacyMessagePages(previous, rows));
+        legacyMessagesLoadedMoreRef.current = true;
+        legacyMessagesCursorRef.current = nextCursor;
+        setLegacyMessagesHasMore(Boolean(nextCursor));
+      } else if (legacyMessagesLoadedMoreRef.current) {
+        setLegacyMessages(previous => mergeLegacyMessagePages(previous, rows));
+      } else {
+        setLegacyMessages(rows);
+        legacyMessagesCursorRef.current = nextCursor;
+        setLegacyMessagesHasMore(Boolean(nextCursor));
+      }
       setLegacyMessagesError('');
     } catch (error) {
-      console.error('GEOSTORE legacy messages fetch failed:', error);
-      setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
+      if (sessionId === legacyMessagesSessionRef.current) {
+        console.error('GEOSTORE legacy messages fetch failed:', error);
+        setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
+      }
+    } finally {
+      legacyMessagesFetchInFlightRef.current = false;
+      if (sessionId === legacyMessagesSessionRef.current) {
+        if (loadMore) setLegacyMessagesLoadingMore(false);
+        if (legacyMessagesRefreshPendingRef.current) {
+          legacyMessagesRefreshPendingRef.current = false;
+          void Promise.resolve().then(() => fetchLegacyMessages({ sessionId }));
+        }
+      }
     }
   };
 
   useEffect(() => {
+    legacyMessagesSessionRef.current += 1;
+    const sessionId = legacyMessagesSessionRef.current;
     if (!adminLoggedIn) {
       setLegacyMessages([]);
       setLegacyMessagesError('');
-      return undefined;
+      setLegacyMessagesHasMore(false);
+      setLegacyMessagesLoadingMore(false);
+      legacyMessagesCursorRef.current = null;
+      legacyMessagesLoadedMoreRef.current = false;
+      legacyMessagesRefreshPendingRef.current = false;
+      return () => {
+        if (legacyMessagesSessionRef.current === sessionId) legacyMessagesSessionRef.current += 1;
+      };
     }
-    fetchLegacyMessages();
-    const interval = setInterval(fetchLegacyMessages, 15000);
-    return () => clearInterval(interval);
+    void fetchLegacyMessages({ sessionId });
+    const interval = setInterval(() => { void fetchLegacyMessages({ sessionId }); }, 15000);
+    return () => {
+      clearInterval(interval);
+      if (legacyMessagesSessionRef.current === sessionId) legacyMessagesSessionRef.current += 1;
+    };
   }, [adminLoggedIn]);
 
   useEffect(() => {
@@ -4631,9 +4684,9 @@ export default function AdminDashboardPro({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <HelpCircle className="w-5 h-5 text-emerald-400" /> შენახული მიმოწერები ({legacyMessages.length})
+                  <HelpCircle className="w-5 h-5 text-emerald-400" /> ჩატვირთული მიმოწერები ({legacyMessages.length})
                 </h3>
-                <p className="text-slate-400 text-xs mt-1">არსებული messages ჩანაწერები. განახლება ხდება ავტომატურად ყოველ 15 წამში.</p>
+                <p className="text-slate-400 text-xs mt-1">ახალი შეტყობინებები ახლდება ავტომატურად ყოველ 15 წამში; ძველი ისტორია იტვირთება 100-100 ჩანაწერად.</p>
               </div>
               <button type="button" onClick={fetchLegacyMessages} className="rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/10">განახლება</button>
             </div>
@@ -4658,6 +4711,13 @@ export default function AdminDashboardPro({
                     <p className="text-[10px] text-slate-500">ჩანაწერის ID: {message.id}</p>
                   </article>
                 ))}
+                {legacyMessagesHasMore && (
+                  <button type="button" disabled={legacyMessagesLoadingMore}
+                    onClick={() => { void fetchLegacyMessages({ loadMore: true }); }}
+                    className="w-full rounded-xl border border-emerald-500/30 px-4 py-3 text-xs font-bold text-emerald-200 hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-50">
+                    {legacyMessagesLoadingMore ? 'იტვირთება...' : 'ძველი შეტყობინებების ჩატვირთვა'}
+                  </button>
+                )}
               </div>
             )}
           </div>
