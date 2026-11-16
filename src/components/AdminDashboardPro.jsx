@@ -15,6 +15,7 @@ import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, col
 import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { createSecureId } from '../utils/secureId.js';
+import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -2549,14 +2550,11 @@ export default function AdminDashboardPro({
   };
 
   const handleSaveDeliveryFees = async () => {
-    const rows = [
-      { region: 'tbilisi', fee_gel: Number(deliveryFees?.tbilisi) },
-      { region: 'bigCities', fee_gel: Number(deliveryFees?.bigCities) },
-      { region: 'other', fee_gel: Number(deliveryFees?.other) }
-    ];
-
-    if (rows.some(row => !Number.isFinite(row.fee_gel) || row.fee_gel < 0)) {
-      alert('მიწოდების საფასური უნდა იყოს 0 ან მეტი.');
+    let rows;
+    try {
+      rows = parseDeliveryFeeDrafts(deliveryFees);
+    } catch (error) {
+      alert(error?.message || 'მიწოდების ტარიფები არასწორია.');
       return;
     }
 
@@ -5132,15 +5130,15 @@ export default function AdminDashboardPro({
               <div className="admin-delivery-fee-fields grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🏙️ თბილისი / რუსთავი (₾):</label>
-                  <input type="number" value={deliveryFees?.tbilisi ?? 0} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, tbilisi: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                  <input type="number" value={deliveryFees?.tbilisi ?? 0} min="0" step="0.01" onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, tbilisi: e.target.value}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🌆 დიდი ქალაქები (₾):</label>
-                  <input type="number" value={deliveryFees?.bigCities ?? 10} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, bigCities: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                  <input type="number" value={deliveryFees?.bigCities ?? 10} min="0" step="0.01" onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, bigCities: e.target.value}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🏔️ სხვა რეგიონები (₾):</label>
-                  <input type="number" value={deliveryFees?.other ?? 15} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, other: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                  <input type="number" value={deliveryFees?.other ?? 15} min="0" step="0.01" onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, other: e.target.value}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
               </div>
               <button onClick={handleSaveDeliveryFees} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
