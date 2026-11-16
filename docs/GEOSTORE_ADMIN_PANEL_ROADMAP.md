@@ -325,3 +325,19 @@ Only then request approval to merge and deploy.
 - No schema migration, live Supabase setting or Production deployment was changed.
 - Verify against staging with more than 1,000 expense rows, including rows sharing the same created_at, and confirm the period totals and CSV include the complete ledger.
 
+## Stage 78 — complete admin order-ledger pagination
+
+### Defect found
+- The authenticated admin order refresh loaded the entire `orders` table in one PostgREST response. Under the common 1,000-row response cap, older delivered/cancelled orders could be omitted from the in-memory admin list, which feeds finance, analytics, order search and exports.
+
+### Fix
+- Admin order refresh now requests 1,000-row pages with explicit Range / Range-Unit headers and the existing deterministic `created_at.desc,id.asc` ordering.
+- The complete list is committed to React state only after every page has loaded. A failed page or the 100,000-row safety bound leaves the last complete order snapshot intact.
+- Existing authenticated headers, session-version checks, logout clearing, fetch lock, queued Realtime refresh and 15-second recovery polling remain in place.
+- Added `tests/adminOrderPagination.test.js` for pagination, incomplete-scan protection and preservation of the authenticated session guard.
+
+### Safety and remaining verification
+- No order, order item, status, stock, customer record, financial record or historical snapshot was changed.
+- No database migration, live Supabase setting or Production deployment was changed.
+- Verify against staging with more than 1,000 orders, including same-timestamp records and Realtime inserts while paging; confirm the complete admin order list, financial KPIs and CSV export.
+
