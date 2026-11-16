@@ -27,7 +27,7 @@ test('privileged support-ticket implementations live in the private schema', () 
 test('public RPC contracts are invoker-only wrappers with unchanged function names', () => {
   for (const name of rpcNames) {
     const pattern = new RegExp(
-      `create or replace function public\\.${name}\\([\\s\\S]*?security invoker[\\s\\S]*?select \\*? ?from private\\.${name}`,
+      `create or replace function public\\.${name}\\([\\s\\S]*?security invoker[\\s\\S]*?(?:select\\s+\\*\\s+from|select)\\s+private\\.${name}`,
       'i'
     );
     assert.match(migration, pattern, `${name} must expose only a SECURITY INVOKER wrapper`);
