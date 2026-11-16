@@ -655,3 +655,134 @@
     white-space: normal;
   }
 }
+
+
+/* STAGE 68 — AI assistant, audit log, staff and settings responsiveness */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-ai-analyst,
+  .admin-ai-chat,
+  .admin-ai-composer,
+  .admin-staff,
+  .admin-staff-panel,
+  .admin-staff-list-panel,
+  .admin-staff-card,
+  .admin-staff-actions,
+  .admin-staff-permissions,
+  .admin-staff-edit-panel,
+  .admin-audit-logs-panel,
+  .admin-broadcasts-panel,
+  .admin-settings-panel,
+  .admin-security-notice,
+  .admin-delivery-settings,
+  .admin-global-settings,
+  .admin-global-settings-form,
+  .admin-delivery-fee-fields
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-ai-bubble,
+  .admin-staff-member-email,
+  .admin-audit-logs-panel,
+  .admin-broadcasts-panel
+) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-ai-chat {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-ai-composer > input {
+  min-width: 0;
+  width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-staff-actions,
+  .admin-staff-permission-grid,
+  .admin-staff-edit-permissions
+) {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-actions button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-edit-panel button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-delivery-settings button {
+  min-height: 44px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-global-settings-form :is(input, textarea) {
+  width: 100%;
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-audit-logs-panel > div:last-child > div {
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-ai-analyst,
+    .admin-staff-panel,
+    .admin-staff-list-panel,
+    .admin-audit-logs-panel,
+    .admin-broadcasts-panel,
+    .admin-security-notice,
+    .admin-delivery-settings,
+    .admin-global-settings
+  ) {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-chat {
+    max-height: min(55vh, 400px);
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-bubble {
+    max-width: 94%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-composer > button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-card {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-actions > button {
+    min-width: 0;
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-grid,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-edit-permissions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-delivery-fee-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-delivery-settings button {
+    width: 100%;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-broadcasts-panel form button {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-actions,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-grid,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-edit-permissions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-bubble {
+    max-width: 100%;
+  }
+}
