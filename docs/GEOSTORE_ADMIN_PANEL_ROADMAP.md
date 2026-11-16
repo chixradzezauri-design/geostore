@@ -382,5 +382,5 @@ Only then request approval to merge and deploy.
 
 ### Verification remaining
 - Run the new regression test, full test suite, production build, dependency audit and CodeQL on the updated draft PR head.
-- Apply the new migration only after checking the live migration ledger and confirming the `private` schema exposure configuration remains appropriate.
+- Apply the new migration only after checking the live migration ledger; verify the public RPC is installed with only authenticated execute permission and test owner isolation against staging.
 - Verify account A cannot read account B's history, test more than 50 tickets across multiple pages, and confirm guest access-code recovery and full thread loading against staging.
