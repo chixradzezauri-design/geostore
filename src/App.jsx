@@ -463,6 +463,9 @@ export default function App() {
     loadSafeStorage('geostore_products', DEFAULT_PRODUCTS)
   );
 
+  const [activeFlashSale, setActiveFlashSale] = useState(null);
+  const activeFlashSaleRef = useRef(null);
+
   const [coupons, setCoupons] = useState(() =>
     loadSafeStorage('geostore_coupons', DEFAULT_COUPONS).filter((coupon) =>
       !(coupon?.id === 'c1' &&
@@ -1651,6 +1654,36 @@ export default function App() {
     }
   };
 
+  const refreshActiveFlashSale = async () => {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_active_flash_sale`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({})
+      });
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `Flash-sale status request failed (HTTP ${response.status}).`);
+      }
+
+      const result = await response.json();
+      const campaign = result?.campaign || null;
+      const previousCampaign = activeFlashSaleRef.current;
+      activeFlashSaleRef.current = campaign;
+      setActiveFlashSale(campaign);
+
+      // The database restores expired campaign prices. Refresh the catalogue
+      // whenever this client observes that an active campaign has ended.
+      if (Number(result?.expired_count) > 0 || (previousCampaign && !campaign)) {
+        await fetchProductsFromDatabase();
+      }
+      return result;
+    } catch (error) {
+      console.error('Flash-sale status refresh failed:', error);
+      return null;
+    }
+  };
+
   const lookupOrderForTracking = async (orderId, phone) => {
     const normalized = normalizeTrackingLookup(orderId, phone);
     if (!normalized.valid) {
@@ -1728,6 +1761,25 @@ export default function App() {
 
   useEffect(() => {
     fetchStorePricingSettings();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      if (active && document.visibilityState === 'visible') {
+        void refreshActiveFlashSale();
+      }
+    };
+
+    void refreshActiveFlashSale();
+    const interval = setInterval(refresh, 30000);
+    document.addEventListener('visibilitychange', refresh);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, []);
 
   useEffect(() => {
@@ -3010,6 +3062,8 @@ export default function App() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             filteredProducts={filteredProducts}
+            activeFlashSale={activeFlashSale}
+            onFlashSaleExpired={refreshActiveFlashSale}
             wishlist={wishlist}
             toggleWishlist={toggleWishlist}
             comparisonList={comparisonList}
