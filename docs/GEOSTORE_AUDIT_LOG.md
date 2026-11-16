@@ -685,3 +685,22 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
 - Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
 - No Vercel deployment or production database changes were made.
+
+## Stage 83 — customer support message persistence and synchronization audit
+
+### Verified behavior
+- New public support requests use the idempotent `create_support_ticket_idempotent` RPC. The database function validates the payload, serializes retries by request UUID, inserts the ticket and its first customer message in one transaction, and returns the existing ticket for a matching retry.
+- Follow-up customer/admin replies use `add_support_ticket_message_idempotent`; the database checks ticket ownership/admin identity, validates the message, and prevents duplicate retries by request UUID.
+- Customer conversation refresh uses the authorized `get_support_ticket_messages` RPC, Realtime notifications for authenticated subscribers, and a 15-second polling recovery path. The admin support inbox/thread also refreshes from Realtime and authenticated RPC reads.
+- Both `support_ticket_messages` and `support_tickets` have migration-based Realtime publication setup.
+- The legacy `public.messages` table is intentionally not the customer support write path; client INSERT is revoked. New customer support messages belong in `support_ticket_messages`.
+
+### Verified limitation / security boundary
+- Guest customers authenticate conversation reads/replies through the ticket access-token RPC, but the messages table grants SELECT only to authenticated users and has an admin-only SELECT policy. Therefore guest sessions cannot rely on direct Postgres Changes delivery; their conversation currently relies on the 15-second RPC polling fallback.
+- Do not grant anonymous SELECT on the message table to make guest Realtime appear instant: that would weaken the existing private-conversation boundary. Any guest push/instant delivery needs a separately authorized server-side broadcast design.
+
+### Outcome
+- No verified message-loss or duplicate-send defect was found in the inspected ticket creation/reply transaction paths.
+- No source-code or database change was made in this audit stage; no existing messages, tickets, orders, customers, access-token hashes or read receipts were modified.
+- Follow-up work: evaluate a secure guest notification/broadcast path and add explicit automated coverage for ticket creation/reply retry and guest-vs-authenticated Realtime authorization behavior.
+- No live migration, merge or production deployment was performed.
