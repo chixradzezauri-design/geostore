@@ -632,6 +632,7 @@ export default function App() {
   const [mySupportTicketsCursor, setMySupportTicketsCursor] = useState(null);
   const [mySupportTicketsError, setMySupportTicketsError] = useState('');
   const hasLoadedMoreSupportTicketsRef = useRef(false);
+  const supportHistoryOwnerRef = useRef(null);
   const [supportTicketStatus, setSupportTicketStatus] = useState(null);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
   const supportThreadMessagesRef = useRef(null);
@@ -646,6 +647,7 @@ export default function App() {
 
   useEffect(() => {
     if (!supportOpen || !currentUser?.id) {
+      supportHistoryOwnerRef.current = null;
       setMySupportTickets([]);
       setMySupportTicketsCursor(null);
       setMySupportTicketsHasMore(false);
@@ -654,6 +656,15 @@ export default function App() {
       setMySupportTicketsError('');
       hasLoadedMoreSupportTicketsRef.current = false;
       return undefined;
+    }
+    const ownerId = String(currentUser.id);
+    if (supportHistoryOwnerRef.current !== ownerId) {
+      supportHistoryOwnerRef.current = ownerId;
+      setMySupportTickets([]);
+      setMySupportTicketsCursor(null);
+      setMySupportTicketsHasMore(false);
+      setMySupportTicketsError('');
+      hasLoadedMoreSupportTicketsRef.current = false;
     }
     let active = true;
     let requestInFlight = false;
@@ -3808,6 +3819,7 @@ export default function App() {
                     disabled={mySupportTicketsLoadingMore || mySupportTicketsLoading}
                     onClick={async () => {
                       if (!mySupportTicketsCursor || mySupportTicketsLoadingMore) return;
+                      const requestOwnerId = String(currentUser?.id || '');
                       setMySupportTicketsLoadingMore(true);
                       setMySupportTicketsError('');
                       try {
@@ -3823,7 +3835,7 @@ export default function App() {
                             : currentLang === 'ru'
                               ? 'Постраничная история обращений станет доступна после обновления базы данных.'
                               : 'მიმართვების გვერდებად ჩატვირთვა მონაცემთა ბაზის განახლების შემდეგ იქნება ხელმისაწვდომი.');
-                        } else {
+                        } else if (supportHistoryOwnerRef.current === requestOwnerId) {
                           hasLoadedMoreSupportTicketsRef.current = true;
                           setMySupportTickets(previous => mergeSupportTicketPages(previous, page.rows));
                           setMySupportTicketsCursor(page.nextCursor);
