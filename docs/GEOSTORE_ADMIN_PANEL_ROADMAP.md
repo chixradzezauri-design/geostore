@@ -133,3 +133,24 @@ Only then request approval to merge and deploy.
 - Wait for Stage 69 GitHub Actions build, dependency audit and CodeQL.
 - Test order creation, status changes, cancellation/restoration and password-confirmed reactivation against staging data before release.
 - Verify real-time order arrival and customer/admin views in a browser session; static source tests alone do not prove live synchronization.
+
+
+## Stage 70 — administrator support read receipts
+
+### Verified defect
+- The customer support view already marked administrator messages as read through `mark_support_ticket_messages_read`.
+- The administrator inbox loaded conversation threads and synchronized them through Realtime, but did not call the same read-receipt RPC. As a result, customer messages could remain recorded as unread after an administrator opened the conversation.
+
+### Change
+- When an administrator opens the matching ticket thread while the page is visible, the client now calls `mark_support_ticket_messages_read` with the authenticated admin session and no guest access token.
+- The conversation is rendered before the receipt request. Receipt failures are logged and do not interrupt message loading.
+- Added `tests/adminSupportReadReceipts.test.js` to protect the open-ticket/visible-page guard and failure isolation.
+
+### Safety boundary
+- No existing ticket, message, user, access token, or read-receipt record was deleted or rewritten.
+- No database migration, live Supabase setting, email delivery behavior, or production deployment was changed.
+- This stage records the read receipt only; it does not claim that a reply is emailed to the customer. The admin UI continues to disclose that replies are stored in the support conversation and are not emailed by this action.
+
+### Verification remaining
+- Run the new test, full test suite, production build, dependency audit and CodeQL on the updated PR head.
+- Verify admin read receipts against staging with an unread customer message, including a hidden tab and a different unselected ticket.
