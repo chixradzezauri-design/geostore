@@ -915,7 +915,7 @@ export default function StoreView({
                         </div>
                       )}
 
-                      <div className="flex flex-wrap gap-2 w-full">
+                      <div className="gs-size-options-grid flex flex-wrap gap-2 w-full">
                         {availableSizesForSelectedColor.map(size => {
                           return (
                             <button
