@@ -154,3 +154,15 @@ test('product detail gallery has responsive touch targets and clear selected-ima
   assert.match(stage38, /@media\(prefers-reduced-motion:reduce\)[\s\S]*?\.gs-product-gallery-thumb\{[\s\S]*?transition:none!important;/);
   assert.match(storeView, /aria-pressed=\{activeImage === img\}/);
 });
+
+
+test('product detail information uses responsive wrapping and readable description typography', () => {
+  const stage39 = css.slice(css.lastIndexOf('GEOSTORE — stage 39: product information hierarchy'));
+  assert.ok(stage39.length > 0);
+  assert.match(storeView, /gs-product-description-panel/);
+  assert.match(storeView, /gs-product-description-copy/);
+  assert.match(stage39, /\.gs-product-detail-title\{[^}]*overflow-wrap:anywhere!important;/);
+  assert.match(stage39, /\.gs-product-price-panel\{[^}]*flex-wrap:wrap!important;/);
+  assert.match(stage39, /\.gs-product-detail-specs\{[^}]*min-width:0!important;/);
+  assert.match(stage39, /@media\(max-width:700px\)[\s\S]*?\.gs-product-description-copy\{[^}]*font-size:13px!important;/);
+});
