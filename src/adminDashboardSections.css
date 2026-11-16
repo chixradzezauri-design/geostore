@@ -348,3 +348,88 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* STAGE 65 — product editor and inventory list responsiveness */
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-form,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-attributes,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-variants-editor,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-gallery,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-row,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-identity,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-controls {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-identity {
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-identity > div {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-identity h4,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-identity p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-controls > div {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-controls input {
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-form button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-product-controls button {
+  min-height: 40px;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel > div {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-attributes,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-variants-editor,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-gallery {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-row {
+    padding: 14px !important;
+    border-radius: 18px !important;
+    align-items: stretch;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-identity {
+    width: 100%;
+    align-items: flex-start;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-controls > div {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-controls > button {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-product-controls > div {
+    justify-content: space-between;
+  }
+}
