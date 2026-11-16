@@ -1,0 +1,150 @@
+/* GEOSTORE ADMIN CONTENT SURFACES — STAGE 59
+   Harmonize section cards and controls without changing component logic or data flows. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  --admin-control-bg: #0b1727;
+  --admin-control-border: rgba(126, 157, 187, .34);
+}
+
+/* Shared surface treatment for existing admin sections. */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-analytics-card,
+  .admin-profit-calculator,
+  .admin-ai-analyst,
+  .admin-staff-panel,
+  .admin-staff-list-panel,
+  .admin-orders-panel,
+  .admin-products-panel > div,
+  .admin-support-ticket,
+  .admin-category-card,
+  .admin-subcategory-card,
+  .admin-vendors-panel > div,
+  .admin-crm-panel,
+  .admin-crm-user-card,
+  .admin-expense-row
+) {
+  border-color: var(--admin-border-soft) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .14);
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-analytics-card,
+  .admin-expense-row,
+  .admin-staff-card,
+  .admin-vendor-card,
+  .admin-crm-user-card,
+  .admin-support-ticket
+) {
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-analytics-toolbar,
+  .admin-orders-header,
+  .admin-staff-list-title
+) {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--admin-text);
+  background-color: var(--admin-control-bg);
+  border-color: var(--admin-control-border);
+  border-radius: 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select) {
+  min-height: 44px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell textarea {
+  min-height: 104px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--admin-accent-strong);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(form button[type="submit"], .admin-flash-sale-submit) {
+  min-height: 44px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell [class*="overflow-x-auto"] {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-analytics-kpis,
+  .admin-calculator-layout,
+  .admin-expense-form,
+  .admin-staff-existing-form,
+  .admin-staff-create-form,
+  .admin-staff-permission-grid,
+  .admin-vendor-list
+) {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-analytics-kpis > *,
+  .admin-calculator-layout > *,
+  .admin-expense-row > *,
+  .admin-staff-card > *,
+  .admin-vendor-card > *,
+  .admin-crm-user-card > *
+) {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-profit-calculator,
+    .admin-ai-analyst,
+    .admin-orders-panel,
+    .admin-crm-panel,
+    .admin-staff-panel,
+    .admin-staff-list-panel
+  ) {
+    padding: clamp(14px, 3.5vw, 22px) !important;
+    border-radius: 20px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-analytics-card,
+    .admin-expense-row,
+    .admin-support-ticket,
+    .admin-category-card,
+    .admin-crm-user-card
+  ) {
+    border-radius: 18px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-composer {
+    flex-direction: column;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-ai-composer > button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-profit-calculator,
+    .admin-ai-analyst,
+    .admin-orders-panel,
+    .admin-crm-panel,
+    .admin-staff-panel,
+    .admin-staff-list-panel
+  ) {
+    padding: 13px !important;
+  }
+}

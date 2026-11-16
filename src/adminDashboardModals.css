@@ -1,0 +1,60 @@
+/* GEOSTORE ADMIN MODAL REFLOW — STAGE 60
+   Applies only to non-order-detail dialogs. Stage 45 order modal styling is intentionally untouched. */
+.admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) > form {
+  box-sizing: border-box;
+  width: min(100%, 28rem);
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  margin: auto 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) > form > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) > form :is(button, input, select, textarea) {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) {
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) > form {
+    width: 100%;
+    max-height: calc(100dvh - max(24px, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+    margin: auto 0;
+    padding: clamp(16px, 4vw, 24px) !important;
+    border-radius: 22px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) > form button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell [role="dialog"]:not(.admin-order-detail-overlay) > form {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+}
