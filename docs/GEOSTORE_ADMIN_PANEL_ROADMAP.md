@@ -105,3 +105,31 @@ Keep all stages as separate draft work until:
 - a single consolidated release branch/PR has been reviewed.
 
 Only then request approval to merge and deploy.
+
+
+## Stages 66–68 — remaining admin section responsive pass
+
+- Stage 66: improved campaign/discount, flash-sale, banner, category/subcategory and coupon layouts at phone widths. Added stable selectors only where the existing audit-log/broadcast containers needed them; no campaign, price, coupon or category behavior changed.
+- Stage 67: improved analytics, profit calculator and expense form/list layouts for small screens. Existing calculations and data handling were not changed.
+- Stage 68: improved AI assistant chat/composer, staff panels, audit logs, local-only broadcast form, delivery settings and global settings layouts. Existing local-only staff/broadcast semantics remain unchanged and are not represented as real server-side permissions or delivery.
+- Added responsive regression tests for each stage.
+- CI at Stage 68 head `3986001acf5c751c33c36fb35922c3d325bb238a`: production build passed and dependency audit passed; CodeQL was still running at last check. Stage 69 adds another test, so its own checks must complete before the release gate.
+
+## Stage 69 — order lifecycle and stock safety audit
+
+### Verified existing database protections
+- The order-status RPC locks the target order row with `FOR UPDATE` before applying a transition.
+- Server-side rules prevent delivered-order rollback, shipped-order rollback/cancellation, and direct reactivation of cancelled orders.
+- Cancellation validates every stored order line before stock restoration and checks that each product row was updated.
+- Reactivation requires a recent password-authentication event, validates quantities, checks available stock and performs stock deduction in the same transaction.
+- A database trigger also guards direct status changes; client roles cannot delete the order ledger.
+- The admin UI uses the protected `admin_update_order_status` RPC. These server checks are authoritative; client-side disabled buttons are not treated as a security boundary.
+
+### Change in this stage
+- Added `tests/orderStatusDatabaseGuards.test.js` to protect these SQL-level invariants against accidental regression.
+- No order records, stock, SQL migrations, live database settings, or production behavior were changed.
+
+### Remaining verification
+- Wait for Stage 69 GitHub Actions build, dependency audit and CodeQL.
+- Test order creation, status changes, cancellation/restoration and password-confirmed reactivation against staging data before release.
+- Verify real-time order arrival and customer/admin views in a browser session; static source tests alone do not prove live synchronization.
