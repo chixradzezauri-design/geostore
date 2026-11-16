@@ -140,3 +140,15 @@ test('mobile floating assistance controls collapse to a non-obstructive stacked 
   assert.match(dockStyles, /\.gs-floating-action-arrow[\s\S]*?display:\s*none\s*!important;/);
   assert.match(dockStyles, /width:\s*48px\s*!important;[\s\S]*?height:\s*48px\s*!important;[\s\S]*?border-radius:\s*50%\s*!important;/);
 });
+
+
+test('flash-sale editorial panel keeps readable contrast after the light storefront theme overrides utility colors', () => {
+  const stage36 = css.slice(css.lastIndexOf('GEOSTORE — stage 36: restore premium flash-sale contrast'));
+  assert.ok(stage36.length > 0);
+  assert.match(stage36, /\.gs-flash-sale-section \[class\*="text-white"\][\s\S]*?color:#fffaf2!important;/);
+  assert.match(stage36, /\.gs-flash-sale-section \[class\*="text-slate-"\]:not\(\[class\*="text-slate-950"\]\)[\s\S]*?color:#d0c4b5!important;/);
+  assert.match(stage36, /\.gs-flash-sale-section \[class\*="text-slate-950"\][\s\S]*?color:#211a13!important;/);
+  assert.match(stage36, /\.gs-flash-sale-card>button:hover[\s\S]*?background:#e4bd7c!important;[\s\S]*?color:#211a13!important;/);
+  assert.match(stage36, /@media\(max-width:640px\)[\s\S]*?\.gs-flash-sale-section/);
+  assert.match(stage36, /@media\(prefers-reduced-motion:reduce\)[\s\S]*?animation-duration:\.01ms!important;/);
+});
