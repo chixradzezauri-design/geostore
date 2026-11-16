@@ -18840,3 +18840,382 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
   outline: 3px solid #8dd8e8 !important;
   outline-offset: 2px !important;
 }
+
+
+/* GEOSTORE ADMIN VISUAL AUDIT — STAGE 45: bring order management back into the admin dark workspace.
+   The legacy Stage 09/10 rules paint order panels, cards, inputs and detail modals warm-white,
+   while the parent dashboard and component markup use the dark admin system. This scoped
+   override changes presentation only; order state, filters, exports, status actions and data remain untouched. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel {
+  background: #0d192a !important;
+  color: #eaf1fa !important;
+  border-color: #34465e !important;
+  border-radius: 20px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-header {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-header h3 {
+  color: #f8fbff !important;
+  font-family: inherit !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-header h3 svg {
+  color: #6ee7b7 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-header p {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-header > button {
+  background: #17263b !important;
+  color: #dbe6f2 !important;
+  border-color: #536982 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-toolbar,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-controls {
+  min-width: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-search input {
+  background: #071321 !important;
+  color: #f8fbff !important;
+  border-color: #536982 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-search input::placeholder {
+  color: #9fb0c5 !important;
+  opacity: 1 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-search svg {
+  color: #6ee7b7 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters {
+  background: #071321 !important;
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters button:not([class*="bg-emerald-500"]) {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters button:not([class*="bg-emerald-500"]):hover {
+  background: #223650 !important;
+  color: #ffffff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-filters button[class*="bg-emerald-500"] {
+  background: #047857 !important;
+  color: #ffffff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+  background: #142238 !important;
+  color: #eaf1fa !important;
+  border-color: #34465e !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .16) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card:hover {
+  background: #192b43 !important;
+  border-color: #7890aa !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-heading {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-heading > div:first-child > span:first-child {
+  color: #6ee7b7 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-heading > div:first-child > span:last-child,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-footer > div:first-child > span:first-child {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-heading > div:last-child > span {
+  color: #f8fbff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-customer {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-customer b {
+  color: #f8fbff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-customer p:nth-child(2) b {
+  color: #6ee7b7 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-footer {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-stock-warning {
+  background: #332713 !important;
+  border-color: #80632e !important;
+  color: #fde68a !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-badge {
+  background: #1c2b40 !important;
+  border-color: #536982 !important;
+  color: #e2e8f0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-actions > button:first-child {
+  background: #123b35 !important;
+  color: #a7f3d0 !important;
+  border-color: #26735f !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-actions > button:nth-child(2) {
+  background: #17263b !important;
+  color: #dbe6f2 !important;
+  border-color: #536982 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+  background: #071321 !important;
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions button:not([class*="bg-blue-400"]):not([class*="bg-amber-400"]):not([class*="bg-cyan-400"]):not([class*="bg-emerald-400"]) {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-pagination {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-pagination button {
+  border-color: #536982 !important;
+  color: #dbe6f2 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-pagination button[aria-current="page"] {
+  background: #047857 !important;
+  color: #ffffff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-overlay {
+  background: rgba(2, 8, 18, .82) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-modal {
+  background: #0d192a !important;
+  color: #eaf1fa !important;
+  border-color: #536982 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .48) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-header,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-footer {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-header h3,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item-info h5 {
+  color: #f8fbff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-header p,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-customer .grid,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-note-editor label {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-customer,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-financials {
+  background: #142238 !important;
+  color: #eaf1fa !important;
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-customer h4,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-items-section > h4,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-financials h4 {
+  color: #6ee7b7 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-customer b,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-financials b {
+  color: #f8fbff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item {
+  background: #101e31 !important;
+  border-color: #34465e !important;
+  color: #eaf1fa !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item img,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item > div:first-child:not(.admin-order-item-info) {
+  background: #071321 !important;
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item-info > div > span {
+  background: #1c2b40 !important;
+  border-color: #536982 !important;
+  color: #dbe6f2 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item-info > div > span b {
+  color: #f8fbff !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item-price {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item-price > span:first-child {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-item-price > span:last-child {
+  color: #6ee7b7 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-financials > p,
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-financials > div > div {
+  color: #bdcadd !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-financials > div {
+  border-color: #34465e !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-note-controls input {
+  background: #071321 !important;
+  color: #f8fbff !important;
+  border-color: #536982 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-note-controls input::placeholder {
+  color: #9fb0c5 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-footer button:first-child {
+  background: #17263b !important;
+  color: #dbe6f2 !important;
+  border-color: #536982 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-footer button:last-child {
+  background: #047857 !important;
+  color: #ffffff !important;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    padding: 14px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-actions {
+    justify-content: flex-start !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-actions > button {
+    flex: 1 1 140px !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+    max-width: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-detail-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px) !important;
+    padding: 15px !important;
+  }
+}
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-actions > button {
+    flex-basis: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card-customer {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+
+
+/* GEOSTORE STOREFRONT — STAGE 46: stable Flash Sale heading and label alignment.
+   Earlier responsive rules centered the title group while the heading itself used
+   wrapping flex children; the badge could split/reflow awkwardly beside the title.
+   Keep the title copy left-aligned, give it a shrink-safe column, and place the timer
+   in its own predictable grid cell. No sale logic, prices or countdown data changed. */
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  justify-content: stretch !important;
+  column-gap: clamp(12px, 2vw, 22px) !important;
+  row-gap: 12px !important;
+  min-width: 0 !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child > div:first-child {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child > div:first-child > div:last-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  text-align: left !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child h3 {
+  display: flex !important;
+  flex-flow: row wrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 7px 9px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child h3 > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 1 auto !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  text-align: center !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child p {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+  line-height: 1.5 !important;
+  overflow-wrap: anywhere !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child .gs-flash-sale-deadline {
+  width: 100% !important;
+  text-align: left !important;
+  line-height: 1.5 !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child .gs-flash-sale-countdown {
+  justify-self: end !important;
+  align-self: center !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+@media (max-width: 640px) {
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    justify-items: stretch !important;
+    row-gap: 12px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child > div:first-child {
+    align-items: flex-start !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child > div:first-child > div:first-child {
+    flex: 0 0 auto !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child h3 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    font-size: clamp(15px, 4vw, 19px) !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child h3 > span {
+    align-self: flex-start !important;
+    max-width: 100% !important;
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child .gs-flash-sale-countdown {
+    justify-self: stretch !important;
+    width: min(100%, 360px) !important;
+    margin-inline: auto !important;
+  }
+}
+@media (max-width: 370px) {
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child > div:first-child {
+    gap: 8px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child > div:first-child > div:first-child {
+    padding: 8px !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > div:first-child h3 > span {
+    font-size: 9px !important;
+    padding: 4px 7px !important;
+  }
+}
