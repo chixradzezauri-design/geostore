@@ -19,7 +19,7 @@ test('privileged support-ticket implementations live in the private schema', () 
     assert.ok(migration.includes('CREATE OR REPLACE FUNCTION private.' + name));
     assert.ok(migration.includes('REVOKE ALL ON FUNCTION private.' + name));
   }
-  assert.equal((migration.match(/SECURITY DEFINER/gi) || []).length, 4);
+  assert.equal((migration.match(/^\\s*SECURITY DEFINER\\s*$/gim) || []).length, 4);
   assert.match(migration, /SET search_path = ''/i);
 });
 
@@ -29,7 +29,7 @@ test('public RPC contracts are invoker-only wrappers with unchanged function nam
     assert.ok(migration.includes('SECURITY INVOKER'));
     assert.ok(migration.includes('private.' + name));
   }
-  assert.equal((migration.match(/SECURITY INVOKER/gi) || []).length, 4);
+  assert.equal((migration.match(/^\\s*SECURITY INVOKER\\s*$/gim) || []).length, 4);
 });
 
 test('anonymous access remains limited to ticket-token status and read-receipt RPCs', () => {
