@@ -19270,3 +19270,28 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
   color: #a7f3d0 !important;
   border-color: #145a45 !important;
 }
+
+
+/* GEOSTORE ADMIN DESIGN — STAGE 49: unify the admin welcome bar with the dark navy workspace. */
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+  background: #0d192a !important;
+  border-color: #34465e !important;
+  border-radius: 20px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18) !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child h2 {
+  color: #f8fbff !important;
+  -webkit-text-fill-color: #f8fbff !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child p {
+  color: #bdcadd !important;
+  -webkit-text-fill-color: #bdcadd !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div {
+  background: #071321 !important;
+  border-color: #34465e !important;
+}
+.geostore-shell .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div span:last-child {
+  color: #6ee7b7 !important;
+  -webkit-text-fill-color: #6ee7b7 !important;
+}
