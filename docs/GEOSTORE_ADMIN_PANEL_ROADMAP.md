@@ -232,3 +232,29 @@ Only then request approval to merge and deploy.
 - Verify price/discount refresh with catalogues larger than the PostgREST row cap; the current admin post-sale refresh is a single request and may leave later products' in-memory admin values stale until a full reload. This is a UI-refresh limitation, not a database write failure.
 - Verify coupon usage limits/expiry and delivery-fee values against the actual checkout path in staging.
 - Do not apply migrations or modify live products/prices/coupons/fees until the consolidated release is explicitly approved.
+
+
+## Stage 74 — coupon and delivery-fee calculation alignment
+
+### Verified behavior
+- Checkout reads active coupons and delivery fees from Supabase; cached coupons are cleared when authoritative coupon loading fails.
+- Immediately before order creation, checkout re-reads both active coupons and delivery fees and stops for customer review if the selected coupon or regional fee has changed.
+- The database checkout RPC recalculates product prices, paid add-on fees, coupon discount and delivery fee; browser-supplied total is not authoritative.
+- Coupon codes are normalized to uppercase, and the server checks active status and minimum order amount.
+- Server discount is rounded to two GEL decimal places before delivery is added.
+- Delivery fee draft validation utility already enforced non-negative amounts with at most two decimal places, but the admin save handler did not use it.
+
+### Verified defects and fixes
+1. **Paid add-ons omitted from storefront coupon subtotal.** The server includes gift wrapping (5 GEL per unit) and VIP warranty (15 GEL per unit) in the discount-eligible subtotal, but the storefront preview previously counted only product prices. This could make coupon minimum eligibility and displayed discount/total differ from the server result. Updated `calculateCartSubtotalGEL` to include both camelCase cart fields and snake_case checkout fields, using integer tetri and the same fixed add-on prices as the SQL RPC. Existing checkout item grouping and server authority remain unchanged.
+2. **Admin delivery fee precision bypass.** The admin save handler previously converted inputs directly to numbers and accepted precision beyond two decimals. It now uses `parseDeliveryFeeDrafts`, retains raw input strings while editing, and sets `min=0` / `step=0.01` on all three region fields. Blank, negative, malformed and >2-decimal values are rejected before any database write.
+
+### Regression coverage
+- Extended `src/utils/orderSafety.test.js` with multiple products, quantities, gift wrap and VIP warranty, covering both camelCase and snake_case cart shapes.
+- Added `tests/checkoutPricingAlignment.test.js` to compare storefront calculation, server RPC add-on fees and admin delivery validation wiring.
+- Existing `tests/deliveryFeeSafety.test.js` already covers zero fees, missing fields, negatives and 3-decimal precision.
+
+### Safety boundary and remaining verification
+- No coupon, delivery fee, product, order, stock, customer or historical record was changed.
+- No migration was added/applied and no production deployment was made.
+- Run all tests, build, dependency audit and CodeQL on this head.
+- Staging verification still required for coupon min-order boundary, 100% discount, disabled/deleted coupon, fee changes between page load and checkout, and authenticated/guest checkout paths.
