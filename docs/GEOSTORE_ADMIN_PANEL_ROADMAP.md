@@ -284,3 +284,28 @@ Only then request approval to merge and deploy.
 - No database migration was added/applied and no Production deployment was made.
 - Run full test suite, build, dependency audit and CodeQL on the updated PR head.
 - Staging verification still required for delivered/cancelled historical records, missing COGS cases, expense date boundaries and future return/refund workflow design.
+
+
+## Stage 76 — historical COGS and add-on revenue accounting
+
+### Verified source-of-truth
+- The server checkout RPC reads product price and `purchase_cost` from the database and snapshots purchase cost, base price, add-on fee, vendor and category into each order item.
+- Financial reporting prefers each order item's historical `purchase_cost` snapshot. If it is missing, it falls back to the current product cost only as an explicitly marked estimate; if neither is available, profit is suppressed as incomplete.
+- Public catalogue roles cannot read internal purchase cost; the protected admin product RPC is the intended source for current product cost.
+- The checkout snapshot stores base product price and paid add-on total separately, and coupon discounts are reflected in the final order total.
+
+### Defect found and correction
+- Admin finance previously treated the full order-item price (base product plus gift-wrap/VIP warranty) as product revenue, while COGS only included the product's purchase cost. This could overstate product margin and net profit because the add-on fulfilment costs are not currently captured.
+- Added pure `splitOrderRevenue` calculation. It allocates the checkout discount proportionally between base product and paid add-ons, then reports product, add-on and delivery revenue separately.
+- Product/vendor profitability now uses only discounted base-product revenue. Add-on revenue appears as its own income source and KPI, and is included in total order turnover but deliberately excluded from profit until its fulfilment cost is tracked. Delivery remains separately reported and included in net operating result as before.
+- CSV export and AI analyst expose the add-on revenue and explicitly explain why it is not included in profit.
+
+### Regression coverage
+- Added unit tests for proportional coupon allocation, add-on and delivery split, legacy order lines without add-on snapshots, and fully discounted items.
+- Added integration/static tests confirming checkout snapshots are the source, add-on revenue is separate from product/vendor profitability, uncosted add-ons are excluded from profit, and historical purchase-cost snapshots remain preferred over current catalogue estimates.
+
+### Safety boundary and remaining verification
+- No product purchase costs, historical orders, prices, coupons, delivery fees, expenses, stock or customer data were modified.
+- No database migration was added/applied and no Production deployment was made.
+- Run full tests, build, dependency audit and CodeQL on the updated PR head.
+- Staging checks remain required for legacy order lines with absent add-on fields, coupon allocation rounding, delivery-address fee parsing, and matching historical COGS snapshots to old order records.
