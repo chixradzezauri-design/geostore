@@ -3045,7 +3045,7 @@ export default function AdminDashboardPro({
             { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0, icon: Megaphone },
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
-            { id: 'vendors', label: '🏪 ვენდორები', count: (vendorsList || []).filter(v => !v?.archived_at && v?.status !== 'არქივირებული').length, icon: Store }
+            { id: 'vendors', label: '🏪 ვენდორები', count: (vendorsList || []).filter(v => !v?.archived_at && v?.status !== 'არქივირებული').length, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].map(tab => {
