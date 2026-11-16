@@ -370,6 +370,7 @@ Only then request approval to merge and deploy.
 - Added `get_my_support_tickets_page`, an authenticated, owner-scoped RPC with a maximum page size of 50 and a deterministic keyset cursor using latest-message timestamp plus ticket ID.
 - The new RPC requires both cursor fields together, validates the ticket ID shape, and filters every page by `auth.uid()` and `customer_user_id`. Anonymous access is revoked; only authenticated users may execute it.
 - Kept the original `get_my_support_tickets(integer)` RPC unchanged for older clients.
+- The client falls back to that original first-page RPC if the new pagination function is not installed yet, avoiding a support-history regression during staged rollout.
 - Updated the customer support panel to load additional pages on demand, merge pages by ticket ID, and retain already loaded older pages during periodic refreshes.
 - Reset account-linked history when the signed-in user changes, and guard in-flight page responses so one account's history cannot be merged into another account's view.
 - Guest ticket-number/access-code recovery and the existing full per-ticket conversation view remain unchanged.
