@@ -208,3 +208,27 @@ Only then request approval to merge and deploy.
 - Run the new test, full test suite, production build, dependency audit and CodeQL.
 - Verify upload, edit, replace, remove and product-delete flows against staging with both shared product references and historical order snapshots.
 - Verify the storefront-media bucket's actual policies and storage object ownership against staging before release.
+
+
+## Stage 73 — pricing, discounts, flash-sale and stock synchronization audit
+
+### Verified behavior
+- Flash-sale discounts are applied through the authenticated server RPC, not browser-side price arithmetic.
+- The database validates discount precision/range, category and supported duration; products with variants are excluded from base-price campaigns.
+- Sale start/end/percentage are persisted on product rows and exposed as catalogue metadata.
+- The canonical expiry worker is intended to run once per minute and restore the saved original price when the deadline passes.
+- The temporary campaign-table implementation is not exposed to client roles; the compatibility migration restores the product-level expiry implementation and the later migration ensures a single canonical cron job.
+- Price, old-price, stock and purchase-cost validation and database constraints already exist in the staged migration set. Quick stock edits are blocked for products with variants; variant stock uses the atomic batch RPC audited in Stage 71.
+- Coupon creation/deletion and delivery-fee updates use database REST writes; client-side input validation is present.
+
+### Verified defect and fix
+- Both the full product editor and quick price editor could change a product's selling price while a persisted flash sale was active. The scheduled expiry worker later restores the previously saved old price, which could overwrite the administrator's newer manual price.
+- Added guards to both admin price-edit paths: while the stored flash-sale deadline is still in the future, price and old-price changes are blocked with a clear Georgian explanation. Other product metadata and stock editing remain available; no sale data is cleared or rewritten.
+- Added `tests/flashSaleManualPriceGuard.test.js` covering both editing paths and the persisted expiry behavior.
+
+### Remaining verification
+- Run the full suite, production build, dependency audit and CodeQL for the new head.
+- Validate a complete flash-sale lifecycle against staging: create, refresh, replace, expiry, and manual price edit after expiry.
+- Verify price/discount refresh with catalogues larger than the PostgREST row cap; the current admin post-sale refresh is a single request and may leave later products' in-memory admin values stale until a full reload. This is a UI-refresh limitation, not a database write failure.
+- Verify coupon usage limits/expiry and delivery-fee values against the actual checkout path in staging.
+- Do not apply migrations or modify live products/prices/coupons/fees until the consolidated release is explicitly approved.
