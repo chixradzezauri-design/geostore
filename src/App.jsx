@@ -1574,7 +1574,7 @@ export default function App() {
         }
       } else {
         res = await fetch(
-          `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc,id.asc`,
+          `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,flash_sale_started_at,flash_sale_ends_at,flash_sale_percent,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc,id.asc`,
           { headers: await getSupabaseHeaders() }
         );
       }
@@ -1594,6 +1594,9 @@ export default function App() {
           category: p.category || 'ტანსაცმელი',
           priceGEL: Number(p.price_gel),
           oldPriceGEL: p.old_price_gel ? Number(p.old_price_gel) : null,
+          flashSaleStartedAt: p.flash_sale_started_at || null,
+          flashSaleEndsAt: p.flash_sale_ends_at || null,
+          flashSalePercent: p.flash_sale_percent == null ? null : Number(p.flash_sale_percent),
           stock: Array.isArray(p.variants) && p.variants.some(variant => variant?.variantType === 'size_color')
             ? p.variants.filter(variant => variant?.variantType === 'size_color').reduce((total, variant) => {
                 const quantity = Number(variant?.stock);
