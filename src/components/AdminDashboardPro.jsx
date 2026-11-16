@@ -148,18 +148,29 @@ const deleteProductImages = async (imageUrls, productId) => {
   try {
     // A product-owned Storage path can still be referenced by another product.
     // Read the lightweight image references first and fail closed if this check fails.
-    const referenceResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=id,image,gallery`,
-      { headers: await getSupabaseHeaders() }
-    );
-    if (!referenceResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
-    const productRows = await referenceResponse.json();
-    if (!Array.isArray(productRows)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+    // Paginate the complete catalogue: a default PostgREST response can be
+    // capped at 1,000 rows. A partial reference scan must never authorize deletion.
+    const productRows = [];
+    const pageSize = 1000;
+    for (let offset = 0; offset < 100000; offset += pageSize) {
+      const productHeaders = await getSupabaseHeaders();
+      productHeaders.Range = `${offset}-${offset + pageSize - 1}`;
+      productHeaders['Range-Unit'] = 'items';
+      const productResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/products?select=id,image,gallery&order=id.asc`,
+        { headers: productHeaders }
+      );
+      if (!productResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
+      const page = await productResponse.json();
+      if (!Array.isArray(page)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+      productRows.push(...page);
+      if (page.length < pageSize) break;
+      if (offset + pageSize >= 100000) throw new Error('პროდუქტების სრული სიის შემოწმება ვერ დასრულდა; ფოტოს წაშლა შეჩერდა.');
+    }
 
     // Historical order snapshots are independent references to their original
     // photos. Never remove a Storage object while any order still references it.
     const orderRows = [];
-    const pageSize = 1000;
     for (let offset = 0; offset < 100000; offset += pageSize) {
       const orderHeaders = await getSupabaseHeaders();
       orderHeaders.Range = `${offset}-${offset + pageSize - 1}`;
