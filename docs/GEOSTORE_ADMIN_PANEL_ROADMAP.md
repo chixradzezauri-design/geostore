@@ -309,3 +309,19 @@ Only then request approval to merge and deploy.
 - No database migration was added/applied and no Production deployment was made.
 - Run full tests, build, dependency audit and CodeQL on the updated PR head.
 - Staging checks remain required for legacy order lines with absent add-on fields, coupon allocation rounding, delivery-address fee parsing, and matching historical COGS snapshots to old order records.
+
+## Stage 77 — complete expense-ledger pagination
+
+### Defect found
+- The admin expense loader requested the entire ledger in one PostgREST response. With the common 1,000-row server cap, older expense rows could be silently omitted from period totals, category breakdowns and financial exports even though the database still retained them.
+
+### Fix
+- Admin expense history now loads in 1,000-row pages using explicit Range / Range-Unit headers and a deterministic created_at.desc,id.desc order.
+- The 100,000-row safety bound fails closed. The UI keeps the last successfully loaded expense list and displays the loading error rather than replacing it with a partial ledger.
+- Added tests/adminExpensePagination.test.js to cover stable paging, the row cap, and preservation of the last successful list on incomplete scans.
+
+### Safety and remaining verification
+- No expense record was created, edited or deleted; no historical financial data was rewritten.
+- No schema migration, live Supabase setting or Production deployment was changed.
+- Verify against staging with more than 1,000 expense rows, including rows sharing the same created_at, and confirm the period totals and CSV include the complete ledger.
+
