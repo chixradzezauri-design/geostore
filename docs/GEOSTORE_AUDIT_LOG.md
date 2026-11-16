@@ -685,3 +685,24 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
 - Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
 - No Vercel deployment or production database changes were made.
+
+## Stage 57 — Auth password protection and Flash Sale access audit — 2026-11-17
+
+### Flash Sale tables
+- Read-only inspection confirms `public.flash_sale_campaigns` and `public.flash_sale_items` have RLS enabled, zero policies, and no SELECT/INSERT/UPDATE grants for `anon` or `authenticated`.
+- This explains the Security Advisor informational `rls_enabled_no_policy` notices. The tables are intentionally inaccessible to client roles and are operated through restricted server-side functions; adding broad policies would weaken this boundary.
+- No table policies or grants were changed.
+
+### Auth password protection
+- Supabase Security Advisor reports leaked-password protection disabled.
+- Current Supabase documentation says this feature uses HaveIBeenPwned Pwned Passwords and is available on Pro Plan and above. It is configured in Dashboard → Authentication → Settings / Auth settings (Email provider password security).
+- This is a project-level Auth behavior change, not a database migration. It may reject compromised passwords on new sign-ups and password changes. No Auth setting was changed in this stage.
+- The connected Supabase tools expose database operations and advisors, but not a dedicated Auth settings read/update action. Enable only after the project owner confirms the plan supports it and approves the behavior change.
+
+### Stage 56 deployment prerequisite
+- Stage 56 uses SECURITY INVOKER public wrappers that call SECURITY DEFINER implementations in the `private` schema. The migration grants the API roles the minimum EXECUTE permissions needed by those wrappers.
+- Keep `private` excluded from PostgREST's exposed API schemas. The database-level `pgrst.db_schemas` setting was unset in the read-only query, so the actual Dashboard API schema allow-list still needs visual confirmation before applying the migration.
+- Stage 56 remains Draft and unapplied; verify private-schema exclusion and test guest ticket-token status/read receipts, authenticated owner history, admin unread counts, and denied unauthorized calls on a staging database first.
+
+### Data safety
+- This stage was read-only against Supabase. No orders, products, customers, tickets, messages, read receipts, user accounts, or authentication settings were modified.
