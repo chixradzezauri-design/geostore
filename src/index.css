@@ -19074,3 +19074,52 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
  .geostore-fashion-store .geostore-storefront .gs-category-photo,
  .geostore-fashion-store .geostore-storefront .gs-catalog-product-card{transition:none!important}
 }
+
+
+/* GEOSTORE — Stage 43.1: full-width single flash-sale card on mobile */
+@media(max-width:640px){
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section>.grid>.gs-flash-sale-card:only-child{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section>.grid>.gs-flash-sale-card:only-child>.gs-flash-sale-media{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section>.grid>.gs-flash-sale-card:only-child>.py-3{
+    min-width:0!important;
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+    writing-mode:horizontal-tb!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section>.grid>.gs-flash-sale-card:only-child>.py-3 h4{
+    min-width:0!important;
+    max-width:100%!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+    writing-mode:horizontal-tb!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section>.grid>.gs-flash-sale-card:only-child>.py-3 .flex{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:baseline!important;
+    min-width:0!important;
+    max-width:100%!important;
+    gap:6px!important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section>.grid>.gs-flash-sale-card:only-child>button{
+    min-width:0!important;
+    max-width:100%!important;
+    width:100%!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+    writing-mode:horizontal-tb!important;
+    line-height:1.35!important;
+  }
+}
