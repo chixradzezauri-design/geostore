@@ -3143,7 +3143,7 @@ export default function AdminDashboardPro({
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
-            { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
+            { id: 'users', label: '👥 CRM მომხმარებლები', count: crmUsers.length, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].map(tab => {
             const IconComp = tab.icon;
@@ -5125,13 +5125,13 @@ export default function AdminDashboardPro({
                             <Edit3 className="w-4 h-4" />
                           </button>
 
-                          <button 
+                          {!u.isServerCustomer && <button 
                             onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </button>}
                         </div>
                       </div>
 
