@@ -3131,7 +3131,7 @@ export default function AdminDashboardPro({
     }
     if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
       reactivationTriggerRef.current = document.activeElement;
-      setReactivationOrder(existingOrder);
+      setReactivationOrder({ ...existingOrder, reactivationMode: 'cancelled' });
       setReactivationPassword('');
       setReactivationError('');
       return;
@@ -3182,6 +3182,8 @@ export default function AdminDashboardPro({
     event.preventDefault();
     if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
 
+    const orderId = reactivationOrder.id;
+    const isCompletedReopen = reactivationOrder.reactivationMode === 'completed';
     setIsReactivatingOrder(true);
     setReactivationError('');
     try {
@@ -3219,7 +3221,10 @@ export default function AdminDashboardPro({
         throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
       }
 
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reactivate_cancelled_order`, {
+      const rpcName = isCompletedReopen
+        ? 'admin_reopen_completed_order'
+        : 'admin_reactivate_cancelled_order';
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${rpcName}`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -3227,7 +3232,7 @@ export default function AdminDashboardPro({
           'Content-Type': 'application/json',
           Prefer: 'return=representation'
         },
-        body: JSON.stringify({ p_order_id: reactivationOrder.id })
+        body: JSON.stringify({ p_order_id: orderId })
       });
 
       if (!response.ok) {
@@ -3235,25 +3240,38 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
+      const result = await response.json().catch(() => null);
+      const nextStatus = String(result?.status || 'ახალი');
+      const statusChangedAt = result?.status_changed_at || new Date().toISOString();
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order
+          String(order.id) === String(orderId)
+            ? { ...order, status: nextStatus, status_changed_at: statusChangedAt }
+            : order
         ));
       }
       setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
+        prev && String(prev.id) === String(orderId)
+          ? { ...prev, status: nextStatus, status_changed_at: statusChangedAt }
+          : prev
       );
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
         localStorage.setItem('geostore_local_orders', JSON.stringify(
-          localOrders.map(order => String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order)
+          localOrders.map(order => String(order.id) === String(orderId)
+            ? { ...order, status: nextStatus, status_changed_at: statusChangedAt }
+            : order)
         ));
       } catch {}
 
-      logActivity(`გაუქმებული შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
+      logActivity(isCompletedReopen
+        ? `დასრულებული შეკვეთა #${orderId} ხელახლა გაიხსნა პაროლის დადასტურებით; მარაგი უცვლელი დარჩა`
+        : `გაუქმებული შეკვეთა #${orderId} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
       setReactivationOrder(null);
       setReactivationPassword('');
-      alert(`✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი ხელახლა ჩამოიჭრა.`);
+      alert(isCompletedReopen
+        ? `✅ შეკვეთა #${orderId} ხელახლა გაიხსნა. მარაგი უცვლელი დარჩა.`
+        : `✅ შეკვეთა #${orderId} ხელახლა გააქტიურდა. მარაგი ხელახლა ჩამოიჭრა.`);
     } catch (error) {
       setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
     } finally {
@@ -4599,7 +4617,12 @@ export default function AdminDashboardPro({
                         {isCancelledOrderStatus(o.status) ? (
                           o.stock_deducted_at && o.stock_restored_at ? (
                             <button
-                              onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                              onClick={(event) => {
+                                reactivationTriggerRef.current = event.currentTarget;
+                                setReactivationOrder({ ...o, reactivationMode: 'cancelled' });
+                                setReactivationPassword('');
+                                setReactivationError('');
+                              }}
                               className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
                             >
                               <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
@@ -4610,6 +4633,29 @@ export default function AdminDashboardPro({
                               title="რეაქტივაცია მოითხოვს მარაგის ჩამოჭრისა და აღდგენის დადასტურებულ ჩანაწერებს."
                             >
                               რეაქტივაცია მიუწვდომელია — მარაგის ისტორია არასრულია
+                            </span>
+                          )
+                        ) : isDeliveredOrderStatus(o.status) ? (
+                          o.stock_deducted_at && !o.stock_restored_at ? (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                reactivationTriggerRef.current = event.currentTarget;
+                                setReactivationOrder({ ...o, reactivationMode: 'completed' });
+                                setReactivationPassword('');
+                                setReactivationError('');
+                              }}
+                              className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
+                              title="ხელახლა გახსნა შეცვლის მხოლოდ სტატუსს და არ შეცვლის მარაგს."
+                            >
+                              <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
+                            </button>
+                          ) : (
+                            <span
+                              className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-200 text-[10px] leading-relaxed"
+                              title="ხელახლა გახსნისთვის საჭიროა დადასტურებული ჩამოჭრილი და ჯერ არაღდგენილი მარაგის ისტორია."
+                            >
+                              ხელახლა გახსნა მიუწვდომელია — მარაგის ისტორია არასრულია
                             </span>
                           )
                         ) : (
@@ -5975,12 +6021,14 @@ export default function AdminDashboardPro({
                 <KeyRound className="w-5 h-5 text-amber-300" />
               </div>
               <div>
-                <h3 id="reactivation-title" className="text-white font-black">შეკვეთის ხელახლა გააქტიურება</h3>
+                <h3 id="reactivation-title" className="text-white font-black">{reactivationOrder.reactivationMode === 'completed' ? 'დასრულებული შეკვეთის ხელახლა გააქტიურება' : 'შეკვეთის ხელახლა გააქტიურება'}</h3>
                 <p className="text-slate-400 text-xs">შეკვეთა #{reactivationOrder.id}</p>
               </div>
             </div>
             <p className="text-slate-300 text-xs leading-5">
-              უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი. დადასტურების შემდეგ სისტემა შეამოწმებს მარაგს და ხელახლა ჩამოჭრის შეკვეთის რაოდენობას.
+              {reactivationOrder.reactivationMode === 'completed'
+                ? 'უსაფრთხოებისთვის შეიყვანეთ ადმინისტრატორის მიმდინარე პაროლი. დადასტურების შემდეგ შეკვეთა დაბრუნდება აქტიურ სიაში სტატუსით „ახალი“. მარაგი უცვლელი დარჩება, რადგან ამ შეკვეთაზე ის უკვე ჩამოჭრილია და არ აღდგენილა.'
+                : 'უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი. დადასტურების შემდეგ სისტემა შეამოწმებს მარაგს და ხელახლა ჩამოჭრის შეკვეთის რაოდენობას.'}
             </p>
             <label className="block text-xs font-bold text-slate-300" htmlFor="reactivation-password">ადმინისტრატორის პაროლი</label>
             <input
@@ -5998,7 +6046,7 @@ export default function AdminDashboardPro({
             <div className="flex justify-end gap-2">
               <button type="button" disabled={isReactivatingOrder} onClick={() => { setReactivationOrder(null); setReactivationPassword(''); setReactivationError(''); }} className="px-4 py-3 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold disabled:opacity-50">გაუქმება</button>
               <button type="submit" disabled={isReactivatingOrder || !reactivationPassword} className="px-4 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black disabled:opacity-50">
-                {isReactivatingOrder ? 'მოწმდება...' : 'დადასტურება და გააქტიურება'}
+                {isReactivatingOrder ? 'მოწმდება...' : (reactivationOrder.reactivationMode === 'completed' ? 'დადასტურება და ხელახლა გახსნა' : 'დადასტურება და გააქტიურება')}
               </button>
             </div>
           </form>
