@@ -28,6 +28,11 @@ test('staff order operations preserve status and stock safeguards', () => {
   assert.match(migration, /get diagnostics v_updated = row_count/i);
 });
 
+test('order status RPC returns the database status timestamp for UI synchronization', () => {
+  assert.match(migration, /SELECT status_changed_at\\s+INTO v_status_changed_at/);
+  assert.match(migration, /'status_changed_at', v_status_changed_at/);
+});
+
 test('completed/cancelled order reactivation remains owner-only', () => {
   assert.match(migration, /ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია/);
   assert.match(migration, /trigger guard[\s\S]*not modified/i);
