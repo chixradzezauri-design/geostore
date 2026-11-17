@@ -2565,7 +2565,7 @@ export default function AdminDashboardPro({
     if (!column) return;
     const val = Number(value);
     if (!Number.isFinite(val) || val < 0 || val > 1000000000) return alert('შეიყვანეთ სწორი რიცხვი 0-დან 1,000,000,000-მდე.');
-    if ((field === 'priceGEL' || field === 'purchaseCost') && !/^\\d+(?:\\.\\d{1,2})?$/.test(String(value).trim())) return alert('ფასი და თვითღირებულება მაქსიმუმ 2 ათწილადი ნიშნით უნდა შეიყვანოთ.');
+    if ((field === 'priceGEL' || field === 'purchaseCost') && !/^\d+(?:\.\d{1,2})?$/.test(String(value).trim())) return alert('ფასი და თვითღირებულება მაქსიმუმ 2 ათწილადი ნიშნით უნდა შეიყვანოთ.');
     if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
@@ -2966,7 +2966,7 @@ export default function AdminDashboardPro({
         id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
-        oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
+        oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: savedProductRow?.purchase_cost ?? existingProduct?.purchaseCost ?? null,
         stock: localVariants.length > 0
           ? localVariants.reduce((total, variant) => total + (Number(variant.stock) || 0), 0)
           : (editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock),
