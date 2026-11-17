@@ -740,3 +740,26 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Latest code commit `c0f469e7490285e8d3f09aa25ecb4165f7731e90`: GitHub Actions automated tests and production build passed; dependency security audit passed; CodeQL remains in progress. Vercel reports the preview deployment completed, but rendered browser/device verification is still outstanding.
 - This is a client-side race-condition hardening change only. No database migration, ticket, message, order, customer record, access-token hash, production setting, or deployment was changed.
 - Live Realtime behavior and browser/device verification remain outstanding.
+
+
+## Stage 86 — administrator support reply session isolation
+
+### Verified race condition
+- The administrator support reply handler used an idempotent request UUID, but it did not capture the admin-session generation.
+- If the administrator logged out or the session changed while the RPC was pending, the old handler could still clear the reply input, refresh the current thread, show a success/error alert, or clear an in-flight marker belonging to the newer session.
+- The admin session effect fenced thread reads but did not release the reply UI lock.
+
+### Change
+- The reply handler now captures the session generation and the exact idempotency request UUID before sending.
+- After the RPC confirms persistence, it clears only the matching request UUID. A stale response cannot delete a different request key created by a newer session.
+- Stale handlers do not mutate current-session reply state, show alerts, log a success, or clear a newer in-flight marker.
+- Session-scoped ticket-list refreshes now discard results from a previous admin session; thread refreshes receive the captured generation explicitly.
+- On admin-session change, the UI in-flight lock and sending state are reset, while pending idempotency UUIDs are retained so uncertain network outcomes can be retried safely.
+
+### Regression coverage
+- Added tests for session-generation checks, matching request-key cleanup, stale ticket-list refresh suppression, and retention of idempotency keys across session changes.
+
+### Safety and verification
+- This is an application/test-only change. No SQL migration, Supabase live setting, customer/order/ticket/message row, access token, or production deployment was changed.
+- The RPC remains idempotent; retaining a pending request UUID avoids duplicate replies if the previous network outcome was uncertain.
+- CI must complete on the updated PR head before this stage is considered verified. Staging/browser testing of logout during a pending reply remains required.
