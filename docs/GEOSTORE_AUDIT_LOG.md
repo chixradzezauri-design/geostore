@@ -951,3 +951,10 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Settings staff may edit drafts but cannot directly set publication fields; `publish_storefront_config`, flash-sale pricing, employee management and activity-log viewing remain owner-only.
 - Updated activity-log writes so active staff can record actions; viewing the audit log remains owner-only.
 - No storefront configuration, media, coupons, delivery fees, storage objects or activity rows were changed. Draft migration only.
+
+## Stage 103F — analytics-only staff access
+- Added `public.get_staff_analytics_summary(from,to)`, a read-only SECURITY DEFINER RPC gated by the `analytics` permission and a maximum 366-day range.
+- Returns only aggregate order counts, revenue, expenses, estimated cost/profit, status totals, daily totals and top-product aggregates; it never returns customer names, email, phone, address or raw expense/order rows.
+- Existing raw orders/products/expenses RLS policies remain restricted to their own modules; analytics permission alone does not grant raw table access.
+- The summary reports uncosted item lines so incomplete historical cost snapshots are visible rather than silently treated as fully accurate.
+- No live order, product, expense, customer or analytics data was modified. Draft migration only.
