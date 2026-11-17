@@ -889,12 +889,12 @@ This file is the durable handoff log for staged audit work. Add new findings and
 
 ## Stage 100 — safe reactivation of completed orders
 - Root cause: the admin UI blocked every transition away from delivered/completed states, while the server-side order status guard and reactivation RPC allowed reactivation only for cancelled orders.
-- Added a dedicated completed-order reactivation path through the existing password-reauthenticated RPC. It returns the order to `ახალი` only after a fresh password check and primary-admin authorization.
-- Completed orders retain their existing `stock_deducted_at` and `stock_restored_at` markers; the completed-order branch does not update products or variants, preventing a second stock deduction.
+- Added a dedicated completed-order reactivation path through a dedicated password-reauthenticated `admin_reopen_completed_order` RPC. It returns the order to `ახალი` only after a fresh password check and primary-admin authorization.
+- Completed orders retain their existing `stock_deducted_at` and `stock_restored_at` markers; the completed-order RPC does not update products or variants, preventing a second stock deduction.
 - Cancelled-order reactivation retains raw-line validation, per-product/per-variant stock checks, atomic stock deduction, and the existing transaction-local trigger marker.
 - The UI now exposes an explicit “ხელახლა გააქტიურება” action for completed orders and explains the distinct stock behavior. The ordinary status RPC remains unable to bypass the dedicated reactivation flow.
 - Live read-only baseline at implementation time: 2 completed orders, both with stock-deduction markers and neither with stock-restoration markers. No order or stock row was changed during this work.
-- Migration `20261117093000_order_reactivate_completed_orders.sql` is staged in this branch only. It has not been applied to the live Supabase project. No Production deployment or merge was performed.
+- Migration `20261117130000_reopen_completed_orders.sql` is staged in this branch only. It has not been applied to the live Supabase project. No Production deployment or merge was performed.
 - Added source-level regression tests for completed-order reactivation, no double stock deduction, cancelled-order stock checks, and direct-update guard behavior. Full CI verification remains pending.
 
 ## Stage 101 — additive admin panel visual polish
