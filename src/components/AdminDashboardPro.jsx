@@ -3195,6 +3195,10 @@ export default function AdminDashboardPro({
 
     setIsReactivatingOrder(true);
     setReactivationError('');
+    const wasDelivered = isDeliveredOrderStatus(reactivationOrder.status);
+    const reactivationRpc = wasDelivered
+      ? 'admin_reopen_completed_order'
+      : 'admin_reactivate_cancelled_order';
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user?.email) {
@@ -3230,7 +3234,7 @@ export default function AdminDashboardPro({
         throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
       }
 
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reactivate_cancelled_order`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${reactivationRpc}`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
