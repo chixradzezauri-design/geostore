@@ -93,33 +93,72 @@ REVOKE INSERT (is_published, published_at, published_config),
        UPDATE (is_published, published_at, published_config)
   ON TABLE public.storefront_config FROM authenticated;
 
--- The media bucket is governed separately from its metadata table.
+-- The shared media bucket contains three separate path namespaces.
+-- Settings staff may manage only storefront banners/categories; product staff
+-- may manage only product images. The owner bypass in has_staff_permission()
+-- preserves the primary administrator's existing full access.
 DROP POLICY IF EXISTS "Storefront media admin upload" ON storage.objects;
-CREATE POLICY "Storefront media settings upload"
+CREATE POLICY "Storefront media scoped upload"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (
     bucket_id = 'storefront-media'
-    AND public.has_staff_permission('settings')
+    AND (
+      (
+        (name LIKE 'storefront/categories/%' OR name LIKE 'storefront/banners/%')
+        AND public.has_staff_permission('settings')
+      )
+      OR (
+        name LIKE 'products/%'
+        AND public.has_staff_permission('products')
+      )
+    )
   );
 
 DROP POLICY IF EXISTS "Storefront media admin update" ON storage.objects;
-CREATE POLICY "Storefront media settings update"
+CREATE POLICY "Storefront media scoped update"
   ON storage.objects FOR UPDATE TO authenticated
   USING (
     bucket_id = 'storefront-media'
-    AND public.has_staff_permission('settings')
+    AND (
+      (
+        (name LIKE 'storefront/categories/%' OR name LIKE 'storefront/banners/%')
+        AND public.has_staff_permission('settings')
+      )
+      OR (
+        name LIKE 'products/%'
+        AND public.has_staff_permission('products')
+      )
+    )
   )
   WITH CHECK (
     bucket_id = 'storefront-media'
-    AND public.has_staff_permission('settings')
+    AND (
+      (
+        (name LIKE 'storefront/categories/%' OR name LIKE 'storefront/banners/%')
+        AND public.has_staff_permission('settings')
+      )
+      OR (
+        name LIKE 'products/%'
+        AND public.has_staff_permission('products')
+      )
+    )
   );
 
 DROP POLICY IF EXISTS "Storefront media admin delete" ON storage.objects;
-CREATE POLICY "Storefront media settings delete"
+CREATE POLICY "Storefront media scoped delete"
   ON storage.objects FOR DELETE TO authenticated
   USING (
     bucket_id = 'storefront-media'
-    AND public.has_staff_permission('settings')
+    AND (
+      (
+        (name LIKE 'storefront/categories/%' OR name LIKE 'storefront/banners/%')
+        AND public.has_staff_permission('settings')
+      )
+      OR (
+        name LIKE 'products/%'
+        AND public.has_staff_permission('products')
+      )
+    )
   );
 
 
