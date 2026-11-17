@@ -19219,3 +19219,62 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     padding: 4px 7px !important;
   }
 }
+
+/* GEOSTORE — Stage 43.2: iPhone Flash Sale card width and text flow
+   The rendered Flash Sale DOM is: div.gs-flash-sale-section > .grid > .gs-flash-sale-card,
+   with direct .gs-flash-sale-media, .py-3 content, and button children.
+   A lone card must span the mobile grid's two columns; all item counts must
+   keep the text and price subtree shrink-safe and horizontal. */
+@media (max-width: 640px) {
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    writing-mode: horizontal-tb !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card:only-child {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > .py-3 {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+    writing-mode: horizontal-tb !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > .py-3 h4,
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > .py-3 span {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    writing-mode: horizontal-tb !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > .py-3 > .flex {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    gap: 6px !important;
+    writing-mode: horizontal-tb !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-flash-sale-section > .grid > .gs-flash-sale-card > button {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    writing-mode: horizontal-tb !important;
+    line-height: 1.35 !important;
+  }
+}

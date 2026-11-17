@@ -32,6 +32,7 @@ import { buildOrderDeliveryAddress, validateCheckoutContact, validateCheckoutIte
 import { validateRegistrationPassword, checkPwnedPassword } from './utils/passwordSafety';
 import { getCheckoutErrorMessage } from './utils/checkoutMessages';
 import { isAuthRestoreCurrent } from './utils/authSafety';
+import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAccess, hasAdminPermission as hasServerAdminPermission, hasAnyAdminAccess } from './utils/adminAccess';
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
@@ -43,6 +44,56 @@ const ProductCompareModal = lazy(() => import('./components/ProductCompareModal'
 const ImageSearchModal = lazy(() => import('./components/ImageSearchModal'));
 const AiAssistantModal = lazy(() => import('./components/AiAssistantModal'));
 const Modals = lazy(() => import('./components/Modals'));
+
+
+class AdminDashboardErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '', componentStack: '' };
+  }
+
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      errorMessage: String(error?.message || error || 'უცნობი React შეცდომა').slice(0, 1200)
+    };
+  }
+
+  componentDidCatch(error, info) {
+    const componentStack = String(info?.componentStack || '').slice(0, 4000);
+    this.setState({ componentStack });
+    console.error('GEOSTORE admin dashboard render failed:', error, info);
+  }
+
+  handleRetry = () => {
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div role="alert" className="mx-auto my-10 w-full max-w-xl rounded-2xl border border-rose-500/30 bg-slate-950 p-6 text-left text-slate-100 shadow-xl">
+          <h2 className="text-center text-lg font-black">ადმინ პანელი ვერ ჩაიტვირთა</h2>
+          <p className="mt-2 text-center text-sm text-slate-300">ტექნიკური შეცდომა დაფიქსირდა. მაღაზიის დანარჩენი ნაწილი ხელმისაწვდომი რჩება.</p>
+          <div className="mt-4 rounded-xl border border-rose-500/20 bg-black/30 p-3">
+            <p className="text-xs font-bold text-rose-300">შეცდომის დეტალი</p>
+            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-200">{this.state.errorMessage || 'შეცდომის ტექსტი მიუწვდომელია'}</pre>
+            {this.state.componentStack && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-slate-400">კომპონენტების კვალი</summary>
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-[10px] text-slate-400">{this.state.componentStack}</pre>
+              </details>
+            )}
+          </div>
+          <button type="button" onClick={this.handleRetry} className="mt-5 block w-full rounded-xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950">
+            ხელახლა ცდა
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
@@ -355,9 +406,7 @@ const normalizeAuthUser = (user) => {
 
 // ადმინისტრატორს ვამოწმებთ Supabase-ის სანდო app_metadata.role-ით
 // და უცვლელი Auth user ID-ით — ელფოსტის ცვლილება/შეცდომა წვდომას აღარ არღვევს.
-const isAuthorizedAdmin = (user) =>
-  user?.app_metadata?.role === 'admin' &&
-  user?.id === '1060de3d-d28a-45f8-9a64-5e0368cffc4b';
+const isAuthorizedAdmin = isOwnerAdmin;
 
 const normalizeOrderStatus = (status) => String(status || '').trim().toLowerCase();
 
@@ -559,16 +608,35 @@ export default function App() {
     password: ''
   });
 
-  // ადმინისტრატორის სტატუსი არასოდეს აღდგება localStorage-იდან.
-  // ის დგინდება მხოლოდ Supabase Auth-ის დადასტურებული მომხმარებლით.
+  // Admin access is resolved from the fixed owner identity or the server-side
+  // get_my_admin_access RPC. Browser storage and editable user metadata never grant access.
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
-  // Serialize catalogue refreshes and discard results from a previous admin session.
+  const [adminAccess, setAdminAccess] = useState(EMPTY_ADMIN_ACCESS);
+  const hasAdminPermission = (permission) => hasServerAdminPermission(adminAccess, permission);
+  const hasOrdersAccess = hasAdminPermission('orders');
+  const hasSettingsAccess = hasAdminPermission('settings');
+  const resolveAdminAccess = async (user) => {
+    if (!user?.id) return EMPTY_ADMIN_ACCESS;
+    if (isAuthorizedAdmin(user)) return OWNER_ADMIN_ACCESS;
+    try {
+      const { data, error } = await supabase.rpc('get_my_admin_access');
+      if (error) throw error;
+      return normalizeAdminAccess(data, user);
+    } catch (error) {
+      // A missing/unavailable permission RPC fails closed; customer storefront
+      // access remains available and no browser-side role is trusted.
+      console.warn('Server-side admin access lookup failed:', error);
+      return EMPTY_ADMIN_ACCESS;
+    }
+  };
+
+  // Serialize catalogue refreshes and discard results from a previous access set.
   const productsFetchLock = useRef(false);
   const productsFetchQueued = useRef(false);
   const productsAccessEpoch = useRef(0);
-  const adminAccessRef = useRef(adminLoggedIn);
-  if (adminAccessRef.current !== adminLoggedIn) {
-    adminAccessRef.current = adminLoggedIn;
+  const adminAccessRef = useRef(adminAccess);
+  if (adminAccessRef.current !== adminAccess) {
+    adminAccessRef.current = adminAccess;
     productsAccessEpoch.current += 1;
   }
   const [storefrontDraftBusy, setStorefrontDraftBusy] = useState(false);
@@ -850,7 +918,7 @@ export default function App() {
   }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken, currentUser?.id]);
 
   useEffect(() => {
-    if (!adminLoggedIn) return undefined;
+    if (!hasSettingsAccess) return undefined;
     let active = true;
     const loadStorefrontDraft = async () => {
       try {
@@ -873,12 +941,12 @@ export default function App() {
     };
     loadStorefrontDraft();
     return () => { active = false; };
-  }, [adminLoggedIn]);
+  }, [hasSettingsAccess]);
 
   useEffect(() => {
-    // Admins load their private draft in the separate authenticated effect above.
+    // Settings-authorized staff load the private draft in the separate authenticated effect above.
     // Do not let a slower public-config request overwrite that draft after login.
-    if (adminLoggedIn) return undefined;
+    if (hasSettingsAccess) return undefined;
     let active = true;
     const loadPublishedStorefront = async () => {
       try {
@@ -899,7 +967,7 @@ export default function App() {
     };
     loadPublishedStorefront();
     return () => { active = false; };
-  }, [adminLoggedIn]);
+  }, [hasSettingsAccess]);
 
   useEffect(() => {
     if (isCheckoutOpen || orderConfirmation || isAuthOpen || isTermsOpen || isWarrantyOpen || isTrackerOpen || isNotificationsOpen) {
@@ -1005,17 +1073,39 @@ export default function App() {
         setIsAuthOpen(true);
       }
 
+      const eventVersion = authEventVersion;
       const authUser = session?.user || null;
-      const authorizedAdmin = isAuthorizedAdmin(authUser);
       activateCartOwner(authUser?.id || null);
       setCurrentUser(normalizeAuthUser(authUser));
-      setAdminLoggedIn(authorizedAdmin);
-      // Route verified administrator accounts directly to the dashboard.
-      // Ordinary users remain in the storefront; URL flags never grant access.
-      setActiveTab((current) =>
-        authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
-      );
-      setAuthLoading(false);
+      setAdminAccess(EMPTY_ADMIN_ACCESS);
+      setAdminLoggedIn(false);
+      setAuthLoading(Boolean(authUser));
+
+      if (!authUser) {
+        setActiveTab((current) => current === 'admin' ? 'store' : current);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Supabase auth callbacks stay synchronous; resolve the database permission
+      // after the callback returns, and discard stale results after account switches.
+      Promise.resolve().then(() => resolveAdminAccess(authUser)).then((access) => {
+        if (!mounted || eventVersion !== authEventVersion) return;
+        const authorized = hasAnyAdminAccess(access);
+        setAdminAccess(access);
+        setAdminLoggedIn(authorized);
+        setActiveTab((current) =>
+          authorized ? 'admin' : current === 'admin' ? 'store' : current
+        );
+        setAuthLoading(false);
+      }).catch((error) => {
+        if (!mounted || eventVersion !== authEventVersion) return;
+        console.error('Admin access resolution failed:', error);
+        setAdminAccess(EMPTY_ADMIN_ACCESS);
+        setAdminLoggedIn(false);
+        setActiveTab((current) => current === 'admin' ? 'store' : current);
+        setAuthLoading(false);
+      });
     });
 
     const restoreSession = async () => {
@@ -1029,14 +1119,16 @@ export default function App() {
           throw error;
         }
 
+        const authUser = data?.user || null;
+        const access = await resolveAdminAccess(authUser);
         if (isAuthRestoreCurrent({ mounted, restoreVersion, currentVersion: authEventVersion })) {
-          const authUser = data?.user || null;
-          const authorizedAdmin = isAuthorizedAdmin(authUser);
+          const authorized = hasAnyAdminAccess(access);
           activateCartOwner(authUser?.id || null);
           setCurrentUser(normalizeAuthUser(authUser));
-          setAdminLoggedIn(authorizedAdmin);
+          setAdminAccess(access);
+          setAdminLoggedIn(authorized);
           setActiveTab((current) =>
-            authorizedAdmin ? 'admin' : current === 'admin' ? 'store' : current
+            authorized ? 'admin' : current === 'admin' ? 'store' : current
           );
         }
       } catch (error) {
@@ -1046,6 +1138,7 @@ export default function App() {
           // Clear every privilege-related UI state, not only the profile.
           activateCartOwner(null);
           setCurrentUser(null);
+          setAdminAccess(EMPTY_ADMIN_ACCESS);
           setAdminLoggedIn(false);
           setActiveTab((current) => current === 'admin' ? 'store' : current);
         }
@@ -1063,6 +1156,61 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+
+  // Revalidate active staff permissions periodically and whenever the app returns
+  // to the foreground. Server-side RPC/RLS checks remain authoritative; this
+  // refresh removes stale tabs and admin UI state after an owner revokes access.
+  useEffect(() => {
+    if (!currentUser?.id || !adminLoggedIn) return undefined;
+    let active = true;
+    let inFlight = false;
+
+    const refreshAdminAccess = async () => {
+      if (!active || inFlight) return;
+      inFlight = true;
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        const authUser = data?.user || null;
+        if (!authUser || authUser.id !== currentUser.id) {
+          throw new Error('The authenticated user changed during permission refresh.');
+        }
+
+        const access = await resolveAdminAccess(authUser);
+        if (!active) return;
+        const authorized = hasAnyAdminAccess(access);
+        setAdminAccess(access);
+        setAdminLoggedIn(authorized);
+        if (!authorized) {
+          setActiveTab((current) => current === 'admin' ? 'store' : current);
+        }
+      } catch (error) {
+        if (!active) return;
+        // Fail closed when the session or permission lookup cannot be verified.
+        console.warn('Admin permission refresh failed; clearing cached access:', error);
+        setAdminAccess(EMPTY_ADMIN_ACCESS);
+        setAdminLoggedIn(false);
+        setActiveTab((current) => current === 'admin' ? 'store' : current);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    void refreshAdminAccess();
+    const interval = window.setInterval(() => void refreshAdminAccess(), 60000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refreshAdminAccess();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [currentUser?.id, adminLoggedIn]);
+
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -1139,7 +1287,7 @@ export default function App() {
   }, [notifications]);
 
   const handleSaveStorefrontDraft = async (settingsOverride = siteSettings) => {
-    if (!adminLoggedIn || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
+    if (!hasSettingsAccess || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return;
     storefrontSaveLock.current = true;
     setStorefrontDraftBusy(true);
     const uploadedAssets = [];
@@ -1171,21 +1319,12 @@ export default function App() {
         banners: draftBanners,
         siteSettings: validateStorefrontSiteSettings(settingsOverride)
       };
-      const savedAt = new Date().toISOString();
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+        `${SUPABASE_URL}/rest/v1/rpc/save_storefront_draft`,
         {
           method: 'POST',
-          headers: {
-            ...(await getSupabaseHeaders({ authenticated: true })),
-            Prefer: 'resolution=merge-duplicates,return=representation'
-          },
-          body: JSON.stringify({
-            config_key: 'storefront',
-            draft_config: snapshot,
-            updated_by: session.user.id,
-            draft_updated_at: savedAt
-          })
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({ p_snapshot: snapshot })
         }
       );
       if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
@@ -1203,7 +1342,7 @@ export default function App() {
   };
 
   const handlePublishStorefront = async () => {
-    if (!adminLoggedIn || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
+    if (!adminAccess.is_admin || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
     storefrontPublishLock.current = true;
     setStorefrontPublishBusy(true);
     const uploadedAssets = [];
@@ -1586,11 +1725,14 @@ export default function App() {
 
     productsFetchLock.current = true;
     const requestAccessEpoch = productsAccessEpoch.current;
-    const requestAdminLoggedIn = adminAccessRef.current;
+    const requestAdminAccess = adminAccessRef.current || EMPTY_ADMIN_ACCESS;
+    const requestAdminLoggedIn = hasAnyAdminAccess(requestAdminAccess);
+    const requestHasProductPermission = hasServerAdminPermission(requestAdminAccess, 'products');
+    const requestHasExpensesPermission = hasServerAdminPermission(requestAdminAccess, 'expenses');
 
     try {
       let res;
-      if (requestAdminLoggedIn) {
+      if (requestAdminLoggedIn && requestHasExpensesPermission) {
         const requestAdminProducts = async () => fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_products`, {
           method: 'POST',
           headers: await getSupabaseHeaders({ authenticated: true }),
@@ -1612,29 +1754,46 @@ export default function App() {
               await supabase.auth.refreshSession();
 
             if (refreshError || !refreshedSession?.access_token) {
+              setAdminAccess(EMPTY_ADMIN_ACCESS);
               setAdminLoggedIn(false);
               setActiveTab((current) => current === 'admin' ? 'store' : current);
-              throw new Error('ადმინისტრატორის სესია განახლდა ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
+              throw new Error('ადმინისტრატორის სესია განახლდა ვერ მოხერხდა. ხელახლა შედით ანგარიშში.');
             }
 
             const { data: { user: verifiedUser } = {}, error: verifyError } =
               await supabase.auth.getUser(refreshedSession.access_token);
 
-            if (verifyError || !isAuthorizedAdmin(verifiedUser)) {
+            if (verifyError || !verifiedUser?.id) {
+              setAdminAccess(EMPTY_ADMIN_ACCESS);
               setAdminLoggedIn(false);
               setActiveTab((current) => current === 'admin' ? 'store' : current);
-              throw new Error('ადმინისტრატორის უფლებები ვერ დადასტურდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
+              throw new Error('ანგარიშის უფლებები ვერ დადასტურდა. ხელახლა შედით სისტემაში.');
             }
 
+            const refreshedAccess = await resolveAdminAccess(verifiedUser);
+            setAdminAccess(refreshedAccess);
+            setAdminLoggedIn(hasAnyAdminAccess(refreshedAccess));
+            if (!hasServerAdminPermission(refreshedAccess, 'expenses')) {
+              // The new permission snapshot will trigger a safe REST catalogue reload.
+              return;
+            }
             res = await requestAdminProducts();
           } else {
             throw new Error(errorBody || 'პროდუქტების ჩატვირთვა ვერ მოხერხდა.');
           }
         }
       } else {
+        // Product-authorized staff use RLS to read the complete safe catalogue
+        // columns; other staff/customers receive the public published catalogue.
+        const safeProductColumns = 'id,sku,name,category,brand,vendor,price_gel,old_price_gel,flash_sale_started_at,flash_sale_ends_at,flash_sale_percent,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured';
+        // Only product-authorized staff need draft/published state. Ordinary
+        // customers keep the public catalogue column allowlist unchanged.
+        const productColumns = requestHasProductPermission
+          ? `${safeProductColumns},is_published`
+          : safeProductColumns;
         res = await fetch(
-          `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,flash_sale_started_at,flash_sale_ends_at,flash_sale_percent,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc,id.asc`,
-          { headers: await getSupabaseHeaders() }
+          `${SUPABASE_URL}/rest/v1/products?select=${productColumns}&order=created_at.desc,id.asc`,
+          { headers: await getSupabaseHeaders({ authenticated: requestHasProductPermission }) }
         );
       }
 
@@ -1804,7 +1963,7 @@ export default function App() {
     };
     document.addEventListener('visibilitychange', refreshProductsWhenVisible);
 
-    if (!adminLoggedIn) {
+    if (!hasOrdersAccess) {
       adminOrdersSessionActive.current = false;
       adminOrdersSessionVersion.current += 1;
       // Never retain private administrator order snapshots after access is lost.
@@ -1842,7 +2001,7 @@ export default function App() {
       void supabase.removeChannel(orderChannel);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
-  }, [adminLoggedIn]);
+  }, [adminLoggedIn, adminAccess, hasOrdersAccess]);
 
   useEffect(() => {
     try {
@@ -2276,6 +2435,7 @@ export default function App() {
         const { error: signOutError } = await supabase.auth.signOut();
         if (signOutError) throw signOutError;
         setCurrentUser(null);
+        setAdminAccess(EMPTY_ADMIN_ACCESS);
         setAdminLoggedIn(false);
         setActiveTab('store');
         setAuthMode('login');
@@ -2475,6 +2635,7 @@ export default function App() {
       }
 
       setCurrentUser(null);
+      setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setOrders([]);
       setMyOrders([]);
@@ -2502,15 +2663,22 @@ export default function App() {
       const { data, error } = await supabase.auth.getUser();
       if (error) throw error;
 
-      if (!isAuthorizedAdmin(data?.user)) {
+      const access = await resolveAdminAccess(data?.user);
+      if (!hasAnyAdminAccess(access)) {
+        setAdminAccess(EMPTY_ADMIN_ACCESS);
         setAdminLoggedIn(false);
-        setAdminError('ამ ანგარიშს ადმინისტრატორის უფლებები არ აქვს.');
+        setAdminError('ამ ანგარიშს ადმინისტრატორის ან თანამშრომლის აქტიური უფლებები არ აქვს.');
         return;
       }
 
+      setAdminAccess(access);
       setAdminLoggedIn(true);
-      showToast('🔓 ადმინისტრატორის წვდომა დადასტურებულია.');
+      setActiveTab('admin');
+      showToast(access.is_admin
+        ? '🔓 მთავარი ადმინისტრატორის წვდომა დადასტურებულია.'
+        : '🔓 თანამშრომლის წვდომა დადასტურებულია.');
     } catch (error) {
+      setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setAdminError(error.message || 'ვერ მოხერხდა ანგარიშის შემოწმება.');
     }
@@ -2980,6 +3148,15 @@ export default function App() {
   // Category and subcategory filtering belongs to StoreView, which has the
   // parent/child category tree. Filtering by the parent name here first would
   // discard products assigned to its subcategories before StoreView can include them.
+  const adminDashboardProducts = useMemo(() => {
+    if (hasAdminPermission('expenses')) return Array.isArray(products) ? products : [];
+    return (Array.isArray(products) ? products : []).map((product) => {
+      if (!product || typeof product !== 'object') return product;
+      const { purchase_cost, purchaseCost, ...safeProduct } = product;
+      return safeProduct;
+    });
+  }, [products, adminAccess]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchesVendor =
@@ -3093,9 +3270,18 @@ export default function App() {
         )}
 
         {activeTab === 'admin' && (
-          <Suspense fallback={null}>
+          <AdminDashboardErrorBoundary>
+          <Suspense
+            fallback={(
+              <div role="status" aria-live="polite" className="mx-auto my-10 flex min-h-[30vh] w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-300">
+                ადმინ პანელი იტვირთება...
+              </div>
+            )}
+          >
             <AdminDashboardPro
+            key={`${currentUser?.id || 'anonymous'}-${adminAccess.is_admin ? 'owner' : Object.keys(adminAccess.permissions || {}).filter((permission) => adminAccess.permissions[permission]).sort().join('-')}`}
             adminLoggedIn={adminLoggedIn}
+            adminAccess={adminAccess}
             setAdminLoggedIn={setAdminLoggedIn}
             adminLoginForm={
               adminLoginForm || {
@@ -3112,7 +3298,7 @@ export default function App() {
             setOrders={setOrders}
             usersList={usersList || []}
             setUsersList={setUsersList}
-            products={products || []}
+            products={adminDashboardProducts}
             setProducts={setProducts}
             vendorsList={vendorsList || []}
             setVendorsList={setVendorsList}
@@ -3133,6 +3319,7 @@ export default function App() {
             setDeliveryFees={setDeliveryFees}
             />
           </Suspense>
+          </AdminDashboardErrorBoundary>
         )}
 
         {activeTab === 'wishlist' && (

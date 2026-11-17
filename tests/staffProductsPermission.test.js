@@ -1,0 +1,88 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const migration = await readFile(new URL('../supabase/migrations/20261117140000_staff_products_permission.sql', import.meta.url), 'utf8');
+const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const settingsMigration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
+const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const dashboard = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+
+test('product reads require active products permission while direct table writes stay disabled', () => {
+  assert.match(migration, /CREATE POLICY "Staff with products permission can read all products"/);
+  assert.ok(migration.includes("USING (public.has_staff_permission('products'))"));
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "Staff with products permission can insert products"'));
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "Staff with products permission can update products"'));
+  assert.ok(migration.includes('REVOKE INSERT, UPDATE ON TABLE public.products FROM authenticated'));
+  assert.doesNotMatch(migration, /CREATE POLICY "Staff with products permission can (insert|update) products"/);
+  assert.match(foundation, /staff\.is_active IS TRUE/);
+});
+
+test('product and inventory RPCs are converted to server-side products authorization', () => {
+  for (const name of [
+    'admin_save_product',
+    'admin_update_product_with_stock',
+    'admin_delete_product',
+    'admin_set_product_custom_variant_stocks',
+    'admin_set_product_variant_stock_batches',
+    'admin_set_product_variant_stocks',
+    'list_inventory_movements',
+    'list_inventory_replenishment_settings',
+    'save_inventory_replenishment_setting'
+  ]) assert.ok(migration.includes(name), name);
+  assert.ok(migration.includes("IF NOT public.has_staff_permission(''products'') THEN"));
+});
+
+test('purchase cost is protected by the separate expenses permission', () => {
+  assert.match(migration, /REVOKE INSERT \(purchase_cost\), UPDATE \(purchase_cost\), SELECT \(purchase_cost\)/);
+  assert.ok(migration.includes("public.has_staff_permission(''expenses'')"));
+  assert.ok(migration.includes("p_product := p_product - ''purchase_cost''"));
+  assert.ok(migration.includes("v_product_result := v_product_result - ''purchase_cost''"));
+  assert.ok(migration.includes("jsonb_set(p_product, ''{purchase_cost}'', ''null''::jsonb, true)"));
+});
+
+test('full product-cost listing is not granted by products permission alone', () => {
+  assert.match(migration, /admin_list_products\(\)/);
+  assert.ok(migration.includes("IF NOT public.has_staff_permission(''expenses'') THEN"));
+  assert.ok(migration.includes("EXECUTE rtrim(v_definition, E'; \\t\\n\\r')"));
+});
+
+test('flash-sale campaigns remain owner-only and are not converted to products permission', () => {
+  const targets = migration.split('v_signatures text[] := ARRAY[')[1]?.split('];')[0] || '';
+  assert.doesNotMatch(targets, /admin_apply_flash_sale/);
+});
+
+test('all product writes use permission-checked RPCs after direct table updates are revoked', () => {
+  assert.match(dashboard, /rpc\/admin_quick_update_product/);
+  assert.match(dashboard, /rpc\/admin_update_product_with_stock/);
+  assert.match(dashboard, /p_size_color_stocks:\s*changedSizeColorStocks/);
+  assert.match(dashboard, /p_custom_variant_stocks:\s*changedCustomVariantStocks/);
+  assert.doesNotMatch(dashboard, /\/rest\/v1\/products[\s\S]{0,240}?method:\s*'PATCH'/);
+});
+
+test('product-authorized staff can see draft publication state without widening the public catalogue', () => {
+  assert.match(migration, /GRANT SELECT \(is_published\) ON TABLE public\.products TO authenticated/);
+  assert.match(app, /requestHasProductPermission\s*\?\s*`\$\{safeProductColumns\},is_published`\s*:\s*safeProductColumns/);
+  assert.match(app, /isPublished: p\.is_published !== false/);
+});
+
+test('product permission changes preserve inventory transaction markers', () => {
+  assert.match(migration, /geostore\.inventory_reason/);
+  assert.match(migration, /geostore\.variant_stock_adjustment/);
+  assert.match(migration, /admin_set_product_variant_stock_batches/);
+});
+
+
+test('product staff can manage only product-image paths in the shared Storage bucket', () => {
+  for (const phrase of [
+    'Storefront media scoped upload',
+    'Storefront media scoped update',
+    'Storefront media scoped delete',
+    "name LIKE 'products/%'",
+    "public.has_staff_permission('products')"
+  ]) assert.ok(settingsMigration.includes(phrase), phrase);
+
+  assert.match(settingsMigration, /bucket_id = 'storefront-media'/);
+  assert.ok(settingsMigration.includes("name LIKE 'storefront/categories/%'"));
+  assert.ok(settingsMigration.includes("name LIKE 'storefront/banners/%'"));
+});

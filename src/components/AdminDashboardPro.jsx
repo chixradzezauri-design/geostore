@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { createClient } from '@supabase/supabase-js';
+import { EMPTY_ADMIN_ACCESS, hasAdminPermission, hasAnyAdminAccess } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
@@ -28,6 +29,36 @@ const getLocalDateInputValue = () => {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+const ADMIN_TAB_PERMISSION = Object.freeze({
+  command: 'owner',
+  analytics: 'analytics',
+  calculator: 'analytics',
+  expenses: 'expenses',
+  ai_analyst: 'owner',
+  staff: 'owner',
+  orders: 'orders',
+  products: 'products',
+  inventory: 'products',
+  replenishment: 'products',
+  support: 'support',
+  messages: 'crm',
+  discounts: 'owner',
+  logs: 'owner',
+  broadcasts: 'owner',
+  banners: 'settings',
+  categories: 'settings',
+  coupons: 'settings',
+  // Legacy browser-local directories remain owner-only until server-backed.
+  vendors: 'owner',
+  users: 'owner',
+  settings: 'settings'
+});
+const STAFF_DEFAULT_TAB_ORDER = [
+  'orders', 'products', 'support', 'messages', 'expenses',
+  'analytics', 'inventory', 'replenishment', 'settings',
+  'banners', 'categories', 'coupons', 'vendors', 'calculator', 'users'
+];
+
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
 const getSupabaseHeaders = async () => {
@@ -290,8 +321,571 @@ const getOrderStatusFilterKey = (status) => {
   return String(status || '');
 };
 
+function StaffAnalyticsSummary() {
+  const [periodDays, setPeriodDays] = useState('30');
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    const loadSummary = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const to = new Date();
+        const from = new Date(to.getTime() - Number(periodDays) * 24 * 60 * 60 * 1000);
+        const { data, error: rpcError } = await supabase.rpc('get_staff_analytics_summary', {
+          p_from: from.toISOString(),
+          p_to: to.toISOString()
+        });
+        if (rpcError) throw rpcError;
+        if (!active) return;
+        setSummary(data && typeof data === 'object' ? data : null);
+      } catch (loadError) {
+        if (!active) return;
+        setSummary(null);
+        setError('ანალიტიკის შეჯამება ვერ ჩაიტვირთა. გადაამოწმეთ თანამშრომლის უფლება და სერვერული განახლების სტატუსი.');
+        console.error('Staff analytics summary failed:', loadError);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void loadSummary();
+    return () => { active = false; };
+  }, [periodDays]);
+
+  const money = (value) => new Intl.NumberFormat('ka-GE', {
+    style: 'currency',
+    currency: 'GEL',
+    maximumFractionDigits: 2
+  }).format(Number(value) || 0);
+  const count = (value) => new Intl.NumberFormat('ka-GE').format(Number(value) || 0);
+  const metrics = [
+    { label: 'შეკვეთები', value: count(summary?.order_count), detail: `გაუქმებული: ${count(summary?.cancelled_count)}` },
+    { label: 'შემოსავალი', value: money(summary?.revenue) },
+    { label: 'დასრულებული გაყიდვები', value: money(summary?.completed_revenue) },
+    { label: 'საშუალო შეკვეთა', value: money(summary?.average_order_value) },
+    ...(summary?.financials_available ? [
+      { label: 'შესყიდვის ღირებულება', value: money(summary?.cost_of_goods) },
+      { label: 'ხარჯები', value: money(summary?.expenses) },
+      { label: 'სავარაუდო წმინდა მოგება', value: money(summary?.net_profit_estimate) },
+      { label: 'მოგება ხარჯებამდე', value: money(summary?.gross_profit_before_expenses) }
+    ] : [])
+  ];
+
+  return (
+    <section className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-slate-900/80 p-4">
+        <div>
+          <h3 className="text-lg font-black text-white">ანალიტიკის შეჯამება</h3>
+          <p className="mt-1 text-xs text-slate-400">მხოლოდ შეჯამებული მონაცემები — მომხმარებლის პირადი ინფორმაცია და შეკვეთების დეტალები არ ჩანს.</p>
+        </div>
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-300">
+          პერიოდი
+          <select
+            value={periodDays}
+            onChange={(event) => setPeriodDays(event.target.value)}
+            className="rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-2 text-white"
+          >
+            <option value="7">ბოლო 7 დღე</option>
+            <option value="30">ბოლო 30 დღე</option>
+            <option value="90">ბოლო 90 დღე</option>
+            <option value="365">ბოლო 365 დღე</option>
+          </select>
+        </label>
+      </div>
+
+      {loading && <div role="status" className="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">ანალიტიკა იტვირთება…</div>}
+      {error && <div role="alert" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">{error}</div>}
+
+      {summary && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {metrics.map((metric) => (
+              <article key={metric.label} className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+                <p className="text-[11px] font-bold text-slate-400">{metric.label}</p>
+                <strong className="mt-2 block text-xl font-black text-white tabular-nums">{metric.value}</strong>
+                {metric.detail && <p className="mt-1 text-[10px] text-slate-500">{metric.detail}</p>}
+              </article>
+            ))}
+          </div>
+
+          {summary.financials_available && Number(summary.uncosted_item_lines) > 0 && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+              {count(summary.uncosted_item_lines)} გაყიდულ პოზიციას ისტორიულ ჩანაწერში შესყიდვის ღირებულება აკლია; მოგების შეფასება შესაძლოა არასრული იყოს.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <section className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+              <h4 className="font-black text-white">სტატუსების მიხედვით</h4>
+              <div className="mt-3 space-y-2">
+                {Object.entries(summary.status_counts || {}).map(([status, value]) => (
+                  <div key={status} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="text-slate-300">{status}</span>
+                    <strong className="text-white tabular-nums">{count(value)}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+              <h4 className="font-black text-white">ტოპ პროდუქტები</h4>
+              <div className="mt-3 space-y-2">
+                {(summary.top_products || []).map((product) => (
+                  <div key={product.product_id} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                    <span className="min-w-0 truncate text-slate-300">{product.product_name}</span>
+                    <span className="shrink-0 text-right text-white">{count(product.units)} ც. · {money(product.revenue)}</span>
+                  </div>
+                ))}
+                {!summary.top_products?.length && <p className="text-xs text-slate-500">ამ პერიოდში გაყიდვები არ არის.</p>}
+              </div>
+            </section>
+          </div>
+
+          <section className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+            <h4 className="font-black text-white">დღიური გაყიდვები</h4>
+            <div className="mt-3 max-h-72 overflow-auto space-y-2">
+              {(summary.daily || []).slice(-31).map((day) => (
+                <div key={day.day} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 border-b border-slate-800 pb-2 text-xs">
+                  <span className="text-slate-400">{day.day}</span>
+                  <span className="text-slate-300">{count(day.orders)} შეკვეთა</span>
+                  <strong className="text-white tabular-nums">{money(day.revenue)}</strong>
+                </div>
+              ))}
+              {!summary.daily?.length && <p className="text-xs text-slate-500">ამ პერიოდში შეკვეთები არ არის.</p>}
+            </div>
+          </section>
+        </>
+      )}
+    </section>
+  );
+}
+
+async function callStaffAdminApi(body) {
+  const { data, error } = await supabase.functions.invoke('manage-admin-staff', { body });
+  if (error) {
+    let message = error.message || 'თანამშრომლების სერვერული მოქმედება ვერ შესრულდა.';
+    const response = error.context;
+    if (response && typeof response.clone === 'function') {
+      const payload = await response.clone().json().catch(() => null);
+      if (payload?.error) message = payload.error;
+    }
+    throw new Error(message);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data || {};
+}
+
+const STAFF_ROLE_OPTIONS = [
+  { value: 'manager', label: 'მენეჯერი' },
+  { value: 'operator', label: 'ოპერატორი' },
+  { value: 'finance', label: 'ფინანსისტი' },
+  { value: 'product_manager', label: 'პროდუქტების მენეჯერი' }
+];
+
+const STAFF_PERMISSION_OPTIONS = [
+  { key: 'products', label: 'პროდუქტები' },
+  { key: 'orders', label: 'შეკვეთები' },
+  { key: 'analytics', label: 'ანალიტიკა' },
+  { key: 'expenses', label: 'ხარჯები და ფინანსები' },
+  { key: 'crm', label: 'CRM მომხმარებლები' },
+  { key: 'support', label: 'მხარდაჭერა' },
+  { key: 'settings', label: 'საიტის პარამეტრები' }
+];
+
+const createStaffPermissions = (source = {}) => Object.fromEntries(
+  STAFF_PERMISSION_OPTIONS.map(({ key }) => [key, source?.[key] === true])
+);
+
+const STAFF_ROLE_LABELS = Object.fromEntries(
+  STAFF_ROLE_OPTIONS.map(({ value, label }) => [value, label])
+);
+
+function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
+  const [staffList, setStaffList] = useState([]);
+  const [legacyStaffList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('geostore_staff_list');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+  const [staffListLoading, setStaffListLoading] = useState(false);
+  const [staffActionBusy, setStaffActionBusy] = useState(false);
+  const [staffListError, setStaffListError] = useState('');
+  const [staffListNotice, setStaffListNotice] = useState('');
+  const [selectedUserEmail, setSelectedUserEmail] = useState('');
+  const [editingStaffId, setEditingStaffId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    display_name: '',
+    role: 'manager',
+    permissions: createStaffPermissions()
+  });
+  const [staffForm, setStaffForm] = useState({
+    display_name: '',
+    email: '',
+    role: 'manager',
+    permissions: createStaffPermissions({ products: true, orders: true })
+  });
+
+  const refreshStaffList = async (silent = false) => {
+    if (!isOwner) return;
+    if (!silent) setStaffListLoading(true);
+    setStaffListError('');
+    try {
+      const result = await callStaffAdminApi({ action: 'list' });
+      setStaffList(Array.isArray(result.staff) ? result.staff : []);
+    } catch (error) {
+      setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
+    } finally {
+      if (!silent) setStaffListLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOwner) {
+      setStaffList([]);
+      return undefined;
+    }
+    let active = true;
+    setStaffListLoading(true);
+    callStaffAdminApi({ action: 'list' }).then((result) => {
+      if (active) {
+        setStaffList(Array.isArray(result.staff) ? result.staff : []);
+        setStaffListError('');
+      }
+    }).catch((error) => {
+      if (active) setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
+    }).finally(() => {
+      if (active) setStaffListLoading(false);
+    });
+    return () => { active = false; };
+  }, [isOwner]);
+
+  const inviteStaff = async ({ email, display_name, role, permissions }) => {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedName = String(display_name || '').trim();
+    const normalizedPermissions = createStaffPermissions(permissions);
+    if (!normalizedEmail || !normalizedName) {
+      setStaffListError('შეავსეთ თანამშრომლის სახელი და ელფოსტა.');
+      return;
+    }
+    if (!Object.values(normalizedPermissions).some(Boolean)) {
+      setStaffListError('მიანიჭეთ მინიმუმ ერთი მოდულის უფლება.');
+      return;
+    }
+
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      const result = await callStaffAdminApi({
+        action: 'invite',
+        email: normalizedEmail,
+        display_name: normalizedName,
+        role,
+        permissions: normalizedPermissions
+      });
+      await refreshStaffList(true);
+      setStaffListNotice(result.invited
+        ? `მოწვევა გაიგზავნა მისამართზე ${normalizedEmail}. ანგარიშის მფლობელმა უნდა დაასრულოს რეგისტრაცია.`
+        : `არსებული Supabase Auth ანგარიში (${normalizedEmail}) თანამშრომლის ჩანაწერს დაუკავშირდა.`);
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის Auth ანგარიში დაემატა: ${normalizedEmail}`);
+      }
+      return result;
+    } catch (error) {
+      setStaffListError(error?.message || 'თანამშრომლის მოწვევა ვერ შესრულდა.');
+      return null;
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  const handleInviteStaff = async (event) => {
+    event.preventDefault();
+    const result = await inviteStaff(staffForm);
+    if (result) {
+      setStaffForm({
+        display_name: '',
+        email: '',
+        role: 'manager',
+        permissions: createStaffPermissions({ products: true, orders: true })
+      });
+    }
+  };
+
+  const handleAddExistingUser = async (event) => {
+    event.preventDefault();
+    const target = (usersList || []).find((user) =>
+      user.email === selectedUserEmail || user.id === selectedUserEmail
+    );
+    if (!target?.email) {
+      setStaffListError('მომხმარებლის ელფოსტა ვერ მოიძებნა.');
+      return;
+    }
+    const result = await inviteStaff({
+      email: target.email,
+      display_name: target.name || target.display_name || target.email.split('@')[0],
+      role: 'manager',
+      permissions: createStaffPermissions({ orders: true })
+    });
+    if (result) setSelectedUserEmail('');
+  };
+
+  const beginEdit = (staff) => {
+    setEditingStaffId(staff.id);
+    setEditForm({
+      display_name: staff.display_name || '',
+      role: staff.role || 'manager',
+      permissions: createStaffPermissions(staff.permissions)
+    });
+  };
+
+  const saveStaff = async (staff) => {
+    if (!Object.values(editForm.permissions).some(Boolean) && staff.is_active) {
+      setStaffListError('აქტიურ თანამშრომელს მინიმუმ ერთი მოდულის უფლება უნდა ჰქონდეს.');
+      return;
+    }
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      await callStaffAdminApi({
+        action: 'update',
+        id: staff.id,
+        display_name: editForm.display_name,
+        role: editForm.role,
+        permissions: editForm.permissions,
+        is_active: staff.is_active
+      });
+      await refreshStaffList(true);
+      setEditingStaffId(null);
+      setStaffListNotice('თანამშრომლის როლი და მოდულების უფლებები Supabase-ში განახლდა.');
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის უფლებები განახლდა: ${staff.email}`);
+      }
+    } catch (error) {
+      setStaffListError(error?.message || 'თანამშრომლის უფლებების განახლება ვერ მოხერხდა.');
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  const revokeStaff = async (staff) => {
+    if (!window.confirm(`გაუქმდეს ${staff.display_name || staff.email}-ის სისტემაში წვდომა? Auth ანგარიში არ წაიშლება.`)) return;
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      await callStaffAdminApi({ action: 'revoke', id: staff.id });
+      await refreshStaffList(true);
+      setStaffListNotice('თანამშრომლის სერვერული წვდომა გაუქმდა. Supabase Auth ანგარიში შენარჩუნებულია.');
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის წვდომა გაუქმდა: ${staff.email}`);
+      }
+    } catch (error) {
+      setStaffListError(error?.message || 'წვდომის გაუქმება ვერ მოხერხდა.');
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  const reactivateStaff = async (staff) => {
+    if (!Object.values(staff.permissions || {}).some(Boolean)) {
+      setStaffListError('რეაქტივაციამდე მიანიჭეთ მინიმუმ ერთი მოდულის უფლება.');
+      return;
+    }
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      await callStaffAdminApi({
+        action: 'update',
+        id: staff.id,
+        display_name: staff.display_name,
+        role: staff.role,
+        permissions: createStaffPermissions(staff.permissions),
+        is_active: true
+      });
+      await refreshStaffList(true);
+      setStaffListNotice('თანამშრომლის სერვერული წვდომა ხელახლა გააქტიურდა.');
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის წვდომა აღდგა: ${staff.email}`);
+      }
+    } catch (error) {
+      setStaffListError(error?.message || 'წვდომის აღდგენა ვერ მოხერხდა.');
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  if (!isOwner) return null;
+
+  return (
+    <div className="admin-staff space-y-6">
+      <div role="note" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
+        <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
+        მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
+      </div>
+
+      {staffListError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{staffListError}</div>}
+      {staffListNotice && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">{staffListNotice}</div>}
+
+      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+        <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> არსებული მომხმარებლის დაკავშირება</h3>
+        <form onSubmit={handleAddExistingUser} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+          <select value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
+            <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
+            {(usersList || []).filter((user) => user.email).map((user) => (
+              <option key={user.id || user.email} value={user.email}>{user.name || user.email} — {user.email}</option>
+            ))}
+          </select>
+          <button type="submit" disabled={staffActionBusy || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
+            {staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}
+          </button>
+        </form>
+      </section>
+
+      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+        <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის მოწვევა</h3>
+        <form onSubmit={handleInviteStaff} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
+            <input type="email" required maxLength={254} value={staffForm.email} onChange={(event) => setStaffForm((current) => ({ ...current, email: event.target.value }))} placeholder="ელფოსტა" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
+            <select value={staffForm.role} onChange={(event) => setStaffForm((current) => ({ ...current, role: event.target.value }))} className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
+              {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+            </select>
+          </div>
+          <div className="rounded-2xl border border-emerald-500/15 bg-slate-950 p-4 space-y-3">
+            <p className="font-bold text-slate-300">მიანიჭეთ მხოლოდ საჭირო მოდულები:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {STAFF_PERMISSION_OPTIONS.map((permission) => (
+                <label key={permission.key} className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                  <input type="checkbox" checked={staffForm.permissions[permission.key]} onChange={(event) => setStaffForm((current) => ({
+                    ...current,
+                    permissions: { ...current.permissions, [permission.key]: event.target.checked }
+                  }))} className="accent-emerald-400" />
+                  {permission.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <button type="submit" disabled={staffActionBusy} className="rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
+            {staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}
+          </button>
+        </form>
+      </section>
+
+      {legacyStaffList.length > 0 && (
+        <section className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4 space-y-2">
+          <h3 className="text-sm font-black text-amber-200">ძველი localStorage ჩანაწერები შენარჩუნებულია ({legacyStaffList.length})</h3>
+          <p className="text-xs leading-5 text-amber-100/80">ეს ძველი ჩანაწერები არ იშლება, მაგრამ რეალურ წვდომას არ ანიჭებს. აირჩიეთ ჩანაწერი, გადაიტანეთ ფორმაში და გაგზავნეთ მოწვევა, რომ შეიქმნას ან დაუკავშირდეს Auth ანგარიში.</p>
+          <div className="space-y-2">
+            {legacyStaffList.map((legacy, index) => (
+              <div key={legacy.id || legacy.email || index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-slate-950/70 p-3">
+                <span className="min-w-0 text-xs text-slate-300">{legacy.name || 'თანამშრომელი'} · {legacy.email || 'ელფოსტა მითითებული არ არის'}</span>
+                <button type="button" disabled={!legacy.email} onClick={() => setStaffForm((current) => ({
+                  ...current,
+                  display_name: legacy.name || current.display_name,
+                  email: legacy.email || current.email,
+                  role: 'manager',
+                  permissions: createStaffPermissions(legacy.permissions)
+                }))} className="shrink-0 rounded-lg border border-amber-500/30 px-3 py-2 text-[11px] font-bold text-amber-200 disabled:opacity-40">
+                  ფორმაში გადატანა
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-black text-white text-base">სერვერზე დაკავშირებული თანამშრომლები ({staffList.length})</h3>
+          <button type="button" onClick={() => refreshStaffList()} disabled={staffListLoading || staffActionBusy} className="rounded-xl border border-emerald-500/25 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">
+            {staffListLoading ? 'იტვირთება…' : 'სიის განახლება'}
+          </button>
+        </div>
+        {staffListLoading && <p role="status" className="text-xs text-slate-400">სერვერული სია იტვირთება…</p>}
+        {!staffListLoading && staffList.length === 0 && <p className="text-xs text-slate-500">სერვერზე თანამშრომლები ჯერ არ არის დამატებული.</p>}
+        <div className="space-y-3">
+          {staffList.map((staff) => {
+            const editing = editingStaffId === staff.id;
+            return (
+              <article key={staff.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="text-sm text-white">{staff.display_name || staff.email}</strong>
+                      <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
+                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ მოიძებნა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
+                    {staff.last_sign_in_at && <p className="mt-1 text-[10px] text-slate-500">ბოლო შესვლა: {new Date(staff.last_sign_in_at).toLocaleString('ka-GE')}</p>}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" disabled={staffActionBusy} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
+                      {editing ? 'დახურვა' : 'როლის/უფლებების შეცვლა'}
+                    </button>
+                    {staff.is_active ? (
+                      <button type="button" disabled={staffActionBusy} onClick={() => revokeStaff(staff)} className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-200 disabled:opacity-50">წვდომის გაუქმება</button>
+                    ) : (
+                      <button type="button" disabled={staffActionBusy} onClick={() => reactivateStaff(staff)} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">წვდომის აღდგენა</button>
+                    )}
+                  </div>
+                </div>
+
+                {!editing && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {STAFF_PERMISSION_OPTIONS.map((permission) => (
+                      <span key={permission.key} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
+                        {permission.label}: {staff.permissions?.[permission.key] ? '✓' : '—'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {editing && (
+                  <div className="rounded-xl border border-amber-500/20 bg-slate-900 p-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input value={editForm.display_name} onChange={(event) => setEditForm((current) => ({ ...current, display_name: event.target.value }))} minLength={2} maxLength={100} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white" aria-label="თანამშრომლის სახელი" />
+                      <select value={editForm.role} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value }))} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white">
+                        {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {STAFF_PERMISSION_OPTIONS.map((permission) => (
+                        <label key={permission.key} className="flex items-center gap-2 text-xs text-slate-300">
+                          <input type="checkbox" checked={editForm.permissions[permission.key]} onChange={(event) => setEditForm((current) => ({
+                            ...current,
+                            permissions: { ...current.permissions, [permission.key]: event.target.checked }
+                          }))} className="accent-amber-400" />
+                          {permission.label}
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button type="button" onClick={() => setEditingStaffId(null)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-300">გაუქმება</button>
+                      <button type="button" disabled={staffActionBusy} onClick={() => saveStaff(staff)} className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">სერვერზე შენახვა</button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function AdminDashboardPro({
   adminLoggedIn,
+  adminAccess = EMPTY_ADMIN_ACCESS,
   setAdminLoggedIn,
   adminLoginForm,
   setAdminLoginForm,
@@ -322,7 +916,31 @@ export default function AdminDashboardPro({
   deliveryFees,
   setDeliveryFees
 }) {
-  const [adminTab, setAdminTab] = useState('command'); 
+  const [adminTab, setAdminTab] = useState('command');
+  const isOwner = adminAccess?.is_admin === true;
+  const hasModulePermission = (permission) => hasAdminPermission(adminAccess, permission);
+  const hasProductsPermission = hasModulePermission('products');
+  const hasOrdersPermission = hasModulePermission('orders');
+  const hasExpensesPermission = hasModulePermission('expenses');
+  const hasCrmPermission = hasModulePermission('crm');
+  const hasSupportPermission = hasModulePermission('support');
+  const hasSettingsPermission = hasModulePermission('settings');
+  const canAccessAdminTab = (tabId) => {
+    const permission = ADMIN_TAB_PERMISSION[tabId];
+    if (permission === 'owner') return isOwner;
+    return Boolean(permission && hasModulePermission(permission));
+  };
+  const getDefaultAdminTab = () => {
+    if (isOwner) return 'command';
+    return STAFF_DEFAULT_TAB_ORDER.find(canAccessAdminTab) || 'command';
+  };
+  // Render a permitted tab immediately; the effect below only synchronizes state.
+  const visibleAdminTab = canAccessAdminTab(adminTab) ? adminTab : getDefaultAdminTab();
+
+  useEffect(() => {
+    if (!adminLoggedIn) return;
+    if (!canAccessAdminTab(adminTab)) setAdminTab(getDefaultAdminTab());
+  }, [adminLoggedIn, adminAccess, adminTab]); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
@@ -468,30 +1086,6 @@ export default function AdminDashboardPro({
   const [editCatIcon, setEditCatIcon] = useState('Shirt');
   const [editCatImage, setEditCatImage] = useState('');
 
-  // This is a local planning list only; it does not create Supabase Auth users or grant server permissions.
-  const [staffList, setStaffList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('geostore_staff_list');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : [];
-      }
-    } catch {}
-    return [];
-  });
-
-  const [staffForm, setStaffForm] = useState({ 
-    name: '', 
-    email: '', 
-    role: 'მენეჯერი', 
-    permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
-  });
-  
-  const [selectedUserEmailForStaff, setSelectedUserEmailForStaff] = useState('');
-  const [editingStaffId, setEditingStaffId] = useState(null);
-  const [editStaffRole, setEditStaffRole] = useState('');
-  const [editStaffPermissions, setEditStaffPermissions] = useState({});
-
   const [calcForm, setCalcForm] = useState({
     purchaseCost: '45',
     sellingPrice: '99',
@@ -514,7 +1108,7 @@ export default function AdminDashboardPro({
   const [isAiThinking, setIsAiThinking] = useState(false);
 
   const fetchInventoryReplenishmentSettings = async () => {
-    if (!adminLoggedIn) return;
+    if (!hasProductsPermission) return;
     const requestId = ++replenishmentRequestRef.current;
     setReplenishmentLoading(true);
     setReplenishmentError('');
@@ -540,6 +1134,7 @@ export default function AdminDashboardPro({
   };
 
   const saveInventoryReplenishmentSetting = async (position) => {
+    if (!hasProductsPermission) return;
     const draft = replenishmentDrafts[position.key] || {};
     const threshold = Number(draft.threshold ?? position.threshold);
     const target = Number(draft.target ?? position.target);
@@ -579,7 +1174,7 @@ export default function AdminDashboardPro({
   };
 
   const fetchInventoryMovements = async (beforeId = null, append = false) => {
-    if (!adminLoggedIn) return;
+    if (!hasProductsPermission) return;
     const requestId = ++inventoryMovementRequestRef.current;
     setInventoryMovementLoading(true);
     if (!append) setInventoryMovementError('');
@@ -618,7 +1213,7 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!hasProductsPermission) {
       inventoryMovementRequestRef.current += 1;
       setInventoryMovementRows([]);
       setInventoryMovementCursor(null);
@@ -626,16 +1221,16 @@ export default function AdminDashboardPro({
       setInventoryMovementError('');
       return undefined;
     }
-    if (adminTab !== 'inventory') {
+    if (visibleAdminTab !== 'inventory') {
       inventoryMovementRequestRef.current += 1;
       return undefined;
     }
     void fetchInventoryMovements(null, false);
     return () => { inventoryMovementRequestRef.current += 1; };
-  }, [adminLoggedIn, adminTab, inventoryMovementProductFilter]);
+  }, [hasProductsPermission, visibleAdminTab, inventoryMovementProductFilter]);
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!hasProductsPermission) {
       replenishmentRequestRef.current += 1;
       setReplenishmentSettings([]);
       setReplenishmentError('');
@@ -644,13 +1239,7 @@ export default function AdminDashboardPro({
     }
     void fetchInventoryReplenishmentSettings();
     return () => { replenishmentRequestRef.current += 1; };
-  }, [adminLoggedIn]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('geostore_staff_list', JSON.stringify(staffList));
-    } catch {}
-  }, [staffList]);
+  }, [hasProductsPermission]);
 
   const fetchExpenses = async () => {
     try {
@@ -692,13 +1281,17 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    // Do not poll private finance data until the server-verified admin session is active.
-    if (!adminLoggedIn) return undefined;
+    // Do not poll private finance data unless the server grants the expenses module.
+    if (!hasExpensesPermission) {
+      setExpenses([]);
+      setExpensesError('');
+      return undefined;
+    }
 
     fetchExpenses();
     const interval = setInterval(fetchExpenses, 15000);
     return () => clearInterval(interval);
-  }, [adminLoggedIn]);
+  }, [hasExpensesPermission]);
 
 
 
@@ -957,7 +1550,7 @@ export default function AdminDashboardPro({
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
   const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
-    if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;
+    if (!hasSupportPermission || sessionId !== supportThreadSessionRef.current) return;
     const requestId = ++supportTicketListRequestRef.current;
     const isCurrentRequest = () => (
       sessionId === supportThreadSessionRef.current
@@ -1053,7 +1646,7 @@ export default function AdminDashboardPro({
       // Mark customer messages as read only while this administrator has the
       // matching conversation open and the page is visible. A receipt failure
       // must never hide the already-loaded conversation.
-      if (adminLoggedIn
+      if (hasSupportPermission
         && String(selectedSupportTicketId || '') === normalizedTicketId
         && document.visibilityState === 'visible') {
         try {
@@ -1079,7 +1672,7 @@ export default function AdminDashboardPro({
       if (sessionId !== supportThreadSessionRef.current) return;
       supportThreadFetchInFlight.current.delete(normalizedTicketId);
       setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
-      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
+      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && hasSupportPermission) {
         // If a Realtime event arrived while this fetch was running, make one
         // follow-up read so the newest message cannot be hidden until polling.
         void Promise.resolve().then(() => fetchSupportTicketThread(normalizedTicketId));
@@ -1096,10 +1689,10 @@ export default function AdminDashboardPro({
     // an uncertain network result must be safely retryable in the next session.
     supportReplyInFlight.current.clear();
     setReplySending({});
-  }, [adminLoggedIn]);
+  }, [hasSupportPermission]);
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!hasSupportPermission) {
       setSelectedSupportTicketId(null);
       setSupportTicketThreads({});
       setSupportTicketThreadErrors({});
@@ -1116,7 +1709,7 @@ export default function AdminDashboardPro({
       })
       .subscribe(status => {
         // Reconnects trigger a fresh protected snapshot, never trust event data.
-        if (active && status === 'SUBSCRIBED' && adminLoggedIn) {
+        if (active && status === 'SUBSCRIBED' && hasSupportPermission) {
           void fetchTickets();
           if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
         }
@@ -1125,10 +1718,10 @@ export default function AdminDashboardPro({
       active = false;
       void supabase.removeChannel(channel);
     };
-  }, [adminLoggedIn, selectedSupportTicketId]);
+  }, [hasSupportPermission, selectedSupportTicketId]);
 
   useEffect(() => {
-    if (!adminLoggedIn) return undefined;
+    if (!hasSupportPermission) return undefined;
     const refreshAdminSupport = () => {
       void fetchTickets();
       if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
@@ -1143,7 +1736,7 @@ export default function AdminDashboardPro({
       clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [adminLoggedIn, selectedSupportTicketId]);
+  }, [hasSupportPermission, selectedSupportTicketId]);
 
   const fetchLegacyMessages = async ({ loadMore = false, sessionId = legacyMessagesSessionRef.current } = {}) => {
     if (sessionId !== legacyMessagesSessionRef.current) return;
@@ -1201,7 +1794,7 @@ export default function AdminDashboardPro({
   useEffect(() => {
     legacyMessagesSessionRef.current += 1;
     const sessionId = legacyMessagesSessionRef.current;
-    if (!adminLoggedIn) {
+    if (!hasCrmPermission) {
       setLegacyMessages([]);
       setLegacyMessagesError('');
       setLegacyMessagesHasMore(false);
@@ -1219,10 +1812,10 @@ export default function AdminDashboardPro({
       clearInterval(interval);
       if (legacyMessagesSessionRef.current === sessionId) legacyMessagesSessionRef.current += 1;
     };
-  }, [adminLoggedIn]);
+  }, [hasCrmPermission]);
 
   useEffect(() => {
-    if (!adminLoggedIn) return undefined;
+    if (!hasCrmPermission) return undefined;
     const channel = supabase
       .channel('geostore-admin-legacy-messages')
       .on(
@@ -1233,18 +1826,18 @@ export default function AdminDashboardPro({
         }
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED' && adminLoggedIn) {
+        if (status === 'SUBSCRIBED' && hasCrmPermission) {
           void fetchLegacyMessages();
         }
       });
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [adminLoggedIn]);
+  }, [hasCrmPermission]);
 
   useEffect(() => {
     let active = true;
-    if (!adminLoggedIn) {
+    if (!hasSettingsPermission) {
       setStorefrontVersions([]);
       setStorefrontVersionsError('');
       setStorefrontVersionsLoading(false);
@@ -1271,7 +1864,7 @@ export default function AdminDashboardPro({
     };
     loadStorefrontVersions();
     return () => { active = false; };
-  }, [adminLoggedIn, storefrontPublishBusy]);
+  }, [hasSettingsPermission, storefrontPublishBusy]);
 
   const [activityLogs, setActivityLogs] = useState([]);
   const [activityLogsLoading, setActivityLogsLoading] = useState(false);
@@ -1302,14 +1895,14 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!isOwner) {
       setActivityLogs([]);
       setActivityLogsError('');
       setActivityLogsLoading(false);
       return;
     }
     fetchActivityLogs();
-  }, [adminLoggedIn]);
+  }, [isOwner]);
 
   const logActivity = async (actionText) => {
     const action = String(actionText || '').trim().slice(0, 500);
@@ -1334,84 +1927,6 @@ export default function AdminDashboardPro({
     } catch (error) {
       setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
       console.error('GEOSTORE admin activity log write failed:', error);
-    }
-  };
-
-  const handleAddStaff = (e) => {
-    e.preventDefault();
-    if (!staffForm.name || !staffForm.email) return;
-    const staffId = createAdminId('st');
-    if (!staffId) return alert(secureIdError);
-    const newStaffMember = {
-      id: staffId,
-      name: staffForm.name.trim(),
-      email: staffForm.email.trim(),
-      role: staffForm.role,
-      permissions: { ...staffForm.permissions }
-    };
-    setStaffList(prev => [...prev, newStaffMember]);
-    setStaffForm({ 
-      name: '', 
-      email: '', 
-      role: 'მენეჯერი', 
-      permissions: { products: true, orders: true, analytics: false, expenses: false, crm: false, settings: false } 
-    });
-    logActivity(`დაემატა ახალი თანამშრომელი: ${newStaffMember.name} (${newStaffMember.role})`);
-    alert('✅ ჩანაწერი დაემატა მხოლოდ ამ მოწყობილობის ლოკალურ სიას. ანგარიშის შექმნა ან წვდომის მინიჭება არ მომხდარა.');
-  };
-
-  const handleAddExistingUserAsStaff = (e) => {
-    e.preventDefault();
-    if (!selectedUserEmailForStaff) return;
-    
-    const targetUser = (usersList || []).find(u => u.email === selectedUserEmailForStaff || u.id === selectedUserEmailForStaff);
-    if (!targetUser) {
-      alert('მომხმარებელი ვერ მოიძებნა');
-      return;
-    }
-
-    const alreadyExists = staffList.some(s => s.email === targetUser.email);
-    if (alreadyExists) {
-      alert('⚠️ ეს მომხმარებელი უკვე არის თანამშრომლების სიაში!');
-      return;
-    }
-
-    const staffId = createAdminId('st');
-    if (!staffId) return alert(secureIdError);
-    const newStaffMember = {
-      id: staffId,
-      name: targetUser.name || 'მომხმარებელი',
-      email: targetUser.email || 'user@geostore.ge',
-      role: 'მენეჯერი',
-      permissions: { products: true, orders: true, analytics: true, expenses: false, crm: true, settings: false }
-    };
-
-    setStaffList(prev => [...prev, newStaffMember]);
-    setSelectedUserEmailForStaff('');
-    logActivity(`რეგისტრირებული მომხმარებელი (${newStaffMember.email}) დაწინაურდა მენეჯერად`);
-    alert(`✅ მომხმარებელი (${newStaffMember.name}) დაემატა მხოლოდ ლოკალურ სიაში. მენეჯერის რეალური წვდომა არ მინიჭებულა.`);
-  };
-
-  const handleSaveEditedStaff = (staffId) => {
-    setStaffList(prev => prev.map(s => {
-      if (s.id === staffId) {
-        return {
-          ...s,
-          role: editStaffRole,
-          permissions: { ...editStaffPermissions }
-        };
-      }
-      return s;
-    }));
-    setEditingStaffId(null);
-    logActivity(`განახლდა თანამშრომლის (ID: ${staffId}) როლი და უფლებები`);
-    alert('✅ თანამშრომლის უფლებები წარმატებით განახლდა!');
-  };
-
-  const handleDeleteStaff = (staffId, staffName) => {
-    if (window.confirm(`ნამდვილად გსურთ თანამშრომლის "${staffName}" წაშლა?`)) {
-      setStaffList(prev => prev.filter(s => s.id !== staffId));
-      logActivity(`წაიშალა თანამშრომელი: ${staffName}`);
     }
   };
 
@@ -1801,7 +2316,7 @@ export default function AdminDashboardPro({
     }
   };
 
-  if (!adminLoggedIn) {
+  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess)) {
     return (
       <div className="max-w-sm mx-auto bg-slate-900/80 border border-emerald-500/35 rounded-[2.5rem] p-6 sm:p-8 space-y-4 shadow-2xl backdrop-blur-3xl text-center my-16">
         <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
@@ -2005,19 +2520,19 @@ export default function AdminDashboardPro({
     setProductPublishBusyIds(prev => ({ ...prev, [key]: true }));
 
     try {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(key) +
-        '&is_published=eq.' + String(currentPublished) + '&select=id,is_published',
-        {
-          method: 'PATCH',
-          headers: await getSupabaseHeaders(),
-          body: JSON.stringify({ is_published: nextPublished })
-        }
-      );
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_quick_update_product`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_product_id: key,
+          p_field: 'is_published',
+          p_expected_value: currentPublished,
+          p_new_value: nextPublished
+        })
+      });
       if (!response.ok) throw new Error(await response.text());
-      const savedRows = await response.json();
-      if (!Array.isArray(savedRows) || savedRows.length !== 1 ||
-          String(savedRows[0].id) !== key || savedRows[0].is_published !== nextPublished) {
+      const savedProduct = await response.json();
+      if (!savedProduct || String(savedProduct.id) !== key || savedProduct.is_published !== nextPublished) {
         throw new Error('სტატუსი ვერ დადასტურდა. შესაძლოა პროდუქტი სხვა ადმინისტრატორმა პარალელურად შეცვალა. განაახლეთ სია.');
       }
 
@@ -2058,18 +2573,24 @@ export default function AdminDashboardPro({
     if (field === 'priceGEL' && Number.isFinite(activeFlashSaleEnd) && activeFlashSaleEnd > Date.now()) {
       return alert('პროდუქტზე მოქმედებს ფლეშ-აქცია. ფასის სწრაფი შეცვლა შესაძლებელი იქნება აქციის დასრულების შემდეგ, რათა ავტომატურმა აღდგენამ ახალი ფასი არ გადაფაროს.');
     }
-    const currentValue = current[column] ?? current[field];
-    const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
+    const currentValue = current[column] ?? current[field] ?? null;
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + compareFilter + '&select=id,price_gel,stock,old_price_gel', {
-        method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify({ [column]: val })
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_quick_update_product`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_product_id: String(id),
+          p_field: column,
+          p_expected_value: currentValue,
+          p_new_value: val
+        })
       });
       if (!response.ok) throw new Error(await response.text());
-      const savedRows = await response.json();
-      if (!Array.isArray(savedRows) || savedRows.length !== 1) {
-        throw new Error('მონაცემი პარალელურად შეიცვალა. განაახლეთ პროდუქტის სია და სცადეთ ხელახლა.');
+      const savedProduct = await response.json();
+      if (!savedProduct || String(savedProduct.id) !== String(id) || savedProduct[column] === undefined) {
+        throw new Error('მონაცემი პარალელურად შეიცვალა ან სერვერმა განახლებული პროდუქტი ვერ დაადასტურა. განაახლეთ სია.');
       }
-      const savedValue = field === 'purchaseCost' ? val : Number(savedRows[0][column]);
+      const savedValue = Number(savedProduct[column]);
       if (!Number.isFinite(savedValue) || savedValue < 0 || (field === 'stock' && !Number.isInteger(savedValue))) {
         throw new Error('სერვერმა არასწორი მნიშვნელობა დააბრუნა. განაახლეთ პროდუქტის სია.');
       }
@@ -2087,6 +2608,7 @@ export default function AdminDashboardPro({
       alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
     }
   };
+
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
@@ -2356,19 +2878,31 @@ export default function AdminDashboardPro({
     };
 
       let savedProductRow = null;
+      let savedVariantStockResult = null;
+      let savedCustomVariantStockResult = null;
       if (editingProductId) {
-        // Do not overwrite checkout stock deductions with the editor's stale snapshot.
+        // Route all edits through the protected RPC. Direct authenticated table
+        // UPDATE is intentionally revoked by the staff-permission migration.
         const updatePayload = { ...newProdPayload };
-        delete updatePayload.id;
         delete updatePayload.stock;
-        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)) + '&select=id,created_at,variants,stock', {
-          method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
+        const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_product_with_stock`, {
+          method: 'POST',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({
+            p_product: updatePayload,
+            p_size_color_stocks: changedSizeColorStocks,
+            p_custom_variant_stocks: changedCustomVariantStocks
+          })
         });
         if (!updateResponse.ok) throw new Error(await updateResponse.text());
         productSaveCommitted = true;
-        const updatedRows = await updateResponse.json();
-        if (!Array.isArray(updatedRows) || updatedRows.length !== 1) throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
-        savedProductRow = updatedRows[0];
+        const updateResult = await updateResponse.json();
+        savedProductRow = updateResult?.product || null;
+        savedVariantStockResult = updateResult?.stock?.size_color ?? null;
+        savedCustomVariantStockResult = updateResult?.stock?.custom ?? null;
+        if (!savedProductRow || typeof savedProductRow !== 'object' || String(savedProductRow.id ?? '') !== String(prodId)) {
+          throw new Error('სერვერმა განახლებული პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
+        }
       } else {
         const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
@@ -2386,41 +2920,23 @@ export default function AdminDashboardPro({
           throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
         }
       }
-      let savedVariantStockResult = null;
-      let savedCustomVariantStockResult = null;
-      if (editingProductId && (changedSizeColorStocks.length > 0 || changedCustomVariantStocks.length > 0)) {
-        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stock_batches', {
-          method: 'POST',
-          headers: await getSupabaseHeaders(),
-          body: JSON.stringify({
-            p_product_id: prodId,
-            p_size_color_stocks: changedSizeColorStocks,
-            p_custom_variant_stocks: changedCustomVariantStocks
-          })
-        });
-        if (!stockResponse.ok) {
-          throw new Error('ვარიანტების მარაგის ერთიანი შენახვა ვერ მოხერხდა: ' + await stockResponse.text());
-        }
-        const stockBatchResult = await stockResponse.json();
-        savedVariantStockResult = stockBatchResult?.size_color ?? null;
-        savedCustomVariantStockResult = stockBatchResult?.custom ?? null;
-        if (changedSizeColorStocks.length > 0 && (
-          !savedVariantStockResult ||
-          Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
-          Number(savedVariantStockResult.stock) < 0 ||
-          !Number.isSafeInteger(Number(savedVariantStockResult.stock))
-        )) {
-          throw new Error('ზომებისა და ფერების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
-        }
-        if (changedCustomVariantStocks.length > 0 && (
-          !savedCustomVariantStockResult ||
-          Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
-          Number(savedCustomVariantStockResult.stock) < 0 ||
-          !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))
-        )) {
-          throw new Error('ინდივიდუალური ვარიანტების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
-        }
+      if (editingProductId && changedSizeColorStocks.length > 0 && (
+        !savedVariantStockResult ||
+        Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
+        Number(savedVariantStockResult.stock) < 0 ||
+        !Number.isSafeInteger(Number(savedVariantStockResult.stock))
+      )) {
+        throw new Error('ზომებისა და ფერების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
       }
+      if (editingProductId && changedCustomVariantStocks.length > 0 && (
+        !savedCustomVariantStockResult ||
+        Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
+        Number(savedCustomVariantStockResult.stock) < 0 ||
+        !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))
+      )) {
+        throw new Error('ინდივიდუალური ვარიანტების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
+      }
+
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
       let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
@@ -2450,7 +2966,7 @@ export default function AdminDashboardPro({
         id: prodId, createdAt: resolveProductCreatedAt({ isEditing: Boolean(editingProductId), savedRow: savedProductRow, existingProduct }),
         sku: newProdPayload.sku, name: newProdPayload.name, category: newProdPayload.category,
         vendor: newProdPayload.vendor, priceGEL: newProdPayload.price_gel,
-        oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: newProdPayload.purchase_cost,
+        oldPriceGEL: newProdPayload.old_price_gel, purchaseCost: savedProductRow?.purchase_cost ?? existingProduct?.purchaseCost ?? null,
         stock: localVariants.length > 0
           ? localVariants.reduce((total, variant) => total + (Number(variant.stock) || 0), 0)
           : (editingProductId ? Number(savedProductRow?.stock ?? 0) : newProdPayload.stock),
@@ -3126,10 +3642,29 @@ export default function AdminDashboardPro({
     const nextStatus = normalizeOrderStatus(newStatus);
 
     if (isDeliveredOrderStatus(currentStatus) && !isDeliveredOrderStatus(nextStatus)) {
-      alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
+      if (!isOwner) {
+        alert('დასრულებული შეკვეთის ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
+        return;
+      }
+      if (nextStatus !== 'ახალი') {
+        alert('დასრულებული შეკვეთის ხელახლა გასააქტიურებლად ჯერ აირჩიეთ „ხელახლა გააქტიურება“. შემდეგ სტატუსებს ჩვეულებრივ შეცვლით.');
+        return;
+      }
+      reactivationTriggerRef.current = document.activeElement;
+      setReactivationOrder(existingOrder);
+      setReactivationPassword('');
+      setReactivationError('');
       return;
     }
     if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
+      if (!isOwner) {
+        alert('გაუქმებული შეკვეთის ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
+        return;
+      }
+      if (nextStatus !== 'ახალი') {
+        alert('გაუქმებული შეკვეთის აღსადგენად ჯერ აირჩიეთ „ხელახლა გააქტიურება“.');
+        return;
+      }
       reactivationTriggerRef.current = document.activeElement;
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
@@ -3156,18 +3691,29 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
+      const statusResult = await response.json().catch(() => null);
+      const statusChangedAt = typeof statusResult?.status_changed_at === 'string'
+        ? statusResult.status_changed_at
+        : new Date().toISOString();
+
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(orderId) ? { ...order, status: newStatus } : order
+          String(order.id) === String(orderId)
+            ? { ...order, status: newStatus, status_changed_at: statusChangedAt }
+            : order
         ));
       }
       setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(orderId) ? { ...prev, status: newStatus } : prev
+        prev && String(prev.id) === String(orderId)
+          ? { ...prev, status: newStatus, status_changed_at: statusChangedAt }
+          : prev
       );
 
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
+        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId)
+          ? { ...o, status: newStatus, status_changed_at: statusChangedAt }
+          : o);
         localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
       } catch {}
 
@@ -3180,10 +3726,18 @@ export default function AdminDashboardPro({
 
   const handleConfirmOrderReactivation = async (event) => {
     event.preventDefault();
+    if (!isOwner) {
+      setReactivationError('ამ მოქმედების შესრულება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
+      return;
+    }
     if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
 
     setIsReactivatingOrder(true);
     setReactivationError('');
+    const wasDelivered = isDeliveredOrderStatus(reactivationOrder.status);
+    const reactivationRpc = wasDelivered
+      ? 'admin_reopen_completed_order'
+      : 'admin_reactivate_cancelled_order';
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user?.email) {
@@ -3219,7 +3773,7 @@ export default function AdminDashboardPro({
         throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
       }
 
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reactivate_cancelled_order`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${reactivationRpc}`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -3235,25 +3789,38 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
+      const reactivationResult = await response.json().catch(() => null);
+      const statusChangedAt = typeof reactivationResult?.status_changed_at === 'string'
+        ? reactivationResult.status_changed_at
+        : new Date().toISOString();
+
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order
+          String(order.id) === String(reactivationOrder.id)
+            ? { ...order, status: 'ახალი', status_changed_at: statusChangedAt }
+            : order
         ));
       }
       setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
+        prev && String(prev.id) === String(reactivationOrder.id)
+          ? { ...prev, status: 'ახალი', status_changed_at: statusChangedAt }
+          : prev
       );
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
         localStorage.setItem('geostore_local_orders', JSON.stringify(
-          localOrders.map(order => String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order)
+          localOrders.map(order => String(order.id) === String(reactivationOrder.id)
+            ? { ...order, status: 'ახალი', status_changed_at: statusChangedAt }
+            : order)
         ));
       } catch {}
 
-      logActivity(`გაუქმებული შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
+      logActivity(`${wasDelivered ? 'დასრულებული' : 'გაუქმებული'} შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
       setReactivationOrder(null);
       setReactivationPassword('');
-      alert(`✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი ხელახლა ჩამოიჭრა.`);
+      alert(wasDelivered
+        ? `✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. არსებული მარაგი უცვლელი დარჩა — განმეორებითი ჩამოჭრა არ მომხდარა.`
+        : `✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი შემოწმდა და ხელახლა ჩამოიჭრა.`);
     } catch (error) {
       setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
     } finally {
@@ -3363,7 +3930,7 @@ export default function AdminDashboardPro({
   };
 
   const handleRestoreStorefrontVersion = (version) => {
-    if (!adminLoggedIn || !version?.snapshot || typeof version.snapshot !== 'object' || Array.isArray(version.snapshot)) return;
+    if (!isOwner || !version?.snapshot || typeof version.snapshot !== 'object' || Array.isArray(version.snapshot)) return;
     const snapshot = version.snapshot;
     if (!Array.isArray(snapshot.categories) || !Array.isArray(snapshot.banners) ||
         !snapshot.siteSettings || typeof snapshot.siteSettings !== 'object' || Array.isArray(snapshot.siteSettings)) {
@@ -3549,7 +4116,7 @@ export default function AdminDashboardPro({
             { id: 'calculator', label: '🧮 მოგების კალკულატორი', icon: Calculator },
             { id: 'expenses', label: '💸 ხარჯების მართვა', count: expenses.length, icon: Wallet },
             { id: 'ai_analyst', label: '🤖 AI ბიზნეს ასისტენტი', icon: Sparkles },
-            { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
+            { id: 'staff', label: '👔 თანამშრომლები & როლები', icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
             { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers },
@@ -3565,9 +4132,9 @@ export default function AdminDashboardPro({
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
-          ].map(tab => {
+          ].filter(tab => canAccessAdminTab(tab.id)).map(tab => {
             const IconComp = tab.icon;
-            const isActive = adminTab === tab.id;
+            const isActive = visibleAdminTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -3605,34 +4172,64 @@ export default function AdminDashboardPro({
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
-            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
+            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+              {isOwner ? 'მოგესალმებით, მთავარო ადმინისტრატორ! 👋' : `მოგესალმებით, ${adminAccess?.display_name || 'თანამშრომელო'}! 👋`}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {isOwner ? 'სრული კონტროლი GEOSTORE-ის მართვის პანელზე:' : 'თქვენთვის მინიჭებული მოდულების მართვა:'}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <button
-              type="button"
-              onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
-              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
-              className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
-            >
-              {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
-              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
-              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
-            >
-              {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
-            </button>
+            {hasModulePermission('settings') && (
+              <button
+                type="button"
+                onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
+                disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
+                className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
+              >
+                {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
+              </button>
+            )}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
+                disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
+                className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
+              >
+                {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
+              </button>
+            )}
             <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+              <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
             </div>
           </div>
         </div>
 
-        {adminTab === 'command' && (
+        {!isOwner && (
+          <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-slate-900 via-slate-900/95 to-emerald-950/30 p-4 sm:p-5 shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-300">STAFF ACCESS</p>
+                <h3 className="mt-1 text-sm font-black text-white">{STAFF_ROLE_LABELS[adminAccess?.role] || 'თანამშრომელი'} · აქტიური მოდულები</h3>
+                <p className="mt-1 text-[11px] text-slate-400">წვდომა მოწმდება Supabase-ში; ბრაუზერის ლოკალური ჩანაწერები უფლებებს არ განსაზღვრავს.</p>
+              </div>
+              <span className="shrink-0 rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200">
+                {STAFF_PERMISSION_OPTIONS.filter((permission) => hasModulePermission(permission.key)).length} მოდული
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {STAFF_PERMISSION_OPTIONS.filter((permission) => hasModulePermission(permission.key)).map((permission) => (
+                <span key={permission.key} className="rounded-lg border border-emerald-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-bold text-emerald-100">
+                  {permission.label}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {visibleAdminTab === 'command' && (
           <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
             <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
               <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
@@ -3755,7 +4352,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminTab === 'inventory' && (
+        {visibleAdminTab === 'inventory' && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
@@ -3881,7 +4478,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminTab === 'replenishment' && (
+        {visibleAdminTab === 'replenishment' && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
@@ -3912,7 +4509,7 @@ export default function AdminDashboardPro({
                     <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{position.isLowStock ? Math.max(0, Number(targetValue) - position.stock) : 0}</strong></div>
-                    <div className="flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !adminLoggedIn} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
+                    <div className="flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !hasProductsPermission} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
                   </article>
                 );
               })}
@@ -3921,7 +4518,8 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminTab === 'analytics' && (
+        {visibleAdminTab === 'analytics' && !isOwner && <StaffAnalyticsSummary />}
+        {visibleAdminTab === 'analytics' && isOwner && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
               <div>
@@ -4192,7 +4790,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'calculator' && (
+        {visibleAdminTab === 'calculator' && (
           <div className="admin-profit-calculator bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Calculator className="w-5 h-5 text-emerald-400" /> გაყიდვებისა და მოგების კალკულატორი
@@ -4232,7 +4830,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'expenses' && (
+        {visibleAdminTab === 'expenses' && (
           <div className="admin-expenses space-y-6">
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -4291,7 +4889,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'ai_analyst' && (
+        {visibleAdminTab === 'ai_analyst' && (
           <div className="admin-ai-analyst bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Sparkles className="w-5 h-5 text-emerald-400" /> AI ბიზნეს ასისტენტი & ანალიტიკოსი
@@ -4313,189 +4911,16 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'staff' && (
-          <div className="admin-staff space-y-6">
-            <div role="note" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs leading-6 text-amber-100">
-              <strong className="block mb-1">მნიშვნელოვანი: თანამშრომლების მართვა ჯერ რეალურ ავტორიზაციასთან დაკავშირებული არ არის.</strong>
-              ეს სია ინახება მხოლოდ ამ ბრაუზერის localStorage-ში. აქ დამატება, როლის ან მოდულების შეცვლა არ ქმნის Supabase ანგარიშს და არ ანიჭებს მონაცემებზე ან ადმინისტრატორის პანელზე წვდომას. სერვერზე დაცული მოქმედებები კვლავ მხოლოდ მთავარ ადმინისტრატორს შეუძლია.
-            </div>
-            <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Users className="w-5 h-5 text-emerald-400" /> რეგისტრირებული მომხმარებლის ლოკალურ თანამშრომელთა სიაში დამატება
-              </h3>
-              <form onSubmit={handleAddExistingUserAsStaff} className="admin-staff-existing-form grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                <select 
-                  value={selectedUserEmailForStaff} 
-                  onChange={e => setSelectedUserEmailForStaff(e.target.value)} 
-                  className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner sm:col-span-2 cursor-pointer"
-                >
-                  <option value="">-- აირჩიეთ საიტზე რეგისტრირებული მომხმარებელი --</option>
-                  {(usersList || []).map(u => (
-                    <option key={u.id || u.email} value={u.email}>
-                      {u.name ? `${u.name} (${u.email})` : u.email} {u.isVip ? '⭐ VIP' : ''}
-                    </option>
-                  ))}
-                </select>
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 px-4 rounded-2xl transition cursor-pointer shadow-lg">
-                  + სიაში დამატება
-                </button>
-              </form>
-            </div>
-
-            <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <UserCog className="w-5 h-5 text-emerald-400" /> თანამშრომლის ლოკალური ჩანაწერი & სასურველი მოდულები
-              </h3>
-              <form onSubmit={handleAddStaff} className="admin-staff-create-form space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                  <input type="text" placeholder="თანამშრომლის სახელი *" required value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <input type="email" placeholder="ელ-ფოსტა *" required value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                  <select value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-emerald-400 font-bold outline-none focus:border-emerald-400 shadow-inner cursor-pointer">
-                    <option value="მენეჯერი">მენეჯერი</option>
-                    <option value="ოპერატორი">ოპერატორი</option>
-                    <option value="ფინანსისტი">ფინანსისტი</option>
-                    <option value="პროდუქტების მენეჯერი">პროდუქტების მენეჯერი</option>
-                  </select>
-                </div>
-
-                <div className="admin-staff-permissions bg-slate-950 p-4 rounded-2xl border border-emerald-500/20 space-y-2">
-                  <span className="text-slate-400 font-bold block mb-2">სასურველი მოდულები (წვდომას არ ანიჭებს):</span>
-                  <div className="admin-staff-permission-grid grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      { key: 'products', label: 'პროდუქტების მართვა' },
-                      { key: 'orders', label: 'შეკვეთების მართვა' },
-                      { key: 'analytics', label: 'ანალიტიკა' },
-                      { key: 'expenses', label: 'ხარჯები & ფინანსები' },
-                      { key: 'crm', label: 'CRM მომხმარებლები' },
-                      { key: 'settings', label: 'საიტის პარამეტრები' }
-                    ].map(p => (
-                      <label key={p.key} className="flex items-center gap-2 cursor-pointer text-slate-300 font-bold">
-                        <input 
-                          type="checkbox" 
-                          checked={staffForm.permissions[p.key] || false}
-                          onChange={e => {
-                            const val = e.target.checked;
-                            setStaffForm(prev => ({
-                              ...prev,
-                              permissions: { ...prev.permissions, [p.key]: val }
-                            }));
-                          }}
-                          className="accent-emerald-400 w-4 h-4 rounded cursor-pointer"
-                        />
-                        <span>{p.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ლოკალურ სიაში დამატება</button>
-              </form>
-            </div>
-
-            <div className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="admin-staff-list-title font-black text-white text-base">ლოკალური თანამშრომელთა ჩანაწერები ({staffList.length})</h3>
-              <div className="admin-staff-cards-list space-y-3">
-                {staffList.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-4">თანამშრომლები არ არიან დამატებული.</p>
-                ) : (
-                  staffList.map(st => {
-                    const isEditing = editingStaffId === st.id;
-
-                    return (
-                      <div key={st.id} className="admin-staff-card bg-slate-950/60 p-4 sm:p-5 rounded-3xl border border-emerald-500/20 space-y-3 shadow-inner">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                          <div>
-                            <div className="flex items-center gap-2.5">
-                              <b className="text-white text-sm">{st.name}</b>
-                              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-black">{st.role}</span>
-                            </div>
-                            <p className="admin-staff-member-email text-slate-400 text-[11px] mt-0.5">📧 {st.email}</p>
-                          </div>
-
-                          <div className="admin-staff-actions flex items-center gap-2 w-full sm:w-auto justify-end">
-                            <button 
-                              onClick={() => {
-                                if (isEditing) {
-                                  setEditingStaffId(null);
-                                } else {
-                                  setEditingStaffId(st.id);
-                                  setEditStaffRole(st.role || 'მენეჯერი');
-                                  setEditStaffPermissions({ ...(st.permissions || {}) });
-                                }
-                              }}
-                              className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl font-bold text-xs flex items-center gap-1.5 cursor-pointer transition"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" /> უფლებების შეცვლა
-                            </button>
-                            <button onClick={() => handleDeleteStaff(st.id, st.name)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
-                          </div>
-                        </div>
-
-                        {!isEditing && (
-                          <div className="flex flex-wrap gap-1.5 pt-1 text-[10px]">
-                            {Object.entries(st.permissions || {}).map(([key, val]) => (
-                              <span key={key} className={`admin-staff-permission-chip px-2.5 py-1 rounded-xl border ${val ? 'is-enabled bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'is-disabled bg-slate-900 text-slate-500 border-slate-800'}`}>
-                                <span>{({ products: 'პროდუქტები', orders: 'შეკვეთები', analytics: 'ანალიტიკა', expenses: 'ფინანსები', crm: 'CRM მომხმარებლები', settings: 'საიტის პარამეტრები' })[key] || key}</span>
-                                <span aria-label={val ? 'ჩართულია' : 'გამორთულია'}>{val ? '✓' : '✕'}</span>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {isEditing && (
-                          <div className="admin-staff-edit-panel bg-slate-900 p-4 rounded-2xl border border-amber-500/30 space-y-3 animate-in fade-in text-xs">
-                            <div className="space-y-1">
-                              <label className="text-slate-400 font-bold">როლი</label>
-                              <input 
-                                type="text" 
-                                value={editStaffRole} 
-                                onChange={e => setEditStaffRole(e.target.value)} 
-                                className="w-full bg-slate-950 border border-amber-500/20 p-2.5 rounded-xl text-white outline-none" 
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <span className="text-slate-400 font-bold block">უფლებები:</span>
-                              <div className="admin-staff-edit-permissions grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {[
-                                  { key: 'products', label: 'პროდუქტები' },
-                                  { key: 'orders', label: 'შეკვეთები' },
-                                  { key: 'analytics', label: 'ანალიტიკა' },
-                                  { key: 'expenses', label: 'ხარჯები' },
-                                  { key: 'crm', label: 'CRM' },
-                                  { key: 'settings', label: 'პარამეტრები' }
-                                ].map(p => (
-                                  <label key={p.key} className="flex items-center gap-2 cursor-pointer text-slate-300 font-bold">
-                                    <input 
-                                      type="checkbox" 
-                                      checked={editStaffPermissions[p.key] || false}
-                                      onChange={e => {
-                                        const val = e.target.checked;
-                                        setEditStaffPermissions(prev => ({ ...prev, [p.key]: val }));
-                                      }}
-                                      className="accent-amber-400 w-3.5 h-3.5 rounded cursor-pointer"
-                                    />
-                                    <span>{p.label}</span>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                              <button onClick={() => setEditingStaffId(null)} className="px-3 py-1.5 bg-slate-950 text-slate-400 rounded-xl font-bold">გაუქმება</button>
-                              <button onClick={() => handleSaveEditedStaff(st.id)} className="px-4 py-1.5 bg-amber-400 text-slate-950 rounded-xl font-black">ცვლილებების შენახვა</button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
+        {visibleAdminTab === 'staff' && (
+          <AdminStaffManagement
+            usersList={usersList}
+            logActivity={logActivity}
+            isOwner={isOwner}
+          />
         )}
 
         {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
-        {adminTab === 'orders' && (
+        {visibleAdminTab === 'orders' && (
           <div className="admin-orders-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <div className="admin-orders-header admin-orders-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
@@ -4596,18 +5021,20 @@ export default function AdminDashboardPro({
                           <Printer className="w-4 h-4" /> ინვოისი
                         </button>
 
-                        {isCancelledOrderStatus(o.status) ? (
-                          o.stock_deducted_at && o.stock_restored_at ? (
+                        {(isCancelledOrderStatus(o.status) || isDeliveredOrderStatus(o.status)) ? (
+                          (isDeliveredOrderStatus(o.status)
+                            ? Boolean(o.stock_deducted_at) && !o.stock_restored_at
+                            : Boolean(o.stock_deducted_at) && Boolean(o.stock_restored_at)) ? (
                             <button
-                              onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
-                              className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
+                              onClick={() => { reactivationTriggerRef.current = document.activeElement; setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                              className="admin-order-reactivate-button px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
                             >
                               <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
                             </button>
                           ) : (
                             <span
                               className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-200 text-[10px] leading-relaxed"
-                              title="რეაქტივაცია მოითხოვს მარაგის ჩამოჭრისა და აღდგენის დადასტურებულ ჩანაწერებს."
+                              title="რეაქტივაცია მოითხოვს მარაგის ისტორიის დადასტურებულ ჩანაწერებს."
                             >
                               რეაქტივაცია მიუწვდომელია — მარაგის ისტორია არასრულია
                             </span>
@@ -4615,6 +5042,16 @@ export default function AdminDashboardPro({
                         ) : (
                           <div className="admin-order-status-actions flex flex-wrap items-center justify-start sm:justify-end gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 w-full sm:w-auto">
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            {isDeliveredOrderStatus(o.status) && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
+                                className="px-2.5 py-1.5 rounded-xl font-black text-[10px] cursor-pointer transition bg-emerald-400/15 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-400/25"
+                                title="დასრულებული შეკვეთის ხელახლა გააქტიურება მარაგის განმეორებითი ჩამოჭრის გარეშე"
+                              >
+                                ხელახლა გააქტიურება
+                              </button>
+                            )}
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
@@ -4792,7 +5229,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'support' && (
+        {visibleAdminTab === 'support' && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
@@ -4902,7 +5339,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'products' && (
+        {visibleAdminTab === 'products' && (
           <div className="admin-products-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
@@ -5316,7 +5753,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'messages' && (
+        {visibleAdminTab === 'messages' && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
@@ -5360,7 +5797,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'discounts' && (
+        {visibleAdminTab === 'discounts' && (
           <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
@@ -5413,7 +5850,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'logs' && (
+        {visibleAdminTab === 'logs' && (
           <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
@@ -5434,7 +5871,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'broadcasts' && (
+        {visibleAdminTab === 'broadcasts' && (
           <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
@@ -5456,7 +5893,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'banners' && (
+        {visibleAdminTab === 'banners' && (
           <div className="admin-banners space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5491,7 +5928,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'categories' && (
+        {visibleAdminTab === 'categories' && (
           <div className="admin-category-manager space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5692,7 +6129,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'coupons' && (
+        {visibleAdminTab === 'coupons' && (
           <div className="admin-coupons-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5722,7 +6159,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'vendors' && (
+        {visibleAdminTab === 'vendors' && (
           <div className="admin-vendors-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5756,7 +6193,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'users' && (
+        {visibleAdminTab === 'users' && (
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -5876,7 +6313,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'settings' && (
+        {visibleAdminTab === 'settings' && (
           <div className="admin-settings-panel space-y-6">
             <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-3 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
@@ -5967,9 +6404,9 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-      {reactivationOrder && (
-        <div tabIndex="-1" className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
-          <form onSubmit={handleConfirmOrderReactivation} className="w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+      {isOwner && reactivationOrder && (
+        <div tabIndex="-1" className="admin-order-reactivation-overlay fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
+          <form onSubmit={handleConfirmOrderReactivation} className="admin-order-reactivation-form w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
                 <KeyRound className="w-5 h-5 text-amber-300" />
@@ -5980,7 +6417,10 @@ export default function AdminDashboardPro({
               </div>
             </div>
             <p className="text-slate-300 text-xs leading-5">
-              უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი. დადასტურების შემდეგ სისტემა შეამოწმებს მარაგს და ხელახლა ჩამოჭრის შეკვეთის რაოდენობას.
+              უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი.
+              {isDeliveredOrderStatus(reactivationOrder.status)
+                ? ' დასრულებული შეკვეთა დაბრუნდება აქტიურ სტატუსზე; უკვე ჩამოჭრილი მარაგი უცვლელი დარჩება და მეორედ არ ჩამოიჭრება.'
+                : ' გაუქმებული შეკვეთისთვის სისტემა შეამოწმებს მარაგს და მხოლოდ საკმარისი რაოდენობის არსებობისას ჩამოჭრის შეკვეთის რაოდენობას.'}
             </p>
             <label className="block text-xs font-bold text-slate-300" htmlFor="reactivation-password">ადმინისტრატორის პაროლი</label>
             <input

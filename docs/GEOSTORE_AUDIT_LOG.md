@@ -886,3 +886,75 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Preserve the existing password reauthentication, admin-role checks, atomic reactivation RPC, stock checks, status updates and error handling. No auth or database behavior changed.
 - Added regression assertions for trigger capture, focus restoration and fallback behavior.
 - No order/customer data, database schema, live settings, merge or production deployment was changed. Browser-level keyboard verification remains required.
+
+## Stage 100 — safe reactivation of completed orders
+- Root cause: the admin UI blocked every transition away from delivered/completed states, while the server-side order status guard and reactivation RPC allowed reactivation only for cancelled orders.
+- Added a dedicated completed-order reactivation path through a dedicated password-reauthenticated `admin_reopen_completed_order` RPC. It returns the order to `ახალი` only after a fresh password check and primary-admin authorization.
+- Completed orders retain their existing `stock_deducted_at` and `stock_restored_at` markers; the completed-order RPC does not update products or variants, preventing a second stock deduction.
+- Cancelled-order reactivation retains raw-line validation, per-product/per-variant stock checks, atomic stock deduction, and the existing transaction-local trigger marker.
+- The UI now exposes an explicit “ხელახლა გააქტიურება” action for completed orders and explains the distinct stock behavior. The ordinary status RPC remains unable to bypass the dedicated reactivation flow.
+- Live read-only baseline at implementation time: 2 completed orders, both with stock-deduction markers and neither with stock-restoration markers. No order or stock row was changed during this work.
+- Migration `20261117130000_reopen_completed_orders.sql` is staged in this branch only. It has not been applied to the live Supabase project. No Production deployment or merge was performed.
+- Added source-level regression tests for completed-order reactivation, no double stock deduction, cancelled-order stock checks, and direct-update guard behavior. Full CI verification remains pending.
+
+## Stage 101 — additive admin panel visual polish
+- Added a dedicated stylesheet loaded after the existing admin styles, keeping prior layout rules and section behavior intact.
+- Harmonized dashboard surfaces, section headers, cards, inputs, focus states, buttons and status actions with a restrained GEOSTORE dark/emerald visual system.
+- Added responsive refinements for tablet, mobile and narrow 320–380px layouts, plus reduced-motion handling.
+- Kept all admin tabs, order actions, staff flows, data requests and existing component structure unchanged.
+- Added source-level regression tests for stylesheet load order, section preservation, responsive breakpoints, keyboard focus and non-hiding behavior.
+- CSS-only visual change; no database schema, live data, authentication, stock, order or customer state was changed.
+
+## Stage 102 — real staff Auth foundation (draft)
+- Read-only audit confirmed 2 Auth users, no existing staff/role table, and no deployed Supabase Edge Functions.
+- Counted 27 live RLS policies and 23 public/private functions with primary-owner UUID checks. These must be converted by module before staff can access protected data; frontend-only permission checks are insufficient.
+- Added a draft Auth-linked staff membership schema, server-side permission lookup functions, and an owner-verified Edge Function for invitation/linking, listing, updating and revoking employee access.
+- The staff table is RLS-enabled and inaccessible to anon/authenticated direct Data API requests; management uses the server secret only inside the Edge Function.
+- No module RLS policy or existing admin RPC has been relaxed in this stage. Existing owner-only protections remain intact until the next permission-enforcement stage.
+- Legacy `geostore_staff_list` localStorage entries are intentionally not deleted or trusted; a later UI stage will provide safe import/linking after Auth accounts are verified.
+- Migration and Edge Function are draft files only. No live Auth users, staff records, RLS policies, database schema, Edge Functions or Production deployment were changed.
+
+## Stage 103A — orders module server-side staff permission
+- Converted the orders SELECT/UPDATE RLS policies to the authoritative `public.has_staff_permission('orders')` check.
+- Updated the order-status and admin-note SECURITY DEFINER RPCs to re-check the same permission in Postgres.
+- Preserved order status transition rules, stock restoration validation, custom-variant stock restoration, and row locking.
+- Completed/cancelled reactivation remains primary-owner-only and still requires fresh password confirmation through the dedicated RPC.
+- No direct table UPDATE privilege was added; the existing RPC remains the supported mutation path.
+- Draft migration only. No live order, stock, customer, staff, Auth or RLS state was changed.
+
+## Stage 103B — products module server-side permission
+- Converted product INSERT/SELECT/UPDATE RLS policies to the active `products` permission.
+- Updated product create/update/delete, variant stock and inventory ledger/replenishment RPC authorization checks to use the database permission helper.
+- Kept the full `admin_list_products` endpoint restricted to the separate `expenses` permission because it returns purchase-cost data.
+- Product-only staff cannot set purchase cost during product creation/update, cannot read it through the product RPC response, and have direct column-level purchase-cost SELECT/INSERT/UPDATE revoked.
+- Existing variant stock preservation, inventory movement markers, row locks and atomic stock RPCs remain in place.
+- Flash-sale and final store-publishing actions remain owner-only pending the settings/security stage.
+- Draft migration only; no live product, stock, ledger, Auth or RLS state was changed.
+- Frontend data-loading will be connected to the new distinction in the next UI integration stage; until then no staff account is activated in the live system.
+
+## Stage 103C — expenses module server-side permission
+- Replaced the primary-owner-only expenses RLS policy with the authoritative `public.has_staff_permission('expenses')` check for SELECT/INSERT/UPDATE/DELETE.
+- The same permission now gates full product-cost listing from Stage 103B; ordinary product staff cannot read or set purchase cost.
+- No expense rows or financial values were changed. No live RLS policy was modified; the migration is staged only.
+
+## Stage 103D — CRM and support module server-side permissions
+- Replaced legacy chat-message read/update/delete policies with the active `crm` permission.
+- Replaced support-ticket and support-message read/update policies with the active `support` permission.
+- Updated the support message send/read/status/unread-count RPCs so authorized staff act as support agents while customer ownership, email and access-token checks remain intact.
+- Visitor ticket creation and customer-facing support flows are preserved.
+- No customer messages, support tickets, support messages or read receipts were changed. Draft migration only; no live RLS/function changes.
+
+## Stage 103E — settings module and media Storage permissions
+- Converted coupon, delivery-fee, storefront draft, media metadata and storefront-version read policies to the `settings` permission.
+- Converted the `storefront-media` Storage bucket upload/update/delete policies to the same server-side permission check.
+- Kept public reads of published storefront configuration, public media, active coupons and delivery fees intact.
+- Settings staff may edit drafts but cannot directly set publication fields; `publish_storefront_config`, flash-sale pricing, employee management and activity-log viewing remain owner-only.
+- Updated activity-log writes so active staff can record actions; viewing the audit log remains owner-only.
+- No storefront configuration, media, coupons, delivery fees, storage objects or activity rows were changed. Draft migration only.
+
+## Stage 103F — analytics-only staff access
+- Added `public.get_staff_analytics_summary(from,to)`, a read-only SECURITY DEFINER RPC gated by the `analytics` permission and a maximum 366-day range.
+- Returns only aggregate order counts, revenue, expenses, estimated cost/profit, status totals, daily totals and top-product aggregates; it never returns customer names, email, phone, address or raw expense/order rows.
+- Existing raw orders/products/expenses RLS policies remain restricted to their own modules; analytics permission alone does not grant raw table access.
+- The summary reports uncosted item lines so incomplete historical cost snapshots are visible rather than silently treated as fully accurate.
+- No live order, product, expense, customer or analytics data was modified. Draft migration only.
