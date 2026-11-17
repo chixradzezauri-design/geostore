@@ -75,3 +75,32 @@ test('customer support subscriptions fence stale account and guest-ticket callba
   assert.match(customerEffect, /active = false/);
   assert.match(customerApp, /supportLookupAccessToken, currentUser\?\.id/);
 });
+
+
+test('admin support replies cannot mutate a newer login session', () => {
+  const sessionEffect = adminApp.slice(
+    adminApp.indexOf('supportThreadSessionRef.current += 1'),
+    adminApp.indexOf('}, [adminLoggedIn]);', adminApp.indexOf('supportThreadSessionRef.current += 1')) + '}, [adminLoggedIn]);'.length
+  );
+  assert.match(sessionEffect, /supportReplyInFlight\.current\.clear\(\)/);
+  assert.match(sessionEffect, /setReplySending\(\{\}\)/);
+  assert.doesNotMatch(sessionEffect, /supportReplyRequestIds\.current\s*=|supportReplyRequestIds\.current\.clear/);
+
+  const replyHandler = adminApp.slice(
+    adminApp.indexOf('const handleSendTicketReply = async'),
+    adminApp.indexOf('const handleDeleteTicket = async')
+  );
+  assert.match(replyHandler, /const replySessionId = supportThreadSessionRef\.current/);
+  assert.match(replyHandler, /requestId = supportReplyRequestIds\.current\[normalizedTicketId\]\.id/);
+  assert.match(replyHandler, /supportReplyRequestIds\.current\[normalizedTicketId\]\?\.id === requestId/);
+  assert.match(replyHandler, /if \(replySessionId !== supportThreadSessionRef\.current\) return/);
+  assert.match(replyHandler, /fetchTickets\(replySessionId\)/);
+  assert.match(replyHandler, /fetchSupportTicketThread\(normalizedTicketId, replySessionId\)/);
+  assert.match(replyHandler, /if \(replySessionId === supportThreadSessionRef\.current\) \{[\s\S]*?supportReplyInFlight\.current\.delete/);
+});
+
+test('session-scoped ticket refresh ignores results from a previous admin login', () => {
+  assert.match(adminApp, /const fetchTickets = async \(sessionId = null\)/);
+  assert.match(adminApp, /if \(sessionId !== null && sessionId !== supportThreadSessionRef\.current\) return;[\s\S]*?setSupportTickets\(/);
+  assert.match(adminApp, /if \(sessionId === null \|\| sessionId === supportThreadSessionRef\.current\) \{[\s\S]*?setSupportTicketsError/);
+});
