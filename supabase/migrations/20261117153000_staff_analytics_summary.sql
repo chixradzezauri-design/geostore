@@ -69,9 +69,12 @@ BEGIN
             position('.' in coalesce(item.value->>'purchase_cost', '')) = 0
             OR length(split_part(coalesce(item.value->>'purchase_cost', ''), '.', 2)) BETWEEN 1 AND 2
           )
-          AND length(coalesce(item.value->>'quantity', '')) BETWEEN 1 AND 3
-          AND regexp_replace(coalesce(item.value->>'quantity', ''), '[0-9]', '', 'g') = ''
-          AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          AND CASE
+            WHEN length(coalesce(item.value->>'quantity', '')) BETWEEN 1 AND 3
+             AND regexp_replace(coalesce(item.value->>'quantity', ''), '[0-9]', '', 'g') = ''
+            THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+            ELSE false
+          END
         THEN (item.value->>'purchase_cost')::numeric * (item.value->>'quantity')::integer
         ELSE 0
       END
@@ -145,7 +148,20 @@ BEGIN
       SELECT
         item.value->>'id' AS product_id,
         left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
-        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum(
+          CASE
+            WHEN length(coalesce(item.value->>'quantity', '')) BETWEEN 1 AND 3
+             AND regexp_replace(coalesce(item.value->>'quantity', ''), '[0-9]', '', 'g') = ''
+             AND CASE
+               WHEN regexp_replace(coalesce(item.value->>'quantity', ''), '[0-9]', '', 'g') = ''
+                 AND length(coalesce(item.value->>'quantity', '')) BETWEEN 1 AND 3
+               THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+               ELSE false
+             END
+            THEN (item.value->>'quantity')::integer
+            ELSE 0
+          END
+        )::bigint AS units,
         sum(
           CASE
             WHEN length(coalesce(item.value->>'price', '')) BETWEEN 1 AND 12
@@ -157,9 +173,12 @@ BEGIN
                position('.' in coalesce(item.value->>'price', '')) = 0
                OR length(split_part(coalesce(item.value->>'price', ''), '.', 2)) BETWEEN 1 AND 2
              )
-             AND length(coalesce(item.value->>'quantity', '')) BETWEEN 1 AND 3
-             AND regexp_replace(coalesce(item.value->>'quantity', ''), '[0-9]', '', 'g') = ''
-             AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+             AND CASE
+               WHEN length(coalesce(item.value->>'quantity', '')) BETWEEN 1 AND 3
+                AND regexp_replace(coalesce(item.value->>'quantity', ''), '[0-9]', '', 'g') = ''
+               THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+               ELSE false
+             END
             THEN (item.value->>'price')::numeric * (item.value->>'quantity')::integer
             ELSE 0
           END
