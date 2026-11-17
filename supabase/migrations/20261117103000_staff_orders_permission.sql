@@ -27,6 +27,7 @@ DECLARE
   v_order public.orders%rowtype;
   v_item record;
   v_updated integer;
+  v_status_changed_at timestamptz;
 BEGIN
   IF NOT public.has_staff_permission('orders') THEN
     RAISE EXCEPTION 'შეკვეთების მართვის უფლება არ გაქვთ.'
@@ -157,7 +158,16 @@ BEGIN
      WHERE id = p_order_id;
   END IF;
 
-  RETURN jsonb_build_object('order_id', p_order_id, 'status', p_new_status);
+  SELECT status_changed_at
+    INTO v_status_changed_at
+    FROM public.orders
+   WHERE id = p_order_id;
+
+  RETURN jsonb_build_object(
+    'order_id', p_order_id,
+    'status', p_new_status,
+    'status_changed_at', v_status_changed_at
+  );
 END;
 $function$;
 
