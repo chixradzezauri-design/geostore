@@ -896,3 +896,11 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Live read-only baseline at implementation time: 2 completed orders, both with stock-deduction markers and neither with stock-restoration markers. No order or stock row was changed during this work.
 - Migration `20261117093000_order_reactivate_completed_orders.sql` is staged in this branch only. It has not been applied to the live Supabase project. No Production deployment or merge was performed.
 - Added source-level regression tests for completed-order reactivation, no double stock deduction, cancelled-order stock checks, and direct-update guard behavior. Full CI verification remains pending.
+
+## Stage 101 — additive admin panel visual polish
+- Added a dedicated stylesheet loaded after the existing admin styles, keeping prior layout rules and section behavior intact.
+- Harmonized dashboard surfaces, section headers, cards, inputs, focus states, buttons and status actions with a restrained GEOSTORE dark/emerald visual system.
+- Added responsive refinements for tablet, mobile and narrow 320–380px layouts, plus reduced-motion handling.
+- Kept all admin tabs, order actions, staff flows, data requests and existing component structure unchanged.
+- Added source-level regression tests for stylesheet load order, section preservation, responsive breakpoints, keyboard focus and non-hiding behavior.
+- CSS-only visual change; no database schema, live data, authentication, stock, order or customer state was changed.
