@@ -22,7 +22,7 @@ test('content styles target existing sections and all original tabs remain avail
   const ids = [...admin.matchAll(/\{ id: '([^']+)', label:/g)].map(match => match[1]);
   assert.deepEqual(ids, [
     'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
-    'products', 'inventory', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
+    'products', 'inventory', 'replenishment', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
     'banners', 'categories', 'coupons', 'vendors', 'users', 'settings'
   ]);
 });
