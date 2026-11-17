@@ -144,7 +144,8 @@ test('staff updates and revocation cannot target the immutable owner or delete A
   assert.match(edge, /is_active: body\.is_active !== false/);
   assert.match(edge, /is_active: false/);
   assert.doesNotMatch(edge, /auth\.admin\.deleteUser/);
-  assert.doesNotMatch(edge, /\.delete\(\)/);
+  assert.doesNotMatch(edge, /auth\.admin\.deleteUser/);
+  assert.match(edge, /from\('admin_staff_pending_invites'\)[\s\S]*?\.delete\(\)/);
 });
 
 const adminDashboard = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
