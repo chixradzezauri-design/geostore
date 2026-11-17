@@ -364,11 +364,13 @@ function StaffAnalyticsSummary() {
     { label: 'შეკვეთები', value: count(summary?.order_count), detail: `გაუქმებული: ${count(summary?.cancelled_count)}` },
     { label: 'შემოსავალი', value: money(summary?.revenue) },
     { label: 'დასრულებული გაყიდვები', value: money(summary?.completed_revenue) },
-    { label: 'შესყიდვის ღირებულება', value: money(summary?.cost_of_goods) },
-    { label: 'ხარჯები', value: money(summary?.expenses) },
-    { label: 'სავარაუდო წმინდა მოგება', value: money(summary?.net_profit_estimate) },
     { label: 'საშუალო შეკვეთა', value: money(summary?.average_order_value) },
-    { label: 'მოგება ხარჯებამდე', value: money(summary?.gross_profit_before_expenses) }
+    ...(summary?.financials_available ? [
+      { label: 'შესყიდვის ღირებულება', value: money(summary?.cost_of_goods) },
+      { label: 'ხარჯები', value: money(summary?.expenses) },
+      { label: 'სავარაუდო წმინდა მოგება', value: money(summary?.net_profit_estimate) },
+      { label: 'მოგება ხარჯებამდე', value: money(summary?.gross_profit_before_expenses) }
+    ] : [])
   ];
 
   return (
@@ -408,7 +410,7 @@ function StaffAnalyticsSummary() {
             ))}
           </div>
 
-          {Number(summary.uncosted_item_lines) > 0 && (
+          {summary.financials_available && Number(summary.uncosted_item_lines) > 0 && (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
               {count(summary.uncosted_item_lines)} გაყიდულ პოზიციას ისტორიულ ჩანაწერში შესყიდვის ღირებულება აკლია; მოგების შეფასება შესაძლოა არასრული იყოს.
             </div>
