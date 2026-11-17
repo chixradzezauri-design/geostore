@@ -838,3 +838,22 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Security advisor warnings on the guest support RPCs require preserving the token-checked guest access model, not removing access without a replacement.
 - No live customer, order, product, stock, message, ticket, or settings data was modified.
 - No live migration, merge, or production deployment was performed.
+
+
+## Stage 95 — atomic inventory replenishment settings (verification addendum)
+- The settings save RPC uses one conflict-safe UPSERT against the unique product/variant-position index while retaining the product-row lock and exact variant validation.
+- Regression coverage includes concurrent first-time saves and rejection of blank variant IDs.
+- On PR head `8b2790056a53fcb177e19f77e971156cf4de287e`, GitHub Actions Build check, Dependency security audit and CodeQL all completed successfully.
+- Build check passed; the repository workflow includes the automated test suite and production build.
+- The replenishment migration remains draft-only and is not present in the live Supabase migration ledger. No live data, settings, schema, merge or deployment was changed.
+
+## Stage 96 — read-only order intake and synchronization audit
+- Live read-only snapshot: `public.orders` contains 2 rows; `public.order_notifications` contains 0 rows.
+- Confirmed `orders` and `order_notifications` are members of the `supabase_realtime` publication.
+- Confirmed the admin order loader reads the complete order ledger in stable 1,000-row pages, preserves the last successful snapshot on failure, serializes/coalesces overlapping refreshes, and rejects responses from an expired admin session.
+- Confirmed the admin client subscribes to order INSERT/UPDATE/DELETE events and re-reads through authenticated REST/RLS; a 15-second polling refresh remains as recovery.
+- Confirmed the live `orders` table has primary-admin-only SELECT and UPDATE policies, and database triggers enforce status transitions, stock/checkout integrity, and order notification recording.
+- Checkout snapshots retain item names, image/gallery URLs, prices, quantities, selected variants, add-ons and purchase-cost/vendor/category fields for historical order detail display.
+- Customer order notifications are owner-scoped to authenticated users. The current zero-row notification table is not evidence of failed order intake; the two current orders do not establish an authenticated notification event.
+- No order, product, stock, customer, message, notification or other live data was modified. No live migration, schema change, merge or deployment was performed.
+- No order-intake or Realtime configuration defect was confirmed in this read-only pass. Remaining verification is an authenticated staging/browser test of a fresh guest order and a fresh account-linked order, admin arrival, order-detail image snapshots, and customer status notifications.
