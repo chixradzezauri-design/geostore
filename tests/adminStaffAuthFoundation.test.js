@@ -88,3 +88,31 @@ test('unconfirmed staff are denied before the membership permission lookup', () 
   assert.ok(confirmationCheck >= 0);
   assert.ok(membershipLookup > confirmationCheck);
 });
+
+
+test('staff Edge Function rejects unauthenticated callers and non-owner administrators', () => {
+  assert.match(edge, /request\.method !== 'POST'/);
+  assert.match(edge, /Authorization/);
+  assert.match(edge, /Bearer\\s\+/);
+  assert.match(edge, /auth\.getUser\(tokenMatch\[1\]\)/);
+  assert.match(edge, /caller\.id !== OWNER_ID \|\| caller\.app_metadata\?\.role !== 'admin'/);
+});
+
+test('staff invite validates identity and cannot link the owner or another administrator', () => {
+  assert.match(edge, /inviteUserByEmail\(email/);
+  assert.match(edge, /email\.length > 254/);
+  assert.match(edge, /displayName\.length < 2 \|\| displayName\.length > 100/);
+  assert.match(edge, /!Object\.values\(permissions\)\.some\(Boolean\)/);
+  assert.match(edge, /targetUser\.id === OWNER_ID/);
+  assert.match(edge, /targetUser\.app_metadata\?\.role === 'admin'/);
+});
+
+test('staff updates and revocation cannot target the immutable owner or delete Auth accounts', () => {
+  assert.equal((edge.match(/\.neq\('user_id', OWNER_ID\)/g) || []).length, 2);
+  assert.match(edge, /action === 'update'/);
+  assert.match(edge, /action === 'revoke'/);
+  assert.match(edge, /is_active: body\.is_active !== false/);
+  assert.match(edge, /is_active: false/);
+  assert.doesNotMatch(edge, /auth\.admin\.deleteUser/);
+  assert.doesNotMatch(edge, /\.delete\(\)/);
+});
