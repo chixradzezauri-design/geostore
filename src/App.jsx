@@ -1794,8 +1794,14 @@ export default function App() {
       } else {
         // Product-authorized staff use RLS to read the complete safe catalogue
         // columns; other staff/customers receive the public published catalogue.
+        const safeProductColumns = 'id,sku,name,category,brand,vendor,price_gel,old_price_gel,flash_sale_started_at,flash_sale_ends_at,flash_sale_percent,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured';
+        // Only product-authorized staff need draft/published state. Ordinary
+        // customers keep the public catalogue column allowlist unchanged.
+        const productColumns = requestHasProductPermission
+          ? `${safeProductColumns},is_published`
+          : safeProductColumns;
         res = await fetch(
-          `${SUPABASE_URL}/rest/v1/products?select=id,sku,name,category,brand,vendor,price_gel,old_price_gel,flash_sale_started_at,flash_sale_ends_at,flash_sale_percent,stock,image,description,available_sizes,available_colors,material,durability,created_at,gallery,variants,tags,model,cpu,ram,storage,gpu,screen_size,os,is_featured&order=created_at.desc,id.asc`,
+          `${SUPABASE_URL}/rest/v1/products?select=${productColumns}&order=created_at.desc,id.asc`,
           { headers: await getSupabaseHeaders({ authenticated: requestHasProductPermission }) }
         );
       }
