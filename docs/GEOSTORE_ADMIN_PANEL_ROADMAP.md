@@ -423,3 +423,19 @@ Only then request approval to merge and deploy.
 
 ### Safety boundary
 - This stage is an audit only. No order/customer data, application code, database schema, live settings or production deployment was changed.
+
+
+## Stage 98 — order detail dialog keyboard accessibility implementation
+
+### Implemented
+- Record the exact order-row button that opens the detail dialog.
+- Move initial focus to the dialog close control once per opening; do not steal focus when the selected order changes while the dialog remains open.
+- Contain Tab and Shift+Tab in the topmost dialog and close the topmost dialog on Escape.
+- Give the reactivation password dialog priority over the underlying order details; do not dismiss an in-progress reactivation.
+- Restore focus to the original order-row trigger when the detail dialog closes, if the trigger remains connected.
+- Remove the document key listener during cleanup and add regression checks.
+
+### Verification still required
+- Run focused modal tests, the complete Node test suite and production build on this PR head.
+- Perform real-browser keyboard checks for initial focus, forward/reverse Tab wrap, Escape, focus restoration and nested reactivation behavior.
+- No merge, live database change or production deployment is authorized by this stage.
