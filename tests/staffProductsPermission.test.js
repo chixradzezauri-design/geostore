@@ -39,7 +39,7 @@ test('purchase cost is protected by the separate expenses permission', () => {
 test('full product-cost listing is not granted by products permission alone', () => {
   assert.match(migration, /admin_list_products\(\)/);
   assert.ok(migration.includes("IF NOT public.has_staff_permission(''expenses'') THEN"));
-  assert.ok(migration.includes("EXECUTE regexp_replace(v_definition, ';[[:space:]]*$', '')"));
+  assert.ok(migration.includes("EXECUTE rtrim(v_definition, E'; \\t\\n\\r')"));
 });
 
 test('product permission changes preserve inventory transaction markers', () => {
