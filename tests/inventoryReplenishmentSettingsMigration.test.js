@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261117210000_inventory_replenishment_settings.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261117084528_inventory_replenishment_settings.sql', import.meta.url), 'utf8');
 
 test('replenishment settings are private, bounded and protected by RLS', () => {
   assert.ok(migration.includes('CREATE TABLE IF NOT EXISTS private.inventory_replenishment_settings'));
