@@ -704,3 +704,21 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - No source-code or database change was made in this audit stage; no existing messages, tickets, orders, customers, access-token hashes or read receipts were modified.
 - Follow-up work: evaluate a secure guest notification/broadcast path and add explicit automated coverage for ticket creation/reply retry and guest-vs-authenticated Realtime authorization behavior.
 - No live migration, merge or production deployment was performed.
+
+## Stage 84 — scoped support Broadcast notifications
+
+### Implementation
+- Added `supabase/migrations/20261117200000_support_ticket_broadcast_notifications.sql`.
+- New support-message INSERTs emit notification-only Broadcast events through a private-schema trigger. Payloads contain only `ticket_id`; message text, sender name, email, access token and token hash are never included in the payload.
+- Guest topics are derived from the existing 256-bit SHA-256 access-token digest and are public/unguessable. This is only an activity signal; the guest still needs the original access code for the existing protected conversation RPC.
+- Account-linked customers receive events on a private topic bound to `auth.uid()`.
+- The administrator receives events on a private topic whose SELECT policy checks both the existing admin app-metadata role and the primary admin UUID.
+- No client Broadcast INSERT policy was added. Customer and administrator clients re-fetch message bodies only through the existing authorization-checked `get_support_ticket_messages` RPC.
+- Customer and admin clients now subscribe to Broadcast events. The 15-second polling recovery path remains. Admin `support_tickets` Postgres Changes status refresh is retained.
+
+### Verification and safety boundary
+- Read-only inspection of the connected Supabase project confirmed RLS is enabled on `realtime.messages`, no existing policies were present there, and both support tables are already in `supabase_realtime`.
+- Supabase Broadcast and Authorization documentation was reviewed for public/private topic behavior and `realtime.topic()` policy checks.
+- Added `tests/supportTicketBroadcastNotifications.test.js` for topic derivation, customer/admin authorization, notification payload minimization, retained polling and server-only trigger writes.
+- The migration is committed to the maintenance branch only. It has NOT been applied to the connected/live Supabase database. No tickets, messages, access-token hashes, orders, customer records, production settings, or deployment were changed.
+- CI/build/test results are pending after the new commits. Browser/device and live end-to-end Broadcast verification remain outstanding; do not describe the feature as live until the migration is explicitly approved, applied in a safe environment, and verified.
