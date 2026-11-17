@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
 test('store settings, coupons, delivery fees and media are protected by settings permission', () => {
   for (const phrase of [
@@ -30,6 +31,18 @@ test('storefront media uploads are permission-checked at the Storage RLS boundar
   assert.match(migration, /Public can read public storefront media/);
   assert.match(migration, /Public can read published storefront config/);
   assert.match(migration, /public read active coupons/);
+});
+
+test('storefront draft saves use a scoped server RPC and cannot mutate published fields', () => {
+  const draftRpc = migration.split('CREATE OR REPLACE FUNCTION private.save_storefront_draft')[1]?.split('CREATE OR REPLACE FUNCTION public.save_storefront_draft')[0] || '';
+  assert.match(draftRpc, /public\.has_staff_permission\('settings'\)/);
+  assert.match(draftRpc, /ON CONFLICT \(config_key\) DO UPDATE/);
+  assert.match(draftRpc, /SET draft_config = EXCLUDED\.draft_config/);
+  assert.match(draftRpc, /updated_by = EXCLUDED\.updated_by/);
+  assert.match(draftRpc, /draft_updated_at = EXCLUDED\.draft_updated_at/);
+  assert.doesNotMatch(draftRpc, /published_config|is_published|published_at/);
+  assert.match(app, /rest\/v1\/rpc\/save_storefront_draft/);
+  assert.doesNotMatch(app, /rest\/v1\/storefront_config\?on_conflict=config_key/);
 });
 
 test('settings staff can edit drafts but cannot publish storefront configuration', () => {
