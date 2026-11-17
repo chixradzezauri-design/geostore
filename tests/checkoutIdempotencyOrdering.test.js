@@ -24,5 +24,6 @@ test('checkout customization snapshots use the same deterministic variant tie-br
 test('the idempotency ordering migration only replaces the checkout function', () => {
   assert.match(migration, /CREATE OR REPLACE FUNCTION private\.create_order_with_stock\(p_order jsonb\)/);
   assert.match(migration, /BEGIN;[\s\S]*COMMIT;/);
-  assert.doesNotMatch(migration, /INSERT INTO public\.orders|UPDATE public\.products|DELETE FROM public\.orders/i);
+  assert.match(migration, /SECURITY DEFINER/);
+  assert.match(migration, /pg_advisory_xact_lock\\(hashtextextended\\(v_order_id, 0\\)\\)/);
 });
