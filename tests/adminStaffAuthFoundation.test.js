@@ -41,10 +41,40 @@ test('staff invitations, role updates and revocation use Supabase Auth and the s
   assert.match(edge, /action === 'revoke'/);
   assert.match(edge, /is_active: false/);
   assert.match(edge, /linked_existing_account/);
-  assert.match(edge, /!invitedNewUser && !targetUser\?\.confirmed_at/);
+  assert.match(edge, /recovered_pending_invite/);
+  assert.match(edge, /admin_staff_pending_invites/);
+  assert.match(edge, /geostore_staff_invitation_token/);
+  assert.match(edge, /targetUser\.user_metadata\?\./);
   assert.match(edge, /არსებული ანგარიშის ელფოსტა ჯერ დადასტურებული არ არის/);
   assert.doesNotMatch(edge, /auth\.admin\.deleteUser/);
-  assert.match(edge, /Keep the Auth account intact/);
+  assert.match(edge, /Keep both the Auth account and pending invitation marker intact/);
+});
+
+const pendingInviteMigration = await readFile(new URL('../supabase/migrations/20261117170000_admin_staff_pending_invites.sql', import.meta.url), 'utf8');
+
+test('pending staff invite recovery ledger is server-only and cannot be accessed by browser roles', () => {
+  assert.match(pendingInviteMigration, /CREATE TABLE public\.admin_staff_pending_invites/);
+  assert.match(pendingInviteMigration, /invitation_token uuid NOT NULL UNIQUE/);
+  assert.match(pendingInviteMigration, /email = lower\(btrim\(email\)\)/);
+  assert.match(pendingInviteMigration, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(pendingInviteMigration, /FORCE ROW LEVEL SECURITY/);
+  assert.match(pendingInviteMigration, /REVOKE ALL ON TABLE public\.admin_staff_pending_invites FROM PUBLIC, anon, authenticated/);
+  assert.match(pendingInviteMigration, /GRANT ALL ON TABLE public\.admin_staff_pending_invites TO service_role/);
+});
+
+test('an interrupted owner-created invite can be recovered only with its matching server-recorded token', () => {
+  const inviteStart = edge.indexOf("if (!targetUser) {");
+  const persistIntent = edge.indexOf("from('admin_staff_pending_invites')", inviteStart);
+  const sendInvite = edge.indexOf('auth.admin.inviteUserByEmail', inviteStart);
+  const recoveryBranch = edge.indexOf('recoveredPendingInvite = true');
+  const permissionGate = migration.indexOf('auth_user.email_confirmed_at IS NOT NULL');
+  assert.ok(inviteStart >= 0);
+  assert.ok(persistIntent > inviteStart);
+  assert.ok(sendInvite > persistIntent);
+  assert.ok(recoveryBranch > sendInvite);
+  assert.ok(permissionGate >= 0);
+  assert.match(edge, /userInvitationToken !== pendingInvite\.invitation_token/);
+  assert.match(edge, /!targetUser\?\.confirmed_at/);
 });
 
 test('permission and role inputs are allow-listed and validated before persistence', () => {
