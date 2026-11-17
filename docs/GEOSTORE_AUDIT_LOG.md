@@ -921,3 +921,13 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Completed/cancelled reactivation remains primary-owner-only and still requires fresh password confirmation through the dedicated RPC.
 - No direct table UPDATE privilege was added; the existing RPC remains the supported mutation path.
 - Draft migration only. No live order, stock, customer, staff, Auth or RLS state was changed.
+
+## Stage 103B — products module server-side permission
+- Converted product INSERT/SELECT/UPDATE RLS policies to the active `products` permission.
+- Updated product create/update/delete, variant stock and inventory ledger/replenishment RPC authorization checks to use the database permission helper.
+- Kept the full `admin_list_products` endpoint restricted to the separate `expenses` permission because it returns purchase-cost data.
+- Product-only staff cannot set purchase cost during product creation/update, cannot read it through the product RPC response, and have direct column-level purchase-cost SELECT/INSERT/UPDATE revoked.
+- Existing variant stock preservation, inventory movement markers, row locks and atomic stock RPCs remain in place.
+- Flash-sale and final store-publishing actions remain owner-only pending the settings/security stage.
+- Draft migration only; no live product, stock, ledger, Auth or RLS state was changed.
+- Frontend data-loading will be connected to the new distinction in the next UI integration stage; until then no staff account is activated in the live system.
