@@ -28,3 +28,24 @@ test('mobile modal respects safe areas and touch target sizing without selecting
   assert.match(css, /min-height:\s*44px/);
   assert.doesNotMatch(css, /\.admin-order-detail-overlay\s*\{/);
 });
+
+
+test('order detail dialog manages initial focus, keyboard containment, Escape and trigger restoration', () => {
+  assert.match(admin, /orderDetailDialogRef = useRef/);
+  assert.match(admin, /orderDetailCloseButtonRef = useRef/);
+  assert.match(admin, /orderDetailTriggerRef\.current = event\.currentTarget/);
+  assert.match(admin, /orderDetailCloseButtonRef\.current\?\.focus\(\)/);
+  assert.match(admin, /event\.key === 'Escape'/);
+  assert.match(admin, /event\.key !== 'Tab'/);
+  assert.match(admin, /event\.shiftKey && \(current === first \|\| current === activeDialog\)/);
+  assert.match(admin, /trigger\?\.isConnected\) trigger\.focus\(\)/);
+  assert.match(admin, /document\.removeEventListener\('keydown', handleOrderDialogKeyDown\)/);
+});
+
+test('nested reactivation dialog takes keyboard priority and cannot dismiss during submission', () => {
+  assert.match(admin, /document\.querySelector\('\[aria-labelledby="reactivation-title"\]'\)/);
+  assert.match(admin, /if \(reactivationOrder\) \{/);
+  assert.match(admin, /if \(!isReactivatingOrder\) \{/);
+  assert.match(admin, /setReactivationPassword\(''\)/);
+  assert.match(admin, /setReactivationError\(''\)/);
+});
