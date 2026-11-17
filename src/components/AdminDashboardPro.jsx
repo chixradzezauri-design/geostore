@@ -356,6 +356,12 @@ export default function AdminDashboardPro({
   const [adminTab, setAdminTab] = useState('command');
   const isOwner = adminAccess?.is_admin === true;
   const hasModulePermission = (permission) => hasAdminPermission(adminAccess, permission);
+  const hasProductsPermission = hasModulePermission('products');
+  const hasOrdersPermission = hasModulePermission('orders');
+  const hasExpensesPermission = hasModulePermission('expenses');
+  const hasCrmPermission = hasModulePermission('crm');
+  const hasSupportPermission = hasModulePermission('support');
+  const hasSettingsPermission = hasModulePermission('settings');
   const canAccessAdminTab = (tabId) => {
     const permission = ADMIN_TAB_PERMISSION[tabId];
     if (permission === 'owner') return isOwner;
@@ -561,7 +567,7 @@ export default function AdminDashboardPro({
   const [isAiThinking, setIsAiThinking] = useState(false);
 
   const fetchInventoryReplenishmentSettings = async () => {
-    if (!adminLoggedIn) return;
+    if (!hasProductsPermission) return;
     const requestId = ++replenishmentRequestRef.current;
     setReplenishmentLoading(true);
     setReplenishmentError('');
@@ -587,6 +593,7 @@ export default function AdminDashboardPro({
   };
 
   const saveInventoryReplenishmentSetting = async (position) => {
+    if (!hasProductsPermission) return;
     const draft = replenishmentDrafts[position.key] || {};
     const threshold = Number(draft.threshold ?? position.threshold);
     const target = Number(draft.target ?? position.target);
@@ -626,7 +633,7 @@ export default function AdminDashboardPro({
   };
 
   const fetchInventoryMovements = async (beforeId = null, append = false) => {
-    if (!adminLoggedIn) return;
+    if (!hasProductsPermission) return;
     const requestId = ++inventoryMovementRequestRef.current;
     setInventoryMovementLoading(true);
     if (!append) setInventoryMovementError('');
@@ -665,7 +672,7 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!hasProductsPermission) {
       inventoryMovementRequestRef.current += 1;
       setInventoryMovementRows([]);
       setInventoryMovementCursor(null);
@@ -679,10 +686,10 @@ export default function AdminDashboardPro({
     }
     void fetchInventoryMovements(null, false);
     return () => { inventoryMovementRequestRef.current += 1; };
-  }, [adminLoggedIn, adminTab, inventoryMovementProductFilter]);
+  }, [hasProductsPermission, adminTab, inventoryMovementProductFilter]);
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!hasProductsPermission) {
       replenishmentRequestRef.current += 1;
       setReplenishmentSettings([]);
       setReplenishmentError('');
@@ -691,7 +698,7 @@ export default function AdminDashboardPro({
     }
     void fetchInventoryReplenishmentSettings();
     return () => { replenishmentRequestRef.current += 1; };
-  }, [adminLoggedIn]);
+  }, [hasProductsPermission]);
 
   useEffect(() => {
     try {
@@ -739,13 +746,17 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    // Do not poll private finance data until the server-verified admin session is active.
-    if (!adminLoggedIn) return undefined;
+    // Do not poll private finance data unless the server grants the expenses module.
+    if (!hasExpensesPermission) {
+      setExpenses([]);
+      setExpensesError('');
+      return undefined;
+    }
 
     fetchExpenses();
     const interval = setInterval(fetchExpenses, 15000);
     return () => clearInterval(interval);
-  }, [adminLoggedIn]);
+  }, [hasExpensesPermission]);
 
 
 
@@ -1004,7 +1015,7 @@ export default function AdminDashboardPro({
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
   const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
-    if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;
+    if (!hasSupportPermission || sessionId !== supportThreadSessionRef.current) return;
     const requestId = ++supportTicketListRequestRef.current;
     const isCurrentRequest = () => (
       sessionId === supportThreadSessionRef.current
@@ -1126,7 +1137,7 @@ export default function AdminDashboardPro({
       if (sessionId !== supportThreadSessionRef.current) return;
       supportThreadFetchInFlight.current.delete(normalizedTicketId);
       setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
-      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
+      if (supportThreadRefreshPending.current.delete(normalizedTicketId) && hasSupportPermission) {
         // If a Realtime event arrived while this fetch was running, make one
         // follow-up read so the newest message cannot be hidden until polling.
         void Promise.resolve().then(() => fetchSupportTicketThread(normalizedTicketId));
@@ -1143,10 +1154,10 @@ export default function AdminDashboardPro({
     // an uncertain network result must be safely retryable in the next session.
     supportReplyInFlight.current.clear();
     setReplySending({});
-  }, [adminLoggedIn]);
+  }, [hasSupportPermission]);
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!hasSupportPermission) {
       setSelectedSupportTicketId(null);
       setSupportTicketThreads({});
       setSupportTicketThreadErrors({});
@@ -1163,7 +1174,7 @@ export default function AdminDashboardPro({
       })
       .subscribe(status => {
         // Reconnects trigger a fresh protected snapshot, never trust event data.
-        if (active && status === 'SUBSCRIBED' && adminLoggedIn) {
+        if (active && status === 'SUBSCRIBED' && hasSupportPermission) {
           void fetchTickets();
           if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
         }
@@ -1172,10 +1183,10 @@ export default function AdminDashboardPro({
       active = false;
       void supabase.removeChannel(channel);
     };
-  }, [adminLoggedIn, selectedSupportTicketId]);
+  }, [hasSupportPermission, selectedSupportTicketId]);
 
   useEffect(() => {
-    if (!adminLoggedIn) return undefined;
+    if (!hasSupportPermission) return undefined;
     const refreshAdminSupport = () => {
       void fetchTickets();
       if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
@@ -1190,7 +1201,7 @@ export default function AdminDashboardPro({
       clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
     };
-  }, [adminLoggedIn, selectedSupportTicketId]);
+  }, [hasSupportPermission, selectedSupportTicketId]);
 
   const fetchLegacyMessages = async ({ loadMore = false, sessionId = legacyMessagesSessionRef.current } = {}) => {
     if (sessionId !== legacyMessagesSessionRef.current) return;
@@ -1248,7 +1259,7 @@ export default function AdminDashboardPro({
   useEffect(() => {
     legacyMessagesSessionRef.current += 1;
     const sessionId = legacyMessagesSessionRef.current;
-    if (!adminLoggedIn) {
+    if (!hasCrmPermission) {
       setLegacyMessages([]);
       setLegacyMessagesError('');
       setLegacyMessagesHasMore(false);
@@ -1266,10 +1277,10 @@ export default function AdminDashboardPro({
       clearInterval(interval);
       if (legacyMessagesSessionRef.current === sessionId) legacyMessagesSessionRef.current += 1;
     };
-  }, [adminLoggedIn]);
+  }, [hasCrmPermission]);
 
   useEffect(() => {
-    if (!adminLoggedIn) return undefined;
+    if (!hasCrmPermission) return undefined;
     const channel = supabase
       .channel('geostore-admin-legacy-messages')
       .on(
@@ -1280,18 +1291,18 @@ export default function AdminDashboardPro({
         }
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED' && adminLoggedIn) {
+        if (status === 'SUBSCRIBED' && hasCrmPermission) {
           void fetchLegacyMessages();
         }
       });
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [adminLoggedIn]);
+  }, [hasCrmPermission]);
 
   useEffect(() => {
     let active = true;
-    if (!adminLoggedIn) {
+    if (!hasSettingsPermission) {
       setStorefrontVersions([]);
       setStorefrontVersionsError('');
       setStorefrontVersionsLoading(false);
@@ -1318,7 +1329,7 @@ export default function AdminDashboardPro({
     };
     loadStorefrontVersions();
     return () => { active = false; };
-  }, [adminLoggedIn, storefrontPublishBusy]);
+  }, [hasSettingsPermission, storefrontPublishBusy]);
 
   const [activityLogs, setActivityLogs] = useState([]);
   const [activityLogsLoading, setActivityLogsLoading] = useState(false);
@@ -1349,7 +1360,7 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    if (!adminLoggedIn) {
+    if (!isOwner) {
       setActivityLogs([]);
       setActivityLogsError('');
       setActivityLogsLoading(false);
@@ -3427,7 +3438,7 @@ export default function AdminDashboardPro({
   };
 
   const handleRestoreStorefrontVersion = (version) => {
-    if (!adminLoggedIn || !version?.snapshot || typeof version.snapshot !== 'object' || Array.isArray(version.snapshot)) return;
+    if (!isOwner || !version?.snapshot || typeof version.snapshot !== 'object' || Array.isArray(version.snapshot)) return;
     const snapshot = version.snapshot;
     if (!Array.isArray(snapshot.categories) || !Array.isArray(snapshot.banners) ||
         !snapshot.siteSettings || typeof snapshot.siteSettings !== 'object' || Array.isArray(snapshot.siteSettings)) {
@@ -3984,7 +3995,7 @@ export default function AdminDashboardPro({
                     <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{position.isLowStock ? Math.max(0, Number(targetValue) - position.stock) : 0}</strong></div>
-                    <div className="flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !adminLoggedIn} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
+                    <div className="flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !hasProductsPermission} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
                   </article>
                 );
               })}
