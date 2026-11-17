@@ -333,6 +333,14 @@ export default function AdminDashboardPro({
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
+  const [inventoryMovementRows, setInventoryMovementRows] = useState([]);
+  const [inventoryMovementLoading, setInventoryMovementLoading] = useState(false);
+  const [inventoryMovementError, setInventoryMovementError] = useState('');
+  const [inventoryMovementCursor, setInventoryMovementCursor] = useState(null);
+  const [inventoryMovementHasMore, setInventoryMovementHasMore] = useState(false);
+  const [inventoryMovementProductQuery, setInventoryMovementProductQuery] = useState('');
+  const [inventoryMovementProductFilter, setInventoryMovementProductFilter] = useState('');
+  const inventoryMovementRequestRef = useRef(0);
   const ORDERS_PER_PAGE = 5;
   const PRODUCTS_PER_PAGE = 10;
 
@@ -398,6 +406,54 @@ export default function AdminDashboardPro({
     { role: 'assistant', text: 'მოგესალმებით! მე ვარ თქვენი AI ბიზნეს ანალიტიკოსი. შემიძლია გავაანალიზო თქვენი რეალური გაყიდვები, მოგება და ხარჯები. რით გეხმარებით?' }
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
+
+  const fetchInventoryMovements = async (beforeId = null, append = false) => {
+    if (!adminLoggedIn) return;
+    const requestId = ++inventoryMovementRequestRef.current;
+    setInventoryMovementLoading(true);
+    if (!append) setInventoryMovementError('');
+    try {
+      const headers = await getSupabaseHeaders();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_inventory_movements`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          p_product_id: inventoryMovementProductFilter || null,
+          p_before_id: beforeId,
+          p_limit: 50
+        })
+      });
+      if (requestId !== inventoryMovementRequestRef.current) return;
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (requestId !== inventoryMovementRequestRef.current) return;
+      const rows = Array.isArray(result?.items) ? result.items : [];
+      setInventoryMovementRows(current => append
+        ? [...current, ...rows.filter(row => !current.some(existing => String(existing.id) === String(row.id)))]
+        : rows
+      );
+      setInventoryMovementCursor(result?.next_cursor ?? null);
+      setInventoryMovementHasMore(result?.has_more === true);
+      setInventoryMovementError('');
+    } catch (error) {
+      if (requestId !== inventoryMovementRequestRef.current) return;
+      setInventoryMovementError(error?.message || 'მარაგის ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+    } finally {
+      if (requestId === inventoryMovementRequestRef.current) setInventoryMovementLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn || adminTab !== 'inventory') {
+      inventoryMovementRequestRef.current += 1;
+      return undefined;
+    }
+    void fetchInventoryMovements(null, false);
+    return () => { inventoryMovementRequestRef.current += 1; };
+  }, [adminLoggedIn, adminTab, inventoryMovementProductFilter]);
 
   useEffect(() => {
     try {
@@ -3311,6 +3367,7 @@ export default function AdminDashboardPro({
             { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
+            { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers }
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
@@ -3509,6 +3566,132 @@ export default function AdminDashboardPro({
                 )}
               </div>
             </div>
+          </section>
+        )}
+
+        {adminTab === 'inventory' && (
+          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY AUDIT</p>
+                <h3 id="admin-inventory-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის მოძრაობების ისტორია</h3>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის მარაგის ცვლილება — საწყისი/საბოლოო რაოდენობა, მიზეზი და შეკვეთის კავშირი.</p>
+              </div>
+              <div className="flex w-full flex-col sm:flex-row gap-2 xl:max-w-xl">
+                <input
+                  type="search"
+                  value={inventoryMovementProductQuery}
+                  onChange={event => setInventoryMovementProductQuery(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') {
+                      const nextFilter = inventoryMovementProductQuery.trim();
+                      if (nextFilter === inventoryMovementProductFilter) void fetchInventoryMovements(null, false);
+                      else setInventoryMovementProductFilter(nextFilter);
+                    }
+                  }}
+                  placeholder="პროდუქტის ID-ით ფილტრაცია"
+                  aria-label="პროდუქტის ID-ით ფილტრაცია"
+                  className="min-w-0 flex-1 rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-3 text-xs font-semibold text-white placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextFilter = inventoryMovementProductQuery.trim();
+                    if (nextFilter === inventoryMovementProductFilter) void fetchInventoryMovements(null, false);
+                    else setInventoryMovementProductFilter(nextFilter);
+                  }}
+                  disabled={inventoryMovementLoading}
+                  className="min-h-11 rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50"
+                >ფილტრი</button>
+                <button
+                  type="button"
+                  onClick={() => void fetchInventoryMovements(null, false)}
+                  disabled={inventoryMovementLoading}
+                  className="min-h-11 rounded-xl border border-emerald-500/30 bg-slate-950 px-4 py-3 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/10 disabled:opacity-50"
+                >განახლება</button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-white/5 bg-slate-950/70 p-4">
+                <p className="text-[10px] font-bold text-slate-400">ჩატვირთული ჩანაწერები</p>
+                <strong className="mt-2 block text-2xl font-black tabular-nums text-white">{inventoryMovementRows.length}</strong>
+              </div>
+              <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
+                <p className="text-[10px] font-bold text-slate-400">მარაგის ზრდის ჩანაწერები</p>
+                <strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) > 0).length}</strong>
+              </div>
+              <div className="rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4">
+                <p className="text-[10px] font-bold text-slate-400">მარაგის შემცირების ჩანაწერები</p>
+                <strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) < 0).length}</strong>
+              </div>
+            </div>
+
+            {inventoryMovementError && (
+              <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">
+                მარაგის ისტორიის ჩატვირთვა ვერ მოხერხდა: {inventoryMovementError}
+              </div>
+            )}
+
+            {inventoryMovementLoading && inventoryMovementRows.length === 0 ? (
+              <div className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400">მარაგის ისტორია იტვირთება…</div>
+            ) : inventoryMovementRows.length === 0 && !inventoryMovementError ? (
+              <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center">
+                <Layers className="mx-auto h-8 w-8 text-emerald-400" />
+                <p className="mt-3 text-sm font-black text-white">ჩანაწერები ჯერ არ არის</p>
+                <p className="mt-1 text-xs text-slate-400">ახალი მარაგის ცვლილებები აქ გამოჩნდება ისტორიის სისტემის ჩართვის შემდეგ.</p>
+              </div>
+            ) : inventoryMovementRows.length > 0 && (
+              <div className="overflow-x-auto rounded-2xl border border-emerald-500/15">
+                <table className="w-full min-w-[900px] text-left text-xs">
+                  <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
+                    <tr>
+                      <th className="px-4 py-3">თარიღი</th>
+                      <th className="px-4 py-3">პროდუქტი / ვარიანტი</th>
+                      <th className="px-4 py-3">მარაგი</th>
+                      <th className="px-4 py-3">ცვლილება</th>
+                      <th className="px-4 py-3">მიზეზი</th>
+                      <th className="px-4 py-3">შეკვეთა</th>
+                      <th className="px-4 py-3">ადმინისტრატორი</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {inventoryMovementRows.map(movement => (
+                      <tr key={movement.id} className="bg-slate-900/60 transition hover:bg-slate-800/70">
+                        <td className="whitespace-nowrap px-4 py-3 text-slate-400">{movement.occurred_at ? new Date(movement.occurred_at).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
+                        <td className="px-4 py-3">
+                          <strong className="block max-w-[260px] truncate text-white">{movement.product_name || movement.product_id}</strong>
+                          <span className="mt-1 block text-[10px] text-slate-400">{movement.variant_name || movement.variant_id || 'ძირითადი მარაგი'}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 font-bold tabular-nums text-slate-300">{movement.before_quantity} → {movement.after_quantity}</td>
+                        <td className={`whitespace-nowrap px-4 py-3 font-black tabular-nums ${Number(movement.quantity_delta) > 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{Number(movement.quantity_delta) > 0 ? '+' : ''}{movement.quantity_delta}</td>
+                        <td className="px-4 py-3 text-slate-300">
+                          {movement.reason === 'order_deduction' ? 'შეკვეთის გაფორმება' :
+                           movement.reason === 'order_cancellation' ? 'შეკვეთის გაუქმება' :
+                           movement.reason === 'order_reactivation' ? 'შეკვეთის რეაქტივაცია' :
+                           movement.reason === 'manual_adjustment' ? 'ადმინისტრატორის ცვლილება' :
+                           movement.reason === 'product_created' ? 'პროდუქტის დამატება' :
+                           movement.reason === 'product_deleted' ? 'პროდუქტის წაშლა' : 'სხვა ცვლილება'}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-emerald-300">{movement.related_order_id ? `#${movement.related_order_id}` : '—'}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-slate-400">{movement.actor_id ? String(movement.actor_id).slice(0, 8) : 'სტუმარი / სისტემა'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {inventoryMovementHasMore && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => void fetchInventoryMovements(inventoryMovementCursor, true)}
+                  disabled={inventoryMovementLoading}
+                  className="min-h-11 rounded-xl border border-emerald-500/30 bg-slate-950 px-5 py-3 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/10 disabled:opacity-50"
+                >{inventoryMovementLoading ? 'იტვირთება…' : 'მეტი ჩანაწერის ჩატვირთვა'}</button>
+              </div>
+            )}
           </section>
         )}
 
