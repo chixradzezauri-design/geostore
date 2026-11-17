@@ -23,9 +23,9 @@ test('store settings, coupons, delivery fees and media are protected by settings
 });
 
 test('storefront media uploads are permission-checked at the Storage RLS boundary while public reads remain public', () => {
-  assert.match(migration, /Storefront media settings upload/);
-  assert.match(migration, /Storefront media settings update/);
-  assert.match(migration, /Storefront media settings delete/);
+  assert.match(migration, /Storefront media scoped upload/);
+  assert.match(migration, /Storefront media scoped update/);
+  assert.match(migration, /Storefront media scoped delete/);
   assert.match(migration, /bucket_id = 'storefront-media'/);
   assert.match(migration, /Public can read public storefront media/);
   assert.match(migration, /Public can read published storefront config/);
@@ -45,4 +45,15 @@ test('activity logging accepts active module staff but activity-log viewing stay
     assert.match(migration, new RegExp(`has_staff_permission\\(''${permission}''\\)`));
   }
   assert.match(migration, /admin activity-log viewing/);
+});
+
+
+test('settings staff Storage access is limited to storefront banner and category paths', () => {
+  for (const phrase of [
+    "name LIKE 'storefront/categories/%'",
+    "name LIKE 'storefront/banners/%'",
+    "public.has_staff_permission('settings')",
+    "name LIKE 'products/%'",
+    "public.has_staff_permission('products')"
+  ]) assert.ok(migration.includes(phrase), phrase);
 });
