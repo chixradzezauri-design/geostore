@@ -53,3 +53,25 @@ test('Realtime notifications are server-triggered only; clients receive no Broad
   assert.match(migration, /execute function private\.broadcast_support_ticket_message\(\)/i);
   assert.doesNotMatch(migration, /for insert\s+to\s+(?:anon|authenticated)/i);
 });
+
+
+test('admin support channel ignores callbacks after cleanup and fences stale session reads', () => {
+  assert.match(adminApp, /const supportThreadSessionRef = useRef\\(0\\)/);
+  assert.match(adminApp, /fetchSupportTicketThread = async \\(ticketId, sessionId = supportThreadSessionRef\\.current\\)/);
+  assert.match(adminApp, /sessionId !== supportThreadSessionRef\\.current/);
+  assert.match(adminApp, /supportThreadSessionRef\\.current \\+= 1/);
+  assert.match(adminApp, /let active = true;[\\s\\S]*?channel\\('geostore-support-admin'[\\s\\S]*?if \\(!active\\) return/);
+  assert.match(adminApp, /active = false;[\\s\\S]*?removeChannel\\(channel\\)/);
+});
+
+test('customer support subscriptions fence stale account and guest-ticket callbacks', () => {
+  const customerEffect = customerApp.slice(
+    customerApp.indexOf("if (!supportOpen || !supportThreadLoaded || supportThreadSending)"),
+    customerApp.indexOf("}, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken, currentUser?.id]);")
+  );
+  assert.match(customerEffect, /let active = true/);
+  assert.match(customerEffect, /if \(!active \|\| !topic\) return/);
+  assert.match(customerEffect, /if \(active\) setSupportThreadMessages/);
+  assert.match(customerEffect, /active = false/);
+  assert.match(customerEffect, /supportLookupAccessToken, currentUser\?\.id/);
+});
