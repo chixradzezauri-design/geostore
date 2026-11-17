@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261117140000_staff_products_permission.sql', import.meta.url), 'utf8');
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
+const settingsMigration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
 
 test('product RLS is based on the active products module permission', () => {
   assert.match(migration, /Staff with products permission can insert products/);
@@ -51,4 +52,19 @@ test('product permission changes preserve inventory transaction markers', () => 
   assert.match(migration, /geostore\.inventory_reason/);
   assert.match(migration, /geostore\.variant_stock_adjustment/);
   assert.match(migration, /admin_set_product_variant_stock_batches/);
+});
+
+
+test('product staff can manage only product-image paths in the shared Storage bucket', () => {
+  for (const phrase of [
+    'Storefront media scoped upload',
+    'Storefront media scoped update',
+    'Storefront media scoped delete',
+    "name LIKE 'products/%'",
+    "public.has_staff_permission('products')"
+  ]) assert.ok(settingsMigration.includes(phrase), phrase);
+
+  assert.match(settingsMigration, /bucket_id = 'storefront-media'/);
+  assert.match(settingsMigration, /name LIKE 'storefront\\/categories\\/%'/);
+  assert.match(settingsMigration, /name LIKE 'storefront\\/banners\\/%'/);
 });
