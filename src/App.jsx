@@ -45,6 +45,41 @@ const ImageSearchModal = lazy(() => import('./components/ImageSearchModal'));
 const AiAssistantModal = lazy(() => import('./components/AiAssistantModal'));
 const Modals = lazy(() => import('./components/Modals'));
 
+
+class AdminDashboardErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('GEOSTORE admin dashboard render failed:', error, info);
+  }
+
+  handleRetry = () => {
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div role="alert" className="mx-auto my-10 w-full max-w-xl rounded-2xl border border-rose-500/30 bg-slate-950 p-6 text-center text-slate-100 shadow-xl">
+          <h2 className="text-lg font-black">ადმინ პანელი ვერ ჩაიტვირთა</h2>
+          <p className="mt-2 text-sm text-slate-300">ჩატვირთვისას ტექნიკური შეცდომა მოხდა. განაახლეთ გვერდი და სცადეთ ხელახლა. მაღაზიის დანარჩენი ნაწილი ხელმისაწვდომი რჩება.</p>
+          <button type="button" onClick={this.handleRetry} className="mt-5 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950">
+            ხელახლა ცდა
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 
 // ეს გასაღები მხოლოდ Supabase-ის საჯარო anon/publishable გასაღები უნდა იყოს.
@@ -3223,7 +3258,14 @@ export default function App() {
         )}
 
         {activeTab === 'admin' && (
-          <Suspense fallback={null}>
+          <AdminDashboardErrorBoundary>
+          <Suspense
+            fallback={(
+              <div role="status" aria-live="polite" className="mx-auto my-10 flex min-h-[30vh] w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-slate-300">
+                ადმინ პანელი იტვირთება...
+              </div>
+            )}
+          >
             <AdminDashboardPro
             key={`${currentUser?.id || 'anonymous'}-${adminAccess.is_admin ? 'owner' : Object.keys(adminAccess.permissions || {}).filter((permission) => adminAccess.permissions[permission]).sort().join('-')}`}
             adminLoggedIn={adminLoggedIn}
@@ -3265,6 +3307,7 @@ export default function App() {
             setDeliveryFees={setDeliveryFees}
             />
           </Suspense>
+          </AdminDashboardErrorBoundary>
         )}
 
         {activeTab === 'wishlist' && (
