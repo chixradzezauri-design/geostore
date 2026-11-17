@@ -763,3 +763,26 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - This is an application/test-only change. No SQL migration, Supabase live setting, customer/order/ticket/message row, access token, or production deployment was changed.
 - The RPC remains idempotent; retaining a pending request UUID avoids duplicate replies if the previous network outcome was uncertain.
 - CI must complete on the updated PR head before this stage is considered verified. Staging/browser testing of logout during a pending reply remains required.
+
+
+## Stage 87 — customer support reply and ticket-session isolation
+
+### Verified race condition
+- Customer reply submission captured the ticket ID and access code for the write RPC, but its post-send refresh read the ticket fields from the handler closure and could still publish a late snapshot after the customer had navigated to another ticket or closed the support panel.
+- Ticket lookup and account-history open handlers also lacked a shared session-generation fence, so older reads could overwrite a more recently selected conversation.
+- A single pending reply idempotency ref was shared across all tickets; switching tickets could replace a retry key for an earlier uncertain request.
+
+### Change
+- Added a customer support thread session generation. Closing the panel, opening another ticket, submitting a new ticket lookup, or changing the signed-in user invalidates earlier in-flight UI work.
+- Ticket lookup and account-history open responses now update state only when their captured session is still current; stale handlers cannot clear the loading state of a newer session.
+- Customer reply handlers capture the active session and the exact ticket ID/access code. The post-send refresh now explicitly uses those captured credentials, and stale responses cannot reset the current composer, overwrite the selected thread, show stale errors, or clear a newer send lock.
+- Pending idempotency keys are now kept in a ticket-keyed Map. A successful RPC removes only the exact request key it used; uncertain failures retain that ticket's key for a safe retry.
+- Session changes release the old UI lock/loading state without discarding pending idempotency keys.
+
+### Regression coverage
+- Added tests for customer stale-reply isolation, ticket-keyed retry-key handling, lookup/account-history stale-response suppression, and support-panel close fencing.
+- Existing admin Stage 86 session isolation tests remain in place.
+
+### Safety and verification
+- Application/test/documentation changes only. No SQL migration, Supabase live setting, customer/order/ticket/message row, access code, production setting, merge, or deployment was changed.
+- Automated CI on the updated PR head is required before this stage is considered verified. Real browser checks for switching tickets and closing/reopening support during a pending reply remain outstanding.
