@@ -509,3 +509,11 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* STAGE 105 — remove inherited vertical spacing from the horizontal mobile tab rail. */
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0 !important;
+  }
+}
