@@ -51,3 +51,13 @@ test('nested reactivation dialog takes keyboard priority and cannot dismiss duri
   assert.match(admin, /setReactivationPassword\(''\)/);
   assert.match(admin, /setReactivationError\(''\)/);
 });
+
+
+test('reactivation dialog restores focus to its invoking status action or a safe order-dialog fallback', () => {
+  assert.match(admin, /reactivationTriggerRef\.current = document\.activeElement/);
+  assert.match(admin, /reactivationDialogWasOpenRef\.current = true/);
+  assert.match(admin, /const trigger = reactivationTriggerRef\.current/);
+  assert.match(admin, /if \(trigger\?\.isConnected\) \{\s*trigger\.focus\(\);/);
+  assert.match(admin, /else if \(orderDetailCloseButtonRef\.current\?\.isConnected\)/);
+  assert.match(admin, /autoFocus/);
+});
