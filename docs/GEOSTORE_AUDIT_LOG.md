@@ -807,3 +807,10 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - GitHub Actions checks were observed starting on PR head `06358fc3e182627448d660680e32f8bee259f0d0`; build, dependency audit and JavaScript analysis were still in progress at the time of this entry.
 - No browser/device E2E test was performed. No Supabase migration, production setting, live order, customer message, support ticket or other production data was changed.
 - PR #129 remains draft and unmerged; no deployment was performed.
+
+
+### Stage 89 verification addendum
+- The first CI attempt exposed three stale assertions in the existing support-ticket test, which still expected the previous nullable `fetchTickets(sessionId = null)` contract.
+- Updated those assertions to verify the new default active-session guard and latest-request fencing.
+- On commit `b7b89bc790a9fe6b6742a5efb124c40669b59c51`, GitHub Actions confirmed Build Check, Dependency Security Audit and CodeQL all **success**. Build Check includes the automated Node test suite and production build.
+- This verifies CI only; browser/device E2E remains outstanding.
