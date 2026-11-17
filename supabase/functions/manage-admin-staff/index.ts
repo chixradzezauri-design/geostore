@@ -126,7 +126,18 @@ Deno.serve(async (request: Request) => {
         .select('id,user_id,email,display_name,role,permissions,is_active,created_at,updated_at')
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return json({ staff: data || [] });
+
+      const staff = await Promise.all((data || []).map(async (member) => {
+        const { data: authData, error: authError } = await admin.auth.admin.getUserById(member.user_id);
+        const authUser = authData?.user || null;
+        return {
+          ...member,
+          auth_confirmed: authUser ? Boolean(authUser.confirmed_at) : null,
+          last_sign_in_at: authUser?.last_sign_in_at || null,
+          auth_account_missing: Boolean(authError || !authUser)
+        };
+      }));
+      return json({ staff });
     }
 
     if (action === 'invite') {
