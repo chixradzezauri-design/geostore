@@ -836,6 +836,10 @@ export default function AdminDashboardPro({
           void fetchSupportTicketThread(changedTicketId);
         }
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+        // Keep the existing status-change signal; the recovery poll remains active.
+        void fetchTickets();
+      })
       .subscribe(status => {
         // Reconnects trigger a fresh protected snapshot, never trust event data.
         if (status === 'SUBSCRIBED' && adminLoggedIn) {
