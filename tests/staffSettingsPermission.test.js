@@ -22,11 +22,14 @@ test('store settings, coupons, delivery fees and media are protected by settings
   assert.match(foundation, /'settings'/);
 });
 
-test('storefront media uploads are permission-checked at the Storage RLS boundary', () => {
+test('storefront media uploads are permission-checked at the Storage RLS boundary while public reads remain public', () => {
   assert.match(migration, /Storefront media settings upload/);
   assert.match(migration, /Storefront media settings update/);
   assert.match(migration, /Storefront media settings delete/);
-  assert.match(migration, /bucket_id = 'storefront-media'/);\n  assert.match(migration, /Public can read public storefront media/);\n  assert.match(migration, /Public can read published storefront config/);\n  assert.match(migration, /public read active coupons/);
+  assert.match(migration, /bucket_id = 'storefront-media'/);
+  assert.match(migration, /Public can read public storefront media/);
+  assert.match(migration, /Public can read published storefront config/);
+  assert.match(migration, /public read active coupons/);
 });
 
 test('settings staff can edit drafts but cannot publish storefront configuration', () => {
