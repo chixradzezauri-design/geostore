@@ -913,3 +913,11 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - No module RLS policy or existing admin RPC has been relaxed in this stage. Existing owner-only protections remain intact until the next permission-enforcement stage.
 - Legacy `geostore_staff_list` localStorage entries are intentionally not deleted or trusted; a later UI stage will provide safe import/linking after Auth accounts are verified.
 - Migration and Edge Function are draft files only. No live Auth users, staff records, RLS policies, database schema, Edge Functions or Production deployment were changed.
+
+## Stage 103A — orders module server-side staff permission
+- Converted the orders SELECT/UPDATE RLS policies to the authoritative `public.has_staff_permission('orders')` check.
+- Updated the order-status and admin-note SECURITY DEFINER RPCs to re-check the same permission in Postgres.
+- Preserved order status transition rules, stock restoration validation, custom-variant stock restoration, and row locking.
+- Completed/cancelled reactivation remains primary-owner-only and still requires fresh password confirmation through the dedicated RPC.
+- No direct table UPDATE privilege was added; the existing RPC remains the supported mutation path.
+- Draft migration only. No live order, stock, customer, staff, Auth or RLS state was changed.
