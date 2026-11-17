@@ -5,6 +5,7 @@ import './index.css'
 import './adminDashboard.css'
 import './adminDashboardSections.css'
 import './adminDashboardModals.css'
+import './adminDashboardPolish.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
