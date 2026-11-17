@@ -662,7 +662,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
         permissions: editForm.permissions,
         is_active: staff.is_active
       });
-      setStaffList((current) => current.map((item) => item.id === staff.id ? result.staff : item));
+      await refreshStaffList(true);
       setEditingStaffId(null);
       setStaffListNotice('თანამშრომლის როლი და მოდულების უფლებები Supabase-ში განახლდა.');
       if (typeof logActivity === 'function') {
@@ -682,7 +682,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListNotice('');
     try {
       const result = await callStaffApi({ action: 'revoke', id: staff.id });
-      setStaffList((current) => current.map((item) => item.id === staff.id ? result.staff : item));
+      await refreshStaffList(true);
       setStaffListNotice('თანამშრომლის სერვერული წვდომა გაუქმდა. Supabase Auth ანგარიში შენარჩუნებულია.');
       if (typeof logActivity === 'function') {
         await logActivity(`თანამშრომლის წვდომა გაუქმდა: ${staff.email}`);
@@ -711,7 +711,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
         permissions: createStaffPermissions(staff.permissions),
         is_active: true
       });
-      setStaffList((current) => current.map((item) => item.id === staff.id ? result.staff : item));
+      await refreshStaffList(true);
       setStaffListNotice('თანამშრომლის სერვერული წვდომა ხელახლა გააქტიურდა.');
       if (typeof logActivity === 'function') {
         await logActivity(`თანამშრომლის წვდომა აღდგა: ${staff.email}`);
@@ -824,7 +824,8 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
                       <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
                       <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Supabase Auth ID: {String(staff.user_id || '').slice(0, 8)}…</p>
+                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Auth: {staff.auth_account_missing ? 'ანგარიში ვერ მოიძებნა' : staff.auth_confirmed ? 'ანგარიში დადასტურებულია' : 'მოწვევა ელოდება დადასტურებას'}</p>
+                    {staff.last_sign_in_at && <p className="mt-1 text-[10px] text-slate-500">ბოლო შესვლა: {new Date(staff.last_sign_in_at).toLocaleString('ka-GE')}</p>}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button type="button" disabled={staffActionBusy} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
