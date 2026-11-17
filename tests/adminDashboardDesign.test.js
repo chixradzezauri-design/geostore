@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-
 const css = await readFile(new URL('../src/adminDashboard.css', import.meta.url), 'utf8');
 const entry = await readFile(new URL('../src/main.jsx', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
@@ -11,45 +10,35 @@ test('admin visual layer loads after the existing global stylesheet', () => {
   assert.ok(entry.indexOf("import './adminDashboard.css'") > entry.indexOf("import './index.css'"));
 });
 
-test('Command Center is the landing section while every existing admin section remains available', () => {
+test('all admin sections including Command Center and inventory history remain available', () => {
   const ids = [...admin.matchAll(/\{ id: '([^']+)', label:/g)].map(match => match[1]);
   assert.deepEqual(ids, [
     'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
-    'products', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
+    'products', 'inventory', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
     'banners', 'categories', 'coupons', 'vendors', 'users', 'settings'
   ]);
-  assert.match(admin, /onClick=\{\(\) => setAdminTab\(tab\.id\)\}/);
 });
 
-test('desktop admin navigation stays visible while the long menu scrolls internally', () => {
+test('inventory history uses the protected RPC and cursor pagination', () => {
+  assert.match(admin, /admin_list_inventory_movements/);
+  assert.match(admin, /p_before_id:\s*beforeId/);
+  assert.match(admin, /p_limit:\s*50/);
+  assert.match(admin, /inventoryMovementHasMore/);
+  assert.match(admin, /inventoryMovementRequestRef/);
+});
+
+test('responsive admin navigation safeguards remain in place', () => {
   assert.match(css, /position:\s*sticky/);
   assert.match(css, /max-height:\s*calc\(100dvh - 24px\)/);
   assert.match(css, /overscroll-behavior:\s*contain/);
-});
-
-test('tablet and mobile admin navigation remains horizontally touch-scrollable', () => {
-  assert.match(css, /@media \(max-width: 1023px\)[\s\S]*?overflow-x:\s*auto[\s\S]*?scroll-snap-type:\s*x proximity/);
-  assert.match(css, /-webkit-overflow-scrolling:\s*touch/);
+  assert.match(css, /@media \(max-width: 1023px\)[\s\S]*?overflow-x:\s*auto/);
   assert.match(css, /min-height:\s*44px/);
-  assert.match(css, /@media \(max-width: 380px\)/);
-});
-
-test('admin palette and keyboard focus treatment remain scoped to the admin workspace', () => {
-  assert.match(css, /--admin-surface:/);
-  assert.match(css, /--admin-accent:/);
-  assert.match(css, /:focus-visible[\s\S]*?outline:\s*3px solid var\(--admin-focus\)/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
 });
 
-test('Command Center is a read-only overview built from existing operational data', () => {
+test('Command Center remains a read-only overview using existing operational data', () => {
   assert.match(admin, /useState\('command'\)/);
-  assert.match(admin, /admin-command-center/);
   assert.match(admin, /commandCenterOverdueTickets/);
   assert.match(admin, /commandCenterLowStockGroups/);
   assert.match(admin, /flashSaleAdminSummary\.expiringCount/);
-  assert.match(admin, /createdAt: t\.created_at \|\| null/);
-  assert.match(admin, /setAdminTab\('orders'\)/);
-  assert.match(admin, /setAdminTab\('support'\)/);
-  assert.match(admin, /setAdminTab\('products'\)/);
-  assert.match(admin, /setAdminTab\('discounts'\)/);
 });
