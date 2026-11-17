@@ -29,7 +29,7 @@ test('staff order operations preserve status and stock safeguards', () => {
 });
 
 test('order status RPC returns the database status timestamp for UI synchronization', () => {
-  assert.match(migration, /SELECT status_changed_at\\s+INTO v_status_changed_at/);
+  assert.match(migration, /SELECT status_changed_at\s+INTO v_status_changed_at/);
   assert.match(migration, /'status_changed_at', v_status_changed_at/);
 });
 
