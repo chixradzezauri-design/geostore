@@ -1109,16 +1109,6 @@ export default function AdminDashboardPro({
     let active = true;
     const channel = supabase
       .channel('geostore-support-admin', { config: { private: true } })
-      .on('broadcast', { event: 'support_message_changed' }, payload => {
-        if (!active) return;
-        // Broadcast carries only the ticket reference; all customer content is
-        // re-read through the existing authenticated RPC/RLS path.
-        const changedTicketId = payload?.payload?.ticket_id;
-        void fetchTickets();
-        if (changedTicketId && String(changedTicketId) === String(selectedSupportTicketId)) {
-          void fetchSupportTicketThread(changedTicketId);
-        }
-      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
         if (!active) return;
         // Keep the existing status-change signal; the recovery poll remains active.
