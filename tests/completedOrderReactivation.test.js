@@ -18,6 +18,8 @@ test('reopening a completed order does not deduct stock a second time', () => {
   assert.match(functionBody, /stock_deducted_at IS NULL OR v_order\.stock_restored_at IS NOT NULL/);
   assert.match(functionBody, /SET status = 'ახალი'[\s\S]*?status_changed_at = now\(\)/);
   assert.doesNotMatch(functionBody, /UPDATE public\.products/i);
+  assert.match(functionBody, /RETURNING status_changed_at INTO v_status_changed_at/);
+  assert.match(functionBody, /'status_changed_at', v_status_changed_at/);
   assert.match(functionBody, /'stock_unchanged', true/);
 });
 
