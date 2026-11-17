@@ -13,7 +13,7 @@ test('product reads require active products permission while direct table writes
   assert.ok(migration.includes('DROP POLICY IF EXISTS "Staff with products permission can update products"'));
   assert.ok(migration.includes('REVOKE INSERT, UPDATE ON TABLE public.products FROM authenticated'));
   assert.doesNotMatch(migration, /CREATE POLICY "Staff with products permission can (insert|update) products"/);
-  assert.match(foundation, /staff\\.is_active IS TRUE/);
+  assert.match(foundation, /staff\.is_active IS TRUE/);
 });
 
 test('product and inventory RPCs are converted to server-side products authorization', () => {
