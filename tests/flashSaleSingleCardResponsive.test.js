@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
 const storeView = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
 
-const flashSaleStart = storeView.indexOf('className="gs-flash-sale-section');
+const flashSaleStart = storeView.indexOf('<div className="gs-flash-sale-section');
 const flashSaleEnd = storeView.indexOf('PREMIUM REDESIGNED CATEGORIES', flashSaleStart);
 const flashSaleMarkup = storeView.slice(flashSaleStart, flashSaleEnd);
 const stage43FixStart = css.lastIndexOf('GEOSTORE — Stage 43.2: iPhone Flash Sale card width and text flow');
@@ -13,6 +13,7 @@ const stage43Fix = css.slice(stage43FixStart);
 
 test('Flash Sale CSS selectors match the actual StoreView card DOM', () => {
   assert.ok(flashSaleStart >= 0 && flashSaleEnd > flashSaleStart);
+  assert.match(flashSaleMarkup, /^<div className="gs-flash-sale-section/);
   assert.match(flashSaleMarkup, /className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4/);
   assert.match(flashSaleMarkup, /className="gs-flash-sale-card[^"]*"/);
   assert.match(flashSaleMarkup, /className="gs-flash-sale-media/);
