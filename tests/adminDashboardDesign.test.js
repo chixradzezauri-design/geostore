@@ -11,10 +11,10 @@ test('admin visual layer loads after the existing global stylesheet', () => {
   assert.ok(entry.indexOf("import './adminDashboard.css'") > entry.indexOf("import './index.css'"));
 });
 
-test('all existing admin sections and tab selection remain unchanged', () => {
+test('Command Center is the landing section while every existing admin section remains available', () => {
   const ids = [...admin.matchAll(/\{ id: '([^']+)', label:/g)].map(match => match[1]);
   assert.deepEqual(ids, [
-    'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
+    'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
     'products', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
     'banners', 'categories', 'coupons', 'vendors', 'users', 'settings'
   ]);
@@ -39,4 +39,17 @@ test('admin palette and keyboard focus treatment remain scoped to the admin work
   assert.match(css, /--admin-accent:/);
   assert.match(css, /:focus-visible[\s\S]*?outline:\s*3px solid var\(--admin-focus\)/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
+});
+
+test('Command Center is a read-only overview built from existing operational data', () => {
+  assert.match(admin, /useState\('command'\)/);
+  assert.match(admin, /admin-command-center/);
+  assert.match(admin, /commandCenterOverdueTickets/);
+  assert.match(admin, /commandCenterLowStockGroups/);
+  assert.match(admin, /flashSaleAdminSummary\.expiringCount/);
+  assert.match(admin, /createdAt: t\.created_at \|\| null/);
+  assert.match(admin, /setAdminTab\('orders'\)/);
+  assert.match(admin, /setAdminTab\('support'\)/);
+  assert.match(admin, /setAdminTab\('products'\)/);
+  assert.match(admin, /setAdminTab\('discounts'\)/);
 });
