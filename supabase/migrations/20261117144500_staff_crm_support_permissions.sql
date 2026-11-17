@@ -91,4 +91,4 @@ $staff_support_permissions$;
 
 -- The existing `Visitors can submit validated support tickets` INSERT policy
 -- and customer checks (`v_ticket.customer_user_id`, `v_ticket.access_token_hash`)
--- are intentionally preserved by the targeted replacements above.
+-- are intentionally preserved by the targeted replacements above. Existing\n-- sender_role branching, idempotency and customer-read receipts are unchanged.
