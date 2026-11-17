@@ -100,11 +100,11 @@ test('admin support replies cannot mutate a newer login session', () => {
 });
 
 test('session-scoped ticket refresh ignores results from a previous admin login', () => {
-  assert.match(adminApp, /const fetchTickets = async \\(sessionId = supportThreadSessionRef\\.current\\)/);
-  assert.match(adminApp, /if \\(!adminLoggedIn \\|\\| sessionId !== supportThreadSessionRef\\.current\\) return/);
-  assert.match(adminApp, /const requestId = \\+\\+supportTicketListRequestRef\\.current/);
-  assert.match(adminApp, /requestId === supportTicketListRequestRef\\.current/);
-  assert.match(adminApp, /if \\(isCurrentRequest\\(\\)\\) \\{[\\s\\S]*?setSupportTicketsError/);
+  assert.ok(adminApp.includes("const fetchTickets = async (sessionId = supportThreadSessionRef.current)"));
+  assert.ok(adminApp.includes("if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;"));
+  assert.ok(adminApp.includes("const requestId = ++supportTicketListRequestRef.current;"));
+  assert.ok(adminApp.includes("requestId === supportTicketListRequestRef.current"));
+  assert.ok(adminApp.includes("if (isCurrentRequest()) {\n        setSupportTicketsError"));
 });
 
 
