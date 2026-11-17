@@ -12,7 +12,7 @@ test('admin content refinement loads after both existing style layers', () => {
   assert.ok(entry.indexOf("import './adminDashboardSections.css'") > entry.indexOf("import './adminDashboard.css'"));
 });
 
-test('content styles target existing sections without changing their tab identities', () => {
+test('content styles target existing sections and all original tabs remain available', () => {
   for (const selector of [
     '.admin-analytics-card', '.admin-profit-calculator', '.admin-ai-analyst',
     '.admin-staff-panel', '.admin-orders-panel', '.admin-products-panel',
@@ -22,7 +22,7 @@ test('content styles target existing sections without changing their tab identit
   const ids = [...admin.matchAll(/\{ id: '([^']+)', label:/g)].map(match => match[1]);
   assert.deepEqual(ids, [
     'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
-    'products', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
+    'products', 'inventory', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
     'banners', 'categories', 'coupons', 'vendors', 'users', 'settings'
   ]);
 });
