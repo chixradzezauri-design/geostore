@@ -365,6 +365,8 @@ export default function AdminDashboardPro({
   const orderDetailCloseButtonRef = useRef(null);
   const orderDetailTriggerRef = useRef(null);
   const orderDetailWasOpenRef = useRef(false);
+  const reactivationTriggerRef = useRef(null);
+  const reactivationDialogWasOpenRef = useRef(false);
 
   // Keep keyboard focus inside the topmost order-related dialog and restore the
   // exact order-row trigger when the order detail dialog closes.
@@ -375,6 +377,18 @@ export default function AdminDashboardPro({
         if (!reactivationOrder) orderDetailCloseButtonRef.current?.focus();
       });
       return () => window.cancelAnimationFrame(frame);
+    }
+
+    if (reactivationOrder) {
+      reactivationDialogWasOpenRef.current = true;
+    } else if (reactivationDialogWasOpenRef.current) {
+      reactivationDialogWasOpenRef.current = false;
+      const trigger = reactivationTriggerRef.current;
+      if (trigger?.isConnected) {
+        trigger.focus();
+      } else if (orderDetailCloseButtonRef.current?.isConnected) {
+        orderDetailCloseButtonRef.current.focus();
+      }
     }
 
     if (!selectedOrderForModal && orderDetailWasOpenRef.current) {
@@ -3126,6 +3140,7 @@ export default function AdminDashboardPro({
       return;
     }
     if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
+      reactivationTriggerRef.current = document.activeElement;
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
       setReactivationError('');
