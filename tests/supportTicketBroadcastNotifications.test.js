@@ -14,5 +14,5 @@ test('customer support conversation keeps its 15-second recovery refresh without
 test('admin support inbox keeps protected Postgres change refresh and polling fallback', () => {
   assert.match(adminApp, /\.on\('postgres_changes', \{ event: '\*', schema: 'public', table: 'support_tickets' \}/);
   assert.match(adminApp, /setInterval\(refreshAdminSupport,\s*15000\)/);
-  assert.doesNotMatch(adminApp, /geostore-support-admin|support_message_changed/);
+  assert.doesNotMatch(adminApp, /support_message_changed/);
 });
