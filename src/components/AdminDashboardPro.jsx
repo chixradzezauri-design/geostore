@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { createClient } from '@supabase/supabase-js';
+import { EMPTY_ADMIN_ACCESS, hasAdminPermission } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
@@ -28,6 +29,35 @@ const getLocalDateInputValue = () => {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+const ADMIN_TAB_PERMISSION = Object.freeze({
+  command: 'owner',
+  analytics: 'analytics',
+  calculator: 'analytics',
+  expenses: 'expenses',
+  ai_analyst: 'owner',
+  staff: 'owner',
+  orders: 'orders',
+  products: 'products',
+  inventory: 'products',
+  replenishment: 'products',
+  support: 'support',
+  messages: 'crm',
+  discounts: 'owner',
+  logs: 'owner',
+  broadcasts: 'owner',
+  banners: 'settings',
+  categories: 'settings',
+  coupons: 'settings',
+  vendors: 'products',
+  users: 'crm',
+  settings: 'settings'
+});
+const STAFF_DEFAULT_TAB_ORDER = [
+  'orders', 'products', 'support', 'messages', 'expenses',
+  'analytics', 'inventory', 'replenishment', 'settings',
+  'banners', 'categories', 'coupons', 'vendors', 'calculator', 'users'
+];
+
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
 
 const getSupabaseHeaders = async () => {
@@ -292,6 +322,7 @@ const getOrderStatusFilterKey = (status) => {
 
 export default function AdminDashboardPro({
   adminLoggedIn,
+  adminAccess = EMPTY_ADMIN_ACCESS,
   setAdminLoggedIn,
   adminLoginForm,
   setAdminLoginForm,
@@ -322,7 +353,23 @@ export default function AdminDashboardPro({
   deliveryFees,
   setDeliveryFees
 }) {
-  const [adminTab, setAdminTab] = useState('command'); 
+  const [adminTab, setAdminTab] = useState('command');
+  const isOwner = adminAccess?.is_admin === true;
+  const hasModulePermission = (permission) => hasAdminPermission(adminAccess, permission);
+  const canAccessAdminTab = (tabId) => {
+    const permission = ADMIN_TAB_PERMISSION[tabId];
+    if (permission === 'owner') return isOwner;
+    return Boolean(permission && hasModulePermission(permission));
+  };
+  const getDefaultAdminTab = () => {
+    if (isOwner) return 'command';
+    return STAFF_DEFAULT_TAB_ORDER.find(canAccessAdminTab) || 'command';
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn) return;
+    if (!canAccessAdminTab(adminTab)) setAdminTab(getDefaultAdminTab());
+  }, [adminLoggedIn, adminAccess, adminTab]); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
@@ -3582,7 +3629,7 @@ export default function AdminDashboardPro({
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
-          ].map(tab => {
+          ].filter(tab => canAccessAdminTab(tab.id)).map(tab => {
             const IconComp = tab.icon;
             const isActive = adminTab === tab.id;
             return (
@@ -3622,26 +3669,34 @@ export default function AdminDashboardPro({
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
-            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">მოგესალმებით, ადმინისტრატორ! 👋</h2>
-            <p className="text-xs text-slate-400 mt-0.5">სრული კონტროლი მაღაზიის მართვის პანელზე:</p>
+            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+              {isOwner ? 'მოგესალმებით, მთავარო ადმინისტრატორ! 👋' : `მოგესალმებით, ${adminAccess?.display_name || 'თანამშრომელო'}! 👋`}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {isOwner ? 'სრული კონტროლი GEOSTORE-ის მართვის პანელზე:' : 'თქვენთვის მინიჭებული მოდულების მართვა:'}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <button
-              type="button"
-              onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
-              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
-              className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
-            >
-              {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
-              disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
-              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
-            >
-              {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
-            </button>
+            {hasModulePermission('settings') && (
+              <button
+                type="button"
+                onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
+                disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
+                className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
+              >
+                {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
+              </button>
+            )}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
+                disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
+                className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
+              >
+                {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
+              </button>
+            )}
             <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
