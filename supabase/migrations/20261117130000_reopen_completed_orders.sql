@@ -85,6 +85,7 @@ AS $function$
 DECLARE
   v_order public.orders%rowtype;
   v_password_auth_time bigint;
+  v_status_changed_at timestamptz;
 BEGIN
   IF auth.uid() IS NULL
      OR coalesce(auth.jwt()->'app_metadata'->>'role', '') <> 'admin'
@@ -127,11 +128,13 @@ BEGIN
   UPDATE public.orders
      SET status = 'ახალი',
          status_changed_at = now()
-   WHERE id = p_order_id;
+   WHERE id = p_order_id
+   RETURNING status_changed_at INTO v_status_changed_at;
 
   RETURN jsonb_build_object(
     'order_id', p_order_id,
     'status', 'ახალი',
+    'status_changed_at', v_status_changed_at,
     'stock_deducted', false,
     'stock_unchanged', true,
     'reauthorized', true
