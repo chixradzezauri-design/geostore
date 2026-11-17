@@ -809,22 +809,44 @@ export default function App() {
       if (document.visibilityState === 'visible') void refreshSupportThread();
     };
 
-    const channel = supabase
-      .channel(`geostore-customer-support-${ticketId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'support_ticket_messages',
-          filter: `ticket_ref=eq.${ticketId}`
-        },
-        () => void refreshSupportThread()
-      )
-      .subscribe(status => {
-        // SUBSCRIBED fires both on first connection and after a reconnect.
-        if (status === 'SUBSCRIBED' && active) void refreshSupportThread();
-      });
+    let channel = null;
+    const subscribeToSupportBroadcast = async () => {
+      try {
+        let topic = '';
+        let isPrivate = false;
+        if (/^[a-f0-9]{64}$/i.test(accessToken)) {
+          // The guest topic is derived from the same one-time access token
+          // whose SHA-256 digest is stored by the database. Only a holder of
+          // the 256-bit access code can derive this unguessable public topic.
+          const digest = await window.crypto.subtle.digest(
+            'SHA-256',
+            new TextEncoder().encode(accessToken.toLowerCase())
+          );
+          const tokenHash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+          topic = `geostore-support-ticket-${tokenHash}`;
+        } else if (currentUser?.id) {
+          // Account-linked tickets use a private topic authorized by auth.uid().
+          topic = `geostore-support-user:${currentUser.id}`;
+          isPrivate = true;
+        }
+        if (!active || !topic) return;
+        channel = supabase
+          .channel(topic, { config: { private: isPrivate } })
+          .on('broadcast', { event: 'support_message_changed' }, payload => {
+            if (String(payload?.payload?.ticket_id || '') === ticketId) {
+              void refreshSupportThread();
+            }
+          })
+          .subscribe(status => {
+            // Re-read the protected RPC snapshot after connect/reconnect.
+            if (status === 'SUBSCRIBED' && active) void refreshSupportThread();
+          });
+      } catch (error) {
+        // The 15-second poll remains the recovery path if Broadcast setup fails.
+        if (active) console.warn('Support Broadcast subscription failed:', error);
+      }
+    };
+    void subscribeToSupportBroadcast();
 
     void refreshSupportThread();
     const interval = window.setInterval(() => void refreshSupportThread(), 15000);
@@ -834,7 +856,7 @@ export default function App() {
       active = false;
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken, currentUser?.id]);
 
