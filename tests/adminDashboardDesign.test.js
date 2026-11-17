@@ -31,7 +31,7 @@ test('replenishment planner uses protected settings RPCs and does not mutate sto
   assert.match(admin, /admin_list_inventory_replenishment_settings/);
   assert.match(admin, /admin_save_inventory_replenishment_setting/);
   assert.match(admin, /buildInventoryReplenishmentPlan/);
-  assert.match(admin, /adminTab === 'replenishment'/);
+  assert.match(admin, /visibleAdminTab === 'replenishment'/);
   assert.match(admin, /სისტემა მარაგს ავტომატურად არ ცვლის/);
 });
 
