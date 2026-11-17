@@ -19,7 +19,7 @@ test('analytics returns aggregates only and does not return customer or expense 
   }
   assert.doesNotMatch(migration, /customer_name|user_email|customer_email|phone|address/);
   assert.match(migration, /sum\(e\.amount\)/);
-  assert.match(migration, /purchase_cost/);
+  assert.match(migration, /purchase_cost/);\n  assert.match(migration, /v_can_view_financials boolean := public\\.has_staff_permission\\('expenses'\\)/);\n  assert.match(migration, /financials_available/);
 });
 
 test('analytics is read-only and cannot mutate orders, products or expenses', () => {
