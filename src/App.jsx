@@ -645,8 +645,15 @@ export default function App() {
     supportThreadSessionRef.current += 1;
     supportReplyInFlightRef.current = false;
     setSupportThreadSending(false);
+    setSupportThreadLoading(false);
     return supportThreadSessionRef.current;
   };
+  useEffect(() => {
+    supportThreadSessionRef.current += 1;
+    supportReplyInFlightRef.current = false;
+    setSupportThreadSending(false);
+    setSupportThreadLoading(false);
+  }, [currentUser?.id]);
   const supportCreateRequestRef = useRef(null);
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
