@@ -1899,7 +1899,7 @@ export default function App() {
       void supabase.removeChannel(orderChannel);
       document.removeEventListener('visibilitychange', refreshProductsWhenVisible);
     };
-  }, [adminLoggedIn, hasOrdersAccess]);
+  }, [adminLoggedIn, adminAccess, hasOrdersAccess]);
 
   useEffect(() => {
     try {
@@ -2333,6 +2333,7 @@ export default function App() {
         const { error: signOutError } = await supabase.auth.signOut();
         if (signOutError) throw signOutError;
         setCurrentUser(null);
+        setAdminAccess(EMPTY_ADMIN_ACCESS);
         setAdminLoggedIn(false);
         setActiveTab('store');
         setAuthMode('login');
@@ -2575,6 +2576,7 @@ export default function App() {
         ? '🔓 მთავარი ადმინისტრატორის წვდომა დადასტურებულია.'
         : '🔓 თანამშრომლის წვდომა დადასტურებულია.');
     } catch (error) {
+      setAdminAccess(EMPTY_ADMIN_ACCESS);
       setAdminLoggedIn(false);
       setAdminError(error.message || 'ვერ მოხერხდა ანგარიშის შემოწმება.');
     }
