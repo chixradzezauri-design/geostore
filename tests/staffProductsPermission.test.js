@@ -6,12 +6,14 @@ const migration = await readFile(new URL('../supabase/migrations/20261117140000_
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const settingsMigration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
 
-test('product RLS is based on the active products module permission', () => {
-  assert.match(migration, /Staff with products permission can insert products/);
-  assert.match(migration, /Staff with products permission can read all products/);
-  assert.match(migration, /Staff with products permission can update products/);
-  assert.match(migration, /public\.has_staff_permission\('products'\)/);
-  assert.match(foundation, /staff\.is_active IS TRUE/);
+test('product reads require active products permission while direct table writes stay disabled', () => {
+  assert.match(migration, /CREATE POLICY "Staff with products permission can read all products"/);
+  assert.ok(migration.includes("USING (public.has_staff_permission('products'))"));
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "Staff with products permission can insert products"'));
+  assert.ok(migration.includes('DROP POLICY IF EXISTS "Staff with products permission can update products"'));
+  assert.ok(migration.includes('REVOKE INSERT, UPDATE ON TABLE public.products FROM authenticated'));
+  assert.doesNotMatch(migration, /CREATE POLICY "Staff with products permission can (insert|update) products"/);
+  assert.match(foundation, /staff\\.is_active IS TRUE/);
 });
 
 test('product and inventory RPCs are converted to server-side products authorization', () => {
