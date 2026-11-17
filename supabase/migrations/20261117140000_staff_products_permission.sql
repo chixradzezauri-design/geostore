@@ -19,6 +19,10 @@ REVOKE INSERT, UPDATE ON TABLE public.products FROM authenticated;
 REVOKE INSERT (purchase_cost), UPDATE (purchase_cost), SELECT (purchase_cost)
   ON TABLE public.products FROM authenticated;
 
+-- Product-authorized staff need to distinguish published from draft products.
+-- RLS still limits ordinary authenticated users to already-published rows.
+GRANT SELECT (is_published) ON TABLE public.products TO authenticated;
+
 -- PostgreSQL column-level grants survive a table-level REVOKE. Remove every
 -- remaining authenticated INSERT/UPDATE column grant; product writes now go
 -- only through the validated SECURITY DEFINER RPCs.
