@@ -18,6 +18,7 @@ import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
+import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -341,6 +342,13 @@ export default function AdminDashboardPro({
   const [inventoryMovementProductQuery, setInventoryMovementProductQuery] = useState('');
   const [inventoryMovementProductFilter, setInventoryMovementProductFilter] = useState('');
   const inventoryMovementRequestRef = useRef(0);
+  const [replenishmentSettings, setReplenishmentSettings] = useState([]);
+  const [replenishmentLoading, setReplenishmentLoading] = useState(false);
+  const [replenishmentError, setReplenishmentError] = useState('');
+  const [replenishmentQuery, setReplenishmentQuery] = useState('');
+  const [replenishmentDrafts, setReplenishmentDrafts] = useState({});
+  const [replenishmentSavingKey, setReplenishmentSavingKey] = useState('');
+  const replenishmentRequestRef = useRef(0);
   const ORDERS_PER_PAGE = 5;
   const PRODUCTS_PER_PAGE = 10;
 
@@ -407,6 +415,71 @@ export default function AdminDashboardPro({
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
+  const fetchInventoryReplenishmentSettings = async () => {
+    if (!adminLoggedIn) return;
+    const requestId = ++replenishmentRequestRef.current;
+    setReplenishmentLoading(true);
+    setReplenishmentError('');
+    try {
+      const headers = await getSupabaseHeaders();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_inventory_replenishment_settings`, {
+        method: 'POST', headers, body: JSON.stringify({ p_limit: 1000 })
+      });
+      if (requestId !== replenishmentRequestRef.current) return;
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (requestId !== replenishmentRequestRef.current) return;
+      setReplenishmentSettings(Array.isArray(result?.items) ? result.items : []);
+    } catch (error) {
+      if (requestId !== replenishmentRequestRef.current) return;
+      setReplenishmentError(error?.message || 'შევსების პარამეტრების ჩატვირთვა ვერ მოხერხდა.');
+    } finally {
+      if (requestId === replenishmentRequestRef.current) setReplenishmentLoading(false);
+    }
+  };
+
+  const saveInventoryReplenishmentSetting = async (position) => {
+    const draft = replenishmentDrafts[position.key] || {};
+    const threshold = Number(draft.threshold ?? position.threshold);
+    const target = Number(draft.target ?? position.target);
+    if (!Number.isSafeInteger(threshold) || threshold < 0 ||
+        !Number.isSafeInteger(target) || target <= threshold || target > 1000000) {
+      setReplenishmentError('სამიზნე მარაგი უნდა აღემატებოდეს დაბალი მარაგის ზღვარს.');
+      return;
+    }
+    setReplenishmentSavingKey(position.key);
+    setReplenishmentError('');
+    try {
+      const headers = await getSupabaseHeaders();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_inventory_replenishment_setting`, {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          p_product_id: position.productId,
+          p_variant_id: position.variantId,
+          p_low_stock_threshold: threshold,
+          p_target_stock: target
+        })
+      });
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      await fetchInventoryReplenishmentSettings();
+      setReplenishmentDrafts(current => {
+        const next = { ...current };
+        delete next[position.key];
+        return next;
+      });
+    } catch (error) {
+      setReplenishmentError(error?.message || 'შევსების პარამეტრების შენახვა ვერ მოხერხდა.');
+    } finally {
+      setReplenishmentSavingKey('');
+    }
+  };
+
   const fetchInventoryMovements = async (beforeId = null, append = false) => {
     if (!adminLoggedIn) return;
     const requestId = ++inventoryMovementRequestRef.current;
@@ -462,6 +535,18 @@ export default function AdminDashboardPro({
     void fetchInventoryMovements(null, false);
     return () => { inventoryMovementRequestRef.current += 1; };
   }, [adminLoggedIn, adminTab, inventoryMovementProductFilter]);
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      replenishmentRequestRef.current += 1;
+      setReplenishmentSettings([]);
+      setReplenishmentError('');
+      setReplenishmentDrafts({});
+      return undefined;
+    }
+    void fetchInventoryReplenishmentSettings();
+    return () => { replenishmentRequestRef.current += 1; };
+  }, [adminLoggedIn]);
 
   useEffect(() => {
     try {
@@ -3312,6 +3397,9 @@ export default function AdminDashboardPro({
   const isLaptop = catLower.includes('ლეპტოპ') || catLower.includes('კომპიუტერ');
   const isPhone = catLower.includes('სმარტფონ') || catLower.includes('ტელეფონ');
 
+  const replenishmentPositions = buildInventoryReplenishmentPlan(products, replenishmentSettings);
+  const filteredReplenishmentPositions = filterInventoryReplenishmentPlan(replenishmentPositions, replenishmentQuery);
+
   // Command Center uses only the data already loaded by the existing admin workflows.
   // It is a read-only operational overview: no stock, order or ticket state is mutated here.
   const commandCenterPendingOrders = (Array.isArray(orders) ? orders : [])
@@ -3376,6 +3464,7 @@ export default function AdminDashboardPro({
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
             { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers },
+            { id: 'replenishment', label: '📦 მარაგის შევსების გეგმა', count: replenishmentPositions.filter(position => position.isLowStock).length, icon: Truck },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
@@ -3700,6 +3789,46 @@ export default function AdminDashboardPro({
                 >{inventoryMovementLoading ? 'იტვირთება…' : 'მეტი ჩანაწერის ჩატვირთვა'}</button>
               </div>
             )}
+          </section>
+        )}
+
+        {adminTab === 'replenishment' && (
+          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY PLANNING</p>
+                <h3 id="admin-replenishment-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის შევსების გეგმა</h3>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის დაბალი მარაგის ზღვარი, სამიზნე რაოდენობა და შესავსები ერთეულების რეკომენდაცია. სისტემა მარაგს ავტომატურად არ ცვლის.</p>
+              </div>
+              <input type="search" value={replenishmentQuery} onChange={event => setReplenishmentQuery(event.target.value)} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="w-full xl:max-w-sm min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">დაბალი მარაგის პოზიციები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{replenishmentPositions.filter(position => position.isLowStock).length}</strong></div>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">სულ შესავსები ერთეულები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{replenishmentPositions.reduce((sum, position) => sum + position.suggestedQuantity, 0)}</strong></div>
+            </div>
+            {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">პარამეტრების შენახვა/ჩატვირთვა ვერ მოხერხდა: {replenishmentError}</div>}
+            {replenishmentLoading && <p className="rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">შევსების პარამეტრები იტვირთება…</p>}
+            <div className="space-y-3">
+              {filteredReplenishmentPositions.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center"><Truck className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 text-sm font-black text-white">შესაბამისი მარაგის პოზიცია ვერ მოიძებნა</p><p className="mt-1 text-xs text-slate-400">შეამოწმეთ ძიება ან დაამატეთ პროდუქტის მარაგი.</p></div>
+              ) : filteredReplenishmentPositions.map(position => {
+                const draft = replenishmentDrafts[position.key] || {};
+                const thresholdValue = draft.threshold ?? position.threshold;
+                const targetValue = draft.target ?? position.target;
+                return (
+                  <article key={position.key} className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-4">
+                    <div className="min-w-0"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : position.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : position.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
+                    <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400">არსებული მარაგი</label><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
+                    <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
+                    <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
+                    <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{position.isLowStock ? Math.max(0, Number(targetValue) - position.stock) : 0}</strong></div>
+                    <div className="flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !adminLoggedIn} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
+                  </article>
+                );
+              })}
+            </div>
+            <p className="text-[10px] leading-5 text-slate-500">საწყისი პარამეტრებია 5 ერთეული (დაბალი მარაგის ზღვარი) და 20 ერთეული (სამიზნე მარაგი). შენახული პარამეტრები გამოიყენება კონკრეტულ პროდუქტზე ან ვარიანტზე. რეკომენდაცია არ ქმნის შესყიდვის შეკვეთას და არ ცვლის მარაგს.</p>
           </section>
         )}
 
