@@ -89,5 +89,6 @@ BEGIN
 END;
 $staff_support_permissions$;
 
--- The public visitor ticket INSERT policy and all customer ownership/token
--- checks are intentionally preserved.
+-- The existing `Visitors can submit validated support tickets` INSERT policy
+-- and customer checks (`v_ticket.customer_user_id`, `v_ticket.access_token_hash`)
+-- are intentionally preserved by the targeted replacements above.
