@@ -8,5 +8,6 @@ test('analytics-only staff call the aggregate RPC, not the owner raw-data analyt
   assert.match(source, /supabase\.rpc\('get_staff_analytics_summary'/);
   assert.match(source, /visibleAdminTab === 'analytics' && !isOwner && <StaffAnalyticsSummary \/>/);
   assert.match(source, /visibleAdminTab === 'analytics' && isOwner && \(/);
-  assert.match(source, /მომხმარებლის პირადი ინფორმაცია და შეკვეთების დეტალები არ ჩანს/);\n  assert.match(source, /summary\\?\\.financials_available/);
+  assert.match(source, /მომხმარებლის პირადი ინფორმაცია და შეკვეთების დეტალები არ ჩანს/);
+  assert.match(source, /summary\?\.financials_available/);
 });
