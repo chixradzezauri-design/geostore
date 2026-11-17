@@ -779,8 +779,7 @@ export default function App() {
     const refreshSupportThread = async () => {
       if (!active || document.visibilityState !== 'visible') return;
       if (requestInFlight) {
-        // Do not lose a Realtime notification that arrives during an in-flight
-        // snapshot request; run one more read after the current request settles.
+        // Coalesce overlapping poll/visibility refreshes into one follow-up read.
         refreshRequested = true;
         return;
       }
@@ -838,20 +837,7 @@ export default function App() {
       if (document.visibilityState === 'visible') void refreshSupportThread();
     };
 
-    void refreshSupportThread();
-            }
-          })
-          .subscribe(status => {
-            // Re-read the protected RPC snapshot after connect/reconnect.
-            if (status === 'SUBSCRIBED' && active) void refreshSupportThread();
-          });
-      } catch (error) {
-        // The 15-second poll remains the recovery path if Broadcast setup fails.
-        if (active) console.warn('Support Broadcast subscription failed:', error);
-      }
-    };
-    void subscribeToSupportBroadcast();
-
+    // Poll the protected conversation RPC; refresh immediately when the tab returns.
     void refreshSupportThread();
     const interval = window.setInterval(() => void refreshSupportThread(), 15000);
     document.addEventListener('visibilitychange', refreshWhenVisible);
@@ -860,7 +846,6 @@ export default function App() {
       active = false;
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
-      if (channel) void supabase.removeChannel(channel);
     };
   }, [supportOpen, supportThreadLoaded, supportThreadSending, supportLookupTicketId, supportLookupAccessToken, currentUser?.id]);
 
