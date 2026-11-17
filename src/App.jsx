@@ -49,14 +49,19 @@ const Modals = lazy(() => import('./components/Modals'));
 class AdminDashboardErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMessage: '', componentStack: '' };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      errorMessage: String(error?.message || error || 'უცნობი React შეცდომა').slice(0, 1200)
+    };
   }
 
   componentDidCatch(error, info) {
+    const componentStack = String(info?.componentStack || '').slice(0, 4000);
+    this.setState({ componentStack });
     console.error('GEOSTORE admin dashboard render failed:', error, info);
   }
 
@@ -67,10 +72,20 @@ class AdminDashboardErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div role="alert" className="mx-auto my-10 w-full max-w-xl rounded-2xl border border-rose-500/30 bg-slate-950 p-6 text-center text-slate-100 shadow-xl">
-          <h2 className="text-lg font-black">ადმინ პანელი ვერ ჩაიტვირთა</h2>
-          <p className="mt-2 text-sm text-slate-300">ჩატვირთვისას ტექნიკური შეცდომა მოხდა. განაახლეთ გვერდი და სცადეთ ხელახლა. მაღაზიის დანარჩენი ნაწილი ხელმისაწვდომი რჩება.</p>
-          <button type="button" onClick={this.handleRetry} className="mt-5 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950">
+        <div role="alert" className="mx-auto my-10 w-full max-w-xl rounded-2xl border border-rose-500/30 bg-slate-950 p-6 text-left text-slate-100 shadow-xl">
+          <h2 className="text-center text-lg font-black">ადმინ პანელი ვერ ჩაიტვირთა</h2>
+          <p className="mt-2 text-center text-sm text-slate-300">ტექნიკური შეცდომა დაფიქსირდა. მაღაზიის დანარჩენი ნაწილი ხელმისაწვდომი რჩება.</p>
+          <div className="mt-4 rounded-xl border border-rose-500/20 bg-black/30 p-3">
+            <p className="text-xs font-bold text-rose-300">შეცდომის დეტალი</p>
+            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-200">{this.state.errorMessage || 'შეცდომის ტექსტი მიუწვდომელია'}</pre>
+            {this.state.componentStack && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-slate-400">კომპონენტების კვალი</summary>
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-[10px] text-slate-400">{this.state.componentStack}</pre>
+              </details>
+            )}
+          </div>
+          <button type="button" onClick={this.handleRetry} className="mt-5 block w-full rounded-xl bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950">
             ხელახლა ცდა
           </button>
         </div>
