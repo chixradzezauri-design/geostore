@@ -1,0 +1,284 @@
+/* GEOSTORE ADMIN POLISH — STAGE 101
+   Additive visual layer only. Existing section IDs, data flows and actions remain unchanged. */
+
+.admin-dashboard-pro.admin-dashboard-shell {
+  --admin-polish-ink: #f6fbff;
+  --admin-polish-muted: #b8c8d8;
+  --admin-polish-line: rgba(135, 165, 193, .22);
+  --admin-polish-glow: rgba(75, 224, 174, .12);
+  --admin-polish-radius: 24px;
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 84% 4%, rgba(49, 185, 153, .08), transparent 34%),
+    radial-gradient(ellipse at 10% 30%, rgba(72, 137, 207, .07), transparent 38%);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-hero,
+  .admin-orders-panel,
+  .admin-products-panel,
+  .admin-staff-panel,
+  .admin-staff-list-panel,
+  .admin-support-panel,
+  .admin-crm-panel,
+  .admin-analytics-card,
+  .admin-profit-calculator,
+  .admin-ai-analyst,
+  .admin-expenses-panel,
+  .admin-settings-panel
+) {
+  position: relative;
+  border-color: var(--admin-polish-line) !important;
+  background-image: linear-gradient(145deg, rgba(28, 49, 70, .28), rgba(8, 21, 36, .12));
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, .17),
+    inset 0 1px 0 rgba(235, 248, 255, .035);
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-hero,
+  .admin-orders-panel,
+  .admin-products-panel,
+  .admin-staff-panel,
+  .admin-staff-list-panel,
+  .admin-support-panel,
+  .admin-crm-panel,
+  .admin-analytics-card,
+  .admin-profit-calculator,
+  .admin-ai-analyst,
+  .admin-expenses-panel,
+  .admin-settings-panel
+) > :is(h2, h3, header) {
+  color: var(--admin-polish-ink);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-orders-header,
+  .admin-analytics-toolbar,
+  .admin-staff-list-title,
+  .admin-products-header,
+  .admin-support-header
+) {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--admin-polish-line);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-kpi,
+  .admin-command-panel,
+  .admin-staff-card,
+  .admin-order-card,
+  .admin-product-card,
+  .admin-support-ticket,
+  .admin-crm-user-card,
+  .admin-analytics-card
+) {
+  border-color: var(--admin-polish-line);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .14);
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease,
+    background-color .18s ease;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-kpi,
+  .admin-command-panel,
+  .admin-staff-card,
+  .admin-order-card,
+  .admin-product-card,
+  .admin-support-ticket,
+  .admin-crm-user-card,
+  .admin-analytics-card
+):hover {
+  border-color: rgba(94, 224, 176, .36);
+  box-shadow: 0 15px 32px rgba(0, 0, 0, .2), 0 0 0 1px rgba(94, 224, 176, .05);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell button:not(:disabled) {
+  transition:
+    background-color .18s ease,
+    border-color .18s ease,
+    color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease,
+    filter .18s ease;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell button:disabled {
+  cursor: not-allowed;
+  filter: saturate(.55);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input, select, textarea) {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .18);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input, select, textarea)::placeholder {
+  color: #8297ab;
+  opacity: 1;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-orders-list,
+  .admin-products-list,
+  .admin-staff-cards-list,
+  .admin-support-tickets-list
+) {
+  min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #526b83 transparent;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-staff-permission-chip,
+  .admin-order-status-actions > button,
+  .admin-order-status-filters > button
+) {
+  letter-spacing: .005em;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-chip {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-edit-panel {
+  border-color: rgba(245, 190, 75, .3) !important;
+  background: linear-gradient(145deg, rgba(39, 39, 34, .34), rgba(10, 20, 33, .72)) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-card {
+  background: linear-gradient(145deg, rgba(18, 37, 56, .82), rgba(8, 19, 32, .82));
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions > button {
+  min-height: 36px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions > button[title*="ხელახლა გააქტიურება"] {
+  border-radius: 10px;
+  box-shadow: 0 5px 16px rgba(52, 211, 153, .08);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #8de8f4 !important;
+  outline-offset: 3px !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-command-kpi,
+    .admin-command-panel,
+    .admin-staff-card,
+    .admin-order-card,
+    .admin-product-card,
+    .admin-support-ticket,
+    .admin-crm-user-card
+  ):hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    gap: 18px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    gap: 14px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-command-hero,
+    .admin-orders-panel,
+    .admin-products-panel,
+    .admin-staff-panel,
+    .admin-staff-list-panel,
+    .admin-support-panel,
+    .admin-crm-panel,
+    .admin-profit-calculator,
+    .admin-ai-analyst,
+    .admin-expenses-panel
+  ) {
+    border-radius: 19px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-orders-header,
+    .admin-analytics-toolbar,
+    .admin-staff-list-title,
+    .admin-products-header,
+    .admin-support-header
+  ) {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions > button {
+    min-height: 40px;
+    padding-inline: 11px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-actions {
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-actions > button {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-command-hero,
+    .admin-orders-panel,
+    .admin-products-panel,
+    .admin-staff-panel,
+    .admin-staff-list-panel,
+    .admin-support-panel,
+    .admin-crm-panel
+  ) {
+    padding: 12px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions > button {
+    font-size: 9px !important;
+    padding-inline: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro.admin-dashboard-shell *,
+  .admin-dashboard-pro.admin-dashboard-shell *::before,
+  .admin-dashboard-pro.admin-dashboard-shell *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
