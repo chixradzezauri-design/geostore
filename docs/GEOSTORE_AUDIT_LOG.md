@@ -931,3 +931,8 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Flash-sale and final store-publishing actions remain owner-only pending the settings/security stage.
 - Draft migration only; no live product, stock, ledger, Auth or RLS state was changed.
 - Frontend data-loading will be connected to the new distinction in the next UI integration stage; until then no staff account is activated in the live system.
+
+## Stage 103C — expenses module server-side permission
+- Replaced the primary-owner-only expenses RLS policy with the authoritative `public.has_staff_permission('expenses')` check for SELECT/INSERT/UPDATE/DELETE.
+- The same permission now gates full product-cost listing from Stage 103B; ordinary product staff cannot read or set purchase cost.
+- No expense rows or financial values were changed. No live RLS policy was modified; the migration is staged only.
