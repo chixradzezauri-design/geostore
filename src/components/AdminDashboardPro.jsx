@@ -3126,10 +3126,21 @@ export default function AdminDashboardPro({
     const nextStatus = normalizeOrderStatus(newStatus);
 
     if (isDeliveredOrderStatus(currentStatus) && !isDeliveredOrderStatus(nextStatus)) {
-      alert('ჩაბარებული შეკვეთა დასრულებულად რჩება. სტატუსის უკუსვლა დაუშვებელია; დაბრუნებისთვის საჭიროა ცალკე დაბრუნების პროცესი.');
+      if (nextStatus !== 'ახალი') {
+        alert('დასრულებული შეკვეთის ხელახლა გასააქტიურებლად ჯერ აირჩიეთ „ხელახლა გააქტიურება“. შემდეგ სტატუსებს ჩვეულებრივ შეცვლით.');
+        return;
+      }
+      reactivationTriggerRef.current = document.activeElement;
+      setReactivationOrder(existingOrder);
+      setReactivationPassword('');
+      setReactivationError('');
       return;
     }
     if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
+      if (nextStatus !== 'ახალი') {
+        alert('გაუქმებული შეკვეთის აღსადგენად ჯერ აირჩიეთ „ხელახლა გააქტიურება“.');
+        return;
+      }
       reactivationTriggerRef.current = document.activeElement;
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
@@ -3250,10 +3261,13 @@ export default function AdminDashboardPro({
         ));
       } catch {}
 
-      logActivity(`გაუქმებული შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
+      const wasDelivered = isDeliveredOrderStatus(reactivationOrder.status);
+      logActivity(`${wasDelivered ? 'დასრულებული' : 'გაუქმებული'} შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
       setReactivationOrder(null);
       setReactivationPassword('');
-      alert(`✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი ხელახლა ჩამოიჭრა.`);
+      alert(wasDelivered
+        ? `✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. არსებული მარაგი უცვლელი დარჩა — განმეორებითი ჩამოჭრა არ მომხდარა.`
+        : `✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი შემოწმდა და ხელახლა ჩამოიჭრა.`);
     } catch (error) {
       setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
     } finally {
@@ -4615,6 +4629,16 @@ export default function AdminDashboardPro({
                         ) : (
                           <div className="admin-order-status-actions flex flex-wrap items-center justify-start sm:justify-end gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 w-full sm:w-auto">
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
+                            {isDeliveredOrderStatus(o.status) && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
+                                className="px-2.5 py-1.5 rounded-xl font-black text-[10px] cursor-pointer transition bg-emerald-400/15 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-400/25"
+                                title="დასრულებული შეკვეთის ხელახლა გააქტიურება მარაგის განმეორებითი ჩამოჭრის გარეშე"
+                              >
+                                ხელახლა გააქტიურება
+                              </button>
+                            )}
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>
@@ -5980,7 +6004,10 @@ export default function AdminDashboardPro({
               </div>
             </div>
             <p className="text-slate-300 text-xs leading-5">
-              უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი. დადასტურების შემდეგ სისტემა შეამოწმებს მარაგს და ხელახლა ჩამოჭრის შეკვეთის რაოდენობას.
+              უსაფრთხოებისთვის შეიყვანეთ თქვენი ადმინისტრატორის ანგარიშის მიმდინარე პაროლი.
+              {isDeliveredOrderStatus(reactivationOrder.status)
+                ? ' დასრულებული შეკვეთა დაბრუნდება აქტიურ სტატუსზე; უკვე ჩამოჭრილი მარაგი უცვლელი დარჩება და მეორედ არ ჩამოიჭრება.'
+                : ' გაუქმებული შეკვეთისთვის სისტემა შეამოწმებს მარაგს და მხოლოდ საკმარისი რაოდენობის არსებობისას ჩამოჭრის შეკვეთის რაოდენობას.'}
             </p>
             <label className="block text-xs font-bold text-slate-300" htmlFor="reactivation-password">ადმინისტრატორის პაროლი</label>
             <input
