@@ -15,6 +15,6 @@ test('completed and cancelled order reactivation refreshes the status timestamp 
   const handler = admin.split('const handleConfirmOrderReactivation = async')[1]?.split('const handleSaveOrderAdminNote = async')[0] || '';
   assert.match(handler, /const reactivationResult = await response\.json\(\)\.catch\(\(\) => null\)/);
   assert.match(handler, /status_changed_at: statusChangedAt/);
-  assert.match(handler, /stock_deducted_at/);
-  assert.match(handler, /stock_restored_at/);
+  assert.match(admin, /Boolean\(o\.stock_deducted_at\) && !o\.stock_restored_at/);
+  assert.match(admin, /stock_restored_at/);
 });
