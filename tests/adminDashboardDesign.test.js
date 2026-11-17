@@ -27,6 +27,14 @@ test('inventory history uses the protected RPC and cursor pagination', () => {
   assert.match(admin, /inventoryMovementRequestRef/);
 });
 
+test('replenishment planner uses protected settings RPCs and does not mutate stock', () => {
+  assert.match(admin, /admin_list_inventory_replenishment_settings/);
+  assert.match(admin, /admin_save_inventory_replenishment_setting/);
+  assert.match(admin, /buildInventoryReplenishmentPlan/);
+  assert.match(admin, /adminTab === 'replenishment'/);
+  assert.match(admin, /სისტემა მარაგს ავტომატურად არ ცვლის/);
+});
+
 test('responsive admin navigation safeguards remain in place', () => {
   assert.match(css, /position:\s*sticky/);
   assert.match(css, /max-height:\s*calc\(100dvh - 24px\)/);
