@@ -35,18 +35,18 @@ test('order ledger deletion is blocked for client roles', () => {
 
 
 test('completed orders can be reopened only by the primary admin after fresh password authentication without changing stock', () => {
-  assert.match(completedReopenMigration, /create or replace function private\\.admin_reopen_completed_order/i);
-  assert.match(completedReopenMigration, /auth\\.uid\\(\\) is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'/i);
-  assert.match(completedReopenMigration, /auth\\.jwt\\(\\)->'amr'/i);
-  assert.match(completedReopenMigration, /extract\\(epoch from now\\(\\)\\)::bigint - v_password_auth_time > 300/i);
-  assert.match(completedReopenMigration, /v_order\\.status not in \\('დასრულებული', 'ჩაბარებულია'\\)/i);
-  assert.match(completedReopenMigration, /v_order\\.stock_deducted_at is null/i);
-  assert.match(completedReopenMigration, /v_order\\.stock_restored_at is not null/i);
-  assert.match(completedReopenMigration, /set_config\\('geostore\\.completed_order_reopen', 'on', true\\)/i);
+  assert.match(completedReopenMigration, /create or replace function private\.admin_reopen_completed_order/i);
+  assert.match(completedReopenMigration, /auth\.uid\(\) is distinct from '1060de3d-d28a-45f8-9a64-5e0368cffc4b'/i);
+  assert.match(completedReopenMigration, /auth\.jwt\(\)->'amr'/i);
+  assert.match(completedReopenMigration, /extract\(epoch from now\(\)\)::bigint - v_password_auth_time > 300/i);
+  assert.match(completedReopenMigration, /v_order\.status not in \('დასრულებული', 'ჩაბარებულია'\)/i);
+  assert.match(completedReopenMigration, /v_order\.stock_deducted_at is null/i);
+  assert.match(completedReopenMigration, /v_order\.stock_restored_at is not null/i);
+  assert.match(completedReopenMigration, /set_config\('geostore\.completed_order_reopen', 'on', true\)/i);
   assert.match(completedReopenMigration, /set status = 'ახალი'/i);
-  assert.doesNotMatch(completedReopenMigration, /update public\\.products/i);
-  assert.match(completedReopenMigration, /revoke all on function public\\.admin_reopen_completed_order\\(text\\) from public, anon/i);
-  assert.match(completedReopenMigration, /grant execute on function public\\.admin_reopen_completed_order\\(text\\) to authenticated/i);
+  assert.doesNotMatch(completedReopenMigration, /update public\.products/i);
+  assert.match(completedReopenMigration, /revoke all on function public\.admin_reopen_completed_order\(text\) from public, anon/i);
+  assert.match(completedReopenMigration, /grant execute on function public\.admin_reopen_completed_order\(text\) to authenticated/i);
   assert.match(admin, /admin_reopen_completed_order/);
   assert.match(admin, /reactivationMode === 'completed'/);
 });
