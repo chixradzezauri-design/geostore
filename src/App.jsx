@@ -639,7 +639,14 @@ export default function App() {
   const [supportThreadLoading, setSupportThreadLoading] = useState(false);
   const [supportThreadSending, setSupportThreadSending] = useState(false);
   const supportReplyInFlightRef = useRef(false);
-  const supportReplyRequestRef = useRef(null);
+  const supportReplyRequestRef = useRef(new Map());
+  const supportThreadSessionRef = useRef(0);
+  const beginSupportThreadSession = () => {
+    supportThreadSessionRef.current += 1;
+    supportReplyInFlightRef.current = false;
+    setSupportThreadSending(false);
+    return supportThreadSessionRef.current;
+  };
   const supportCreateRequestRef = useRef(null);
   const [supportThreadError, setSupportThreadError] = useState('');
   const [hasLoadedModals, setHasLoadedModals] = useState(false);
@@ -3586,7 +3593,7 @@ export default function App() {
               </span>
               <button
                 type="button"
-                onClick={() => setSupportOpen(false)}
+                onClick={() => { beginSupportThreadSession(); setSupportOpen(false); }}
                 className="gs-support-close"
                 aria-label={currentLang === 'en' ? 'Close' : currentLang === 'ru' ? 'Закрыть' : 'დახურვა'}
               >
@@ -3808,6 +3815,7 @@ export default function App() {
                           {Number(ticket.unread_count) > 0 ? ` · ${currentLang === 'en' ? 'New reply' : currentLang === 'ru' ? 'Новый ответ' : 'ახალი პასუხი'}` : ''}
                         </span>
                         <button type="button" disabled={supportThreadLoading} onClick={async () => {
+                          const sessionId = beginSupportThreadSession();
                           setSupportLookupTicketId(ticket.ticket_id);
                           setSupportLookupAccessToken('');
                           setSupportThreadError('');
@@ -3822,12 +3830,17 @@ export default function App() {
                             if (!response.ok) throw new Error('ACCESS_DENIED');
                             const rows = await response.json();
                             if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                            if (sessionId !== supportThreadSessionRef.current) return;
                             setSupportThreadMessages(rows);
                             setSupportThreadLoaded(true);
                           } catch (error) {
-                            console.error('Account-linked support conversation open failed:', error);
-                            setSupportThreadError(currentLang === 'en' ? 'Could not open this request. Please try again.' : currentLang === 'ru' ? 'Не удалось открыть обращение. Попробуйте ещё раз.' : 'მიმართვის გახსნა ვერ მოხერხდა. სცადე ხელახლა.');
-                          } finally { setSupportThreadLoading(false); }
+                            if (sessionId === supportThreadSessionRef.current) {
+                              console.error('Account-linked support conversation open failed:', error);
+                              setSupportThreadError(currentLang === 'en' ? 'Could not open this request. Please try again.' : currentLang === 'ru' ? 'Не удалось открыть обращение. Попробуйте ещё раз.' : 'მიმართვის გახსნა ვერ მოხერხდა. სცადე ხელახლა.');
+                            }
+                          } finally {
+                            if (sessionId === supportThreadSessionRef.current) setSupportThreadLoading(false);
+                          }
                         }} className="rounded-lg border border-cyan-500/30 px-3 py-1.5 text-[10px] font-bold text-cyan-200 disabled:opacity-50">
                           {currentLang === 'en' ? 'Open' : currentLang === 'ru' ? 'Открыть' : 'გახსნა'}
                         </button>
@@ -3894,6 +3907,7 @@ export default function App() {
                 onSubmit={async (event) => {
                   event.preventDefault();
                   if (supportThreadLoading) return;
+                  const sessionId = beginSupportThreadSession();
                   const ticketId = supportLookupTicketId.trim();
                   const accessToken = supportLookupAccessToken.trim();
                   if (!/^t-[a-f0-9]{32}$/i.test(ticketId) || (!/^[a-f0-9]{64}$/i.test(accessToken) && !currentUser?.id)) {
@@ -3915,6 +3929,7 @@ export default function App() {
                     if (!response.ok) throw new Error('ACCESS_DENIED');
                     const rows = await response.json();
                     if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                    if (sessionId !== supportThreadSessionRef.current) return;
                     const statusSnapshot = await fetchSupportTicketStatus({
                       supabaseUrl: SUPABASE_URL,
                       headers: await getSupabaseHeaders({ authenticated: true }),
@@ -3924,21 +3939,24 @@ export default function App() {
                       console.warn('Support ticket status lookup failed:', error);
                       return null;
                     });
+                    if (sessionId !== supportThreadSessionRef.current) return;
                     setSupportTicketStatus(statusSnapshot);
                     setSupportThreadMessages(rows);
                     setSupportThreadLoaded(true);
                   } catch (error) {
-                    console.error('Support conversation lookup error:', error);
-                    setSupportThreadMessages([]);
-                    setSupportTicketStatus(null);
-                    setSupportThreadLoaded(false);
-                    setSupportThreadError(currentLang === 'en'
-                      ? 'Conversation not found or the access details are incorrect.'
-                      : currentLang === 'ru'
-                        ? 'Переписка не найдена или данные доступа неверны.'
-                        : 'მიმოწერა ვერ მოიძებნა ან წვდომის მონაცემები არასწორია.');
+                    if (sessionId === supportThreadSessionRef.current) {
+                      console.error('Support conversation lookup error:', error);
+                      setSupportThreadMessages([]);
+                      setSupportTicketStatus(null);
+                      setSupportThreadLoaded(false);
+                      setSupportThreadError(currentLang === 'en'
+                        ? 'Conversation not found or the access details are incorrect.'
+                        : currentLang === 'ru'
+                          ? 'Переписка не найдена или данные доступа неверны.'
+                          : 'მიმოწერა ვერ მოიძებნა ან წვდომის მონაცემები არასწორია.');
+                    }
                   } finally {
-                    setSupportThreadLoading(false);
+                    if (sessionId === supportThreadSessionRef.current) setSupportThreadLoading(false);
                   }
                 }}
                 className="space-y-2"
@@ -4026,16 +4044,23 @@ export default function App() {
                             : 'მხარდაჭერის მოთხოვნის წვდომის მონაცემები არასწორია. ხელახლა გახსენი მოთხოვნა.');
                         return;
                       }
+                      const replySessionId = supportThreadSessionRef.current;
                       supportReplyInFlightRef.current = true;
                       setSupportThreadSending(true);
                       setSupportThreadError('');
+                      let requestId = null;
                       try {
-                        if (!supportReplyRequestRef.current || supportReplyRequestRef.current.ticketId !== ticketId || supportReplyRequestRef.current.message !== message) {
+                        const pendingRequest = supportReplyRequestRef.current.get(ticketId);
+                        if (!pendingRequest || pendingRequest.message !== message) {
                           if (!window.crypto?.randomUUID) {
                             throw new Error('უსაფრთხო მოთხოვნის ID ვერ შეიქმნა. განაახლეთ ბრაუზერი და სცადეთ თავიდან.');
                           }
-                          supportReplyRequestRef.current = { id: window.crypto.randomUUID(), ticketId, message };
+                          supportReplyRequestRef.current.set(ticketId, {
+                            id: window.crypto.randomUUID(),
+                            message
+                          });
                         }
+                        requestId = supportReplyRequestRef.current.get(ticketId).id;
                         const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/add_support_ticket_message_idempotent`, {
                           method: 'POST',
                           headers: await getSupabaseHeaders({ authenticated: true }),
@@ -4043,30 +4068,38 @@ export default function App() {
                             p_ticket_id: ticketId,
                             p_message: message,
                             p_access_token: accessToken,
-                            p_request_id: supportReplyRequestRef.current.id
+                            p_request_id: requestId
                           })
                         });
                         if (!response.ok) throw new Error(await response.text());
 
+                        // Persistence is confirmed. Remove only this request key,
+                        // even if the customer has already navigated to another thread.
+                        if (supportReplyRequestRef.current.get(ticketId)?.id === requestId) {
+                          supportReplyRequestRef.current.delete(ticketId);
+                        }
+                        if (replySessionId !== supportThreadSessionRef.current) return;
+
                         // The message is already committed. Clear the composer now so
                         // a refresh failure cannot make the customer resend a duplicate.
                         replyForm.reset();
-                        supportReplyRequestRef.current = null;
 
                         try {
                           const refreshResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_support_ticket_messages`, {
                             method: 'POST',
                             headers: await getSupabaseHeaders({ authenticated: true }),
                             body: JSON.stringify({
-                              p_ticket_id: supportLookupTicketId.trim(),
-                              p_access_token: supportLookupAccessToken.trim()
+                              p_ticket_id: ticketId,
+                              p_access_token: accessToken
                             })
                           });
                           if (!refreshResponse.ok) throw new Error('REFRESH_FAILED');
                           const rows = await refreshResponse.json();
                           if (!Array.isArray(rows)) throw new Error('INVALID_RESPONSE');
+                          if (replySessionId !== supportThreadSessionRef.current) return;
                           setSupportThreadMessages(rows);
                         } catch (refreshError) {
+                          if (replySessionId !== supportThreadSessionRef.current) return;
                           console.warn('Support reply saved but conversation refresh failed:', refreshError);
                           setSupportThreadError(currentLang === 'en'
                             ? 'Your reply was sent, but the conversation could not refresh. Reopen it or try refreshing.'
@@ -4075,15 +4108,19 @@ export default function App() {
                               : 'პასუხი გაიგზავნა, მაგრამ მიმოწერის განახლება ვერ მოხერხდა. ხელახლა გახსენი ან განაახლე.');
                         }
                       } catch (error) {
-                        console.error('Support reply error:', error);
-                        setSupportThreadError(currentLang === 'en'
-                          ? 'Your reply could not be sent. Please try again.'
-                          : currentLang === 'ru'
-                            ? 'Не удалось отправить ответ. Попробуйте ещё раз.'
-                            : 'პასუხის გაგზავნა ვერ მოხერხდა. სცადე ხელახლა.');
+                        if (replySessionId === supportThreadSessionRef.current) {
+                          console.error('Support reply error:', error);
+                          setSupportThreadError(currentLang === 'en'
+                            ? 'Your reply could not be sent. Please try again.'
+                            : currentLang === 'ru'
+                              ? 'Не удалось отправить ответ. Попробуйте ещё раз.'
+                              : 'პასუხის გაგზავნა ვერ მოხერხდა. სცადე ხელახლა.');
+                        }
                       } finally {
-                        supportReplyInFlightRef.current = false;
-                        setSupportThreadSending(false);
+                        if (replySessionId === supportThreadSessionRef.current) {
+                          supportReplyInFlightRef.current = false;
+                          setSupportThreadSending(false);
+                        }
                       }
                     }}
                     className="space-y-2"
