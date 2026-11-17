@@ -462,6 +462,21 @@ function StaffAnalyticsSummary() {
   );
 }
 
+async function callStaffAdminApi(body) {
+  const { data, error } = await supabase.functions.invoke('manage-admin-staff', { body });
+  if (error) {
+    let message = error.message || 'თანამშრომლების სერვერული მოქმედება ვერ შესრულდა.';
+    const response = error.context;
+    if (response && typeof response.clone === 'function') {
+      const payload = await response.clone().json().catch(() => null);
+      if (payload?.error) message = payload.error;
+    }
+    throw new Error(message);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data || {};
+}
+
 const STAFF_ROLE_OPTIONS = [
   { value: 'manager', label: 'მენეჯერი' },
   { value: 'operator', label: 'ოპერატორი' },
@@ -516,27 +531,12 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     permissions: createStaffPermissions({ products: true, orders: true })
   });
 
-  const callStaffApi = async (body) => {
-    const { data, error } = await supabase.functions.invoke('manage-admin-staff', { body });
-    if (error) {
-      let message = error.message || 'თანამშრომლების სერვერული მოქმედება ვერ შესრულდა.';
-      const response = error.context;
-      if (response && typeof response.clone === 'function') {
-        const payload = await response.clone().json().catch(() => null);
-        if (payload?.error) message = payload.error;
-      }
-      throw new Error(message);
-    }
-    if (data?.error) throw new Error(data.error);
-    return data || {};
-  };
-
   const refreshStaffList = async (silent = false) => {
     if (!isOwner) return;
     if (!silent) setStaffListLoading(true);
     setStaffListError('');
     try {
-      const result = await callStaffApi({ action: 'list' });
+      const result = await callStaffAdminApi({ action: 'list' });
       setStaffList(Array.isArray(result.staff) ? result.staff : []);
     } catch (error) {
       setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
@@ -552,7 +552,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     }
     let active = true;
     setStaffListLoading(true);
-    callStaffApi({ action: 'list' }).then((result) => {
+    callStaffAdminApi({ action: 'list' }).then((result) => {
       if (active) {
         setStaffList(Array.isArray(result.staff) ? result.staff : []);
         setStaffListError('');
@@ -582,7 +582,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      const result = await callStaffApi({
+      const result = await callStaffAdminApi({
         action: 'invite',
         email: normalizedEmail,
         display_name: normalizedName,
@@ -654,7 +654,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      await callStaffApi({
+      await callStaffAdminApi({
         action: 'update',
         id: staff.id,
         display_name: editForm.display_name,
@@ -681,7 +681,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      await callStaffApi({ action: 'revoke', id: staff.id });
+      await callStaffAdminApi({ action: 'revoke', id: staff.id });
       await refreshStaffList(true);
       setStaffListNotice('თანამშრომლის სერვერული წვდომა გაუქმდა. Supabase Auth ანგარიში შენარჩუნებულია.');
       if (typeof logActivity === 'function') {
@@ -703,7 +703,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      await callStaffApi({
+      await callStaffAdminApi({
         action: 'update',
         id: staff.id,
         display_name: staff.display_name,
