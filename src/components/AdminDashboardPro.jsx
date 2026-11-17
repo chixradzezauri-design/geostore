@@ -1367,7 +1367,7 @@ export default function AdminDashboardPro({
       return;
     }
     fetchActivityLogs();
-  }, [adminLoggedIn]);
+  }, [isOwner]);
 
   const logActivity = async (actionText) => {
     const action = String(actionText || '').trim().slice(0, 500);
