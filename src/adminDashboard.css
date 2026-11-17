@@ -252,3 +252,35 @@
     transition-duration: .01ms !important;
   }
 }
+
+
+/* STAGE 90 — read-only Admin Command Center */
+.admin-command-center { min-width: 0; }
+.admin-command-hero {
+  background: radial-gradient(circle at 88% 12%, rgba(47, 201, 148, .2), transparent 34%), linear-gradient(125deg, #142b42 0%, #0c1b2c 58%, #102b31 100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .18);
+}
+.admin-command-kpi {
+  min-width: 0;
+  min-height: 142px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .14);
+}
+.admin-command-kpi:focus-visible,
+.admin-command-panel button:focus-visible {
+  outline: 3px solid var(--admin-focus, #8de8f4);
+  outline-offset: 3px;
+}
+.admin-command-panel {
+  min-width: 0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .12);
+}
+.admin-command-panel button { min-height: 54px; }
+@media (max-width: 640px) {
+  .admin-command-hero { padding: 18px !important; border-radius: 20px !important; }
+  .admin-command-kpi { min-height: 124px; padding: 16px !important; }
+  .admin-command-panel { padding: 16px !important; border-radius: 18px !important; }
+  .admin-command-panel button { min-height: 58px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-command-kpi { transition: none !important; }
+}
