@@ -92,3 +92,15 @@ Read-only inspection of the connected Supabase project found:
 - **Phase E:** media upgrades, reviews, loyalty and personalised merchandising.
 
 Each phase should be delivered as a small, tested draft PR. Preserve all existing data and behavior, run the complete test suite/build, and require explicit approval before merging, production migrations or deployment.
+
+
+## Stage 90 — Admin Command Center (Draft PR implementation)
+
+- Added a new first-screen Command Center while keeping all 18 existing admin sections and their tab IDs intact.
+- Reuses existing loaded order, support-ticket, product-stock and flash-sale data; the overview is read-only and links to the existing management sections.
+- Highlights new orders, orders awaiting processing, open support tickets older than 24 hours, low-stock products/variants using the existing five-unit threshold, and flash sales ending within 24 hours.
+- Adds a recent-events list derived only from existing order and support-ticket timestamps.
+- Does not create a second order/support/inventory system, mutate stock, change order/ticket status, or write to the database.
+- Failed-upload and system-error queues are intentionally not shown: the current application does not expose a verified central event feed for those signals. They must not be represented as monitored until a secure source exists.
+- Added responsive styling and static regression assertions for the new landing section and preservation of all previous admin tabs.
+- No live migration, database setting, customer data, order, product, stock balance or message was changed. Browser/device verification and CI completion remain pending.
