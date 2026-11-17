@@ -2520,19 +2520,19 @@ export default function AdminDashboardPro({
     setProductPublishBusyIds(prev => ({ ...prev, [key]: true }));
 
     try {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(key) +
-        '&is_published=eq.' + String(currentPublished) + '&select=id,is_published',
-        {
-          method: 'PATCH',
-          headers: await getSupabaseHeaders(),
-          body: JSON.stringify({ is_published: nextPublished })
-        }
-      );
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_quick_update_product`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_product_id: key,
+          p_field: 'is_published',
+          p_expected_value: currentPublished,
+          p_new_value: nextPublished
+        })
+      });
       if (!response.ok) throw new Error(await response.text());
-      const savedRows = await response.json();
-      if (!Array.isArray(savedRows) || savedRows.length !== 1 ||
-          String(savedRows[0].id) !== key || savedRows[0].is_published !== nextPublished) {
+      const savedProduct = await response.json();
+      if (!savedProduct || String(savedProduct.id) !== key || savedProduct.is_published !== nextPublished) {
         throw new Error('სტატუსი ვერ დადასტურდა. შესაძლოა პროდუქტი სხვა ადმინისტრატორმა პარალელურად შეცვალა. განაახლეთ სია.');
       }
 
@@ -2565,7 +2565,7 @@ export default function AdminDashboardPro({
     if (!column) return;
     const val = Number(value);
     if (!Number.isFinite(val) || val < 0 || val > 1000000000) return alert('შეიყვანეთ სწორი რიცხვი 0-დან 1,000,000,000-მდე.');
-    if ((field === 'priceGEL' || field === 'purchaseCost') && !/^\d+(?:\.\d{1,2})?$/.test(String(value).trim())) return alert('ფასი და თვითღირებულება მაქსიმუმ 2 ათწილადი ნიშნით უნდა შეიყვანოთ.');
+    if ((field === 'priceGEL' || field === 'purchaseCost') && !/^\\d+(?:\\.\\d{1,2})?$/.test(String(value).trim())) return alert('ფასი და თვითღირებულება მაქსიმუმ 2 ათწილადი ნიშნით უნდა შეიყვანოთ.');
     if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
@@ -2573,18 +2573,24 @@ export default function AdminDashboardPro({
     if (field === 'priceGEL' && Number.isFinite(activeFlashSaleEnd) && activeFlashSaleEnd > Date.now()) {
       return alert('პროდუქტზე მოქმედებს ფლეშ-აქცია. ფასის სწრაფი შეცვლა შესაძლებელი იქნება აქციის დასრულების შემდეგ, რათა ავტომატურმა აღდგენამ ახალი ფასი არ გადაფაროს.');
     }
-    const currentValue = current[column] ?? current[field];
-    const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
+    const currentValue = current[column] ?? current[field] ?? null;
     try {
-      const response = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(id)) + '&' + compareFilter + '&select=id,price_gel,stock,old_price_gel', {
-        method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify({ [column]: val })
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_quick_update_product`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders(),
+        body: JSON.stringify({
+          p_product_id: String(id),
+          p_field: column,
+          p_expected_value: currentValue,
+          p_new_value: val
+        })
       });
       if (!response.ok) throw new Error(await response.text());
-      const savedRows = await response.json();
-      if (!Array.isArray(savedRows) || savedRows.length !== 1) {
-        throw new Error('მონაცემი პარალელურად შეიცვალა. განაახლეთ პროდუქტის სია და სცადეთ ხელახლა.');
+      const savedProduct = await response.json();
+      if (!savedProduct || String(savedProduct.id) !== String(id) || savedProduct[column] === undefined) {
+        throw new Error('მონაცემი პარალელურად შეიცვალა ან სერვერმა განახლებული პროდუქტი ვერ დაადასტურა. განაახლეთ სია.');
       }
-      const savedValue = field === 'purchaseCost' ? val : Number(savedRows[0][column]);
+      const savedValue = Number(savedProduct[column]);
       if (!Number.isFinite(savedValue) || savedValue < 0 || (field === 'stock' && !Number.isInteger(savedValue))) {
         throw new Error('სერვერმა არასწორი მნიშვნელობა დააბრუნა. განაახლეთ პროდუქტის სია.');
       }
@@ -2602,6 +2608,7 @@ export default function AdminDashboardPro({
       alert('პროდუქტის განახლება ვერ შესრულდა: ' + (error.message || 'ქსელის შეცდომა'));
     }
   };
+
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
@@ -2871,19 +2878,31 @@ export default function AdminDashboardPro({
     };
 
       let savedProductRow = null;
+      let savedVariantStockResult = null;
+      let savedCustomVariantStockResult = null;
       if (editingProductId) {
-        // Do not overwrite checkout stock deductions with the editor's stale snapshot.
+        // Route all edits through the protected RPC. Direct authenticated table
+        // UPDATE is intentionally revoked by the staff-permission migration.
         const updatePayload = { ...newProdPayload };
-        delete updatePayload.id;
         delete updatePayload.stock;
-        const updateResponse = await fetch(SUPABASE_URL + '/rest/v1/products?id=eq.' + encodeURIComponent(String(prodId)) + '&select=id,created_at,variants,stock', {
-          method: 'PATCH', headers: await getSupabaseHeaders(), body: JSON.stringify(updatePayload)
+        const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_product_with_stock`, {
+          method: 'POST',
+          headers: await getSupabaseHeaders(),
+          body: JSON.stringify({
+            p_product: updatePayload,
+            p_size_color_stocks: changedSizeColorStocks,
+            p_custom_variant_stocks: changedCustomVariantStocks
+          })
         });
         if (!updateResponse.ok) throw new Error(await updateResponse.text());
         productSaveCommitted = true;
-        const updatedRows = await updateResponse.json();
-        if (!Array.isArray(updatedRows) || updatedRows.length !== 1) throw new Error('პროდუქტი ვერ განახლდა. განაახლეთ სია და სცადეთ ხელახლა.');
-        savedProductRow = updatedRows[0];
+        const updateResult = await updateResponse.json();
+        savedProductRow = updateResult?.product || null;
+        savedVariantStockResult = updateResult?.stock?.size_color ?? null;
+        savedCustomVariantStockResult = updateResult?.stock?.custom ?? null;
+        if (!savedProductRow || typeof savedProductRow !== 'object' || String(savedProductRow.id ?? '') !== String(prodId)) {
+          throw new Error('სერვერმა განახლებული პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
+        }
       } else {
         const createResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_save_product', {
           method: 'POST', headers: await getSupabaseHeaders(), body: JSON.stringify({ p_product: newProdPayload })
@@ -2901,41 +2920,23 @@ export default function AdminDashboardPro({
           throw new Error('სერვერმა შექმნილი პროდუქტის დადასტურებული ჩანაწერი ვერ დააბრუნა. განაახლეთ სია და გადაამოწმეთ პროდუქტი.');
         }
       }
-      let savedVariantStockResult = null;
-      let savedCustomVariantStockResult = null;
-      if (editingProductId && (changedSizeColorStocks.length > 0 || changedCustomVariantStocks.length > 0)) {
-        const stockResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_set_product_variant_stock_batches', {
-          method: 'POST',
-          headers: await getSupabaseHeaders(),
-          body: JSON.stringify({
-            p_product_id: prodId,
-            p_size_color_stocks: changedSizeColorStocks,
-            p_custom_variant_stocks: changedCustomVariantStocks
-          })
-        });
-        if (!stockResponse.ok) {
-          throw new Error('ვარიანტების მარაგის ერთიანი შენახვა ვერ მოხერხდა: ' + await stockResponse.text());
-        }
-        const stockBatchResult = await stockResponse.json();
-        savedVariantStockResult = stockBatchResult?.size_color ?? null;
-        savedCustomVariantStockResult = stockBatchResult?.custom ?? null;
-        if (changedSizeColorStocks.length > 0 && (
-          !savedVariantStockResult ||
-          Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
-          Number(savedVariantStockResult.stock) < 0 ||
-          !Number.isSafeInteger(Number(savedVariantStockResult.stock))
-        )) {
-          throw new Error('ზომებისა და ფერების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
-        }
-        if (changedCustomVariantStocks.length > 0 && (
-          !savedCustomVariantStockResult ||
-          Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
-          Number(savedCustomVariantStockResult.stock) < 0 ||
-          !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))
-        )) {
-          throw new Error('ინდივიდუალური ვარიანტების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
-        }
+      if (editingProductId && changedSizeColorStocks.length > 0 && (
+        !savedVariantStockResult ||
+        Number(savedVariantStockResult.updated) !== changedSizeColorStocks.length ||
+        Number(savedVariantStockResult.stock) < 0 ||
+        !Number.isSafeInteger(Number(savedVariantStockResult.stock))
+      )) {
+        throw new Error('ზომებისა და ფერების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
       }
+      if (editingProductId && changedCustomVariantStocks.length > 0 && (
+        !savedCustomVariantStockResult ||
+        Number(savedCustomVariantStockResult.updated) !== changedCustomVariantStocks.length ||
+        Number(savedCustomVariantStockResult.stock) < 0 ||
+        !Number.isSafeInteger(Number(savedCustomVariantStockResult.stock))
+      )) {
+        throw new Error('ინდივიდუალური ვარიანტების მარაგის ყველა ცვლილება ვერ დადასტურდა. განაახლეთ პროდუქტის სია.');
+      }
+
       const existingProduct = (products || []).find(p => String(p.id) === String(prodId));
       let imageCleanupWarning = false;
       if (editingProductId && existingProduct) {
