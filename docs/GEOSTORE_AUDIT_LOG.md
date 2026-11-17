@@ -867,3 +867,13 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Next implementation should add dialog-scoped focus management without changing order selection, status, note-save, invoice, reactivation, or data-fetch behavior. It must preserve the previously focused trigger and avoid stealing focus when the selected order changes while the dialog remains open.
 - Add regression coverage for Escape close, Tab/Shift+Tab containment, initial focus, focus restoration, and cleanup on unmount. Verify nested reactivation dialog behavior separately to avoid closing the underlying order dialog unexpectedly.
 - No application code, order, customer, database row, schema, migration, or production setting was changed in this audit.
+
+
+## Stage 98 — order detail dialog keyboard accessibility implementation
+- Added a dialog-scoped key handler for Escape and Tab/Shift+Tab, including focus containment and a safe fallback when no focusable controls are present.
+- Opening order details records the exact invoking order-row button and moves focus to the dialog close control once; changing the selected order while the dialog remains open does not steal focus.
+- Closing the order detail dialog restores focus to the original trigger only when that element is still connected to the document.
+- The nested reactivation password dialog takes keyboard priority. Escape clears its draft only when reactivation is not submitting; an in-progress reactivation cannot be dismissed through Escape, and the underlying order dialog is never closed by that key event.
+- The document key listener is removed on dialog close/unmount. Existing order data, status, note-save, invoice, reactivation RPC and database behavior remain unchanged.
+- Added source-level regression checks for focus entry/return, keyboard handling, listener cleanup and nested-dialog priority. Browser-level keyboard verification remains part of staging QA.
+- No order/customer data, live database schema, settings or production deployment was changed.
