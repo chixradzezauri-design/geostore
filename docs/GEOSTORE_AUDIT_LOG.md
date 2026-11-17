@@ -936,3 +936,10 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Replaced the primary-owner-only expenses RLS policy with the authoritative `public.has_staff_permission('expenses')` check for SELECT/INSERT/UPDATE/DELETE.
 - The same permission now gates full product-cost listing from Stage 103B; ordinary product staff cannot read or set purchase cost.
 - No expense rows or financial values were changed. No live RLS policy was modified; the migration is staged only.
+
+## Stage 103D — CRM and support module server-side permissions
+- Replaced legacy chat-message read/update/delete policies with the active `crm` permission.
+- Replaced support-ticket and support-message read/update policies with the active `support` permission.
+- Updated the support message send/read/status/unread-count RPCs so authorized staff act as support agents while customer ownership, email and access-token checks remain intact.
+- Visitor ticket creation and customer-facing support flows are preserved.
+- No customer messages, support tickets, support messages or read receipts were changed. Draft migration only; no live RLS/function changes.
