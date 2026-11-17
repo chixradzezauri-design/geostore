@@ -786,3 +786,24 @@ This file is the durable handoff log for staged audit work. Add new findings and
 ### Safety and verification
 - Application/test/documentation changes only. No SQL migration, Supabase live setting, customer/order/ticket/message row, access code, production setting, merge, or deployment was changed.
 - Automated CI on the updated PR head is required before this stage is considered verified. Real browser checks for switching tickets and closing/reopening support during a pending reply remain outstanding.
+
+
+## Stage 89 — admin support ticket list refresh session fencing
+
+### Finding
+- The admin support-ticket list refresh was callable from Broadcast notifications, Postgres Changes, reconnect recovery, polling, visibility refresh and post-mutation handlers.
+- Calls without an explicit session ID previously used `null`, which bypassed the existing admin-session check. Overlapping refreshes could also complete out of order and let an older response replace a newer ticket snapshot.
+- A delayed response from a prior administrator login could therefore overwrite the current inbox state.
+
+### Fix
+- Default ticket-list refreshes to the current admin session and return immediately when no verified admin session is active.
+- Add a monotonically increasing request ID. Only the latest request in the same admin session may publish ticket rows or an error.
+- Re-check both the session generation and request ID after each awaited header, network and JSON operation in the paginated fetch.
+- Invalidate pending list requests when the admin login state changes.
+- Preserve the existing 1,000-row pagination, stable `created_at.desc,id.asc` ordering, ticket mapping, Realtime notifications and 15-second recovery polling.
+
+### Regression coverage and verification
+- Added regression assertions to `tests/supportTicketBroadcastNotifications.test.js` for session fencing, stale-result/error suppression, login invalidation and retained pagination.
+- GitHub Actions checks were observed starting on PR head `06358fc3e182627448d660680e32f8bee259f0d0`; build, dependency audit and JavaScript analysis were still in progress at the time of this entry.
+- No browser/device E2E test was performed. No Supabase migration, production setting, live order, customer message, support ticket or other production data was changed.
+- PR #129 remains draft and unmerged; no deployment was performed.
