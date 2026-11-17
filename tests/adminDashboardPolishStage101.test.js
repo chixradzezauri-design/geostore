@@ -18,7 +18,8 @@ test('Stage 101 visual refinements retain all core admin sections and interactio
   }
   assert.match(admin, /handleUpdateOrderStatus/);
   assert.match(admin, /handleConfirmOrderReactivation/);
-  assert.match(admin, /handleAddStaff/);
+  assert.match(admin, /handleInviteStaff/);
+  assert.match(admin, /handleAddExistingUser/);
 });
 
 test('admin polish remains responsive, keyboard visible and reduced-motion aware', () => {
