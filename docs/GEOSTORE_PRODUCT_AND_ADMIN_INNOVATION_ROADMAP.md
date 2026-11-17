@@ -103,4 +103,17 @@ Each phase should be delivered as a small, tested draft PR. Preserve all existin
 - Does not create a second order/support/inventory system, mutate stock, change order/ticket status, or write to the database.
 - Failed-upload and system-error queues are intentionally not shown: the current application does not expose a verified central event feed for those signals. They must not be represented as monitored until a secure source exists.
 - Added responsive styling and static regression assertions for the new landing section and preservation of all previous admin tabs.
-- No live migration, database setting, customer data, order, product, stock balance or message was changed. Browser/device verification and CI completion remain pending.
+- No live migration, database setting, customer data, order, product, stock balance or message was changed. Build check, automated tests and dependency security audit passed; CodeQL and browser/device verification remain outstanding.
+
+
+## Stage 91 — Inventory movement ledger audit (read-only)
+
+- Current live snapshot: 8 products, 2 orders, 6 products with variants, and 49 variant positions at or below the existing five-unit low-stock threshold.
+- The two current orders have consistent stock markers: no non-cancelled order is missing its deduction marker; no non-cancelled order has a restoration marker; no restoration marker exists without a deduction marker.
+- Neither `private.inventory_movements` nor `public.inventory_movements` exists. No AFTER/INSTEAD OF trigger currently records product inventory changes.
+- Verified existing live stock guards: `private.preserve_product_variant_stock()` preserves variant balances during ordinary product edits; `private.sync_size_color_aggregate_stock()` keeps aggregate parent stock aligned with variants.
+- Mapped live stock writers: checkout, cancellation restoration, password-reauthenticated order reactivation, product stock edits and size/color/custom-variant stock RPCs.
+- Design decision: record inventory changes with one database-level AFTER trigger, compare base-product and per-variant positions separately, and carry transaction-local reason/order context from existing RPC wrappers. Keep all current stock guards and mutation functions authoritative.
+- Store the ledger in the private schema with RLS defense-in-depth, no direct client table grants, append-only enforcement and a bounded admin-only read RPC.
+- Do not backfill historical movements from current balances or order snapshots; those records cannot prove every past stock delta.
+- Audit was read-only. No live SQL, migration, order, product, stock, or setting was changed. Stage 92 implementation remains pending migration-generation and staging verification.
