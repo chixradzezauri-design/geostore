@@ -1319,21 +1319,12 @@ export default function App() {
         banners: draftBanners,
         siteSettings: validateStorefrontSiteSettings(settingsOverride)
       };
-      const savedAt = new Date().toISOString();
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/storefront_config?on_conflict=config_key`,
+        `${SUPABASE_URL}/rest/v1/rpc/save_storefront_draft`,
         {
           method: 'POST',
-          headers: {
-            ...(await getSupabaseHeaders({ authenticated: true })),
-            Prefer: 'resolution=merge-duplicates,return=representation'
-          },
-          body: JSON.stringify({
-            config_key: 'storefront',
-            draft_config: snapshot,
-            updated_by: session.user.id,
-            draft_updated_at: savedAt
-          })
+          headers: await getSupabaseHeaders({ authenticated: true }),
+          body: JSON.stringify({ p_snapshot: snapshot })
         }
       );
       if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
