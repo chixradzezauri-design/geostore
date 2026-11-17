@@ -16,7 +16,7 @@ test('orders RLS grants active staff only when the orders permission is enabled'
 test('order status and admin note RPCs enforce the server-side orders permission', () => {
   assert.match(migration, /FUNCTION private\.admin_update_order_status/);
   assert.match(migration, /FUNCTION private\.admin_save_order_note/);
-  assert.equal((migration.match(/public\.has_staff_permission\('orders'\)/g) || []).length, 4);
+  assert.equal((migration.match(/public\.has_staff_permission\('orders'\)/g) || []).length, 5);
 });
 
 test('staff order operations preserve status and stock safeguards', () => {
