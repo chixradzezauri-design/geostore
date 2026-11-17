@@ -3569,10 +3569,10 @@ export default function AdminDashboardPro({
                 <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterOverdueTickets.length}</strong>
                 <span className="mt-2 block text-[11px] text-slate-400">ღია ტიკეტი 24 საათზე მეტი ხნით · გახსნა</span>
               </button>
-              <button type="button" onClick={() => setAdminTab('products')} className="admin-command-kpi group text-left rounded-2xl border border-rose-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-rose-300/60">
+              <button type="button" onClick={() => setAdminTab('replenishment')} className="admin-command-kpi group text-left rounded-2xl border border-rose-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-rose-300/60">
                 <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-5 w-5 text-rose-300" /></span>
-                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterLowStockGroups.length}</strong>
-                <span className="mt-2 block text-[11px] text-slate-400">პროდუქტი/ვარიანტი საჭიროებს შემოწმებას · გახსნა</span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{replenishmentPositions.filter(position => position.isLowStock).length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">პოზიცია/ვარიანტი საჭიროებს შევსების დაგეგმვას · გახსნა</span>
               </button>
               <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group text-left rounded-2xl border border-sky-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-sky-300/60">
                 <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-5 w-5 text-sky-300" /></span>
@@ -3628,7 +3628,7 @@ export default function AdminDashboardPro({
               <div className="admin-command-panel rounded-2xl border border-rose-400/20 bg-slate-900/75 p-5 sm:p-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div><h4 className="text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 text-[11px] text-slate-400">არსებული 5 ერთეულის ზღვრის მიხედვით</p></div>
-                  <button type="button" onClick={() => setAdminTab('products')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">პროდუქტები</button>
+                  <button type="button" onClick={() => setAdminTab('replenishment')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">შევსების გეგმა</button>
                 </div>
                 {commandCenterLowStockGroups.length === 0 ? (
                   <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">დაბალი მარაგის ჩანაწერები არ იძებნება არსებული ზღვრის ფარგლებში.</p>
