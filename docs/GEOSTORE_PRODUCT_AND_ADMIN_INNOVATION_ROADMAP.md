@@ -117,3 +117,16 @@ Each phase should be delivered as a small, tested draft PR. Preserve all existin
 - Store the ledger in the private schema with RLS defense-in-depth, no direct client table grants, append-only enforcement and a bounded admin-only read RPC.
 - Do not backfill historical movements from current balances or order snapshots; those records cannot prove every past stock delta.
 - Audit was read-only. No live SQL, migration, order, product, stock, or setting was changed. Stage 92 implementation remains pending migration-generation and staging verification.
+
+
+## Stage 93 — Inventory replenishment planner (Draft PR implementation)
+
+- Added a responsive replenishment tab and linked the Command Center low-stock KPI to it.
+- Calculates current stock, configurable low-stock threshold, target stock and suggested refill quantity independently for each base product or variant.
+- Variant-backed products are evaluated by variant; aggregate parent stock is not double-counted.
+- Defaults are 5 units for the low-stock threshold and 20 units for the target. Settings can be overridden per product/variant.
+- Added private settings storage with RLS, revoked direct table access and primary-admin-only list/save RPCs.
+- Save validates the product and exact variant while holding a product row lock. It changes only replenishment settings; it does not mutate stock or create purchase orders.
+- Added helper and migration regression tests.
+- Migration remains staged in Draft PR #129 only. No live database migration, order, product, customer, message, stock balance, production setting, merge or deployment was changed.
+- Final-head CI, isolated Supabase staging integration, authorization tests and browser/device verification remain required.
