@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const css = await readFile(new URL('../src/adminDashboard.css', import.meta.url), 'utf8');
+const sectionsCss = await readFile(new URL('../src/adminDashboardSections.css', import.meta.url), 'utf8');
 const entry = await readFile(new URL('../src/main.jsx', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 
@@ -49,4 +50,15 @@ test('Command Center remains a read-only overview using existing operational dat
   assert.match(admin, /commandCenterOverdueTickets/);
   assert.match(admin, /commandCenterLowStockGroups/);
   assert.match(admin, /flashSaleAdminSummary\.expiringCount/);
+});
+
+
+test('Stage 101 adds a unified card hierarchy and refined completed-order reactivation controls', () => {
+  assert.match(sectionsCss, /STAGE 101 — premium visual hierarchy/);
+  assert.match(sectionsCss, /admin-order-reactivate-button/);
+  assert.match(sectionsCss, /admin-order-reactivation-form/);
+  assert.match(sectionsCss, /admin-order-status-badge/);
+  assert.match(sectionsCss, /@media \(max-width: 640px\)[\s\S]*?admin-order-status-actions/);
+  assert.match(sectionsCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(admin, /admin-order-reactivate-button/);
 });
