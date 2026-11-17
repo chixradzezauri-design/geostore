@@ -43,7 +43,9 @@ test('order detail dialog manages initial focus, keyboard containment, Escape an
 });
 
 test('nested reactivation dialog takes keyboard priority and cannot dismiss during submission', () => {
-  assert.match(admin, /if \(!selectedOrderForModal && !reactivationOrder\) return undefined/);\n  assert.match(admin, /document\.querySelector\('\[aria-labelledby="reactivation-title"\]'\)/);\n  assert.match(admin, /z-\[10000\].*aria-labelledby="reactivation-title"/);
+  assert.match(admin, /if \(!selectedOrderForModal && !reactivationOrder\) return undefined/);
+  assert.match(admin, /document\.querySelector\('\[aria-labelledby="reactivation-title"\]'\)/);
+  assert.match(admin, /z-\[10000\].*aria-labelledby="reactivation-title"/);
   assert.match(admin, /if \(reactivationOrder\) \{/);
   assert.match(admin, /if \(!isReactivatingOrder\) \{/);
   assert.match(admin, /setReactivationPassword\(''\)/);
