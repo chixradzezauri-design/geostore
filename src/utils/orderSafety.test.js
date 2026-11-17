@@ -10,6 +10,7 @@ import {
   isReusableCheckout,
   normalizeOrderItems,
   normalizeOrderTotal,
+  splitOrderRevenue,
   validateOrderCreationResponse,
   CHECKOUT_CATALOG_SELECT
 } from './orderSafety.js';
@@ -377,6 +378,14 @@ test('sums cart line prices in integer tetri without floating-point drift', () =
   ]), 20);
 });
 
+test('includes gift wrap and VIP warranty add-ons in coupon-eligible subtotal like server checkout', () => {
+  assert.equal(calculateCartSubtotalGEL([
+    { priceGEL: 40, quantity: 2, giftWrap: true, vipWarranty: true },
+    { priceGEL: 10, quantity: 1, gift_wrap: true, vip_warranty: false },
+    { priceGEL: 5, quantity: 3, giftWrap: false, vipWarranty: true }
+  ]), 195);
+});
+
 test('rounds subtotal and delivery to exact tetri before discount calculation', () => {
   assert.deepEqual(
     calculateCheckoutTotals({
@@ -467,4 +476,41 @@ test('rejects size/color inventory lines that exceed the selected combination st
     }]
   );
   assert.deepEqual(result.changes.map(change => change.type), ['stock']);
+});
+
+
+test('splits coupon-discounted product, paid add-on and delivery revenue proportionally', () => {
+  const result = splitOrderRevenue([
+    { price: 125, base_price: 100, addon_total: 25, quantity: 2 },
+    { price: 50, base_price: 50, addon_total: 0, quantity: 1 }
+  ], 250, 10);
+
+  assert.equal(result.productRevenue, 200);
+  assert.equal(result.addonRevenue, 40);
+  assert.equal(result.deliveryRevenue, 10);
+  assert.deepEqual(result.itemProductRevenue, [160, 40]);
+  assert.equal(
+    result.productRevenue + result.addonRevenue + result.deliveryRevenue,
+    250
+  );
+});
+
+test('keeps legacy order lines without add-on snapshots as product revenue', () => {
+  const result = splitOrderRevenue([
+    { price: 30, quantity: 2 }
+  ], 70, 10);
+
+  assert.equal(result.productRevenue, 60);
+  assert.equal(result.addonRevenue, 0);
+  assert.equal(result.deliveryRevenue, 10);
+});
+
+test('does not create product or add-on revenue when the entire item amount was discounted', () => {
+  const result = splitOrderRevenue([
+    { price: 120, base_price: 100, addon_total: 20, quantity: 1 }
+  ], 5, 5);
+
+  assert.equal(result.productRevenue, 0);
+  assert.equal(result.addonRevenue, 0);
+  assert.equal(result.deliveryRevenue, 5);
 });

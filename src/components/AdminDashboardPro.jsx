@@ -12,10 +12,13 @@ import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
 import { getLowStockInventory, groupLowStockInventory, resolveProductCreatedAt } from '../utils/productOrdering';
 import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, collectOrderProductIdsWithoutImageSnapshot } from '../utils/productImageCleanup';
-import { normalizeOrderItems, normalizeOrderTotal } from '../utils/orderSafety';
+import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { createSecureId } from '../utils/secureId.js';
+import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
+import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
+import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -148,18 +151,29 @@ const deleteProductImages = async (imageUrls, productId) => {
   try {
     // A product-owned Storage path can still be referenced by another product.
     // Read the lightweight image references first and fail closed if this check fails.
-    const referenceResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/products?select=id,image,gallery`,
-      { headers: await getSupabaseHeaders() }
-    );
-    if (!referenceResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
-    const productRows = await referenceResponse.json();
-    if (!Array.isArray(productRows)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+    // Paginate the complete catalogue: a default PostgREST response can be
+    // capped at 1,000 rows. A partial reference scan must never authorize deletion.
+    const productRows = [];
+    const pageSize = 1000;
+    for (let offset = 0; offset < 100000; offset += pageSize) {
+      const productHeaders = await getSupabaseHeaders();
+      productHeaders.Range = `${offset}-${offset + pageSize - 1}`;
+      productHeaders['Range-Unit'] = 'items';
+      const productResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/products?select=id,image,gallery&order=id.asc`,
+        { headers: productHeaders }
+      );
+      if (!productResponse.ok) throw new Error('პროდუქტის ფოტოების გამოყენების შემოწმება ვერ მოხერხდა.');
+      const page = await productResponse.json();
+      if (!Array.isArray(page)) throw new Error('პროდუქტის ფოტოების სია არასწორია.');
+      productRows.push(...page);
+      if (page.length < pageSize) break;
+      if (offset + pageSize >= 100000) throw new Error('პროდუქტების სრული სიის შემოწმება ვერ დასრულდა; ფოტოს წაშლა შეჩერდა.');
+    }
 
     // Historical order snapshots are independent references to their original
     // photos. Never remove a Storage object while any order still references it.
     const orderRows = [];
-    const pageSize = 1000;
     for (let offset = 0; offset < 100000; offset += pageSize) {
       const orderHeaders = await getSupabaseHeaders();
       orderHeaders.Range = `${offset}-${offset + pageSize - 1}`;
@@ -308,7 +322,7 @@ export default function AdminDashboardPro({
   deliveryFees,
   setDeliveryFees
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); 
+  const [adminTab, setAdminTab] = useState('command'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
@@ -320,6 +334,21 @@ export default function AdminDashboardPro({
   const [orderStatusFilter, setOrderStatusFilter] = useState('ყველა');
   const [orderPageByStatus, setOrderPageByStatus] = useState({});
   const [analyticsPeriod, setAnalyticsPeriod] = useState('all');
+  const [inventoryMovementRows, setInventoryMovementRows] = useState([]);
+  const [inventoryMovementLoading, setInventoryMovementLoading] = useState(false);
+  const [inventoryMovementError, setInventoryMovementError] = useState('');
+  const [inventoryMovementCursor, setInventoryMovementCursor] = useState(null);
+  const [inventoryMovementHasMore, setInventoryMovementHasMore] = useState(false);
+  const [inventoryMovementProductQuery, setInventoryMovementProductQuery] = useState('');
+  const [inventoryMovementProductFilter, setInventoryMovementProductFilter] = useState('');
+  const inventoryMovementRequestRef = useRef(0);
+  const [replenishmentSettings, setReplenishmentSettings] = useState([]);
+  const [replenishmentLoading, setReplenishmentLoading] = useState(false);
+  const [replenishmentError, setReplenishmentError] = useState('');
+  const [replenishmentQuery, setReplenishmentQuery] = useState('');
+  const [replenishmentDrafts, setReplenishmentDrafts] = useState({});
+  const [replenishmentSavingKey, setReplenishmentSavingKey] = useState('');
+  const replenishmentRequestRef = useRef(0);
   const ORDERS_PER_PAGE = 5;
   const PRODUCTS_PER_PAGE = 10;
 
@@ -331,6 +360,104 @@ export default function AdminDashboardPro({
   const [reactivationPassword, setReactivationPassword] = useState('');
   const [reactivationError, setReactivationError] = useState('');
   const [isReactivatingOrder, setIsReactivatingOrder] = useState(false);
+
+  const orderDetailDialogRef = useRef(null);
+  const orderDetailCloseButtonRef = useRef(null);
+  const orderDetailTriggerRef = useRef(null);
+  const orderDetailWasOpenRef = useRef(false);
+  const reactivationTriggerRef = useRef(null);
+  const reactivationDialogWasOpenRef = useRef(false);
+
+  // Keep keyboard focus inside the topmost order-related dialog and restore the
+  // exact order-row trigger when the order detail dialog closes.
+  useEffect(() => {
+    if (selectedOrderForModal && !orderDetailWasOpenRef.current) {
+      orderDetailWasOpenRef.current = true;
+      const frame = window.requestAnimationFrame(() => {
+        if (!reactivationOrder) orderDetailCloseButtonRef.current?.focus();
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    if (reactivationOrder) {
+      reactivationDialogWasOpenRef.current = true;
+    } else if (reactivationDialogWasOpenRef.current) {
+      reactivationDialogWasOpenRef.current = false;
+      const trigger = reactivationTriggerRef.current;
+      if (trigger?.isConnected) {
+        trigger.focus();
+      } else if (orderDetailCloseButtonRef.current?.isConnected) {
+        orderDetailCloseButtonRef.current.focus();
+      }
+    }
+
+    if (!selectedOrderForModal && orderDetailWasOpenRef.current) {
+      orderDetailWasOpenRef.current = false;
+      const trigger = orderDetailTriggerRef.current;
+      if (trigger?.isConnected) trigger.focus();
+    }
+  }, [selectedOrderForModal, reactivationOrder]);
+
+  useEffect(() => {
+    if (!selectedOrderForModal && !reactivationOrder) return undefined;
+
+    const handleOrderDialogKeyDown = (event) => {
+      const activeDialog = reactivationOrder
+        ? document.querySelector('[aria-labelledby="reactivation-title"]')
+        : orderDetailDialogRef.current;
+      if (!activeDialog) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (reactivationOrder) {
+          // The password confirmation is the topmost dialog. Never dismiss
+          // the underlying order details while reactivation is in progress.
+          if (!isReactivatingOrder) {
+            setReactivationOrder(null);
+            setReactivationPassword('');
+            setReactivationError('');
+          }
+          return;
+        }
+        setSelectedOrderForModal(null);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(activeDialog.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(element =>
+        !element.matches(':disabled') &&
+        element.getAttribute('aria-hidden') !== 'true' &&
+        !element.hasAttribute('hidden') &&
+        element.getClientRects().length > 0
+      );
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        activeDialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const current = document.activeElement;
+      if (!activeDialog.contains(current)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (current === first || current === activeDialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleOrderDialogKeyDown);
+    return () => document.removeEventListener('keydown', handleOrderDialogKeyDown);
+  }, [selectedOrderForModal, reactivationOrder, isReactivatingOrder]);
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserDiscount, setEditUserDiscount] = useState('');
@@ -386,6 +513,139 @@ export default function AdminDashboardPro({
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
+  const fetchInventoryReplenishmentSettings = async () => {
+    if (!adminLoggedIn) return;
+    const requestId = ++replenishmentRequestRef.current;
+    setReplenishmentLoading(true);
+    setReplenishmentError('');
+    try {
+      const headers = await getSupabaseHeaders();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_inventory_replenishment_settings`, {
+        method: 'POST', headers, body: JSON.stringify({ p_limit: 1000 })
+      });
+      if (requestId !== replenishmentRequestRef.current) return;
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (requestId !== replenishmentRequestRef.current) return;
+      setReplenishmentSettings(Array.isArray(result?.items) ? result.items : []);
+    } catch (error) {
+      if (requestId !== replenishmentRequestRef.current) return;
+      setReplenishmentError(error?.message || 'შევსების პარამეტრების ჩატვირთვა ვერ მოხერხდა.');
+    } finally {
+      if (requestId === replenishmentRequestRef.current) setReplenishmentLoading(false);
+    }
+  };
+
+  const saveInventoryReplenishmentSetting = async (position) => {
+    const draft = replenishmentDrafts[position.key] || {};
+    const threshold = Number(draft.threshold ?? position.threshold);
+    const target = Number(draft.target ?? position.target);
+    if (!Number.isSafeInteger(threshold) || threshold < 0 ||
+        !Number.isSafeInteger(target) || target <= threshold || target > 1000000) {
+      setReplenishmentError('სამიზნე მარაგი უნდა აღემატებოდეს დაბალი მარაგის ზღვარს.');
+      return;
+    }
+    setReplenishmentSavingKey(position.key);
+    setReplenishmentError('');
+    try {
+      const headers = await getSupabaseHeaders();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_inventory_replenishment_setting`, {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          p_product_id: position.productId,
+          p_variant_id: position.variantId,
+          p_low_stock_threshold: threshold,
+          p_target_stock: target
+        })
+      });
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      await fetchInventoryReplenishmentSettings();
+      setReplenishmentDrafts(current => {
+        const next = { ...current };
+        delete next[position.key];
+        return next;
+      });
+    } catch (error) {
+      setReplenishmentError(error?.message || 'შევსების პარამეტრების შენახვა ვერ მოხერხდა.');
+    } finally {
+      setReplenishmentSavingKey('');
+    }
+  };
+
+  const fetchInventoryMovements = async (beforeId = null, append = false) => {
+    if (!adminLoggedIn) return;
+    const requestId = ++inventoryMovementRequestRef.current;
+    setInventoryMovementLoading(true);
+    if (!append) setInventoryMovementError('');
+    try {
+      const headers = await getSupabaseHeaders();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_inventory_movements`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          p_product_id: inventoryMovementProductFilter || null,
+          p_before_id: beforeId,
+          p_limit: 50
+        })
+      });
+      if (requestId !== inventoryMovementRequestRef.current) return;
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '');
+        throw new Error(detail || `HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (requestId !== inventoryMovementRequestRef.current) return;
+      const rows = Array.isArray(result?.items) ? result.items : [];
+      setInventoryMovementRows(current => append
+        ? [...current, ...rows.filter(row => !current.some(existing => String(existing.id) === String(row.id)))]
+        : rows
+      );
+      setInventoryMovementCursor(result?.next_cursor ?? null);
+      setInventoryMovementHasMore(result?.has_more === true);
+      setInventoryMovementError('');
+    } catch (error) {
+      if (requestId !== inventoryMovementRequestRef.current) return;
+      setInventoryMovementError(error?.message || 'მარაგის ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+    } finally {
+      if (requestId === inventoryMovementRequestRef.current) setInventoryMovementLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      inventoryMovementRequestRef.current += 1;
+      setInventoryMovementRows([]);
+      setInventoryMovementCursor(null);
+      setInventoryMovementHasMore(false);
+      setInventoryMovementError('');
+      return undefined;
+    }
+    if (adminTab !== 'inventory') {
+      inventoryMovementRequestRef.current += 1;
+      return undefined;
+    }
+    void fetchInventoryMovements(null, false);
+    return () => { inventoryMovementRequestRef.current += 1; };
+  }, [adminLoggedIn, adminTab, inventoryMovementProductFilter]);
+
+  useEffect(() => {
+    if (!adminLoggedIn) {
+      replenishmentRequestRef.current += 1;
+      setReplenishmentSettings([]);
+      setReplenishmentError('');
+      setReplenishmentDrafts({});
+      return undefined;
+    }
+    void fetchInventoryReplenishmentSettings();
+    return () => { replenishmentRequestRef.current += 1; };
+  }, [adminLoggedIn]);
+
   useEffect(() => {
     try {
       localStorage.setItem('geostore_staff_list', JSON.stringify(staffList));
@@ -394,11 +654,34 @@ export default function AdminDashboardPro({
 
   const fetchExpenses = async () => {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
-      setExpenses(data);
+      // PostgREST commonly caps one response at 1,000 rows. Fetch the complete
+      // expense ledger in stable pages so older expenses are not silently
+      // omitted from financial-period totals or CSV exports.
+      const allExpenses = [];
+      const pageSize = 1000;
+      let completed = false;
+      for (let offset = 0; offset < 100000; offset += pageSize) {
+        const headers = await getSupabaseHeaders();
+        headers.Range = `${offset}-${offset + pageSize - 1}`;
+        headers['Range-Unit'] = 'items';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc,id.desc`,
+          { headers }
+        );
+        if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
+        const page = await res.json();
+        if (!Array.isArray(page)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
+        allExpenses.push(...page);
+        if (page.length < pageSize) {
+          completed = true;
+          break;
+        }
+        if (offset + pageSize >= 100000) {
+          throw new Error('ხარჯების სრული ისტორიის შემოწმება ვერ დასრულდა; ნაჩვენებია ბოლო წარმატებული სია.');
+        }
+      }
+      if (!completed) throw new Error('ხარჯების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      setExpenses(allExpenses);
       setExpensesError('');
       return true;
     } catch (error) {
@@ -636,7 +919,8 @@ export default function AdminDashboardPro({
     const endTimes = activeProducts.map(product => Date.parse(product.flashSaleEndsAt));
     return {
       count: activeProducts.length,
-      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null
+      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null,
+      expiringCount: endTimes.filter(endTime => endTime - now <= 24 * 60 * 60 * 1000).length
     };
   }, [products, flashSaleStatusClock]);
 
@@ -653,26 +937,69 @@ export default function AdminDashboardPro({
   const [supportTicketThreadErrors, setSupportTicketThreadErrors] = useState({});
   const [legacyMessages, setLegacyMessages] = useState([]);
   const [legacyMessagesError, setLegacyMessagesError] = useState('');
+  const [legacyMessagesHasMore, setLegacyMessagesHasMore] = useState(false);
+  const [legacyMessagesLoadingMore, setLegacyMessagesLoadingMore] = useState(false);
+  const legacyMessagesCursorRef = useRef(null);
+  const legacyMessagesLoadedMoreRef = useRef(false);
+  const legacyMessagesFetchInFlightRef = useRef(false);
+  const legacyMessagesRefreshPendingRef = useRef(false);
+  const legacyMessagesSessionRef = useRef(0);
   const [replyInputs, setReplyInputs] = useState({});
   const [replySending, setReplySending] = useState({});
   const supportReplyInFlight = useRef(new Set());
   const supportReplyRequestIds = useRef({});
   const supportThreadFetchInFlight = useRef(new Set());
   const supportThreadRefreshPending = useRef(new Set());
+  const supportThreadSessionRef = useRef(0);
+  const supportTicketListRequestRef = useRef(0);
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
+    if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;
+    const requestId = ++supportTicketListRequestRef.current;
+    const isCurrentRequest = () => (
+      sessionId === supportThreadSessionRef.current
+      && requestId === supportTicketListRequestRef.current
+    );
+
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc`, { headers: await getSupabaseHeaders() });
-      if (!res.ok) {
-        const detail = await res.text().catch(() => '');
-        throw new Error(detail || `HTTP ${res.status}`);
+      // PostgREST may cap a response at 1,000 rows. Read the complete ticket
+      // history in stable pages so older open/unread tickets remain visible.
+      const allTickets = [];
+      const pageSize = 1000;
+      let completed = false;
+      for (let offset = 0; offset < 100000; offset += pageSize) {
+        const headers = await getSupabaseHeaders();
+        if (!isCurrentRequest()) return;
+        headers.Range = `${offset}-${offset + pageSize - 1}`;
+        headers['Range-Unit'] = 'items';
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc,id.asc`,
+          { headers }
+        );
+        if (!isCurrentRequest()) return;
+        if (!res.ok) {
+          const detail = await res.text().catch(() => '');
+          if (!isCurrentRequest()) return;
+          throw new Error(detail || `HTTP ${res.status}`);
+        }
+        const page = await res.json();
+        if (!isCurrentRequest()) return;
+        if (!Array.isArray(page)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
+        allTickets.push(...page);
+        if (page.length < pageSize) {
+          completed = true;
+          break;
+        }
+        if (offset + pageSize >= 100000) {
+          throw new Error('მხარდაჭერის ტიკეტების სრული ისტორიის შემოწმება ვერ დასრულდა; ბოლო წარმატებული სია შენარჩუნებულია.');
+        }
       }
-      const data = await res.json();
-      if (!Array.isArray(data)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
-      setSupportTickets(data.map(t => ({
+      if (!completed) throw new Error('მხარდაჭერის ტიკეტების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      if (!isCurrentRequest()) return;
+      setSupportTickets(allTickets.map(t => ({
         id: t.id,
         customerName: t.customer_name,
         email: t.email,
@@ -680,18 +1007,21 @@ export default function AdminDashboardPro({
         message: t.message,
         status: t.status || 'ღია',
         reply: t.reply || '',
-        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+      createdAt: t.created_at || null
       })));
       setSupportTicketsError('');
     } catch (error) {
       console.error('GEOSTORE support tickets fetch failed:', error);
-      setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+      if (isCurrentRequest()) {
+        setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+      }
     }
   };
 
-  const fetchSupportTicketThread = async (ticketId) => {
+  const fetchSupportTicketThread = async (ticketId, sessionId = supportThreadSessionRef.current) => {
     const normalizedTicketId = String(ticketId || '').trim();
-    if (!normalizedTicketId) return;
+    if (!normalizedTicketId || sessionId !== supportThreadSessionRef.current) return;
     if (supportThreadFetchInFlight.current.has(normalizedTicketId)) {
       supportThreadRefreshPending.current.add(normalizedTicketId);
       return;
@@ -709,6 +1039,7 @@ export default function AdminDashboardPro({
         throw new Error(detail || ('HTTP ' + response.status));
       }
       const rows = await response.json();
+      if (sessionId !== supportThreadSessionRef.current) return;
       if (!Array.isArray(rows)) throw new Error('მიმოწერის პასუხის ფორმატი არასწორია.');
       const uniqueRows = [...new Map(rows.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
       uniqueRows.sort((a, b) => {
@@ -716,11 +1047,36 @@ export default function AdminDashboardPro({
         const bTime = Date.parse(b.created_at || '') || 0;
         return aTime - bTime || String(a.id).localeCompare(String(b.id));
       });
+      if (sessionId !== supportThreadSessionRef.current) return;
       setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: uniqueRows }));
+
+      // Mark customer messages as read only while this administrator has the
+      // matching conversation open and the page is visible. A receipt failure
+      // must never hide the already-loaded conversation.
+      if (adminLoggedIn
+        && String(selectedSupportTicketId || '') === normalizedTicketId
+        && document.visibilityState === 'visible') {
+        try {
+          const readResponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/mark_support_ticket_messages_read', {
+            method: 'POST',
+            headers: await getSupabaseHeaders(),
+            body: JSON.stringify({ p_ticket_id: normalizedTicketId, p_access_token: null })
+          });
+          if (!readResponse.ok) {
+            const detail = await readResponse.text().catch(() => '');
+            throw new Error(detail || ('HTTP ' + readResponse.status));
+          }
+        } catch (readError) {
+          console.warn('GEOSTORE admin support read receipt failed:', readError);
+        }
+      }
     } catch (error) {
-      console.error('GEOSTORE support ticket thread fetch failed:', error);
-      setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
+      if (sessionId === supportThreadSessionRef.current) {
+        console.error('GEOSTORE support ticket thread fetch failed:', error);
+        setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
+      }
     } finally {
+      if (sessionId !== supportThreadSessionRef.current) return;
       supportThreadFetchInFlight.current.delete(normalizedTicketId);
       setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
       if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
@@ -732,6 +1088,17 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    supportThreadSessionRef.current += 1;
+    supportTicketListRequestRef.current += 1;
+    supportThreadFetchInFlight.current.clear();
+    supportThreadRefreshPending.current.clear();
+    // Release UI locks from the previous login, but retain idempotency keys:
+    // an uncertain network result must be safely retryable in the next session.
+    supportReplyInFlight.current.clear();
+    setReplySending({});
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
     if (!adminLoggedIn) {
       setSelectedSupportTicketId(null);
       setSupportTicketThreads({});
@@ -739,26 +1106,25 @@ export default function AdminDashboardPro({
       supportThreadRefreshPending.current.clear();
       return undefined;
     }
+    let active = true;
     const channel = supabase
-      .channel('geostore-admin-support-ticket-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_messages' }, payload => {
-        const changedTicketId = payload?.new?.ticket_ref || payload?.old?.ticket_ref;
-        fetchTickets();
-        if (changedTicketId && String(changedTicketId) === String(selectedSupportTicketId)) fetchSupportTicketThread(changedTicketId);
-      })
+      .channel('geostore-support-admin', { config: { private: true } })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
-        // Ticket status and assignment changes should appear without waiting
-        // for the 15-second recovery poll. Fetch through the existing REST/RLS path.
+        if (!active) return;
+        // Keep the existing status-change signal; the recovery poll remains active.
         void fetchTickets();
       })
       .subscribe(status => {
-        // A new SUBSCRIBED status is also emitted after websocket recovery.
-        if (status === 'SUBSCRIBED' && adminLoggedIn) {
+        // Reconnects trigger a fresh protected snapshot, never trust event data.
+        if (active && status === 'SUBSCRIBED' && adminLoggedIn) {
           void fetchTickets();
           if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
         }
       });
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
   }, [adminLoggedIn, selectedSupportTicketId]);
 
   useEffect(() => {
@@ -779,35 +1145,80 @@ export default function AdminDashboardPro({
     };
   }, [adminLoggedIn, selectedSupportTicketId]);
 
-  const fetchLegacyMessages = async () => {
+  const fetchLegacyMessages = async ({ loadMore = false, sessionId = legacyMessagesSessionRef.current } = {}) => {
+    if (sessionId !== legacyMessagesSessionRef.current) return;
+    if (legacyMessagesFetchInFlightRef.current) {
+      if (!loadMore) legacyMessagesRefreshPendingRef.current = true;
+      return;
+    }
+    const cursor = loadMore ? legacyMessagesCursorRef.current : null;
+    if (loadMore && !cursor) return;
+    legacyMessagesFetchInFlightRef.current = true;
+    if (loadMore) setLegacyMessagesLoadingMore(true);
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/messages?select=id,created_at,client_name,sender,text,image,time&order=created_at.desc&limit=100`,
-        { headers: await getSupabaseHeaders() }
-      );
+      const response = await fetch(buildLegacyMessagesPageUrl(SUPABASE_URL, cursor, 100), {
+        headers: await getSupabaseHeaders()
+      });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         throw new Error(detail || `HTTP ${response.status}`);
       }
       const rows = await response.json();
       if (!Array.isArray(rows)) throw new Error('მიმოწერების მონაცემების ფორმატი არასწორია.');
-      setLegacyMessages(rows);
+      const nextCursor = getLegacyMessageCursor(rows);
+      if (rows.length === 100 && !nextCursor) throw new Error('მიმოწერის ისტორიის შემდეგი გვერდის კურსორი ვერ დადასტურდა.');
+      if (sessionId !== legacyMessagesSessionRef.current) return;
+      if (loadMore) {
+        setLegacyMessages(previous => mergeLegacyMessagePages(previous, rows));
+        legacyMessagesLoadedMoreRef.current = true;
+        legacyMessagesCursorRef.current = nextCursor;
+        setLegacyMessagesHasMore(Boolean(nextCursor));
+      } else if (legacyMessagesLoadedMoreRef.current) {
+        setLegacyMessages(previous => mergeLegacyMessagePages(previous, rows));
+      } else {
+        setLegacyMessages(rows);
+        legacyMessagesCursorRef.current = nextCursor;
+        setLegacyMessagesHasMore(Boolean(nextCursor));
+      }
       setLegacyMessagesError('');
     } catch (error) {
-      console.error('GEOSTORE legacy messages fetch failed:', error);
-      setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
+      if (sessionId === legacyMessagesSessionRef.current) {
+        console.error('GEOSTORE legacy messages fetch failed:', error);
+        setLegacyMessagesError(error?.message || 'მიმოწერების ჩატვირთვა ვერ მოხერხდა.');
+      }
+    } finally {
+      legacyMessagesFetchInFlightRef.current = false;
+      if (sessionId === legacyMessagesSessionRef.current) {
+        if (loadMore) setLegacyMessagesLoadingMore(false);
+        if (legacyMessagesRefreshPendingRef.current) {
+          legacyMessagesRefreshPendingRef.current = false;
+          void Promise.resolve().then(() => fetchLegacyMessages({ sessionId }));
+        }
+      }
     }
   };
 
   useEffect(() => {
+    legacyMessagesSessionRef.current += 1;
+    const sessionId = legacyMessagesSessionRef.current;
     if (!adminLoggedIn) {
       setLegacyMessages([]);
       setLegacyMessagesError('');
-      return undefined;
+      setLegacyMessagesHasMore(false);
+      setLegacyMessagesLoadingMore(false);
+      legacyMessagesCursorRef.current = null;
+      legacyMessagesLoadedMoreRef.current = false;
+      legacyMessagesRefreshPendingRef.current = false;
+      return () => {
+        if (legacyMessagesSessionRef.current === sessionId) legacyMessagesSessionRef.current += 1;
+      };
     }
-    fetchLegacyMessages();
-    const interval = setInterval(fetchLegacyMessages, 15000);
-    return () => clearInterval(interval);
+    void fetchLegacyMessages({ sessionId });
+    const interval = setInterval(() => { void fetchLegacyMessages({ sessionId }); }, 15000);
+    return () => {
+      clearInterval(interval);
+      if (legacyMessagesSessionRef.current === sessionId) legacyMessagesSessionRef.current += 1;
+    };
   }, [adminLoggedIn]);
 
   useEffect(() => {
@@ -1064,6 +1475,11 @@ export default function AdminDashboardPro({
       return inPeriod(reportingDate);
     });
     const deliveredOrders = periodOrders.filter(order => !isCancelled(order) && isDelivered(order));
+    const cancelledOrders = periodOrders.filter(isCancelled);
+    const cancelledOrderValue = cancelledOrders.reduce(
+      (sum, order) => sum + normalizeOrderTotal(order.totalGEL ?? order.total_gel),
+      0
+    );
     const pipelineOrders = periodOrders.filter(order => !isCancelled(order) && !isDelivered(order));
     // Legacy rows may predate status/stock audit columns. Keep them in sales
     // history, but expose the missing audit metadata instead of implying it exists.
@@ -1079,6 +1495,7 @@ export default function AdminDashboardPro({
     let totalSalesRevenue = 0;
     let totalDeliveryRevenue = 0;
     let totalProductRevenue = 0;
+    let totalAddonRevenue = 0;
     let totalCogs = 0;
     let estimatedCogsItems = 0;
     let unknownCogsItems = 0;
@@ -1093,12 +1510,12 @@ export default function AdminDashboardPro({
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
       const items = rawItems.filter(item => item && typeof item === 'object' && !Array.isArray(item));
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
-      const lineGross = items.reduce((sum, item) => sum + (Math.max(0, Number(item.priceGEL ?? item.price) || 0) * Math.max(1, Number(item.quantity) || 1)), 0);
       const deliveryMatch = String(order.address || '').match(/მიწოდება:\s*([\d.,]+)\s*₾/i);
       const deliveryCharge = deliveryMatch ? Math.max(0, Number(deliveryMatch[1].replace(',', '.')) || 0) : 0;
-      const productNetRevenue = Math.max(0, orderTotal - deliveryCharge);
-      totalDeliveryRevenue += Math.min(orderTotal, deliveryCharge);
-      totalProductRevenue += productNetRevenue;
+      const revenueSplit = splitOrderRevenue(items, orderTotal, deliveryCharge);
+      totalDeliveryRevenue += revenueSplit.deliveryRevenue;
+      totalProductRevenue += revenueSplit.productRevenue;
+      totalAddonRevenue += revenueSplit.addonRevenue;
 
       if (!items.length) {
         const label = 'ძველი შეკვეთა — პროდუქტის დეტალები არ არის';
@@ -1107,12 +1524,11 @@ export default function AdminDashboardPro({
         return;
       }
 
-      items.forEach(item => {
+      items.forEach((item, itemIndex) => {
         const productId = item.id ?? item.product_id;
         const product = productId === null || productId === undefined ? undefined : productById.get(String(productId));
         const quantity = Math.max(1, Number(item.quantity) || 1);
-        const itemGross = Math.max(0, Number(item.priceGEL ?? item.price) || 0) * quantity;
-        const allocatedRevenue = lineGross > 0 ? productNetRevenue * (itemGross / lineGross) : 0;
+        const allocatedRevenue = revenueSplit.itemProductRevenue[itemIndex] || 0;
         const vendor = item.vendor || product?.vendor || 'ვენდორი უცნობია';
         const category = item.category || product?.category || 'კატეგორია უცნობია';
         const label = `${vendor} · ${category}`;
@@ -1155,7 +1571,12 @@ export default function AdminDashboardPro({
         if (isEstimatedCost) vendorEntry.estimatedCostItems += quantity;
         vendorProfitTotals.set(vendor, vendorEntry);
       });
-      if (deliveryCharge > 0) incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + Math.min(orderTotal, deliveryCharge));
+      if (revenueSplit.addonRevenue > 0) {
+        incomeTotals.set('დამატებითი მომსახურებები', (incomeTotals.get('დამატებითი მომსახურებები') || 0) + revenueSplit.addonRevenue);
+      }
+      if (revenueSplit.deliveryRevenue > 0) {
+        incomeTotals.set('მიწოდების საფასური', (incomeTotals.get('მიწოდების საფასური') || 0) + revenueSplit.deliveryRevenue);
+      }
     });
 
     const trendBuckets = new Map();
@@ -1179,8 +1600,8 @@ export default function AdminDashboardPro({
       .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue).slice(0, 5);
     const lowStockProducts = getLowStockInventory(products, 5);
     const totalExpenses = periodExpenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-    // Gross profit is product revenue less product cost. Delivery fees are
-    // tracked separately and added to net operating result, not product margin.
+    // Add-on revenue is disclosed separately but excluded from profit until
+    // its fulfilment costs can be recorded. Delivery is tracked separately.
     const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 ? totalProductRevenue - totalCogs : null;
     const netProfit = grossProfit === null ? null : grossProfit + totalDeliveryRevenue - totalExpenses;
     const expenseTotals = new Map();
@@ -1193,9 +1614,9 @@ export default function AdminDashboardPro({
     });
 
     return {
-      periodOrders, deliveredOrders, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
+      periodOrders, deliveredOrders, cancelledOrders, cancelledOrderValue, pipelineOrders, periodExpenses, salesTrend, bestSellingProducts, lowStockProducts,
       deliveredOrdersMissingStatusDate, deliveredOrdersWithoutStockTracking,
-      totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue,
+      totalSalesRevenue, totalDeliveryRevenue, totalProductRevenue, totalAddonRevenue,
       totalExpenses, totalCogs, grossProfit, netProfit,
       estimatedCogsItems, unknownCogsItems,
       averageOrderValue: deliveredOrders.length ? totalSalesRevenue / deliveredOrders.length : 0,
@@ -1247,8 +1668,11 @@ export default function AdminDashboardPro({
       ['მაჩვენებელი', 'თანხა (GEL)'],
       [
         ['ჩაბარებული შეკვეთები', financialOverview.deliveredOrders.length],
+        ['გაუქმებული შეკვეთები', financialOverview.cancelledOrders.length],
+        ['გაუქმებული შეკვეთების ნომინალური ღირებულება (არ არის დაბრუნების თანხა)', financialOverview.cancelledOrderValue.toFixed(2)],
         ['ბრუნვა', financialOverview.totalSalesRevenue.toFixed(2)],
         ['პროდუქტის შემოსავალი', financialOverview.totalProductRevenue.toFixed(2)],
+        ['დამატებითი მომსახურებების შემოსავალი (მოგებაში არ არის ჩათვლილი)', financialOverview.totalAddonRevenue.toFixed(2)],
         ['მიწოდების შემოსავალი', financialOverview.totalDeliveryRevenue.toFixed(2)],
         ['თვითღირებულება', financialOverview.unknownCogsItems ? 'უცნობია/არასრულია' : financialOverview.estimatedCogsItems ? 'შეფასებულია' : financialOverview.totalCogs.toFixed(2)],
         ['მიმდინარე პროდუქტის ფასით შეფასებული ერთეულები', financialOverview.estimatedCogsItems],
@@ -1279,8 +1703,10 @@ export default function AdminDashboardPro({
     setTimeout(() => {
       let answer = `🤖 არჩეულ პერიოდში ჩაბარებულია ${financialOverview.deliveredOrders.length} შეკვეთა. რეალიზებული ბრუნვა: ${financialOverview.totalSalesRevenue.toFixed(2)} ₾. წმინდა მოგება: ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}.`;
       const qLower = userQuestion.toLowerCase();
-      if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
+      if (qLower.includes('მომსახურ') || qLower.includes('შეფუთვა') || qLower.includes('დაზღვევა')) answer = `✨ დამატებითი მომსახურებების შემოსავალია ${financialOverview.totalAddonRevenue.toFixed(2)} ₾. ეს თანხა ცალკეა ნაჩვენები და მოგებაში არ შედის, რადგან მომსახურების თვითღირებულება ჯერ არ აღირიცხება.`;
+      else if (qLower.includes('შემოსავალი')) answer = `📊 ჩაბარებული შეკვეთების რეალიზებული შემოსავალია ${financialOverview.totalSalesRevenue.toFixed(2)} ₾.`;
       else if (qLower.includes('მოგება')) answer = `💰 წმინდა მოგება არის ${financialOverview.netProfit === null ? 'ვერ განისაზღვრება — ისტორიული თვითღირებულება აკლია ან შეფასებულია' : financialOverview.netProfit.toFixed(2) + ' ₾'}${financialOverview.estimatedCogsItems > 0 ? '. შენიშვნა: ნაწილის თვითღირებულება მიმდინარე პროდუქტის ფასითაა შეფასებული და არა შეკვეთის ისტორიული ჩანაწერით' : ''}.`;
+      else if (qLower.includes('გაუქმ')) answer = `🛑 გაუქმებულია ${financialOverview.cancelledOrders.length} შეკვეთა, ნომინალური ღირებულებით ${financialOverview.cancelledOrderValue.toFixed(2)} ₾. ეს თანხა არ ითვლება გაყიდვად ან დადასტურებულ დაბრუნებად.`;
       else if (qLower.includes('ხარჯი')) answer = `📉 არჩეულ პერიოდში აღრიცხული ხარჯებია ${financialOverview.totalExpenses.toFixed(2)} ₾.`;
 
       setAiChatLogs(prev => [...prev, { role: 'assistant', text: answer }]);
@@ -1628,6 +2054,10 @@ export default function AdminDashboardPro({
     if (field === 'stock' && (!Number.isSafeInteger(val) || val > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
     const currentOldPrice = Number(current.oldPriceGEL ?? current.old_price_gel ?? 0);
     if (field === 'priceGEL' && currentOldPrice > 0 && currentOldPrice <= val) return alert('ჯერ გაასუფთავეთ ან გაზარდეთ ძველი ფასი, შემდეგ შეცვალეთ მიმდინარე ფასი.');
+    const activeFlashSaleEnd = Date.parse(current.flashSaleEndsAt ?? current.flash_sale_ends_at ?? '');
+    if (field === 'priceGEL' && Number.isFinite(activeFlashSaleEnd) && activeFlashSaleEnd > Date.now()) {
+      return alert('პროდუქტზე მოქმედებს ფლეშ-აქცია. ფასის სწრაფი შეცვლა შესაძლებელი იქნება აქციის დასრულების შემდეგ, რათა ავტომატურმა აღდგენამ ახალი ფასი არ გადაფაროს.');
+    }
     const currentValue = current[column] ?? current[field];
     const compareFilter = currentValue == null ? column + '=is.null' : column + '=eq.' + encodeURIComponent(String(currentValue));
     try {
@@ -1781,6 +2211,25 @@ export default function AdminDashboardPro({
     const originalPrice = productForm.oldPriceGEL === '' ? 0 : Number(productForm.oldPriceGEL);
     if (!Number.isFinite(originalPrice) || originalPrice < 0 || originalPrice > 1000000000 || (productForm.oldPriceGEL !== '' && !/^\d+(?:\.\d{1,2})?$/.test(String(productForm.oldPriceGEL).trim()))) return alert('ძველი ფასი უნდა იყოს 0-დან 1,000,000,000-მდე და მაქსიმუმ 2 ათწილადი ნიშნით.');
     if (originalPrice > 0 && originalPrice <= priceValue) return alert('ძველი ფასი მიმდინარე ფასზე მეტი უნდა იყოს. თუ ფასდაკლება არ მოქმედებს, ძველი ფასი გაასუფთავეთ.');
+    const editingProductForPriceGuard = editingProductId
+      ? (products || []).find(product => String(product.id) === String(editingProductId))
+      : null;
+    const activeFlashSaleEnd = Date.parse(
+      editingProductForPriceGuard?.flashSaleEndsAt ??
+      editingProductForPriceGuard?.flash_sale_ends_at ??
+      ''
+    );
+    if (
+      editingProductForPriceGuard &&
+      Number.isFinite(activeFlashSaleEnd) &&
+      activeFlashSaleEnd > Date.now() &&
+      (
+        priceValue !== Number(editingProductForPriceGuard.priceGEL ?? editingProductForPriceGuard.price_gel) ||
+        originalPrice !== Number(editingProductForPriceGuard.oldPriceGEL ?? editingProductForPriceGuard.old_price_gel ?? 0)
+      )
+    ) {
+      return alert('პროდუქტზე მოქმედებს ფლეშ-აქცია. მიმდინარე ან ძველი ფასის შეცვლა შესაძლებელი იქნება აქციის დასრულების შემდეგ, რათა ავტომატურმა აღდგენამ ახალი ფასი არ გადაფაროს.');
+    }
     if (productForm.stock !== '' && (!/^\d+$/.test(String(productForm.stock).trim()) || !Number.isSafeInteger(Number(productForm.stock)) || Number(productForm.stock) > 1000000)) return alert('მარაგი უნდა იყოს მთელი რიცხვი 0-დან 1,000,000-მდე.');
 
     const tagsArray = productForm.tags ? productForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
@@ -2246,8 +2695,22 @@ export default function AdminDashboardPro({
           <title>ინვოისი #${escapeHtml(order.id)}</title>
           <style>
             body { font-family: 'Noto Sans Georgian', sans-serif; padding: 30px; color: #111; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
+            .header { display: flex; justify-content: space-between; gap: 20px; border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 20px; }
             .store-name { font-size: 24px; font-weight: 900; color: #059669; }
+            @media screen and (max-width: 640px) {
+              body { padding: 12px; }
+              .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+              .header > div:last-child { text-align: left !important; }
+              table { display: block; width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+              th, td { white-space: nowrap; padding: 8px; font-size: 12px; }
+              .totals-breakdown { width: 100%; max-width: 100%; }
+              .total { font-size: 16px; }
+            }
+            @media print {
+              body { padding: 12mm; }
+              table { display: table; width: 100%; overflow: visible; }
+              th, td { white-space: normal; }
+            }
             .order-info { margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
@@ -2327,8 +2790,10 @@ export default function AdminDashboardPro({
     const replyText = String(replyInputs[ticketId] || '').trim();
     if (!replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId)) return;
 
+    const replySessionId = supportThreadSessionRef.current;
     supportReplyInFlight.current.add(normalizedTicketId);
     setReplySending(prev => ({ ...prev, [normalizedTicketId]: true }));
+    let requestId = null;
     try {
       const pendingRequest = supportReplyRequestIds.current[normalizedTicketId];
       if (!pendingRequest || pendingRequest.message !== replyText) {
@@ -2340,31 +2805,48 @@ export default function AdminDashboardPro({
           message: replyText
         };
       }
+      requestId = supportReplyRequestIds.current[normalizedTicketId].id;
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message_idempotent', {
         method: 'POST', headers: await getSupabaseHeaders(),
         body: JSON.stringify({
           p_ticket_id: normalizedTicketId,
           p_message: replyText,
           p_access_token: null,
-          p_request_id: supportReplyRequestIds.current[normalizedTicketId].id
+          p_request_id: requestId
         })
       });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       }
+
+      // The RPC confirmed persistence. Clear only the exact key used by this
+      // request; a newer session may already have installed a different key.
+      if (supportReplyRequestIds.current[normalizedTicketId]?.id === requestId) {
+        delete supportReplyRequestIds.current[normalizedTicketId];
+      }
+      if (replySessionId !== supportThreadSessionRef.current) return;
+
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
-      delete supportReplyRequestIds.current[normalizedTicketId];
       setSelectedSupportTicketId(normalizedTicketId);
-      await Promise.allSettled([fetchTickets(), fetchSupportTicketThread(normalizedTicketId)]);
+      await Promise.allSettled([
+        fetchTickets(replySessionId),
+        fetchSupportTicketThread(normalizedTicketId, replySessionId)
+      ]);
+      if (replySessionId !== supportThreadSessionRef.current) return;
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${normalizedTicketId}`);
       alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის მიმოწერაში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
     } catch (error) {
-      console.error('GEOSTORE support ticket reply failed:', error);
-      alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+      if (replySessionId === supportThreadSessionRef.current) {
+        console.error('GEOSTORE support ticket reply failed:', error);
+        alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+      }
     } finally {
-      supportReplyInFlight.current.delete(normalizedTicketId);
-      setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
+      // A stale request must never release a lock owned by a newer session.
+      if (replySessionId === supportThreadSessionRef.current) {
+        supportReplyInFlight.current.delete(normalizedTicketId);
+        setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
+      }
     }
   };
 
@@ -2480,14 +2962,11 @@ export default function AdminDashboardPro({
   };
 
   const handleSaveDeliveryFees = async () => {
-    const rows = [
-      { region: 'tbilisi', fee_gel: Number(deliveryFees?.tbilisi) },
-      { region: 'bigCities', fee_gel: Number(deliveryFees?.bigCities) },
-      { region: 'other', fee_gel: Number(deliveryFees?.other) }
-    ];
-
-    if (rows.some(row => !Number.isFinite(row.fee_gel) || row.fee_gel < 0)) {
-      alert('მიწოდების საფასური უნდა იყოს 0 ან მეტი.');
+    let rows;
+    try {
+      rows = parseDeliveryFeeDrafts(deliveryFees);
+    } catch (error) {
+      alert(error?.message || 'მიწოდების ტარიფები არასწორია.');
       return;
     }
 
@@ -2651,6 +3130,7 @@ export default function AdminDashboardPro({
       return;
     }
     if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
+      reactivationTriggerRef.current = document.activeElement;
       setReactivationOrder(existingOrder);
       setReactivationPassword('');
       setReactivationError('');
@@ -3006,6 +3486,47 @@ export default function AdminDashboardPro({
   const isLaptop = catLower.includes('ლეპტოპ') || catLower.includes('კომპიუტერ');
   const isPhone = catLower.includes('სმარტფონ') || catLower.includes('ტელეფონ');
 
+  const replenishmentPositions = buildInventoryReplenishmentPlan(products, replenishmentSettings);
+  const filteredReplenishmentPositions = filterInventoryReplenishmentPlan(replenishmentPositions, replenishmentQuery);
+
+  // Command Center uses only the data already loaded by the existing admin workflows.
+  // It is a read-only operational overview: no stock, order or ticket state is mutated here.
+  const commandCenterPendingOrders = (Array.isArray(orders) ? orders : [])
+    .filter(order => ['ახალი', 'მუშავდება'].includes(getOrderStatusFilterKey(order?.status)))
+    .sort((left, right) => {
+      const leftTime = Date.parse(left?.created_at || left?.createdAt || '') || 0;
+      const rightTime = Date.parse(right?.created_at || right?.createdAt || '') || 0;
+      return rightTime - leftTime || String(right?.id ?? '').localeCompare(String(left?.id ?? ''));
+    });
+  const commandCenterNewOrders = commandCenterPendingOrders.filter(order => getOrderStatusFilterKey(order?.status) === 'ახალი');
+  const commandCenterOpenTickets = (Array.isArray(supportTickets) ? supportTickets : [])
+    .filter(ticket => ['ღია', 'მუშავდება', 'open', 'in progress', 'pending', 'new'].includes(normalizeOrderStatus(ticket?.status)));
+  const commandCenterOverdueTickets = commandCenterOpenTickets.filter(ticket => {
+    const createdAt = Date.parse(ticket?.createdAt || '');
+    return Number.isFinite(createdAt) && flashSaleStatusClock - createdAt >= 24 * 60 * 60 * 1000;
+  });
+  const commandCenterLowStockGroups = Array.isArray(lowStockGroups) ? lowStockGroups : [];
+  const commandCenterRecentEvents = [
+    ...(Array.isArray(orders) ? orders : []).map(order => ({
+      id: `order-${order?.id ?? ''}`,
+      title: `შეკვეთა #${order?.id ?? '—'}`,
+      detail: order?.customerName || order?.user_email || 'მომხმარებელი',
+      timestamp: Date.parse(order?.created_at || order?.createdAt || ''),
+      tab: 'orders',
+      kind: 'შეკვეთა'
+    })),
+    ...(Array.isArray(supportTickets) ? supportTickets : []).map(ticket => ({
+      id: `ticket-${ticket?.id ?? ''}`,
+      title: ticket?.subject || 'მხარდაჭერის მოთხოვნა',
+      detail: ticket?.customerName || ticket?.email || 'მომხმარებელი',
+      timestamp: Date.parse(ticket?.createdAt || ''),
+      tab: 'support',
+      kind: 'მხარდაჭერა'
+    }))
+  ].filter(event => event.id && !event.id.endsWith('-') && Number.isFinite(event.timestamp))
+    .sort((left, right) => right.timestamp - left.timestamp)
+    .slice(0, 6);
+
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
@@ -3023,6 +3544,7 @@ export default function AdminDashboardPro({
 
         <div className="space-y-1.5">
           {[
+            { id: 'command', label: '🚀 მთავარი მართვის ცენტრი', icon: LayoutDashboard },
             { id: 'analytics', label: '📊 ანალიტიკა & ფინანსები', icon: BarChart3 },
             { id: 'calculator', label: '🧮 მოგების კალკულატორი', icon: Calculator },
             { id: 'expenses', label: '💸 ხარჯების მართვა', count: expenses.length, icon: Wallet },
@@ -3030,6 +3552,8 @@ export default function AdminDashboardPro({
             { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
+            { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers },
+            { id: 'replenishment', label: '📦 მარაგის შევსების გეგმა', count: replenishmentPositions.filter(position => position.isLowStock).length, icon: Truck },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
@@ -3108,6 +3632,295 @@ export default function AdminDashboardPro({
           </div>
         </div>
 
+        {adminTab === 'command' && (
+          <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
+            <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
+              <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[.22em] text-emerald-300">GEOSTORE / OPERATIONS</p>
+                  <h3 id="admin-command-title" className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-white">მთავარი მართვის ცენტრი</h3>
+                  <p className="mt-2 max-w-2xl text-xs sm:text-sm leading-6 text-slate-300">მაღაზიის ყოველდღიური ოპერაციები ერთ სივრცეში — შეკვეთები, მხარდაჭერა, მარაგი და აქციები.</p>
+                </div>
+                <button type="button" onClick={() => setAdminTab('analytics')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-slate-950/50 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/10">
+                  <BarChart3 className="h-4 w-4" /> ფინანსური ანალიტიკა
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-command-kpis grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4">
+              <button type="button" onClick={() => setAdminTab('orders')} className="admin-command-kpi group text-left rounded-2xl border border-emerald-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-5 w-5 text-emerald-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterNewOrders.length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">მოლოდინში სულ {commandCenterPendingOrders.length} შეკვეთა · გახსნა</span>
+              </button>
+              <button type="button" onClick={() => setAdminTab('support')} className="admin-command-kpi group text-left rounded-2xl border border-amber-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-amber-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-5 w-5 text-amber-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterOverdueTickets.length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">ღია ტიკეტი 24 საათზე მეტი ხნით · გახსნა</span>
+              </button>
+              <button type="button" onClick={() => setAdminTab('replenishment')} className="admin-command-kpi group text-left rounded-2xl border border-rose-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-rose-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-5 w-5 text-rose-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{replenishmentPositions.filter(position => position.isLowStock).length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">პოზიცია/ვარიანტი საჭიროებს შევსების დაგეგმვას · გახსნა</span>
+              </button>
+              <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group text-left rounded-2xl border border-sky-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-sky-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-5 w-5 text-sky-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">მომდევნო 24 საათში · გახსნა</span>
+              </button>
+            </div>
+
+            <div className="admin-command-panels grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="admin-command-panel rounded-2xl border border-emerald-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">შეკვეთების რიგი</h4><p className="mt-1 text-[11px] text-slate-400">ახალი და დამუშავების პროცესში მყოფი შეკვეთები</p></div>
+                  <button type="button" onClick={() => setAdminTab('orders')} className="shrink-0 rounded-lg border border-emerald-400/25 px-3 py-2 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10">ყველა</button>
+                </div>
+                {commandCenterPendingOrders.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">ამჟამად დასამუშავებელი შეკვეთები არ არის.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterPendingOrders.slice(0, 5).map(order => (
+                      <button type="button" key={String(order.id)} onClick={() => setAdminTab('orders')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-emerald-400/40">
+                        <span className="min-w-0"><strong className="block truncate text-xs text-white">#{order.id} · {order.customerName || 'მომხმარებელი'}</strong><span className="mt-1 block text-[10px] text-slate-400">{order.status || 'სტატუსი უცნობია'}</span></span>
+                        <span className="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">ნახვა</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-command-panel rounded-2xl border border-amber-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">მხარდაჭერის პრიორიტეტები</h4><p className="mt-1 text-[11px] text-slate-400">ღია მოთხოვნები და 24 საათზე ძველი ტიკეტები</p></div>
+                  <button type="button" onClick={() => setAdminTab('support')} className="shrink-0 rounded-lg border border-amber-400/25 px-3 py-2 text-[11px] font-bold text-amber-200 hover:bg-amber-400/10">ყველა</button>
+                </div>
+                {supportTicketsError ? (
+                  <p role="alert" className="rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-xs text-rose-200">მხარდაჭერის მონაცემები ვერ ჩაიტვირთა. გახსენით მხარდაჭერის განყოფილება და შეამოწმეთ კავშირი.</p>
+                ) : commandCenterOpenTickets.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">ღია მხარდაჭერის მოთხოვნები არ არის.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterOpenTickets.slice(0, 5).map(ticket => {
+                      const isOverdue = commandCenterOverdueTickets.some(item => String(item.id) === String(ticket.id));
+                      return (
+                        <button type="button" key={String(ticket.id)} onClick={() => setAdminTab('support')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-amber-400/40">
+                          <span className="min-w-0"><strong className="block truncate text-xs text-white">{ticket.subject || 'მხარდაჭერის მოთხოვნა'}</strong><span className="mt-1 block text-[10px] text-slate-400">{ticket.customerName || ticket.email || 'მომხმარებელი'}</span></span>
+                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-command-panel rounded-2xl border border-rose-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 text-[11px] text-slate-400">არსებული 5 ერთეულის ზღვრის მიხედვით</p></div>
+                  <button type="button" onClick={() => setAdminTab('replenishment')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">შევსების გეგმა</button>
+                </div>
+                {commandCenterLowStockGroups.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">დაბალი მარაგის ჩანაწერები არ იძებნება არსებული ზღვრის ფარგლებში.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterLowStockGroups.slice(0, 5).map(group => (
+                      <div key={group.key} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3">
+                        <span className="min-w-0"><strong className="block truncate text-xs text-white">{group.name}</strong><span className="mt-1 block truncate text-[10px] text-slate-400">{group.positions.map(position => position.variantName).filter(Boolean).join(', ') || group.sku}</span></span>
+                        <span className="shrink-0 rounded-full bg-rose-400/10 px-2.5 py-1 text-[10px] font-bold text-rose-200">{group.positions.length} პოზიცია</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-command-panel rounded-2xl border border-sky-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">ბოლო მოვლენები</h4><p className="mt-1 text-[11px] text-slate-400">შეკვეთებისა და მხარდაჭერის უახლესი ჩანაწერები</p></div>
+                  <Activity className="h-5 w-5 text-sky-300" />
+                </div>
+                {commandCenterRecentEvents.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">მოვლენების ისტორია ჯერ არ არის ხელმისაწვდომი.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterRecentEvents.map(event => (
+                      <button type="button" key={event.id} onClick={() => setAdminTab(event.tab)} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-sky-400/40">
+                        <span className="min-w-0"><strong className="block truncate text-xs text-white">{event.title}</strong><span className="mt-1 block text-[10px] text-slate-400">{event.kind} · {event.detail}</span></span>
+                        <time className="shrink-0 text-right text-[10px] text-slate-500">{new Date(event.timestamp).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {adminTab === 'inventory' && (
+          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY AUDIT</p>
+                <h3 id="admin-inventory-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის მოძრაობების ისტორია</h3>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის მარაგის ცვლილება — საწყისი/საბოლოო რაოდენობა, მიზეზი და შეკვეთის კავშირი.</p>
+              </div>
+              <div className="flex w-full flex-col sm:flex-row gap-2 xl:max-w-xl">
+                <input
+                  type="search"
+                  value={inventoryMovementProductQuery}
+                  onChange={event => setInventoryMovementProductQuery(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') {
+                      const nextFilter = inventoryMovementProductQuery.trim();
+                      if (nextFilter === inventoryMovementProductFilter) void fetchInventoryMovements(null, false);
+                      else setInventoryMovementProductFilter(nextFilter);
+                    }
+                  }}
+                  placeholder="პროდუქტის ID-ით ფილტრაცია"
+                  aria-label="პროდუქტის ID-ით ფილტრაცია"
+                  className="min-w-0 flex-1 rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-3 text-xs font-semibold text-white placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextFilter = inventoryMovementProductQuery.trim();
+                    if (nextFilter === inventoryMovementProductFilter) void fetchInventoryMovements(null, false);
+                    else setInventoryMovementProductFilter(nextFilter);
+                  }}
+                  disabled={inventoryMovementLoading}
+                  className="min-h-11 rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:opacity-50"
+                >ფილტრი</button>
+                <button
+                  type="button"
+                  onClick={() => void fetchInventoryMovements(null, false)}
+                  disabled={inventoryMovementLoading}
+                  className="min-h-11 rounded-xl border border-emerald-500/30 bg-slate-950 px-4 py-3 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/10 disabled:opacity-50"
+                >განახლება</button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-white/5 bg-slate-950/70 p-4">
+                <p className="text-[10px] font-bold text-slate-400">ჩატვირთული ჩანაწერები</p>
+                <strong className="mt-2 block text-2xl font-black tabular-nums text-white">{inventoryMovementRows.length}</strong>
+              </div>
+              <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
+                <p className="text-[10px] font-bold text-slate-400">მარაგის ზრდის ჩანაწერები</p>
+                <strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) > 0).length}</strong>
+              </div>
+              <div className="rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4">
+                <p className="text-[10px] font-bold text-slate-400">მარაგის შემცირების ჩანაწერები</p>
+                <strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) < 0).length}</strong>
+              </div>
+            </div>
+
+            {inventoryMovementError && (
+              <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">
+                მარაგის ისტორიის ჩატვირთვა ვერ მოხერხდა: {inventoryMovementError}
+              </div>
+            )}
+
+            {inventoryMovementLoading && inventoryMovementRows.length === 0 ? (
+              <div className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400">მარაგის ისტორია იტვირთება…</div>
+            ) : inventoryMovementRows.length === 0 && !inventoryMovementError ? (
+              <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center">
+                <Layers className="mx-auto h-8 w-8 text-emerald-400" />
+                <p className="mt-3 text-sm font-black text-white">ჩანაწერები ჯერ არ არის</p>
+                <p className="mt-1 text-xs text-slate-400">ახალი მარაგის ცვლილებები აქ გამოჩნდება ისტორიის სისტემის ჩართვის შემდეგ.</p>
+              </div>
+            ) : inventoryMovementRows.length > 0 && (
+              <div className="overflow-x-auto rounded-2xl border border-emerald-500/15">
+                <table className="w-full min-w-[900px] text-left text-xs">
+                  <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400">
+                    <tr>
+                      <th className="px-4 py-3">თარიღი</th>
+                      <th className="px-4 py-3">პროდუქტი / ვარიანტი</th>
+                      <th className="px-4 py-3">მარაგი</th>
+                      <th className="px-4 py-3">ცვლილება</th>
+                      <th className="px-4 py-3">მიზეზი</th>
+                      <th className="px-4 py-3">შეკვეთა</th>
+                      <th className="px-4 py-3">ადმინისტრატორი</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {inventoryMovementRows.map(movement => (
+                      <tr key={movement.id} className="bg-slate-900/60 transition hover:bg-slate-800/70">
+                        <td className="whitespace-nowrap px-4 py-3 text-slate-400">{movement.occurred_at ? new Date(movement.occurred_at).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
+                        <td className="px-4 py-3">
+                          <strong className="block max-w-[260px] truncate text-white">{movement.product_name || movement.product_id}</strong>
+                          <span className="mt-1 block text-[10px] text-slate-400">{movement.variant_name || movement.variant_id || 'ძირითადი მარაგი'}</span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 font-bold tabular-nums text-slate-300">{movement.before_quantity} → {movement.after_quantity}</td>
+                        <td className={`whitespace-nowrap px-4 py-3 font-black tabular-nums ${Number(movement.quantity_delta) > 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{Number(movement.quantity_delta) > 0 ? '+' : ''}{movement.quantity_delta}</td>
+                        <td className="px-4 py-3 text-slate-300">
+                          {movement.reason === 'order_deduction' ? 'შეკვეთის გაფორმება' :
+                           movement.reason === 'order_cancellation' ? 'შეკვეთის გაუქმება' :
+                           movement.reason === 'order_reactivation' ? 'შეკვეთის რეაქტივაცია' :
+                           movement.reason === 'manual_adjustment' ? 'ადმინისტრატორის ცვლილება' :
+                           movement.reason === 'product_created' ? 'პროდუქტის დამატება' :
+                           movement.reason === 'product_deleted' ? 'პროდუქტის წაშლა' : 'სხვა ცვლილება'}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-emerald-300">{movement.related_order_id ? `#${movement.related_order_id}` : '—'}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-slate-400">{movement.actor_id ? String(movement.actor_id).slice(0, 8) : 'სტუმარი / სისტემა'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {inventoryMovementHasMore && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => void fetchInventoryMovements(inventoryMovementCursor, true)}
+                  disabled={inventoryMovementLoading}
+                  className="min-h-11 rounded-xl border border-emerald-500/30 bg-slate-950 px-5 py-3 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/10 disabled:opacity-50"
+                >{inventoryMovementLoading ? 'იტვირთება…' : 'მეტი ჩანაწერის ჩატვირთვა'}</button>
+              </div>
+            )}
+          </section>
+        )}
+
+        {adminTab === 'replenishment' && (
+          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY PLANNING</p>
+                <h3 id="admin-replenishment-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის შევსების გეგმა</h3>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის დაბალი მარაგის ზღვარი, სამიზნე რაოდენობა და შესავსები ერთეულების რეკომენდაცია. სისტემა მარაგს ავტომატურად არ ცვლის.</p>
+              </div>
+              <input type="search" value={replenishmentQuery} onChange={event => setReplenishmentQuery(event.target.value)} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="w-full xl:max-w-sm min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">დაბალი მარაგის პოზიციები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{replenishmentPositions.filter(position => position.isLowStock).length}</strong></div>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">ნულოვანი მარაგი</p><strong className="mt-2 block text-2xl font-black tabular-nums text-amber-300">{replenishmentPositions.filter(position => position.isOutOfStock).length}</strong></div>
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">სულ შესავსები ერთეულები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{replenishmentPositions.reduce((sum, position) => sum + position.suggestedQuantity, 0)}</strong></div>
+            </div>
+            {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">პარამეტრების შენახვა/ჩატვირთვა ვერ მოხერხდა: {replenishmentError}</div>}
+            {replenishmentLoading && <p className="rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">შევსების პარამეტრები იტვირთება…</p>}
+            <div className="space-y-3">
+              {filteredReplenishmentPositions.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center"><Truck className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 text-sm font-black text-white">შესაბამისი მარაგის პოზიცია ვერ მოიძებნა</p><p className="mt-1 text-xs text-slate-400">შეამოწმეთ ძიება ან დაამატეთ პროდუქტის მარაგი.</p></div>
+              ) : filteredReplenishmentPositions.map(position => {
+                const draft = replenishmentDrafts[position.key] || {};
+                const thresholdValue = draft.threshold ?? position.threshold;
+                const targetValue = draft.target ?? position.target;
+                return (
+                  <article key={position.key} className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-4">
+                    <div className="min-w-0"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : position.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : position.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
+                    <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400">არსებული მარაგი</label><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
+                    <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
+                    <div className="rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
+                    <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{position.isLowStock ? Math.max(0, Number(targetValue) - position.stock) : 0}</strong></div>
+                    <div className="flex items-center"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !adminLoggedIn} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
+                  </article>
+                );
+              })}
+            </div>
+            <p className="text-[10px] leading-5 text-slate-500">საწყისი პარამეტრებია 5 ერთეული (დაბალი მარაგის ზღვარი) და 20 ერთეული (სამიზნე მარაგი). შენახული პარამეტრები გამოიყენება კონკრეტულ პროდუქტზე ან ვარიანტზე. რეკომენდაცია არ ქმნის შესყიდვის შეკვეთას და არ ცვლის მარაგს.</p>
+          </section>
+        )}
+
         {adminTab === 'analytics' && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
@@ -3157,15 +3970,25 @@ export default function AdminDashboardPro({
                 <p className="text-2xl sm:text-3xl font-black text-blue-400">{financialOverview.deliveredOrders.length}</p>
                 <span className="text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
               </div>
+              <div className="admin-analytics-card bg-slate-900/80 border border-rose-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><X className="w-4 h-4 text-rose-400" /> გაუქმებული შეკვეთები</p>
+                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.cancelledOrders.length}</p>
+                <span className="text-[10px] text-rose-300">ნომინალური ღირებულება: {financialOverview.cancelledOrderValue.toFixed(2)} ₾ · არ არის დადასტურებული დაბრუნება</span>
+              </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> საშუალო შეკვეთა</p>
                 <p className="text-2xl sm:text-3xl font-black text-indigo-400">{financialOverview.averageOrderValue.toFixed(2)} ₾</p>
                 <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
               </div>
+              <div className="admin-analytics-card bg-slate-900/80 border border-violet-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
+                <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /> დამატებითი მომსახურებები</p>
+                <p className="text-2xl sm:text-3xl font-black text-violet-300">{financialOverview.totalAddonRevenue.toFixed(2)} ₾</p>
+                <span className="text-[10px] text-violet-300">შეფუთვა და VIP დაზღვევა · მოგებაში არ არის ჩათვლილი</span>
+              </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
                 <p className="text-2xl sm:text-3xl font-black text-amber-400">{financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
-                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება − ოპერაციული ხარჯები'}</span>
+                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
               </div>
             </div>
 
@@ -3270,7 +4093,7 @@ export default function AdminDashboardPro({
               <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">შემოსავლის წყაროები</h3>
-                  <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთები · პროდუქტი და მიწოდება</span>
+                  <span className="text-[10px] text-slate-400">პროდუქტი, დამატებითი მომსახურება და მიწოდება</span>
                 </div>
                 {incomeSources.length === 0 ? <p className="text-slate-500 text-xs py-4">შემოსავლის წყარო ჯერ არ არის.</p> : incomeSources.map(source => (
                   <div key={source.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
@@ -3755,7 +4578,8 @@ export default function AdminDashboardPro({
 
                       <div className="admin-order-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                         <button 
-                          onClick={() => {
+                          onClick={(event) => {
+                            orderDetailTriggerRef.current = event.currentTarget;
                             setSelectedOrderForModal(o);
                             setOrderAdminNoteInput(o.adminNote || '');
                           }} 
@@ -3820,7 +4644,7 @@ export default function AdminDashboardPro({
 
         {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
-          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
+          <div ref={orderDetailDialogRef} tabIndex="-1" className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
             <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 max-w-3xl w-full space-y-5 sm:space-y-6 text-xs text-white shadow-2xl relative max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain">
               
               <div className="admin-order-detail-header flex justify-between items-center border-b border-emerald-500/20 pb-4">
@@ -3833,8 +4657,11 @@ export default function AdminDashboardPro({
                     <p className="text-[11px] text-slate-400">თარიღი: {selectedOrderForModal.date} {selectedOrderForModal.time || ''}</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedOrderForModal(null)} 
+                <button
+                  ref={orderDetailCloseButtonRef}
+                  type="button"
+                  onClick={() => setSelectedOrderForModal(null)}
+                  aria-label="შეკვეთის დეტალების დახურვა"
                   className="p-2.5 bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 rounded-2xl border border-emerald-500/20 transition cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -4494,9 +5321,9 @@ export default function AdminDashboardPro({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
                 <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                  <HelpCircle className="w-5 h-5 text-emerald-400" /> შენახული მიმოწერები ({legacyMessages.length})
+                  <HelpCircle className="w-5 h-5 text-emerald-400" /> ჩატვირთული მიმოწერები ({legacyMessages.length})
                 </h3>
-                <p className="text-slate-400 text-xs mt-1">არსებული messages ჩანაწერები. განახლება ხდება ავტომატურად ყოველ 15 წამში.</p>
+                <p className="text-slate-400 text-xs mt-1">ახალი შეტყობინებები ახლდება ავტომატურად ყოველ 15 წამში; ძველი ისტორია იტვირთება 100-100 ჩანაწერად.</p>
               </div>
               <button type="button" onClick={fetchLegacyMessages} className="rounded-xl border border-emerald-500/30 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/10">განახლება</button>
             </div>
@@ -4521,6 +5348,13 @@ export default function AdminDashboardPro({
                     <p className="text-[10px] text-slate-500">ჩანაწერის ID: {message.id}</p>
                   </article>
                 ))}
+                {legacyMessagesHasMore && (
+                  <button type="button" disabled={legacyMessagesLoadingMore}
+                    onClick={() => { void fetchLegacyMessages({ loadMore: true }); }}
+                    className="w-full rounded-xl border border-emerald-500/30 px-4 py-3 text-xs font-bold text-emerald-200 hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-50">
+                    {legacyMessagesLoadingMore ? 'იტვირთება...' : 'ძველი შეტყობინებების ჩატვირთვა'}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -4580,7 +5414,7 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'logs' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
             </h3>
@@ -4601,7 +5435,7 @@ export default function AdminDashboardPro({
         )}
 
         {adminTab === 'broadcasts' && (
-          <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
             </h3>
@@ -5063,15 +5897,15 @@ export default function AdminDashboardPro({
               <div className="admin-delivery-fee-fields grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🏙️ თბილისი / რუსთავი (₾):</label>
-                  <input type="number" value={deliveryFees?.tbilisi ?? 0} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, tbilisi: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                  <input type="number" value={deliveryFees?.tbilisi ?? 0} min="0" step="0.01" onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, tbilisi: e.target.value}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🌆 დიდი ქალაქები (₾):</label>
-                  <input type="number" value={deliveryFees?.bigCities ?? 10} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, bigCities: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                  <input type="number" value={deliveryFees?.bigCities ?? 10} min="0" step="0.01" onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, bigCities: e.target.value}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
                 <div className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 space-y-1.5">
                   <label className="text-slate-300 font-bold">🏔️ სხვა რეგიონები (₾):</label>
-                  <input type="number" value={deliveryFees?.other ?? 15} onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, other: Number(e.target.value)}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                  <input type="number" value={deliveryFees?.other ?? 15} min="0" step="0.01" onChange={e => { if (typeof setDeliveryFees === 'function') setDeliveryFees({...deliveryFees, other: e.target.value}); }} className="w-full bg-slate-950 border border-emerald-500/30 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                 </div>
               </div>
               <button onClick={handleSaveDeliveryFees} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-500/20">
@@ -5134,7 +5968,7 @@ export default function AdminDashboardPro({
         )}
 
       {reactivationOrder && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
+        <div tabIndex="-1" className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
           <form onSubmit={handleConfirmOrderReactivation} className="w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">

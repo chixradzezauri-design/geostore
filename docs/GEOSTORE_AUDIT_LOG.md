@@ -685,3 +685,204 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Begin a scoped stylesheet consolidation, starting with one isolated surface at a time (storefront product cards/modal, then filters/categories, then footer/navigation).
 - Preserve current rendered declarations and source order; require CI build and mobile/desktop visual review before each consolidation is considered complete.
 - No Vercel deployment or production database changes were made.
+
+## Stage 83 — customer support message persistence and synchronization audit
+
+### Verified behavior
+- New public support requests use the idempotent `create_support_ticket_idempotent` RPC. The database function validates the payload, serializes retries by request UUID, inserts the ticket and its first customer message in one transaction, and returns the existing ticket for a matching retry.
+- Follow-up customer/admin replies use `add_support_ticket_message_idempotent`; the database checks ticket ownership/admin identity, validates the message, and prevents duplicate retries by request UUID.
+- Customer conversation refresh uses the authorized `get_support_ticket_messages` RPC, Realtime notifications for authenticated subscribers, and a 15-second polling recovery path. The admin support inbox/thread also refreshes from Realtime and authenticated RPC reads.
+- Both `support_ticket_messages` and `support_tickets` have migration-based Realtime publication setup.
+- The legacy `public.messages` table is intentionally not the customer support write path; client INSERT is revoked. New customer support messages belong in `support_ticket_messages`.
+
+### Verified limitation / security boundary
+- Guest customers authenticate conversation reads/replies through the ticket access-token RPC, but the messages table grants SELECT only to authenticated users and has an admin-only SELECT policy. Therefore guest sessions cannot rely on direct Postgres Changes delivery; their conversation currently relies on the 15-second RPC polling fallback.
+- Do not grant anonymous SELECT on the message table to make guest Realtime appear instant: that would weaken the existing private-conversation boundary. Any guest push/instant delivery needs a separately authorized server-side broadcast design.
+
+### Outcome
+- No verified message-loss or duplicate-send defect was found in the inspected ticket creation/reply transaction paths.
+- No source-code or database change was made in this audit stage; no existing messages, tickets, orders, customers, access-token hashes or read receipts were modified.
+- Follow-up work: evaluate a secure guest notification/broadcast path and add explicit automated coverage for ticket creation/reply retry and guest-vs-authenticated Realtime authorization behavior.
+- No live migration, merge or production deployment was performed.
+
+## Stage 84 — scoped support Broadcast notifications
+
+### Implementation
+- Added `supabase/migrations/20261117200000_support_ticket_broadcast_notifications.sql`.
+- New support-message INSERTs emit notification-only Broadcast events through a private-schema trigger. Payloads contain only `ticket_id`; message text, sender name, email, access token and token hash are never included in the payload.
+- Guest topics are derived from the existing 256-bit SHA-256 access-token digest and are public/unguessable. This is only an activity signal; the guest still needs the original access code for the existing protected conversation RPC.
+- Account-linked customers receive events on a private topic bound to `auth.uid()`.
+- The administrator receives events on a private topic whose SELECT policy checks both the existing admin app-metadata role and the primary admin UUID.
+- No client Broadcast INSERT policy was added. Customer and administrator clients re-fetch message bodies only through the existing authorization-checked `get_support_ticket_messages` RPC.
+- Customer and admin clients now subscribe to Broadcast events. The 15-second polling recovery path remains. Admin `support_tickets` Postgres Changes status refresh is retained.
+
+### Verification and safety boundary
+- Read-only inspection of the connected Supabase project confirmed RLS is enabled on `realtime.messages`, no existing policies were present there, and both support tables are already in `supabase_realtime`.
+- Supabase Broadcast and Authorization documentation was reviewed for public/private topic behavior and `realtime.topic()` policy checks.
+- Added `tests/supportTicketBroadcastNotifications.test.js` for topic derivation, customer/admin authorization, notification payload minimization, retained polling and server-only trigger writes.
+- The migration is committed to the maintenance branch only. It has NOT been applied to the connected/live Supabase database. No tickets, messages, access-token hashes, orders, customer records, production settings, or deployment were changed.
+- CI/build/test results are pending after the new commits. Browser/device and live end-to-end Broadcast verification remain outstanding; do not describe the feature as live until the migration is explicitly approved, applied in a safe environment, and verified.
+
+## Stage 85 — stale support-session and Realtime callback isolation
+
+### Verified risk
+- The administrator support Broadcast effect removed its channel on cleanup, but its Broadcast/Postgres Changes handlers and reconnect callback did not independently check whether that effect instance was still active.
+- The administrator support-thread fetch also had no session-generation fence. A response started under an earlier admin login could therefore finish after logout or a subsequent login and still update the current component state.
+
+### Change
+- Added an administrator support-session generation counter. A login-state transition advances the generation and clears pending/in-flight bookkeeping for the prior session.
+- Support-thread reads capture the current generation and verify it before applying results, errors, loading-state changes, or queued refreshes. A stale request cannot clear a newer session's in-flight marker.
+- Added an active guard to admin Broadcast, Postgres Changes, and reconnect callbacks; cleanup disables callbacks before removing the channel.
+- Added regression assertions for administrator session fencing, channel cleanup, and the customer's existing stale guest/account subscription guards.
+- Preserved protected RPC reads, notification-only payloads, the 15-second recovery poll, and existing support-ticket status refresh.
+
+### Verification and safety boundary
+- Latest code commit `c0f469e7490285e8d3f09aa25ecb4165f7731e90`: GitHub Actions automated tests and production build passed; dependency security audit passed; CodeQL remains in progress. Vercel reports the preview deployment completed, but rendered browser/device verification is still outstanding.
+- This is a client-side race-condition hardening change only. No database migration, ticket, message, order, customer record, access-token hash, production setting, or deployment was changed.
+- Live Realtime behavior and browser/device verification remain outstanding.
+
+
+## Stage 86 — administrator support reply session isolation
+
+### Verified race condition
+- The administrator support reply handler used an idempotent request UUID, but it did not capture the admin-session generation.
+- If the administrator logged out or the session changed while the RPC was pending, the old handler could still clear the reply input, refresh the current thread, show a success/error alert, or clear an in-flight marker belonging to the newer session.
+- The admin session effect fenced thread reads but did not release the reply UI lock.
+
+### Change
+- The reply handler now captures the session generation and the exact idempotency request UUID before sending.
+- After the RPC confirms persistence, it clears only the matching request UUID. A stale response cannot delete a different request key created by a newer session.
+- Stale handlers do not mutate current-session reply state, show alerts, log a success, or clear a newer in-flight marker.
+- Session-scoped ticket-list refreshes now discard results from a previous admin session; thread refreshes receive the captured generation explicitly.
+- On admin-session change, the UI in-flight lock and sending state are reset, while pending idempotency UUIDs are retained so uncertain network outcomes can be retried safely.
+
+### Regression coverage
+- Added tests for session-generation checks, matching request-key cleanup, stale ticket-list refresh suppression, and retention of idempotency keys across session changes.
+
+### Safety and verification
+- This is an application/test-only change. No SQL migration, Supabase live setting, customer/order/ticket/message row, access token, or production deployment was changed.
+- The RPC remains idempotent; retaining a pending request UUID avoids duplicate replies if the previous network outcome was uncertain.
+- CI must complete on the updated PR head before this stage is considered verified. Staging/browser testing of logout during a pending reply remains required.
+
+
+## Stage 87 — customer support reply and ticket-session isolation
+
+### Verified race condition
+- Customer reply submission captured the ticket ID and access code for the write RPC, but its post-send refresh read the ticket fields from the handler closure and could still publish a late snapshot after the customer had navigated to another ticket or closed the support panel.
+- Ticket lookup and account-history open handlers also lacked a shared session-generation fence, so older reads could overwrite a more recently selected conversation.
+- A single pending reply idempotency ref was shared across all tickets; switching tickets could replace a retry key for an earlier uncertain request.
+
+### Change
+- Added a customer support thread session generation. Closing the panel, opening another ticket, submitting a new ticket lookup, or changing the signed-in user invalidates earlier in-flight UI work.
+- Ticket lookup and account-history open responses now update state only when their captured session is still current; stale handlers cannot clear the loading state of a newer session.
+- Customer reply handlers capture the active session and the exact ticket ID/access code. The post-send refresh now explicitly uses those captured credentials, and stale responses cannot reset the current composer, overwrite the selected thread, show stale errors, or clear a newer send lock.
+- Pending idempotency keys are now kept in a ticket-keyed Map. A successful RPC removes only the exact request key it used; uncertain failures retain that ticket's key for a safe retry.
+- Session changes release the old UI lock/loading state without discarding pending idempotency keys.
+
+### Regression coverage
+- Added tests for customer stale-reply isolation, ticket-keyed retry-key handling, lookup/account-history stale-response suppression, and support-panel close fencing.
+- Existing admin Stage 86 session isolation tests remain in place.
+
+### Safety and verification
+- Application/test/documentation changes only. No SQL migration, Supabase live setting, customer/order/ticket/message row, access code, production setting, merge, or deployment was changed.
+- Automated CI on the updated PR head is required before this stage is considered verified. Real browser checks for switching tickets and closing/reopening support during a pending reply remain outstanding.
+
+
+## Stage 89 — admin support ticket list refresh session fencing
+
+### Finding
+- The admin support-ticket list refresh was callable from Broadcast notifications, Postgres Changes, reconnect recovery, polling, visibility refresh and post-mutation handlers.
+- Calls without an explicit session ID previously used `null`, which bypassed the existing admin-session check. Overlapping refreshes could also complete out of order and let an older response replace a newer ticket snapshot.
+- A delayed response from a prior administrator login could therefore overwrite the current inbox state.
+
+### Fix
+- Default ticket-list refreshes to the current admin session and return immediately when no verified admin session is active.
+- Add a monotonically increasing request ID. Only the latest request in the same admin session may publish ticket rows or an error.
+- Re-check both the session generation and request ID after each awaited header, network and JSON operation in the paginated fetch.
+- Invalidate pending list requests when the admin login state changes.
+- Preserve the existing 1,000-row pagination, stable `created_at.desc,id.asc` ordering, ticket mapping, Realtime notifications and 15-second recovery polling.
+
+### Regression coverage and verification
+- Added regression assertions to `tests/supportTicketBroadcastNotifications.test.js` for session fencing, stale-result/error suppression, login invalidation and retained pagination.
+- GitHub Actions checks were observed starting on PR head `06358fc3e182627448d660680e32f8bee259f0d0`; build, dependency audit and JavaScript analysis were still in progress at the time of this entry.
+- No browser/device E2E test was performed. No Supabase migration, production setting, live order, customer message, support ticket or other production data was changed.
+- PR #129 remains draft and unmerged; no deployment was performed.
+
+
+### Stage 89 verification addendum
+- The first CI attempt exposed three stale assertions in the existing support-ticket test, which still expected the previous nullable `fetchTickets(sessionId = null)` contract.
+- Updated those assertions to verify the new default active-session guard and latest-request fencing.
+- On commit `b7b89bc790a9fe6b6742a5efb124c40669b59c51`, GitHub Actions confirmed Build Check, Dependency Security Audit and CodeQL all **success**. Build Check includes the automated Node test suite and production build.
+- This verifies CI only; browser/device E2E remains outstanding.
+
+
+## Stage 94 — read-only Supabase security and performance audit
+
+### Scope and method
+- Inspected the connected live Supabase project `xmtnszxtnfxnrojionoa` using read-only catalog, policy, function-definition, migration-ledger and advisor queries.
+- No SQL migration, schema change, permission change, Auth setting change, data write, merge or deployment was performed.
+
+### Findings and disposition
+- `public.flash_sale_campaigns` and `public.flash_sale_items` both have RLS enabled and currently have no policies. This is default-deny for client roles, not evidence of public exposure. Do not add permissive policies without first identifying a required client access path and a row-ownership/admin model.
+- The advisors flagged four exposed `SECURITY DEFINER` support RPCs. Their live definitions use an empty `search_path` and explicit authorization checks:
+  - `get_my_support_tickets(integer)` requires `auth.uid()` and filters tickets to `customer_user_id = auth.uid()`; anonymous EXECUTE is not granted.
+  - `get_support_ticket_unread_counts()` requires both the primary administrator UUID and `app_metadata.role = admin`; anonymous EXECUTE is not granted.
+  - `get_support_ticket_status(text,text)` and `mark_support_ticket_messages_read(text,text)` intentionally allow guest access-code flows. They validate the ticket ID and compare a 64-character hexadecimal access token's SHA-256 digest with the stored ticket hash; authenticated owner/email and administrator paths are also checked. Anonymous EXECUTE is currently granted for these two RPCs.
+- Do not blindly revoke guest RPC execution or replace these functions with `SECURITY INVOKER`: that would break the existing guest ticket-status/read-receipt path unless an equivalent secure server-side endpoint is implemented and verified first.
+- Supabase Auth advisor reports leaked-password protection is disabled. No Auth setting was changed; enabling it requires a separately planned configuration change and user-facing impact review.
+- Performance advisor reports seven unused indexes and one pair of permissive SELECT policies on `public.products`. No index was dropped and no policies were consolidated: usage counters alone are insufficient to prove an index is safe to remove, and the product policies have distinct admin/public catalogue purposes that must be preserved.
+- The Stage 93 inventory-replenishment migration is not present in the live migration ledger. Its table and RPCs remain draft-only and are not available in production.
+
+### Outcome
+- No confirmed public data exposure was found in the inspected flash-sale tables; RLS is enabled with no policies.
+- Security advisor warnings on the guest support RPCs require preserving the token-checked guest access model, not removing access without a replacement.
+- No live customer, order, product, stock, message, ticket, or settings data was modified.
+- No live migration, merge, or production deployment was performed.
+
+
+## Stage 95 — atomic inventory replenishment settings (verification addendum)
+- The settings save RPC uses one conflict-safe UPSERT against the unique product/variant-position index while retaining the product-row lock and exact variant validation.
+- Regression coverage includes concurrent first-time saves and rejection of blank variant IDs.
+- On PR head `8b2790056a53fcb177e19f77e971156cf4de287e`, GitHub Actions Build check, Dependency security audit and CodeQL all completed successfully.
+- Build check passed; the repository workflow includes the automated test suite and production build.
+- The replenishment migration remains draft-only and is not present in the live Supabase migration ledger. No live data, settings, schema, merge or deployment was changed.
+
+## Stage 96 — read-only order intake and synchronization audit
+- Live read-only snapshot: `public.orders` contains 2 rows; `public.order_notifications` contains 0 rows.
+- Confirmed `orders` and `order_notifications` are members of the `supabase_realtime` publication.
+- Confirmed the admin order loader reads the complete order ledger in stable 1,000-row pages, preserves the last successful snapshot on failure, serializes/coalesces overlapping refreshes, and rejects responses from an expired admin session.
+- Confirmed the admin client subscribes to order INSERT/UPDATE/DELETE events and re-reads through authenticated REST/RLS; a 15-second polling refresh remains as recovery.
+- Confirmed the live `orders` table has primary-admin-only SELECT and UPDATE policies, and database triggers enforce status transitions, stock/checkout integrity, and order notification recording.
+- Checkout snapshots retain item names, image/gallery URLs, prices, quantities, selected variants, add-ons and purchase-cost/vendor/category fields for historical order detail display.
+- Customer order notifications are owner-scoped to authenticated users. The current zero-row notification table is not evidence of failed order intake; the two current orders do not establish an authenticated notification event.
+- No order, product, stock, customer, message, notification or other live data was modified. No live migration, schema change, merge or deployment was performed.
+- No order-intake or Realtime configuration defect was confirmed in this read-only pass. Remaining verification is an authenticated staging/browser test of a fresh guest order and a fresh account-linked order, admin arrival, order-detail image snapshots, and customer status notifications.
+
+
+## Stage 97 — order detail dialog keyboard accessibility audit (read-only)
+- Inspected the admin order detail dialog and its open/close entry points in `AdminDashboardPro.jsx`.
+- The dialog exposes `role="dialog"`, `aria-modal="true"` and an accessible title, and it has a visible close button.
+- The inspected implementation does not show an Escape-key close handler, initial focus placement, focus containment while open, or focus restoration to the invoking order button after close.
+- This is a keyboard and assistive-technology usability gap; it does not indicate an order-data or authorization defect.
+- Next implementation should add dialog-scoped focus management without changing order selection, status, note-save, invoice, reactivation, or data-fetch behavior. It must preserve the previously focused trigger and avoid stealing focus when the selected order changes while the dialog remains open.
+- Add regression coverage for Escape close, Tab/Shift+Tab containment, initial focus, focus restoration, and cleanup on unmount. Verify nested reactivation dialog behavior separately to avoid closing the underlying order dialog unexpectedly.
+- No application code, order, customer, database row, schema, migration, or production setting was changed in this audit.
+
+
+## Stage 98 — order detail dialog keyboard accessibility implementation
+- Added a dialog-scoped key handler for Escape and Tab/Shift+Tab, including focus containment and a safe fallback when no focusable controls are present.
+- Opening order details records the exact invoking order-row button and moves focus to the dialog close control once; changing the selected order while the dialog remains open does not steal focus.
+- Closing the order detail dialog restores focus to the original trigger only when that element is still connected to the document.
+- The nested reactivation password dialog takes keyboard priority. Escape clears its draft only when reactivation is not submitting; an in-progress reactivation cannot be dismissed through Escape, and the underlying order dialog is never closed by that key event.
+- The document key listener is removed on dialog close/unmount. Existing order data, status, note-save, invoice, reactivation RPC and database behavior remain unchanged.
+- Added source-level regression checks for focus entry/return, keyboard handling, listener cleanup and nested-dialog priority. Browser-level keyboard verification remains part of staging QA.
+- No order/customer data, live database schema, settings or production deployment was changed.
+
+
+## Stage 99 — nested order reactivation focus restoration
+- Audited the cancelled-order reactivation flow opened from an order status action. The password field already receives initial focus and the nested dialog already takes keyboard priority, but closing the nested dialog did not explicitly return focus to the status action that opened it.
+- Capture the exact active status-action element when reactivation confirmation opens.
+- When the nested dialog closes by cancellation or successful reactivation, restore focus to that trigger if it remains connected; if the row/action was removed during the update, fall back to the order-detail close control when available.
+- Preserve the existing password reauthentication, admin-role checks, atomic reactivation RPC, stock checks, status updates and error handling. No auth or database behavior changed.
+- Added regression assertions for trigger capture, focus restoration and fallback behavior.
+- No order/customer data, database schema, live settings, merge or production deployment was changed. Browser-level keyboard verification remains required.
