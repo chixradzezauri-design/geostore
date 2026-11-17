@@ -55,7 +55,12245 @@ BEGIN
      AND e.created_at < v_to;
 
   SELECT coalesce(sum(
-    (item.value->>'purchase_cost')::numeric * (item.value->>'quantity')::integer
+    CASE
+      WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+    INTO v_cost_of_goods
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND CASE
+       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR CASE
+         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum(
+          CASE
+            WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+    INTO v_cost_of_goods
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND CASE
+       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR CASE
+         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      THEN (item.value->>'purchase_cost')::numeric * (item.value->>'quantity')::integer
+      ELSE 0
+    END
+  ), 0)
+    INTO v_cost_of_goods
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND CASE
+       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR CASE
+         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+             AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+    INTO v_cost_of_goods
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND CASE
+       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR CASE
+         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      THEN (item.value->>'purchase_cost')::numeric * (item.value->>'quantity')::integer
+      ELSE 0
+    END
+  ), 0)
+    INTO v_cost_of_goods
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND CASE
+       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR CASE
+         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+             AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+            THEN (item.value->>'price')::numeric * (item.value->>'quantity')::integer
+            ELSE 0
+          END
+        )::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+    INTO v_cost_of_goods
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND CASE
+       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR CASE
+         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND CASE
+          WHEN coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})? item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+           AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3} item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+          THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+          ELSE false
+        END
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+         THEN (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+         ELSE true
+       END
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       THEN (item.value->>'quantity')::integer BETWEEN 1 AND 100
+       ELSE false
+     END;
+
+  SELECT count(*)
+    INTO v_uncosted_lines
+    FROM public.orders AS o
+    CROSS JOIN LATERAL jsonb_array_elements(
+      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+    ) AS item(value)
+   WHERE o.created_at >= v_from
+     AND o.created_at < v_to
+     AND o.status <> 'გაუქმებული'
+     AND (
+       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+       OR (item.value->>'quantity')::integer NOT BETWEEN 1 AND 100
+     );
+
+  SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
+    INTO v_statuses
+    FROM (
+      SELECT o.status, count(*)::bigint AS amount
+        FROM public.orders AS o
+       WHERE o.created_at >= v_from
+         AND o.created_at < v_to
+       GROUP BY o.status
+    ) AS status_counts;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(daily) ORDER BY daily.day), '[]'::jsonb)
+    INTO v_daily
+    FROM (
+      SELECT
+        (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date AS day,
+        count(*) FILTER (WHERE o.status <> 'გაუქმებული')::bigint AS orders,
+        coalesce(sum(o.total_gel) FILTER (WHERE o.status <> 'გაუქმებული'), 0)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+      GROUP BY (o.created_at AT TIME ZONE 'Asia/Tbilisi')::date
+      ORDER BY day
+    ) AS daily;
+
+  SELECT coalesce(jsonb_agg(to_jsonb(top_item) ORDER BY top_item.revenue DESC), '[]'::jsonb)
+    INTO v_top_products
+    FROM (
+      SELECT
+        item.value->>'id' AS product_id,
+        left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100) AS product_name,
+        sum((item.value->>'quantity')::integer)::bigint AS units,
+        sum((item.value->>'price')::numeric * (item.value->>'quantity')::integer)::numeric(14,2) AS revenue
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+      WHERE o.created_at >= v_from
+        AND o.created_at < v_to
+        AND o.status <> 'გაუქმებული'
+        AND coalesce(item.value->>'id', '') <> ''
+        AND coalesce(item.value->>'price', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+        AND coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}$'
+        AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      GROUP BY item.value->>'id', left(coalesce(nullif(item.value->>'name', ''), 'პროდუქტი'), 100)
+      ORDER BY revenue DESC
+      LIMIT 5
+    ) AS top_item;
+
+  v_summary := jsonb_build_object(
+    'from', v_from,
+    'to', v_to,
+    'order_count', v_order_count,
+    'cancelled_count', v_cancelled_count,
+    'revenue', round(v_revenue, 2),
+    'completed_revenue', round(v_completed_revenue, 2),
+    'average_order_value', round(v_average_order, 2),
+    'expenses', round(v_expenses, 2),
+    'cost_of_goods', round(v_cost_of_goods, 2),
+    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
+    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
+    'uncosted_item_lines', v_uncosted_lines,
+    'status_counts', coalesce(v_statuses, '{}'::jsonb),
+    'daily', coalesce(v_daily, '[]'::jsonb),
+    'top_products', coalesce(v_top_products, '[]'::jsonb)
+  );
+
+  RETURN v_summary;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) TO authenticated;
+
+COMMENT ON FUNCTION public.get_staff_analytics_summary(timestamptz, timestamptz) IS
+  'Read-only aggregate analytics for staff with analytics permission. Never returns order/customer/expense rows.';
+
+       AND (item.value->>'quantity')::integer BETWEEN 1 AND 100
+      THEN (item.value->>'purchase_cost')::numeric * (item.value->>'quantity')::integer
+      ELSE 0
+    END
   ), 0)
     INTO v_cost_of_goods
     FROM public.orders AS o
