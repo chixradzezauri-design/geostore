@@ -61,3 +61,30 @@ test('staff management bounds actual request bytes and rejects malformed JSON as
   assert.match(edge, /მოთხოვნის ფორმატი არასწორია/);
   assert.doesNotMatch(edge, /request\.json\(\)/);
 });
+
+
+test('negative permission checks deny unknown modules and permissions not explicitly set to true', () => {
+  assert.match(migration, /p_permission NOT IN \([\s\S]*'products', 'orders', 'analytics', 'expenses', 'crm', 'support', 'settings'[\s\S]*\)/);
+  assert.match(migration, /staff\.permissions->>p_permission = 'true'/);
+  assert.match(migration, /RETURN false;/);
+});
+
+test('inactive staff membership is denied by both permission and access-resolution paths', () => {
+  assert.equal((migration.match(/staff\.is_active IS TRUE/g) || []).length, 2);
+  assert.match(migration, /IF NOT FOUND THEN[\s\S]*'is_staff', false[\s\S]*'permissions', '\{\}'::jsonb/);
+});
+
+test('owner bypass is explicit and returns the complete known permission set', () => {
+  assert.equal((migration.match(/v_user_id = '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid/g) || []).length, 2);
+  for (const permission of ['products', 'orders', 'analytics', 'expenses', 'crm', 'support', 'settings']) {
+    assert.match(migration, new RegExp(`'${permission}', true`));
+  }
+});
+
+test('unconfirmed staff are denied before the membership permission lookup', () => {
+  const permissionFunction = migration.split('CREATE OR REPLACE FUNCTION public.has_staff_permission')[1]?.split('$function$;')[0] || '';
+  const confirmationCheck = permissionFunction.indexOf('auth_user.email_confirmed_at IS NOT NULL');
+  const membershipLookup = permissionFunction.indexOf('FROM public.admin_staff_members AS staff');
+  assert.ok(confirmationCheck >= 0);
+  assert.ok(membershipLookup > confirmationCheck);
+});
