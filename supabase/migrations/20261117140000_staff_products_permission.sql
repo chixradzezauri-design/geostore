@@ -68,7 +68,6 @@ DECLARE
   v_guard_auth_jwt text := E'IF auth.uid() IS NULL\n     OR coalesce(auth.jwt()->''app_metadata''->>''role'', '''') <> ''admin''\n     OR auth.uid() IS DISTINCT FROM ''1060de3d-d28a-45f8-9a64-5e0368cffc4b''::uuid THEN';
   v_guard_v_jwt_lower text := E'if auth.uid() is null\n     or coalesce(v_jwt -> ''app_metadata'' ->> ''role'', '''') <> ''admin''\n     or auth.uid() is distinct from ''1060de3d-d28a-45f8-9a64-5e0368cffc4b''::uuid then';
   v_signatures text[] := ARRAY[
-    'private.admin_apply_flash_sale(numeric,text,integer)',
     'private.admin_delete_product(text)',
     'private.admin_set_product_custom_variant_stocks(text,jsonb)',
     'private.admin_set_product_variant_stock_batches(text,jsonb,jsonb)',
