@@ -904,3 +904,12 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Kept all admin tabs, order actions, staff flows, data requests and existing component structure unchanged.
 - Added source-level regression tests for stylesheet load order, section preservation, responsive breakpoints, keyboard focus and non-hiding behavior.
 - CSS-only visual change; no database schema, live data, authentication, stock, order or customer state was changed.
+
+## Stage 102 — real staff Auth foundation (draft)
+- Read-only audit confirmed 2 Auth users, no existing staff/role table, and no deployed Supabase Edge Functions.
+- Counted 27 live RLS policies and 23 public/private functions with primary-owner UUID checks. These must be converted by module before staff can access protected data; frontend-only permission checks are insufficient.
+- Added a draft Auth-linked staff membership schema, server-side permission lookup functions, and an owner-verified Edge Function for invitation/linking, listing, updating and revoking employee access.
+- The staff table is RLS-enabled and inaccessible to anon/authenticated direct Data API requests; management uses the server secret only inside the Edge Function.
+- No module RLS policy or existing admin RPC has been relaxed in this stage. Existing owner-only protections remain intact until the next permission-enforcement stage.
+- Legacy `geostore_staff_list` localStorage entries are intentionally not deleted or trusted; a later UI stage will provide safe import/linking after Auth accounts are verified.
+- Migration and Edge Function are draft files only. No live Auth users, staff records, RLS policies, database schema, Edge Functions or Production deployment were changed.
