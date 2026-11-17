@@ -459,6 +459,426 @@ function StaffAnalyticsSummary() {
   );
 }
 
+const STAFF_ROLE_OPTIONS = [
+  { value: 'manager', label: 'მენეჯერი' },
+  { value: 'operator', label: 'ოპერატორი' },
+  { value: 'finance', label: 'ფინანსისტი' },
+  { value: 'product_manager', label: 'პროდუქტების მენეჯერი' }
+];
+
+const STAFF_PERMISSION_OPTIONS = [
+  { key: 'products', label: 'პროდუქტები' },
+  { key: 'orders', label: 'შეკვეთები' },
+  { key: 'analytics', label: 'ანალიტიკა' },
+  { key: 'expenses', label: 'ხარჯები და ფინანსები' },
+  { key: 'crm', label: 'CRM მომხმარებლები' },
+  { key: 'support', label: 'მხარდაჭერა' },
+  { key: 'settings', label: 'საიტის პარამეტრები' }
+];
+
+const createStaffPermissions = (source = {}) => Object.fromEntries(
+  STAFF_PERMISSION_OPTIONS.map(({ key }) => [key, source?.[key] === true])
+);
+
+const STAFF_ROLE_LABELS = Object.fromEntries(
+  STAFF_ROLE_OPTIONS.map(({ value, label }) => [value, label])
+);
+
+function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
+  const [staffList, setStaffList] = useState([]);
+  const [legacyStaffList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('geostore_staff_list');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+  const [staffListLoading, setStaffListLoading] = useState(false);
+  const [staffActionBusy, setStaffActionBusy] = useState(false);
+  const [staffListError, setStaffListError] = useState('');
+  const [staffListNotice, setStaffListNotice] = useState('');
+  const [selectedUserEmail, setSelectedUserEmail] = useState('');
+  const [editingStaffId, setEditingStaffId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    display_name: '',
+    role: 'manager',
+    permissions: createStaffPermissions()
+  });
+  const [staffForm, setStaffForm] = useState({
+    display_name: '',
+    email: '',
+    role: 'manager',
+    permissions: createStaffPermissions({ products: true, orders: true })
+  });
+
+  const callStaffApi = async (body) => {
+    const { data, error } = await supabase.functions.invoke('manage-admin-staff', { body });
+    if (error) {
+      let message = error.message || 'თანამშრომლების სერვერული მოქმედება ვერ შესრულდა.';
+      const response = error.context;
+      if (response && typeof response.clone === 'function') {
+        const payload = await response.clone().json().catch(() => null);
+        if (payload?.error) message = payload.error;
+      }
+      throw new Error(message);
+    }
+    if (data?.error) throw new Error(data.error);
+    return data || {};
+  };
+
+  const refreshStaffList = async (silent = false) => {
+    if (!isOwner) return;
+    if (!silent) setStaffListLoading(true);
+    setStaffListError('');
+    try {
+      const result = await callStaffApi({ action: 'list' });
+      setStaffList(Array.isArray(result.staff) ? result.staff : []);
+    } catch (error) {
+      setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
+    } finally {
+      if (!silent) setStaffListLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOwner) {
+      setStaffList([]);
+      return undefined;
+    }
+    let active = true;
+    setStaffListLoading(true);
+    callStaffApi({ action: 'list' }).then((result) => {
+      if (active) {
+        setStaffList(Array.isArray(result.staff) ? result.staff : []);
+        setStaffListError('');
+      }
+    }).catch((error) => {
+      if (active) setStaffListError(error?.message || 'თანამშრომლების სია ვერ ჩაიტვირთა.');
+    }).finally(() => {
+      if (active) setStaffListLoading(false);
+    });
+    return () => { active = false; };
+  }, [isOwner]);
+
+  const inviteStaff = async ({ email, display_name, role, permissions }) => {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedName = String(display_name || '').trim();
+    const normalizedPermissions = createStaffPermissions(permissions);
+    if (!normalizedEmail || !normalizedName) {
+      setStaffListError('შეავსეთ თანამშრომლის სახელი და ელფოსტა.');
+      return;
+    }
+    if (!Object.values(normalizedPermissions).some(Boolean)) {
+      setStaffListError('მიანიჭეთ მინიმუმ ერთი მოდულის უფლება.');
+      return;
+    }
+
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      const result = await callStaffApi({
+        action: 'invite',
+        email: normalizedEmail,
+        display_name: normalizedName,
+        role,
+        permissions: normalizedPermissions
+      });
+      await refreshStaffList(true);
+      setStaffListNotice(result.invited
+        ? `მოწვევა გაიგზავნა მისამართზე ${normalizedEmail}. ანგარიშის მფლობელმა უნდა დაასრულოს რეგისტრაცია.`
+        : `არსებული Supabase Auth ანგარიში (${normalizedEmail}) თანამშრომლის ჩანაწერს დაუკავშირდა.`);
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის Auth ანგარიში დაემატა: ${normalizedEmail}`);
+      }
+      return result;
+    } catch (error) {
+      setStaffListError(error?.message || 'თანამშრომლის მოწვევა ვერ შესრულდა.');
+      return null;
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  const handleInviteStaff = async (event) => {
+    event.preventDefault();
+    const result = await inviteStaff(staffForm);
+    if (result) {
+      setStaffForm({
+        display_name: '',
+        email: '',
+        role: 'manager',
+        permissions: createStaffPermissions({ products: true, orders: true })
+      });
+    }
+  };
+
+  const handleAddExistingUser = async (event) => {
+    event.preventDefault();
+    const target = (usersList || []).find((user) =>
+      user.email === selectedUserEmail || user.id === selectedUserEmail
+    );
+    if (!target?.email) {
+      setStaffListError('მომხმარებლის ელფოსტა ვერ მოიძებნა.');
+      return;
+    }
+    const result = await inviteStaff({
+      email: target.email,
+      display_name: target.name || target.display_name || target.email.split('@')[0],
+      role: 'manager',
+      permissions: createStaffPermissions({ orders: true })
+    });
+    if (result) setSelectedUserEmail('');
+  };
+
+  const beginEdit = (staff) => {
+    setEditingStaffId(staff.id);
+    setEditForm({
+      display_name: staff.display_name || '',
+      role: staff.role || 'manager',
+      permissions: createStaffPermissions(staff.permissions)
+    });
+  };
+
+  const saveStaff = async (staff) => {
+    if (!Object.values(editForm.permissions).some(Boolean) && staff.is_active) {
+      setStaffListError('აქტიურ თანამშრომელს მინიმუმ ერთი მოდულის უფლება უნდა ჰქონდეს.');
+      return;
+    }
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      const result = await callStaffApi({
+        action: 'update',
+        id: staff.id,
+        display_name: editForm.display_name,
+        role: editForm.role,
+        permissions: editForm.permissions,
+        is_active: staff.is_active
+      });
+      setStaffList((current) => current.map((item) => item.id === staff.id ? result.staff : item));
+      setEditingStaffId(null);
+      setStaffListNotice('თანამშრომლის როლი და მოდულების უფლებები Supabase-ში განახლდა.');
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის უფლებები განახლდა: ${staff.email}`);
+      }
+    } catch (error) {
+      setStaffListError(error?.message || 'თანამშრომლის უფლებების განახლება ვერ მოხერხდა.');
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  const revokeStaff = async (staff) => {
+    if (!window.confirm(`გაუქმდეს ${staff.display_name || staff.email}-ის სისტემაში წვდომა? Auth ანგარიში არ წაიშლება.`)) return;
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      const result = await callStaffApi({ action: 'revoke', id: staff.id });
+      setStaffList((current) => current.map((item) => item.id === staff.id ? result.staff : item));
+      setStaffListNotice('თანამშრომლის სერვერული წვდომა გაუქმდა. Supabase Auth ანგარიში შენარჩუნებულია.');
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის წვდომა გაუქმდა: ${staff.email}`);
+      }
+    } catch (error) {
+      setStaffListError(error?.message || 'წვდომის გაუქმება ვერ მოხერხდა.');
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  const reactivateStaff = async (staff) => {
+    if (!Object.values(staff.permissions || {}).some(Boolean)) {
+      setStaffListError('რეაქტივაციამდე მიანიჭეთ მინიმუმ ერთი მოდულის უფლება.');
+      return;
+    }
+    setStaffActionBusy(true);
+    setStaffListError('');
+    setStaffListNotice('');
+    try {
+      const result = await callStaffApi({
+        action: 'update',
+        id: staff.id,
+        display_name: staff.display_name,
+        role: staff.role,
+        permissions: createStaffPermissions(staff.permissions),
+        is_active: true
+      });
+      setStaffList((current) => current.map((item) => item.id === staff.id ? result.staff : item));
+      setStaffListNotice('თანამშრომლის სერვერული წვდომა ხელახლა გააქტიურდა.');
+      if (typeof logActivity === 'function') {
+        await logActivity(`თანამშრომლის წვდომა აღდგა: ${staff.email}`);
+      }
+    } catch (error) {
+      setStaffListError(error?.message || 'წვდომის აღდგენა ვერ მოხერხდა.');
+    } finally {
+      setStaffActionBusy(false);
+    }
+  };
+
+  if (!isOwner) return null;
+
+  return (
+    <div className="admin-staff space-y-6">
+      <div role="note" className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-6 text-emerald-100">
+        <strong className="block mb-1">თანამშრომლების რეალური ავტორიზაცია ჩართულია.</strong>
+        მოწვევა ქმნის ან აკავშირებს Supabase Auth ანგარიშს. როლი და მოდულების უფლებები ინახება სერვერზე და მოწმდება მონაცემთა ბაზის RLS/RPC წესებით. წვდომის გაუქმება თანამშრომელს სისტემიდან თიშავს, მაგრამ მის Auth ანგარიშსა და არსებულ მონაცემებს არ შლის.
+      </div>
+
+      {staffListError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200">{staffListError}</div>}
+      {staffListNotice && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">{staffListNotice}</div>}
+
+      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+        <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> არსებული მომხმარებლის დაკავშირება</h3>
+        <form onSubmit={handleAddExistingUser} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+          <select value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
+            <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
+            {(usersList || []).filter((user) => user.email).map((user) => (
+              <option key={user.id || user.email} value={user.email}>{user.name || user.email} — {user.email}</option>
+            ))}
+          </select>
+          <button type="submit" disabled={staffActionBusy || !selectedUserEmail} className="rounded-xl bg-emerald-500 px-5 py-3 text-xs font-black text-slate-950 disabled:opacity-50">
+            {staffActionBusy ? 'მუშავდება…' : 'Auth ანგარიშთან დაკავშირება'}
+          </button>
+        </form>
+      </section>
+
+      <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+        <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის მოწვევა</h3>
+        <form onSubmit={handleInviteStaff} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
+            <input type="email" required maxLength={254} value={staffForm.email} onChange={(event) => setStaffForm((current) => ({ ...current, email: event.target.value }))} placeholder="ელფოსტა" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
+            <select value={staffForm.role} onChange={(event) => setStaffForm((current) => ({ ...current, role: event.target.value }))} className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
+              {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+            </select>
+          </div>
+          <div className="rounded-2xl border border-emerald-500/15 bg-slate-950 p-4 space-y-3">
+            <p className="font-bold text-slate-300">მიანიჭეთ მხოლოდ საჭირო მოდულები:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {STAFF_PERMISSION_OPTIONS.map((permission) => (
+                <label key={permission.key} className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                  <input type="checkbox" checked={staffForm.permissions[permission.key]} onChange={(event) => setStaffForm((current) => ({
+                    ...current,
+                    permissions: { ...current.permissions, [permission.key]: event.target.checked }
+                  }))} className="accent-emerald-400" />
+                  {permission.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <button type="submit" disabled={staffActionBusy} className="rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
+            {staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}
+          </button>
+        </form>
+      </section>
+
+      {legacyStaffList.length > 0 && (
+        <section className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4 space-y-2">
+          <h3 className="text-sm font-black text-amber-200">ძველი localStorage ჩანაწერები შენარჩუნებულია ({legacyStaffList.length})</h3>
+          <p className="text-xs leading-5 text-amber-100/80">ეს ძველი ჩანაწერები არ იშლება, მაგრამ რეალურ წვდომას არ ანიჭებს. აირჩიეთ ჩანაწერი, გადაიტანეთ ფორმაში და გაგზავნეთ მოწვევა, რომ შეიქმნას ან დაუკავშირდეს Auth ანგარიში.</p>
+          <div className="space-y-2">
+            {legacyStaffList.map((legacy, index) => (
+              <div key={legacy.id || legacy.email || index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-slate-950/70 p-3">
+                <span className="min-w-0 text-xs text-slate-300">{legacy.name || 'თანამშრომელი'} · {legacy.email || 'ელფოსტა მითითებული არ არის'}</span>
+                <button type="button" disabled={!legacy.email} onClick={() => setStaffForm((current) => ({
+                  ...current,
+                  display_name: legacy.name || current.display_name,
+                  email: legacy.email || current.email,
+                  role: 'manager',
+                  permissions: createStaffPermissions(legacy.permissions)
+                }))} className="shrink-0 rounded-lg border border-amber-500/30 px-3 py-2 text-[11px] font-bold text-amber-200 disabled:opacity-40">
+                  ფორმაში გადატანა
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-black text-white text-base">სერვერზე დაკავშირებული თანამშრომლები ({staffList.length})</h3>
+          <button type="button" onClick={() => refreshStaffList()} disabled={staffListLoading || staffActionBusy} className="rounded-xl border border-emerald-500/25 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">
+            {staffListLoading ? 'იტვირთება…' : 'სიის განახლება'}
+          </button>
+        </div>
+        {staffListLoading && <p role="status" className="text-xs text-slate-400">სერვერული სია იტვირთება…</p>}
+        {!staffListLoading && staffList.length === 0 && <p className="text-xs text-slate-500">სერვერზე თანამშრომლები ჯერ არ არის დამატებული.</p>}
+        <div className="space-y-3">
+          {staffList.map((staff) => {
+            const editing = editingStaffId === staff.id;
+            return (
+              <article key={staff.id} className="rounded-2xl border border-emerald-500/15 bg-slate-950/60 p-4 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="text-sm text-white">{staff.display_name || staff.email}</strong>
+                      <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">{STAFF_ROLE_LABELS[staff.role] || staff.role}</span>
+                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${staff.is_active ? 'border-emerald-500/25 text-emerald-200' : 'border-rose-500/25 text-rose-200'}`}>{staff.is_active ? 'აქტიური' : 'წვდომა გაუქმებულია'}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">{staff.email} · Supabase Auth ID: {String(staff.user_id || '').slice(0, 8)}…</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" disabled={staffActionBusy} onClick={() => editing ? setEditingStaffId(null) : beginEdit(staff)} className="rounded-xl border border-amber-500/25 px-3 py-2 text-xs font-bold text-amber-200 disabled:opacity-50">
+                      {editing ? 'დახურვა' : 'როლის/უფლებების შეცვლა'}
+                    </button>
+                    {staff.is_active ? (
+                      <button type="button" disabled={staffActionBusy} onClick={() => revokeStaff(staff)} className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs font-bold text-rose-200 disabled:opacity-50">წვდომის გაუქმება</button>
+                    ) : (
+                      <button type="button" disabled={staffActionBusy} onClick={() => reactivateStaff(staff)} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">წვდომის აღდგენა</button>
+                    )}
+                  </div>
+                </div>
+
+                {!editing && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {STAFF_PERMISSION_OPTIONS.map((permission) => (
+                      <span key={permission.key} className={`rounded-lg border px-2.5 py-1 text-[10px] ${staff.permissions?.[permission.key] ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200' : 'border-slate-800 bg-slate-900 text-slate-500'}`}>
+                        {permission.label}: {staff.permissions?.[permission.key] ? '✓' : '—'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {editing && (
+                  <div className="rounded-xl border border-amber-500/20 bg-slate-900 p-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input value={editForm.display_name} onChange={(event) => setEditForm((current) => ({ ...current, display_name: event.target.value }))} minLength={2} maxLength={100} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white" aria-label="თანამშრომლის სახელი" />
+                      <select value={editForm.role} onChange={(event) => setEditForm((current) => ({ ...current, role: event.target.value }))} className="rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-xs text-white">
+                        {STAFF_ROLE_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {STAFF_PERMISSION_OPTIONS.map((permission) => (
+                        <label key={permission.key} className="flex items-center gap-2 text-xs text-slate-300">
+                          <input type="checkbox" checked={editForm.permissions[permission.key]} onChange={(event) => setEditForm((current) => ({
+                            ...current,
+                            permissions: { ...current.permissions, [permission.key]: event.target.checked }
+                          }))} className="accent-amber-400" />
+                          {permission.label}
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button type="button" onClick={() => setEditingStaffId(null)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs text-slate-300">გაუქმება</button>
+                      <button type="button" disabled={staffActionBusy} onClick={() => saveStaff(staff)} className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50">სერვერზე შენახვა</button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function AdminDashboardPro({
   adminLoggedIn,
   adminAccess = EMPTY_ADMIN_ACCESS,
