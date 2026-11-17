@@ -128,14 +128,23 @@ Deno.serve(async (request: Request) => {
       if (error) throw error;
 
       const staff = await Promise.all((data || []).map(async (member) => {
-        const { data: authData, error: authError } = await admin.auth.admin.getUserById(member.user_id);
-        const authUser = authData?.user || null;
-        return {
-          ...member,
-          auth_confirmed: authUser ? Boolean(authUser.confirmed_at) : null,
-          last_sign_in_at: authUser?.last_sign_in_at || null,
-          auth_account_missing: Boolean(authError || !authUser)
-        };
+        try {
+          const { data: authData, error: authError } = await admin.auth.admin.getUserById(member.user_id);
+          const authUser = authData?.user || null;
+          return {
+            ...member,
+            auth_confirmed: authUser ? Boolean(authUser.confirmed_at) : null,
+            last_sign_in_at: authUser?.last_sign_in_at || null,
+            auth_account_missing: Boolean(authError || !authUser)
+          };
+        } catch {
+          return {
+            ...member,
+            auth_confirmed: null,
+            last_sign_in_at: null,
+            auth_account_missing: true
+          };
+        }
       }));
       return json({ staff });
     }
