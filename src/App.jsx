@@ -3046,6 +3046,15 @@ export default function App() {
   // Category and subcategory filtering belongs to StoreView, which has the
   // parent/child category tree. Filtering by the parent name here first would
   // discard products assigned to its subcategories before StoreView can include them.
+  const adminDashboardProducts = useMemo(() => {
+    if (hasAdminPermission('expenses')) return Array.isArray(products) ? products : [];
+    return (Array.isArray(products) ? products : []).map((product) => {
+      if (!product || typeof product !== 'object') return product;
+      const { purchase_cost, purchaseCost, ...safeProduct } = product;
+      return safeProduct;
+    });
+  }, [products, adminAccess]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchesVendor =
@@ -3161,6 +3170,7 @@ export default function App() {
         {activeTab === 'admin' && (
           <Suspense fallback={null}>
             <AdminDashboardPro
+            key={`${currentUser?.id || 'anonymous'}-${adminAccess.is_admin ? 'owner' : Object.keys(adminAccess.permissions || {}).filter((permission) => adminAccess.permissions[permission]).sort().join('-')}`}
             adminLoggedIn={adminLoggedIn}
             adminAccess={adminAccess}
             setAdminLoggedIn={setAdminLoggedIn}
@@ -3179,7 +3189,7 @@ export default function App() {
             setOrders={setOrders}
             usersList={usersList || []}
             setUsersList={setUsersList}
-            products={products || []}
+            products={adminDashboardProducts}
             setProducts={setProducts}
             vendorsList={vendorsList || []}
             setVendorsList={setVendorsList}
