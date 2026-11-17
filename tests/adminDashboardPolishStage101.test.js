@@ -34,3 +34,20 @@ test('visual polish does not hide or disable existing admin controls', () => {
   assert.doesNotMatch(polish, /pointer-events:\s*none/i);
   assert.doesNotMatch(polish, /visibility:\s*hidden/i);
 });
+
+
+test('Stage 104 keeps the admin navigation usable on tablet and mobile', () => {
+  assert.match(polish, /flex-direction:\s*row/);
+  assert.match(polish, /overflow-x:\s*auto/);
+  assert.match(polish, /scroll-snap-type:\s*x\s+proximity/);
+  assert.match(polish, /min-height:\s*46px/);
+  assert.match(polish, /max-width:\s*1023px/);
+});
+
+test('Stage 104 improves narrow-screen readability and prevents horizontal layout overflow', () => {
+  assert.match(polish, /\[class~="text-\[8px\]"\]/);
+  assert.match(polish, /font-size:\s*10px\s*!important/);
+  assert.match(polish, /overflow-wrap:\s*anywhere/);
+  assert.match(polish, /max-width:\s*100%/);
+  assert.match(polish, /min-height:\s*44px/);
+});
