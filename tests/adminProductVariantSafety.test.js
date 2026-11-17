@@ -20,7 +20,7 @@ test('variant stock changes use the authenticated atomic batch RPC, not the stal
   assert.match(admin, /rpc\/admin_update_product_with_stock/);
   assert.match(admin, /p_size_color_stocks:\s*changedSizeColorStocks/);
   assert.match(admin, /p_custom_variant_stocks:\s*changedCustomVariantStocks/);
-  assert.match(admin, /admin_set_product_variant_stock_batches/);
+  assert.match(atomicStock, /CREATE OR REPLACE FUNCTION private\.admin_set_product_variant_stock_batches/);
   assert.match(atomicStock, /IF v_size_count > 0 THEN[\s\S]*?private\.admin_set_product_variant_stocks/);
   assert.match(atomicStock, /IF v_custom_count > 0 THEN[\s\S]*?private\.admin_set_product_custom_variant_stocks/);
   assert.match(atomicStock, /SECURITY DEFINER[\s\S]*?auth\.uid\(\) IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid/);
