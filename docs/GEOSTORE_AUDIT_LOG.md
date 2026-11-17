@@ -857,3 +857,13 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Customer order notifications are owner-scoped to authenticated users. The current zero-row notification table is not evidence of failed order intake; the two current orders do not establish an authenticated notification event.
 - No order, product, stock, customer, message, notification or other live data was modified. No live migration, schema change, merge or deployment was performed.
 - No order-intake or Realtime configuration defect was confirmed in this read-only pass. Remaining verification is an authenticated staging/browser test of a fresh guest order and a fresh account-linked order, admin arrival, order-detail image snapshots, and customer status notifications.
+
+
+## Stage 97 — order detail dialog keyboard accessibility audit (read-only)
+- Inspected the admin order detail dialog and its open/close entry points in `AdminDashboardPro.jsx`.
+- The dialog exposes `role="dialog"`, `aria-modal="true"` and an accessible title, and it has a visible close button.
+- The inspected implementation does not show an Escape-key close handler, initial focus placement, focus containment while open, or focus restoration to the invoking order button after close.
+- This is a keyboard and assistive-technology usability gap; it does not indicate an order-data or authorization defect.
+- Next implementation should add dialog-scoped focus management without changing order selection, status, note-save, invoice, reactivation, or data-fetch behavior. It must preserve the previously focused trigger and avoid stealing focus when the selected order changes while the dialog remains open.
+- Add regression coverage for Escape close, Tab/Shift+Tab containment, initial focus, focus restoration, and cleanup on unmount. Verify nested reactivation dialog behavior separately to avoid closing the underlying order dialog unexpectedly.
+- No application code, order, customer, database row, schema, migration, or production setting was changed in this audit.
