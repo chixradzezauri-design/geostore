@@ -42,6 +42,11 @@ test('full product-cost listing is not granted by products permission alone', ()
   assert.ok(migration.includes("EXECUTE rtrim(v_definition, E'; \\t\\n\\r')"));
 });
 
+test('flash-sale campaigns remain owner-only and are not converted to products permission', () => {
+  const targets = migration.split('v_signatures text[] := ARRAY[')[1]?.split('];')[0] || '';
+  assert.doesNotMatch(targets, /admin_apply_flash_sale/);
+});
+
 test('product permission changes preserve inventory transaction markers', () => {
   assert.match(migration, /geostore\.inventory_reason/);
   assert.match(migration, /geostore\.variant_stock_adjustment/);
