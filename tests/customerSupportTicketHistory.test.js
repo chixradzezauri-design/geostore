@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fetchMySupportTickets, mergeSupportTicketPages } from '../src/utils/supportTicketHistory.js';
 
 const migration = await readFile(new URL('../supabase/migrations/20261116170000_customer_support_ticket_history.sql', import.meta.url), 'utf8');
-const paginationMigration = await readFile(new URL('../supabase/migrations/20261117190000_customer_support_ticket_history_pagination.sql', import.meta.url), 'utf8');
+const paginationMigration = await readFile(new URL('../supabase/migrations/20261117084443_customer_support_ticket_history_pagination.sql', import.meta.url), 'utf8');
 const threadMigration = await readFile(new URL('../supabase/migrations/20261116071600_harden_support_ticket_authorization_and_admin_reply_status.sql', import.meta.url), 'utf8');
 const helper = await readFile(new URL('../src/utils/supportTicketHistory.js', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
