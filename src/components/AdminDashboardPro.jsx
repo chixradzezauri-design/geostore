@@ -654,7 +654,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      const result = await callStaffApi({
+      await callStaffApi({
         action: 'update',
         id: staff.id,
         display_name: editForm.display_name,
@@ -681,7 +681,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      const result = await callStaffApi({ action: 'revoke', id: staff.id });
+      await callStaffApi({ action: 'revoke', id: staff.id });
       await refreshStaffList(true);
       setStaffListNotice('თანამშრომლის სერვერული წვდომა გაუქმდა. Supabase Auth ანგარიში შენარჩუნებულია.');
       if (typeof logActivity === 'function') {
@@ -703,7 +703,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
     setStaffListError('');
     setStaffListNotice('');
     try {
-      const result = await callStaffApi({
+      await callStaffApi({
         action: 'update',
         id: staff.id,
         display_name: staff.display_name,
