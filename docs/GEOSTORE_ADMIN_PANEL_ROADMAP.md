@@ -407,3 +407,19 @@ Only then request approval to merge and deploy.
 ### Verification remaining
 - Run focused tests, full `npm test`, production build, dependency audit and CodeQL on the updated draft PR head.
 - Verify more than 100 legacy messages across several pages against staging, including equal timestamps, new Realtime inserts while paging, manual refresh, and admin logout during a pending request.
+
+
+## Stage 97 — order detail dialog keyboard accessibility
+
+### Audit finding
+- The full order detail dialog already has dialog semantics, modal indication, a labelled heading and a visible close control.
+- Read-only inspection found no Escape-key close behavior, initial focus placement, focus trap, or focus restoration to the order-row trigger.
+
+### Planned safe implementation
+- Add dialog-scoped keyboard focus management and restore focus to the exact invoking order button on close.
+- Keep the selected-order state and all existing order actions unchanged.
+- Handle the nested password-confirmation dialog independently so Escape and focus return do not unintentionally dismiss or strand the underlying order detail dialog.
+- Add focused tests for keyboard behavior, focus restoration, cleanup, and nested dialog interaction.
+
+### Safety boundary
+- This stage is an audit only. No order/customer data, application code, database schema, live settings or production deployment was changed.
