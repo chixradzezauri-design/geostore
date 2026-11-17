@@ -786,3 +786,245 @@
     max-width: 100%;
   }
 }
+
+
+
+/* STAGE 101 — premium visual hierarchy and interaction polish
+   Builds on the existing Stage 58–90 visual and responsive layers. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  --admin-card-border: rgba(126, 157, 187, .24);
+  --admin-card-highlight: rgba(255, 255, 255, .035);
+  --admin-card-shadow: 0 16px 34px rgba(0, 0, 0, .17), inset 0 1px 0 rgba(255, 255, 255, .025);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-orders-panel,
+  .admin-products-panel,
+  .admin-inventory-panel,
+  .admin-staff-panel,
+  .admin-staff-list-panel,
+  .admin-support-panel,
+  .admin-crm-panel,
+  .admin-settings-panel,
+  .admin-analytics,
+  .admin-expenses,
+  .admin-discounts-panel,
+  .admin-banners,
+  .admin-coupons-panel,
+  .admin-vendors-panel,
+  .admin-category-manager
+) {
+  border-color: var(--admin-card-border) !important;
+  box-shadow: var(--admin-card-shadow);
+  background-image: linear-gradient(150deg, var(--admin-card-highlight), transparent 58%);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-order-card,
+  .admin-product-row,
+  .admin-staff-card,
+  .admin-support-ticket,
+  .admin-crm-user-card,
+  .admin-vendor-card,
+  .admin-banner-card,
+  .admin-coupon-card,
+  .admin-category-card,
+  .admin-subcategory-card,
+  .admin-expense-row,
+  .admin-analytics-card,
+  .admin-command-kpi,
+  .admin-command-panel
+) {
+  border-color: var(--admin-card-border) !important;
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, .035), transparent 62%);
+  box-shadow: var(--admin-card-shadow);
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-orders-heading,
+  .admin-orders-header,
+  .admin-staff-list-title,
+  .admin-product-inventory-title
+) {
+  text-wrap: balance;
+  line-height: 1.3;
+  letter-spacing: -.015em;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+  border-radius: 24px !important;
+  background-color: rgba(7, 18, 31, .74);
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-heading {
+  align-items: center;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  border-radius: 999px !important;
+  padding-inline: 11px;
+  letter-spacing: .015em;
+  white-space: nowrap;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-actions {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivate-button {
+  min-height: 42px;
+  border: 1px solid rgba(252, 211, 77, .52);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, .13);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-overlay {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-form {
+  background: linear-gradient(155deg, #172a40 0%, #0b1727 100%) !important;
+  border-color: rgba(245, 158, 11, .42) !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-form :is(input, button) {
+  min-height: 46px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-order-status-actions,
+  .admin-support-status-actions
+) > button {
+  min-height: 40px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell button:not(:disabled) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell button:disabled {
+  cursor: not-allowed;
+  filter: saturate(.72);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-order-card,
+    .admin-product-row,
+    .admin-staff-card,
+    .admin-support-ticket,
+    .admin-crm-user-card,
+    .admin-vendor-card,
+    .admin-banner-card,
+    .admin-coupon-card,
+    .admin-category-card,
+    .admin-subcategory-card,
+    .admin-expense-row,
+    .admin-analytics-card,
+    .admin-command-kpi,
+    .admin-command-panel
+  ) {
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-order-card,
+    .admin-product-row,
+    .admin-staff-card,
+    .admin-support-ticket,
+    .admin-crm-user-card,
+    .admin-vendor-card,
+    .admin-banner-card,
+    .admin-coupon-card,
+    .admin-category-card,
+    .admin-subcategory-card,
+    .admin-expense-row,
+    .admin-analytics-card,
+    .admin-command-kpi,
+    .admin-command-panel
+  ):hover {
+    border-color: rgba(94, 224, 176, .42) !important;
+    box-shadow: 0 20px 42px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .04);
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    padding: 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card-footer {
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 6px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions > button,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivate-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-form {
+    padding: clamp(16px, 4vw, 24px) !important;
+    border-radius: 22px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    padding: 13px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card-customer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-order-card,
+    .admin-product-row,
+    .admin-staff-card,
+    .admin-support-ticket,
+    .admin-crm-user-card,
+    .admin-vendor-card,
+    .admin-banner-card,
+    .admin-coupon-card,
+    .admin-category-card,
+    .admin-subcategory-card,
+    .admin-expense-row,
+    .admin-analytics-card,
+    .admin-command-kpi,
+    .admin-command-panel
+  ) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
