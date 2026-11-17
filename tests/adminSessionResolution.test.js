@@ -18,3 +18,11 @@ test('product data is loaded with permission-aware paths and purchase cost is st
   assert.match(source, /const \{ purchase_cost, purchaseCost, \.\.\.safeProduct \} = product/);
   assert.match(source, /adminAccess=\{adminAccess\}/);
 });
+
+test('active admin permissions are revalidated on an interval and when the app returns to foreground', () => {
+  assert.match(source, /refreshAdminAccess/);
+  assert.match(source, /window\.setInterval\(\(\) => void refreshAdminAccess\(\), 60000\)/);
+  assert.match(source, /document\.addEventListener\('visibilitychange', refreshWhenVisible\)/);
+  assert.match(source, /setAdminAccess\(EMPTY_ADMIN_ACCESS\)/);
+  assert.match(source, /setAdminLoggedIn\(false\)/);
+});
