@@ -3230,7 +3230,11 @@ export default function AdminDashboardPro({
         throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
       }
 
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_reactivate_cancelled_order`, {
+      const wasDelivered = isDeliveredOrderStatus(reactivationOrder.status);
+      const reactivationRpc = wasDelivered
+        ? 'admin_reopen_completed_order'
+        : 'admin_reactivate_cancelled_order';
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${reactivationRpc}`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -3261,7 +3265,6 @@ export default function AdminDashboardPro({
         ));
       } catch {}
 
-      const wasDelivered = isDeliveredOrderStatus(reactivationOrder.status);
       logActivity(`${wasDelivered ? 'დასრულებული' : 'გაუქმებული'} შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა პაროლის დადასტურებით`);
       setReactivationOrder(null);
       setReactivationPassword('');
@@ -4610,10 +4613,12 @@ export default function AdminDashboardPro({
                           <Printer className="w-4 h-4" /> ინვოისი
                         </button>
 
-                        {isCancelledOrderStatus(o.status) ? (
-                          o.stock_deducted_at && o.stock_restored_at ? (
+                        {(isCancelledOrderStatus(o.status) || isDeliveredOrderStatus(o.status)) ? (
+                          (isDeliveredOrderStatus(o.status)
+                            ? Boolean(o.stock_deducted_at) && !o.stock_restored_at
+                            : Boolean(o.stock_deducted_at) && Boolean(o.stock_restored_at)) ? (
                             <button
-                              onClick={() => { setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                              onClick={() => { reactivationTriggerRef.current = document.activeElement; setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
                               className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
                             >
                               <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
@@ -4621,7 +4626,7 @@ export default function AdminDashboardPro({
                           ) : (
                             <span
                               className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-200 text-[10px] leading-relaxed"
-                              title="რეაქტივაცია მოითხოვს მარაგის ჩამოჭრისა და აღდგენის დადასტურებულ ჩანაწერებს."
+                              title="რეაქტივაცია მოითხოვს მარაგის ისტორიის დადასტურებულ ჩანაწერებს."
                             >
                               რეაქტივაცია მიუწვდომელია — მარაგის ისტორია არასრულია
                             </span>
