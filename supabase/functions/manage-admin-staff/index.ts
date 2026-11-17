@@ -177,24 +177,66 @@ Deno.serve(async (request: Request) => {
         return json({ error: 'აქტიურ თანამშრომელს მინიმუმ ერთი მოდულის უფლება უნდა ჰქონდეს.' }, 400);
       }
 
+      const invitationMetadataKey = 'geostore_staff_invitation_token';
       let targetUser = await findAuthUserByEmail(admin, email);
       let invitedNewUser = false;
+      let recoveredPendingInvite = false;
+      let invitationToken: string | null = null;
+
       if (!targetUser) {
+        // Persist the owner-authorized intent before calling Auth. If Auth creates
+        // the user but the membership write later fails, the same token lets the
+        // owner safely recover that exact invitation on a subsequent attempt.
+        const { data: pendingInvite, error: pendingReadError } = await admin
+          .from('admin_staff_pending_invites')
+          .select('invitation_token')
+          .eq('email', email)
+          .maybeSingle();
+        if (pendingReadError) throw pendingReadError;
+
+        invitationToken = pendingInvite?.invitation_token || crypto.randomUUID();
+        if (!pendingInvite) {
+          const { error: pendingInsertError } = await admin
+            .from('admin_staff_pending_invites')
+            .insert({
+              email,
+              invitation_token: invitationToken,
+              invited_by: caller.id
+            });
+          if (pendingInsertError) throw pendingInsertError;
+        }
+
         const redirectTo = Deno.env.get('STAFF_INVITE_REDIRECT_URL');
         const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-          data: { name: displayName },
+          data: { name: displayName, [invitationMetadataKey]: invitationToken },
           ...(redirectTo ? { redirectTo } : {})
         });
         if (error) throw error;
         targetUser = data.user;
         invitedNewUser = true;
+      } else if (!targetUser.confirmed_at) {
+        // Never attach an arbitrary pre-existing unconfirmed signup. Recovery is
+        // allowed only when its unguessable marker matches an owner-created,
+        // server-only pending invitation recorded before Auth was called.
+        const { data: pendingInvite, error: pendingReadError } = await admin
+          .from('admin_staff_pending_invites')
+          .select('invitation_token')
+          .eq('email', email)
+          .maybeSingle();
+        if (pendingReadError) throw pendingReadError;
+
+        const userInvitationToken = targetUser.user_metadata?.[invitationMetadataKey];
+        if (!pendingInvite || typeof userInvitationToken !== 'string' ||
+            userInvitationToken !== pendingInvite.invitation_token) {
+          return json({ error: 'არსებული ანგარიშის ელფოსტა ჯერ დადასტურებული არ არის და ეს ანგარიში ამ მოწვევით არ შექმნილა. ჯერ დაადასტურეთ ელფოსტა.' }, 409);
+        }
+        invitationToken = pendingInvite.invitation_token;
+        recoveredPendingInvite = true;
       }
 
-      // Existing accounts may be linked only after Supabase confirms ownership
-      // of the email address. Newly invited accounts complete verification
-      // through the invitation flow and are intentionally exempt here.
-      if (!invitedNewUser && !targetUser?.confirmed_at) {
-        return json({ error: 'არსებული ანგარიშის ელფოსტა ჯერ დადასტურებული არ არის. თანამშრომლად დასამატებლად ჯერ დაადასტურეთ ელფოსტა.' }, 409);
+      if (!targetUser?.confirmed_at &&
+          (!invitationToken || targetUser.user_metadata?.[invitationMetadataKey] !== invitationToken)) {
+        return json({ error: 'თანამშრომლის მოწვევა ვერ დადასტურდა. უფლებების მინიჭება შეჩერებულია.' }, 409);
       }
 
       if (!targetUser?.id || targetUser.id === OWNER_ID) {
@@ -220,12 +262,29 @@ Deno.serve(async (request: Request) => {
         .single();
 
       if (saveError) {
-        // Keep the Auth account intact. Without a membership row it has no staff permissions,
-        // and the owner can safely retry linking the same account after resolving the error.
+        // Keep both the Auth account and pending invitation marker intact. The
+        // owner can retry; an unconfirmed account is recoverable only with this
+        // exact server-recorded invitation token and still receives no access
+        // until email_confirmed_at becomes non-null in the permission functions.
         throw saveError;
       }
 
-      return json({ staff, invited: invitedNewUser, linked_existing_account: !invitedNewUser });
+      // Cleanup is best-effort: a failed cleanup is harmless and a retry remains
+      // idempotent because the membership upsert and token check are repeatable.
+      const { error: pendingCleanupError } = await admin
+        .from('admin_staff_pending_invites')
+        .delete()
+        .eq('email', email);
+      if (pendingCleanupError) {
+        console.error('Could not clear recovered staff invitation marker:', pendingCleanupError);
+      }
+
+      return json({
+        staff,
+        invited: invitedNewUser,
+        linked_existing_account: !invitedNewUser && !recoveredPendingInvite,
+        recovered_pending_invite: recoveredPendingInvite
+      });
     }
 
     if (action === 'update') {
