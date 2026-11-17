@@ -4179,10 +4179,32 @@ export default function AdminDashboardPro({
             )}
             <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-slate-300 font-bold">CRM & Database აქტიურია</span>
+              <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
             </div>
           </div>
         </div>
+
+        {!isOwner && (
+          <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-slate-900 via-slate-900/95 to-emerald-950/30 p-4 sm:p-5 shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-300">STAFF ACCESS</p>
+                <h3 className="mt-1 text-sm font-black text-white">{STAFF_ROLE_LABELS[adminAccess?.role] || 'თანამშრომელი'} · აქტიური მოდულები</h3>
+                <p className="mt-1 text-[11px] text-slate-400">წვდომა მოწმდება Supabase-ში; ბრაუზერის ლოკალური ჩანაწერები უფლებებს არ განსაზღვრავს.</p>
+              </div>
+              <span className="shrink-0 rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200">
+                {STAFF_PERMISSION_OPTIONS.filter((permission) => hasModulePermission(permission.key)).length} მოდული
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {STAFF_PERMISSION_OPTIONS.filter((permission) => hasModulePermission(permission.key)).map((permission) => (
+                <span key={permission.key} className="rounded-lg border border-emerald-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-bold text-emerald-100">
+                  {permission.label}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
         {visibleAdminTab === 'command' && (
           <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
