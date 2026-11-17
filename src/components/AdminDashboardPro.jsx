@@ -1642,7 +1642,7 @@ export default function AdminDashboardPro({
       // Mark customer messages as read only while this administrator has the
       // matching conversation open and the page is visible. A receipt failure
       // must never hide the already-loaded conversation.
-      if (adminLoggedIn
+      if (hasSupportPermission
         && String(selectedSupportTicketId || '') === normalizedTicketId
         && document.visibilityState === 'visible') {
         try {
