@@ -1107,6 +1107,61 @@ export default function App() {
     };
   }, []);
 
+
+  // Revalidate active staff permissions periodically and whenever the app returns
+  // to the foreground. Server-side RPC/RLS checks remain authoritative; this
+  // refresh removes stale tabs and admin UI state after an owner revokes access.
+  useEffect(() => {
+    if (!currentUser?.id || !adminLoggedIn) return undefined;
+    let active = true;
+    let inFlight = false;
+
+    const refreshAdminAccess = async () => {
+      if (!active || inFlight) return;
+      inFlight = true;
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        const authUser = data?.user || null;
+        if (!authUser || authUser.id !== currentUser.id) {
+          throw new Error('The authenticated user changed during permission refresh.');
+        }
+
+        const access = await resolveAdminAccess(authUser);
+        if (!active) return;
+        const authorized = hasAnyAdminAccess(access);
+        setAdminAccess(access);
+        setAdminLoggedIn(authorized);
+        if (!authorized) {
+          setActiveTab((current) => current === 'admin' ? 'store' : current);
+        }
+      } catch (error) {
+        if (!active) return;
+        // Fail closed when the session or permission lookup cannot be verified.
+        console.warn('Admin permission refresh failed; clearing cached access:', error);
+        setAdminAccess(EMPTY_ADMIN_ACCESS);
+        setAdminLoggedIn(false);
+        setActiveTab((current) => current === 'admin' ? 'store' : current);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    void refreshAdminAccess();
+    const interval = window.setInterval(() => void refreshAdminAccess(), 60000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refreshAdminAccess();
+    };
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [currentUser?.id, adminLoggedIn]);
+
+
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
