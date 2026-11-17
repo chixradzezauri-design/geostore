@@ -3639,6 +3639,10 @@ export default function AdminDashboardPro({
     const nextStatus = normalizeOrderStatus(newStatus);
 
     if (isDeliveredOrderStatus(currentStatus) && !isDeliveredOrderStatus(nextStatus)) {
+      if (!isOwner) {
+        alert('დასრულებული შეკვეთის ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
+        return;
+      }
       if (nextStatus !== 'ახალი') {
         alert('დასრულებული შეკვეთის ხელახლა გასააქტიურებლად ჯერ აირჩიეთ „ხელახლა გააქტიურება“. შემდეგ სტატუსებს ჩვეულებრივ შეცვლით.');
         return;
@@ -3650,6 +3654,10 @@ export default function AdminDashboardPro({
       return;
     }
     if (isCancelledOrderStatus(currentStatus) && !isCancelledOrderStatus(nextStatus)) {
+      if (!isOwner) {
+        alert('გაუქმებული შეკვეთის ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
+        return;
+      }
       if (nextStatus !== 'ახალი') {
         alert('გაუქმებული შეკვეთის აღსადგენად ჯერ აირჩიეთ „ხელახლა გააქტიურება“.');
         return;
@@ -3704,6 +3712,10 @@ export default function AdminDashboardPro({
 
   const handleConfirmOrderReactivation = async (event) => {
     event.preventDefault();
+    if (!isOwner) {
+      setReactivationError('ამ მოქმედების შესრულება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
+      return;
+    }
     if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
 
     setIsReactivatingOrder(true);
@@ -6345,7 +6357,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-      {reactivationOrder && (
+      {isOwner && reactivationOrder && (
         <div tabIndex="-1" className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
           <form onSubmit={handleConfirmOrderReactivation} className="w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
             <div className="flex items-center gap-3">
