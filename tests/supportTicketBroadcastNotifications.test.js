@@ -56,12 +56,12 @@ test('Realtime notifications are server-triggered only; clients receive no Broad
 
 
 test('admin support channel ignores callbacks after cleanup and fences stale session reads', () => {
-  assert.match(adminApp, /const supportThreadSessionRef = useRef\\(0\\)/);
-  assert.match(adminApp, /fetchSupportTicketThread = async \\(ticketId, sessionId = supportThreadSessionRef\\.current\\)/);
-  assert.match(adminApp, /sessionId !== supportThreadSessionRef\\.current/);
-  assert.match(adminApp, /supportThreadSessionRef\\.current \\+= 1/);
-  assert.match(adminApp, /let active = true;[\\s\\S]*?channel\\('geostore-support-admin'[\\s\\S]*?if \\(!active\\) return/);
-  assert.match(adminApp, /active = false;[\\s\\S]*?removeChannel\\(channel\\)/);
+  assert.match(adminApp, /const supportThreadSessionRef = useRef\(0\)/);
+  assert.match(adminApp, /fetchSupportTicketThread = async \(ticketId, sessionId = supportThreadSessionRef\.current\)/);
+  assert.match(adminApp, /sessionId !== supportThreadSessionRef\.current/);
+  assert.match(adminApp, /supportThreadSessionRef\.current \+= 1/);
+  assert.match(adminApp, /let active = true;[\s\S]*?channel\('geostore-support-admin'[\s\S]*?if \(!active\) return/);
+  assert.match(adminApp, /active = false;[\s\S]*?removeChannel\(channel\)/);
 });
 
 test('customer support subscriptions fence stale account and guest-ticket callbacks', () => {
