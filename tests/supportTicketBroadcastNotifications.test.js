@@ -20,7 +20,7 @@ test('account-linked customer notifications require a private auth.uid-scoped to
   assert.match(customerApp, /geostore-support-user:\$\{currentUser\.id\}/);
   assert.match(customerApp, /config:\s*\{\s*private:\s*isPrivate\s*\}/);
   assert.match(migration, /'geostore-support-user:'\s*\|\|\s*v_customer_user_id::text,[\s\S]*?true\s*\)/);
-  assert.match(migration, /realtime\.topic\(\)\s*=\s*'geostore-support-user:'\s*\|\|\s*\(select auth\.uid\(\)\)::text/);
+  assert.match(migration, /\(select realtime\.topic\(\)\)\s*=\s*'geostore-support-user:'\s*\|\|\s*\(select auth\.uid\(\)\)::text/);
 });
 
 test('admin notifications are private and restricted to the primary admin identity', () => {
