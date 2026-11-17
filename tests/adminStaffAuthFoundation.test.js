@@ -20,6 +20,12 @@ test('server-side permission checks use the authenticated user and active databa
   assert.match(migration, /public\.get_my_admin_access/);
 });
 
+test('staff authorization is blocked until the Auth email is confirmed', () => {
+  assert.equal((migration.match(/auth_user\.email_confirmed_at IS NOT NULL/g) || []).length, 2);
+  assert.match(migration, /FROM auth\.users AS auth_user/);
+  assert.match(migration, /Do not expose staff-panel access before the invited email is confirmed/);
+});
+
 test('staff management Edge Function verifies the owner and never exposes the server secret', () => {
   assert.match(edge, /auth\.getUser\(tokenMatch\[1\]\)/);
   assert.match(edge, /caller\.id !== OWNER_ID/);
