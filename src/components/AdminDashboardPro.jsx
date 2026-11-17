@@ -321,7 +321,7 @@ export default function AdminDashboardPro({
   deliveryFees,
   setDeliveryFees
 }) {
-  const [adminTab, setAdminTab] = useState('analytics'); 
+  const [adminTab, setAdminTab] = useState('command'); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
@@ -672,7 +672,8 @@ export default function AdminDashboardPro({
     const endTimes = activeProducts.map(product => Date.parse(product.flashSaleEndsAt));
     return {
       count: activeProducts.length,
-      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null
+      nextEndsAt: endTimes.length ? Math.min(...endTimes) : null,
+      expiringCount: endTimes.filter(endTime => endTime - now <= 24 * 60 * 60 * 1000).length
     };
   }, [products, flashSaleStatusClock]);
 
@@ -759,7 +760,8 @@ export default function AdminDashboardPro({
         message: t.message,
         status: t.status || 'ღია',
         reply: t.reply || '',
-        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს'
+        date: t.created_at ? new Date(t.created_at).toLocaleDateString('ka-GE') : 'დღეს',
+      createdAt: t.created_at || null
       })));
       setSupportTicketsError('');
     } catch (error) {
@@ -3246,6 +3248,44 @@ export default function AdminDashboardPro({
   const isLaptop = catLower.includes('ლეპტოპ') || catLower.includes('კომპიუტერ');
   const isPhone = catLower.includes('სმარტფონ') || catLower.includes('ტელეფონ');
 
+  // Command Center uses only the data already loaded by the existing admin workflows.
+  // It is a read-only operational overview: no stock, order or ticket state is mutated here.
+  const commandCenterPendingOrders = (Array.isArray(orders) ? orders : [])
+    .filter(order => ['ახალი', 'მუშავდება'].includes(getOrderStatusFilterKey(order?.status)))
+    .sort((left, right) => {
+      const leftTime = Date.parse(left?.created_at || left?.createdAt || '') || 0;
+      const rightTime = Date.parse(right?.created_at || right?.createdAt || '') || 0;
+      return rightTime - leftTime || String(right?.id ?? '').localeCompare(String(left?.id ?? ''));
+    });
+  const commandCenterNewOrders = commandCenterPendingOrders.filter(order => getOrderStatusFilterKey(order?.status) === 'ახალი');
+  const commandCenterOpenTickets = (Array.isArray(supportTickets) ? supportTickets : [])
+    .filter(ticket => ['ღია', 'მუშავდება', 'open', 'in progress', 'pending', 'new'].includes(normalizeOrderStatus(ticket?.status)));
+  const commandCenterOverdueTickets = commandCenterOpenTickets.filter(ticket => {
+    const createdAt = Date.parse(ticket?.createdAt || '');
+    return Number.isFinite(createdAt) && flashSaleStatusClock - createdAt >= 24 * 60 * 60 * 1000;
+  });
+  const commandCenterLowStockGroups = Array.isArray(lowStockGroups) ? lowStockGroups : [];
+  const commandCenterRecentEvents = [
+    ...(Array.isArray(orders) ? orders : []).map(order => ({
+      id: `order-${order?.id ?? ''}`,
+      title: `შეკვეთა #${order?.id ?? '—'}`,
+      detail: order?.customerName || order?.user_email || 'მომხმარებელი',
+      timestamp: Date.parse(order?.created_at || order?.createdAt || ''),
+      tab: 'orders',
+      kind: 'შეკვეთა'
+    })),
+    ...(Array.isArray(supportTickets) ? supportTickets : []).map(ticket => ({
+      id: `ticket-${ticket?.id ?? ''}`,
+      title: ticket?.subject || 'მხარდაჭერის მოთხოვნა',
+      detail: ticket?.customerName || ticket?.email || 'მომხმარებელი',
+      timestamp: Date.parse(ticket?.createdAt || ''),
+      tab: 'support',
+      kind: 'მხარდაჭერა'
+    }))
+  ].filter(event => event.id && !event.id.endsWith('-') && Number.isFinite(event.timestamp))
+    .sort((left, right) => right.timestamp - left.timestamp)
+    .slice(0, 6);
+
   return (
     <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
       
@@ -3263,6 +3303,7 @@ export default function AdminDashboardPro({
 
         <div className="space-y-1.5">
           {[
+            { id: 'command', label: '🚀 მთავარი მართვის ცენტრი', icon: LayoutDashboard },
             { id: 'analytics', label: '📊 ანალიტიკა & ფინანსები', icon: BarChart3 },
             { id: 'calculator', label: '🧮 მოგების კალკულატორი', icon: Calculator },
             { id: 'expenses', label: '💸 ხარჯების მართვა', count: expenses.length, icon: Wallet },
@@ -3347,6 +3388,129 @@ export default function AdminDashboardPro({
             </div>
           </div>
         </div>
+
+        {adminTab === 'command' && (
+          <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
+            <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
+              <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[.22em] text-emerald-300">GEOSTORE / OPERATIONS</p>
+                  <h3 id="admin-command-title" className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-white">მთავარი მართვის ცენტრი</h3>
+                  <p className="mt-2 max-w-2xl text-xs sm:text-sm leading-6 text-slate-300">მაღაზიის ყოველდღიური ოპერაციები ერთ სივრცეში — შეკვეთები, მხარდაჭერა, მარაგი და აქციები.</p>
+                </div>
+                <button type="button" onClick={() => setAdminTab('analytics')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-slate-950/50 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/10">
+                  <BarChart3 className="h-4 w-4" /> ფინანსური ანალიტიკა
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-command-kpis grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 sm:gap-4">
+              <button type="button" onClick={() => setAdminTab('orders')} className="admin-command-kpi group text-left rounded-2xl border border-emerald-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>ახალი შეკვეთები</span><PackageCheck className="h-5 w-5 text-emerald-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterNewOrders.length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">მოლოდინში სულ {commandCenterPendingOrders.length} შეკვეთა · გახსნა</span>
+              </button>
+              <button type="button" onClick={() => setAdminTab('support')} className="admin-command-kpi group text-left rounded-2xl border border-amber-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-amber-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>ვადაგადაცილებული მხარდაჭერა</span><HelpCircle className="h-5 w-5 text-amber-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterOverdueTickets.length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">ღია ტიკეტი 24 საათზე მეტი ხნით · გახსნა</span>
+              </button>
+              <button type="button" onClick={() => setAdminTab('products')} className="admin-command-kpi group text-left rounded-2xl border border-rose-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-rose-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>დაბალი მარაგი</span><Store className="h-5 w-5 text-rose-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{commandCenterLowStockGroups.length}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">პროდუქტი/ვარიანტი საჭიროებს შემოწმებას · გახსნა</span>
+              </button>
+              <button type="button" onClick={() => setAdminTab('discounts')} className="admin-command-kpi group text-left rounded-2xl border border-sky-400/25 bg-slate-900/80 p-5 transition hover:-translate-y-0.5 hover:border-sky-300/60">
+                <span className="flex items-center justify-between gap-3 text-xs font-bold text-slate-300"><span>აქციები იწურება</span><Zap className="h-5 w-5 text-sky-300" /></span>
+                <strong className="mt-3 block text-3xl font-black tabular-nums text-white">{flashSaleAdminSummary.expiringCount || 0}</strong>
+                <span className="mt-2 block text-[11px] text-slate-400">მომდევნო 24 საათში · გახსნა</span>
+              </button>
+            </div>
+
+            <div className="admin-command-panels grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="admin-command-panel rounded-2xl border border-emerald-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">შეკვეთების რიგი</h4><p className="mt-1 text-[11px] text-slate-400">ახალი და დამუშავების პროცესში მყოფი შეკვეთები</p></div>
+                  <button type="button" onClick={() => setAdminTab('orders')} className="shrink-0 rounded-lg border border-emerald-400/25 px-3 py-2 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10">ყველა</button>
+                </div>
+                {commandCenterPendingOrders.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">ამჟამად დასამუშავებელი შეკვეთები არ არის.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterPendingOrders.slice(0, 5).map(order => (
+                      <button type="button" key={String(order.id)} onClick={() => setAdminTab('orders')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-emerald-400/40">
+                        <span className="min-w-0"><strong className="block truncate text-xs text-white">#{order.id} · {order.customerName || 'მომხმარებელი'}</strong><span className="mt-1 block text-[10px] text-slate-400">{order.status || 'სტატუსი უცნობია'}</span></span>
+                        <span className="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-200">ნახვა</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-command-panel rounded-2xl border border-amber-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">მხარდაჭერის პრიორიტეტები</h4><p className="mt-1 text-[11px] text-slate-400">ღია მოთხოვნები და 24 საათზე ძველი ტიკეტები</p></div>
+                  <button type="button" onClick={() => setAdminTab('support')} className="shrink-0 rounded-lg border border-amber-400/25 px-3 py-2 text-[11px] font-bold text-amber-200 hover:bg-amber-400/10">ყველა</button>
+                </div>
+                {supportTicketsError ? (
+                  <p role="alert" className="rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-xs text-rose-200">მხარდაჭერის მონაცემები ვერ ჩაიტვირთა. გახსენით მხარდაჭერის განყოფილება და შეამოწმეთ კავშირი.</p>
+                ) : commandCenterOpenTickets.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">ღია მხარდაჭერის მოთხოვნები არ არის.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterOpenTickets.slice(0, 5).map(ticket => {
+                      const isOverdue = commandCenterOverdueTickets.some(item => String(item.id) === String(ticket.id));
+                      return (
+                        <button type="button" key={String(ticket.id)} onClick={() => setAdminTab('support')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-amber-400/40">
+                          <span className="min-w-0"><strong className="block truncate text-xs text-white">{ticket.subject || 'მხარდაჭერის მოთხოვნა'}</strong><span className="mt-1 block text-[10px] text-slate-400">{ticket.customerName || ticket.email || 'მომხმარებელი'}</span></span>
+                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-command-panel rounded-2xl border border-rose-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 text-[11px] text-slate-400">არსებული 5 ერთეულის ზღვრის მიხედვით</p></div>
+                  <button type="button" onClick={() => setAdminTab('products')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">პროდუქტები</button>
+                </div>
+                {commandCenterLowStockGroups.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">დაბალი მარაგის ჩანაწერები არ იძებნება არსებული ზღვრის ფარგლებში.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterLowStockGroups.slice(0, 5).map(group => (
+                      <div key={group.key} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3">
+                        <span className="min-w-0"><strong className="block truncate text-xs text-white">{group.name}</strong><span className="mt-1 block truncate text-[10px] text-slate-400">{group.positions.map(position => position.variantName).filter(Boolean).join(', ') || group.sku}</span></span>
+                        <span className="shrink-0 rounded-full bg-rose-400/10 px-2.5 py-1 text-[10px] font-bold text-rose-200">{group.positions.length} პოზიცია</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="admin-command-panel rounded-2xl border border-sky-400/20 bg-slate-900/75 p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div><h4 className="text-sm font-black text-white">ბოლო მოვლენები</h4><p className="mt-1 text-[11px] text-slate-400">შეკვეთებისა და მხარდაჭერის უახლესი ჩანაწერები</p></div>
+                  <Activity className="h-5 w-5 text-sky-300" />
+                </div>
+                {commandCenterRecentEvents.length === 0 ? (
+                  <p className="rounded-xl border border-slate-700/70 bg-slate-950/50 p-4 text-xs text-slate-400">მოვლენების ისტორია ჯერ არ არის ხელმისაწვდომი.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {commandCenterRecentEvents.map(event => (
+                      <button type="button" key={event.id} onClick={() => setAdminTab(event.tab)} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-sky-400/40">
+                        <span className="min-w-0"><strong className="block truncate text-xs text-white">{event.title}</strong><span className="mt-1 block text-[10px] text-slate-400">{event.kind} · {event.detail}</span></span>
+                        <time className="shrink-0 text-right text-[10px] text-slate-500">{new Date(event.timestamp).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         {adminTab === 'analytics' && (
           <div className="admin-analytics space-y-6">
