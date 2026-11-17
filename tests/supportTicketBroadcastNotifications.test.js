@@ -135,11 +135,11 @@ test('admin support ticket list refresh is fenced to the active admin session', 
   const end = adminApp.indexOf('  const fetchSupportTicketThread =', start);
   const fetchTickets = start >= 0 && end > start ? adminApp.slice(start, end) : '';
   assert.ok(fetchTickets, 'ticket list refresh function exists');
-  assert.match(adminApp, /const supportTicketListRequestRef = useRef\\(0\\)/);
-  assert.match(fetchTickets, /if \\(!adminLoggedIn \\|\\| sessionId !== supportThreadSessionRef\\.current\\) return/);
-  assert.match(fetchTickets, /const requestId = \\+\\+supportTicketListRequestRef\\.current/);
-  assert.match(fetchTickets, /requestId === supportTicketListRequestRef\\.current/);
-  assert.match(fetchTickets, /sessionId === supportThreadSessionRef\\.current/);
+  assert.ok(adminApp.includes('const supportTicketListRequestRef = useRef(0);'));
+  assert.ok(fetchTickets.includes('if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;'));
+  assert.ok(fetchTickets.includes('const requestId = ++supportTicketListRequestRef.current;'));
+  assert.ok(fetchTickets.includes('requestId === supportTicketListRequestRef.current'));
+  assert.ok(fetchTickets.includes('sessionId === supportThreadSessionRef.current'));
 });
 
 test('stale admin ticket list requests cannot publish results or errors', () => {
@@ -147,15 +147,16 @@ test('stale admin ticket list requests cannot publish results or errors', () => 
   const end = adminApp.indexOf('  const fetchSupportTicketThread =', start);
   const fetchTickets = start >= 0 && end > start ? adminApp.slice(start, end) : '';
   assert.ok(fetchTickets);
-  assert.match(fetchTickets, /await getSupabaseHeaders\\(\\);\\s*if \\(!isCurrentRequest\\(\\)\\) return/);
-  assert.match(fetchTickets, /await res\\.json\\(\\);\\s*if \\(!isCurrentRequest\\(\\)\\) return/);
-  assert.match(fetchTickets, /if \\(isCurrentRequest\\(\\)\\) \\{\\s*setSupportTicketsError/);
-  assert.match(fetchTickets, /if \\(!isCurrentRequest\\(\\)\\) return;\\s*setSupportTickets\\(/);
+  assert.ok(fetchTickets.includes('const headers = await getSupabaseHeaders();\n        if (!isCurrentRequest()) return;'));
+  assert.ok(fetchTickets.includes('const page = await res.json();\n        if (!isCurrentRequest()) return;'));
+  assert.ok(fetchTickets.includes('if (isCurrentRequest()) {\n        setSupportTicketsError'));
+  assert.ok(fetchTickets.includes('if (!isCurrentRequest()) return;\n      setSupportTickets('));
 });
 
 test('admin login changes invalidate pending ticket list requests without removing pagination', () => {
-  assert.match(adminApp, /supportThreadSessionRef\\.current \\+= 1;\\s*supportTicketListRequestRef\\.current \\+= 1;[\\s\\S]*?\\}, \\[adminLoggedIn\\]\\)/);
-  assert.match(adminApp, /const pageSize = 1000/);
-  assert.match(adminApp, /order=created_at\\.desc,id\\.asc/);
-  assert.match(adminApp, /offset < 100000; offset \\+= pageSize/);
+  assert.ok(adminApp.includes('supportThreadSessionRef.current += 1;\n    supportTicketListRequestRef.current += 1;'));
+  assert.ok(adminApp.includes('}, [adminLoggedIn]);'));
+  assert.ok(adminApp.includes('const pageSize = 1000;'));
+  assert.ok(adminApp.includes('order=created_at.desc,id.asc'));
+  assert.ok(adminApp.includes('offset < 100000; offset += pageSize'));
 });
