@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 import { createClient } from '@supabase/supabase-js';
-import { EMPTY_ADMIN_ACCESS, hasAdminPermission } from '../utils/adminAccess';
+import { EMPTY_ADMIN_ACCESS, hasAdminPermission, hasAnyAdminAccess } from '../utils/adminAccess';
 import { supabase } from '../supabaseClient';
 import { validateImageFile, isValidImageDataUrl } from '../utils/imageSafety';
 import { validateProductVariants, validateSizeColorInventoryVariants } from '../utils/productValidation';
@@ -371,6 +371,8 @@ export default function AdminDashboardPro({
     if (isOwner) return 'command';
     return STAFF_DEFAULT_TAB_ORDER.find(canAccessAdminTab) || 'command';
   };
+  // Render a permitted tab immediately; the effect below only synchronizes state.
+  const visibleAdminTab = canAccessAdminTab(adminTab) ? adminTab : getDefaultAdminTab();
 
   useEffect(() => {
     if (!adminLoggedIn) return;
@@ -680,13 +682,13 @@ export default function AdminDashboardPro({
       setInventoryMovementError('');
       return undefined;
     }
-    if (adminTab !== 'inventory') {
+    if (visibleAdminTab !== 'inventory') {
       inventoryMovementRequestRef.current += 1;
       return undefined;
     }
     void fetchInventoryMovements(null, false);
     return () => { inventoryMovementRequestRef.current += 1; };
-  }, [hasProductsPermission, adminTab, inventoryMovementProductFilter]);
+  }, [hasProductsPermission, visibleAdminTab, inventoryMovementProductFilter]);
 
   useEffect(() => {
     if (!hasProductsPermission) {
@@ -1859,7 +1861,7 @@ export default function AdminDashboardPro({
     }
   };
 
-  if (!adminLoggedIn) {
+  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess)) {
     return (
       <div className="max-w-sm mx-auto bg-slate-900/80 border border-emerald-500/35 rounded-[2.5rem] p-6 sm:p-8 space-y-4 shadow-2xl backdrop-blur-3xl text-center my-16">
         <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
@@ -3642,7 +3644,7 @@ export default function AdminDashboardPro({
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].filter(tab => canAccessAdminTab(tab.id)).map(tab => {
             const IconComp = tab.icon;
-            const isActive = adminTab === tab.id;
+            const isActive = visibleAdminTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -3715,7 +3717,7 @@ export default function AdminDashboardPro({
           </div>
         </div>
 
-        {adminTab === 'command' && (
+        {visibleAdminTab === 'command' && (
           <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
             <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
               <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
@@ -3838,7 +3840,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminTab === 'inventory' && (
+        {visibleAdminTab === 'inventory' && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
@@ -3964,7 +3966,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminTab === 'replenishment' && (
+        {visibleAdminTab === 'replenishment' && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
@@ -4004,7 +4006,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminTab === 'analytics' && (
+        {visibleAdminTab === 'analytics' && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
               <div>
@@ -4275,7 +4277,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'calculator' && (
+        {visibleAdminTab === 'calculator' && (
           <div className="admin-profit-calculator bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Calculator className="w-5 h-5 text-emerald-400" /> გაყიდვებისა და მოგების კალკულატორი
@@ -4315,7 +4317,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'expenses' && (
+        {visibleAdminTab === 'expenses' && (
           <div className="admin-expenses space-y-6">
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -4374,7 +4376,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'ai_analyst' && (
+        {visibleAdminTab === 'ai_analyst' && (
           <div className="admin-ai-analyst bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Sparkles className="w-5 h-5 text-emerald-400" /> AI ბიზნეს ასისტენტი & ანალიტიკოსი
@@ -4396,7 +4398,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'staff' && (
+        {visibleAdminTab === 'staff' && (
           <div className="admin-staff space-y-6">
             <div role="note" className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs leading-6 text-amber-100">
               <strong className="block mb-1">მნიშვნელოვანი: თანამშრომლების მართვა ჯერ რეალურ ავტორიზაციასთან დაკავშირებული არ არის.</strong>
@@ -4578,7 +4580,7 @@ export default function AdminDashboardPro({
         )}
 
         {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
-        {adminTab === 'orders' && (
+        {visibleAdminTab === 'orders' && (
           <div className="admin-orders-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <div className="admin-orders-header admin-orders-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
@@ -4887,7 +4889,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'support' && (
+        {visibleAdminTab === 'support' && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
@@ -4997,7 +4999,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'products' && (
+        {visibleAdminTab === 'products' && (
           <div className="admin-products-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
@@ -5411,7 +5413,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'messages' && (
+        {visibleAdminTab === 'messages' && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
@@ -5455,7 +5457,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'discounts' && (
+        {visibleAdminTab === 'discounts' && (
           <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
@@ -5508,7 +5510,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'logs' && (
+        {visibleAdminTab === 'logs' && (
           <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
@@ -5529,7 +5531,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'broadcasts' && (
+        {visibleAdminTab === 'broadcasts' && (
           <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
@@ -5551,7 +5553,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'banners' && (
+        {visibleAdminTab === 'banners' && (
           <div className="admin-banners space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5586,7 +5588,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'categories' && (
+        {visibleAdminTab === 'categories' && (
           <div className="admin-category-manager space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5787,7 +5789,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'coupons' && (
+        {visibleAdminTab === 'coupons' && (
           <div className="admin-coupons-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5817,7 +5819,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'vendors' && (
+        {visibleAdminTab === 'vendors' && (
           <div className="admin-vendors-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5851,7 +5853,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'users' && (
+        {visibleAdminTab === 'users' && (
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -5971,7 +5973,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminTab === 'settings' && (
+        {visibleAdminTab === 'settings' && (
           <div className="admin-settings-panel space-y-6">
             <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-3 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
