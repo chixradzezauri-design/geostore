@@ -14,7 +14,7 @@ test('Stage 101 admin polish is loaded after all existing dashboard styles', () 
 
 test('Stage 101 visual refinements retain all core admin sections and interactions', () => {
   for (const section of ['command', 'orders', 'products', 'staff', 'support', 'analytics', 'settings']) {
-    assert.match(admin, new RegExp(`adminTab === ['"]${section}['"]`));
+    assert.match(admin, new RegExp(`visibleAdminTab === ['"]${section}['"]`));
   }
   assert.match(admin, /handleUpdateOrderStatus/);
   assert.match(admin, /handleConfirmOrderReactivation/);
@@ -50,4 +50,6 @@ test('Stage 104 improves narrow-screen readability and prevents horizontal layou
   assert.match(polish, /overflow-wrap:\s*anywhere/);
   assert.match(polish, /max-width:\s*100%/);
   assert.match(polish, /min-height:\s*44px/);
+  assert.match(polish, /> :not\(\[hidden\]\) ~ :not\(\[hidden\]\)/);
+  assert.match(polish, /margin-top:\s*0 !important/);
 });
