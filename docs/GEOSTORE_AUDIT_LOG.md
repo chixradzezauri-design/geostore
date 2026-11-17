@@ -737,6 +737,6 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Preserved protected RPC reads, notification-only payloads, the 15-second recovery poll, and existing support-ticket status refresh.
 
 ### Verification and safety boundary
-- Changes are committed to the existing draft maintenance branch. GitHub Actions Build, dependency security audit, and CodeQL are running for the latest commit; no pass result is claimed yet.
+- Latest code commit `c0f469e7490285e8d3f09aa25ecb4165f7731e90`: GitHub Actions automated tests and production build passed; dependency security audit passed; CodeQL remains in progress. Vercel reports the preview deployment completed, but rendered browser/device verification is still outstanding.
 - This is a client-side race-condition hardening change only. No database migration, ticket, message, order, customer record, access-token hash, production setting, or deployment was changed.
 - Live Realtime behavior and browser/device verification remain outstanding.
