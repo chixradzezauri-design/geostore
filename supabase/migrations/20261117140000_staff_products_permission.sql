@@ -250,13 +250,8 @@ BEGIN
 
   ELSIF p_field = 'stock' THEN
     IF jsonb_typeof(p_new_value) IS DISTINCT FROM 'number'
-       OR coalesce(p_new_value #>> '{}', '') !~ '^[0-9]{1,7}
-      RAISE EXCEPTION 'მარაგი უნდა იყოს მთელი რიცხვი.'
-        USING ERRCODE = '22023';
-    END IF;
-
-    v_stock := (p_new_value #>> '{}')::integer;
-    IF v_stock NOT BETWEEN 0 AND 1000000 THEN
+       OR coalesce(p_new_value #>> '{}', '') !~ '^[0-9]{1,7}$'
+    THEN
       RAISE EXCEPTION 'მარაგი უნდა იყოს 0-დან 1,000,000-მდე.'
         USING ERRCODE = '22023';
     END IF;
