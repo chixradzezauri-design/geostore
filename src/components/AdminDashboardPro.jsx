@@ -3690,18 +3690,29 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
+      const statusResult = await response.json().catch(() => null);
+      const statusChangedAt = typeof statusResult?.status_changed_at === 'string'
+        ? statusResult.status_changed_at
+        : new Date().toISOString();
+
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(orderId) ? { ...order, status: newStatus } : order
+          String(order.id) === String(orderId)
+            ? { ...order, status: newStatus, status_changed_at: statusChangedAt }
+            : order
         ));
       }
       setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(orderId) ? { ...prev, status: newStatus } : prev
+        prev && String(prev.id) === String(orderId)
+          ? { ...prev, status: newStatus, status_changed_at: statusChangedAt }
+          : prev
       );
 
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
-        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId) ? { ...o, status: newStatus } : o);
+        const updatedLocal = localOrders.map(o => String(o.id) === String(orderId)
+          ? { ...o, status: newStatus, status_changed_at: statusChangedAt }
+          : o);
         localStorage.setItem('geostore_local_orders', JSON.stringify(updatedLocal));
       } catch {}
 
@@ -3777,18 +3788,29 @@ export default function AdminDashboardPro({
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
+      const reactivationResult = await response.json().catch(() => null);
+      const statusChangedAt = typeof reactivationResult?.status_changed_at === 'string'
+        ? reactivationResult.status_changed_at
+        : new Date().toISOString();
+
       if (typeof setOrders === 'function') {
         setOrders(prev => (prev || []).map(order =>
-          String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order
+          String(order.id) === String(reactivationOrder.id)
+            ? { ...order, status: 'ახალი', status_changed_at: statusChangedAt }
+            : order
         ));
       }
       setSelectedOrderForModal(prev =>
-        prev && String(prev.id) === String(reactivationOrder.id) ? { ...prev, status: 'ახალი' } : prev
+        prev && String(prev.id) === String(reactivationOrder.id)
+          ? { ...prev, status: 'ახალი', status_changed_at: statusChangedAt }
+          : prev
       );
       try {
         const localOrders = JSON.parse(localStorage.getItem('geostore_local_orders') || '[]');
         localStorage.setItem('geostore_local_orders', JSON.stringify(
-          localOrders.map(order => String(order.id) === String(reactivationOrder.id) ? { ...order, status: 'ახალი' } : order)
+          localOrders.map(order => String(order.id) === String(reactivationOrder.id)
+            ? { ...order, status: 'ახალი', status_changed_at: statusChangedAt }
+            : order)
         ));
       } catch {}
 
