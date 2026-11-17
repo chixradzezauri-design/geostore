@@ -178,11 +178,9 @@ Deno.serve(async (request: Request) => {
       }
 
       if (!targetUser?.id || targetUser.id === OWNER_ID) {
-        if (invitedNewUser && targetUser?.id) await admin.auth.admin.deleteUser(targetUser.id);
         return json({ error: 'ამ ანგარიშის თანამშრომლად დამატება დაუშვებელია.' }, 400);
       }
       if (targetUser.app_metadata?.role === 'admin') {
-        if (invitedNewUser) await admin.auth.admin.deleteUser(targetUser.id);
         return json({ error: 'სხვა ადმინისტრატორის ანგარიშის თანამშრომლად შეცვლა დაუშვებელია.' }, 409);
       }
 
@@ -202,7 +200,8 @@ Deno.serve(async (request: Request) => {
         .single();
 
       if (saveError) {
-        if (invitedNewUser) await admin.auth.admin.deleteUser(targetUser.id);
+        // Keep the Auth account intact. Without a membership row it has no staff permissions,
+        // and the owner can safely retry linking the same account after resolving the error.
         throw saveError;
       }
 
