@@ -27,3 +27,11 @@ Status: implementation staged on Draft PR #129. The migration is committed to th
 - Apply the migration to an isolated Supabase staging branch, then verify list/save RPC behavior and admin denial for non-admin accounts.
 - Browser/device checks at 1440, 1024, 768, 390 and 320 CSS pixels.
 - Confirm the app degrades clearly when the migration is not installed.
+
+
+## Concurrency hardening addendum
+- Replaced the check-then-insert/update sequence in the settings RPC with a single `INSERT ... ON CONFLICT ... DO UPDATE` against the existing unique product/variant-position index. Concurrent first-time saves for the same position can no longer race into a unique-key failure.
+- Retained the product-row lock while validating the exact variant ID, so a concurrent product/variant edit cannot invalidate the position between validation and persistence.
+- Rejects blank variant IDs so they cannot collide with the base-product key represented by a NULL variant ID.
+- Added regression assertions for the atomic upsert and blank-variant validation.
+- The migration remains draft-only and has not been applied to the live Supabase project.
