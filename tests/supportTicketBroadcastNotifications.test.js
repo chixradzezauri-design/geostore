@@ -25,14 +25,19 @@ test('account-linked customer notifications require a private auth.uid-scoped to
 
 test('admin notifications are private and restricted to the primary admin identity', () => {
   assert.match(adminApp, /channel\('geostore-support-admin',\s*\{\s*config:\s*\{\s*private:\s*true\s*\}\s*\}\)/);
-  assert.match(migration, /realtime\.topic\(\)\s*=\s*'geostore-support-admin'/);
+  assert.match(migration, /\(select realtime\.topic\(\)\)\s*=\s*'geostore-support-admin'/);
   assert.match(migration, /app_metadata.*role.*admin/);
   assert.match(migration, /auth\.uid\(\).*1060de3d-d28a-45f8-9a64-5e0368cffc4b/);
 });
 
 test('broadcast payloads contain only a ticket reference, never conversation content or credentials', () => {
   assert.match(migration, /jsonb_build_object\('ticket_id',\s*new\.ticket_ref\)/i);
-  assert.doesNotMatch(migration, /jsonb_build_object\([\s\S]{0,300}(?:message_text|access_token|customer_email|sender_name)/i);
+  const payloads = [...migration.matchAll(/jsonb_build_object\(([^)]*)\)/gi)].map(match => match[1]);
+  assert.equal(payloads.length, 3, 'each audience receives one notification payload');
+  for (const payload of payloads) {
+    assert.match(payload, /ticket_id/);
+    assert.doesNotMatch(payload, /message|access_token|email|sender_name/i);
+  }
   assert.match(customerApp, /get_support_ticket_messages/);
   assert.match(adminApp, /get_support_ticket_messages/);
 });
