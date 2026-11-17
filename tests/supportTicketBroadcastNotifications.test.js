@@ -73,5 +73,5 @@ test('customer support subscriptions fence stale account and guest-ticket callba
   assert.match(customerEffect, /if \(!active \|\| !topic\) return/);
   assert.match(customerEffect, /if \(active\) \{[\s\S]*?setSupportThreadMessages/);
   assert.match(customerEffect, /active = false/);
-  assert.match(customerEffect, /supportLookupAccessToken, currentUser\?\.id/);
+  assert.match(customerApp, /supportLookupAccessToken, currentUser\?\.id/);
 });
