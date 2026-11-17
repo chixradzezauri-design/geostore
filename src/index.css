@@ -19222,7 +19222,7 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
 
 
 /* GEOSTORE — Stage 43.2: iPhone Flash Sale card width and text flow
-   The rendered Flash Sale DOM is: section > .grid > .gs-flash-sale-card,
+   The rendered Flash Sale DOM is: div.gs-flash-sale-section > .grid > .gs-flash-sale-card,
    with direct .gs-flash-sale-media, .py-3 content, and button children.
    A lone card must span the mobile grid's two columns; all item counts must
    keep the text and price subtree shrink-safe and horizontal. */
