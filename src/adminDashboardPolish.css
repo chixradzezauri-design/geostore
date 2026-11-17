@@ -517,3 +517,122 @@
     margin-top: 0 !important;
   }
 }
+
+
+/* Stage 101 — focused order workspace polish. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+  border-radius: 24px !important;
+  background-color: rgba(7, 18, 31, .74);
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-card-heading {
+  align-items: center;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  border-radius: 999px !important;
+  padding-inline: 11px;
+  letter-spacing: .015em;
+  white-space: nowrap;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-actions {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivate-button {
+  min-height: 42px;
+  border: 1px solid rgba(252, 211, 77, .52);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, .13);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-overlay {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-form {
+  background: linear-gradient(155deg, #172a40 0%, #0b1727 100%) !important;
+  border-color: rgba(245, 158, 11, .42) !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .04) !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-form :is(input, button) {
+  min-height: 46px;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card:hover {
+    border-color: rgba(94, 224, 176, .42) !important;
+    box-shadow: 0 20px 42px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .04);
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    padding: 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card-footer {
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 6px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions > button,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivate-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-reactivation-form {
+    padding: clamp(16px, 4vw, 24px) !important;
+    border-radius: 22px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    padding: 13px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card-customer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-status-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-order-card {
+    transition: none !important;
+    transform: none !important;
+  }
+}
