@@ -104,3 +104,27 @@ test('session-scoped ticket refresh ignores results from a previous admin login'
   assert.match(adminApp, /if \(sessionId !== null && sessionId !== supportThreadSessionRef\.current\) return;[\s\S]*?setSupportTickets\(/);
   assert.match(adminApp, /if \(sessionId === null \|\| sessionId === supportThreadSessionRef\.current\) \{[\s\S]*?setSupportTicketsError/);
 });
+
+
+test('customer support reply responses cannot overwrite a newly selected ticket', () => {
+  assert.match(customerApp, /const supportThreadSessionRef = useRef\(0\)/);
+  assert.match(customerApp, /const beginSupportThreadSession = \(\) => \{[\s\S]*?supportThreadSessionRef\.current \+= 1;[\s\S]*?setSupportThreadSending\(false\);[\s\S]*?setSupportThreadLoading\(false\)/);
+  assert.match(customerApp, /\}, \[currentUser\?\.id\]\);/);
+
+  const replyHandler = customerApp.slice(
+    customerApp.indexOf('const replySessionId = supportThreadSessionRef.current'),
+    customerApp.indexOf('className="space-y-2"', customerApp.indexOf('const replySessionId = supportThreadSessionRef.current'))
+  );
+  assert.match(replyHandler, /supportReplyRequestRef\.current\.get\(ticketId\)/);
+  assert.match(replyHandler, /supportReplyRequestRef\.current\.delete\(ticketId\)/);
+  assert.match(replyHandler, /if \(replySessionId !== supportThreadSessionRef\.current\) return/);
+  assert.match(replyHandler, /p_ticket_id: ticketId,[\s\S]*?p_access_token: accessToken/);
+  assert.match(replyHandler, /if \(replySessionId === supportThreadSessionRef\.current\) \{[\s\S]*?supportReplyInFlightRef\.current = false/);
+});
+
+test('customer support ticket lookup and account-history open discard stale session results', () => {
+  assert.match(customerApp, /const sessionId = beginSupportThreadSession\(\);[\s\S]*?setSupportLookupTicketId\(ticket\.ticket_id\)/);
+  assert.match(customerApp, /if \(sessionId !== supportThreadSessionRef\.current\) return;[\s\S]*?setSupportThreadMessages\(rows\)/);
+  assert.match(customerApp, /if \(sessionId === supportThreadSessionRef\.current\) setSupportThreadLoading\(false\)/);
+  assert.match(customerApp, /onClick=\{\(\) => \{ beginSupportThreadSession\(\); setSupportOpen\(false\); \}\}/);
+});
