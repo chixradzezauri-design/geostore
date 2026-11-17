@@ -48,8 +48,9 @@ const ADMIN_TAB_PERMISSION = Object.freeze({
   banners: 'settings',
   categories: 'settings',
   coupons: 'settings',
-  vendors: 'products',
-  users: 'crm',
+  // Legacy browser-local directories remain owner-only until server-backed.
+  vendors: 'owner',
+  users: 'owner',
   settings: 'settings'
 });
 const STAFF_DEFAULT_TAB_ORDER = [
