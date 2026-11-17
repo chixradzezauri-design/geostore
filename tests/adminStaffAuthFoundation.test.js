@@ -116,3 +116,10 @@ test('staff updates and revocation cannot target the immutable owner or delete A
   assert.doesNotMatch(edge, /auth\.admin\.deleteUser/);
   assert.doesNotMatch(edge, /\.delete\(\)/);
 });
+
+const adminDashboard = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+
+test('admin staff navigation does not reference child-local staffList state', () => {
+  assert.match(adminDashboard, /\{ id: 'staff', label: '👔 თანამშრომლები & როლები', icon: UserCog \}/);
+  assert.doesNotMatch(adminDashboard, /\{ id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList/);
+});
