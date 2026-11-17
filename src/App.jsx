@@ -633,6 +633,8 @@ export default function App() {
   const [mySupportTicketsError, setMySupportTicketsError] = useState('');
   const hasLoadedMoreSupportTicketsRef = useRef(false);
   const supportHistoryOwnerRef = useRef(null);
+  const supportHistorySessionRef = useRef(0);
+  const supportHistoryLoadMoreSessionRef = useRef(null);
   const [supportTicketStatus, setSupportTicketStatus] = useState(null);
   const [supportThreadLoaded, setSupportThreadLoaded] = useState(false);
   const supportThreadMessagesRef = useRef(null);
@@ -660,7 +662,9 @@ export default function App() {
   const [hasLoadedAiAssistant, setHasLoadedAiAssistant] = useState(false);
 
   useEffect(() => {
+    const historySessionId = ++supportHistorySessionRef.current;
     if (!supportOpen || !currentUser?.id) {
+      supportHistoryLoadMoreSessionRef.current = null;
       supportHistoryOwnerRef.current = null;
       setMySupportTickets([]);
       setMySupportTicketsCursor(null);
@@ -669,7 +673,12 @@ export default function App() {
       setMySupportTicketsLoadingMore(false);
       setMySupportTicketsError('');
       hasLoadedMoreSupportTicketsRef.current = false;
-      return undefined;
+      return () => {
+        if (supportHistorySessionRef.current === historySessionId) {
+          supportHistorySessionRef.current += 1;
+          supportHistoryLoadMoreSessionRef.current = null;
+        }
+      };
     }
     const ownerId = String(currentUser.id);
     if (supportHistoryOwnerRef.current !== ownerId) {
@@ -677,13 +686,15 @@ export default function App() {
       setMySupportTickets([]);
       setMySupportTicketsCursor(null);
       setMySupportTicketsHasMore(false);
+      setMySupportTicketsLoadingMore(false);
       setMySupportTicketsError('');
       hasLoadedMoreSupportTicketsRef.current = false;
+      supportHistoryLoadMoreSessionRef.current = null;
     }
     let active = true;
     let requestInFlight = false;
     const loadMySupportTickets = async () => {
-      if (!active || requestInFlight || document.visibilityState !== 'visible') return;
+      if (!active || historySessionId !== supportHistorySessionRef.current || requestInFlight || document.visibilityState !== 'visible') return;
       requestInFlight = true;
       setMySupportTicketsLoading(true);
       try {
@@ -733,6 +744,10 @@ export default function App() {
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       active = false;
+      if (supportHistorySessionRef.current === historySessionId) {
+        supportHistorySessionRef.current += 1;
+        supportHistoryLoadMoreSessionRef.current = null;
+      }
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
@@ -3860,8 +3875,13 @@ export default function App() {
                     type="button"
                     disabled={mySupportTicketsLoadingMore || mySupportTicketsLoading}
                     onClick={async () => {
-                      if (!mySupportTicketsCursor || mySupportTicketsLoadingMore) return;
+                      const requestSessionId = supportHistorySessionRef.current;
+                      if (!mySupportTicketsCursor
+                        || mySupportTicketsLoadingMore
+                        || supportHistoryLoadMoreSessionRef.current === requestSessionId) return;
                       const requestOwnerId = String(currentUser?.id || '');
+                      if (!requestOwnerId || supportHistoryOwnerRef.current !== requestOwnerId) return;
+                      supportHistoryLoadMoreSessionRef.current = requestSessionId;
                       setMySupportTicketsLoadingMore(true);
                       setMySupportTicketsError('');
                       try {
@@ -3870,6 +3890,8 @@ export default function App() {
                           headers: await getSupabaseHeaders({ authenticated: true }),
                           cursor: mySupportTicketsCursor
                         });
+                        if (requestSessionId !== supportHistorySessionRef.current
+                          || supportHistoryOwnerRef.current !== requestOwnerId) return;
                         if (page === null) {
                           setMySupportTicketsHasMore(false);
                           setMySupportTicketsError(currentLang === 'en'
@@ -3877,21 +3899,29 @@ export default function App() {
                             : currentLang === 'ru'
                               ? 'Постраничная история обращений станет доступна после обновления базы данных.'
                               : 'მიმართვების გვერდებად ჩატვირთვა მონაცემთა ბაზის განახლების შემდეგ იქნება ხელმისაწვდომი.');
-                        } else if (supportHistoryOwnerRef.current === requestOwnerId) {
+                        } else {
                           hasLoadedMoreSupportTicketsRef.current = true;
                           setMySupportTickets(previous => mergeSupportTicketPages(previous, page.rows));
                           setMySupportTicketsCursor(page.nextCursor);
                           setMySupportTicketsHasMore(Boolean(page.nextCursor));
                         }
                       } catch (error) {
-                        console.warn('Could not load the next support history page:', error);
-                        setMySupportTicketsError(currentLang === 'en'
-                          ? 'Could not load more requests. Please try again.'
-                          : currentLang === 'ru'
-                            ? 'Не удалось загрузить следующие обращения. Попробуйте ещё раз.'
-                            : 'შემდეგი მიმართვების ჩატვირთვა ვერ მოხერხდა. სცადე ხელახლა.');
+                        if (requestSessionId === supportHistorySessionRef.current
+                          && supportHistoryOwnerRef.current === requestOwnerId) {
+                          console.warn('Could not load the next support history page:', error);
+                          setMySupportTicketsError(currentLang === 'en'
+                            ? 'Could not load more requests. Please try again.'
+                            : currentLang === 'ru'
+                              ? 'Не удалось загрузить следующие обращения. Попробуйте ещё раз.'
+                              : 'შემდეგი მიმართვების ჩატვირთვა ვერ მოხერხდა. სცადე ხელახლა.');
+                        }
                       } finally {
-                        setMySupportTicketsLoadingMore(false);
+                        if (supportHistoryLoadMoreSessionRef.current === requestSessionId) {
+                          supportHistoryLoadMoreSessionRef.current = null;
+                          if (requestSessionId === supportHistorySessionRef.current) {
+                            setMySupportTicketsLoadingMore(false);
+                          }
+                        }
                       }
                     }}
                     className="w-full rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
