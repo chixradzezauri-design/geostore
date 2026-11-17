@@ -702,6 +702,7 @@ export default function AdminDashboardPro({
   const supportReplyRequestIds = useRef({});
   const supportThreadFetchInFlight = useRef(new Set());
   const supportThreadRefreshPending = useRef(new Set());
+  const supportThreadSessionRef = useRef(0);
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
@@ -754,9 +755,9 @@ export default function AdminDashboardPro({
     }
   };
 
-  const fetchSupportTicketThread = async (ticketId) => {
+  const fetchSupportTicketThread = async (ticketId, sessionId = supportThreadSessionRef.current) => {
     const normalizedTicketId = String(ticketId || '').trim();
-    if (!normalizedTicketId) return;
+    if (!normalizedTicketId || sessionId !== supportThreadSessionRef.current) return;
     if (supportThreadFetchInFlight.current.has(normalizedTicketId)) {
       supportThreadRefreshPending.current.add(normalizedTicketId);
       return;
@@ -774,6 +775,7 @@ export default function AdminDashboardPro({
         throw new Error(detail || ('HTTP ' + response.status));
       }
       const rows = await response.json();
+      if (sessionId !== supportThreadSessionRef.current) return;
       if (!Array.isArray(rows)) throw new Error('მიმოწერის პასუხის ფორმატი არასწორია.');
       const uniqueRows = [...new Map(rows.filter(row => row?.id != null).map(row => [String(row.id), row])).values()];
       uniqueRows.sort((a, b) => {
@@ -781,6 +783,7 @@ export default function AdminDashboardPro({
         const bTime = Date.parse(b.created_at || '') || 0;
         return aTime - bTime || String(a.id).localeCompare(String(b.id));
       });
+      if (sessionId !== supportThreadSessionRef.current) return;
       setSupportTicketThreads(prev => ({ ...prev, [normalizedTicketId]: uniqueRows }));
 
       // Mark customer messages as read only while this administrator has the
@@ -804,9 +807,12 @@ export default function AdminDashboardPro({
         }
       }
     } catch (error) {
-      console.error('GEOSTORE support ticket thread fetch failed:', error);
-      setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
+      if (sessionId === supportThreadSessionRef.current) {
+        console.error('GEOSTORE support ticket thread fetch failed:', error);
+        setSupportTicketThreadErrors(prev => ({ ...prev, [normalizedTicketId]: error?.message || 'მიმოწერის ჩატვირთვა ვერ მოხერხდა.' }));
+      }
     } finally {
+      if (sessionId !== supportThreadSessionRef.current) return;
       supportThreadFetchInFlight.current.delete(normalizedTicketId);
       setSupportTicketThreadLoading(prev => ({ ...prev, [normalizedTicketId]: false }));
       if (supportThreadRefreshPending.current.delete(normalizedTicketId) && adminLoggedIn) {
@@ -818,6 +824,12 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
+    supportThreadSessionRef.current += 1;
+    supportThreadFetchInFlight.current.clear();
+    supportThreadRefreshPending.current.clear();
+  }, [adminLoggedIn]);
+
+  useEffect(() => {
     if (!adminLoggedIn) {
       setSelectedSupportTicketId(null);
       setSupportTicketThreads({});
@@ -825,9 +837,11 @@ export default function AdminDashboardPro({
       supportThreadRefreshPending.current.clear();
       return undefined;
     }
+    let active = true;
     const channel = supabase
       .channel('geostore-support-admin', { config: { private: true } })
       .on('broadcast', { event: 'support_message_changed' }, payload => {
+        if (!active) return;
         // Broadcast carries only the ticket reference; all customer content is
         // re-read through the existing authenticated RPC/RLS path.
         const changedTicketId = payload?.payload?.ticket_id;
@@ -837,17 +851,21 @@ export default function AdminDashboardPro({
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
+        if (!active) return;
         // Keep the existing status-change signal; the recovery poll remains active.
         void fetchTickets();
       })
       .subscribe(status => {
         // Reconnects trigger a fresh protected snapshot, never trust event data.
-        if (status === 'SUBSCRIBED' && adminLoggedIn) {
+        if (active && status === 'SUBSCRIBED' && adminLoggedIn) {
           void fetchTickets();
           if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
         }
       });
-    return () => { void supabase.removeChannel(channel); };
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
   }, [adminLoggedIn, selectedSupportTicketId]);
 
   useEffect(() => {
