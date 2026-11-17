@@ -706,7 +706,9 @@ export default function AdminDashboardPro({
   const supportTicketListRequestRef = useRef(0);
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
-  const [storefrontVersionsErr  const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
+  const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
+
+  const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
     if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;
     const requestId = ++supportTicketListRequestRef.current;
     const isCurrentRequest = () => (
@@ -764,9 +766,6 @@ export default function AdminDashboardPro({
       console.error('GEOSTORE support tickets fetch failed:', error);
       if (isCurrentRequest()) {
         setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
-      }
-    }
-  };ბის ჩატვირთვა ვერ მოხერხდა.');
       }
     }
   };
