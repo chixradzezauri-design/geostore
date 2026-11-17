@@ -877,3 +877,12 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - The document key listener is removed on dialog close/unmount. Existing order data, status, note-save, invoice, reactivation RPC and database behavior remain unchanged.
 - Added source-level regression checks for focus entry/return, keyboard handling, listener cleanup and nested-dialog priority. Browser-level keyboard verification remains part of staging QA.
 - No order/customer data, live database schema, settings or production deployment was changed.
+
+
+## Stage 99 — nested order reactivation focus restoration
+- Audited the cancelled-order reactivation flow opened from an order status action. The password field already receives initial focus and the nested dialog already takes keyboard priority, but closing the nested dialog did not explicitly return focus to the status action that opened it.
+- Capture the exact active status-action element when reactivation confirmation opens.
+- When the nested dialog closes by cancellation or successful reactivation, restore focus to that trigger if it remains connected; if the row/action was removed during the update, fall back to the order-detail close control when available.
+- Preserve the existing password reauthentication, admin-role checks, atomic reactivation RPC, stock checks, status updates and error handling. No auth or database behavior changed.
+- Added regression assertions for trigger capture, focus restoration and fallback behavior.
+- No order/customer data, database schema, live settings, merge or production deployment was changed. Browser-level keyboard verification remains required.
