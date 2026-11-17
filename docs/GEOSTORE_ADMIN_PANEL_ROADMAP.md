@@ -439,3 +439,21 @@ Only then request approval to merge and deploy.
 - Run focused modal tests, the complete Node test suite and production build on this PR head.
 - Perform real-browser keyboard checks for initial focus, forward/reverse Tab wrap, Escape, focus restoration and nested reactivation behavior.
 - No merge, live database change or production deployment is authorized by this stage.
+
+
+## Stage 99 — nested order reactivation focus restoration
+
+### Finding
+- The password field in the nested reactivation dialog already receives initial focus, and Stage 98 gives the nested dialog keyboard priority.
+- Closing that nested dialog did not explicitly restore focus to the status-action button that opened it, which could leave keyboard users without a predictable focus location.
+
+### Implemented
+- Capture the exact active status-action element when the reactivation confirmation opens.
+- On cancellation or successful completion, return focus to that element if it is still connected to the document.
+- If the original row/action no longer exists after the status update, fall back to the order-detail close control when it is available.
+- Add regression assertions for trigger capture, focus restoration and fallback.
+
+### Safety and verification
+- Existing password reauthentication, primary-admin checks, reactivation RPC, stock validation, order status updates and error handling remain unchanged.
+- No order/customer data, live database schema/settings, merge or production deployment was changed.
+- Run full CI and verify the cancel/success/fallback paths with a real browser and keyboard in staging.
