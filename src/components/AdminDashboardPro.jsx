@@ -4115,7 +4115,7 @@ export default function AdminDashboardPro({
             { id: 'calculator', label: '🧮 მოგების კალკულატორი', icon: Calculator },
             { id: 'expenses', label: '💸 ხარჯების მართვა', count: expenses.length, icon: Wallet },
             { id: 'ai_analyst', label: '🤖 AI ბიზნეს ასისტენტი', icon: Sparkles },
-            { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
+            { id: 'staff', label: '👔 თანამშრომლები & როლები', icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
             { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers },
