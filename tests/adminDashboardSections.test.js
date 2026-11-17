@@ -21,7 +21,7 @@ test('content styles target existing sections without changing their tab identit
 
   const ids = [...admin.matchAll(/\{ id: '([^']+)', label:/g)].map(match => match[1]);
   assert.deepEqual(ids, [
-    'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
+    'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
     'products', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
     'banners', 'categories', 'coupons', 'vendors', 'users', 'settings'
   ]);
