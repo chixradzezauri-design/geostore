@@ -65,6 +65,6 @@ test('product staff can manage only product-image paths in the shared Storage bu
   ]) assert.ok(settingsMigration.includes(phrase), phrase);
 
   assert.match(settingsMigration, /bucket_id = 'storefront-media'/);
-  assert.match(settingsMigration, /name LIKE 'storefront\\/categories\\/%'/);
-  assert.match(settingsMigration, /name LIKE 'storefront\\/banners\\/%'/);
+  assert.ok(settingsMigration.includes("name LIKE 'storefront/categories/%'"));
+  assert.ok(settingsMigration.includes("name LIKE 'storefront/banners/%'"));
 });
