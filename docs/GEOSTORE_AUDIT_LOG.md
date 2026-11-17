@@ -943,3 +943,11 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Updated the support message send/read/status/unread-count RPCs so authorized staff act as support agents while customer ownership, email and access-token checks remain intact.
 - Visitor ticket creation and customer-facing support flows are preserved.
 - No customer messages, support tickets, support messages or read receipts were changed. Draft migration only; no live RLS/function changes.
+
+## Stage 103E — settings module and media Storage permissions
+- Converted coupon, delivery-fee, storefront draft, media metadata and storefront-version read policies to the `settings` permission.
+- Converted the `storefront-media` Storage bucket upload/update/delete policies to the same server-side permission check.
+- Kept public reads of published storefront configuration, public media, active coupons and delivery fees intact.
+- Settings staff may edit drafts but cannot directly set publication fields; `publish_storefront_config`, flash-sale pricing, employee management and activity-log viewing remain owner-only.
+- Updated activity-log writes so active staff can record actions; viewing the audit log remains owner-only.
+- No storefront configuration, media, coupons, delivery fees, storage objects or activity rows were changed. Draft migration only.
