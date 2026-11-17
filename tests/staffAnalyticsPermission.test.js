@@ -13,13 +13,15 @@ test('analytics RPC requires the analytics module permission and limits date ran
   assert.match(foundation, /'analytics'/);
 });
 
-test('analytics returns aggregates only and does not return customer or expense records', () => {
+test('analytics returns aggregates only and financial aggregates require expenses permission', () => {
   for (const key of ['order_count', 'cancelled_count', 'revenue', 'expenses', 'cost_of_goods', 'net_profit_estimate', 'status_counts', 'daily', 'top_products']) {
     assert.match(migration, new RegExp(`'${key}'`));
   }
   assert.doesNotMatch(migration, /customer_name|user_email|customer_email|phone|address/);
   assert.match(migration, /sum\(e\.amount\)/);
-  assert.match(migration, /purchase_cost/);\n  assert.match(migration, /v_can_view_financials boolean := public\\.has_staff_permission\\('expenses'\\)/);\n  assert.match(migration, /financials_available/);
+  assert.match(migration, /purchase_cost/);
+  assert.match(migration, /v_can_view_financials boolean := public\.has_staff_permission\('expenses'\)/);
+  assert.match(migration, /financials_available/);
 });
 
 test('analytics is read-only and cannot mutate orders, products or expenses', () => {
