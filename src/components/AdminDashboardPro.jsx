@@ -447,7 +447,15 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    if (!adminLoggedIn || adminTab !== 'inventory') {
+    if (!adminLoggedIn) {
+      inventoryMovementRequestRef.current += 1;
+      setInventoryMovementRows([]);
+      setInventoryMovementCursor(null);
+      setInventoryMovementHasMore(false);
+      setInventoryMovementError('');
+      return undefined;
+    }
+    if (adminTab !== 'inventory') {
       inventoryMovementRequestRef.current += 1;
       return undefined;
     }
@@ -3367,7 +3375,7 @@ export default function AdminDashboardPro({
             { id: 'staff', label: '👔 თანამშრომლები & როლები', count: staffList?.length || 0, icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
-            { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers }
+            { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
             { id: 'discounts', label: '⚡ ფლეშ-აქციები', icon: Zap },
