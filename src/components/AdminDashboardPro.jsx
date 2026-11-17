@@ -361,6 +361,90 @@ export default function AdminDashboardPro({
   const [reactivationError, setReactivationError] = useState('');
   const [isReactivatingOrder, setIsReactivatingOrder] = useState(false);
 
+  const orderDetailDialogRef = useRef(null);
+  const orderDetailCloseButtonRef = useRef(null);
+  const orderDetailTriggerRef = useRef(null);
+  const orderDetailWasOpenRef = useRef(false);
+
+  // Keep keyboard focus inside the topmost order-related dialog and restore the
+  // exact order-row trigger when the order detail dialog closes.
+  useEffect(() => {
+    if (selectedOrderForModal && !orderDetailWasOpenRef.current) {
+      orderDetailWasOpenRef.current = true;
+      const frame = window.requestAnimationFrame(() => {
+        if (!reactivationOrder) orderDetailCloseButtonRef.current?.focus();
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    if (!selectedOrderForModal && orderDetailWasOpenRef.current) {
+      orderDetailWasOpenRef.current = false;
+      const trigger = orderDetailTriggerRef.current;
+      if (trigger?.isConnected) trigger.focus();
+    }
+  }, [selectedOrderForModal, reactivationOrder]);
+
+  useEffect(() => {
+    if (!selectedOrderForModal) return undefined;
+
+    const handleOrderDialogKeyDown = (event) => {
+      const activeDialog = reactivationOrder
+        ? document.querySelector('[aria-labelledby="reactivation-title"]')
+        : orderDetailDialogRef.current;
+      if (!activeDialog) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (reactivationOrder) {
+          // The password confirmation is the topmost dialog. Never dismiss
+          // the underlying order details while reactivation is in progress.
+          if (!isReactivatingOrder) {
+            setReactivationOrder(null);
+            setReactivationPassword('');
+            setReactivationError('');
+          }
+          return;
+        }
+        setSelectedOrderForModal(null);
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(activeDialog.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(element =>
+        !element.matches(':disabled') &&
+        element.getAttribute('aria-hidden') !== 'true' &&
+        !element.hasAttribute('hidden') &&
+        element.getClientRects().length > 0
+      );
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        activeDialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const current = document.activeElement;
+      if (!activeDialog.contains(current)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (current === first || current === activeDialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleOrderDialogKeyDown);
+    return () => document.removeEventListener('keydown', handleOrderDialogKeyDown);
+  }, [selectedOrderForModal, reactivationOrder, isReactivatingOrder]);
+
   const [editingUserId, setEditingUserId] = useState(null);
   const [editUserDiscount, setEditUserDiscount] = useState('');
   const [editUserNotes, setEditUserNotes] = useState('');
@@ -4489,7 +4573,8 @@ export default function AdminDashboardPro({
 
                       <div className="admin-order-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                         <button 
-                          onClick={() => {
+                          onClick={(event) => {
+                            orderDetailTriggerRef.current = event.currentTarget;
                             setSelectedOrderForModal(o);
                             setOrderAdminNoteInput(o.adminNote || '');
                           }} 
@@ -4554,7 +4639,7 @@ export default function AdminDashboardPro({
 
         {/* 🌟 ORDER DETAILS FULL MODAL (შეკვეთის დეტალური ხედვის მოდალი) */}
         {selectedOrderForModal && (
-          <div className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
+          <div ref={orderDetailDialogRef} tabIndex="-1" className="admin-order-detail-overlay fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in" role="dialog" aria-modal="true" aria-labelledby="admin-order-detail-title">
             <div className="admin-order-detail-modal bg-[#0d0d10] border border-emerald-500/50 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-8 max-w-3xl w-full space-y-5 sm:space-y-6 text-xs text-white shadow-2xl relative max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain">
               
               <div className="admin-order-detail-header flex justify-between items-center border-b border-emerald-500/20 pb-4">
@@ -4567,8 +4652,11 @@ export default function AdminDashboardPro({
                     <p className="text-[11px] text-slate-400">თარიღი: {selectedOrderForModal.date} {selectedOrderForModal.time || ''}</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedOrderForModal(null)} 
+                <button
+                  ref={orderDetailCloseButtonRef}
+                  type="button"
+                  onClick={() => setSelectedOrderForModal(null)}
+                  aria-label="შეკვეთის დეტალების დახურვა"
                   className="p-2.5 bg-slate-900 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 rounded-2xl border border-emerald-500/20 transition cursor-pointer"
                 >
                   <X className="w-5 h-5" />
