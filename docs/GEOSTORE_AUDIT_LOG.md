@@ -814,3 +814,27 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Updated those assertions to verify the new default active-session guard and latest-request fencing.
 - On commit `b7b89bc790a9fe6b6742a5efb124c40669b59c51`, GitHub Actions confirmed Build Check, Dependency Security Audit and CodeQL all **success**. Build Check includes the automated Node test suite and production build.
 - This verifies CI only; browser/device E2E remains outstanding.
+
+
+## Stage 94 — read-only Supabase security and performance audit
+
+### Scope and method
+- Inspected the connected live Supabase project `xmtnszxtnfxnrojionoa` using read-only catalog, policy, function-definition, migration-ledger and advisor queries.
+- No SQL migration, schema change, permission change, Auth setting change, data write, merge or deployment was performed.
+
+### Findings and disposition
+- `public.flash_sale_campaigns` and `public.flash_sale_items` both have RLS enabled and currently have no policies. This is default-deny for client roles, not evidence of public exposure. Do not add permissive policies without first identifying a required client access path and a row-ownership/admin model.
+- The advisors flagged four exposed `SECURITY DEFINER` support RPCs. Their live definitions use an empty `search_path` and explicit authorization checks:
+  - `get_my_support_tickets(integer)` requires `auth.uid()` and filters tickets to `customer_user_id = auth.uid()`; anonymous EXECUTE is not granted.
+  - `get_support_ticket_unread_counts()` requires both the primary administrator UUID and `app_metadata.role = admin`; anonymous EXECUTE is not granted.
+  - `get_support_ticket_status(text,text)` and `mark_support_ticket_messages_read(text,text)` intentionally allow guest access-code flows. They validate the ticket ID and compare a 64-character hexadecimal access token's SHA-256 digest with the stored ticket hash; authenticated owner/email and administrator paths are also checked. Anonymous EXECUTE is currently granted for these two RPCs.
+- Do not blindly revoke guest RPC execution or replace these functions with `SECURITY INVOKER`: that would break the existing guest ticket-status/read-receipt path unless an equivalent secure server-side endpoint is implemented and verified first.
+- Supabase Auth advisor reports leaked-password protection is disabled. No Auth setting was changed; enabling it requires a separately planned configuration change and user-facing impact review.
+- Performance advisor reports seven unused indexes and one pair of permissive SELECT policies on `public.products`. No index was dropped and no policies were consolidated: usage counters alone are insufficient to prove an index is safe to remove, and the product policies have distinct admin/public catalogue purposes that must be preserved.
+- The Stage 93 inventory-replenishment migration is not present in the live migration ledger. Its table and RPCs remain draft-only and are not available in production.
+
+### Outcome
+- No confirmed public data exposure was found in the inspected flash-sale tables; RLS is enabled with no policies.
+- Security advisor warnings on the guest support RPCs require preserving the token-checked guest access model, not removing access without a replacement.
+- No live customer, order, product, stock, message, ticket, or settings data was modified.
+- No live migration, merge, or production deployment was performed.
