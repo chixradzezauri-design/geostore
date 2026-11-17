@@ -722,3 +722,21 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Added `tests/supportTicketBroadcastNotifications.test.js` for topic derivation, customer/admin authorization, notification payload minimization, retained polling and server-only trigger writes.
 - The migration is committed to the maintenance branch only. It has NOT been applied to the connected/live Supabase database. No tickets, messages, access-token hashes, orders, customer records, production settings, or deployment were changed.
 - CI/build/test results are pending after the new commits. Browser/device and live end-to-end Broadcast verification remain outstanding; do not describe the feature as live until the migration is explicitly approved, applied in a safe environment, and verified.
+
+## Stage 85 — stale support-session and Realtime callback isolation
+
+### Verified risk
+- The administrator support Broadcast effect removed its channel on cleanup, but its Broadcast/Postgres Changes handlers and reconnect callback did not independently check whether that effect instance was still active.
+- The administrator support-thread fetch also had no session-generation fence. A response started under an earlier admin login could therefore finish after logout or a subsequent login and still update the current component state.
+
+### Change
+- Added an administrator support-session generation counter. A login-state transition advances the generation and clears pending/in-flight bookkeeping for the prior session.
+- Support-thread reads capture the current generation and verify it before applying results, errors, loading-state changes, or queued refreshes. A stale request cannot clear a newer session's in-flight marker.
+- Added an active guard to admin Broadcast, Postgres Changes, and reconnect callbacks; cleanup disables callbacks before removing the channel.
+- Added regression assertions for administrator session fencing, channel cleanup, and the customer's existing stale guest/account subscription guards.
+- Preserved protected RPC reads, notification-only payloads, the 15-second recovery poll, and existing support-ticket status refresh.
+
+### Verification and safety boundary
+- Changes are committed to the existing draft maintenance branch. GitHub Actions Build, dependency security audit, and CodeQL are running for the latest commit; no pass result is claimed yet.
+- This is a client-side race-condition hardening change only. No database migration, ticket, message, order, customer record, access-token hash, production setting, or deployment was changed.
+- Live Realtime behavior and browser/device verification remain outstanding.
