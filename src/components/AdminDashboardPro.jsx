@@ -385,7 +385,7 @@ export default function AdminDashboardPro({
   }, [selectedOrderForModal, reactivationOrder]);
 
   useEffect(() => {
-    if (!selectedOrderForModal) return undefined;
+    if (!selectedOrderForModal && !reactivationOrder) return undefined;
 
     const handleOrderDialogKeyDown = (event) => {
       const activeDialog = reactivationOrder
@@ -5963,7 +5963,7 @@ export default function AdminDashboardPro({
         )}
 
       {reactivationOrder && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
+        <div tabIndex="-1" className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
           <form onSubmit={handleConfirmOrderReactivation} className="w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
