@@ -707,7 +707,7 @@ export default function AdminDashboardPro({
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
   const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (sessionId = null) => {
     try {
       // PostgREST may cap a response at 1,000 rows. Read the complete ticket
       // history in stable pages so older open/unread tickets remain visible.
@@ -738,6 +738,7 @@ export default function AdminDashboardPro({
         }
       }
       if (!completed) throw new Error('მხარდაჭერის ტიკეტების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      if (sessionId !== null && sessionId !== supportThreadSessionRef.current) return;
       setSupportTickets(allTickets.map(t => ({
         id: t.id,
         customerName: t.customer_name,
@@ -751,7 +752,9 @@ export default function AdminDashboardPro({
       setSupportTicketsError('');
     } catch (error) {
       console.error('GEOSTORE support tickets fetch failed:', error);
-      setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+      if (sessionId === null || sessionId === supportThreadSessionRef.current) {
+        setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+      }
     }
   };
 
@@ -827,6 +830,10 @@ export default function AdminDashboardPro({
     supportThreadSessionRef.current += 1;
     supportThreadFetchInFlight.current.clear();
     supportThreadRefreshPending.current.clear();
+    // Release UI locks from the previous login, but retain idempotency keys:
+    // an uncertain network result must be safely retryable in the next session.
+    supportReplyInFlight.current.clear();
+    setReplySending({});
   }, [adminLoggedIn]);
 
   useEffect(() => {
@@ -2531,8 +2538,10 @@ export default function AdminDashboardPro({
     const replyText = String(replyInputs[ticketId] || '').trim();
     if (!replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId)) return;
 
+    const replySessionId = supportThreadSessionRef.current;
     supportReplyInFlight.current.add(normalizedTicketId);
     setReplySending(prev => ({ ...prev, [normalizedTicketId]: true }));
+    let requestId = null;
     try {
       const pendingRequest = supportReplyRequestIds.current[normalizedTicketId];
       if (!pendingRequest || pendingRequest.message !== replyText) {
@@ -2544,31 +2553,48 @@ export default function AdminDashboardPro({
           message: replyText
         };
       }
+      requestId = supportReplyRequestIds.current[normalizedTicketId].id;
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message_idempotent', {
         method: 'POST', headers: await getSupabaseHeaders(),
         body: JSON.stringify({
           p_ticket_id: normalizedTicketId,
           p_message: replyText,
           p_access_token: null,
-          p_request_id: supportReplyRequestIds.current[normalizedTicketId].id
+          p_request_id: requestId
         })
       });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       }
+
+      // The RPC confirmed persistence. Clear only the exact key used by this
+      // request; a newer session may already have installed a different key.
+      if (supportReplyRequestIds.current[normalizedTicketId]?.id === requestId) {
+        delete supportReplyRequestIds.current[normalizedTicketId];
+      }
+      if (replySessionId !== supportThreadSessionRef.current) return;
+
       setReplyInputs(prev => ({ ...prev, [ticketId]: '' }));
-      delete supportReplyRequestIds.current[normalizedTicketId];
       setSelectedSupportTicketId(normalizedTicketId);
-      await Promise.allSettled([fetchTickets(), fetchSupportTicketThread(normalizedTicketId)]);
+      await Promise.allSettled([
+        fetchTickets(replySessionId),
+        fetchSupportTicketThread(normalizedTicketId, replySessionId)
+      ]);
+      if (replySessionId !== supportThreadSessionRef.current) return;
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${normalizedTicketId}`);
       alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის მიმოწერაში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
     } catch (error) {
-      console.error('GEOSTORE support ticket reply failed:', error);
-      alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+      if (replySessionId === supportThreadSessionRef.current) {
+        console.error('GEOSTORE support ticket reply failed:', error);
+        alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
+      }
     } finally {
-      supportReplyInFlight.current.delete(normalizedTicketId);
-      setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
+      // A stale request must never release a lock owned by a newer session.
+      if (replySessionId === supportThreadSessionRef.current) {
+        supportReplyInFlight.current.delete(normalizedTicketId);
+        setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
+      }
     }
   };
 
