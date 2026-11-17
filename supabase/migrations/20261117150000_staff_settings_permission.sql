@@ -40,12 +40,12 @@ CREATE POLICY "Staff with settings permission can update storefront drafts"
   WITH CHECK (public.has_staff_permission('settings'));
 
 DROP POLICY IF EXISTS "Read published config or admin config" ON public.storefront_config;
-CREATE POLICY "Read published config or authorized settings draft"
+CREATE POLICY "Public can read published storefront config"
+  ON public.storefront_config FOR SELECT TO anon, authenticated
+  USING (is_published = true AND published_config IS NOT NULL);
+CREATE POLICY "Settings staff can read storefront drafts"
   ON public.storefront_config FOR SELECT TO authenticated
-  USING (
-    (is_published = true AND published_config IS NOT NULL)
-    OR public.has_staff_permission('settings')
-  );
+  USING (public.has_staff_permission('settings'));
 
 DROP POLICY IF EXISTS "GEOSTORE admin inserts storefront media" ON public.storefront_media;
 CREATE POLICY "Staff with settings permission can insert storefront media"
@@ -64,24 +64,27 @@ CREATE POLICY "Staff with settings permission can delete storefront media"
   USING (public.has_staff_permission('settings'));
 
 DROP POLICY IF EXISTS "Read public media or admin media" ON public.storefront_media;
-CREATE POLICY "Read public media or authorized settings media"
+CREATE POLICY "Public can read public storefront media"
+  ON public.storefront_media FOR SELECT TO anon, authenticated
+  USING (is_public = true);
+CREATE POLICY "Settings staff can read all storefront media"
   ON public.storefront_media FOR SELECT TO authenticated
-  USING (is_public = true OR public.has_staff_permission('settings'));
+  USING (public.has_staff_permission('settings'));
 
 DROP POLICY IF EXISTS "GEOSTORE admin reads storefront versions" ON public.storefront_versions;
 CREATE POLICY "Staff with settings permission can read storefront versions"
   ON public.storefront_versions FOR SELECT TO authenticated
   USING (public.has_staff_permission('settings'));
 
--- Keep public read behavior for active coupons; only settings staff can see
--- inactive/draft coupon rows.
+-- Keep the public active-coupon policy independent from the authenticated
+-- permission helper (which is intentionally not executable by anon).
 DROP POLICY IF EXISTS "public read active coupons" ON public.store_coupons;
-CREATE POLICY "Public read active coupons or settings staff read all"
+CREATE POLICY "public read active coupons"
   ON public.store_coupons FOR SELECT TO anon, authenticated
-  USING (
-    active = true
-    OR (auth.uid() IS NOT NULL AND public.has_staff_permission('settings'))
-  );
+  USING (active = true);
+CREATE POLICY "Settings staff can read all store coupons"
+  ON public.store_coupons FOR SELECT TO authenticated
+  USING (public.has_staff_permission('settings'));
 
 -- Draft settings may be edited, but publishing fields remain owner-only through
 -- private.publish_storefront_config. Staff cannot set is_published directly.
