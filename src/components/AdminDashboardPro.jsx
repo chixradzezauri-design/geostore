@@ -826,19 +826,18 @@ export default function AdminDashboardPro({
       return undefined;
     }
     const channel = supabase
-      .channel('geostore-admin-support-ticket-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_messages' }, payload => {
-        const changedTicketId = payload?.new?.ticket_ref || payload?.old?.ticket_ref;
-        fetchTickets();
-        if (changedTicketId && String(changedTicketId) === String(selectedSupportTicketId)) fetchSupportTicketThread(changedTicketId);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
-        // Ticket status and assignment changes should appear without waiting
-        // for the 15-second recovery poll. Fetch through the existing REST/RLS path.
+      .channel('geostore-support-admin', { config: { private: true } })
+      .on('broadcast', { event: 'support_message_changed' }, payload => {
+        // Broadcast carries only the ticket reference; all customer content is
+        // re-read through the existing authenticated RPC/RLS path.
+        const changedTicketId = payload?.payload?.ticket_id;
         void fetchTickets();
+        if (changedTicketId && String(changedTicketId) === String(selectedSupportTicketId)) {
+          void fetchSupportTicketThread(changedTicketId);
+        }
       })
       .subscribe(status => {
-        // A new SUBSCRIBED status is also emitted after websocket recovery.
+        // Reconnects trigger a fresh protected snapshot, never trust event data.
         if (status === 'SUBSCRIBED' && adminLoggedIn) {
           void fetchTickets();
           if (selectedSupportTicketId) void fetchSupportTicketThread(selectedSupportTicketId);
