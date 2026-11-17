@@ -78,7 +78,6 @@ AS $function$
 DECLARE
   v_product public.products%ROWTYPE;
   v_variant_name text;
-  v_existing_id bigint;
   v_saved private.inventory_replenishment_settings%ROWTYPE;
 BEGIN
   IF auth.uid() IS NULL
@@ -89,6 +88,7 @@ BEGIN
   END IF;
 
   IF coalesce(trim(p_product_id), '') = ''
+     OR p_variant_id IS NOT NULL AND trim(p_variant_id) = ''
      OR p_low_stock_threshold IS NULL
      OR p_low_stock_threshold < 0 OR p_low_stock_threshold > 100000
      OR p_target_stock IS NULL
@@ -97,6 +97,8 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
+  -- Lock the product so a concurrent product/variant edit cannot invalidate
+  -- the variant identity between validation and settings persistence.
   SELECT p.* INTO v_product
     FROM public.products AS p
    WHERE p.id = p_product_id
@@ -123,32 +125,24 @@ BEGIN
     END IF;
   END IF;
 
-  SELECT s.id INTO v_existing_id
-    FROM private.inventory_replenishment_settings AS s
-   WHERE s.product_id = p_product_id
-     AND s.variant_id IS NOT DISTINCT FROM p_variant_id
-   FOR UPDATE;
-
-  IF v_existing_id IS NULL THEN
-    INSERT INTO private.inventory_replenishment_settings (
-      product_id, variant_id, product_name, variant_name,
-      low_stock_threshold, target_stock, updated_by
-    ) VALUES (
-      p_product_id, p_variant_id, coalesce(v_product.name, p_product_id), v_variant_name,
-      p_low_stock_threshold, p_target_stock, auth.uid()
-    )
-    RETURNING * INTO v_saved;
-  ELSE
-    UPDATE private.inventory_replenishment_settings AS s
-       SET product_name = coalesce(v_product.name, p_product_id),
-           variant_name = v_variant_name,
-           low_stock_threshold = p_low_stock_threshold,
-           target_stock = p_target_stock,
-           updated_by = auth.uid(),
-           updated_at = clock_timestamp()
-     WHERE s.id = v_existing_id
-     RETURNING * INTO v_saved;
-  END IF;
+  -- A single UPSERT makes first-time saves safe under concurrent requests.
+  -- The expression target matches the unique index for both base and variant rows.
+  INSERT INTO private.inventory_replenishment_settings (
+    product_id, variant_id, product_name, variant_name,
+    low_stock_threshold, target_stock, updated_by
+  ) VALUES (
+    p_product_id, p_variant_id, coalesce(v_product.name, p_product_id), v_variant_name,
+    p_low_stock_threshold, p_target_stock, auth.uid()
+  )
+  ON CONFLICT (product_id, (coalesce(variant_id, '')))
+  DO UPDATE SET
+    product_name = EXCLUDED.product_name,
+    variant_name = EXCLUDED.variant_name,
+    low_stock_threshold = EXCLUDED.low_stock_threshold,
+    target_stock = EXCLUDED.target_stock,
+    updated_by = EXCLUDED.updated_by,
+    updated_at = clock_timestamp()
+  RETURNING * INTO v_saved;
 
   RETURN jsonb_build_object('success', true, 'setting', to_jsonb(v_saved));
 END;
