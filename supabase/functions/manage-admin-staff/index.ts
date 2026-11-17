@@ -190,6 +190,13 @@ Deno.serve(async (request: Request) => {
         invitedNewUser = true;
       }
 
+      // Existing accounts may be linked only after Supabase confirms ownership
+      // of the email address. Newly invited accounts complete verification
+      // through the invitation flow and are intentionally exempt here.
+      if (!invitedNewUser && !targetUser?.confirmed_at) {
+        return json({ error: 'არსებული ანგარიშის ელფოსტა ჯერ დადასტურებული არ არის. თანამშრომლად დასამატებლად ჯერ დაადასტურეთ ელფოსტა.' }, 409);
+      }
+
       if (!targetUser?.id || targetUser.id === OWNER_ID) {
         return json({ error: 'ამ ანგარიშის თანამშრომლად დამატება დაუშვებელია.' }, 400);
       }
