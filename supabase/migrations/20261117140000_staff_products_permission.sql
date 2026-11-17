@@ -122,6 +122,8 @@ $staff_product_permissions$;
 
 -- The browser cannot read purchase_cost directly. Full product-cost reads
 -- remain available only through admin_list_products to expenses-authorized staff.
+-- The existing geostore.inventory_reason and geostore.variant_stock_adjustment
+-- transaction markers are preserved inside the function definitions.
 , '');
 
   -- Product update: preserve the existing cost for product-only staff and
