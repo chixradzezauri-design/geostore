@@ -6,6 +6,7 @@ const migration = await readFile(new URL('../supabase/migrations/20261117140000_
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const settingsMigration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const dashboard = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 
 test('product reads require active products permission while direct table writes stay disabled', () => {
   assert.match(migration, /CREATE POLICY "Staff with products permission can read all products"/);
@@ -49,6 +50,14 @@ test('full product-cost listing is not granted by products permission alone', ()
 test('flash-sale campaigns remain owner-only and are not converted to products permission', () => {
   const targets = migration.split('v_signatures text[] := ARRAY[')[1]?.split('];')[0] || '';
   assert.doesNotMatch(targets, /admin_apply_flash_sale/);
+});
+
+test('all product writes use permission-checked RPCs after direct table updates are revoked', () => {
+  assert.match(dashboard, /rpc\/admin_quick_update_product/);
+  assert.match(dashboard, /rpc\/admin_update_product_with_stock/);
+  assert.match(dashboard, /p_size_color_stocks:\s*changedSizeColorStocks/);
+  assert.match(dashboard, /p_custom_variant_stocks:\s*changedCustomVariantStocks/);
+  assert.doesNotMatch(dashboard, /\/rest\/v1\/products[\s\S]{0,240}?method:\s*'PATCH'/);
 });
 
 test('product-authorized staff can see draft publication state without widening the public catalogue', () => {
