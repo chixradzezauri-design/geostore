@@ -45,3 +45,11 @@ test('permission and role inputs are allow-listed and validated before persisten
   assert.match(edge, /Object\.keys\(input\)\.some/);
   assert.match(edge, /typeof input\[key\] !== 'boolean'/);
 });
+
+test('staff management bounds actual request bytes and rejects malformed JSON as a client error', () => {
+  assert.match(edge, /const rawBody = await request\.text\(\)/);
+  assert.match(edge, /new TextEncoder\(\)\.encode\(rawBody\)\.byteLength > 12000/);
+  assert.match(edge, /მოთხოვნის JSON ფორმატი არასწორია/);
+  assert.match(edge, /მოთხოვნის ფორმატი არასწორია/);
+  assert.doesNotMatch(edge, /request\.json\(\)/);
+});
