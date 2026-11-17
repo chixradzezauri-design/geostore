@@ -5026,7 +5026,7 @@ export default function AdminDashboardPro({
                             : Boolean(o.stock_deducted_at) && Boolean(o.stock_restored_at)) ? (
                             <button
                               onClick={() => { reactivationTriggerRef.current = document.activeElement; setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
-                              className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
+                              className="admin-order-reactivate-button px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
                             >
                               <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
                             </button>
@@ -6404,8 +6404,8 @@ export default function AdminDashboardPro({
         )}
 
       {isOwner && reactivationOrder && (
-        <div tabIndex="-1" className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
-          <form onSubmit={handleConfirmOrderReactivation} className="w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
+        <div tabIndex="-1" className="admin-order-reactivation-overlay fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reactivation-title">
+          <form onSubmit={handleConfirmOrderReactivation} className="admin-order-reactivation-form w-full max-w-md bg-slate-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
                 <KeyRound className="w-5 h-5 text-amber-300" />
