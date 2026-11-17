@@ -112,10 +112,23 @@ Deno.serve(async (request: Request) => {
       return json({ error: 'თანამშრომლების მართვა მხოლოდ მთავარ ადმინისტრატორს შეუძლია.' }, 403);
     }
 
-    const contentLength = Number(request.headers.get('content-length') || 0);
-    if (contentLength > 12000) return json({ error: 'მოთხოვნა ძალიან დიდია.' }, 413);
-    const body = await request.json();
-    const action = body?.action;
+    // Enforce the limit on the actual body bytes; Content-Length may be absent
+    // or untrusted on streamed requests.
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > 12000) {
+      return json({ error: 'მოთხოვნა ძალიან დიდია.' }, 413);
+    }
+    let body: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(rawBody);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return json({ error: 'მოთხოვნის ფორმატი არასწორია.' }, 400);
+      }
+      body = parsed as Record<string, unknown>;
+    } catch {
+      return json({ error: 'მოთხოვნის JSON ფორმატი არასწორია.' }, 400);
+    }
+    const action = body.action;
     const admin = createClient(url, getSecretKey(), {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
     });
