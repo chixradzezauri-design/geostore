@@ -35,6 +35,8 @@ test('staff invitations, role updates and revocation use Supabase Auth and the s
   assert.match(edge, /action === 'revoke'/);
   assert.match(edge, /is_active: false/);
   assert.match(edge, /linked_existing_account/);
+  assert.match(edge, /!invitedNewUser && !targetUser\?\.confirmed_at/);
+  assert.match(edge, /არსებული ანგარიშის ელფოსტა ჯერ დადასტურებული არ არის/);
   assert.doesNotMatch(edge, /auth\.admin\.deleteUser/);
   assert.match(edge, /Keep the Auth account intact/);
 });
