@@ -703,11 +703,17 @@ export default function AdminDashboardPro({
   const supportThreadFetchInFlight = useRef(new Set());
   const supportThreadRefreshPending = useRef(new Set());
   const supportThreadSessionRef = useRef(0);
+  const supportTicketListRequestRef = useRef(0);
   const [storefrontVersions, setStorefrontVersions] = useState([]);
   const [storefrontVersionsLoading, setStorefrontVersionsLoading] = useState(false);
-  const [storefrontVersionsError, setStorefrontVersionsError] = useState('');
+  const [storefrontVersionsErr  const fetchTickets = async (sessionId = supportThreadSessionRef.current) => {
+    if (!adminLoggedIn || sessionId !== supportThreadSessionRef.current) return;
+    const requestId = ++supportTicketListRequestRef.current;
+    const isCurrentRequest = () => (
+      sessionId === supportThreadSessionRef.current
+      && requestId === supportTicketListRequestRef.current
+    );
 
-  const fetchTickets = async (sessionId = null) => {
     try {
       // PostgREST may cap a response at 1,000 rows. Read the complete ticket
       // history in stable pages so older open/unread tickets remain visible.
@@ -716,17 +722,21 @@ export default function AdminDashboardPro({
       let completed = false;
       for (let offset = 0; offset < 100000; offset += pageSize) {
         const headers = await getSupabaseHeaders();
+        if (!isCurrentRequest()) return;
         headers.Range = `${offset}-${offset + pageSize - 1}`;
         headers['Range-Unit'] = 'items';
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/support_tickets?select=*&order=created_at.desc,id.asc`,
           { headers }
         );
+        if (!isCurrentRequest()) return;
         if (!res.ok) {
           const detail = await res.text().catch(() => '');
+          if (!isCurrentRequest()) return;
           throw new Error(detail || `HTTP ${res.status}`);
         }
         const page = await res.json();
+        if (!isCurrentRequest()) return;
         if (!Array.isArray(page)) throw new Error('მხარდაჭერის ტიკეტების პასუხის ფორმატი არასწორია.');
         allTickets.push(...page);
         if (page.length < pageSize) {
@@ -738,7 +748,7 @@ export default function AdminDashboardPro({
         }
       }
       if (!completed) throw new Error('მხარდაჭერის ტიკეტების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
-      if (sessionId !== null && sessionId !== supportThreadSessionRef.current) return;
+      if (!isCurrentRequest()) return;
       setSupportTickets(allTickets.map(t => ({
         id: t.id,
         customerName: t.customer_name,
@@ -752,8 +762,11 @@ export default function AdminDashboardPro({
       setSupportTicketsError('');
     } catch (error) {
       console.error('GEOSTORE support tickets fetch failed:', error);
-      if (sessionId === null || sessionId === supportThreadSessionRef.current) {
+      if (isCurrentRequest()) {
         setSupportTicketsError(error?.message || 'მხარდაჭერის ტიკეტების ჩატვირთვა ვერ მოხერხდა.');
+      }
+    }
+  };ბის ჩატვირთვა ვერ მოხერხდა.');
       }
     }
   };
@@ -828,6 +841,7 @@ export default function AdminDashboardPro({
 
   useEffect(() => {
     supportThreadSessionRef.current += 1;
+    supportTicketListRequestRef.current += 1;
     supportThreadFetchInFlight.current.clear();
     supportThreadRefreshPending.current.clear();
     // Release UI locks from the previous login, but retain idempotency keys:
