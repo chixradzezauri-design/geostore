@@ -26,6 +26,7 @@ DECLARE
   v_order_count bigint := 0;
   v_cancelled_count bigint := 0;
   v_average_order numeric := 0;
+  v_can_view_financials boolean := public.has_staff_permission('expenses');
 BEGIN
   IF NOT public.has_staff_permission('analytics') THEN
     RAISE EXCEPTION 'ანალიტიკის ნახვის უფლება არ გაქვთ.'
@@ -48,40 +49,42 @@ BEGIN
   WHERE o.created_at >= v_from
     AND o.created_at < v_to;
 
-  SELECT coalesce(sum(e.amount), 0)
-    INTO v_expenses
-    FROM public.expenses AS e
-   WHERE e.created_at >= v_from
-     AND e.created_at < v_to;
-
-  SELECT coalesce(sum(
-    CASE
-      WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
-    INTO v_cost_of_goods
-    FROM public.orders AS o
-    CROSS JOIN LATERAL jsonb_array_elements(
-      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
-    ) AS item(value)
-   WHERE o.created_at >= v_from
-     AND o.created_at < v_to
-     AND o.status <> 'გაუქმებული'
-     AND CASE
-       WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
-
-  SELECT count(*)
-    INTO v_uncosted_lines
-    FROM public.orders AS o
-    CROSS JOIN LATERAL jsonb_array_elements(
-      CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
-    ) AS item(value)
-   WHERE o.created_at >= v_from
-     AND o.created_at < v_to
-     AND o.status <> 'გაუქმებული'
-     AND (
-       coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
-       OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
-       OR CASE
-         WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+  IF v_can_view_financials THEN
+    SELECT coalesce(sum(e.amount), 0)
+      INTO v_expenses
+      FROM public.expenses AS e
+     WHERE e.created_at >= v_from
+       AND e.created_at < v_to;
+  
+    SELECT coalesce(sum(
+      CASE
+        WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+      INTO v_cost_of_goods
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+     WHERE o.created_at >= v_from
+       AND o.created_at < v_to
+       AND o.status <> 'გაუქმებული'
+       AND CASE
+         WHEN coalesce(item.value->>'purchase_cost', '') ~ '^[0-9]{1,9}([.][0-9]{1,2})?
+  
+    SELECT count(*)
+      INTO v_uncosted_lines
+      FROM public.orders AS o
+      CROSS JOIN LATERAL jsonb_array_elements(
+        CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END
+      ) AS item(value)
+     WHERE o.created_at >= v_from
+       AND o.created_at < v_to
+       AND o.status <> 'გაუქმებული'
+       AND (
+         coalesce(item.value->>'purchase_cost', '') !~ '^[0-9]{1,9}([.][0-9]{1,2})?$'
+         OR coalesce(item.value->>'quantity', '') !~ '^[0-9]{1,3}$'
+         OR CASE
+           WHEN coalesce(item.value->>'quantity', '') ~ '^[0-9]{1,3}
+  END IF;
 
   SELECT coalesce(jsonb_object_agg(status, amount), '{}'::jsonb)
     INTO v_statuses
@@ -140,11 +143,12 @@ BEGIN
     'revenue', round(v_revenue, 2),
     'completed_revenue', round(v_completed_revenue, 2),
     'average_order_value', round(v_average_order, 2),
-    'expenses', round(v_expenses, 2),
-    'cost_of_goods', round(v_cost_of_goods, 2),
-    'gross_profit_before_expenses', round(v_revenue - v_cost_of_goods, 2),
-    'net_profit_estimate', round(v_revenue - v_cost_of_goods - v_expenses, 2),
-    'uncosted_item_lines', v_uncosted_lines,
+    'financials_available', v_can_view_financials,
+    'expenses', CASE WHEN v_can_view_financials THEN round(v_expenses, 2) ELSE NULL END,
+    'cost_of_goods', CASE WHEN v_can_view_financials THEN round(v_cost_of_goods, 2) ELSE NULL END,
+    'gross_profit_before_expenses', CASE WHEN v_can_view_financials THEN round(v_revenue - v_cost_of_goods, 2) ELSE NULL END,
+    'net_profit_estimate', CASE WHEN v_can_view_financials THEN round(v_revenue - v_cost_of_goods - v_expenses, 2) ELSE NULL END,
+    'uncosted_item_lines', CASE WHEN v_can_view_financials THEN v_uncosted_lines ELSE NULL END,
     'status_counts', coalesce(v_statuses, '{}'::jsonb),
     'daily', coalesce(v_daily, '[]'::jsonb),
     'top_products', coalesce(v_top_products, '[]'::jsonb)
