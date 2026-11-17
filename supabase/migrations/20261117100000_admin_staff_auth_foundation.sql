@@ -58,6 +58,17 @@ BEGIN
     RETURN true;
   END IF;
 
+  -- Defense in depth: an invited staff account receives no permissions
+  -- until Supabase Auth confirms ownership of its email address.
+  IF NOT EXISTS (
+    SELECT 1
+      FROM auth.users AS auth_user
+     WHERE auth_user.id = v_user_id
+       AND auth_user.email_confirmed_at IS NOT NULL
+  ) THEN
+    RETURN false;
+  END IF;
+
   RETURN EXISTS (
     SELECT 1
       FROM public.admin_staff_members AS staff
@@ -101,6 +112,21 @@ BEGIN
         'products', true, 'orders', true, 'analytics', true,
         'expenses', true, 'crm', true, 'support', true, 'settings', true
       )
+    );
+  END IF;
+
+  -- Do not expose staff-panel access before the invited email is confirmed.
+  IF NOT EXISTS (
+    SELECT 1
+      FROM auth.users AS auth_user
+     WHERE auth_user.id = v_user_id
+       AND auth_user.email_confirmed_at IS NOT NULL
+  ) THEN
+    RETURN jsonb_build_object(
+      'is_admin', false,
+      'is_staff', false,
+      'role', null,
+      'permissions', '{}'::jsonb
     );
   END IF;
 
