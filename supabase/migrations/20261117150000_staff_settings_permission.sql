@@ -93,6 +93,68 @@ REVOKE INSERT (is_published, published_at, published_config),
        UPDATE (is_published, published_at, published_config)
   ON TABLE public.storefront_config FROM authenticated;
 
+-- Draft writes use a narrow RPC because direct table INSERT/UPDATE is revoked.
+-- It changes only the draft columns and can never publish or overwrite the live snapshot.
+CREATE OR REPLACE FUNCTION private.save_storefront_draft(p_snapshot jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_result jsonb;
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.has_staff_permission('settings') THEN
+    RAISE EXCEPTION 'მაღაზიის მონახაზის შეცვლის უფლება არ გაქვთ.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF p_snapshot IS NULL
+     OR jsonb_typeof(p_snapshot) IS DISTINCT FROM 'object'
+     OR jsonb_typeof(p_snapshot->'categories') IS DISTINCT FROM 'array'
+     OR jsonb_typeof(p_snapshot->'banners') IS DISTINCT FROM 'array'
+     OR jsonb_typeof(p_snapshot->'siteSettings') IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'მაღაზიის მონახაზის მონაცემები არასწორია.'
+      USING ERRCODE = '22023';
+  END IF;
+
+  INSERT INTO public.storefront_config (
+    config_key, draft_config, updated_by, draft_updated_at
+  )
+  VALUES (
+    'storefront', p_snapshot, auth.uid(), now()
+  )
+  ON CONFLICT (config_key) DO UPDATE
+    SET draft_config = EXCLUDED.draft_config,
+        updated_by = EXCLUDED.updated_by,
+        draft_updated_at = EXCLUDED.draft_updated_at
+  RETURNING jsonb_build_object(
+    'config_key', config_key,
+    'draft_updated_at', draft_updated_at
+  )
+  INTO v_result;
+
+  RETURN v_result;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.save_storefront_draft(p_snapshot jsonb)
+RETURNS jsonb
+LANGUAGE sql
+SET search_path = ''
+AS $function$
+  SELECT private.save_storefront_draft(p_snapshot);
+$function$;
+
+REVOKE ALL ON FUNCTION private.save_storefront_draft(jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.save_storefront_draft(jsonb) TO authenticated;
+REVOKE ALL ON FUNCTION public.save_storefront_draft(jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.save_storefront_draft(jsonb) TO authenticated;
+
+COMMENT ON FUNCTION public.save_storefront_draft(jsonb) IS
+  'Permission-checked draft-only storefront save; published config and version history remain unchanged.';
+
+
 -- The shared media bucket contains three separate path namespaces.
 -- Settings staff may manage only storefront banners/categories; product staff
 -- may manage only product images. The owner bypass in has_staff_permission()
