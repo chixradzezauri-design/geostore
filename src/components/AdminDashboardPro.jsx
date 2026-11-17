@@ -320,6 +320,145 @@ const getOrderStatusFilterKey = (status) => {
   return String(status || '');
 };
 
+function StaffAnalyticsSummary() {
+  const [periodDays, setPeriodDays] = useState('30');
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    const loadSummary = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const to = new Date();
+        const from = new Date(to.getTime() - Number(periodDays) * 24 * 60 * 60 * 1000);
+        const { data, error: rpcError } = await supabase.rpc('get_staff_analytics_summary', {
+          p_from: from.toISOString(),
+          p_to: to.toISOString()
+        });
+        if (rpcError) throw rpcError;
+        if (!active) return;
+        setSummary(data && typeof data === 'object' ? data : null);
+      } catch (loadError) {
+        if (!active) return;
+        setSummary(null);
+        setError('ანალიტიკის შეჯამება ვერ ჩაიტვირთა. გადაამოწმეთ თანამშრომლის უფლება და სერვერული განახლების სტატუსი.');
+        console.error('Staff analytics summary failed:', loadError);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void loadSummary();
+    return () => { active = false; };
+  }, [periodDays]);
+
+  const money = (value) => new Intl.NumberFormat('ka-GE', {
+    style: 'currency',
+    currency: 'GEL',
+    maximumFractionDigits: 2
+  }).format(Number(value) || 0);
+  const count = (value) => new Intl.NumberFormat('ka-GE').format(Number(value) || 0);
+  const metrics = [
+    { label: 'შეკვეთები', value: count(summary?.order_count), detail: `გაუქმებული: ${count(summary?.cancelled_count)}` },
+    { label: 'შემოსავალი', value: money(summary?.revenue) },
+    { label: 'დასრულებული გაყიდვები', value: money(summary?.completed_revenue) },
+    { label: 'შესყიდვის ღირებულება', value: money(summary?.cost_of_goods) },
+    { label: 'ხარჯები', value: money(summary?.expenses) },
+    { label: 'სავარაუდო წმინდა მოგება', value: money(summary?.net_profit_estimate) },
+    { label: 'საშუალო შეკვეთა', value: money(summary?.average_order_value) },
+    { label: 'მოგება ხარჯებამდე', value: money(summary?.gross_profit_before_expenses) }
+  ];
+
+  return (
+    <section className="space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-emerald-500/20 bg-slate-900/80 p-4">
+        <div>
+          <h3 className="text-lg font-black text-white">ანალიტიკის შეჯამება</h3>
+          <p className="mt-1 text-xs text-slate-400">მხოლოდ შეჯამებული მონაცემები — მომხმარებლის პირადი ინფორმაცია და შეკვეთების დეტალები არ ჩანს.</p>
+        </div>
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-300">
+          პერიოდი
+          <select
+            value={periodDays}
+            onChange={(event) => setPeriodDays(event.target.value)}
+            className="rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-2 text-white"
+          >
+            <option value="7">ბოლო 7 დღე</option>
+            <option value="30">ბოლო 30 დღე</option>
+            <option value="90">ბოლო 90 დღე</option>
+            <option value="365">ბოლო 365 დღე</option>
+          </select>
+        </label>
+      </div>
+
+      {loading && <div role="status" className="rounded-xl border border-slate-700 bg-slate-900 p-4 text-sm text-slate-300">ანალიტიკა იტვირთება…</div>}
+      {error && <div role="alert" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">{error}</div>}
+
+      {summary && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {metrics.map((metric) => (
+              <article key={metric.label} className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+                <p className="text-[11px] font-bold text-slate-400">{metric.label}</p>
+                <strong className="mt-2 block text-xl font-black text-white tabular-nums">{metric.value}</strong>
+                {metric.detail && <p className="mt-1 text-[10px] text-slate-500">{metric.detail}</p>}
+              </article>
+            ))}
+          </div>
+
+          {Number(summary.uncosted_item_lines) > 0 && (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+              {count(summary.uncosted_item_lines)} გაყიდულ პოზიციას ისტორიულ ჩანაწერში შესყიდვის ღირებულება აკლია; მოგების შეფასება შესაძლოა არასრული იყოს.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <section className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+              <h4 className="font-black text-white">სტატუსების მიხედვით</h4>
+              <div className="mt-3 space-y-2">
+                {Object.entries(summary.status_counts || {}).map(([status, value]) => (
+                  <div key={status} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="text-slate-300">{status}</span>
+                    <strong className="text-white tabular-nums">{count(value)}</strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+              <h4 className="font-black text-white">ტოპ პროდუქტები</h4>
+              <div className="mt-3 space-y-2">
+                {(summary.top_products || []).map((product) => (
+                  <div key={product.product_id} className="flex items-center justify-between gap-3 border-b border-slate-800 pb-2 text-xs">
+                    <span className="min-w-0 truncate text-slate-300">{product.product_name}</span>
+                    <span className="shrink-0 text-right text-white">{count(product.units)} ც. · {money(product.revenue)}</span>
+                  </div>
+                ))}
+                {!summary.top_products?.length && <p className="text-xs text-slate-500">ამ პერიოდში გაყიდვები არ არის.</p>}
+              </div>
+            </section>
+          </div>
+
+          <section className="rounded-2xl border border-emerald-500/15 bg-slate-900/80 p-4">
+            <h4 className="font-black text-white">დღიური გაყიდვები</h4>
+            <div className="mt-3 max-h-72 overflow-auto space-y-2">
+              {(summary.daily || []).slice(-31).map((day) => (
+                <div key={day.day} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 border-b border-slate-800 pb-2 text-xs">
+                  <span className="text-slate-400">{day.day}</span>
+                  <span className="text-slate-300">{count(day.orders)} შეკვეთა</span>
+                  <strong className="text-white tabular-nums">{money(day.revenue)}</strong>
+                </div>
+              ))}
+              {!summary.daily?.length && <p className="text-xs text-slate-500">ამ პერიოდში შეკვეთები არ არის.</p>}
+            </div>
+          </section>
+        </>
+      )}
+    </section>
+  );
+}
+
 export default function AdminDashboardPro({
   adminLoggedIn,
   adminAccess = EMPTY_ADMIN_ACCESS,
@@ -4006,7 +4145,8 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {visibleAdminTab === 'analytics' && (
+        {visibleAdminTab === 'analytics' && !isOwner && <StaffAnalyticsSummary />}
+        {visibleAdminTab === 'analytics' && isOwner && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
               <div>
