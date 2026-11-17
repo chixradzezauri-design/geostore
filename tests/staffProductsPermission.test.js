@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 const migration = await readFile(new URL('../supabase/migrations/20261117140000_staff_products_permission.sql', import.meta.url), 'utf8');
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const settingsMigration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
+const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
 test('product reads require active products permission while direct table writes stay disabled', () => {
   assert.match(migration, /CREATE POLICY "Staff with products permission can read all products"/);
@@ -48,6 +49,12 @@ test('full product-cost listing is not granted by products permission alone', ()
 test('flash-sale campaigns remain owner-only and are not converted to products permission', () => {
   const targets = migration.split('v_signatures text[] := ARRAY[')[1]?.split('];')[0] || '';
   assert.doesNotMatch(targets, /admin_apply_flash_sale/);
+});
+
+test('product-authorized staff can see draft publication state without widening the public catalogue', () => {
+  assert.match(migration, /GRANT SELECT \(is_published\) ON TABLE public\.products TO authenticated/);
+  assert.match(app, /requestHasProductPermission\s*\?\s*`\$\{safeProductColumns\},is_published`\s*:\s*safeProductColumns/);
+  assert.match(app, /isPublished: p\.is_published !== false/);
 });
 
 test('product permission changes preserve inventory transaction markers', () => {
