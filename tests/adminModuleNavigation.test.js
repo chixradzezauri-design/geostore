@@ -6,6 +6,14 @@ const source = await readFile(new URL('../src/components/AdminDashboardPro.jsx',
 
 test('admin navigation maps each module to its server permission', () => {
   for (const [tab, permission] of [
+    ['command', 'owner'],
+    ['calculator', 'analytics'],
+    ['ai_analyst', 'owner'],
+    ['discounts', 'owner'],
+    ['broadcasts', 'owner'],
+    ['banners', 'settings'],
+    ['categories', 'settings'],
+    ['coupons', 'settings'],
     ['orders', 'orders'],
     ['products', 'products'],
     ['inventory', 'products'],
