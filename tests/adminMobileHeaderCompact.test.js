@@ -36,8 +36,26 @@ test('admin typography is consistently compact across desktop, tablet and mobile
 
 test('compact typography overrides oversized utility classes and shrinks the admin greeting header', () => {
   assert.match(polish, /STAGE 109 — hard compact typography/);
-  assert.match(polish, /\.admin-dashboard-pro\.admin-dashboard-shell \* \{[\s\S]*?font-size: inherit !important/);
+  assert.doesNotMatch(polish, /\.admin-dashboard-pro\.admin-dashboard-shell \* \{[\s\S]*?font-size: inherit !important/);
   assert.match(polish, /\.admin-dashboard-pro\.admin-dashboard-shell > div:nth-child\(2\) > div:first-child > div:first-child h2[\s\S]*?font-size: 12px !important/);
   assert.match(polish, /min-height: 34px !important/);
   assert.match(polish, /\.admin-command-kpi > strong[\s\S]*?font-size: 18px !important/);
+});
+
+
+test('storefront typography uses a scoped responsive scale and preserves mobile form usability', () => {
+  const storefront = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+  assert.match(storefront, /VISUAL SYSTEM — STAGE 47/);
+  assert.match(storefront, /--gs-type-body:\s*clamp\(/);
+  assert.match(storefront, /\.geostore-fashion-store \.geostore-storefront h1/);
+  assert.match(storefront, /max-width:\s*767px/);
+  assert.match(storefront, /font-size:\s*16px !important/);
+});
+
+test('admin typography preserves semantic hierarchy and mobile input zoom protection', () => {
+  assert.match(polish, /STAGE 110 — restore a clear type hierarchy/);
+  assert.match(polish, /:is\(h1, h2\)[\s\S]*?font-size:\s*17px !important/);
+  assert.match(polish, /max-width:\s*640px/);
+  assert.match(polish, /:is\(input, select, textarea\)[\s\S]*?font-size:\s*16px !important/);
+  assert.doesNotMatch(polish, /\.admin-dashboard-pro\.admin-dashboard-shell \* \{[\s\S]*?font-size: inherit !important/);
 });
