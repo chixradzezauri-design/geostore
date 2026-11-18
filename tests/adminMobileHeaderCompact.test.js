@@ -59,3 +59,14 @@ test('admin typography preserves semantic hierarchy and mobile input zoom protec
   assert.match(polish, /:is\(input, select, textarea\)[\s\S]*?font-size:\s*16px !important/);
   assert.doesNotMatch(polish, /\.admin-dashboard-pro\.admin-dashboard-shell \* \{[\s\S]*?font-size: inherit !important/);
 });
+
+
+test('storefront first-screen sections have responsive layout guardrails', () => {
+  const storefront = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+  assert.match(storefront, /VISUAL SYSTEM — STAGE 48/);
+  assert.match(storefront, /\.geostore-fashion-store \.gs-site-header-inner/);
+  assert.match(storefront, /\.geostore-fashion-store \.gs-fashion-hero__content/);
+  assert.match(storefront, /\.geostore-fashion-store \.geostore-storefront \.gs-flash-sale-countdown/);
+  assert.match(storefront, /max-width: 760px/);
+  assert.match(storefront, /max-width: 390px/);
+});
