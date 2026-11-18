@@ -4,31 +4,158 @@ BEGIN;
 
 CREATE OR REPLACE FUNCTION private.list_inventory_movements(p_product_id text DEFAULT NULL::text, p_before_id bigint DEFAULT NULL::bigint, p_limit integer DEFAULT 50)
  RETURNS jsonb
- LANGUAGE sql
+ LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-  SELECT private.list_inventory_movements(p_product_id, p_before_id, p_limit);
+DECLARE
+  v_limit integer := least(greatest(coalesce(p_limit, 50), 1), 100);
+  v_result jsonb;
+BEGIN
+  IF NOT public.has_staff_permission('products') THEN
+    RAISE EXCEPTION 'ადმინისტრატორის უფლებები არ დადასტურდა.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  WITH page AS (
+    SELECT m.*
+      FROM private.inventory_movements AS m
+     WHERE (p_product_id IS NULL OR m.product_id = p_product_id)
+       AND (p_before_id IS NULL OR m.id < p_before_id)
+     ORDER BY m.id DESC
+     LIMIT v_limit + 1
+  ),
+  visible_page AS (
+    SELECT *
+      FROM page
+     ORDER BY id DESC
+     LIMIT v_limit
+  )
+  SELECT jsonb_build_object(
+    'items', coalesce(
+      (SELECT jsonb_agg(to_jsonb(v) ORDER BY v.id DESC) FROM visible_page AS v),
+      '[]'::jsonb
+    ),
+    'has_more', (SELECT count(*) > v_limit FROM page),
+    'next_cursor', CASE
+      WHEN (SELECT count(*) > v_limit FROM page)
+        THEN (SELECT min(id) FROM visible_page)
+      ELSE NULL
+    END
+  )
+  INTO v_result;
+
+  RETURN v_result;
+END;
 $function$
 
 CREATE OR REPLACE FUNCTION private.list_inventory_replenishment_settings(p_limit integer DEFAULT 500)
  RETURNS jsonb
- LANGUAGE sql
+ LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-  SELECT private.list_inventory_replenishment_settings(p_limit);
+DECLARE
+  v_limit integer := least(greatest(coalesce(p_limit, 500), 1), 1000);
+  v_items jsonb;
+  v_has_more boolean;
+BEGIN
+  IF NOT public.has_staff_permission('products') THEN
+    RAISE EXCEPTION 'ადმინისტრატორის უფლებები არ დადასტურდა.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  WITH page AS (
+    SELECT s.*
+      FROM private.inventory_replenishment_settings AS s
+     ORDER BY s.product_id, coalesce(s.variant_id, '')
+     LIMIT v_limit + 1
+  )
+  SELECT
+    coalesce(jsonb_agg(to_jsonb(items) ORDER BY items.product_id, coalesce(items.variant_id, ''))
+      FILTER (WHERE items.row_number <= v_limit), '[]'::jsonb),
+    count(*) > v_limit
+    INTO v_items, v_has_more
+    FROM (
+      SELECT page.*, row_number() OVER (ORDER BY product_id, coalesce(variant_id, '')) AS row_number
+        FROM page
+    ) AS items;
+
+  RETURN jsonb_build_object('items', v_items, 'has_more', v_has_more);
+END;
 $function$
 
 CREATE OR REPLACE FUNCTION private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)
  RETURNS jsonb
- LANGUAGE sql
+ LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
 AS $function$
-  SELECT private.save_inventory_replenishment_setting(
-    p_product_id, p_variant_id, p_low_stock_threshold, p_target_stock
-  );
+DECLARE
+  v_product public.products%ROWTYPE;
+  v_variant_name text;
+  v_saved private.inventory_replenishment_settings%ROWTYPE;
+BEGIN
+  IF NOT public.has_staff_permission('products') THEN
+    RAISE EXCEPTION 'ადმინისტრატორის უფლებები არ დადასტურდა.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF coalesce(trim(p_product_id), '') = ''
+     OR p_variant_id IS NOT NULL AND trim(p_variant_id) = ''
+     OR p_low_stock_threshold IS NULL
+     OR p_low_stock_threshold < 0 OR p_low_stock_threshold > 100000
+     OR p_target_stock IS NULL
+     OR p_target_stock <= p_low_stock_threshold OR p_target_stock > 1000000 THEN
+    RAISE EXCEPTION 'მარაგის ზღვარი ან სამიზნე რაოდენობა არასწორია.'
+      USING ERRCODE = '22023';
+  END IF;
+
+  SELECT p.* INTO v_product
+    FROM public.products AS p
+   WHERE p.id = p_product_id
+   FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'პროდუქტი ვერ მოიძებნა.'
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  IF p_variant_id IS NOT NULL THEN
+    SELECT coalesce(nullif(v.item->>'name', ''), nullif(v.item->>'label', ''))
+      INTO v_variant_name
+      FROM jsonb_array_elements(
+        CASE WHEN jsonb_typeof(coalesce(v_product.variants, '[]'::jsonb)) = 'array'
+          THEN coalesce(v_product.variants, '[]'::jsonb) ELSE '[]'::jsonb END
+      ) AS v(item)
+     WHERE v.item->>'id' = p_variant_id
+     LIMIT 1;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'პროდუქტის მითითებული ვარიანტი აღარ არსებობს.'
+        USING ERRCODE = '22023';
+    END IF;
+  END IF;
+
+  INSERT INTO private.inventory_replenishment_settings (
+    product_id, variant_id, product_name, variant_name,
+    low_stock_threshold, target_stock, updated_by
+  ) VALUES (
+    p_product_id, p_variant_id, coalesce(v_product.name, p_product_id), v_variant_name,
+    p_low_stock_threshold, p_target_stock, auth.uid()
+  )
+  ON CONFLICT (product_id, (coalesce(variant_id, '')))
+  DO UPDATE SET
+    product_name = EXCLUDED.product_name,
+    variant_name = EXCLUDED.variant_name,
+    low_stock_threshold = EXCLUDED.low_stock_threshold,
+    target_stock = EXCLUDED.target_stock,
+    updated_by = EXCLUDED.updated_by,
+    updated_at = clock_timestamp()
+  RETURNING * INTO v_saved;
+
+  RETURN jsonb_build_object('success', true, 'setting', to_jsonb(v_saved));
+END;
 $function$
 
 CREATE OR REPLACE FUNCTION private.get_my_admin_access()

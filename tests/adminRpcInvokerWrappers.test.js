@@ -20,7 +20,7 @@ test('all six privileged implementations are in the private schema', () => {
   for (const [, privateName] of pairs) {
     assert.match(migration, new RegExp('CREATE OR REPLACE FUNCTION private\\.' + privateName + '\\('));
   }
-  assert.equal((migration.match(/\\bSECURITY\\s+DEFINER\\b/gi) || []).length, 6);
+  assert.equal((migration.match(/\bSECURITY\s+DEFINER\b/gi) || []).length, 6);
 });
 
 test('all six established public RPC names remain SECURITY INVOKER wrappers', () => {
@@ -28,7 +28,19 @@ test('all six established public RPC names remain SECURITY INVOKER wrappers', ()
     assert.match(migration, new RegExp('CREATE OR REPLACE FUNCTION public\\.' + publicName + '\\('));
     assert.match(migration, new RegExp('SELECT private\\.' + privateName + '\\('));
   }
-  assert.equal((migration.match(/\\bSECURITY\\s+INVOKER\\b/gi) || []).length, 6);
+  assert.equal((migration.match(/\bSECURITY\s+INVOKER\b/gi) || []).length, 6);
+});
+
+test('inventory wrappers call the original private implementations, not themselves', () => {
+  const movement = migration.split('CREATE OR REPLACE FUNCTION private.list_inventory_movements')[1]?.split('CREATE OR REPLACE FUNCTION private.list_inventory_replenishment_settings')[0] || '';
+  const replenishment = migration.split('CREATE OR REPLACE FUNCTION private.list_inventory_replenishment_settings')[1]?.split('CREATE OR REPLACE FUNCTION private.save_inventory_replenishment_setting')[0] || '';
+  const save = migration.split('CREATE OR REPLACE FUNCTION private.save_inventory_replenishment_setting')[1]?.split('CREATE OR REPLACE FUNCTION private.get_my_admin_access')[0] || '';
+  assert.match(movement, /FROM private\.inventory_movements/);
+  assert.match(replenishment, /FROM private\.inventory_replenishment_settings/);
+  assert.match(save, /INSERT INTO private\.inventory_replenishment_settings/);
+  assert.doesNotMatch(movement, /SELECT private\.list_inventory_movements\(/);
+  assert.doesNotMatch(replenishment, /SELECT private\.list_inventory_replenishment_settings\(/);
+  assert.doesNotMatch(save, /SELECT private\.save_inventory_replenishment_setting\(/);
 });
 
 test('RLS permission helper remains public under its existing name', () => {
@@ -59,8 +71,8 @@ test('public wrappers and private implementations grant only authenticated staff
   for (const [publicName, privateName] of pairs) {
     assert.match(migration, new RegExp('GRANT EXECUTE ON FUNCTION public\\.' + publicName + '\\('));
     assert.match(migration, new RegExp('GRANT EXECUTE ON FUNCTION private\\.' + privateName + '\\('));
-    assert.doesNotMatch(migration, new RegExp('GRANT EXECUTE ON FUNCTION (public|private)\\.' + publicName + '[^;]* TO anon', 'i'));
-    assert.doesNotMatch(migration, new RegExp('GRANT EXECUTE ON FUNCTION (public|private)\\.' + privateName + '[^;]* TO anon', 'i'));
+    assert.doesNotMatch(migration, new RegExp('GRANT EXECUTE ON FUNCTION public\\.' + publicName + '[^;]* TO anon', 'i'));
+    assert.doesNotMatch(migration, new RegExp('GRANT EXECUTE ON FUNCTION private\\.' + privateName + '[^;]* TO anon', 'i'));
   }
 });
 
