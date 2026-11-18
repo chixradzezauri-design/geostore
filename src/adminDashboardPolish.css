@@ -731,3 +731,151 @@
     padding-inline: 6px !important;
   }
 }
+
+
+/* STAGE 108 — consistent compact typography across the entire admin workspace.
+   Scoped to the admin shell; preserves hierarchy, controls, handlers and content. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  p, span, label, small, th, td, li, dt, dd, figcaption,
+  button, input, select, textarea, option
+) {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  h1, h2, h3, h4, h5, h6
+) {
+  line-height: 1.25;
+  letter-spacing: -.015em;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+  font-size: 16px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+  font-size: 13px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+  font-size: 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  button, input, select, textarea
+) {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-kpi, .admin-command-panel, .admin-order-card,
+  .admin-product-card, .admin-staff-card, .admin-support-ticket,
+  .admin-crm-user-card, .admin-expense-row
+) :is(p, span, small, label, strong, b) {
+  line-height: 1.35;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-kpi, .admin-analytics-card
+) :is(h2, h3, h4) {
+  font-size: 13px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-orders-header, .admin-products-header, .admin-staff-list-title,
+  .admin-support-header, .admin-analytics-toolbar
+) :is(h2, h3, p, span, button) {
+  line-height: 1.3;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .text-\\[8px\\], .text-\\[9px\\], .text-\\[10px\\]
+) {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 11px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption,
+    button, input, select, textarea, option
+  ) {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 14px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 12px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption,
+    button, input, select, textarea, option
+  ) {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+    font-size: 10px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-command-kpi, .admin-analytics-card
+  ) :is(h2, h3, h4) {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption,
+    button, input, select, textarea, option
+  ) {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 12px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 10px;
+  }
+}
