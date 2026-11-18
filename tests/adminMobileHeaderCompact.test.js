@@ -70,3 +70,20 @@ test('storefront first-screen sections have responsive layout guardrails', () =>
   assert.match(storefront, /max-width: 760px/);
   assert.match(storefront, /max-width: 390px/);
 });
+
+
+test('storefront category tiles, catalog controls and product cards have responsive layout rules', () => {
+  const storefront = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+  const view = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
+  assert.match(storefront, /VISUAL SYSTEM — STAGE 49/);
+  assert.match(storefront, /\.gs-catalog-category-grid[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(storefront, /\.gs-catalog-controls[\s\S]*?flex-direction:\s*column/);
+  assert.match(storefront, /\.gs-catalog-product-card[\s\S]*?border-radius:\s*16px/);
+  assert.match(storefront, /\.gs-catalog-product-media[\s\S]*?aspect-ratio:/);
+  assert.match(view, /gs-category-card/);
+  assert.match(view, /gs-catalog-product-card/);
+  assert.match(view, /setMinPrice\(/);
+  assert.match(view, /setMaxPrice\(/);
+  assert.match(view, /setSortBy\(/);
+  assert.match(view, /handleOpenProduct\(prod\)/);
+});
