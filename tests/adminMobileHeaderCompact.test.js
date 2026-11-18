@@ -24,3 +24,12 @@ test('admin action handlers and role guards remain in place', () => {
   assert.match(dashboard, /hasModulePermission\('settings'\)/);
   assert.match(dashboard, /isOwner &&/);
 });
+
+test('admin typography is consistently compact across desktop, tablet and mobile', () => {
+  assert.match(polish, /STAGE 108 — consistent compact typography across the entire admin workspace/);
+  assert.match(polish, /max-width:\s*1023px/);
+  assert.match(polish, /max-width:\s*640px/);
+  assert.match(polish, /max-width:\s*380px/);
+  assert.match(polish, /p, span, label, small, th, td, li, dt, dd, figcaption/);
+  assert.match(polish, /:is\\(h1, h2\\)[\\s\\S]*?font-size:\s*13px/);
+});
