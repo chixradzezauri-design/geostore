@@ -79,5 +79,6 @@ test('public wrappers and private implementations grant only authenticated staff
 test('migration is transactional and does not modify or delete application data', () => {
   assert.match(migration, /^--[\s\S]*?BEGIN;/i);
   assert.match(migration, /COMMIT;\s*$/i);
-  assert.doesNotMatch(migration, /DROP TABLE|TRUNCATE|DELETE FROM|INSERT INTO|UPDATE public\./i);
+  assert.match(migration, /INSERT INTO private\.inventory_replenishment_settings/);
+  assert.doesNotMatch(migration, /DROP TABLE|TRUNCATE|DELETE FROM|INSERT INTO public\.|UPDATE public\./i);
 });
