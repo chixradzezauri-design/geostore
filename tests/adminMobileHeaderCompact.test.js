@@ -31,5 +31,5 @@ test('admin typography is consistently compact across desktop, tablet and mobile
   assert.match(polish, /max-width:\s*640px/);
   assert.match(polish, /max-width:\s*380px/);
   assert.match(polish, /p, span, label, small, th, td, li, dt, dd, figcaption/);
-  assert.match(polish, /:is\\(h1, h2\\)[\\s\\S]*?font-size:\s*13px/);
+  assert.match(polish, /:is\(h1, h2\)[\s\S]*?font-size:\s*13px/);
 });
