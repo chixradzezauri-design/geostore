@@ -87,3 +87,19 @@ test('storefront category tiles, catalog controls and product cards have respons
   assert.match(view, /setSortBy\(/);
   assert.match(view, /handleOpenProduct\(prod\)/);
 });
+
+
+test('product detail modal and gallery retain compact responsive sizing', () => {
+  const storefront = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+  const view = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
+  assert.match(storefront, /VISUAL SYSTEM — STAGE 50/);
+  assert.match(storefront, /\.gs-product-dialog[\s\S]*?max-height:/);
+  assert.match(storefront, /\.gs-product-detail-image-stage[\s\S]*?height:/);
+  assert.match(storefront, /\.gs-product-modal-body > \.grid[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(storefront, /env\(safe-area-inset-bottom\)/);
+  assert.match(view, /setActiveImage\(img\)/);
+  assert.match(view, /setSelectedSize\(size\)/);
+  assert.match(view, /setSelectedColor\(colName\)/);
+  assert.match(view, /addToCart\(/);
+  assert.match(view, /handleAddReview\(/);
+});
