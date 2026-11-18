@@ -958,3 +958,13 @@ This file is the durable handoff log for staged audit work. Add new findings and
 - Existing raw orders/products/expenses RLS policies remain restricted to their own modules; analytics permission alone does not grant raw table access.
 - The summary reports uncosted item lines so incomplete historical cost snapshots are visible rather than silently treated as fully accurate.
 - No live order, product, expense, customer or analytics data was modified. Draft migration only.
+
+
+## Stage 56 revision — complete support-ticket RPC exposure correction — 2026-11-18
+- Rechecked the live Supabase Security Advisor and database function definitions read-only. The live baseline contains five exposed public SECURITY DEFINER support RPCs: customer ticket history, paginated customer ticket history, ticket status, unread counts, and read receipts.
+- The earlier Stage 56 draft covered only four RPCs and replaced the existing `public.has_staff_permission('support')` checks with a primary-owner-only UUID/role check. That would have left the paginated history RPC exposed and removed support-module access from authorized staff.
+- The revised migration adds all five private SECURITY DEFINER implementations behind public SECURITY INVOKER wrappers, preserves the existing RPC argument/default/return contracts, keeps guest access-token checks for status/read receipts, and retains active staff support permission checks for status, unread counts, and read receipts.
+- Customer history and paginated history remain authenticated-owner-only; admin unread counts remain authenticated and support-permission-gated; guest token access remains limited to status and read receipts.
+- The revision is staged on `maintenance/stage-56-support-rpc-private-complete-2026-11-18`. No live Supabase migration was applied and no support tickets, messages, read receipts, users, staff records, or access-token hashes were changed.
+- Current Security Advisor baseline: 2 anon-executable SECURITY DEFINER warnings (both support RPCs), 11 authenticated-executable SECURITY DEFINER warnings (5 support RPCs plus 6 other functions), 6 RLS-enabled tables without policies, and leaked-password protection disabled. This scoped revision is intended to remove the 5 support RPC findings only; the other findings remain separate work.
+- CI, staging database execution, and guest/staff/owner authorization integration tests are still required before merge or production application.
