@@ -19278,3 +19278,130 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     line-height: 1.35 !important;
   }
 }
+
+
+/* GEOSTORE VISUAL SYSTEM — STAGE 47
+   Responsive storefront typography baseline.
+   Scoped to the customer storefront; no component behavior or data flow changes. */
+.geostore-fashion-store .geostore-storefront {
+  --gs-type-body: clamp(0.8125rem, 0.79rem + 0.12vw, 0.9rem);
+  --gs-type-small: clamp(0.6875rem, 0.66rem + 0.1vw, 0.75rem);
+  --gs-type-control: clamp(0.75rem, 0.72rem + 0.14vw, 0.875rem);
+  color: #29231f;
+  font-size: var(--gs-type-body);
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+}
+
+.geostore-fashion-store .geostore-storefront :is(p, li, dd, dt, figcaption) {
+  font-size: var(--gs-type-body);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .geostore-storefront :is(label, button, a) {
+  line-height: 1.4;
+}
+
+.geostore-fashion-store .geostore-storefront button {
+  font-size: var(--gs-type-control);
+}
+
+.geostore-fashion-store .geostore-storefront :is(small, [class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"]) {
+  font-size: var(--gs-type-small) !important;
+  line-height: 1.4 !important;
+}
+
+.geostore-fashion-store .geostore-storefront :is(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.geostore-fashion-store .geostore-storefront h1 {
+  font-size: clamp(2rem, 1.55rem + 1.55vw, 2.9rem);
+}
+
+.geostore-fashion-store .geostore-storefront h2 {
+  font-size: clamp(1.5rem, 1.25rem + 0.8vw, 2rem);
+}
+
+.geostore-fashion-store .geostore-storefront h3 {
+  font-size: clamp(1.125rem, 1rem + 0.45vw, 1.4rem);
+}
+
+.geostore-fashion-store .geostore-storefront h4 {
+  font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1.1rem);
+}
+
+.geostore-fashion-store .geostore-storefront :is(h5, h6) {
+  font-size: clamp(0.875rem, 0.84rem + 0.16vw, 1rem);
+}
+
+.geostore-fashion-store .geostore-storefront .gs-fashion-hero h1 {
+  font-size: clamp(2.1rem, 1.55rem + 2.1vw, 3.1rem) !important;
+  line-height: 1.08 !important;
+}
+
+.geostore-fashion-store .geostore-storefront :is(input, select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .geostore-fashion-store .geostore-storefront {
+    --gs-type-body: 0.8125rem;
+    --gs-type-small: 0.6875rem;
+    --gs-type-control: 0.75rem;
+    line-height: 1.5;
+  }
+
+  .geostore-fashion-store .geostore-storefront :is(p, li, dd, dt, figcaption) {
+    line-height: 1.5;
+  }
+
+  .geostore-fashion-store .geostore-storefront h1 {
+    font-size: clamp(1.65rem, 6.5vw, 2.15rem);
+  }
+
+  .geostore-fashion-store .geostore-storefront h2 {
+    font-size: clamp(1.3rem, 5vw, 1.65rem);
+  }
+
+  .geostore-fashion-store .geostore-storefront h3 {
+    font-size: clamp(1.05rem, 4vw, 1.25rem);
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-fashion-hero h1 {
+    font-size: clamp(1.8rem, 7vw, 2.45rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Keep controls legible and prevent iOS input zoom. */
+  .geostore-fashion-store .geostore-storefront :is(input, select, textarea) {
+    font-size: 16px !important;
+  }
+
+  .geostore-fashion-store .geostore-storefront button {
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .geostore-fashion-store .geostore-storefront {
+    --gs-type-body: 0.8rem;
+    --gs-type-small: 0.675rem;
+    --gs-type-control: 0.75rem;
+  }
+
+  .geostore-fashion-store .geostore-storefront .gs-fashion-hero h1 {
+    font-size: clamp(1.65rem, 7vw, 2rem) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .geostore-fashion-store .geostore-storefront {
+    scroll-behavior: auto;
+  }
+}
