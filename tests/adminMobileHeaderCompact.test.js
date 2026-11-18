@@ -33,3 +33,11 @@ test('admin typography is consistently compact across desktop, tablet and mobile
   assert.match(polish, /p, span, label, small, th, td, li, dt, dd, figcaption/);
   assert.match(polish, /:is\(h1, h2\)[\s\S]*?font-size:\s*13px/);
 });
+
+test('compact typography overrides oversized utility classes and shrinks the admin greeting header', () => {
+  assert.match(polish, /STAGE 109 — hard compact typography/);
+  assert.match(polish, /\.admin-dashboard-pro\.admin-dashboard-shell \* \{[\s\S]*?font-size: inherit !important/);
+  assert.match(polish, /\.admin-dashboard-pro\.admin-dashboard-shell > div:nth-child\(2\) > div:first-child > div:first-child h2[\s\S]*?font-size: 12px !important/);
+  assert.match(polish, /min-height: 34px !important/);
+  assert.match(polish, /\.admin-command-kpi > strong[\s\S]*?font-size: 18px !important/);
+});
