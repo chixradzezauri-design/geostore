@@ -1352,3 +1352,18 @@
     padding: 8px !important;
   }
 }
+
+
+ 
+/* STAGE 115 — restore dark admin finance and vendor surfaces.
+   index.css contains an older paper-surface rule for these wrappers.
+   Keep their existing inner cards and functionality unchanged. */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-expenses,
+  .admin-vendors-panel
+) {
+  background: transparent !important;
+  color: var(--admin-text) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}

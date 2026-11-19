@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 const css = await readFile(new URL('../src/adminDashboard.css', import.meta.url), 'utf8');
 const entry = await readFile(new URL('../src/main.jsx', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+const polish = await readFile(new URL('../src/adminDashboardPolish.css', import.meta.url), 'utf8');
+const globalCss = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
 
 test('admin visual layer loads after the existing global stylesheet', () => {
   assert.ok(entry.indexOf("import './index.css'") >= 0);
@@ -72,4 +74,13 @@ test('admin activity history displays paginated results and requests the support
   assert.match(admin, /paginatedActivityLogs\.map\(log =>/);
   assert.match(admin, /aria-label="აქტივობების ისტორიის გვერდები"/);
   assert.match(admin, /setActivityLogsPage\(1\)/);
+});
+
+ 
+test('legacy light paper surfaces cannot override the dark expenses and vendor admin sections', () => {
+  assert.match(globalCss, /\.admin-dashboard-pro :is\([\s\S]*?\.admin-vendors-panel[\s\S]*?background: var\(--gs-admin-paper\)/);
+  assert.match(polish, /STAGE 115 — restore dark admin finance and vendor surfaces/);
+  assert.match(polish, /\.admin-dashboard-pro\.admin-dashboard-shell :is\([\s\S]*?\.admin-expenses,[\s\S]*?\.admin-vendors-panel[\s\S]*?background: transparent !important/);
+  assert.match(polish, /color: var\(--admin-text\) !important/);
+  assert.ok(entry.indexOf("import './adminDashboardPolish.css'") > entry.indexOf("import './index.css'"));
 });
