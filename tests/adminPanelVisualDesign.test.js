@@ -915,3 +915,19 @@ test('visual editor offers an explicit retry when shared saving fails', () => {
   assert.match(dashboard, /onRetrySave=\{retryAdminVisualSave\}/);
   assert.match(dashboard, /handleAdminVisualDesignChange\(\{ \.\.\.adminVisualDesign \}\)/);
 });
+
+test('visual design API uses optimistic concurrency tokens and exposes conflict handling', () => {
+  const api = readFileSync(new URL('../src/utils/adminPanelVisualDesignApi.js', import.meta.url), 'utf8');
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  const migration = readFileSync(new URL('../supabase/migrations/20261119152000_admin_panel_visual_design_concurrency.sql', import.meta.url), 'utf8');
+  assert.match(api, /get_admin_panel_visual_design_state/);
+  assert.match(api, /p_expected_updated_at: expectedUpdatedAt/);
+  assert.match(dashboard, /adminVisualUpdatedAtRef/);
+  assert.match(dashboard, /error\?\.code === '40001' \? 'conflict' : 'error'/);
+  assert.match(editor, /syncStatus === 'conflict'/);
+  assert.match(editor, /სხვა მოწყობილობაზე დიზაინი უკვე შეიცვალა/);
+  assert.match(migration, /FOR UPDATE/);
+  assert.match(migration, /ERRCODE = '40001'/);
+  assert.match(migration, /auth\.uid\(\) IS DISTINCT FROM/);
+});

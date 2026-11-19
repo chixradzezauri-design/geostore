@@ -955,6 +955,7 @@ export default function AdminDashboardPro({
   const adminVisualSkipNextSaveRef = useRef(false);
   const adminVisualSaveQueueRef = useRef(Promise.resolve());
   const adminVisualSaveVersionRef = useRef(0);
+  const adminVisualUpdatedAtRef = useRef(null);
   const adminVisualDesignRef = useRef(adminVisualDesign);
   const adminVisualSyncStatusRef = useRef(adminVisualSyncStatus);
   const adminVisualHasLocalChangesRef = useRef(false);
@@ -983,10 +984,11 @@ export default function AdminDashboardPro({
     setAdminVisualSyncStatus('loading');
     const loadSharedDesign = async () => {
       try {
-        const sharedDesign = await fetchAdminPanelVisualDesign();
+        const sharedState = await fetchAdminPanelVisualDesign();
         if (!active) return;
+        adminVisualUpdatedAtRef.current = sharedState.updatedAt;
 
-        let nextDesign = sharedDesign;
+        let nextDesign = sharedState.design;
         if (!nextDesign) {
           // One-time migration: preserve settings made in the original browser
           // when the shared record does not exist yet.
@@ -998,7 +1000,8 @@ export default function AdminDashboardPro({
             hasLegacySettings = false;
           }
           if (hasLegacySettings) {
-            await saveAdminPanelVisualDesignToCloud(nextDesign);
+            const savedState = await saveAdminPanelVisualDesignToCloud(nextDesign, adminVisualUpdatedAtRef.current);
+            adminVisualUpdatedAtRef.current = savedState.updatedAt;
             if (!active) return;
           }
         }
@@ -1043,8 +1046,9 @@ export default function AdminDashboardPro({
       setAdminVisualSyncStatus('saving');
       adminVisualSaveQueueRef.current = adminVisualSaveQueueRef.current
         .catch(() => undefined)
-        .then(() => saveAdminPanelVisualDesignToCloud(adminVisualDesign))
-        .then(() => {
+        .then(() => saveAdminPanelVisualDesignToCloud(adminVisualDesign, adminVisualUpdatedAtRef.current))
+        .then(savedState => {
+          adminVisualUpdatedAtRef.current = savedState.updatedAt;
           if (active && saveVersion === adminVisualSaveVersionRef.current) {
             adminVisualHasLocalChangesRef.current = false;
             setAdminVisualSyncStatus('saved');
@@ -1052,7 +1056,7 @@ export default function AdminDashboardPro({
         })
         .catch(error => {
           if (active && saveVersion === adminVisualSaveVersionRef.current) {
-            setAdminVisualSyncStatus('error');
+            setAdminVisualSyncStatus(error?.code === '40001' ? 'conflict' : 'error');
           }
           console.error('GEOSTORE shared admin visual settings failed to save:', error);
         });
@@ -1083,16 +1087,17 @@ export default function AdminDashboardPro({
       inFlight = true;
       const requestVersion = adminVisualSaveVersionRef.current;
       try {
-        const sharedDesign = await fetchAdminPanelVisualDesign();
+        const sharedState = await fetchAdminPanelVisualDesign();
         if (
           !active ||
-          !sharedDesign ||
+          !sharedState.design ||
           requestVersion !== adminVisualSaveVersionRef.current ||
           adminVisualHasLocalChangesRef.current ||
           adminVisualSyncStatusRef.current !== 'saved'
         ) return;
 
-        const normalized = normalizeAdminPanelVisualDesign(sharedDesign);
+        adminVisualUpdatedAtRef.current = sharedState.updatedAt;
+        const normalized = normalizeAdminPanelVisualDesign(sharedState.design);
         if (JSON.stringify(normalized) === JSON.stringify(adminVisualDesignRef.current)) return;
 
         adminVisualSkipNextSaveRef.current = true;
@@ -6417,6 +6422,7 @@ export default function AdminDashboardPro({
               syncStatus={adminVisualSyncStatus}
               onChange={handleAdminVisualDesignChange}
               onRetrySave={retryAdminVisualSave}
+              onReloadRemote={() => setAdminVisualReloadKey(value => value + 1)}
             />
           ) : (
             <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
