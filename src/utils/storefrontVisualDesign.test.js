@@ -143,3 +143,24 @@ test('product detail targets support independent safe styling', () => {
   assert.equal(buildStorefrontElementStyle(design, 'product.detail.description').padding, '12px');
   assert.deepEqual(buildStorefrontElementStyle(design, 'product.detail.purchase'), {});
 });
+
+test('element styles support bounded width, height, opacity and safe image fit controls', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'product.detail.image': {
+        width: 140,
+        minHeight: 820,
+        opacity: 45,
+        objectFit: 'contain',
+        objectPositionX: 120
+      }
+    }
+  });
+  const style = buildStorefrontElementStyle(design, 'product.detail.image');
+  assert.equal(style.width, '100%');
+  assert.equal(style.minHeight, '600px');
+  assert.equal(style.opacity, '0.45');
+  assert.equal(style.objectFit, 'contain');
+  assert.equal(style.objectPosition, '100% center');
+  assert.equal(buildStorefrontElementStyle({ elementStyles: { 'hero.title': { objectFit: 'url(javascript:1)' } } }, 'hero.title').objectFit, undefined);
+});

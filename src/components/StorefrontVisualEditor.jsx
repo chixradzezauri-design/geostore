@@ -344,6 +344,32 @@ export default function StorefrontVisualEditor({
                   <span className="flex justify-between"><span>კუთხეების მომრგვალება</span><b>{selectedElementStyle.borderRadius ?? 0} px</b></span>
                   <input type="range" min="0" max="32" step="1" value={selectedElementStyle.borderRadius ?? 0} onChange={event => updateSelectedElementStyle('borderRadius', Number(event.target.value))} className="w-full accent-emerald-400" />
                 </label>
+                <label className="block space-y-1 text-[10px] text-slate-300">
+                  <span className="flex justify-between"><span>სიგანე</span><b>{selectedElementStyle.width ?? 100}%</b></span>
+                  <input type="range" min="10" max="100" step="1" value={selectedElementStyle.width ?? 100} onChange={event => updateSelectedElementStyle('width', Number(event.target.value))} className="w-full accent-emerald-400" />
+                </label>
+                <label className="block space-y-1 text-[10px] text-slate-300">
+                  <span className="flex justify-between"><span>მინიმალური სიმაღლე</span><b>{selectedElementStyle.minHeight ?? 0} px</b></span>
+                  <input type="range" min="0" max="600" step="10" value={selectedElementStyle.minHeight ?? 0} onChange={event => updateSelectedElementStyle('minHeight', Number(event.target.value))} className="w-full accent-emerald-400" />
+                </label>
+                <label className="block space-y-1 text-[10px] text-slate-300">
+                  <span className="flex justify-between"><span>გამჭვირვალობა</span><b>{selectedElementStyle.opacity ?? 100}%</b></span>
+                  <input type="range" min="0" max="100" step="5" value={selectedElementStyle.opacity ?? 100} onChange={event => updateSelectedElementStyle('opacity', Number(event.target.value))} className="w-full accent-emerald-400" />
+                </label>
+                {selectedElement.id.includes('image') && (
+                  <>
+                    <label className="block space-y-1 text-[10px] text-slate-300">
+                      <span>ფოტოს ჩასმის რეჟიმი</span>
+                      <select value={selectedElementStyle.objectFit || 'cover'} onChange={event => updateSelectedElementStyle('objectFit', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white">
+                        <option value="cover">შევსება (Cover)</option><option value="contain">მთლიანად გამოჩენა (Contain)</option><option value="fill">გაწელვა (Fill)</option>
+                      </select>
+                    </label>
+                    <label className="block space-y-1 text-[10px] text-slate-300">
+                      <span className="flex justify-between"><span>ფოტოს ჰორიზონტალური პოზიცია</span><b>{selectedElementStyle.objectPositionX ?? 50}%</b></span>
+                      <input type="range" min="0" max="100" step="1" value={selectedElementStyle.objectPositionX ?? 50} onChange={event => updateSelectedElementStyle('objectPositionX', Number(event.target.value))} className="w-full accent-emerald-400" />
+                    </label>
+                  </>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                   <label className="space-y-1 text-[10px] text-slate-300">
                     <span>ტექსტის გასწორება</span>

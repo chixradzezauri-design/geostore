@@ -130,7 +130,12 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
         padding: clamp(value.padding, 0, 48, null),
         borderRadius: clamp(value.borderRadius, 0, 32, null),
         textAlign: ['left', 'center', 'right'].includes(value.textAlign) ? value.textAlign : '',
-        fontWeight: [400, 500, 600, 700, 800, 900].includes(Number(value.fontWeight)) ? Number(value.fontWeight) : null
+        fontWeight: [400, 500, 600, 700, 800, 900].includes(Number(value.fontWeight)) ? Number(value.fontWeight) : null,
+        width: clamp(value.width, 10, 100, null),
+        minHeight: clamp(value.minHeight, 0, 600, null),
+        opacity: clamp(value.opacity, 0, 100, null),
+        objectFit: ['cover', 'contain', 'fill'].includes(value.objectFit) ? value.objectFit : '',
+        objectPositionX: clamp(value.objectPositionX, 0, 100, null)
       }];
     })),
     copy: {
@@ -224,5 +229,10 @@ export function buildStorefrontElementStyle(rawDesign, elementId) {
   if (['left', 'center', 'right'].includes(value.textAlign)) style.textAlign = value.textAlign;
   const fontWeight = value.fontWeight == null ? null : Number(value.fontWeight);
   if ([400, 500, 600, 700, 800, 900].includes(fontWeight)) style.fontWeight = fontWeight;
+  if (value.width !== null && Number.isFinite(Number(value.width))) style.width = String(Math.min(100, Math.max(10, Number(value.width)))) + '%';
+  if (value.minHeight !== null && Number.isFinite(Number(value.minHeight))) style.minHeight = String(Math.min(600, Math.max(0, Number(value.minHeight)))) + 'px';
+  if (value.opacity !== null && Number.isFinite(Number(value.opacity))) style.opacity = String(Math.min(100, Math.max(0, Number(value.opacity))) / 100);
+  if (['cover', 'contain', 'fill'].includes(value.objectFit)) style.objectFit = value.objectFit;
+  if (value.objectPositionX !== null && Number.isFinite(Number(value.objectPositionX))) style.objectPosition = String(Math.min(100, Math.max(0, Number(value.objectPositionX)))) + '% center';
   return style;
 }
