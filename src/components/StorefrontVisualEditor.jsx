@@ -152,7 +152,10 @@ export default function StorefrontVisualEditor({
   const [selectedElement, setSelectedElement] = useState(null);
   const [draggedSection, setDraggedSection] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
-  const previewStyle = useMemo(() => buildStorefrontVisualStyle(design), [design]);
+  const activeLayout = previewMode === 'desktop'
+    ? design.layout
+    : { ...design.layout, ...(design.responsive?.[previewMode]?.layout || {}) };
+  const previewStyle = useMemo(() => buildStorefrontVisualStyle(design, previewMode), [design, previewMode]);
   const safeProducts = Array.isArray(products) ? products : [];
   const safeCategories = Array.isArray(categoriesList) ? categoriesList : [];
   const safeBanners = Array.isArray(bannersList) ? bannersList : [];
@@ -172,6 +175,19 @@ export default function StorefrontVisualEditor({
   };
 
   const updateGroup = (group, key, value) => {
+    if (group === 'layout' && previewMode !== 'desktop') {
+      commitDesign({
+        ...design,
+        responsive: {
+          ...(design.responsive || {}),
+          [previewMode]: {
+            ...(design.responsive?.[previewMode] || {}),
+            layout: { ...(design.responsive?.[previewMode]?.layout || {}), [key]: value }
+          }
+        }
+      });
+      return;
+    }
     commitDesign({ ...design, [group]: { ...design[group], [key]: value } });
   };
 
@@ -502,17 +518,17 @@ export default function StorefrontVisualEditor({
               </label>
               <RangeControl label="ძირითადი ტექსტის ზომა" value={design.typography.baseFontSize} min={12} max={18} unit=" px" onChange={value => updateGroup('typography', 'baseFontSize', value)} />
               <RangeControl label="სათაურების მასშტაბი" value={design.typography.headingScale} min={0.8} max={1.25} step={0.05} unit="×" onChange={value => updateGroup('typography', 'headingScale', value)} />
-              <RangeControl label="გვერდის სიგანე" value={design.layout.contentWidth} min={960} max={1600} step={20} unit=" px" onChange={value => updateGroup('layout', 'contentWidth', value)} />
-              <RangeControl label="სექციებს შორის დაშორება" value={design.layout.sectionGap} min={16} max={72} unit=" px" onChange={value => updateGroup('layout', 'sectionGap', value)} />
-              <RangeControl label="მთავარი ბლოკის სიმაღლე" value={design.layout.heroHeight} min={320} max={680} step={10} unit=" px" onChange={value => updateGroup('layout', 'heroHeight', value)} />
-              <RangeControl label="Hero ტექსტის ბლოკის სიგანე" value={design.layout.heroContentWidth} min={40} max={90} unit="%" onChange={value => updateGroup('layout', 'heroContentWidth', value)} />
-              <RangeControl label="ბანერის სიმაღლე" value={design.layout.bannerHeight} min={150} max={340} step={10} unit=" px" onChange={value => updateGroup('layout', 'bannerHeight', value)} />
-              <RangeControl label="პროდუქტის ფოტოს პროპორცია" value={design.layout.productImageRatio} min={0.7} max={1.2} step={0.05} onChange={value => updateGroup('layout', 'productImageRatio', value)} />
-              <RangeControl label="კატეგორიის ბარათის სიმაღლე" value={design.layout.categoryCardHeight} min={110} max={260} step={5} unit=" px" onChange={value => updateGroup('layout', 'categoryCardHeight', value)} />
-              <RangeControl label="კატეგორიები ერთ რიგში (Desktop)" value={design.layout.categoryColumns} min={2} max={6} onChange={value => updateGroup('layout', 'categoryColumns', value)} />
-              <RangeControl label="პროდუქტები ერთ რიგში (Desktop)" value={design.layout.productColumns} min={2} max={5} onChange={value => updateGroup('layout', 'productColumns', value)} />
-              <RangeControl label="ბარათების კუთხეები" value={design.layout.cardRadius} min={0} max={28} unit=" px" onChange={value => updateGroup('layout', 'cardRadius', value)} />
-              <RangeControl label="ღილაკების კუთხეები" value={design.layout.buttonRadius} min={0} max={28} unit=" px" onChange={value => updateGroup('layout', 'buttonRadius', value)} />
+              <RangeControl label="გვერდის სიგანე" value={activeLayout.contentWidth} min={960} max={1600} step={20} unit=" px" onChange={value => updateGroup('layout', 'contentWidth', value)} />
+              <RangeControl label="სექციებს შორის დაშორება" value={activeLayout.sectionGap} min={16} max={72} unit=" px" onChange={value => updateGroup('layout', 'sectionGap', value)} />
+              <RangeControl label="მთავარი ბლოკის სიმაღლე" value={activeLayout.heroHeight} min={320} max={680} step={10} unit=" px" onChange={value => updateGroup('layout', 'heroHeight', value)} />
+              <RangeControl label="Hero ტექსტის ბლოკის სიგანე" value={activeLayout.heroContentWidth} min={40} max={90} unit="%" onChange={value => updateGroup('layout', 'heroContentWidth', value)} />
+              <RangeControl label="ბანერის სიმაღლე" value={activeLayout.bannerHeight} min={150} max={340} step={10} unit=" px" onChange={value => updateGroup('layout', 'bannerHeight', value)} />
+              <RangeControl label="პროდუქტის ფოტოს პროპორცია" value={activeLayout.productImageRatio} min={0.7} max={1.2} step={0.05} onChange={value => updateGroup('layout', 'productImageRatio', value)} />
+              <RangeControl label="კატეგორიის ბარათის სიმაღლე" value={activeLayout.categoryCardHeight} min={110} max={260} step={5} unit=" px" onChange={value => updateGroup('layout', 'categoryCardHeight', value)} />
+              <RangeControl label="კატეგორიები ერთ რიგში (Desktop)" value={activeLayout.categoryColumns} min={2} max={6} onChange={value => updateGroup('layout', 'categoryColumns', value)} />
+              <RangeControl label="პროდუქტები ერთ რიგში (Desktop)" value={activeLayout.productColumns} min={2} max={5} onChange={value => updateGroup('layout', 'productColumns', value)} />
+              <RangeControl label="ბარათების კუთხეები" value={activeLayout.cardRadius} min={0} max={28} unit=" px" onChange={value => updateGroup('layout', 'cardRadius', value)} />
+              <RangeControl label="ღილაკების კუთხეები" value={activeLayout.buttonRadius} min={0} max={28} unit=" px" onChange={value => updateGroup('layout', 'buttonRadius', value)} />
             </div>
           </details>
 
@@ -567,6 +583,7 @@ export default function StorefrontVisualEditor({
             </div>
             <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
+              <button type="button" onClick={() => setPreviewMode('tablet')} aria-pressed={previewMode === 'tablet'} className={previewMode === 'tablet' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Tablet</button>
               <button type="button" onClick={() => setPreviewMode('mobile')} aria-pressed={previewMode === 'mobile'} className={previewMode === 'mobile' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Smartphone className="mr-1 inline h-3.5 w-3.5" /> Mobile</button>
             </div>
           </div>
@@ -635,7 +652,7 @@ export default function StorefrontVisualEditor({
               outline: 2px solid #34d399 !important; outline-offset: 3px; position: relative; z-index: 3;
             }
           `}</style>
-          <div onClickCapture={handlePreviewSelect} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : '100%' }}>
+          <div onClickCapture={handlePreviewSelect} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : previewMode === 'tablet' ? '820px' : '100%' }}>
             <Header
               siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
               visualDesign={design}
