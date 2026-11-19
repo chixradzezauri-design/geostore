@@ -1175,3 +1175,13 @@ test('admin style editor can save a new preset version and restore a prior versi
   assert.match(editor, /ამ ვერსიის აღდგენა/);
   assert.match(editor, /slice\(-10\)/);
 });
+
+
+test('admin style library supports bulk category and favorite management', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /updateSelectedStylePresetCategory/);
+  assert.match(editor, /toggleSelectedStylePresetFavorites/);
+  assert.match(editor, /მონიშნული სტილების ახალი კატეგორია/);
+  assert.match(editor, /კატეგორიის შეცვლა \(/);
+  assert.match(editor, /რჩეულებში დამატება/);
+});
