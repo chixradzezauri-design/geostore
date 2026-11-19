@@ -571,10 +571,40 @@ test('desktop order sub-element CSS uses concrete design keys and never leaves t
   for (const [selector, key] of Object.entries(selectors)) {
     const start = css.indexOf(selector + ' {');
     assert.ok(start >= 0, `Missing desktop style rule for ${selector}`);
-    const end = css.indexOf('\\n}', start);
+    const end = css.indexOf('\n}', start);
     assert.ok(end > start, `Unclosed desktop style rule for ${selector}`);
     const rule = css.slice(start, end);
     assert.ok(rule.includes('--admin-vd-element-' + key + '-fontSize'), `Missing design key for ${selector}`);
     assert.ok(!rule.includes('${key}'), `Unresolved template placeholder for ${selector}`);
   }
+});
+
+
+test('all eight admin modules expose real fine-grained visual editor targets with responsive styles', () => {
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  const utility = readFileSync(new URL('../src/utils/adminPanelVisualDesign.js', import.meta.url), 'utf8');
+  const stylesheet = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  const targets = [{"key":"staffList","selector":".admin-staff-list-panel"},{"key":"staffCreateForm","selector":".admin-staff-create-form"},{"key":"inventoryPanel","selector":".admin-inventory-panel"},{"key":"inventoryMovementRow","selector":".admin-replenishment-row"},{"key":"inventoryMetric","selector":".admin-replenishment-metric"},{"key":"analyticsToolbar","selector":".admin-analytics-toolbar"},{"key":"analyticsCard","selector":".admin-analytics-card"},{"key":"analyticsGrid","selector":".admin-analytics-kpis"},{"key":"supportTicket","selector":".admin-support-ticket"},{"key":"supportTicketHeader","selector":".admin-support-ticket-header"},{"key":"supportTicketMessage","selector":".admin-support-ticket-message"},{"key":"supportReplyForm","selector":".admin-support-reply-form"},{"key":"discountForm","selector":".admin-flash-sale-form"},{"key":"discountFields","selector":".admin-flash-sale-fields"},{"key":"discountActiveSummary","selector":".gs-admin-flash-sale-active"},{"key":"bannerForm","selector":".admin-banner-form"},{"key":"bannerCard","selector":".admin-banner-card"},{"key":"bannerList","selector":".admin-banner-list"},{"key":"categoryForm","selector":".admin-category-form"},{"key":"categoryCard","selector":".admin-category-card"},{"key":"subcategoryCard","selector":".admin-subcategory-card"},{"key":"couponForm","selector":".admin-coupon-form"},{"key":"couponCard","selector":".admin-coupon-card"},{"key":"couponList","selector":".admin-coupon-list"}];
+  for (const { key, selector } of targets) {
+    assert.ok(dashboard.includes(selector.slice(1)), `Missing rendered dashboard target: ${selector}`);
+    assert.ok(utility.includes(key), `Missing normalized visual design key: ${key}`);
+    assert.ok(stylesheet.includes(selector + ' {'), `Missing desktop visual rule: ${selector}`);
+    assert.ok(stylesheet.includes('--admin-vd-element-tablet-' + key + '-fontSize'), `Missing tablet style token: ${key}`);
+    assert.ok(stylesheet.includes('--admin-vd-element-mobile-' + key + '-fontSize'), `Missing mobile style token: ${key}`);
+  }
+});
+
+test('responsive element styles inherit desktop values and preserve device-specific overrides', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    elementStyles: { staffList: { fontSize: 15, textColor: '#123456' } },
+    responsive: {
+      tablet: { elementStyles: { staffList: { fontSize: 14 } } },
+      mobile: { elementStyles: { staffList: { fontSize: 12 } } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+  assert.equal(style['--admin-vd-element-staffList-fontSize'], '15px');
+  assert.equal(style['--admin-vd-element-tablet-staffList-fontSize'], '14px');
+  assert.equal(style['--admin-vd-element-mobile-staffList-fontSize'], '12px');
+  assert.equal(style['--admin-vd-element-mobile-staffList-textColor'], '#123456');
 });

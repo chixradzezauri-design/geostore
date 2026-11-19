@@ -1317,3 +1317,801 @@
   padding: var(--admin-vd-element-mobile-orderDetailModal-padding, var(--admin-vd-element-tablet-orderDetailModal-padding, var(--admin-vd-element-orderDetailModal-padding))) !important;
 }
 }
+
+
+/* Fine-grained admin module element styles — shared desktop, tablet and mobile tokens. */
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel {
+  font-size: var(--admin-vd-element-staffList-fontSize) !important;
+  font-weight: var(--admin-vd-element-staffList-fontWeight) !important;
+  text-align: var(--admin-vd-element-staffList-textAlign) !important;
+  color: var(--admin-vd-element-staffList-textColor) !important;
+  background-color: var(--admin-vd-element-staffList-backgroundColor) !important;
+  border-color: var(--admin-vd-element-staffList-borderColor) !important;
+  border-radius: var(--admin-vd-element-staffList-borderRadius) !important;
+  padding: var(--admin-vd-element-staffList-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-create-form {
+  font-size: var(--admin-vd-element-staffCreateForm-fontSize) !important;
+  font-weight: var(--admin-vd-element-staffCreateForm-fontWeight) !important;
+  text-align: var(--admin-vd-element-staffCreateForm-textAlign) !important;
+  color: var(--admin-vd-element-staffCreateForm-textColor) !important;
+  background-color: var(--admin-vd-element-staffCreateForm-backgroundColor) !important;
+  border-color: var(--admin-vd-element-staffCreateForm-borderColor) !important;
+  border-radius: var(--admin-vd-element-staffCreateForm-borderRadius) !important;
+  padding: var(--admin-vd-element-staffCreateForm-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel {
+  font-size: var(--admin-vd-element-inventoryPanel-fontSize) !important;
+  font-weight: var(--admin-vd-element-inventoryPanel-fontWeight) !important;
+  text-align: var(--admin-vd-element-inventoryPanel-textAlign) !important;
+  color: var(--admin-vd-element-inventoryPanel-textColor) !important;
+  background-color: var(--admin-vd-element-inventoryPanel-backgroundColor) !important;
+  border-color: var(--admin-vd-element-inventoryPanel-borderColor) !important;
+  border-radius: var(--admin-vd-element-inventoryPanel-borderRadius) !important;
+  padding: var(--admin-vd-element-inventoryPanel-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-row {
+  font-size: var(--admin-vd-element-inventoryMovementRow-fontSize) !important;
+  font-weight: var(--admin-vd-element-inventoryMovementRow-fontWeight) !important;
+  text-align: var(--admin-vd-element-inventoryMovementRow-textAlign) !important;
+  color: var(--admin-vd-element-inventoryMovementRow-textColor) !important;
+  background-color: var(--admin-vd-element-inventoryMovementRow-backgroundColor) !important;
+  border-color: var(--admin-vd-element-inventoryMovementRow-borderColor) !important;
+  border-radius: var(--admin-vd-element-inventoryMovementRow-borderRadius) !important;
+  padding: var(--admin-vd-element-inventoryMovementRow-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-metric {
+  font-size: var(--admin-vd-element-inventoryMetric-fontSize) !important;
+  font-weight: var(--admin-vd-element-inventoryMetric-fontWeight) !important;
+  text-align: var(--admin-vd-element-inventoryMetric-textAlign) !important;
+  color: var(--admin-vd-element-inventoryMetric-textColor) !important;
+  background-color: var(--admin-vd-element-inventoryMetric-backgroundColor) !important;
+  border-color: var(--admin-vd-element-inventoryMetric-borderColor) !important;
+  border-radius: var(--admin-vd-element-inventoryMetric-borderRadius) !important;
+  padding: var(--admin-vd-element-inventoryMetric-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-toolbar {
+  font-size: var(--admin-vd-element-analyticsToolbar-fontSize) !important;
+  font-weight: var(--admin-vd-element-analyticsToolbar-fontWeight) !important;
+  text-align: var(--admin-vd-element-analyticsToolbar-textAlign) !important;
+  color: var(--admin-vd-element-analyticsToolbar-textColor) !important;
+  background-color: var(--admin-vd-element-analyticsToolbar-backgroundColor) !important;
+  border-color: var(--admin-vd-element-analyticsToolbar-borderColor) !important;
+  border-radius: var(--admin-vd-element-analyticsToolbar-borderRadius) !important;
+  padding: var(--admin-vd-element-analyticsToolbar-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
+  font-size: var(--admin-vd-element-analyticsCard-fontSize) !important;
+  font-weight: var(--admin-vd-element-analyticsCard-fontWeight) !important;
+  text-align: var(--admin-vd-element-analyticsCard-textAlign) !important;
+  color: var(--admin-vd-element-analyticsCard-textColor) !important;
+  background-color: var(--admin-vd-element-analyticsCard-backgroundColor) !important;
+  border-color: var(--admin-vd-element-analyticsCard-borderColor) !important;
+  border-radius: var(--admin-vd-element-analyticsCard-borderRadius) !important;
+  padding: var(--admin-vd-element-analyticsCard-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-kpis {
+  font-size: var(--admin-vd-element-analyticsGrid-fontSize) !important;
+  font-weight: var(--admin-vd-element-analyticsGrid-fontWeight) !important;
+  text-align: var(--admin-vd-element-analyticsGrid-textAlign) !important;
+  color: var(--admin-vd-element-analyticsGrid-textColor) !important;
+  background-color: var(--admin-vd-element-analyticsGrid-backgroundColor) !important;
+  border-color: var(--admin-vd-element-analyticsGrid-borderColor) !important;
+  border-radius: var(--admin-vd-element-analyticsGrid-borderRadius) !important;
+  padding: var(--admin-vd-element-analyticsGrid-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket {
+  font-size: var(--admin-vd-element-supportTicket-fontSize) !important;
+  font-weight: var(--admin-vd-element-supportTicket-fontWeight) !important;
+  text-align: var(--admin-vd-element-supportTicket-textAlign) !important;
+  color: var(--admin-vd-element-supportTicket-textColor) !important;
+  background-color: var(--admin-vd-element-supportTicket-backgroundColor) !important;
+  border-color: var(--admin-vd-element-supportTicket-borderColor) !important;
+  border-radius: var(--admin-vd-element-supportTicket-borderRadius) !important;
+  padding: var(--admin-vd-element-supportTicket-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket-header {
+  font-size: var(--admin-vd-element-supportTicketHeader-fontSize) !important;
+  font-weight: var(--admin-vd-element-supportTicketHeader-fontWeight) !important;
+  text-align: var(--admin-vd-element-supportTicketHeader-textAlign) !important;
+  color: var(--admin-vd-element-supportTicketHeader-textColor) !important;
+  background-color: var(--admin-vd-element-supportTicketHeader-backgroundColor) !important;
+  border-color: var(--admin-vd-element-supportTicketHeader-borderColor) !important;
+  border-radius: var(--admin-vd-element-supportTicketHeader-borderRadius) !important;
+  padding: var(--admin-vd-element-supportTicketHeader-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket-message {
+  font-size: var(--admin-vd-element-supportTicketMessage-fontSize) !important;
+  font-weight: var(--admin-vd-element-supportTicketMessage-fontWeight) !important;
+  text-align: var(--admin-vd-element-supportTicketMessage-textAlign) !important;
+  color: var(--admin-vd-element-supportTicketMessage-textColor) !important;
+  background-color: var(--admin-vd-element-supportTicketMessage-backgroundColor) !important;
+  border-color: var(--admin-vd-element-supportTicketMessage-borderColor) !important;
+  border-radius: var(--admin-vd-element-supportTicketMessage-borderRadius) !important;
+  padding: var(--admin-vd-element-supportTicketMessage-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-reply-form {
+  font-size: var(--admin-vd-element-supportReplyForm-fontSize) !important;
+  font-weight: var(--admin-vd-element-supportReplyForm-fontWeight) !important;
+  text-align: var(--admin-vd-element-supportReplyForm-textAlign) !important;
+  color: var(--admin-vd-element-supportReplyForm-textColor) !important;
+  background-color: var(--admin-vd-element-supportReplyForm-backgroundColor) !important;
+  border-color: var(--admin-vd-element-supportReplyForm-borderColor) !important;
+  border-radius: var(--admin-vd-element-supportReplyForm-borderRadius) !important;
+  padding: var(--admin-vd-element-supportReplyForm-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-flash-sale-form {
+  font-size: var(--admin-vd-element-discountForm-fontSize) !important;
+  font-weight: var(--admin-vd-element-discountForm-fontWeight) !important;
+  text-align: var(--admin-vd-element-discountForm-textAlign) !important;
+  color: var(--admin-vd-element-discountForm-textColor) !important;
+  background-color: var(--admin-vd-element-discountForm-backgroundColor) !important;
+  border-color: var(--admin-vd-element-discountForm-borderColor) !important;
+  border-radius: var(--admin-vd-element-discountForm-borderRadius) !important;
+  padding: var(--admin-vd-element-discountForm-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-flash-sale-fields {
+  font-size: var(--admin-vd-element-discountFields-fontSize) !important;
+  font-weight: var(--admin-vd-element-discountFields-fontWeight) !important;
+  text-align: var(--admin-vd-element-discountFields-textAlign) !important;
+  color: var(--admin-vd-element-discountFields-textColor) !important;
+  background-color: var(--admin-vd-element-discountFields-backgroundColor) !important;
+  border-color: var(--admin-vd-element-discountFields-borderColor) !important;
+  border-radius: var(--admin-vd-element-discountFields-borderRadius) !important;
+  padding: var(--admin-vd-element-discountFields-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .gs-admin-flash-sale-active {
+  font-size: var(--admin-vd-element-discountActiveSummary-fontSize) !important;
+  font-weight: var(--admin-vd-element-discountActiveSummary-fontWeight) !important;
+  text-align: var(--admin-vd-element-discountActiveSummary-textAlign) !important;
+  color: var(--admin-vd-element-discountActiveSummary-textColor) !important;
+  background-color: var(--admin-vd-element-discountActiveSummary-backgroundColor) !important;
+  border-color: var(--admin-vd-element-discountActiveSummary-borderColor) !important;
+  border-radius: var(--admin-vd-element-discountActiveSummary-borderRadius) !important;
+  padding: var(--admin-vd-element-discountActiveSummary-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-form {
+  font-size: var(--admin-vd-element-bannerForm-fontSize) !important;
+  font-weight: var(--admin-vd-element-bannerForm-fontWeight) !important;
+  text-align: var(--admin-vd-element-bannerForm-textAlign) !important;
+  color: var(--admin-vd-element-bannerForm-textColor) !important;
+  background-color: var(--admin-vd-element-bannerForm-backgroundColor) !important;
+  border-color: var(--admin-vd-element-bannerForm-borderColor) !important;
+  border-radius: var(--admin-vd-element-bannerForm-borderRadius) !important;
+  padding: var(--admin-vd-element-bannerForm-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-card {
+  font-size: var(--admin-vd-element-bannerCard-fontSize) !important;
+  font-weight: var(--admin-vd-element-bannerCard-fontWeight) !important;
+  text-align: var(--admin-vd-element-bannerCard-textAlign) !important;
+  color: var(--admin-vd-element-bannerCard-textColor) !important;
+  background-color: var(--admin-vd-element-bannerCard-backgroundColor) !important;
+  border-color: var(--admin-vd-element-bannerCard-borderColor) !important;
+  border-radius: var(--admin-vd-element-bannerCard-borderRadius) !important;
+  padding: var(--admin-vd-element-bannerCard-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-list {
+  font-size: var(--admin-vd-element-bannerList-fontSize) !important;
+  font-weight: var(--admin-vd-element-bannerList-fontWeight) !important;
+  text-align: var(--admin-vd-element-bannerList-textAlign) !important;
+  color: var(--admin-vd-element-bannerList-textColor) !important;
+  background-color: var(--admin-vd-element-bannerList-backgroundColor) !important;
+  border-color: var(--admin-vd-element-bannerList-borderColor) !important;
+  border-radius: var(--admin-vd-element-bannerList-borderRadius) !important;
+  padding: var(--admin-vd-element-bannerList-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-form {
+  font-size: var(--admin-vd-element-categoryForm-fontSize) !important;
+  font-weight: var(--admin-vd-element-categoryForm-fontWeight) !important;
+  text-align: var(--admin-vd-element-categoryForm-textAlign) !important;
+  color: var(--admin-vd-element-categoryForm-textColor) !important;
+  background-color: var(--admin-vd-element-categoryForm-backgroundColor) !important;
+  border-color: var(--admin-vd-element-categoryForm-borderColor) !important;
+  border-radius: var(--admin-vd-element-categoryForm-borderRadius) !important;
+  padding: var(--admin-vd-element-categoryForm-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-card {
+  font-size: var(--admin-vd-element-categoryCard-fontSize) !important;
+  font-weight: var(--admin-vd-element-categoryCard-fontWeight) !important;
+  text-align: var(--admin-vd-element-categoryCard-textAlign) !important;
+  color: var(--admin-vd-element-categoryCard-textColor) !important;
+  background-color: var(--admin-vd-element-categoryCard-backgroundColor) !important;
+  border-color: var(--admin-vd-element-categoryCard-borderColor) !important;
+  border-radius: var(--admin-vd-element-categoryCard-borderRadius) !important;
+  padding: var(--admin-vd-element-categoryCard-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-subcategory-card {
+  font-size: var(--admin-vd-element-subcategoryCard-fontSize) !important;
+  font-weight: var(--admin-vd-element-subcategoryCard-fontWeight) !important;
+  text-align: var(--admin-vd-element-subcategoryCard-textAlign) !important;
+  color: var(--admin-vd-element-subcategoryCard-textColor) !important;
+  background-color: var(--admin-vd-element-subcategoryCard-backgroundColor) !important;
+  border-color: var(--admin-vd-element-subcategoryCard-borderColor) !important;
+  border-radius: var(--admin-vd-element-subcategoryCard-borderRadius) !important;
+  padding: var(--admin-vd-element-subcategoryCard-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-form {
+  font-size: var(--admin-vd-element-couponForm-fontSize) !important;
+  font-weight: var(--admin-vd-element-couponForm-fontWeight) !important;
+  text-align: var(--admin-vd-element-couponForm-textAlign) !important;
+  color: var(--admin-vd-element-couponForm-textColor) !important;
+  background-color: var(--admin-vd-element-couponForm-backgroundColor) !important;
+  border-color: var(--admin-vd-element-couponForm-borderColor) !important;
+  border-radius: var(--admin-vd-element-couponForm-borderRadius) !important;
+  padding: var(--admin-vd-element-couponForm-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-card {
+  font-size: var(--admin-vd-element-couponCard-fontSize) !important;
+  font-weight: var(--admin-vd-element-couponCard-fontWeight) !important;
+  text-align: var(--admin-vd-element-couponCard-textAlign) !important;
+  color: var(--admin-vd-element-couponCard-textColor) !important;
+  background-color: var(--admin-vd-element-couponCard-backgroundColor) !important;
+  border-color: var(--admin-vd-element-couponCard-borderColor) !important;
+  border-radius: var(--admin-vd-element-couponCard-borderRadius) !important;
+  padding: var(--admin-vd-element-couponCard-padding) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-list {
+  font-size: var(--admin-vd-element-couponList-fontSize) !important;
+  font-weight: var(--admin-vd-element-couponList-fontWeight) !important;
+  text-align: var(--admin-vd-element-couponList-textAlign) !important;
+  color: var(--admin-vd-element-couponList-textColor) !important;
+  background-color: var(--admin-vd-element-couponList-backgroundColor) !important;
+  border-color: var(--admin-vd-element-couponList-borderColor) !important;
+  border-radius: var(--admin-vd-element-couponList-borderRadius) !important;
+  padding: var(--admin-vd-element-couponList-padding) !important;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel {
+  font-size: var(--admin-vd-element-tablet-staffList-fontSize, var(--admin-vd-element-staffList-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-staffList-fontWeight, var(--admin-vd-element-staffList-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-staffList-textAlign, var(--admin-vd-element-staffList-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-staffList-textColor, var(--admin-vd-element-staffList-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-staffList-backgroundColor, var(--admin-vd-element-staffList-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-staffList-borderColor, var(--admin-vd-element-staffList-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-staffList-borderRadius, var(--admin-vd-element-staffList-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-staffList-padding, var(--admin-vd-element-staffList-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-create-form {
+  font-size: var(--admin-vd-element-tablet-staffCreateForm-fontSize, var(--admin-vd-element-staffCreateForm-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-staffCreateForm-fontWeight, var(--admin-vd-element-staffCreateForm-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-staffCreateForm-textAlign, var(--admin-vd-element-staffCreateForm-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-staffCreateForm-textColor, var(--admin-vd-element-staffCreateForm-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-staffCreateForm-backgroundColor, var(--admin-vd-element-staffCreateForm-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-staffCreateForm-borderColor, var(--admin-vd-element-staffCreateForm-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-staffCreateForm-borderRadius, var(--admin-vd-element-staffCreateForm-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-staffCreateForm-padding, var(--admin-vd-element-staffCreateForm-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel {
+  font-size: var(--admin-vd-element-tablet-inventoryPanel-fontSize, var(--admin-vd-element-inventoryPanel-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-inventoryPanel-fontWeight, var(--admin-vd-element-inventoryPanel-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-inventoryPanel-textAlign, var(--admin-vd-element-inventoryPanel-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-inventoryPanel-textColor, var(--admin-vd-element-inventoryPanel-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-inventoryPanel-backgroundColor, var(--admin-vd-element-inventoryPanel-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-inventoryPanel-borderColor, var(--admin-vd-element-inventoryPanel-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-inventoryPanel-borderRadius, var(--admin-vd-element-inventoryPanel-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-inventoryPanel-padding, var(--admin-vd-element-inventoryPanel-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-row {
+  font-size: var(--admin-vd-element-tablet-inventoryMovementRow-fontSize, var(--admin-vd-element-inventoryMovementRow-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-inventoryMovementRow-fontWeight, var(--admin-vd-element-inventoryMovementRow-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-inventoryMovementRow-textAlign, var(--admin-vd-element-inventoryMovementRow-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-inventoryMovementRow-textColor, var(--admin-vd-element-inventoryMovementRow-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-inventoryMovementRow-backgroundColor, var(--admin-vd-element-inventoryMovementRow-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-inventoryMovementRow-borderColor, var(--admin-vd-element-inventoryMovementRow-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-inventoryMovementRow-borderRadius, var(--admin-vd-element-inventoryMovementRow-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-inventoryMovementRow-padding, var(--admin-vd-element-inventoryMovementRow-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-metric {
+  font-size: var(--admin-vd-element-tablet-inventoryMetric-fontSize, var(--admin-vd-element-inventoryMetric-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-inventoryMetric-fontWeight, var(--admin-vd-element-inventoryMetric-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-inventoryMetric-textAlign, var(--admin-vd-element-inventoryMetric-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-inventoryMetric-textColor, var(--admin-vd-element-inventoryMetric-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-inventoryMetric-backgroundColor, var(--admin-vd-element-inventoryMetric-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-inventoryMetric-borderColor, var(--admin-vd-element-inventoryMetric-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-inventoryMetric-borderRadius, var(--admin-vd-element-inventoryMetric-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-inventoryMetric-padding, var(--admin-vd-element-inventoryMetric-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-toolbar {
+  font-size: var(--admin-vd-element-tablet-analyticsToolbar-fontSize, var(--admin-vd-element-analyticsToolbar-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-analyticsToolbar-fontWeight, var(--admin-vd-element-analyticsToolbar-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-analyticsToolbar-textAlign, var(--admin-vd-element-analyticsToolbar-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-analyticsToolbar-textColor, var(--admin-vd-element-analyticsToolbar-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-analyticsToolbar-backgroundColor, var(--admin-vd-element-analyticsToolbar-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-analyticsToolbar-borderColor, var(--admin-vd-element-analyticsToolbar-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-analyticsToolbar-borderRadius, var(--admin-vd-element-analyticsToolbar-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-analyticsToolbar-padding, var(--admin-vd-element-analyticsToolbar-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
+  font-size: var(--admin-vd-element-tablet-analyticsCard-fontSize, var(--admin-vd-element-analyticsCard-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-analyticsCard-fontWeight, var(--admin-vd-element-analyticsCard-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-analyticsCard-textAlign, var(--admin-vd-element-analyticsCard-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-analyticsCard-textColor, var(--admin-vd-element-analyticsCard-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-analyticsCard-backgroundColor, var(--admin-vd-element-analyticsCard-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-analyticsCard-borderColor, var(--admin-vd-element-analyticsCard-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-analyticsCard-borderRadius, var(--admin-vd-element-analyticsCard-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-analyticsCard-padding, var(--admin-vd-element-analyticsCard-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-kpis {
+  font-size: var(--admin-vd-element-tablet-analyticsGrid-fontSize, var(--admin-vd-element-analyticsGrid-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-analyticsGrid-fontWeight, var(--admin-vd-element-analyticsGrid-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-analyticsGrid-textAlign, var(--admin-vd-element-analyticsGrid-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-analyticsGrid-textColor, var(--admin-vd-element-analyticsGrid-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-analyticsGrid-backgroundColor, var(--admin-vd-element-analyticsGrid-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-analyticsGrid-borderColor, var(--admin-vd-element-analyticsGrid-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-analyticsGrid-borderRadius, var(--admin-vd-element-analyticsGrid-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-analyticsGrid-padding, var(--admin-vd-element-analyticsGrid-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket {
+  font-size: var(--admin-vd-element-tablet-supportTicket-fontSize, var(--admin-vd-element-supportTicket-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-supportTicket-fontWeight, var(--admin-vd-element-supportTicket-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-supportTicket-textAlign, var(--admin-vd-element-supportTicket-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-supportTicket-textColor, var(--admin-vd-element-supportTicket-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-supportTicket-backgroundColor, var(--admin-vd-element-supportTicket-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-supportTicket-borderColor, var(--admin-vd-element-supportTicket-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-supportTicket-borderRadius, var(--admin-vd-element-supportTicket-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-supportTicket-padding, var(--admin-vd-element-supportTicket-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket-header {
+  font-size: var(--admin-vd-element-tablet-supportTicketHeader-fontSize, var(--admin-vd-element-supportTicketHeader-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-supportTicketHeader-fontWeight, var(--admin-vd-element-supportTicketHeader-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-supportTicketHeader-textAlign, var(--admin-vd-element-supportTicketHeader-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-supportTicketHeader-textColor, var(--admin-vd-element-supportTicketHeader-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-supportTicketHeader-backgroundColor, var(--admin-vd-element-supportTicketHeader-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-supportTicketHeader-borderColor, var(--admin-vd-element-supportTicketHeader-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-supportTicketHeader-borderRadius, var(--admin-vd-element-supportTicketHeader-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-supportTicketHeader-padding, var(--admin-vd-element-supportTicketHeader-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket-message {
+  font-size: var(--admin-vd-element-tablet-supportTicketMessage-fontSize, var(--admin-vd-element-supportTicketMessage-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-supportTicketMessage-fontWeight, var(--admin-vd-element-supportTicketMessage-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-supportTicketMessage-textAlign, var(--admin-vd-element-supportTicketMessage-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-supportTicketMessage-textColor, var(--admin-vd-element-supportTicketMessage-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-supportTicketMessage-backgroundColor, var(--admin-vd-element-supportTicketMessage-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-supportTicketMessage-borderColor, var(--admin-vd-element-supportTicketMessage-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-supportTicketMessage-borderRadius, var(--admin-vd-element-supportTicketMessage-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-supportTicketMessage-padding, var(--admin-vd-element-supportTicketMessage-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-reply-form {
+  font-size: var(--admin-vd-element-tablet-supportReplyForm-fontSize, var(--admin-vd-element-supportReplyForm-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-supportReplyForm-fontWeight, var(--admin-vd-element-supportReplyForm-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-supportReplyForm-textAlign, var(--admin-vd-element-supportReplyForm-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-supportReplyForm-textColor, var(--admin-vd-element-supportReplyForm-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-supportReplyForm-backgroundColor, var(--admin-vd-element-supportReplyForm-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-supportReplyForm-borderColor, var(--admin-vd-element-supportReplyForm-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-supportReplyForm-borderRadius, var(--admin-vd-element-supportReplyForm-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-supportReplyForm-padding, var(--admin-vd-element-supportReplyForm-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-flash-sale-form {
+  font-size: var(--admin-vd-element-tablet-discountForm-fontSize, var(--admin-vd-element-discountForm-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-discountForm-fontWeight, var(--admin-vd-element-discountForm-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-discountForm-textAlign, var(--admin-vd-element-discountForm-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-discountForm-textColor, var(--admin-vd-element-discountForm-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-discountForm-backgroundColor, var(--admin-vd-element-discountForm-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-discountForm-borderColor, var(--admin-vd-element-discountForm-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-discountForm-borderRadius, var(--admin-vd-element-discountForm-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-discountForm-padding, var(--admin-vd-element-discountForm-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-flash-sale-fields {
+  font-size: var(--admin-vd-element-tablet-discountFields-fontSize, var(--admin-vd-element-discountFields-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-discountFields-fontWeight, var(--admin-vd-element-discountFields-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-discountFields-textAlign, var(--admin-vd-element-discountFields-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-discountFields-textColor, var(--admin-vd-element-discountFields-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-discountFields-backgroundColor, var(--admin-vd-element-discountFields-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-discountFields-borderColor, var(--admin-vd-element-discountFields-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-discountFields-borderRadius, var(--admin-vd-element-discountFields-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-discountFields-padding, var(--admin-vd-element-discountFields-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .gs-admin-flash-sale-active {
+  font-size: var(--admin-vd-element-tablet-discountActiveSummary-fontSize, var(--admin-vd-element-discountActiveSummary-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-discountActiveSummary-fontWeight, var(--admin-vd-element-discountActiveSummary-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-discountActiveSummary-textAlign, var(--admin-vd-element-discountActiveSummary-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-discountActiveSummary-textColor, var(--admin-vd-element-discountActiveSummary-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-discountActiveSummary-backgroundColor, var(--admin-vd-element-discountActiveSummary-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-discountActiveSummary-borderColor, var(--admin-vd-element-discountActiveSummary-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-discountActiveSummary-borderRadius, var(--admin-vd-element-discountActiveSummary-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-discountActiveSummary-padding, var(--admin-vd-element-discountActiveSummary-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-form {
+  font-size: var(--admin-vd-element-tablet-bannerForm-fontSize, var(--admin-vd-element-bannerForm-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-bannerForm-fontWeight, var(--admin-vd-element-bannerForm-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-bannerForm-textAlign, var(--admin-vd-element-bannerForm-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-bannerForm-textColor, var(--admin-vd-element-bannerForm-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-bannerForm-backgroundColor, var(--admin-vd-element-bannerForm-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-bannerForm-borderColor, var(--admin-vd-element-bannerForm-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-bannerForm-borderRadius, var(--admin-vd-element-bannerForm-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-bannerForm-padding, var(--admin-vd-element-bannerForm-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-card {
+  font-size: var(--admin-vd-element-tablet-bannerCard-fontSize, var(--admin-vd-element-bannerCard-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-bannerCard-fontWeight, var(--admin-vd-element-bannerCard-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-bannerCard-textAlign, var(--admin-vd-element-bannerCard-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-bannerCard-textColor, var(--admin-vd-element-bannerCard-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-bannerCard-backgroundColor, var(--admin-vd-element-bannerCard-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-bannerCard-borderColor, var(--admin-vd-element-bannerCard-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-bannerCard-borderRadius, var(--admin-vd-element-bannerCard-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-bannerCard-padding, var(--admin-vd-element-bannerCard-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-list {
+  font-size: var(--admin-vd-element-tablet-bannerList-fontSize, var(--admin-vd-element-bannerList-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-bannerList-fontWeight, var(--admin-vd-element-bannerList-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-bannerList-textAlign, var(--admin-vd-element-bannerList-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-bannerList-textColor, var(--admin-vd-element-bannerList-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-bannerList-backgroundColor, var(--admin-vd-element-bannerList-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-bannerList-borderColor, var(--admin-vd-element-bannerList-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-bannerList-borderRadius, var(--admin-vd-element-bannerList-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-bannerList-padding, var(--admin-vd-element-bannerList-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-form {
+  font-size: var(--admin-vd-element-tablet-categoryForm-fontSize, var(--admin-vd-element-categoryForm-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-categoryForm-fontWeight, var(--admin-vd-element-categoryForm-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-categoryForm-textAlign, var(--admin-vd-element-categoryForm-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-categoryForm-textColor, var(--admin-vd-element-categoryForm-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-categoryForm-backgroundColor, var(--admin-vd-element-categoryForm-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-categoryForm-borderColor, var(--admin-vd-element-categoryForm-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-categoryForm-borderRadius, var(--admin-vd-element-categoryForm-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-categoryForm-padding, var(--admin-vd-element-categoryForm-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-card {
+  font-size: var(--admin-vd-element-tablet-categoryCard-fontSize, var(--admin-vd-element-categoryCard-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-categoryCard-fontWeight, var(--admin-vd-element-categoryCard-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-categoryCard-textAlign, var(--admin-vd-element-categoryCard-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-categoryCard-textColor, var(--admin-vd-element-categoryCard-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-categoryCard-backgroundColor, var(--admin-vd-element-categoryCard-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-categoryCard-borderColor, var(--admin-vd-element-categoryCard-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-categoryCard-borderRadius, var(--admin-vd-element-categoryCard-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-categoryCard-padding, var(--admin-vd-element-categoryCard-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-subcategory-card {
+  font-size: var(--admin-vd-element-tablet-subcategoryCard-fontSize, var(--admin-vd-element-subcategoryCard-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-subcategoryCard-fontWeight, var(--admin-vd-element-subcategoryCard-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-subcategoryCard-textAlign, var(--admin-vd-element-subcategoryCard-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-subcategoryCard-textColor, var(--admin-vd-element-subcategoryCard-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-subcategoryCard-backgroundColor, var(--admin-vd-element-subcategoryCard-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-subcategoryCard-borderColor, var(--admin-vd-element-subcategoryCard-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-subcategoryCard-borderRadius, var(--admin-vd-element-subcategoryCard-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-subcategoryCard-padding, var(--admin-vd-element-subcategoryCard-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-form {
+  font-size: var(--admin-vd-element-tablet-couponForm-fontSize, var(--admin-vd-element-couponForm-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-couponForm-fontWeight, var(--admin-vd-element-couponForm-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-couponForm-textAlign, var(--admin-vd-element-couponForm-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-couponForm-textColor, var(--admin-vd-element-couponForm-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-couponForm-backgroundColor, var(--admin-vd-element-couponForm-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-couponForm-borderColor, var(--admin-vd-element-couponForm-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-couponForm-borderRadius, var(--admin-vd-element-couponForm-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-couponForm-padding, var(--admin-vd-element-couponForm-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-card {
+  font-size: var(--admin-vd-element-tablet-couponCard-fontSize, var(--admin-vd-element-couponCard-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-couponCard-fontWeight, var(--admin-vd-element-couponCard-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-couponCard-textAlign, var(--admin-vd-element-couponCard-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-couponCard-textColor, var(--admin-vd-element-couponCard-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-couponCard-backgroundColor, var(--admin-vd-element-couponCard-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-couponCard-borderColor, var(--admin-vd-element-couponCard-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-couponCard-borderRadius, var(--admin-vd-element-couponCard-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-couponCard-padding, var(--admin-vd-element-couponCard-padding)) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-list {
+  font-size: var(--admin-vd-element-tablet-couponList-fontSize, var(--admin-vd-element-couponList-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-couponList-fontWeight, var(--admin-vd-element-couponList-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-couponList-textAlign, var(--admin-vd-element-couponList-textAlign)) !important;
+  color: var(--admin-vd-element-tablet-couponList-textColor, var(--admin-vd-element-couponList-textColor)) !important;
+  background-color: var(--admin-vd-element-tablet-couponList-backgroundColor, var(--admin-vd-element-couponList-backgroundColor)) !important;
+  border-color: var(--admin-vd-element-tablet-couponList-borderColor, var(--admin-vd-element-couponList-borderColor)) !important;
+  border-radius: var(--admin-vd-element-tablet-couponList-borderRadius, var(--admin-vd-element-couponList-borderRadius)) !important;
+  padding: var(--admin-vd-element-tablet-couponList-padding, var(--admin-vd-element-couponList-padding)) !important;
+}
+}
+
+@media (max-width: 767px) {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel {
+  font-size: var(--admin-vd-element-mobile-staffList-fontSize, var(--admin-vd-element-tablet-staffList-fontSize, var(--admin-vd-element-staffList-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-staffList-fontWeight, var(--admin-vd-element-tablet-staffList-fontWeight, var(--admin-vd-element-staffList-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-staffList-textAlign, var(--admin-vd-element-tablet-staffList-textAlign, var(--admin-vd-element-staffList-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-staffList-textColor, var(--admin-vd-element-tablet-staffList-textColor, var(--admin-vd-element-staffList-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-staffList-backgroundColor, var(--admin-vd-element-tablet-staffList-backgroundColor, var(--admin-vd-element-staffList-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-staffList-borderColor, var(--admin-vd-element-tablet-staffList-borderColor, var(--admin-vd-element-staffList-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-staffList-borderRadius, var(--admin-vd-element-tablet-staffList-borderRadius, var(--admin-vd-element-staffList-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-staffList-padding, var(--admin-vd-element-tablet-staffList-padding, var(--admin-vd-element-staffList-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-create-form {
+  font-size: var(--admin-vd-element-mobile-staffCreateForm-fontSize, var(--admin-vd-element-tablet-staffCreateForm-fontSize, var(--admin-vd-element-staffCreateForm-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-staffCreateForm-fontWeight, var(--admin-vd-element-tablet-staffCreateForm-fontWeight, var(--admin-vd-element-staffCreateForm-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-staffCreateForm-textAlign, var(--admin-vd-element-tablet-staffCreateForm-textAlign, var(--admin-vd-element-staffCreateForm-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-staffCreateForm-textColor, var(--admin-vd-element-tablet-staffCreateForm-textColor, var(--admin-vd-element-staffCreateForm-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-staffCreateForm-backgroundColor, var(--admin-vd-element-tablet-staffCreateForm-backgroundColor, var(--admin-vd-element-staffCreateForm-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-staffCreateForm-borderColor, var(--admin-vd-element-tablet-staffCreateForm-borderColor, var(--admin-vd-element-staffCreateForm-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-staffCreateForm-borderRadius, var(--admin-vd-element-tablet-staffCreateForm-borderRadius, var(--admin-vd-element-staffCreateForm-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-staffCreateForm-padding, var(--admin-vd-element-tablet-staffCreateForm-padding, var(--admin-vd-element-staffCreateForm-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel {
+  font-size: var(--admin-vd-element-mobile-inventoryPanel-fontSize, var(--admin-vd-element-tablet-inventoryPanel-fontSize, var(--admin-vd-element-inventoryPanel-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-inventoryPanel-fontWeight, var(--admin-vd-element-tablet-inventoryPanel-fontWeight, var(--admin-vd-element-inventoryPanel-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-inventoryPanel-textAlign, var(--admin-vd-element-tablet-inventoryPanel-textAlign, var(--admin-vd-element-inventoryPanel-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-inventoryPanel-textColor, var(--admin-vd-element-tablet-inventoryPanel-textColor, var(--admin-vd-element-inventoryPanel-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-inventoryPanel-backgroundColor, var(--admin-vd-element-tablet-inventoryPanel-backgroundColor, var(--admin-vd-element-inventoryPanel-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-inventoryPanel-borderColor, var(--admin-vd-element-tablet-inventoryPanel-borderColor, var(--admin-vd-element-inventoryPanel-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-inventoryPanel-borderRadius, var(--admin-vd-element-tablet-inventoryPanel-borderRadius, var(--admin-vd-element-inventoryPanel-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-inventoryPanel-padding, var(--admin-vd-element-tablet-inventoryPanel-padding, var(--admin-vd-element-inventoryPanel-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-row {
+  font-size: var(--admin-vd-element-mobile-inventoryMovementRow-fontSize, var(--admin-vd-element-tablet-inventoryMovementRow-fontSize, var(--admin-vd-element-inventoryMovementRow-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-inventoryMovementRow-fontWeight, var(--admin-vd-element-tablet-inventoryMovementRow-fontWeight, var(--admin-vd-element-inventoryMovementRow-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-inventoryMovementRow-textAlign, var(--admin-vd-element-tablet-inventoryMovementRow-textAlign, var(--admin-vd-element-inventoryMovementRow-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-inventoryMovementRow-textColor, var(--admin-vd-element-tablet-inventoryMovementRow-textColor, var(--admin-vd-element-inventoryMovementRow-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-inventoryMovementRow-backgroundColor, var(--admin-vd-element-tablet-inventoryMovementRow-backgroundColor, var(--admin-vd-element-inventoryMovementRow-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-inventoryMovementRow-borderColor, var(--admin-vd-element-tablet-inventoryMovementRow-borderColor, var(--admin-vd-element-inventoryMovementRow-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-inventoryMovementRow-borderRadius, var(--admin-vd-element-tablet-inventoryMovementRow-borderRadius, var(--admin-vd-element-inventoryMovementRow-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-inventoryMovementRow-padding, var(--admin-vd-element-tablet-inventoryMovementRow-padding, var(--admin-vd-element-inventoryMovementRow-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-metric {
+  font-size: var(--admin-vd-element-mobile-inventoryMetric-fontSize, var(--admin-vd-element-tablet-inventoryMetric-fontSize, var(--admin-vd-element-inventoryMetric-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-inventoryMetric-fontWeight, var(--admin-vd-element-tablet-inventoryMetric-fontWeight, var(--admin-vd-element-inventoryMetric-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-inventoryMetric-textAlign, var(--admin-vd-element-tablet-inventoryMetric-textAlign, var(--admin-vd-element-inventoryMetric-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-inventoryMetric-textColor, var(--admin-vd-element-tablet-inventoryMetric-textColor, var(--admin-vd-element-inventoryMetric-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-inventoryMetric-backgroundColor, var(--admin-vd-element-tablet-inventoryMetric-backgroundColor, var(--admin-vd-element-inventoryMetric-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-inventoryMetric-borderColor, var(--admin-vd-element-tablet-inventoryMetric-borderColor, var(--admin-vd-element-inventoryMetric-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-inventoryMetric-borderRadius, var(--admin-vd-element-tablet-inventoryMetric-borderRadius, var(--admin-vd-element-inventoryMetric-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-inventoryMetric-padding, var(--admin-vd-element-tablet-inventoryMetric-padding, var(--admin-vd-element-inventoryMetric-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-toolbar {
+  font-size: var(--admin-vd-element-mobile-analyticsToolbar-fontSize, var(--admin-vd-element-tablet-analyticsToolbar-fontSize, var(--admin-vd-element-analyticsToolbar-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-analyticsToolbar-fontWeight, var(--admin-vd-element-tablet-analyticsToolbar-fontWeight, var(--admin-vd-element-analyticsToolbar-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-analyticsToolbar-textAlign, var(--admin-vd-element-tablet-analyticsToolbar-textAlign, var(--admin-vd-element-analyticsToolbar-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-analyticsToolbar-textColor, var(--admin-vd-element-tablet-analyticsToolbar-textColor, var(--admin-vd-element-analyticsToolbar-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-analyticsToolbar-backgroundColor, var(--admin-vd-element-tablet-analyticsToolbar-backgroundColor, var(--admin-vd-element-analyticsToolbar-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-analyticsToolbar-borderColor, var(--admin-vd-element-tablet-analyticsToolbar-borderColor, var(--admin-vd-element-analyticsToolbar-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-analyticsToolbar-borderRadius, var(--admin-vd-element-tablet-analyticsToolbar-borderRadius, var(--admin-vd-element-analyticsToolbar-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-analyticsToolbar-padding, var(--admin-vd-element-tablet-analyticsToolbar-padding, var(--admin-vd-element-analyticsToolbar-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
+  font-size: var(--admin-vd-element-mobile-analyticsCard-fontSize, var(--admin-vd-element-tablet-analyticsCard-fontSize, var(--admin-vd-element-analyticsCard-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-analyticsCard-fontWeight, var(--admin-vd-element-tablet-analyticsCard-fontWeight, var(--admin-vd-element-analyticsCard-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-analyticsCard-textAlign, var(--admin-vd-element-tablet-analyticsCard-textAlign, var(--admin-vd-element-analyticsCard-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-analyticsCard-textColor, var(--admin-vd-element-tablet-analyticsCard-textColor, var(--admin-vd-element-analyticsCard-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-analyticsCard-backgroundColor, var(--admin-vd-element-tablet-analyticsCard-backgroundColor, var(--admin-vd-element-analyticsCard-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-analyticsCard-borderColor, var(--admin-vd-element-tablet-analyticsCard-borderColor, var(--admin-vd-element-analyticsCard-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-analyticsCard-borderRadius, var(--admin-vd-element-tablet-analyticsCard-borderRadius, var(--admin-vd-element-analyticsCard-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-analyticsCard-padding, var(--admin-vd-element-tablet-analyticsCard-padding, var(--admin-vd-element-analyticsCard-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-kpis {
+  font-size: var(--admin-vd-element-mobile-analyticsGrid-fontSize, var(--admin-vd-element-tablet-analyticsGrid-fontSize, var(--admin-vd-element-analyticsGrid-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-analyticsGrid-fontWeight, var(--admin-vd-element-tablet-analyticsGrid-fontWeight, var(--admin-vd-element-analyticsGrid-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-analyticsGrid-textAlign, var(--admin-vd-element-tablet-analyticsGrid-textAlign, var(--admin-vd-element-analyticsGrid-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-analyticsGrid-textColor, var(--admin-vd-element-tablet-analyticsGrid-textColor, var(--admin-vd-element-analyticsGrid-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-analyticsGrid-backgroundColor, var(--admin-vd-element-tablet-analyticsGrid-backgroundColor, var(--admin-vd-element-analyticsGrid-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-analyticsGrid-borderColor, var(--admin-vd-element-tablet-analyticsGrid-borderColor, var(--admin-vd-element-analyticsGrid-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-analyticsGrid-borderRadius, var(--admin-vd-element-tablet-analyticsGrid-borderRadius, var(--admin-vd-element-analyticsGrid-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-analyticsGrid-padding, var(--admin-vd-element-tablet-analyticsGrid-padding, var(--admin-vd-element-analyticsGrid-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket {
+  font-size: var(--admin-vd-element-mobile-supportTicket-fontSize, var(--admin-vd-element-tablet-supportTicket-fontSize, var(--admin-vd-element-supportTicket-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-supportTicket-fontWeight, var(--admin-vd-element-tablet-supportTicket-fontWeight, var(--admin-vd-element-supportTicket-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-supportTicket-textAlign, var(--admin-vd-element-tablet-supportTicket-textAlign, var(--admin-vd-element-supportTicket-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-supportTicket-textColor, var(--admin-vd-element-tablet-supportTicket-textColor, var(--admin-vd-element-supportTicket-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-supportTicket-backgroundColor, var(--admin-vd-element-tablet-supportTicket-backgroundColor, var(--admin-vd-element-supportTicket-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-supportTicket-borderColor, var(--admin-vd-element-tablet-supportTicket-borderColor, var(--admin-vd-element-supportTicket-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-supportTicket-borderRadius, var(--admin-vd-element-tablet-supportTicket-borderRadius, var(--admin-vd-element-supportTicket-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-supportTicket-padding, var(--admin-vd-element-tablet-supportTicket-padding, var(--admin-vd-element-supportTicket-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket-header {
+  font-size: var(--admin-vd-element-mobile-supportTicketHeader-fontSize, var(--admin-vd-element-tablet-supportTicketHeader-fontSize, var(--admin-vd-element-supportTicketHeader-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-supportTicketHeader-fontWeight, var(--admin-vd-element-tablet-supportTicketHeader-fontWeight, var(--admin-vd-element-supportTicketHeader-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-supportTicketHeader-textAlign, var(--admin-vd-element-tablet-supportTicketHeader-textAlign, var(--admin-vd-element-supportTicketHeader-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-supportTicketHeader-textColor, var(--admin-vd-element-tablet-supportTicketHeader-textColor, var(--admin-vd-element-supportTicketHeader-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-supportTicketHeader-backgroundColor, var(--admin-vd-element-tablet-supportTicketHeader-backgroundColor, var(--admin-vd-element-supportTicketHeader-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-supportTicketHeader-borderColor, var(--admin-vd-element-tablet-supportTicketHeader-borderColor, var(--admin-vd-element-supportTicketHeader-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-supportTicketHeader-borderRadius, var(--admin-vd-element-tablet-supportTicketHeader-borderRadius, var(--admin-vd-element-supportTicketHeader-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-supportTicketHeader-padding, var(--admin-vd-element-tablet-supportTicketHeader-padding, var(--admin-vd-element-supportTicketHeader-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-ticket-message {
+  font-size: var(--admin-vd-element-mobile-supportTicketMessage-fontSize, var(--admin-vd-element-tablet-supportTicketMessage-fontSize, var(--admin-vd-element-supportTicketMessage-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-supportTicketMessage-fontWeight, var(--admin-vd-element-tablet-supportTicketMessage-fontWeight, var(--admin-vd-element-supportTicketMessage-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-supportTicketMessage-textAlign, var(--admin-vd-element-tablet-supportTicketMessage-textAlign, var(--admin-vd-element-supportTicketMessage-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-supportTicketMessage-textColor, var(--admin-vd-element-tablet-supportTicketMessage-textColor, var(--admin-vd-element-supportTicketMessage-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-supportTicketMessage-backgroundColor, var(--admin-vd-element-tablet-supportTicketMessage-backgroundColor, var(--admin-vd-element-supportTicketMessage-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-supportTicketMessage-borderColor, var(--admin-vd-element-tablet-supportTicketMessage-borderColor, var(--admin-vd-element-supportTicketMessage-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-supportTicketMessage-borderRadius, var(--admin-vd-element-tablet-supportTicketMessage-borderRadius, var(--admin-vd-element-supportTicketMessage-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-supportTicketMessage-padding, var(--admin-vd-element-tablet-supportTicketMessage-padding, var(--admin-vd-element-supportTicketMessage-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-reply-form {
+  font-size: var(--admin-vd-element-mobile-supportReplyForm-fontSize, var(--admin-vd-element-tablet-supportReplyForm-fontSize, var(--admin-vd-element-supportReplyForm-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-supportReplyForm-fontWeight, var(--admin-vd-element-tablet-supportReplyForm-fontWeight, var(--admin-vd-element-supportReplyForm-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-supportReplyForm-textAlign, var(--admin-vd-element-tablet-supportReplyForm-textAlign, var(--admin-vd-element-supportReplyForm-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-supportReplyForm-textColor, var(--admin-vd-element-tablet-supportReplyForm-textColor, var(--admin-vd-element-supportReplyForm-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-supportReplyForm-backgroundColor, var(--admin-vd-element-tablet-supportReplyForm-backgroundColor, var(--admin-vd-element-supportReplyForm-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-supportReplyForm-borderColor, var(--admin-vd-element-tablet-supportReplyForm-borderColor, var(--admin-vd-element-supportReplyForm-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-supportReplyForm-borderRadius, var(--admin-vd-element-tablet-supportReplyForm-borderRadius, var(--admin-vd-element-supportReplyForm-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-supportReplyForm-padding, var(--admin-vd-element-tablet-supportReplyForm-padding, var(--admin-vd-element-supportReplyForm-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-flash-sale-form {
+  font-size: var(--admin-vd-element-mobile-discountForm-fontSize, var(--admin-vd-element-tablet-discountForm-fontSize, var(--admin-vd-element-discountForm-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-discountForm-fontWeight, var(--admin-vd-element-tablet-discountForm-fontWeight, var(--admin-vd-element-discountForm-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-discountForm-textAlign, var(--admin-vd-element-tablet-discountForm-textAlign, var(--admin-vd-element-discountForm-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-discountForm-textColor, var(--admin-vd-element-tablet-discountForm-textColor, var(--admin-vd-element-discountForm-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-discountForm-backgroundColor, var(--admin-vd-element-tablet-discountForm-backgroundColor, var(--admin-vd-element-discountForm-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-discountForm-borderColor, var(--admin-vd-element-tablet-discountForm-borderColor, var(--admin-vd-element-discountForm-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-discountForm-borderRadius, var(--admin-vd-element-tablet-discountForm-borderRadius, var(--admin-vd-element-discountForm-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-discountForm-padding, var(--admin-vd-element-tablet-discountForm-padding, var(--admin-vd-element-discountForm-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-flash-sale-fields {
+  font-size: var(--admin-vd-element-mobile-discountFields-fontSize, var(--admin-vd-element-tablet-discountFields-fontSize, var(--admin-vd-element-discountFields-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-discountFields-fontWeight, var(--admin-vd-element-tablet-discountFields-fontWeight, var(--admin-vd-element-discountFields-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-discountFields-textAlign, var(--admin-vd-element-tablet-discountFields-textAlign, var(--admin-vd-element-discountFields-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-discountFields-textColor, var(--admin-vd-element-tablet-discountFields-textColor, var(--admin-vd-element-discountFields-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-discountFields-backgroundColor, var(--admin-vd-element-tablet-discountFields-backgroundColor, var(--admin-vd-element-discountFields-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-discountFields-borderColor, var(--admin-vd-element-tablet-discountFields-borderColor, var(--admin-vd-element-discountFields-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-discountFields-borderRadius, var(--admin-vd-element-tablet-discountFields-borderRadius, var(--admin-vd-element-discountFields-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-discountFields-padding, var(--admin-vd-element-tablet-discountFields-padding, var(--admin-vd-element-discountFields-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .gs-admin-flash-sale-active {
+  font-size: var(--admin-vd-element-mobile-discountActiveSummary-fontSize, var(--admin-vd-element-tablet-discountActiveSummary-fontSize, var(--admin-vd-element-discountActiveSummary-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-discountActiveSummary-fontWeight, var(--admin-vd-element-tablet-discountActiveSummary-fontWeight, var(--admin-vd-element-discountActiveSummary-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-discountActiveSummary-textAlign, var(--admin-vd-element-tablet-discountActiveSummary-textAlign, var(--admin-vd-element-discountActiveSummary-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-discountActiveSummary-textColor, var(--admin-vd-element-tablet-discountActiveSummary-textColor, var(--admin-vd-element-discountActiveSummary-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-discountActiveSummary-backgroundColor, var(--admin-vd-element-tablet-discountActiveSummary-backgroundColor, var(--admin-vd-element-discountActiveSummary-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-discountActiveSummary-borderColor, var(--admin-vd-element-tablet-discountActiveSummary-borderColor, var(--admin-vd-element-discountActiveSummary-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-discountActiveSummary-borderRadius, var(--admin-vd-element-tablet-discountActiveSummary-borderRadius, var(--admin-vd-element-discountActiveSummary-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-discountActiveSummary-padding, var(--admin-vd-element-tablet-discountActiveSummary-padding, var(--admin-vd-element-discountActiveSummary-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-form {
+  font-size: var(--admin-vd-element-mobile-bannerForm-fontSize, var(--admin-vd-element-tablet-bannerForm-fontSize, var(--admin-vd-element-bannerForm-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-bannerForm-fontWeight, var(--admin-vd-element-tablet-bannerForm-fontWeight, var(--admin-vd-element-bannerForm-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-bannerForm-textAlign, var(--admin-vd-element-tablet-bannerForm-textAlign, var(--admin-vd-element-bannerForm-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-bannerForm-textColor, var(--admin-vd-element-tablet-bannerForm-textColor, var(--admin-vd-element-bannerForm-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-bannerForm-backgroundColor, var(--admin-vd-element-tablet-bannerForm-backgroundColor, var(--admin-vd-element-bannerForm-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-bannerForm-borderColor, var(--admin-vd-element-tablet-bannerForm-borderColor, var(--admin-vd-element-bannerForm-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-bannerForm-borderRadius, var(--admin-vd-element-tablet-bannerForm-borderRadius, var(--admin-vd-element-bannerForm-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-bannerForm-padding, var(--admin-vd-element-tablet-bannerForm-padding, var(--admin-vd-element-bannerForm-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-card {
+  font-size: var(--admin-vd-element-mobile-bannerCard-fontSize, var(--admin-vd-element-tablet-bannerCard-fontSize, var(--admin-vd-element-bannerCard-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-bannerCard-fontWeight, var(--admin-vd-element-tablet-bannerCard-fontWeight, var(--admin-vd-element-bannerCard-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-bannerCard-textAlign, var(--admin-vd-element-tablet-bannerCard-textAlign, var(--admin-vd-element-bannerCard-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-bannerCard-textColor, var(--admin-vd-element-tablet-bannerCard-textColor, var(--admin-vd-element-bannerCard-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-bannerCard-backgroundColor, var(--admin-vd-element-tablet-bannerCard-backgroundColor, var(--admin-vd-element-bannerCard-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-bannerCard-borderColor, var(--admin-vd-element-tablet-bannerCard-borderColor, var(--admin-vd-element-bannerCard-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-bannerCard-borderRadius, var(--admin-vd-element-tablet-bannerCard-borderRadius, var(--admin-vd-element-bannerCard-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-bannerCard-padding, var(--admin-vd-element-tablet-bannerCard-padding, var(--admin-vd-element-bannerCard-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banner-list {
+  font-size: var(--admin-vd-element-mobile-bannerList-fontSize, var(--admin-vd-element-tablet-bannerList-fontSize, var(--admin-vd-element-bannerList-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-bannerList-fontWeight, var(--admin-vd-element-tablet-bannerList-fontWeight, var(--admin-vd-element-bannerList-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-bannerList-textAlign, var(--admin-vd-element-tablet-bannerList-textAlign, var(--admin-vd-element-bannerList-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-bannerList-textColor, var(--admin-vd-element-tablet-bannerList-textColor, var(--admin-vd-element-bannerList-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-bannerList-backgroundColor, var(--admin-vd-element-tablet-bannerList-backgroundColor, var(--admin-vd-element-bannerList-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-bannerList-borderColor, var(--admin-vd-element-tablet-bannerList-borderColor, var(--admin-vd-element-bannerList-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-bannerList-borderRadius, var(--admin-vd-element-tablet-bannerList-borderRadius, var(--admin-vd-element-bannerList-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-bannerList-padding, var(--admin-vd-element-tablet-bannerList-padding, var(--admin-vd-element-bannerList-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-form {
+  font-size: var(--admin-vd-element-mobile-categoryForm-fontSize, var(--admin-vd-element-tablet-categoryForm-fontSize, var(--admin-vd-element-categoryForm-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-categoryForm-fontWeight, var(--admin-vd-element-tablet-categoryForm-fontWeight, var(--admin-vd-element-categoryForm-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-categoryForm-textAlign, var(--admin-vd-element-tablet-categoryForm-textAlign, var(--admin-vd-element-categoryForm-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-categoryForm-textColor, var(--admin-vd-element-tablet-categoryForm-textColor, var(--admin-vd-element-categoryForm-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-categoryForm-backgroundColor, var(--admin-vd-element-tablet-categoryForm-backgroundColor, var(--admin-vd-element-categoryForm-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-categoryForm-borderColor, var(--admin-vd-element-tablet-categoryForm-borderColor, var(--admin-vd-element-categoryForm-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-categoryForm-borderRadius, var(--admin-vd-element-tablet-categoryForm-borderRadius, var(--admin-vd-element-categoryForm-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-categoryForm-padding, var(--admin-vd-element-tablet-categoryForm-padding, var(--admin-vd-element-categoryForm-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-card {
+  font-size: var(--admin-vd-element-mobile-categoryCard-fontSize, var(--admin-vd-element-tablet-categoryCard-fontSize, var(--admin-vd-element-categoryCard-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-categoryCard-fontWeight, var(--admin-vd-element-tablet-categoryCard-fontWeight, var(--admin-vd-element-categoryCard-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-categoryCard-textAlign, var(--admin-vd-element-tablet-categoryCard-textAlign, var(--admin-vd-element-categoryCard-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-categoryCard-textColor, var(--admin-vd-element-tablet-categoryCard-textColor, var(--admin-vd-element-categoryCard-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-categoryCard-backgroundColor, var(--admin-vd-element-tablet-categoryCard-backgroundColor, var(--admin-vd-element-categoryCard-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-categoryCard-borderColor, var(--admin-vd-element-tablet-categoryCard-borderColor, var(--admin-vd-element-categoryCard-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-categoryCard-borderRadius, var(--admin-vd-element-tablet-categoryCard-borderRadius, var(--admin-vd-element-categoryCard-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-categoryCard-padding, var(--admin-vd-element-tablet-categoryCard-padding, var(--admin-vd-element-categoryCard-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-subcategory-card {
+  font-size: var(--admin-vd-element-mobile-subcategoryCard-fontSize, var(--admin-vd-element-tablet-subcategoryCard-fontSize, var(--admin-vd-element-subcategoryCard-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-subcategoryCard-fontWeight, var(--admin-vd-element-tablet-subcategoryCard-fontWeight, var(--admin-vd-element-subcategoryCard-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-subcategoryCard-textAlign, var(--admin-vd-element-tablet-subcategoryCard-textAlign, var(--admin-vd-element-subcategoryCard-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-subcategoryCard-textColor, var(--admin-vd-element-tablet-subcategoryCard-textColor, var(--admin-vd-element-subcategoryCard-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-subcategoryCard-backgroundColor, var(--admin-vd-element-tablet-subcategoryCard-backgroundColor, var(--admin-vd-element-subcategoryCard-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-subcategoryCard-borderColor, var(--admin-vd-element-tablet-subcategoryCard-borderColor, var(--admin-vd-element-subcategoryCard-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-subcategoryCard-borderRadius, var(--admin-vd-element-tablet-subcategoryCard-borderRadius, var(--admin-vd-element-subcategoryCard-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-subcategoryCard-padding, var(--admin-vd-element-tablet-subcategoryCard-padding, var(--admin-vd-element-subcategoryCard-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-form {
+  font-size: var(--admin-vd-element-mobile-couponForm-fontSize, var(--admin-vd-element-tablet-couponForm-fontSize, var(--admin-vd-element-couponForm-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-couponForm-fontWeight, var(--admin-vd-element-tablet-couponForm-fontWeight, var(--admin-vd-element-couponForm-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-couponForm-textAlign, var(--admin-vd-element-tablet-couponForm-textAlign, var(--admin-vd-element-couponForm-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-couponForm-textColor, var(--admin-vd-element-tablet-couponForm-textColor, var(--admin-vd-element-couponForm-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-couponForm-backgroundColor, var(--admin-vd-element-tablet-couponForm-backgroundColor, var(--admin-vd-element-couponForm-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-couponForm-borderColor, var(--admin-vd-element-tablet-couponForm-borderColor, var(--admin-vd-element-couponForm-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-couponForm-borderRadius, var(--admin-vd-element-tablet-couponForm-borderRadius, var(--admin-vd-element-couponForm-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-couponForm-padding, var(--admin-vd-element-tablet-couponForm-padding, var(--admin-vd-element-couponForm-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-card {
+  font-size: var(--admin-vd-element-mobile-couponCard-fontSize, var(--admin-vd-element-tablet-couponCard-fontSize, var(--admin-vd-element-couponCard-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-couponCard-fontWeight, var(--admin-vd-element-tablet-couponCard-fontWeight, var(--admin-vd-element-couponCard-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-couponCard-textAlign, var(--admin-vd-element-tablet-couponCard-textAlign, var(--admin-vd-element-couponCard-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-couponCard-textColor, var(--admin-vd-element-tablet-couponCard-textColor, var(--admin-vd-element-couponCard-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-couponCard-backgroundColor, var(--admin-vd-element-tablet-couponCard-backgroundColor, var(--admin-vd-element-couponCard-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-couponCard-borderColor, var(--admin-vd-element-tablet-couponCard-borderColor, var(--admin-vd-element-couponCard-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-couponCard-borderRadius, var(--admin-vd-element-tablet-couponCard-borderRadius, var(--admin-vd-element-couponCard-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-couponCard-padding, var(--admin-vd-element-tablet-couponCard-padding, var(--admin-vd-element-couponCard-padding))) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupon-list {
+  font-size: var(--admin-vd-element-mobile-couponList-fontSize, var(--admin-vd-element-tablet-couponList-fontSize, var(--admin-vd-element-couponList-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-couponList-fontWeight, var(--admin-vd-element-tablet-couponList-fontWeight, var(--admin-vd-element-couponList-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-couponList-textAlign, var(--admin-vd-element-tablet-couponList-textAlign, var(--admin-vd-element-couponList-textAlign))) !important;
+  color: var(--admin-vd-element-mobile-couponList-textColor, var(--admin-vd-element-tablet-couponList-textColor, var(--admin-vd-element-couponList-textColor))) !important;
+  background-color: var(--admin-vd-element-mobile-couponList-backgroundColor, var(--admin-vd-element-tablet-couponList-backgroundColor, var(--admin-vd-element-couponList-backgroundColor))) !important;
+  border-color: var(--admin-vd-element-mobile-couponList-borderColor, var(--admin-vd-element-tablet-couponList-borderColor, var(--admin-vd-element-couponList-borderColor))) !important;
+  border-radius: var(--admin-vd-element-mobile-couponList-borderRadius, var(--admin-vd-element-tablet-couponList-borderRadius, var(--admin-vd-element-couponList-borderRadius))) !important;
+  padding: var(--admin-vd-element-mobile-couponList-padding, var(--admin-vd-element-tablet-couponList-padding, var(--admin-vd-element-couponList-padding))) !important;
+}
+}
