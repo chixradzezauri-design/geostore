@@ -24,6 +24,14 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
   assert.equal(design.theme.bannersSectionBorder, '#334155');
   assert.equal(design.theme.categoriesSectionBackground, '#0f172a');
   assert.equal(design.theme.couponsSectionBorder, '#334155');
+  assert.equal(design.theme.tableRowBackground, '#0f172a');
+  assert.equal(design.theme.tableRowHover, '#172554');
+  assert.equal(design.theme.filterBackground, '#020617');
+  assert.equal(design.theme.filterText, '#f8fafc');
+  assert.equal(design.theme.filterBorder, '#334155');
+  assert.equal(design.theme.primaryButtonBackground, '#059669');
+  assert.equal(design.theme.primaryButtonText, '#ffffff');
+  assert.equal(design.theme.primaryButtonBorder, '#10b981');
   assert.equal(design.layout.fontSize, 16);
   assert.equal(design.layout.cardRadius, 10);
   assert.equal(design.layout.cardPadding, 32);
@@ -46,10 +54,10 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
 
 test('tablet and mobile admin visual overrides inherit unset desktop values', () => {
   const design = normalizeAdminPanelVisualDesign({
-    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', staffSectionBackground: '#aabbcc', inventorySectionBorder: '#bbccdd', analyticsSectionBackground: '#ccddee', ordersSectionBackground: '#ddeeff', supportSectionBorder: '#aabbcc', discountsSectionBackground: '#ddeeff', bannersSectionBorder: '#aabbcc', categoriesSectionBackground: '#ccddee', couponsSectionBorder: '#bbccdd', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678', modalOverlayBackground: '#123456' },
+    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', tableRowBackground: '#abcdef', tableRowHover: '#bcdefa', filterBackground: '#112233', filterText: '#ffffff', filterBorder: '#223344', primaryButtonBackground: '#334455', primaryButtonText: '#ffffff', primaryButtonBorder: '#445566', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', staffSectionBackground: '#aabbcc', inventorySectionBorder: '#bbccdd', analyticsSectionBackground: '#ccddee', ordersSectionBackground: '#ddeeff', supportSectionBorder: '#aabbcc', discountsSectionBackground: '#ddeeff', bannersSectionBorder: '#aabbcc', categoriesSectionBackground: '#ccddee', couponsSectionBorder: '#bbccdd', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678', modalOverlayBackground: '#123456' },
     layout: { fontSize: 14, cardRadius: 20, sectionGap: 30, headerPadding: 28, tableCellPadding: 10, inputHeight: 48, cardBorderWidth: 2, cardShadowBlur: 30, modalRadius: 32, modalPadding: 30, modalOverlayOpacity: 90 },
     responsive: {
-      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', inputFocus: '#778899', contentCardBackground: '#8899aa', modalBackground: '#7788aa', modalOverlayBackground: '#abcdef', staffSectionBackground: '#ddeeff' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12, modalRadius: 18, modalPadding: 16, modalOverlayOpacity: 70 } },
+      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', tableRowBackground: '#778899', filterBackground: '#8899aa', primaryButtonBackground: '#99aabb', inputFocus: '#778899', contentCardBackground: '#8899aa', modalBackground: '#7788aa', modalOverlayBackground: '#abcdef', staffSectionBackground: '#ddeeff' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12, modalRadius: 18, modalPadding: 16, modalOverlayOpacity: 70 } },
       mobile: { theme: { panel: '#334455' }, layout: { cardPadding: 14 } }
     }
   });
@@ -69,8 +77,19 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-mobile-navActiveBackground'], '#abcdef');
   assert.equal(style['--admin-vd-headerBackground'], '#aabbcc');
   assert.equal(style['--admin-vd-tableHeaderText'], '#112244');
+  assert.equal(style['--admin-vd-tableRowBackground'], '#abcdef');
+  assert.equal(style['--admin-vd-tableRowHover'], '#bcdefa');
+  assert.equal(style['--admin-vd-filterBackground'], '#112233');
+  assert.equal(style['--admin-vd-filterText'], '#ffffff');
+  assert.equal(style['--admin-vd-filterBorder'], '#223344');
+  assert.equal(style['--admin-vd-primaryButtonBackground'], '#334455');
+  assert.equal(style['--admin-vd-primaryButtonText'], '#ffffff');
+  assert.equal(style['--admin-vd-primaryButtonBorder'], '#445566');
   assert.equal(style['--admin-vd-inputFocus'], '#556677');
   assert.equal(style['--admin-vd-tablet-headerBackground'], '#667788');
+  assert.equal(style['--admin-vd-tablet-tableRowBackground'], '#778899');
+  assert.equal(style['--admin-vd-tablet-filterBackground'], '#8899aa');
+  assert.equal(style['--admin-vd-tablet-primaryButtonBackground'], '#99aabb');
   assert.equal(style['--admin-vd-tablet-inputFocus'], '#778899');
   assert.equal(style['--admin-vd-tablet-headerPadding'], '16px');
   assert.equal(style['--admin-vd-tablet-inputHeight'], '42px');
