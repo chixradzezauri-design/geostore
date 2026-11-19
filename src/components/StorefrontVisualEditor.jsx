@@ -221,7 +221,7 @@ export default function StorefrontVisualEditor({
     if (!window.confirm('გსურთ „' + label + '“-ის მონახაზში აღდგენა? გამოქვეყნებული საიტი უცვლელი დარჩება.')) return;
     setVersionRestoreBusy(true);
     try {
-      const restored = await onRestoreStorefrontVersion(selectedVersionId);
+      const restored = await onRestoreStorefrontVersion(selectedVersionId, selectedVersionSnapshot.snapshot);
       if (restored === true) {
         commitDesign(normalizeStorefrontVisualDesign(selectedVersionSnapshot.snapshot?.siteSettings?.visualDesign));
         setSaveMessage('ძველი ვერსია მონახაზში აღდგა. გამოსაჩენად ცალკე გამოაქვეყნეთ.');
