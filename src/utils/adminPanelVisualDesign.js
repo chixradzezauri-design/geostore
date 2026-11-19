@@ -264,63 +264,63 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "inventory": {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "analytics": {
     "radius": 24,
     "padding": 20,
     "borderWidth": 1,
     "shadowBlur": 20,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "orders": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "support": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "discounts": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "banners": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "categories": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "coupons": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 },
   content: DEFAULT_ADMIN_PANEL_CONTENT,
@@ -337,63 +337,63 @@ const COMPONENT_DEFAULTS = {
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "inventory": {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "analytics": {
     "radius": 24,
     "padding": 20,
     "borderWidth": 1,
     "shadowBlur": 20,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "orders": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "support": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "discounts": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "banners": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "categories": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "coupons": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 };
 const COMPONENT_LIMITS = {
@@ -414,9 +414,12 @@ const COMPONENT_LIMITS = {
     40
   ],
   fontSize: [10, 20],
-  titleFontSize: [12, 28]
+  titleFontSize: [12, 28],
+  titleFontWeight: [400, 900],
+  bodyFontWeight: [300, 800]
 };
 const COMPONENT_COLOR_DEFAULTS = { textColor: "#e2e8f0", backgroundColor: "#0f172a", borderColor: "#334155" };
+const COMPONENT_ENUM_DEFAULTS = { textAlign: ['left', 'center', 'right'] };
 
 const normalizeComponents = (source, fallback, partial = false) => Object.fromEntries(
   Object.entries(COMPONENT_DEFAULTS).map(([component, defaults]) => {
@@ -425,10 +428,13 @@ const normalizeComponents = (source, fallback, partial = false) => Object.fromEn
     const numeric = Object.fromEntries(Object.entries(COMPONENT_LIMITS)
       .filter(([key]) => !partial || (values[key] != null && values[key] !== ''))
       .map(([key, bounds]) => [key, clampNumber(values[key], bounds, partial ? base[key] : defaults[key])]));
+    const enums = Object.fromEntries(Object.entries(COMPONENT_ENUM_DEFAULTS)
+      .filter(([key]) => !partial || (values[key] != null && values[key] !== ''))
+      .map(([key, allowed]) => [key, allowed.includes(values[key]) ? values[key] : (partial ? (base[key] || allowed[0]) : allowed[0])]));
     const colors = Object.fromEntries(Object.entries(COMPONENT_COLOR_DEFAULTS)
       .filter(([key]) => !partial || (values[key] != null && values[key] !== ''))
       .map(([key, fallback]) => [key, safeColor(values[key], partial ? (base[key] || fallback) : fallback)]));
-    return [component, { ...numeric, ...colors }];
+    return [component, { ...numeric, ...enums, ...colors }];
   })
 );
 
@@ -562,7 +568,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
   for (const [prefix, values] of componentViewports) {
     for (const [component, settings] of Object.entries(values)) {
       for (const [key, value] of Object.entries(settings)) {
-        style[`--admin-vd-${prefix}${component}-${key}`] = COMPONENT_COLOR_DEFAULTS[key] ? value : `${value}px`;
+        style[`--admin-vd-${prefix}${component}-${key}`] = COMPONENT_COLOR_DEFAULTS[key] || COMPONENT_ENUM_DEFAULTS[key] ? value : key.endsWith('FontWeight') ? String(value) : `${value}px`;
       }
     }
   }
