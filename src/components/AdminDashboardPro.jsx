@@ -3858,12 +3858,12 @@ export default function AdminDashboardPro({
 
   const handleConfirmOrderReactivation = async (event) => {
     event.preventDefault();
-    const requestSessionVersion = adminSessionVersion.current;
-    if (!isCurrentAdminSession(requestSessionVersion)) return;
     if (!isOwner) {
       setReactivationError('ამ მოქმედების შესრულება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
       return;
     }
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
 
     setIsReactivatingOrder(true);
