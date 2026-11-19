@@ -693,9 +693,9 @@ export function createAdminPanelModuleBackup(rawDesign, category, viewport) {
   } : {
     theme: {}, components: {}, content: contentSnapshot, elementStyles: {},
     responsive: { [viewport]: {
-      theme: Object.fromEntries(sectionThemeKeys.filter(key => responsiveSource.theme?.[key]).map(key => [key, responsiveSource.theme[key]])),
-      components: responsiveSource.components?.[category.id] ? { [category.id]: responsiveSource.components[category.id] } : {},
-      elementStyles: Object.fromEntries(elementKeys.filter(key => responsiveSource.elementStyles?.[key]).map(key => [key, responsiveSource.elementStyles[key]]))
+      theme: Object.fromEntries(sectionThemeKeys.map(key => [key, responsiveSource.theme?.[key] ?? design.theme[key]])),
+      components: { [category.id]: { ...design.components[category.id], ...(responsiveSource.components?.[category.id] || {}) } },
+      elementStyles: Object.fromEntries(elementKeys.map(key => [key, { ...design.elementStyles[key], ...(responsiveSource.elementStyles?.[key] || {}) }]))
     } }
   };
   const backup = {
