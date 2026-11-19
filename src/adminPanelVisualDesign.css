@@ -10,6 +10,7 @@
   --admin-vd-cardRadius-active: var(--admin-vd-cardRadius);
   --admin-vd-cardPadding-active: var(--admin-vd-cardPadding);
   --admin-vd-sidebarWidth-active: var(--admin-vd-sidebarWidth);
+  background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
 }
