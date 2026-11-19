@@ -37,7 +37,9 @@
   --admin-vd-primaryButtonBorder-active: var(--admin-vd-primaryButtonBorder);
   --admin-vd-inputBackground-active: var(--admin-vd-inputBackground);
   --admin-vd-inputText-active: var(--admin-vd-inputText);
+  --admin-vd-inputPlaceholder-active: var(--admin-vd-inputPlaceholder);
   --admin-vd-inputBorder-active: var(--admin-vd-inputBorder);
+  --admin-vd-inputFocusRingWidth-active: var(--admin-vd-inputFocusRingWidth);
   --admin-vd-inputFocus-active: var(--admin-vd-inputFocus);
   --admin-vd-headerRadius-active: var(--admin-vd-headerRadius);
   --admin-vd-headerPadding-active: var(--admin-vd-headerPadding);
@@ -297,11 +299,16 @@
   background-color: var(--admin-vd-inputBackground-active) !important;
   color: var(--admin-vd-inputText-active) !important;
 }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(input, textarea)::placeholder {
+  color: var(--admin-vd-inputPlaceholder-active) !important;
+  opacity: 1;
+}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] input:focus,
 .admin-dashboard-pro[data-admin-visual-design="enabled"] select:focus,
 .admin-dashboard-pro[data-admin-visual-design="enabled"] textarea:focus {
   border-color: var(--admin-vd-inputFocus-active) !important;
   outline-color: var(--admin-vd-inputFocus-active) !important;
+  box-shadow: 0 0 0 var(--admin-vd-inputFocusRingWidth-active) color-mix(in srgb, var(--admin-vd-inputFocus-active), transparent 68%) !important;
 }
 
 @media (min-width: 1024px) {
@@ -351,7 +358,9 @@
     --admin-vd-primaryButtonBorder-active: var(--admin-vd-tablet-primaryButtonBorder, var(--admin-vd-primaryButtonBorder));
     --admin-vd-inputBackground-active: var(--admin-vd-tablet-inputBackground, var(--admin-vd-inputBackground));
     --admin-vd-inputText-active: var(--admin-vd-tablet-inputText, var(--admin-vd-inputText));
+    --admin-vd-inputPlaceholder-active: var(--admin-vd-tablet-inputPlaceholder, var(--admin-vd-inputPlaceholder));
     --admin-vd-inputBorder-active: var(--admin-vd-tablet-inputBorder, var(--admin-vd-inputBorder));
+    --admin-vd-inputFocusRingWidth-active: var(--admin-vd-tablet-inputFocusRingWidth, var(--admin-vd-inputFocusRingWidth));
     --admin-vd-inputFocus-active: var(--admin-vd-tablet-inputFocus, var(--admin-vd-inputFocus));
     --admin-vd-headerRadius-active: var(--admin-vd-tablet-headerRadius, var(--admin-vd-headerRadius));
     --admin-vd-headerPadding-active: var(--admin-vd-tablet-headerPadding, var(--admin-vd-headerPadding));
@@ -434,7 +443,9 @@
     --admin-vd-primaryButtonBorder-active: var(--admin-vd-mobile-primaryButtonBorder, var(--admin-vd-tablet-primaryButtonBorder, var(--admin-vd-primaryButtonBorder)));
     --admin-vd-inputBackground-active: var(--admin-vd-mobile-inputBackground, var(--admin-vd-tablet-inputBackground, var(--admin-vd-inputBackground)));
     --admin-vd-inputText-active: var(--admin-vd-mobile-inputText, var(--admin-vd-tablet-inputText, var(--admin-vd-inputText)));
+    --admin-vd-inputPlaceholder-active: var(--admin-vd-mobile-inputPlaceholder, var(--admin-vd-tablet-inputPlaceholder, var(--admin-vd-inputPlaceholder)));
     --admin-vd-inputBorder-active: var(--admin-vd-mobile-inputBorder, var(--admin-vd-tablet-inputBorder, var(--admin-vd-inputBorder)));
+    --admin-vd-inputFocusRingWidth-active: var(--admin-vd-mobile-inputFocusRingWidth, var(--admin-vd-tablet-inputFocusRingWidth, var(--admin-vd-inputFocusRingWidth)));
     --admin-vd-inputFocus-active: var(--admin-vd-mobile-inputFocus, var(--admin-vd-tablet-inputFocus, var(--admin-vd-inputFocus)));
     --admin-vd-headerRadius-active: var(--admin-vd-mobile-headerRadius, var(--admin-vd-tablet-headerRadius, var(--admin-vd-headerRadius)));
     --admin-vd-headerPadding-active: var(--admin-vd-mobile-headerPadding, var(--admin-vd-tablet-headerPadding, var(--admin-vd-headerPadding)));
