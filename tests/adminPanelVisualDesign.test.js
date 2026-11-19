@@ -470,7 +470,11 @@ test('admin visual editor exposes text editing and live admin modules consume th
   const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
   assert.match(editor, /ტექსტების რედაქტირება/);
   assert.match(editor, /ADMIN_PANEL_CONTENT_FIELDS\.map/);
-  for (const key of ['staffInviteTitle','inventoryTitle','analyticsPeriodTitle','ordersTitle','supportTitle','discountsTitle','bannersCreateTitle','categoriesCreateTitle','couponsCreateTitle']) {
+  for (const key of ['staffExistingUsersTitle','staffInviteTitle','staffListTitle']) {
+    assert.match(dashboard, new RegExp('visualContent\\.' + key));
+  }
+  for (const key of ['inventoryTitle','analyticsPeriodTitle','ordersTitle','supportTitle','discountsTitle','bannersCreateTitle','categoriesCreateTitle','couponsCreateTitle']) {
     assert.match(dashboard, new RegExp('adminVisualDesign\\.content\\.' + key));
   }
+  assert.match(dashboard, /visualContent=\{adminVisualDesign\.content\}/);
 });
