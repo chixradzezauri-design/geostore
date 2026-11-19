@@ -6,6 +6,8 @@ import {
   ADMIN_PANEL_VISUAL_STORAGE_KEY,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   buildAdminPanelVisualStyle,
+  createAdminStylePresetBackup,
+  restoreAdminStylePresetBackup,
   loadAdminPanelVisualDesign,
   normalizeAdminPanelVisualDesign,
   resetAdminPanelVisualViewport,
@@ -1236,4 +1238,49 @@ test('admin style backup restore rejects malformed or lossy preset data before r
   assert.match(editor, /typeof preset\.id !== 'string'/);
   assert.match(editor, /preset\.id\.trim\(\)\.length > 80/);
   assert.match(editor, /preset\.name\.trim\(\)\.length > 40/);
+});
+
+
+test('admin style library automatically backs up before destructive changes and restores safely', () => {
+  const initial = normalizeAdminPanelVisualDesign({
+    stylePresets: [
+      { id: 'one', name: 'ძველი სტილი', category: 'შეკვეთები', favorite: true, style: { fontSize: 18 } }
+    ]
+  });
+  const backedUp = createAdminStylePresetBackup(initial, 'მონიშნული სტილების წაშლამდე: 1');
+  assert.equal(backedUp.stylePresetBackups.length, 1);
+  assert.equal(backedUp.stylePresetBackups[0].stylePresets[0].name, 'ძველი სტილი');
+  assert.equal(backedUp.stylePresetBackups[0].stylePresets[0].favorite, true);
+
+  const afterDelete = normalizeAdminPanelVisualDesign({ ...backedUp, stylePresets: [] });
+  const restored = restoreAdminStylePresetBackup(afterDelete, backedUp.stylePresetBackups[0].id);
+  assert.equal(restored.stylePresets.length, 1);
+  assert.equal(restored.stylePresets[0].id, 'one');
+  assert.equal(restored.stylePresets[0].style.fontSize, 18);
+  assert.equal(restored.stylePresetBackups.length, 2);
+  assert.equal(restored.stylePresetBackups.at(-1).reason, 'ავტომატური ასლი აღდგენამდე');
+});
+
+test('admin style automatic backups are normalized and limited to the latest ten', () => {
+  const backups = Array.from({ length: 12 }, (_, index) => ({
+    id: `backup-${index}`,
+    savedAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+    reason: `backup reason ${index}`,
+    stylePresets: [{ id: `preset-${index}`, name: `Style ${index}`, style: { fontSize: 12 + index } }]
+  }));
+  const design = normalizeAdminPanelVisualDesign({ stylePresetBackups: backups });
+  assert.equal(design.stylePresetBackups.length, 10);
+  assert.equal(design.stylePresetBackups[0].id, 'backup-2');
+  assert.equal(design.stylePresetBackups.at(-1).id, 'backup-11');
+  assert.equal(normalizeAdminPanelVisualDesign({ stylePresetBackups: [{ id: 'bad', savedAt: 'invalid', stylePresets: [] }] }).stylePresetBackups.length, 0);
+});
+
+test('admin style editor protects single, bulk and full-restore deletion paths with automatic backups', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /createAdminStylePresetBackup\(normalized, `სტილის წაშლამდე:/);
+  assert.match(editor, /createAdminStylePresetBackup\(normalized, `მონიშნული სტილების წაშლამდე:/);
+  assert.match(editor, /createAdminStylePresetBackup\(normalized, 'სრული JSON აღდგენის წინ'/);
+  assert.match(editor, /restoreAdminStylePresetBackup\(normalized, backup\.id\)/);
+  assert.match(editor, /ავტომატური სარეზერვო ასლები/);
+  assert.match(editor, /ამ ასლის აღდგენა/);
 });
