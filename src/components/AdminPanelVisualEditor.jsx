@@ -678,6 +678,24 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     }));
   };
 
+  const saveSelectedElementStyle = () => {
+    if (!selectedElementKey) return;
+    const name = window.prompt('დაარქვით სახელი შენახულ სტილს:', ADMIN_PANEL_ELEMENT_DEFINITIONS[selectedElementKey]?.label || 'ჩემი სტილი');
+    if (!name || !name.trim()) return;
+    if (normalized.stylePresets.length >= 30) { window.alert('სტილების ბიბლიოთეკის მაქსიმალური რაოდენობაა 30.'); return; }
+    const style = { ...(active.elementStyles[selectedElementKey] || {}) };
+    const id = `admin-style-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: [...normalized.stylePresets, { id, name: name.trim().slice(0, 40), style }] }));
+  };
+  const applySavedElementStyle = preset => {
+    if (!selectedElementKey || !preset?.style) return;
+    const next = { ...normalized };
+    if (viewport === 'desktop') next.elementStyles = { ...next.elementStyles, [selectedElementKey]: { ...next.elementStyles[selectedElementKey], ...preset.style } };
+    else next.responsive = { ...next.responsive, [viewport]: { ...(next.responsive?.[viewport] || {}), elementStyles: { ...(next.responsive?.[viewport]?.elementStyles || {}), [selectedElementKey]: { ...(next.responsive?.[viewport]?.elementStyles?.[selectedElementKey] || {}), ...preset.style } } } };
+    commitChange(normalizeAdminPanelVisualDesign(next));
+  };
+  const removeSavedElementStyle = id => commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: normalized.stylePresets.filter(item => item.id !== id) }));
+
   const applyPreset = preset => {
     if (!PRESETS[preset]) return;
     if (viewport === 'desktop') {
@@ -953,6 +971,11 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             {filteredElementEntries.length} / {Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).length} ელემენტი
           </div>
         </div>
+        <section className="space-y-3 rounded-xl border border-emerald-400/25 bg-slate-950/60 p-3 sm:col-span-2" aria-label="შენახული სტილების ბიბლიოთეკა">
+          <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-black text-white">შენახული სტილების ბიბლიოთეკა</h3><p className="text-[11px] text-slate-400">შეინახეთ ელემენტის სტილი და გამოიყენეთ სხვა ელემენტზე.</p></div><button type="button" onClick={saveSelectedElementStyle} disabled={!selectedElementKey || normalized.stylePresets.length >= 30} className="rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950 disabled:opacity-40">არჩეული ელემენტის სტილის შენახვა</button></div>
+          {!selectedElementKey && <p className="text-xs text-amber-200">ჯერ აირჩიეთ ელემენტი ქვემოთ მოცემული სიიდან.</p>}
+          {normalized.stylePresets.length === 0 ? <p className="text-xs text-slate-500">ბიბლიოთეკა ჯერ ცარიელია.</p> : <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{normalized.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900 p-2"><span className="min-w-0 truncate text-xs font-bold text-slate-200">{preset.name}</span><div className="flex shrink-0 gap-1"><button type="button" onClick={() => applySavedElementStyle(preset)} disabled={!selectedElementKey} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[10px] font-bold text-emerald-200 disabled:opacity-40">გამოყენება</button><button type="button" onClick={() => removeSavedElementStyle(preset.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[10px] font-bold text-rose-200">წაშლა</button></div></div>)}</div>}
+        </section>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {filteredElementEntries.map(([key, item]) => (
             <section
