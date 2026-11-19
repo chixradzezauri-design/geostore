@@ -1506,16 +1506,27 @@ export default function App() {
       if (!publishResponse.ok) {
         // A definitive HTTP error means Postgres rejected and rolled back the transaction.
         publishRequestStarted = false;
-        throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + (await publishResponse.text()));
+        const publishErrorText = await publishResponse.text();
+        let publishErrorCode = '';
+        try { publishErrorCode = JSON.parse(publishErrorText)?.code || ''; } catch {}
+        if (publishErrorCode === '40001') {
+          throw new Error('გამოქვეყნება შეჩერდა: სხვა მოწყობილობაზე მონახაზი შეიცვალა. თქვენი ცვლილებები არ გადაგვიწერია. განაახლეთ საერთო მონახაზი და ხელახლა გადაამოწმეთ ცვლილებები.');
+        }
+        throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + publishErrorText);
       }
       // The database transaction has committed both the published config
       // and its immutable history row. Do not clean up referenced uploads
       // if response parsing or a later UI update fails.
       storefrontPublished = true;
       const publishResult = await publishResponse.json();
-      if (!publishResult?.version_id) {
-        throw new Error('საიტი გამოქვეყნდა, თუმცა ვერსიის დადასტურების პასუხი ვერ მივიღეთ. განაახლეთ ისტორიის სია.');
+      if (
+        !publishResult?.version_id
+        || typeof publishResult?.draft_updated_at !== 'string'
+        || !Number.isFinite(Date.parse(publishResult.draft_updated_at))
+      ) {
+        throw new Error('საიტი გამოქვეყნდა, თუმცა ახალი საერთო ვერსიის დრო ვერ დადასტურდა. ატვირთული ფაილები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი.');
       }
+      storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at;
 
       // Commit the uploaded Hero URL to editor state only after publish is confirmed.
       if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
