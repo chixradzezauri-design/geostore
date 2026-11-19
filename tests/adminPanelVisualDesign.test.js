@@ -171,6 +171,60 @@ test('admin visual design saves and loads only the normalized visual preferences
   assert.equal(Object.hasOwn(loaded, 'customerData'), false);
 });
 
+test('saved admin style presets survive normalized local storage round trips', () => {
+  const storage = {
+    value: null,
+    getItem(key) {
+      assert.equal(key, ADMIN_PANEL_VISUAL_STORAGE_KEY);
+      return this.value;
+    },
+    setItem(key, value) {
+      assert.equal(key, ADMIN_PANEL_VISUAL_STORAGE_KEY);
+      this.value = value;
+    }
+  };
+  const source = {
+    stylePresets: [{
+      id: 'admin-style-roundtrip',
+      name: 'სუფთა ბარათი',
+      style: {
+        fontSize: 18,
+        fontWeight: 700,
+        textAlign: 'center',
+        textColor: '#ffffff',
+        backgroundColor: '#123456',
+        borderColor: '#abcdef',
+        borderRadius: 20,
+        padding: 24
+      }
+    }]
+  };
+
+  assert.equal(saveAdminPanelVisualDesign(source, storage), true);
+  const loaded = loadAdminPanelVisualDesign(storage);
+  assert.equal(loaded.stylePresets.length, 1);
+  assert.equal(loaded.stylePresets[0].id, 'admin-style-roundtrip');
+  assert.equal(loaded.stylePresets[0].name, 'სუფთა ბარათი');
+  assert.deepEqual(loaded.stylePresets[0].style, {
+    fontSize: 18,
+    fontWeight: 700,
+    borderRadius: 20,
+    padding: 24,
+    textColor: '#ffffff',
+    backgroundColor: '#123456',
+    borderColor: '#abcdef',
+    textAlign: 'center'
+  });
+});
+
+test('admin visual design cloud API includes normalized saved style presets', () => {
+  const api = readFileSync(new URL('../src/utils/adminPanelVisualDesignApi.js', import.meta.url), 'utf8');
+  assert.match(api, /normalizeAdminPanelVisualDesign\(rawDesign\)/);
+  assert.match(api, /p_design: design/);
+  assert.match(api, /get_admin_panel_visual_design_state/);
+  assert.match(api, /save_admin_panel_visual_design_state/);
+});
+
 test('admin visual design storage failures fall back safely without throwing', () => {
   const brokenStorage = {
     getItem() { throw new Error('blocked'); },
