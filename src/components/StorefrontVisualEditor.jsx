@@ -578,6 +578,21 @@ export default function StorefrontVisualEditor({
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
     const published = await onPublishStorefront();
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
+    if (published === true) {
+      const { data, error } = await supabase
+        .from('storefront_versions')
+        .select('id,version_label,created_at')
+        .eq('config_key', 'storefront')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
+      else {
+        setVersionHistory(Array.isArray(data) ? data : []);
+        setSelectedVersionId('');
+        setSelectedVersionSnapshot(null);
+        setVersionHistoryError('');
+      }
+    }
   };
 
   const resetDesign = () => {
