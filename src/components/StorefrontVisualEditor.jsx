@@ -74,6 +74,24 @@ const VISUAL_EDITOR_TARGETS = {
   'footer.link': { label: 'Footer ბმული', help: 'შეცვალეთ პირობების, კონფიდენციალურობის და გარანტიის ბმულების ვიზუალი.' },
   'footer.copyright': { label: 'საავტორო წარწერა', help: 'შეცვალეთ საავტორო წარწერის ფერი და ტიპოგრაფია.' }
 };
+const VISUAL_EDITOR_TREE = [
+  {
+    id: 'header',
+    label: 'Header — ზედა ნაწილი',
+    targets: Object.entries(VISUAL_EDITOR_TARGETS).filter(([id]) => id === 'header' || id.startsWith('header.'))
+  },
+  {
+    id: 'store',
+    label: 'მთავარი გვერდი და კატალოგი',
+    targets: Object.entries(VISUAL_EDITOR_TARGETS).filter(([id]) => !id.startsWith('header.') && id !== 'header' && !id.startsWith('footer.') && id !== 'footer')
+  },
+  {
+    id: 'footer',
+    label: 'Footer — ქვედა ნაწილი',
+    targets: Object.entries(VISUAL_EDITOR_TARGETS).filter(([id]) => id === 'footer' || id.startsWith('footer.'))
+  }
+];
+
 const SECTION_LABELS = {
   hero: 'მთავარი ბლოკი (Hero)',
   banners: 'სარეკლამო ბანერები',
@@ -221,6 +239,13 @@ export default function StorefrontVisualEditor({
     if (!metadata) return;
     event.preventDefault();
     event.stopPropagation();
+    setSelectedElement({ id: targetId, ...metadata });
+  };
+
+  const selectElementFromTree = targetId => {
+    const metadata = VISUAL_EDITOR_TARGETS[targetId];
+    if (!metadata) return;
+    setSelectionMode(false);
     setSelectedElement({ id: targetId, ...metadata });
   };
 
@@ -418,6 +443,35 @@ export default function StorefrontVisualEditor({
                 {selectionMode ? 'არჩევა ჩართულია' : 'არჩევის ჩართვა'}
               </button>
             </div>
+            <details className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-bold text-slate-200">
+                <span>კომპონენტების იერარქია</span>
+                <span className="text-[10px] font-semibold text-slate-500">{Object.keys(VISUAL_EDITOR_TARGETS).length} ელემენტი</span>
+              </summary>
+              <div className="mt-3 space-y-2">
+                {VISUAL_EDITOR_TREE.map(group => (
+                  <details key={group.id} className="rounded-lg border border-slate-800 bg-slate-900/70">
+                    <summary className="cursor-pointer px-3 py-2.5 text-[11px] font-black text-emerald-200">{group.label} ({group.targets.length})</summary>
+                    <div className="grid grid-cols-1 gap-1 border-t border-slate-800 p-2 sm:grid-cols-2">
+                      {group.targets.map(([targetId, metadata]) => (
+                        <button
+                          key={targetId}
+                          type="button"
+                          aria-pressed={selectedElement?.id === targetId}
+                          onClick={() => selectElementFromTree(targetId)}
+                          className={selectedElement?.id === targetId
+                            ? 'rounded-lg bg-emerald-400 px-2.5 py-2 text-left text-[10px] font-black text-slate-950'
+                            : 'rounded-lg border border-slate-800 px-2.5 py-2 text-left text-[10px] font-semibold text-slate-300 hover:border-emerald-400/50 hover:text-white'}
+                        >
+                          {metadata.label}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] leading-4 text-slate-500">აქედან შეგიძლიათ მონიშნოთ მენიუსა და სხვა ისეთი ელემენტებიც, რომლებიც Preview-ში ამ მომენტში დამალულია.</p>
+            </details>
             {selectedElement && (
               <div className="rounded-xl border border-emerald-400/30 bg-slate-950/80 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
