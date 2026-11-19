@@ -427,6 +427,7 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
 
 test('every admin visual module selector is present on a real AdminDashboardPro element', () => {
   const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  const visualCss = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
   const moduleTargets = {
     staff: ['admin-staff-panel', 'admin-staff-list-panel'],
     inventory: ['admin-inventory-panel'],
@@ -443,6 +444,6 @@ test('every admin visual module selector is present on a real AdminDashboardPro 
     for (const className of classNames) {
       assert.match(dashboard, new RegExp('className="[^"]*' + className + '(?:\\s|")'));
     }
-    assert.match(dashboard, new RegExp('--admin-vd-' + moduleName + '-backgroundColor-active'));
+    assert.match(visualCss, new RegExp('--admin-vd-' + moduleName + '-backgroundColor-active'));
   }
 });
