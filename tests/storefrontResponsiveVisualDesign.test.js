@@ -197,3 +197,40 @@ test('every selectable storefront target accepts independent responsive element 
     assert.equal(buildStorefrontElementStyle(design, targetId, 'mobile').color, '#abcdef', `mobile style not applied to ${targetId}`);
   }
 });
+
+
+test('automatic storefront responsive styles use the editor breakpoints at tablet/mobile boundaries', () => {
+  const originalWindow = globalThis.window;
+  const design = normalizeStorefrontVisualDesign({
+    layout: { productColumns: 4 },
+    elementStyles: { 'hero.title': { textColor: '#111111' } },
+    responsive: {
+      tablet: { layout: { productColumns: 3 }, elementStyles: { 'hero.title': { textColor: '#222222' } } },
+      mobile: { layout: { productColumns: 2 }, elementStyles: { 'hero.title': { textColor: '#333333' } } }
+    }
+  });
+  try {
+    globalThis.window = { innerWidth: 641 };
+    assert.equal(buildStorefrontVisualStyle(design)['--gs-product-columns'], '3');
+    assert.equal(buildStorefrontElementStyle(design, 'hero.title').color, '#222222');
+
+    globalThis.window = { innerWidth: 700 };
+    assert.equal(buildStorefrontVisualStyle(design)['--gs-product-columns'], '3');
+    assert.equal(buildStorefrontElementStyle(design, 'hero.title').color, '#222222');
+
+    globalThis.window = { innerWidth: 640 };
+    assert.equal(buildStorefrontVisualStyle(design)['--gs-product-columns'], '2');
+    assert.equal(buildStorefrontElementStyle(design, 'hero.title').color, '#333333');
+
+    globalThis.window = { innerWidth: 1023 };
+    assert.equal(buildStorefrontVisualStyle(design)['--gs-product-columns'], '3');
+    assert.equal(buildStorefrontElementStyle(design, 'hero.title').color, '#222222');
+
+    globalThis.window = { innerWidth: 1024 };
+    assert.equal(buildStorefrontVisualStyle(design)['--gs-product-columns'], '4');
+    assert.equal(buildStorefrontElementStyle(design, 'hero.title').color, '#111111');
+  } finally {
+    if (originalWindow === undefined) delete globalThis.window;
+    else globalThis.window = originalWindow;
+  }
+});
