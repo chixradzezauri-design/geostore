@@ -152,13 +152,13 @@ function RangeControl({ label, value, min, max, step = 1, unit = '', onChange })
 const flattenStorefrontSnapshot = (value, prefix = '', output = {}) => {
   if (Array.isArray(value)) {
     if (!value.length) output[prefix || '$'] = '[]';
-    value.forEach((item, index) => flattenStorefrontSnapshot(item, prefix ? \`\${prefix}[\${index}]\` : \`[\${index}]\`, output));
+    value.forEach((item, index) => flattenStorefrontSnapshot(item, prefix ? prefix + '[' + index + ']' : '[' + index + ']', output));
     return output;
   }
   if (value && typeof value === 'object') {
     const entries = Object.entries(value).sort(([left], [right]) => left.localeCompare(right));
     if (!entries.length) output[prefix || '$'] = '{}';
-    entries.forEach(([key, item]) => flattenStorefrontSnapshot(item, prefix ? \`\${prefix}.\${key}\` : key, output));
+    entries.forEach(([key, item]) => flattenStorefrontSnapshot(item, prefix ? prefix + '.' + key : key, output));
     return output;
   }
   output[prefix || '$'] = value === undefined ? '(არ არის)' : value === null ? 'null' : String(value);
@@ -186,7 +186,7 @@ const compareStorefrontSnapshots = (publishedSnapshot, currentDraftSnapshot) => 
 
 const formatSnapshotDiffValue = value => {
   const text = String(value);
-  return text.length > 180 ? \`\${text.slice(0, 177)}…\` : text;
+  return text.length > 180 ? text.slice(0, 177) + '…' : text;
 };
 
 export default function StorefrontVisualEditor({
