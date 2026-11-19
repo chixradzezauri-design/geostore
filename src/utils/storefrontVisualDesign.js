@@ -303,12 +303,16 @@ export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
 }
 
 
-export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewport = 'desktop') {
+export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewport) {
   if (!ELEMENT_STYLE_IDS.includes(elementId)) return {};
   const raw = isPlainObject(rawDesign) ? rawDesign : {};
   const rawElementStyles = isPlainObject(raw.elementStyles) ? raw.elementStyles : {};
   const baseValue = isPlainObject(rawElementStyles[elementId]) ? rawElementStyles[elementId] : {};
-  const viewport = ['desktop', 'tablet', 'mobile'].includes(requestedViewport) ? requestedViewport : 'desktop';
+  const viewport = ['desktop', 'tablet', 'mobile'].includes(requestedViewport)
+    ? requestedViewport
+    : (typeof window !== 'undefined' && window.innerWidth <= 767
+      ? 'mobile'
+      : typeof window !== 'undefined' && window.innerWidth <= 1023 ? 'tablet' : 'desktop');
   const responsiveValue = viewport === 'desktop' ? {} : (raw.responsive?.[viewport]?.elementStyles?.[elementId] || {});
   const value = { ...baseValue, ...responsiveValue };
   const style = {};
