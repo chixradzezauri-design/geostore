@@ -932,3 +932,34 @@ test('visual design API uses optimistic concurrency tokens and exposes conflict 
   assert.match(migration, /ERRCODE = '40001'/);
   assert.match(migration, /auth\.uid\(\) IS DISTINCT FROM/);
 });
+
+
+test('saved admin style presets are bounded, uniquely identified and safely normalized', () => {
+  const sourcePresets = Array.from({ length: 31 }, (_, index) => ({
+    id: index < 2 ? 'duplicate-preset-id' : `preset-${index}`,
+    name: `Preset ${index}`,
+    style: {
+      fontSize: 99,
+      fontWeight: 100,
+      borderRadius: -10,
+      padding: 99,
+      textColor: 'url(javascript:alert(1))',
+      backgroundColor: '#123456',
+      borderColor: '#abcdef',
+      textAlign: 'not-a-valid-alignment',
+      unsupportedProperty: 'position:fixed'
+    }
+  }));
+  sourcePresets.push({ id: 'empty', name: '   ', style: { fontSize: 14 } });
+
+  const design = normalizeAdminPanelVisualDesign({ stylePresets: sourcePresets });
+  assert.equal(design.stylePresets.length, 30);
+  assert.equal(new Set(design.stylePresets.map(preset => preset.id)).size, 30);
+  assert.equal(design.stylePresets[0].style.fontSize, 24);
+  assert.equal(design.stylePresets[0].style.fontWeight, 300);
+  assert.equal(design.stylePresets[0].style.borderRadius, 0);
+  assert.equal(design.stylePresets[0].style.padding, 32);
+  assert.notEqual(design.stylePresets[0].style.textColor, 'url(javascript:alert(1))');
+  assert.equal(design.stylePresets[0].style.backgroundColor, '#123456');
+  assert.equal(Object.hasOwn(design.stylePresets[0].style, 'unsupportedProperty'), false);
+});
