@@ -1,5 +1,11 @@
 const normalizeEmail = value => String(value || '').trim().toLowerCase();
-const normalizePhone = value => String(value || '').replace(/[^0-9+]/g, '');
+const normalizePhone = value => {
+  const digits = String(value || '').replace(/\\D/g, '');
+  // Treat Georgian mobile numbers in local 9-digit and +995 international
+  // formats as the same customer identity, while preserving other numbers.
+  if (digits.length === 9 && digits.startsWith('5')) return `995${digits}`;
+  return digits;
+};
 
 const getCustomerKeys = customer => {
   const email = normalizeEmail(customer?.email || customer?.user_email || customer?.customer_email);
