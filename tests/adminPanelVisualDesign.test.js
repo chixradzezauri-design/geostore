@@ -1017,6 +1017,23 @@ test('visual design API uses optimistic concurrency tokens and exposes conflict 
 });
 
 
+test('admin style library supports safe bulk selection, export and deletion', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const \[selectedStylePresetIds, setSelectedStylePresetIds\] = useState\(\[\]\)/);
+  assert.match(editor, /const toggleStylePresetSelection = id =>/);
+  assert.match(editor, /const selectedStylePresets = normalized\.stylePresets\.filter/);
+  assert.match(editor, /const selectAllStylePresets = \(\) =>/);
+  assert.match(editor, /const removeSelectedStylePresets = \(\) =>/);
+  assert.match(editor, /window\.confirm\(/);
+  assert.match(editor, /selectedIds\.has\(item\.id\)/);
+  assert.match(editor, /geostore-admin-selected-style-presets\.json/);
+  assert.match(editor, /მონიშნულის ექსპორტი/);
+  assert.match(editor, /მონიშნულის წაშლა/);
+  assert.match(editor, /ყველას მონიშვნა/);
+  assert.match(editor, /მონიშვნის მოხსნა/);
+  assert.match(editor, /სტილის მონიშვნა/);
+});
+
 test('saved admin style presets are bounded, uniquely identified and safely normalized', () => {
   const sourcePresets = [{ id: 'empty-first', name: '   ', style: { fontSize: 14 } }, ...Array.from({ length: 31 }, (_, index) => ({
     id: index < 2 ? 'duplicate-preset-id' : `preset-${index}`,
