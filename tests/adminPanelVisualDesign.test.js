@@ -9,6 +9,7 @@ import {
   loadAdminPanelVisualDesign,
   normalizeAdminPanelVisualDesign,
   resetAdminPanelVisualViewport,
+  resetAdminPanelVisualElement,
   saveAdminPanelVisualDesign
 } from '../src/utils/adminPanelVisualDesign.js';
 
@@ -850,11 +851,6 @@ test('visual editor can isolate element styles customized for the active viewpor
 
 
 test('resetAdminPanelVisualElement resets only the selected element in the active viewport', () => {
-  const {
-    resetAdminPanelVisualElement,
-    DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
-    normalizeAdminPanelVisualDesign
-  } = require('../src/utils/adminPanelVisualDesign.js');
   const source = normalizeAdminPanelVisualDesign({
     ...DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
     elementStyles: {
