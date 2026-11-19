@@ -25,7 +25,7 @@ test('successful save and version restore advance the shared baseline and timest
   const save = app.split('const handleSaveStorefrontDraft')[1]?.split('const handleRestoreStorefrontVersion')[0] || '';
   const restore = app.split('const handleRestoreStorefrontVersion')[1]?.split('const handlePublishStorefront')[0] || '';
   assert.match(save, /storefrontDraftBaselineRef\.current = JSON\.stringify\(\{ categories: draftCategories, banners: draftBanners, siteSettings: draftSiteSettings \}\)/);
-  assert.match(save, /storefrontDraftLocalDirtyRef\.current = false/);
+  assert.match(save, /storefrontDraftLocalDirtyRef\.current = editsArrivedDuringSave/);
   assert.match(restore, /storefrontDraftBaselineRef\.current = JSON\.stringify\(\{ categories: restoredCategories, banners: restoredBanners, siteSettings: restoredSettings \}\)/);
   assert.match(restore, /storefrontDraftLocalDirtyRef\.current = false/);
   assert.match(restore, /p_expected_draft_updated_at: storefrontDraftUpdatedAtRef\.current/);
