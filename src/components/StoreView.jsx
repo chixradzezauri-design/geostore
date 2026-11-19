@@ -12,9 +12,35 @@ import {
   Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
+
+const buildCustomSectionResponsiveCss = section => {
+  const makeRule = viewport => {
+    const value = section.responsive?.[viewport] || {};
+    const declarations = [];
+    const colors = { backgroundColor: 'background-color', textColor: 'color' };
+    Object.entries(colors).forEach(([key, property]) => {
+      if (value[key]) declarations.push(property + ':' + value[key] + ' !important;');
+    });
+    const numeric = {
+      padding: 'padding', maxWidth: 'max-width', marginTop: 'margin-top',
+      marginBottom: 'margin-bottom', borderRadius: 'border-radius', minHeight: 'min-height'
+    };
+    Object.entries(numeric).forEach(([key, property]) => {
+      if (value[key] != null) declarations.push(property + ':' + value[key] + 'px !important;');
+    });
+    if (value.align) declarations.push('text-align:' + value.align + ' !important;');
+    return declarations.length ? '[data-gs-custom-section="' + section.id + '"]{' + declarations.join('') + '}' : '';
+  };
+  const tablet = makeRule('tablet');
+  const mobile = makeRule('mobile');
+  return (tablet ? '@media (min-width:768px) and (max-width:1023px){' + tablet + '}' : '') +
+    (mobile ? '@media (max-width:767px){' + mobile + '}' : '');
+};
+
 export default function StoreView({
   currentLang = 'ka',
   siteSettings,
+  visualEditorViewport = null,
   banners = [],
   categories = [],
   selectedCategory,
@@ -1201,8 +1227,14 @@ export default function StoreView({
       )}
 
 
-      {customSections.filter(section => section.visible).map(section => (
-        <section key={section.id} aria-label={section.title || 'Custom storefront section'} className="gs-custom-storefront-section mx-auto w-full max-w-[var(--gs-content-width,1440px)] overflow-hidden rounded-2xl" style={{ backgroundColor: section.backgroundColor, color: section.textColor, padding: section.padding + 'px', textAlign: section.align }}>
+      {customSections.filter(section => section.visible).map(section => {
+        const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
+          ? { ...section, ...(section.responsive?.[visualEditorViewport] || {}) }
+          : section;
+        const responsiveCss = !visualEditorViewport ? buildCustomSectionResponsiveCss(section) : '';
+        return (
+        <section key={section.id} data-gs-custom-section={section.id} aria-label={section.title || 'Custom storefront section'} className="gs-custom-storefront-section mx-auto w-full max-w-[var(--gs-content-width,1440px)] overflow-hidden" style={{ backgroundColor: activeSectionStyle.backgroundColor, color: activeSectionStyle.textColor, padding: activeSectionStyle.padding + 'px', textAlign: activeSectionStyle.align, maxWidth: activeSectionStyle.maxWidth + 'px', marginTop: activeSectionStyle.marginTop + 'px', marginBottom: activeSectionStyle.marginBottom + 'px', borderRadius: activeSectionStyle.borderRadius + 'px', minHeight: activeSectionStyle.minHeight ? activeSectionStyle.minHeight + 'px' : undefined }}>
+          {responsiveCss ? <style>{responsiveCss}</style> : null}
           <div className="mx-auto flex w-full max-w-full flex-col gap-4">
             {section.blocks.map(block => {
               if (block.type === 'heading') return <h2 key={block.id} className="text-xl sm:text-2xl font-bold leading-tight">{block.text}</h2>;
@@ -1215,7 +1247,8 @@ export default function StoreView({
             })}
           </div>
         </section>
-      ))}
+        );
+      })}
 
       {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
