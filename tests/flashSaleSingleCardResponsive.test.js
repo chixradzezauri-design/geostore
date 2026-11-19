@@ -14,7 +14,7 @@ const stage43Fix = css.slice(stage43FixStart);
 
 test('Flash Sale CSS selectors match the actual StoreView card DOM', () => {
   assert.ok(flashSaleStart >= 0 && flashSaleEnd > flashSaleStart);
-  assert.match(flashSaleMarkup, /^<div data-visual-editor-target="flashSale"[\\s\\S]*?className="gs-flash-sale-section/);
+  assert.match(flashSaleMarkup, /^<div data-visual-editor-target="flashSale"[\s\S]*?className="gs-flash-sale-section/);
   assert.match(flashSaleMarkup, /className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4/);
   assert.match(flashSaleMarkup, /className="gs-flash-sale-card[^"]*"/);
   assert.match(flashSaleMarkup, /className="gs-flash-sale-media/);
