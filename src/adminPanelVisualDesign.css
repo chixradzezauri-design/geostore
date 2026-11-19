@@ -48,6 +48,15 @@
   --admin-vd-headerRadius-active: var(--admin-vd-headerRadius);
   --admin-vd-headerPadding-active: var(--admin-vd-headerPadding);
   --admin-vd-tableCellPadding-active: var(--admin-vd-tableCellPadding);
+  --admin-vd-tableCellPaddingY-active: var(--admin-vd-tableCellPaddingY);
+  --admin-vd-tableHeaderFontSize-active: var(--admin-vd-tableHeaderFontSize);
+  --admin-vd-tableHeaderFontWeight-active: var(--admin-vd-tableHeaderFontWeight);
+  --admin-vd-tableRowFontSize-active: var(--admin-vd-tableRowFontSize);
+  --admin-vd-tableRowMinHeight-active: var(--admin-vd-tableRowMinHeight);
+  --admin-vd-filterControlHeight-active: var(--admin-vd-filterControlHeight);
+  --admin-vd-filterGap-active: var(--admin-vd-filterGap);
+  --admin-vd-inputFontSize-active: var(--admin-vd-inputFontSize);
+  --admin-vd-inputFontWeight-active: var(--admin-vd-inputFontWeight);
   --admin-vd-inputRadius-active: var(--admin-vd-inputRadius);
   --admin-vd-inputHeight-active: var(--admin-vd-inputHeight);
   --admin-vd-contentCardBackground-active: var(--admin-vd-contentCardBackground);
@@ -284,14 +293,16 @@
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table thead { background-color: var(--admin-vd-tableHeaderBackground-active) !important; }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPadding-active) !important; }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody td { padding: var(--admin-vd-tableCellPadding-active) !important; }
-.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr { background-color: var(--admin-vd-tableRowBackground-active); }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPaddingY-active) var(--admin-vd-tableCellPadding-active) !important; font-size: var(--admin-vd-tableHeaderFontSize-active) !important; font-weight: var(--admin-vd-tableHeaderFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody td { padding: var(--admin-vd-tableCellPaddingY-active) var(--admin-vd-tableCellPadding-active) !important; font-size: var(--admin-vd-tableRowFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr { background-color: var(--admin-vd-tableRowBackground-active); min-height: var(--admin-vd-tableRowMinHeight-active); }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr:hover { background-color: var(--admin-vd-tableRowHover-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-product-list-filters { gap: var(--admin-vd-filterGap-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-product-list-filters :is(input, select) {
   background-color: var(--admin-vd-filterBackground-active) !important;
   color: var(--admin-vd-filterText-active) !important;
   border-color: var(--admin-vd-filterBorder-active) !important;
+  min-height: var(--admin-vd-filterControlHeight-active) !important;
 }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] :is(form button[type="submit"], .admin-flash-sale-submit) {
   background-color: var(--admin-vd-primaryButtonBackground-active) !important;
@@ -302,6 +313,8 @@
 .admin-dashboard-pro[data-admin-visual-design="enabled"] select,
 .admin-dashboard-pro[data-admin-visual-design="enabled"] textarea {
   min-height: var(--admin-vd-inputHeight-active);
+  font-size: var(--admin-vd-inputFontSize-active) !important;
+  font-weight: var(--admin-vd-inputFontWeight-active) !important;
   border-radius: var(--admin-vd-inputRadius-active) !important;
   border-color: var(--admin-vd-inputBorder-active) !important;
   background-color: var(--admin-vd-inputBackground-active) !important;
@@ -377,6 +390,15 @@
     --admin-vd-headerRadius-active: var(--admin-vd-tablet-headerRadius, var(--admin-vd-headerRadius));
     --admin-vd-headerPadding-active: var(--admin-vd-tablet-headerPadding, var(--admin-vd-headerPadding));
     --admin-vd-tableCellPadding-active: var(--admin-vd-tablet-tableCellPadding, var(--admin-vd-tableCellPadding));
+    --admin-vd-tableCellPaddingY-active: var(--admin-vd-tablet-tableCellPaddingY, var(--admin-vd-tableCellPaddingY));
+    --admin-vd-tableHeaderFontSize-active: var(--admin-vd-tablet-tableHeaderFontSize, var(--admin-vd-tableHeaderFontSize));
+    --admin-vd-tableHeaderFontWeight-active: var(--admin-vd-tablet-tableHeaderFontWeight, var(--admin-vd-tableHeaderFontWeight));
+    --admin-vd-tableRowFontSize-active: var(--admin-vd-tablet-tableRowFontSize, var(--admin-vd-tableRowFontSize));
+    --admin-vd-tableRowMinHeight-active: var(--admin-vd-tablet-tableRowMinHeight, var(--admin-vd-tableRowMinHeight));
+    --admin-vd-filterControlHeight-active: var(--admin-vd-tablet-filterControlHeight, var(--admin-vd-filterControlHeight));
+    --admin-vd-filterGap-active: var(--admin-vd-tablet-filterGap, var(--admin-vd-filterGap));
+    --admin-vd-inputFontSize-active: var(--admin-vd-tablet-inputFontSize, var(--admin-vd-inputFontSize));
+    --admin-vd-inputFontWeight-active: var(--admin-vd-tablet-inputFontWeight, var(--admin-vd-inputFontWeight));
     --admin-vd-inputRadius-active: var(--admin-vd-tablet-inputRadius, var(--admin-vd-inputRadius));
     --admin-vd-inputHeight-active: var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight));
   --admin-vd-contentCardBackground-active: var(--admin-vd-tablet-contentCardBackground, var(--admin-vd-contentCardBackground));
@@ -466,6 +488,15 @@
     --admin-vd-headerRadius-active: var(--admin-vd-mobile-headerRadius, var(--admin-vd-tablet-headerRadius, var(--admin-vd-headerRadius)));
     --admin-vd-headerPadding-active: var(--admin-vd-mobile-headerPadding, var(--admin-vd-tablet-headerPadding, var(--admin-vd-headerPadding)));
     --admin-vd-tableCellPadding-active: var(--admin-vd-mobile-tableCellPadding, var(--admin-vd-tablet-tableCellPadding, var(--admin-vd-tableCellPadding)));
+    --admin-vd-tableCellPaddingY-active: var(--admin-vd-mobile-tableCellPaddingY, var(--admin-vd-tablet-tableCellPaddingY, var(--admin-vd-tableCellPaddingY)));
+    --admin-vd-tableHeaderFontSize-active: var(--admin-vd-mobile-tableHeaderFontSize, var(--admin-vd-tablet-tableHeaderFontSize, var(--admin-vd-tableHeaderFontSize)));
+    --admin-vd-tableHeaderFontWeight-active: var(--admin-vd-mobile-tableHeaderFontWeight, var(--admin-vd-tablet-tableHeaderFontWeight, var(--admin-vd-tableHeaderFontWeight)));
+    --admin-vd-tableRowFontSize-active: var(--admin-vd-mobile-tableRowFontSize, var(--admin-vd-tablet-tableRowFontSize, var(--admin-vd-tableRowFontSize)));
+    --admin-vd-tableRowMinHeight-active: var(--admin-vd-mobile-tableRowMinHeight, var(--admin-vd-tablet-tableRowMinHeight, var(--admin-vd-tableRowMinHeight)));
+    --admin-vd-filterControlHeight-active: var(--admin-vd-mobile-filterControlHeight, var(--admin-vd-tablet-filterControlHeight, var(--admin-vd-filterControlHeight)));
+    --admin-vd-filterGap-active: var(--admin-vd-mobile-filterGap, var(--admin-vd-tablet-filterGap, var(--admin-vd-filterGap)));
+    --admin-vd-inputFontSize-active: var(--admin-vd-mobile-inputFontSize, var(--admin-vd-tablet-inputFontSize, var(--admin-vd-inputFontSize)));
+    --admin-vd-inputFontWeight-active: var(--admin-vd-mobile-inputFontWeight, var(--admin-vd-tablet-inputFontWeight, var(--admin-vd-inputFontWeight)));
     --admin-vd-inputRadius-active: var(--admin-vd-mobile-inputRadius, var(--admin-vd-tablet-inputRadius, var(--admin-vd-inputRadius)));
     --admin-vd-inputHeight-active: var(--admin-vd-mobile-inputHeight, var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight)));
   --admin-vd-contentCardBackground-active: var(--admin-vd-mobile-contentCardBackground, var(--admin-vd-tablet-contentCardBackground, var(--admin-vd-contentCardBackground)));
