@@ -608,3 +608,28 @@ test('responsive element styles inherit desktop values and preserve device-speci
   assert.equal(style['--admin-vd-element-mobile-staffList-fontSize'], '12px');
   assert.equal(style['--admin-vd-element-mobile-staffList-textColor'], '#123456');
 });
+
+test('inventory history visual controls emit valid CSS properties for all responsive viewports', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    elementStyles: {
+      inventoryHistoryRow: { fontSize: 17, fontWeight: 800, textAlign: 'center', backgroundColor: '#123456' },
+      inventoryHistoryMetric: { padding: 18, borderRadius: 16 }
+    },
+    responsive: {
+      tablet: { elementStyles: { inventoryHistoryRow: { fontSize: 15 } } },
+      mobile: { elementStyles: { inventoryHistoryRow: { fontSize: 13 }, inventoryHistoryMetric: { padding: 8 } } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+  assert.equal(style['--admin-vd-element-inventoryHistoryRow-fontSize'], '17px');
+  assert.equal(style['--admin-vd-element-tablet-inventoryHistoryRow-fontSize'], '15px');
+  assert.equal(style['--admin-vd-element-mobile-inventoryHistoryRow-fontSize'], '13px');
+  assert.equal(style['--admin-vd-element-mobile-inventoryHistoryMetric-padding'], '8px');
+
+  const stylesheet = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  const historyCss = stylesheet.slice(stylesheet.lastIndexOf('/* Inventory history controls are styled independently'));
+  for (const property of ['font-size:', 'font-weight:', 'text-align:', 'color:', 'background-color:', 'border-color:', 'border-radius:', 'padding:']) {
+    assert.ok(historyCss.includes(property), `Missing valid CSS property: ${property}`);
+  }
+  assert.doesNotMatch(historyCss, /  (?:fontSize|fontWeight|textAlign):/);
+});

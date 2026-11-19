@@ -2119,9 +2119,9 @@
 
 /* Inventory history controls are styled independently from replenishment planning. */
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-movement-row {
-  fontSize: var(--admin-vd-element-inventoryHistoryRow-fontSize) !important;
-  fontWeight: var(--admin-vd-element-inventoryHistoryRow-fontWeight) !important;
-  textAlign: var(--admin-vd-element-inventoryHistoryRow-textAlign) !important;
+  font-size: var(--admin-vd-element-inventoryHistoryRow-fontSize) !important;
+  font-weight: var(--admin-vd-element-inventoryHistoryRow-fontWeight) !important;
+  text-align: var(--admin-vd-element-inventoryHistoryRow-textAlign) !important;
   color: var(--admin-vd-element-inventoryHistoryRow-textColor) !important;
   background-color: var(--admin-vd-element-inventoryHistoryRow-backgroundColor) !important;
   border-color: var(--admin-vd-element-inventoryHistoryRow-borderColor) !important;
@@ -2130,9 +2130,9 @@
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-history-metric {
-  fontSize: var(--admin-vd-element-inventoryHistoryMetric-fontSize) !important;
-  fontWeight: var(--admin-vd-element-inventoryHistoryMetric-fontWeight) !important;
-  textAlign: var(--admin-vd-element-inventoryHistoryMetric-textAlign) !important;
+  font-size: var(--admin-vd-element-inventoryHistoryMetric-fontSize) !important;
+  font-weight: var(--admin-vd-element-inventoryHistoryMetric-fontWeight) !important;
+  text-align: var(--admin-vd-element-inventoryHistoryMetric-textAlign) !important;
   color: var(--admin-vd-element-inventoryHistoryMetric-textColor) !important;
   background-color: var(--admin-vd-element-inventoryHistoryMetric-backgroundColor) !important;
   border-color: var(--admin-vd-element-inventoryHistoryMetric-borderColor) !important;
@@ -2142,9 +2142,9 @@
 
 @media (min-width: 641px) and (max-width: 1023px) {
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-movement-row {
-  fontSize: var(--admin-vd-element-tablet-inventoryHistoryRow-fontSize , var(--admin-vd-element-inventoryHistoryRow-fontSize)) !important;
-  fontWeight: var(--admin-vd-element-tablet-inventoryHistoryRow-fontWeight , var(--admin-vd-element-inventoryHistoryRow-fontWeight)) !important;
-  textAlign: var(--admin-vd-element-tablet-inventoryHistoryRow-textAlign , var(--admin-vd-element-inventoryHistoryRow-textAlign)) !important;
+  font-size: var(--admin-vd-element-tablet-inventoryHistoryRow-fontSize , var(--admin-vd-element-inventoryHistoryRow-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-inventoryHistoryRow-fontWeight , var(--admin-vd-element-inventoryHistoryRow-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-inventoryHistoryRow-textAlign , var(--admin-vd-element-inventoryHistoryRow-textAlign)) !important;
   color: var(--admin-vd-element-tablet-inventoryHistoryRow-textColor , var(--admin-vd-element-inventoryHistoryRow-textColor)) !important;
   background-color: var(--admin-vd-element-tablet-inventoryHistoryRow-backgroundColor , var(--admin-vd-element-inventoryHistoryRow-backgroundColor)) !important;
   border-color: var(--admin-vd-element-tablet-inventoryHistoryRow-borderColor , var(--admin-vd-element-inventoryHistoryRow-borderColor)) !important;
@@ -2153,9 +2153,9 @@
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-history-metric {
-  fontSize: var(--admin-vd-element-tablet-inventoryHistoryMetric-fontSize , var(--admin-vd-element-inventoryHistoryMetric-fontSize)) !important;
-  fontWeight: var(--admin-vd-element-tablet-inventoryHistoryMetric-fontWeight , var(--admin-vd-element-inventoryHistoryMetric-fontWeight)) !important;
-  textAlign: var(--admin-vd-element-tablet-inventoryHistoryMetric-textAlign , var(--admin-vd-element-inventoryHistoryMetric-textAlign)) !important;
+  font-size: var(--admin-vd-element-tablet-inventoryHistoryMetric-fontSize , var(--admin-vd-element-inventoryHistoryMetric-fontSize)) !important;
+  font-weight: var(--admin-vd-element-tablet-inventoryHistoryMetric-fontWeight , var(--admin-vd-element-inventoryHistoryMetric-fontWeight)) !important;
+  text-align: var(--admin-vd-element-tablet-inventoryHistoryMetric-textAlign , var(--admin-vd-element-inventoryHistoryMetric-textAlign)) !important;
   color: var(--admin-vd-element-tablet-inventoryHistoryMetric-textColor , var(--admin-vd-element-inventoryHistoryMetric-textColor)) !important;
   background-color: var(--admin-vd-element-tablet-inventoryHistoryMetric-backgroundColor , var(--admin-vd-element-inventoryHistoryMetric-backgroundColor)) !important;
   border-color: var(--admin-vd-element-tablet-inventoryHistoryMetric-borderColor , var(--admin-vd-element-inventoryHistoryMetric-borderColor)) !important;
@@ -2166,9 +2166,9 @@
 
 @media (max-width: 640px) {
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-movement-row {
-  fontSize: var(--admin-vd-element-mobile-inventoryHistoryRow-fontSize, var(--admin-vd-element-tablet-inventoryHistoryRow-fontSize, var(--admin-vd-element-inventoryHistoryRow-fontSize))) !important;
-  fontWeight: var(--admin-vd-element-mobile-inventoryHistoryRow-fontWeight, var(--admin-vd-element-tablet-inventoryHistoryRow-fontWeight, var(--admin-vd-element-inventoryHistoryRow-fontWeight))) !important;
-  textAlign: var(--admin-vd-element-mobile-inventoryHistoryRow-textAlign, var(--admin-vd-element-tablet-inventoryHistoryRow-textAlign, var(--admin-vd-element-inventoryHistoryRow-textAlign))) !important;
+  font-size: var(--admin-vd-element-mobile-inventoryHistoryRow-fontSize, var(--admin-vd-element-tablet-inventoryHistoryRow-fontSize, var(--admin-vd-element-inventoryHistoryRow-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-inventoryHistoryRow-fontWeight, var(--admin-vd-element-tablet-inventoryHistoryRow-fontWeight, var(--admin-vd-element-inventoryHistoryRow-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-inventoryHistoryRow-textAlign, var(--admin-vd-element-tablet-inventoryHistoryRow-textAlign, var(--admin-vd-element-inventoryHistoryRow-textAlign))) !important;
   color: var(--admin-vd-element-mobile-inventoryHistoryRow-textColor, var(--admin-vd-element-tablet-inventoryHistoryRow-textColor, var(--admin-vd-element-inventoryHistoryRow-textColor))) !important;
   background-color: var(--admin-vd-element-mobile-inventoryHistoryRow-backgroundColor, var(--admin-vd-element-tablet-inventoryHistoryRow-backgroundColor, var(--admin-vd-element-inventoryHistoryRow-backgroundColor))) !important;
   border-color: var(--admin-vd-element-mobile-inventoryHistoryRow-borderColor, var(--admin-vd-element-tablet-inventoryHistoryRow-borderColor, var(--admin-vd-element-inventoryHistoryRow-borderColor))) !important;
@@ -2177,9 +2177,9 @@
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-history-metric {
-  fontSize: var(--admin-vd-element-mobile-inventoryHistoryMetric-fontSize, var(--admin-vd-element-tablet-inventoryHistoryMetric-fontSize, var(--admin-vd-element-inventoryHistoryMetric-fontSize))) !important;
-  fontWeight: var(--admin-vd-element-mobile-inventoryHistoryMetric-fontWeight, var(--admin-vd-element-tablet-inventoryHistoryMetric-fontWeight, var(--admin-vd-element-inventoryHistoryMetric-fontWeight))) !important;
-  textAlign: var(--admin-vd-element-mobile-inventoryHistoryMetric-textAlign, var(--admin-vd-element-tablet-inventoryHistoryMetric-textAlign, var(--admin-vd-element-inventoryHistoryMetric-textAlign))) !important;
+  font-size: var(--admin-vd-element-mobile-inventoryHistoryMetric-fontSize, var(--admin-vd-element-tablet-inventoryHistoryMetric-fontSize, var(--admin-vd-element-inventoryHistoryMetric-fontSize))) !important;
+  font-weight: var(--admin-vd-element-mobile-inventoryHistoryMetric-fontWeight, var(--admin-vd-element-tablet-inventoryHistoryMetric-fontWeight, var(--admin-vd-element-inventoryHistoryMetric-fontWeight))) !important;
+  text-align: var(--admin-vd-element-mobile-inventoryHistoryMetric-textAlign, var(--admin-vd-element-tablet-inventoryHistoryMetric-textAlign, var(--admin-vd-element-inventoryHistoryMetric-textAlign))) !important;
   color: var(--admin-vd-element-mobile-inventoryHistoryMetric-textColor, var(--admin-vd-element-tablet-inventoryHistoryMetric-textColor, var(--admin-vd-element-inventoryHistoryMetric-textColor))) !important;
   background-color: var(--admin-vd-element-mobile-inventoryHistoryMetric-backgroundColor, var(--admin-vd-element-tablet-inventoryHistoryMetric-backgroundColor, var(--admin-vd-element-inventoryHistoryMetric-backgroundColor))) !important;
   border-color: var(--admin-vd-element-mobile-inventoryHistoryMetric-borderColor, var(--admin-vd-element-tablet-inventoryHistoryMetric-borderColor, var(--admin-vd-element-inventoryHistoryMetric-borderColor))) !important;
