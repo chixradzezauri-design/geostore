@@ -786,3 +786,71 @@
     max-width: 100%;
   }
 }
+
+/* STAGE 110 — compact mobile inventory planning and variant rows */
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row,
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row > *,
+.admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-row,
+.admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-row {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-identity,
+.admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-identity {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-control,
+.admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-stock {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-product,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-save {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric {
+    padding: 10px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric label {
+    min-height: 2.6em;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-save button {
+    min-height: 44px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-row,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-identity,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-identity {
+    flex: 1 1 120px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-control,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-stock {
+    flex: 0 1 auto;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-size-color-stock-control input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-stock input {
+    width: 5rem;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-custom-variant-row > button {
+    min-height: 40px;
+  }
+}
