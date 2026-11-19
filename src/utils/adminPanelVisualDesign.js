@@ -72,6 +72,10 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
   },
   layout: {
     fontSize: 13,
+    titleFontSize: 18,
+    bodyFontSize: 13,
+    headingFontWeight: 700,
+    bodyFontWeight: 400,
     fontFamily: 'system',
     cardRadius: 24,
     cardPadding: 20,
@@ -100,6 +104,10 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
 const THEME_KEYS = Object.keys(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme);
 const LAYOUT_LIMITS = {
   fontSize: [11, 16],
+  titleFontSize: [14, 32],
+  bodyFontSize: [11, 18],
+  headingFontWeight: [500, 900],
+  bodyFontWeight: [400, 700],
   cardRadius: [10, 36],
   cardPadding: [12, 32],
   sidebarWidth: [240, 360],
