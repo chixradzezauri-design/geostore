@@ -291,8 +291,8 @@ export default function StorefrontVisualEditor({
     layout: { ...design.layout, ...(activeResponsive.layout || {}) },
     theme: { ...design.theme, ...(activeResponsive.theme || {}) },
     typography: { ...design.typography, ...(activeResponsive.typography || {}) },
-    elementStyles: Object.fromEntries(Object.entries({ ...(design.elementStyles || {}) }).map(([id, style]) => [
-      id, { ...(style || {}), ...(activeResponsive.elementStyles?.[id] || {}) }
+    elementStyles: Object.fromEntries(Object.keys({ ...(design.elementStyles || {}), ...(activeResponsive.elementStyles || {}) }).map(id => [
+      id, { ...(design.elementStyles?.[id] || {}), ...(activeResponsive.elementStyles?.[id] || {}) }
     ]))
   }), [design, previewMode]);
   const hasViewportOverrides = previewMode !== 'desktop' && Boolean(
