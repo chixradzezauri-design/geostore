@@ -680,7 +680,7 @@
   }
 }
 
-@media (max-width: 639px) {
+@media (max-width: 640px) {
   .admin-dashboard-pro[data-admin-visual-design="enabled"] {
     --admin-vd-accent-active: var(--admin-vd-mobile-accent, var(--admin-vd-tablet-accent, var(--admin-vd-accent)));
     --admin-vd-canvas-active: var(--admin-vd-mobile-canvas, var(--admin-vd-tablet-canvas, var(--admin-vd-canvas)));
