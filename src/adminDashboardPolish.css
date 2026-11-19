@@ -1300,3 +1300,55 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* STAGE 114 — compact inventory replenishment cards on narrow screens. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row,
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-product,
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric,
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-save {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric label {
+  display: block;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric input {
+  min-height: 40px;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+    padding: 12px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-product,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-save {
+    grid-column: 1 / -1;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-product {
+    padding-bottom: 3px;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric {
+    padding: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric label {
+    font-size: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric strong {
+    font-size: 17px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-save button {
+    width: 100%;
+    min-height: 46px;
+  }
+}
+@media (max-width: 360px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-row {
+    gap: 7px !important;
+    padding: 9px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-replenishment-metric {
+    padding: 8px !important;
+  }
+}

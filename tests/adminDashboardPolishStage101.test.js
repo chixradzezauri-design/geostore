@@ -83,3 +83,14 @@ test('Stage 113 staff invitation form stays readable and touch-accessible on pho
   assert.match(polish, /\.admin-staff-create-submit[\s\S]*?min-height: 48px/);
   assert.match(polish, /@media \(min-width: 420px\) and \(max-width: 640px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
+
+test('Stage 114 inventory replenishment cards use a compact two-column mobile layout', () => {
+  assert.match(admin, /className="admin-replenishment-row grid/);
+  assert.match(admin, /className="admin-replenishment-product/);
+  assert.match(admin, /className="admin-replenishment-metric/);
+  assert.match(admin, /className="admin-replenishment-save/);
+  assert.match(polish, /STAGE 114 — compact inventory replenishment cards/);
+  assert.match(polish, /\.admin-replenishment-row \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\) !important/);
+  assert.match(polish, /\.admin-replenishment-product,[\s\S]*?grid-column: 1 \/ -1/);
+  assert.match(polish, /\.admin-replenishment-save button[\s\S]*?min-height: 46px/);
+});
