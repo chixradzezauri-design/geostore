@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -121,4 +122,17 @@ test('responsive element styles merge over desktop styles without changing deskt
   assert.equal(mobile.color, '#111111');
   assert.equal(mobile.fontSize, '22px');
   assert.equal(mobile.padding, '4px');
+});
+
+
+test('custom storefront sections use the same tablet and mobile breakpoints as the visual editor', async () => {
+  const storeView = await readFile(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
+  const customSectionCss = storeView.slice(
+    storeView.indexOf('const buildCustomSectionResponsiveCss'),
+    storeView.indexOf('export default function StoreView')
+  );
+  assert.match(customSectionCss, /@media \\(min-width:641px\\) and \\(max-width:1023px\\)/);
+  assert.match(customSectionCss, /@media \\(max-width:640px\\)/);
+  assert.doesNotMatch(customSectionCss, /@media \\(min-width:768px\\) and \\(max-width:1023px\\)/);
+  assert.doesNotMatch(customSectionCss, /@media \\(max-width:767px\\)/);
 });
