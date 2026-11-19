@@ -9,13 +9,21 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     surface: '#020617',
     text: '#f8fafc',
     muted: '#94a3b8',
-    border: '#334155'
+    border: '#334155',
+    navActiveBackground: '#34d399',
+    navActiveText: '#020617',
+    navInactiveBackground: '#020617',
+    navInactiveText: '#94a3b8'
   },
   layout: {
     fontSize: 13,
     cardRadius: 24,
     cardPadding: 20,
-    sidebarWidth: 288
+    sidebarWidth: 288,
+    buttonRadius: 14,
+    navItemRadius: 16,
+    navItemPaddingY: 12,
+    sectionGap: 24
   },
   responsive: {
     tablet: { theme: {}, layout: {} },
@@ -28,7 +36,11 @@ const LAYOUT_LIMITS = {
   fontSize: [11, 16],
   cardRadius: [10, 36],
   cardPadding: [12, 32],
-  sidebarWidth: [240, 360]
+  sidebarWidth: [240, 360],
+  buttonRadius: [0, 28],
+  navItemRadius: [0, 28],
+  navItemPaddingY: [6, 20],
+  sectionGap: [12, 48]
 };
 
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -94,7 +106,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
       style[`--admin-vd-${prefix}${key}`] = value;
     }
     for (const [key, value] of Object.entries(values.layout)) {
-      style[`--admin-vd-${prefix}${key}`] = key === 'fontSize' || key === 'cardRadius' || key === 'cardPadding' || key === 'sidebarWidth'
+      style[`--admin-vd-${prefix}${key}`] = key !== 'sectionGap'
         ? `${value}px`
         : String(value);
     }
