@@ -19,7 +19,8 @@ test('CRM search and customer details do not overflow narrow viewports', () => {
   assert.match(css, /@media \(max-width: 380px\)[\s\S]*?\.admin-crm-user-actions \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
 });
 
-test('CRM labels accurately distinguish local records from real Auth accounts', () => {
-  assert.match(admin, /ლოკალური სია/);
+test('CRM labels distinguish synchronized Auth customers from preserved local records', () => {
+  assert.match(admin, /სინქრონიზებული სია/);
+  assert.match(admin, /ძველი ლოკალური ჩანაწერები შენარჩუნებულია/);
   assert.match(admin, /Auth ანგარიშის უფლებებს/);
 });

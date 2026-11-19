@@ -22,7 +22,7 @@ test('admin navigation maps each module to its server permission', () => {
     ['analytics', 'analytics'],
     ['support', 'support'],
     ['messages', 'crm'],
-    ['users', 'owner'],
+    ['users', 'crm'],
     ['settings', 'settings'],
     ['vendors', 'owner'],
     ['staff', 'owner'],
