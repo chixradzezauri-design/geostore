@@ -26,7 +26,8 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     contentCardBorder: '#334155',
     modalBackground: '#0d0d10',
     modalText: '#f8fafc',
-    modalBorder: '#334155'
+    modalBorder: '#334155',
+    modalOverlayBackground: '#020617'
   },
   layout: {
     fontSize: 13,
@@ -45,7 +46,8 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     cardBorderWidth: 1,
     cardShadowBlur: 24,
     modalRadius: 28,
-    modalPadding: 24
+    modalPadding: 24,
+    modalOverlayOpacity: 82
   },
   responsive: {
     tablet: { theme: {}, layout: {} },
@@ -71,7 +73,8 @@ const LAYOUT_LIMITS = {
   cardBorderWidth: [0, 3],
   cardShadowBlur: [0, 36],
   modalRadius: [12, 40],
-  modalPadding: [12, 36]
+  modalPadding: [12, 36],
+  modalOverlayOpacity: [40, 95]
 };
 
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -137,7 +140,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
       style[`--admin-vd-${prefix}${key}`] = value;
     }
     for (const [key, value] of Object.entries(values.layout)) {
-      style[`--admin-vd-${prefix}${key}`] = `${value}px`;
+      style[`--admin-vd-${prefix}${key}`] = key === 'modalOverlayOpacity' ? `${value}%` : `${value}px`;
     }
   }
 
