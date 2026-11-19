@@ -12,6 +12,18 @@ const VIEWPORTS = [
   { id: 'mobile', label: 'Mobile' }
 ];
 
+const ELEMENT_CATEGORIES = [
+  { id: 'orders', label: 'შეკვეთები', keys: ['orderHeader', 'orderToolbar', 'orderCard', 'orderCardHeading', 'orderCustomer', 'orderActions', 'orderStatusBadge', 'orderPagination', 'orderDetailModal'] },
+  { id: 'staff', label: 'თანამშრომლები', keys: ['staffList', 'staffCreateForm'] },
+  { id: 'inventory', label: 'მარაგები', keys: ['inventoryPanel', 'inventoryMovementRow', 'inventoryMetric', 'inventoryHistoryRow', 'inventoryHistoryMetric'] },
+  { id: 'analytics', label: 'ანალიტიკა', keys: ['analyticsToolbar', 'analyticsCard', 'analyticsGrid'] },
+  { id: 'support', label: 'მხარდაჭერა', keys: ['supportTicket', 'supportTicketHeader', 'supportTicketMessage', 'supportReplyForm'] },
+  { id: 'discounts', label: 'ფასდაკლებები', keys: ['discountForm', 'discountFields', 'discountActiveSummary'] },
+  { id: 'banners', label: 'ბანერები', keys: ['bannerForm', 'bannerCard', 'bannerList'] },
+  { id: 'categories', label: 'კატეგორიები', keys: ['categoryForm', 'categoryCard', 'subcategoryCard'] },
+  { id: 'coupons', label: 'კუპონები', keys: ['couponForm', 'couponCard', 'couponList'] }
+];
+
 const COLOR_FIELDS = [
   { key: 'accent', label: 'აქცენტის ფერი' },
   { key: 'canvas', label: 'პანელის საერთო ფონი' },
@@ -464,6 +476,10 @@ const PRESETS = {
 
 export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
+  const [elementSearch, setElementSearch] = useState('');
+  const [elementCategory, setElementCategory] = useState('all');
+  const [selectedElementKey, setSelectedElementKey] = useState('');
+  const elementCardRefs = useRef({});
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const historyRef = useRef({ past: [], future: [], present: normalized });
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
@@ -519,6 +535,22 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
           key, { ...value, ...(normalized.responsive?.[viewport]?.elementStyles?.[key] || {}) }
         ]))
       };
+
+  const filteredElementEntries = useMemo(() => {
+    const query = elementSearch.trim().toLocaleLowerCase();
+    const category = ELEMENT_CATEGORIES.find(item => item.id === elementCategory);
+    const allowedKeys = category ? new Set(category.keys) : null;
+    return Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(([key, item]) => {
+      if (allowedKeys && !allowedKeys.has(key)) return false;
+      if (!query) return true;
+      return item.label.toLocaleLowerCase().includes(query) || key.toLocaleLowerCase().includes(query) || item.selector.toLocaleLowerCase().includes(query);
+    });
+  }, [elementSearch, elementCategory]);
+
+  const focusElementEditor = key => {
+    setSelectedElementKey(key);
+    elementCardRefs.current[key]?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  };
 
   const updateValue = (group, key, value) => {
     if (viewport === 'desktop') {
@@ -829,10 +861,57 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
           <h3 className="text-sm font-black text-white">შიდა ელემენტების ინდივიდუალური რედაქტირება</h3>
           <p className="mt-1 text-[11px] leading-5 text-slate-400">შეკვეთების მოდულში ცალკე შეცვალეთ სათაური, ფილტრები, ბარათები, მომხმარებლის ინფორმაცია, მოქმედებები, სტატუსი და გვერდების ნავიგაცია. პარამეტრები მოწყობილობის ხედის მიხედვით ინახება.</p>
         </div>
+        <div className="grid grid-cols-1 gap-2 rounded-xl border border-slate-700/80 bg-slate-900/60 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,0.65fr)_auto] sm:items-end">
+          <label className="block min-w-0 space-y-1 text-[11px] text-slate-300">
+            <span>ელემენტის სწრაფი ძებნა</span>
+            <input
+              type="search"
+              value={elementSearch}
+              onChange={event => setElementSearch(event.target.value)}
+              placeholder="მაგ. შეკვეთის ბარათი, მარაგი…"
+              aria-label="ვიზუალური ელემენტის ძებნა"
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2.5 text-sm text-white placeholder:text-slate-500"
+            />
+          </label>
+          <label className="block min-w-0 space-y-1 text-[11px] text-slate-300">
+            <span>კატეგორია</span>
+            <select
+              value={elementCategory}
+              onChange={event => setElementCategory(event.target.value)}
+              aria-label="ვიზუალური ელემენტების კატეგორია"
+              className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2.5 text-sm text-white"
+            >
+              <option value="all">ყველა კატეგორია</option>
+              {ELEMENT_CATEGORIES.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
+            </select>
+          </label>
+          <div className="text-[11px] font-semibold tabular-nums text-emerald-300 sm:pb-2" role="status" aria-live="polite">
+            {filteredElementEntries.length} / {Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).length} ელემენტი
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).map(([key, item]) => (
-            <section key={key} className="space-y-3 rounded-xl border border-slate-700/80 bg-slate-900/70 p-3" aria-label={item.label}>
-              <h4 className="text-xs font-black text-emerald-200">{item.label}</h4>
+          {filteredElementEntries.map(([key, item]) => (
+            <section
+              key={key}
+              ref={node => {
+                if (node) elementCardRefs.current[key] = node;
+                else delete elementCardRefs.current[key];
+              }}
+              className={`space-y-3 rounded-xl border p-3 transition-colors ${selectedElementKey === key ? 'border-emerald-300 bg-emerald-950/30 ring-1 ring-emerald-400/30' : 'border-slate-700/80 bg-slate-900/70'}`}
+              aria-label={item.label}
+              aria-current={selectedElementKey === key ? 'true' : undefined}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-xs font-black text-emerald-200">{item.label}</h4>
+                <button
+                  type="button"
+                  onClick={() => focusElementEditor(key)}
+                  className="rounded-lg border border-emerald-400/30 px-2.5 py-1.5 text-[10px] font-bold text-emerald-200 hover:bg-emerald-400/10"
+                  aria-label={item.label + ' ელემენტის არჩევა და რედაქტირება'}
+                >
+                  {selectedElementKey === key ? 'არჩეულია' : 'რედაქტირება'}
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { key: 'fontSize', label: 'ტექსტის ზომა', min: 10, max: 24, suffix: 'px' },
@@ -866,6 +945,12 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
               </label>
             </section>
           ))}
+          {filteredElementEntries.length === 0 && (
+            <div className="rounded-xl border border-dashed border-slate-600 bg-slate-950/50 p-5 text-center text-xs text-slate-400 md:col-span-2" role="status">
+              ამ ძიებით ელემენტი ვერ მოიძებნა. შეცვალეთ საძიებო სიტყვა ან აირჩიეთ სხვა კატეგორია.
+              <button type="button" onClick={() => { setElementSearch(''); setElementCategory('all'); }} className="ml-2 font-bold text-emerald-300 underline underline-offset-2">ფილტრების გასუფთავება</button>
+            </div>
+          )}
         </div>
       </div>
 
