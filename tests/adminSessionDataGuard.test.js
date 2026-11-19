@@ -39,6 +39,20 @@ test('ending an admin session clears private snapshots before paint and incremen
   ]) assert.ok(admin.includes(statement), `Expected logout cleanup: ${statement}`);
 });
 
+test('CRM profile saves and actions cannot restore private data after logout', () => {
+  const persist = readFunction('persistServerCustomerProfile');
+  assert.match(persist, /const requestSessionVersion = adminSessionVersion\\.current/);
+  assert.match(persist, /if \\(!isCurrentAdminSession\\(requestSessionVersion\\)\\) return false/);
+  assert.match(persist, /const headers = await getSupabaseHeaders\\(\\)/);
+  assert.match(persist, /const saved = await saveAdminCustomerCrmProfile/);
+  assert.ok(persist.indexOf('const saved = await saveAdminCustomerCrmProfile') < persist.indexOf('setServerCustomers'));
+  for (const name of ['handleToggleVipUser', 'handleToggleBlockUser']) {
+    const body = readFunction(name);
+    assert.match(body, /const requestSessionVersion = adminSessionVersion\\.current/);
+    assert.match(body, /!isCurrentAdminSession\\(requestSessionVersion\\)/);
+  }
+});
+
 test('support reply history and realtime refresh remain in place', () => {
   assert.match(admin, /add_support_ticket_message_idempotent/);
   assert.match(admin, /geostore-admin-support-ticket-messages/);
