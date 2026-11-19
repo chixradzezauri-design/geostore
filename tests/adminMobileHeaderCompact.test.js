@@ -103,3 +103,12 @@ test('product detail modal and gallery retain compact responsive sizing', () => 
   assert.match(view, /addToCart\(/);
   assert.match(view, /handleAddReview\(/);
 });
+
+
+test('narrow mobile admin typography never falls below 11px for readable labels and actions', () => {
+  assert.match(polish, /STAGE 111 — minimum readable typography on the narrowest admin screens/);
+  const stage111 = polish.slice(polish.lastIndexOf('STAGE 111 — minimum readable typography'));
+  assert.match(stage111, /font-size:\s*11px !important/);
+  assert.match(stage111, /min-height:\s*40px !important/);
+  assert.match(stage111, /font-size:\s*16px !important/);
+});
