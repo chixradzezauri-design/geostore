@@ -143,7 +143,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -179,7 +181,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -215,7 +219,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -251,7 +257,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -287,7 +295,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -323,7 +333,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -359,7 +371,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -395,7 +409,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   },
   {
@@ -431,7 +447,9 @@ const COMPONENT_FIELDS = [
         "suffix": "px"
       },
       { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
-      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" },
+      { "key": "titleFontWeight", "label": "სათაურის სისქე", "min": 400, "max": 900, "suffix": "weight" },
+      { "key": "bodyFontWeight", "label": "ტექსტის სისქე", "min": 300, "max": 800, "suffix": "weight" }
     ]
   }
 ];
@@ -698,6 +716,14 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
                   </label>
                 ))}
               </div>
+              <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-700/70 bg-slate-900/70 p-2 text-[11px] text-slate-300">
+                <span>ტექსტის გასწორება</span>
+                <select value={active.components[component.key].textAlign} onChange={event => updateComponentValue(component.key, 'textAlign', event.target.value)} className="rounded-md border border-slate-600 bg-slate-950 px-2 py-1.5 text-white" aria-label={component.label + ' — ტექსტის გასწორება'}>
+                  <option value="left">მარცხნივ</option>
+                  <option value="center">ცენტრში</option>
+                  <option value="right">მარჯვნივ</option>
+                </select>
+              </label>
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
                   { key: 'textColor', label: 'ტექსტის ფერი' },
