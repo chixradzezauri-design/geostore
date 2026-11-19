@@ -1,5 +1,5 @@
 // src/components/AdminDashboardPro.jsx - Ultimate Full Elite Edition with Advanced Order Details Modal
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { 
   Shield, TrendingUp, DollarSign, PackageCheck, Bell, LogOut, 
   Plus, Trash2, Users, Store, Tag, Search, Star, Settings, Image as ImageIcon, Percent, Download, FolderTree, Megaphone, Send, Activity, Zap, Printer, HelpCircle,
@@ -919,6 +919,9 @@ export default function AdminDashboardPro({
   setDeliveryFees
 }) {
   const [adminTab, setAdminTab] = useState('command');
+  const adminSessionVersion = useRef(0);
+  const adminSessionActiveRef = useRef(Boolean(adminLoggedIn));
+  const isCurrentAdminSession = (version) => adminSessionActiveRef.current && version === adminSessionVersion.current;
   const isOwner = adminAccess?.is_admin === true;
   const hasModulePermission = (permission) => hasAdminPermission(adminAccess, permission);
   const hasProductsPermission = hasModulePermission('products');
@@ -1286,6 +1289,8 @@ export default function AdminDashboardPro({
   }, [adminLoggedIn, hasCrmPermission]);
 
   const fetchExpenses = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion) || !hasExpensesPermission) return false;
     try {
       // PostgREST commonly caps one response at 1,000 rows. Fetch the complete
       // expense ledger in stable pages so older expenses are not silently
@@ -1295,14 +1300,17 @@ export default function AdminDashboardPro({
       let completed = false;
       for (let offset = 0; offset < 100000; offset += pageSize) {
         const headers = await getSupabaseHeaders();
+        if (!isCurrentAdminSession(requestSessionVersion)) return false;
         headers.Range = `${offset}-${offset + pageSize - 1}`;
         headers['Range-Unit'] = 'items';
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc,id.desc`,
           { headers }
         );
+        if (!isCurrentAdminSession(requestSessionVersion)) return false;
         if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
         const page = await res.json();
+        if (!isCurrentAdminSession(requestSessionVersion)) return false;
         if (!Array.isArray(page)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
         allExpenses.push(...page);
         if (page.length < pageSize) {
@@ -1314,10 +1322,12 @@ export default function AdminDashboardPro({
         }
       }
       if (!completed) throw new Error('ხარჯების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
+      if (!isCurrentAdminSession(requestSessionVersion)) return false;
       setExpenses(allExpenses);
       setExpensesError('');
       return true;
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return false;
       console.error('GEOSTORE expense history fetch failed:', error);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
@@ -1889,6 +1899,8 @@ export default function AdminDashboardPro({
     }
     if (storefrontPublishBusy) return () => { active = false; };
     const loadStorefrontVersions = async () => {
+      const requestSessionVersion = adminSessionVersion.current;
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setStorefrontVersionsLoading(true);
       setStorefrontVersionsError('');
       try {
@@ -1896,14 +1908,16 @@ export default function AdminDashboardPro({
           `${SUPABASE_URL}/rest/v1/storefront_versions?config_key=eq.storefront&select=id,snapshot,version_label,created_at&order=created_at.desc&limit=20`,
           { headers: await getSupabaseHeaders() }
         );
+        if (!active || !isCurrentAdminSession(requestSessionVersion)) return;
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
+        if (!active || !isCurrentAdminSession(requestSessionVersion)) return;
         if (!Array.isArray(rows)) throw new Error('ვერსიების ისტორიის ფორმატი არასწორია.');
-        if (active) setStorefrontVersions(rows);
+        setStorefrontVersions(rows);
       } catch (error) {
-        if (active) setStorefrontVersionsError(error.message || 'ვერსიების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+        if (active && isCurrentAdminSession(requestSessionVersion)) setStorefrontVersionsError(error.message || 'ვერსიების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       } finally {
-        if (active) setStorefrontVersionsLoading(false);
+        if (active && isCurrentAdminSession(requestSessionVersion)) setStorefrontVersionsLoading(false);
       }
     };
     loadStorefrontVersions();
@@ -1914,7 +1928,70 @@ export default function AdminDashboardPro({
   const [activityLogsLoading, setActivityLogsLoading] = useState(false);
   const [activityLogsError, setActivityLogsError] = useState('');
 
+  useLayoutEffect(() => {
+    adminSessionActiveRef.current = Boolean(adminLoggedIn);
+    adminSessionVersion.current += 1;
+    if (adminLoggedIn) return;
+
+    // Clear private admin snapshots before the logged-out UI is painted.
+    setExpenses([]);
+    setExpensesError('');
+    setServerCustomers([]);
+    setCrmLoading(false);
+    setCrmError('');
+    setSupportTickets([]);
+    setSupportTicketsError('');
+    setSelectedSupportTicketId(null);
+    setSupportTicketThreads({});
+    setSupportTicketThreadLoading({});
+    setSupportTicketThreadErrors({});
+    setLegacyMessages([]);
+    setLegacyMessagesError('');
+    setLegacyMessagesHasMore(false);
+    setLegacyMessagesLoadingMore(false);
+    setReplyInputs({});
+    setReplySending({});
+    setActivityLogs([]);
+    setActivityLogsLoading(false);
+    setActivityLogsError('');
+    setStorefrontVersions([]);
+    setStorefrontVersionsLoading(false);
+    setStorefrontVersionsError('');
+    setInventoryMovementRows([]);
+    setInventoryMovementLoading(false);
+    setInventoryMovementError('');
+    setInventoryMovementCursor(null);
+    setInventoryMovementHasMore(false);
+    setReplenishmentSettings([]);
+    setReplenishmentLoading(false);
+    setReplenishmentError('');
+    setReplenishmentDrafts({});
+    setReplenishmentSavingKey('');
+    setSelectedOrderForModal(null);
+    setOrderAdminNoteInput('');
+    setReactivationOrder(null);
+    setReactivationPassword('');
+    setReactivationError('');
+    setIsReactivatingOrder(false);
+
+    crmSessionVersion.current += 1;
+    supportThreadSessionRef.current += 1;
+    supportTicketListRequestRef.current += 1;
+    legacyMessagesSessionRef.current += 1;
+    legacyMessagesFetchInFlightRef.current = false;
+    legacyMessagesRefreshPendingRef.current = false;
+    legacyMessagesCursorRef.current = null;
+    legacyMessagesLoadedMoreRef.current = false;
+    inventoryMovementRequestRef.current += 1;
+    replenishmentRequestRef.current += 1;
+    supportThreadFetchInFlight.current.clear();
+    supportThreadRefreshPending.current.clear();
+    supportReplyInFlight.current.clear();
+  }, [adminLoggedIn]);
+
   const fetchActivityLogs = async () => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion) || !isOwner) return;
     setActivityLogsLoading(true);
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
@@ -1922,8 +1999,10 @@ export default function AdminDashboardPro({
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({ p_limit: 100 })
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) throw new Error(await response.text());
       const rows = await response.json();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!Array.isArray(rows)) throw new Error('აქტივობების ისტორიის ფორმატი არასწორია.');
       setActivityLogs(rows.map(log => ({
         id: String(log.id),
@@ -1932,9 +2011,9 @@ export default function AdminDashboardPro({
       })));
       setActivityLogsError('');
     } catch (error) {
-      setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      if (isCurrentAdminSession(requestSessionVersion)) setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
     } finally {
-      setActivityLogsLoading(false);
+      if (isCurrentAdminSession(requestSessionVersion)) setActivityLogsLoading(false);
     }
   };
 
@@ -1949,8 +2028,9 @@ export default function AdminDashboardPro({
   }, [isOwner]);
 
   const logActivity = async (actionText) => {
+    const requestSessionVersion = adminSessionVersion.current;
     const action = String(actionText || '').trim().slice(0, 500);
-    if (!action) return;
+    if (!action || !isCurrentAdminSession(requestSessionVersion)) return;
 
     try {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/write_admin_activity_log`, {
@@ -1958,8 +2038,10 @@ export default function AdminDashboardPro({
         headers: await getSupabaseHeaders(),
         body: JSON.stringify({ p_action: action })
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) throw new Error(await response.text());
       const rows = await response.json();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const saved = Array.isArray(rows) ? rows[0] : rows;
       if (!saved?.id) throw new Error('სერვერმა აქტივობის ჩანაწერი არ დააბრუნა.');
       setActivityLogs(prev => [{
@@ -1969,6 +2051,7 @@ export default function AdminDashboardPro({
       }, ...(prev || [])].slice(0, 100));
       setActivityLogsError('');
     } catch (error) {
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setActivityLogsError('აქტივობის შენახვა ვერ მოხერხდა. ' + (error?.message || ''));
       console.error('GEOSTORE admin activity log write failed:', error);
     }
@@ -3333,19 +3416,27 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateTicketStatus = async (ticketId, newStatus) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion) || !hasSupportPermission) return;
     try {
+      const headers = await getSupabaseHeaders();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
-        method: 'PATCH',
-        headers: await getSupabaseHeaders(),
+        method: 'PATCH', headers,
         body: JSON.stringify({ status: newStatus })
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) throw new Error('ტიკეტის სტატუსის განახლება ვერ მოხერხდა.');
       fetchTickets();
       logActivity(`ტიგეტის #${ticketId} სტატუსი შეიცვალა: ${newStatus}`);
-    } catch { alert('შეცდომა სტატუსის განახლებისას'); }
+    } catch (error) {
+      if (isCurrentAdminSession(requestSessionVersion)) alert(error?.message || 'შეცდომა სტატუსის განახლებისას');
+    }
   };
 
   const handleSendTicketReply = async (ticketId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion) || !hasSupportPermission) return;
     const normalizedTicketId = String(ticketId);
     const replyText = String(replyInputs[ticketId] || '').trim();
     if (!replyText || replyText.length > 4000 || supportReplyInFlight.current.has(normalizedTicketId)) return;
@@ -3366,8 +3457,10 @@ export default function AdminDashboardPro({
         };
       }
       requestId = supportReplyRequestIds.current[normalizedTicketId].id;
+      const headers = await getSupabaseHeaders();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/add_support_ticket_message_idempotent', {
-        method: 'POST', headers: await getSupabaseHeaders(),
+        method: 'POST', headers,
         body: JSON.stringify({
           p_ticket_id: normalizedTicketId,
           p_message: replyText,
@@ -3375,8 +3468,10 @@ export default function AdminDashboardPro({
           p_request_id: requestId
         })
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
+        if (!isCurrentAdminSession(requestSessionVersion)) return;
         throw new Error(detail || 'ტიკეტში პასუხის შენახვა ვერ მოხერხდა.');
       }
 
@@ -3397,30 +3492,16 @@ export default function AdminDashboardPro({
       logActivity(`გაიგზავნა პასუხი ტიგეტზე #${normalizedTicketId}`);
       alert('✅ პასუხი წარმატებით შეინახა მხარდაჭერის მიმოწერაში. მომხმარებლისთვის ელფოსტით გაგზავნა ამ მოქმედებით არ ხდება.');
     } catch (error) {
-      if (replySessionId === supportThreadSessionRef.current) {
+      if (isCurrentAdminSession(requestSessionVersion) && replySessionId === supportThreadSessionRef.current) {
         console.error('GEOSTORE support ticket reply failed:', error);
         alert(error?.message || 'შეცდომა პასუხის გაგზავნისას');
       }
     } finally {
       // A stale request must never release a lock owned by a newer session.
-      if (replySessionId === supportThreadSessionRef.current) {
+      if (isCurrentAdminSession(requestSessionVersion) && replySessionId === supportThreadSessionRef.current) {
         supportReplyInFlight.current.delete(normalizedTicketId);
         setReplySending(prev => ({ ...prev, [normalizedTicketId]: false }));
       }
-    }
-  };
-
-  const handleDeleteTicket = async (ticketId) => {
-    if (window.confirm('ნამდვილად გსურთ ამ ტიგეტის წაშლა?')) {
-      try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/support_tickets?id=eq.${ticketId}`, {
-          method: 'DELETE',
-          headers: await getSupabaseHeaders()
-        });
-        if (!response.ok) throw new Error('ტიკეტის წაშლა ვერ მოხერხდა.');
-        fetchTickets();
-        logActivity(`წაიშალა მხარდაჭერის ტიგეტი (ID: ${ticketId})`);
-      } catch { alert('შეცდომა ტიგეტის წაშლისას'); }
     }
   };
 
@@ -3681,6 +3762,8 @@ export default function AdminDashboardPro({
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion) || !hasOrdersPermission) return;
     const existingOrder = (orders || []).find(order => String(order.id) === String(orderId));
     const currentStatus = normalizeOrderStatus(existingOrder?.status);
     const nextStatus = normalizeOrderStatus(newStatus);
@@ -3721,21 +3804,26 @@ export default function AdminDashboardPro({
     }
 
     try {
+      const headers = await getSupabaseHeaders({ authenticated: true });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_order_status`, {
         method: 'POST',
-        headers: await getSupabaseHeaders({ authenticated: true }),
+        headers,
         body: JSON.stringify({
           p_order_id: orderId,
           p_new_status: newStatus
         })
       });
 
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
+        if (!isCurrentAdminSession(requestSessionVersion)) return;
         throw new Error(errorBody || 'ვერ მოხერხდა შეკვეთის სტატუსის განახლება.');
       }
 
       const statusResult = await response.json().catch(() => null);
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const statusChangedAt = typeof statusResult?.status_changed_at === 'string'
         ? statusResult.status_changed_at
         : new Date().toISOString();
@@ -3764,7 +3852,7 @@ export default function AdminDashboardPro({
       logActivity(`შეკვეთის #${orderId} სტატუსი შეიცვალა: ${newStatus}`);
       alert(`✅ შეკვეთის #${orderId} სტატუსი წარმატებით განახლდა: ${newStatus}`);
     } catch (error) {
-      alert(error.message || 'ქსელის შეცდომა სტატუსის შეცვლისას');
+      if (isCurrentAdminSession(requestSessionVersion)) alert(error.message || 'ქსელის შეცდომა სტატუსის შეცვლისას');
     }
   };
 
@@ -3774,6 +3862,8 @@ export default function AdminDashboardPro({
       setReactivationError('ამ მოქმედების შესრულება მხოლოდ მთავარ ადმინისტრატორს შეუძლია.');
       return;
     }
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     if (!reactivationOrder || !reactivationPassword || isReactivatingOrder) return;
 
     setIsReactivatingOrder(true);
@@ -3784,6 +3874,7 @@ export default function AdminDashboardPro({
       : 'admin_reactivate_cancelled_order';
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (userError || !userData?.user?.email) {
         throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა. ხელახლა შედით სისტემაში.');
       }
@@ -3801,6 +3892,7 @@ export default function AdminDashboardPro({
         email: userData.user.email,
         password: reactivationPassword
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (passwordError) {
         throw new Error('პაროლი არასწორია. შეკვეთა არ გააქტიურებულა.');
       }
@@ -3817,6 +3909,7 @@ export default function AdminDashboardPro({
         throw new Error('პაროლის დადასტურება ვერ მოხერხდა. ხელახლა შედით ადმინისტრატორის ანგარიშში.');
       }
 
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${reactivationRpc}`, {
         method: 'POST',
         headers: {
@@ -3828,12 +3921,15 @@ export default function AdminDashboardPro({
         body: JSON.stringify({ p_order_id: reactivationOrder.id })
       });
 
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
+        if (!isCurrentAdminSession(requestSessionVersion)) return;
         throw new Error(errorBody || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
       }
 
       const reactivationResult = await response.json().catch(() => null);
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const statusChangedAt = typeof reactivationResult?.status_changed_at === 'string'
         ? reactivationResult.status_changed_at
         : new Date().toISOString();
@@ -3866,27 +3962,32 @@ export default function AdminDashboardPro({
         ? `✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. არსებული მარაგი უცვლელი დარჩა — განმეორებითი ჩამოჭრა არ მომხდარა.`
         : `✅ შეკვეთა #${reactivationOrder.id} ხელახლა გააქტიურდა. მარაგი შემოწმდა და ხელახლა ჩამოიჭრა.`);
     } catch (error) {
-      setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
+      if (isCurrentAdminSession(requestSessionVersion)) setReactivationError(error.message || 'შეკვეთის ხელახლა გააქტიურება ვერ მოხერხდა.');
     } finally {
-      setIsReactivatingOrder(false);
+      if (isCurrentAdminSession(requestSessionVersion)) setIsReactivatingOrder(false);
     }
   };
 
   const handleSaveOrderAdminNote = async (orderId) => {
-    if (isSavingOrderNote) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion) || !hasOrdersPermission || isSavingOrderNote) return;
     const noteToSave = String(orderAdminNoteInput ?? '');
     setIsSavingOrderNote(true);
     try {
+      const headers = await getSupabaseHeaders({ authenticated: true });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_order_note`, {
         method: 'POST',
-        headers: await getSupabaseHeaders({ authenticated: true }),
+        headers,
         body: JSON.stringify({
           p_order_id: String(orderId),
           p_admin_note: noteToSave
         })
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) {
         const errorBody = await response.text().catch(() => '');
+        if (!isCurrentAdminSession(requestSessionVersion)) return;
         throw new Error(errorBody || 'შენიშვნის ბაზაში შენახვა ვერ მოხერხდა.');
       }
       if (typeof setOrders === 'function') {
@@ -3901,10 +4002,12 @@ export default function AdminDashboardPro({
       );
       alert('✅ ადმინისტრატორის შენიშვნა წარმატებით შეინახა!');
     } catch (error) {
-      console.error('Admin order note save failed:', error);
-      alert(error?.message || 'შეცდომა შენიშვნის შენახვისას');
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        console.error('Admin order note save failed:', error);
+        alert(error?.message || 'შეცდომა შენიშვნის შენახვისას');
+      }
     } finally {
-      setIsSavingOrderNote(false);
+      if (isCurrentAdminSession(requestSessionVersion)) setIsSavingOrderNote(false);
     }
   };
 
@@ -5401,7 +5504,6 @@ export default function AdminDashboardPro({
                         }} className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 font-bold text-cyan-200 transition hover:bg-cyan-500/20">
                           {String(selectedSupportTicketId) === String(t.id) ? 'მიმოწერის დამალვა' : 'მიმოწერის ნახვა'}
                         </button>
-                        <button onClick={() => handleDeleteTicket(t.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
