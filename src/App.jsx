@@ -1377,10 +1377,22 @@ export default function App() {
     }
   };
 
-  const handleRestoreStorefrontVersion = async (versionId) => {
+  const handleRestoreStorefrontVersion = async (versionId, versionSnapshot) => {
     if (!hasSettingsAccess || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return false;
     if (!versionId || !storefrontDraftUpdatedAtRef.current) {
       alert('მონახაზის მიმდინარე ვერსიის დრო ვერ დადასტურდა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return false;
+    }
+    let restoredCategories;
+    let restoredBanners;
+    let restoredSettings;
+    try {
+      if (!versionSnapshot || typeof versionSnapshot !== 'object' || Array.isArray(versionSnapshot)) throw new Error('არჩეული ვერსიის მონაცემები არასწორია.');
+      restoredCategories = validateStorefrontCategorySnapshot(versionSnapshot.categories, products);
+      restoredBanners = validateStorefrontBannerSnapshot(versionSnapshot.banners);
+      restoredSettings = validateStorefrontSiteSettings(versionSnapshot.siteSettings);
+    } catch (error) {
+      alert(error?.message || 'არჩეული ვერსიის მონაცემები ვერ გადამოწმდა.');
       return false;
     }
     storefrontSaveLock.current = true;
@@ -1402,16 +1414,10 @@ export default function App() {
         throw new Error('ვერსიის მონახაზში აღდგენა ვერ მოხერხდა: ' + detail);
       }
       const result = await response.json();
-      const snapshot = result?.snapshot;
-      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
-        throw new Error('სერვერმა აღდგენილი მონახაზის ფორმატი ვერ დაადასტურა.');
+      if (String(result?.version_id || '') !== String(versionId) || typeof result?.draft_updated_at !== 'string') {
+        throw new Error('აღდგენის პასუხი არასრულია. განაახლეთ გვერდი, რათა საერთო მონახაზის მიმდინარე ვერსია ჩაიტვირთოს.');
       }
-      const restoredCategories = validateStorefrontCategorySnapshot(snapshot.categories, products);
-      const restoredBanners = validateStorefrontBannerSnapshot(snapshot.banners);
-      const restoredSettings = validateStorefrontSiteSettings(snapshot.siteSettings);
-      storefrontDraftUpdatedAtRef.current = typeof result?.draft_updated_at === 'string'
-        ? result.draft_updated_at
-        : storefrontDraftUpdatedAtRef.current;
+      storefrontDraftUpdatedAtRef.current = result.draft_updated_at;
       setCategoriesList(restoredCategories);
       setBannersList(restoredBanners);
       setSiteSettings(restoredSettings);
