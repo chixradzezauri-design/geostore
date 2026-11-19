@@ -17,9 +17,9 @@ const pairs = [
 ];
 
 test('every SQL function definition is terminated before the next statement', () => {
-  const definitions = migration.match(/^\\$function\\$;$/gm) || [];
-  assert.equal(definitions.length, 12);
-  assert.doesNotMatch(migration, /^\\$function\\$/m);
+  const lines = migration.split('\n').map(line => line.trim());
+  assert.equal(lines.filter(line => line === '$function$;').length, 12);
+  assert.equal(lines.filter(line => line === '$function$').length, 0);
 });
 
 test('all six privileged implementations are in the private schema', () => {
