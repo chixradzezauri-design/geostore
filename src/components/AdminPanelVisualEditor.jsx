@@ -517,13 +517,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       const target = event.target;
       if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
       if (!target.closest('.admin-dashboard-shell')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
       const match = Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).find(([, definition]) => {
         try { return Boolean(target.closest(definition.selector)); } catch { return false; }
       });
       if (!match) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
       const [key] = match;
       setSelectedElementKey(key);
       setSelectedElementKeys(current => current.includes(key) ? current : [...current, key]);
