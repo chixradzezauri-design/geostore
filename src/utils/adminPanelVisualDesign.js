@@ -491,7 +491,7 @@ const normalizeContent = source => Object.fromEntries(
   ADMIN_PANEL_CONTENT_FIELDS.map(({ key, maxLength }) => {
     const rawValue = typeof source?.[key] === 'string' ? source[key] : '';
     const cleaned = rawValue
-      .replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g, '')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
       .trim()
       .slice(0, maxLength);
     return [key, cleaned || DEFAULT_ADMIN_PANEL_CONTENT[key]];
