@@ -4449,7 +4449,7 @@ export default function AdminDashboardPro({
       {/* 🖥️ MAIN CONTENT AREA */}
       <div className="flex-1 w-full space-y-6">
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
+        <div data-admin-visual-header="true" className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
               {isOwner ? 'მოგესალმებით, მთავარო ადმინისტრატორ! 👋' : `მოგესალმებით, ${adminAccess?.display_name || 'თანამშრომელო'}! 👋`}
