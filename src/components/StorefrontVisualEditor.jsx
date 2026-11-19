@@ -27,6 +27,9 @@ const VISUAL_EDITOR_TARGETS = {
   'categories': { label: 'კატეგორიების ბლოკი', help: 'კატეგორიების ფოტოები და დასახელებები მართეთ კატეგორიების განყოფილებაში.' },
   'categories.title': { label: 'კატეგორიების სათაური', group: 'copy', key: 'categoriesTitle', help: 'სათაური პირდაპირ აქედან შეცვალეთ.' },
   'categories.description': { label: 'კატეგორიების აღწერა', group: 'copy', key: 'categoriesSubtitle', help: 'აღწერა პირდაპირ აქედან შეცვალეთ.' },
+  'category.card': { label: 'კატეგორიის ბარათი', help: 'შეცვალეთ კატეგორიის ბარათის ფონი, ჩარჩო, ზომა, მომრგვალება და ჩრდილი.' },
+  'category.title': { label: 'კატეგორიის სათაური', help: 'შეცვალეთ კატეგორიის სახელის ფერი, ზომა, სისქე და განლაგება.' },
+  'category.description': { label: 'კატეგორიის ქვეტექსტი', help: 'შეცვალეთ კატეგორიის დამხმარე ტექსტის სტილი.' },
   'filters': { label: 'ფილტრები და დალაგება', help: 'ფილტრების ფერები და განლაგება შეცვალეთ დიზაინის პარამეტრებში.' },
   'product.card': { label: 'პროდუქტის ბარათი', help: 'პროდუქტის მონაცემები მართეთ პროდუქტების განყოფილებაში; აქ ცვლით ბარათის ვიზუალს.' },
   'product.image': { label: 'კატალოგის პროდუქტის ფოტო', help: 'ფოტოს შეცვლა ხდება პროდუქტების მართვის განყოფილებაში; აქ ცვლით ფოტოს ზომას, ჩასმის რეჟიმსა და პოზიციას.' },
@@ -332,6 +335,7 @@ export default function StorefrontVisualEditor({
                     <span>ფონის ფერი</span>
                     <input type="color" value={selectedElementStyle.backgroundColor || '#ffffff'} onChange={event => updateSelectedElementStyle('backgroundColor', event.target.value)} className="gs-visual-color-control h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" />
                   </label>
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>ჩარჩოს ფერი</span><input type="color" value={selectedElementStyle.borderColor || '#92785f'} onChange={event => updateSelectedElementStyle('borderColor', event.target.value)} className="gs-visual-color-control h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
                 </div>
                 <label className="block space-y-1 text-[10px] text-slate-300">
                   <span className="flex justify-between"><span>ტექსტის ზომა</span><b>{selectedElementStyle.fontSize ?? 'ავტო'} px</b></span>
@@ -385,7 +389,15 @@ export default function StorefrontVisualEditor({
                     </select>
                   </label>
                 </div>
-                <button type="button" onClick={() => updateSelectedElementStyle('textColor', '') || updateSelectedElementStyle('backgroundColor', '')} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>ჩარჩოს სისქე</span><input type="range" min="0" max="12" value={selectedElementStyle.borderWidth ?? 0} onChange={event => updateSelectedElementStyle('borderWidth', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>ხაზებს შორის დაშორება</span><input type="range" min="0.8" max="2.5" step="0.1" value={selectedElementStyle.lineHeight ?? 1.4} onChange={event => updateSelectedElementStyle('lineHeight', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>ასოების დაშორება</span><input type="range" min="-2" max="12" step="0.5" value={selectedElementStyle.letterSpacing ?? 0} onChange={event => updateSelectedElementStyle('letterSpacing', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>ჩრდილი</span><select value={selectedElementStyle.boxShadow || 'none'} onChange={event => updateSelectedElementStyle('boxShadow', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="none">გარეშე</option><option value="soft">მსუბუქი</option><option value="medium">საშუალო</option><option value="strong">ძლიერი</option></select></label>
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>ტექსტის რეგისტრი</span><select value={selectedElementStyle.textTransform || 'none'} onChange={event => updateSelectedElementStyle('textTransform', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="none">უცვლელი</option><option value="uppercase">დიდი ასოები</option><option value="lowercase">პატარა ასოები</option><option value="capitalize">სიტყვების პირველი ასო</option></select></label>
+                  <label className="space-y-1 text-[10px] text-slate-300"><span>შრიფტი</span><select value={selectedElementStyle.fontFamily || 'inherit'} onChange={event => updateSelectedElementStyle('fontFamily', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="inherit">მემკვიდრეობით</option><option value="manrope">Manrope</option><option value="georgia">Georgia</option><option value="arial">Arial</option></select></label>
+                </div>
+                <button type="button" onClick={() => { updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', ''); updateSelectedElementStyle('borderColor', ''); }} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
                 <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help} სტილები ცალკე ინახება თითოეული ელემენტისთვის.</p>
               </div>
             )}
@@ -543,6 +555,9 @@ export default function StorefrontVisualEditor({
             .gs-visual-preview-frame[data-visual-editor-selected="categories"] [data-visual-editor-target="categories"],
             .gs-visual-preview-frame[data-visual-editor-selected="categories.title"] [data-visual-editor-target="categories.title"],
             .gs-visual-preview-frame[data-visual-editor-selected="categories.description"] [data-visual-editor-target="categories.description"],
+            .gs-visual-preview-frame[data-visual-editor-selected="category.card"] [data-visual-editor-target="category.card"],
+            .gs-visual-preview-frame[data-visual-editor-selected="category.title"] [data-visual-editor-target="category.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="category.description"] [data-visual-editor-target="category.description"],
             .gs-visual-preview-frame[data-visual-editor-selected="filters"] [data-visual-editor-target="filters"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.card"] [data-visual-editor-target="product.card"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.image"] [data-visual-editor-target="product.image"],
