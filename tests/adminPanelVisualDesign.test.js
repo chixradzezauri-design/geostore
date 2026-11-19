@@ -403,6 +403,7 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
   const api = readFileSync(new URL('../src/utils/adminPanelVisualDesignApi.js', import.meta.url), 'utf8');
   const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
   const migration = readFileSync(new URL('../supabase/migrations/20261119150000_admin_panel_visual_design_sync.sql', import.meta.url), 'utf8');
+  const policyMigration = readFileSync(new URL('../supabase/migrations/20261119151000_admin_panel_visual_settings_owner_policy.sql', import.meta.url), 'utf8');
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
 
   assert.match(api, /rpc\('get_admin_panel_visual_design'\)/);
@@ -416,7 +417,7 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
   assert.match(migration, /auth\.uid\(\) IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid/);
   assert.match(migration, /auth\.jwt\(\)->'app_metadata'->>'role'/);
   assert.match(migration, /ENABLE ROW LEVEL SECURITY/);
-  assert.match(migration, /CREATE POLICY admin_panel_visual_settings_owner_only/);
+  assert.match(policyMigration, /CREATE POLICY admin_panel_visual_settings_owner_only/);
   assert.match(migration, /REVOKE ALL ON TABLE private\.admin_panel_visual_settings FROM PUBLIC, anon, authenticated/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_admin_panel_visual_design\(jsonb\) TO authenticated/);
   assert.match(editor, /ყველა მოწყობილობაზე გამოჩნდეს/);
