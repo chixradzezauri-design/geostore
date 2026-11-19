@@ -129,3 +129,17 @@ test('element style builder independently rejects unsafe alignment and font-weig
   assert.equal(style.textAlign, undefined);
   assert.equal(style.fontWeight, undefined);
 });
+
+test('product detail targets support independent safe styling', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'product.detail.title': { textColor: '#123abc', fontSize: 30 },
+      'product.detail.description': { textAlign: 'right', padding: 12 }
+    }
+  });
+  assert.equal(buildStorefrontElementStyle(design, 'product.detail.title').color, '#123abc');
+  assert.equal(buildStorefrontElementStyle(design, 'product.detail.title').fontSize, '30px');
+  assert.equal(buildStorefrontElementStyle(design, 'product.detail.description').textAlign, 'right');
+  assert.equal(buildStorefrontElementStyle(design, 'product.detail.description').padding, '12px');
+  assert.deepEqual(buildStorefrontElementStyle(design, 'product.detail.purchase'), {});
+});

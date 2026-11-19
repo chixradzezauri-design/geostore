@@ -30,7 +30,13 @@ const VISUAL_EDITOR_TARGETS = {
   'filters': { label: 'ფილტრები და დალაგება', help: 'ფილტრების ფერები და განლაგება შეცვალეთ დიზაინის პარამეტრებში.' },
   'product.card': { label: 'პროდუქტის ბარათი', help: 'პროდუქტის ფოტო, ფასი, დასახელება და მარაგი მართეთ პროდუქტების განყოფილებაში.' },
   'product.title': { label: 'პროდუქტის დასახელება', help: 'პროდუქტის დასახელება შეცვალეთ პროდუქტების მართვის განყოფილებაში.' },
-  'product.button': { label: 'პროდუქტის ღილაკი', group: 'copy', key: 'productButtonText', help: 'ღილაკის ტექსტი პირდაპირ აქედან შეცვალეთ.' }
+  'product.button': { label: 'პროდუქტის ღილაკი', group: 'copy', key: 'productButtonText', help: 'ღილაკის ტექსტი პირდაპირ აქედან შეცვალეთ.' },
+  'product.detail.image': { label: 'პროდუქტის დეტალური ფოტო', help: 'პროდუქტის ფოტო და გალერეა შეცვალეთ პროდუქტების მართვის განყოფილებაში; აქ ცვლით ვიზუალურ სტილს.' },
+  'product.detail.title': { label: 'პროდუქტის დეტალური სათაური', help: 'პროდუქტის დასახელება შეცვალეთ პროდუქტების მართვის განყოფილებაში; აქ ცვლით სათაურის სტილს.' },
+  'product.detail.price': { label: 'პროდუქტის დეტალური ფასი', help: 'ფასის მნიშვნელობა მოდის პროდუქტის მონაცემებიდან; აქ იცვლება ფასის ვიზუალური სტილი.' },
+  'product.detail.description': { label: 'პროდუქტის დეტალური აღწერა', help: 'აღწერის ტექსტი შეცვალეთ პროდუქტების მართვის განყოფილებაში; აქ ცვლით მის ვიზუალურ სტილს.' },
+  'product.detail.variants': { label: 'ზომები და ვარიანტები', help: 'ზომები, ფერები და მარაგი უცვლელად იმართება პროდუქტის პარამეტრებში; აქ იცვლება ბლოკის დიზაინი.' },
+  'product.detail.purchase': { label: 'დეტალური კალათის ღილაკი', help: 'კალათაში დამატების ფუნქცია უცვლელია; აქ იცვლება მხოლოდ ღილაკის ვიზუალი.' }
 };
 const SECTION_LABELS = {
   hero: 'მთავარი ბლოკი (Hero)',
@@ -108,6 +114,7 @@ export default function StorefrontVisualEditor({
   const [previewCategory, setPreviewCategory] = useState('ყველა');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [draggedSection, setDraggedSection] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const previewStyle = useMemo(() => buildStorefrontVisualStyle(design), [design]);
   const safeProducts = Array.isArray(products) ? products : [];
@@ -229,6 +236,17 @@ export default function StorefrontVisualEditor({
     const target = index + direction;
     if (index < 0 || target < 0 || target >= current.length) return;
     [current[index], current[target]] = [current[target], current[index]];
+    commitDesign({ ...design, sectionOrder: current });
+  };
+
+  const reorderSection = (sourceId, targetId) => {
+    if (!sourceId || !targetId || sourceId === targetId) return;
+    const current = [...design.sectionOrder];
+    const from = current.indexOf(sourceId);
+    const to = current.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    current.splice(from, 1);
+    current.splice(to, 0, sourceId);
     commitDesign({ ...design, sectionOrder: current });
   };
 
@@ -446,9 +464,17 @@ export default function StorefrontVisualEditor({
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Layout className="h-4 w-4 text-emerald-300" /> სექციების ჩართვა და თანმიმდევრობა</summary>
             <div className="mt-4 space-y-2">
               {design.sectionOrder.map((id, index) => (
-                <div key={id} className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/60 p-2.5">
+                <div
+                  key={id}
+                  draggable
+                  onDragStart={event => { setDraggedSection(id); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', id); }}
+                  onDragOver={event => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }}
+                  onDrop={event => { event.preventDefault(); const sourceId = event.dataTransfer.getData('text/plain') || draggedSection; reorderSection(sourceId, id); setDraggedSection(''); }}
+                  onDragEnd={() => setDraggedSection('')}
+                  className={`flex items-center gap-2 rounded-xl border bg-slate-950/60 p-2.5 transition ${draggedSection === id ? 'border-emerald-400 opacity-50' : 'border-slate-700'}`}
+                >
                   <input type="checkbox" checked={design.sections[id]} onChange={event => updateGroup('sections', id, event.target.checked)} aria-label={SECTION_LABELS[id] + ' — ჩვენება'} className="h-4 w-4 accent-emerald-400" />
-                  <span className="min-w-0 flex-1 text-xs font-semibold text-slate-200">{SECTION_LABELS[id]}</span>
+                  <span className="min-w-0 flex-1 text-xs font-semibold text-slate-200"><span aria-hidden="true" className="mr-2 text-slate-500">⠿</span>{SECTION_LABELS[id]}</span>
                   <button type="button" onClick={() => moveSection(id, -1)} disabled={index === 0} aria-label={SECTION_LABELS[id] + ' ზემოთ'} className="rounded-lg border border-slate-700 p-2 text-slate-300 disabled:opacity-30"><ChevronUp className="h-3.5 w-3.5" /></button>
                   <button type="button" onClick={() => moveSection(id, 1)} disabled={index === design.sectionOrder.length - 1} aria-label={SECTION_LABELS[id] + ' ქვემოთ'} className="rounded-lg border border-slate-700 p-2 text-slate-300 disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
                 </div>
@@ -493,6 +519,12 @@ export default function StorefrontVisualEditor({
             .gs-visual-preview-frame[data-visual-editor-selected="filters"] [data-visual-editor-target="filters"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.card"] [data-visual-editor-target="product.card"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.title"] [data-visual-editor-target="product.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.detail.image"] [data-visual-editor-target="product.detail.image"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.detail.title"] [data-visual-editor-target="product.detail.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.detail.price"] [data-visual-editor-target="product.detail.price"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.detail.description"] [data-visual-editor-target="product.detail.description"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.detail.variants"] [data-visual-editor-target="product.detail.variants"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.detail.purchase"] [data-visual-editor-target="product.detail.purchase"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.button"] [data-visual-editor-target="product.button"] {
               outline: 2px solid #34d399 !important; outline-offset: 3px; position: relative; z-index: 3;
             }
