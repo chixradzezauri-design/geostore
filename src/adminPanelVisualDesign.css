@@ -52,6 +52,14 @@
   --admin-vd-ordersSectionBorder-active: var(--admin-vd-ordersSectionBorder);
   --admin-vd-supportSectionBackground-active: var(--admin-vd-supportSectionBackground);
   --admin-vd-supportSectionBorder-active: var(--admin-vd-supportSectionBorder);
+  --admin-vd-discountsSectionBackground-active: var(--admin-vd-discountsSectionBackground);
+  --admin-vd-discountsSectionBorder-active: var(--admin-vd-discountsSectionBorder);
+  --admin-vd-bannersSectionBackground-active: var(--admin-vd-bannersSectionBackground);
+  --admin-vd-bannersSectionBorder-active: var(--admin-vd-bannersSectionBorder);
+  --admin-vd-categoriesSectionBackground-active: var(--admin-vd-categoriesSectionBackground);
+  --admin-vd-categoriesSectionBorder-active: var(--admin-vd-categoriesSectionBorder);
+  --admin-vd-couponsSectionBackground-active: var(--admin-vd-couponsSectionBackground);
+  --admin-vd-couponsSectionBorder-active: var(--admin-vd-couponsSectionBorder);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -121,6 +129,22 @@
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-panel {
   background-color: var(--admin-vd-supportSectionBackground-active) !important;
   border-color: var(--admin-vd-supportSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-discounts-panel {
+  background-color: var(--admin-vd-discountsSectionBackground-active) !important;
+  border-color: var(--admin-vd-discountsSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banners {
+  background-color: var(--admin-vd-bannersSectionBackground-active) !important;
+  border-color: var(--admin-vd-bannersSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-manager {
+  background-color: var(--admin-vd-categoriesSectionBackground-active) !important;
+  border-color: var(--admin-vd-categoriesSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel {
+  background-color: var(--admin-vd-couponsSectionBackground-active) !important;
+  border-color: var(--admin-vd-couponsSectionBorder-active) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
@@ -278,6 +302,14 @@
   --admin-vd-ordersSectionBorder-active: var(--admin-vd-tablet-ordersSectionBorder, var(--admin-vd-ordersSectionBorder));
   --admin-vd-supportSectionBackground-active: var(--admin-vd-tablet-supportSectionBackground, var(--admin-vd-supportSectionBackground));
   --admin-vd-supportSectionBorder-active: var(--admin-vd-tablet-supportSectionBorder, var(--admin-vd-supportSectionBorder));
+  --admin-vd-discountsSectionBackground-active: var(--admin-vd-tablet-discountsSectionBackground, var(--admin-vd-discountsSectionBackground));
+  --admin-vd-discountsSectionBorder-active: var(--admin-vd-tablet-discountsSectionBorder, var(--admin-vd-discountsSectionBorder));
+  --admin-vd-bannersSectionBackground-active: var(--admin-vd-tablet-bannersSectionBackground, var(--admin-vd-bannersSectionBackground));
+  --admin-vd-bannersSectionBorder-active: var(--admin-vd-tablet-bannersSectionBorder, var(--admin-vd-bannersSectionBorder));
+  --admin-vd-categoriesSectionBackground-active: var(--admin-vd-tablet-categoriesSectionBackground, var(--admin-vd-categoriesSectionBackground));
+  --admin-vd-categoriesSectionBorder-active: var(--admin-vd-tablet-categoriesSectionBorder, var(--admin-vd-categoriesSectionBorder));
+  --admin-vd-couponsSectionBackground-active: var(--admin-vd-tablet-couponsSectionBackground, var(--admin-vd-couponsSectionBackground));
+  --admin-vd-couponsSectionBorder-active: var(--admin-vd-tablet-couponsSectionBorder, var(--admin-vd-couponsSectionBorder));
   }
 }
 
@@ -336,5 +368,13 @@
   --admin-vd-ordersSectionBorder-active: var(--admin-vd-mobile-ordersSectionBorder, var(--admin-vd-tablet-ordersSectionBorder, var(--admin-vd-ordersSectionBorder)));
   --admin-vd-supportSectionBackground-active: var(--admin-vd-mobile-supportSectionBackground, var(--admin-vd-tablet-supportSectionBackground, var(--admin-vd-supportSectionBackground)));
   --admin-vd-supportSectionBorder-active: var(--admin-vd-mobile-supportSectionBorder, var(--admin-vd-tablet-supportSectionBorder, var(--admin-vd-supportSectionBorder)));
+  --admin-vd-discountsSectionBackground-active: var(--admin-vd-mobile-discountsSectionBackground, var(--admin-vd-tablet-discountsSectionBackground, var(--admin-vd-discountsSectionBackground)));
+  --admin-vd-discountsSectionBorder-active: var(--admin-vd-mobile-discountsSectionBorder, var(--admin-vd-tablet-discountsSectionBorder, var(--admin-vd-discountsSectionBorder)));
+  --admin-vd-bannersSectionBackground-active: var(--admin-vd-mobile-bannersSectionBackground, var(--admin-vd-tablet-bannersSectionBackground, var(--admin-vd-bannersSectionBackground)));
+  --admin-vd-bannersSectionBorder-active: var(--admin-vd-mobile-bannersSectionBorder, var(--admin-vd-tablet-bannersSectionBorder, var(--admin-vd-bannersSectionBorder)));
+  --admin-vd-categoriesSectionBackground-active: var(--admin-vd-mobile-categoriesSectionBackground, var(--admin-vd-tablet-categoriesSectionBackground, var(--admin-vd-categoriesSectionBackground)));
+  --admin-vd-categoriesSectionBorder-active: var(--admin-vd-mobile-categoriesSectionBorder, var(--admin-vd-tablet-categoriesSectionBorder, var(--admin-vd-categoriesSectionBorder)));
+  --admin-vd-couponsSectionBackground-active: var(--admin-vd-mobile-couponsSectionBackground, var(--admin-vd-tablet-couponsSectionBackground, var(--admin-vd-couponsSectionBackground)));
+  --admin-vd-couponsSectionBorder-active: var(--admin-vd-mobile-couponsSectionBorder, var(--admin-vd-tablet-couponsSectionBorder, var(--admin-vd-couponsSectionBorder)));
   }
 }
