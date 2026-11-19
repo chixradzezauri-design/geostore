@@ -12,6 +12,20 @@ test('storefront draft loader captures the shared version used by the next save'
   assert.match(app, /const savedDraftUpdatedAt = savedDraftState\?\.draft_updated_at/);
 });
 
+test('draft RPC migration replaces the old signature and exposes only the authenticated invoker wrapper', () => {
+  const publicDrop = migration.indexOf('DROP FUNCTION IF EXISTS public.save_storefront_draft(jsonb)');
+  const privateDrop = migration.indexOf('DROP FUNCTION IF EXISTS private.save_storefront_draft(jsonb)');
+  const privateCreate = migration.indexOf('CREATE OR REPLACE FUNCTION private.save_storefront_draft');
+  const publicCreate = migration.indexOf('CREATE OR REPLACE FUNCTION public.save_storefront_draft');
+  assert.ok(publicDrop >= 0 && privateDrop > publicDrop && privateCreate > privateDrop && publicCreate > privateCreate);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION private\.save_storefront_draft\([\s\S]*?SECURITY DEFINER/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.save_storefront_draft\([\s\S]*?SECURITY INVOKER/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION private\.save_storefront_draft\(jsonb, timestamptz\) FROM PUBLIC, anon/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION private\.save_storefront_draft\(jsonb, timestamptz\) TO authenticated/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.save_storefront_draft\(jsonb, timestamptz\) FROM PUBLIC, anon/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_storefront_draft\(jsonb, timestamptz\) TO authenticated/);
+});
+
 test('storefront draft RPC rejects stale device versions and serializes first-time writes', () => {
   assert.match(migration, /DROP FUNCTION IF EXISTS public\.save_storefront_draft\(jsonb\)/);
   assert.match(migration, /p_expected_draft_updated_at timestamptz/);
