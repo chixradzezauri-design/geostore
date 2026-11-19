@@ -76,7 +76,6 @@ BEGIN
   RETURN jsonb_build_object(
     'version_id', p_version_id,
     'version_label', v_version_label,
-    'snapshot', v_snapshot,
     'draft_updated_at', v_saved_updated_at
   );
 END;
