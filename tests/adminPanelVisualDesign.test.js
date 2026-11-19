@@ -652,7 +652,7 @@ test('every admin visual editor target is wired to real JSX and all eight deskto
   const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
   const utility = readFileSync(new URL('../src/utils/adminPanelVisualDesign.js', import.meta.url), 'utf8');
   const stylesheet = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
-  const definitionsMatch = utility.match(/const ADMIN_PANEL_ELEMENT_DEFINITIONS = Object\\.freeze\\((\\{.*?\\})\\);/s);
+  const definitionsMatch = utility.match(/const ADMIN_PANEL_ELEMENT_DEFINITIONS = Object\.freeze\((\{.*?\})\);/s);
   assert.ok(definitionsMatch, 'Could not read the canonical admin visual target definitions');
   const definitions = JSON.parse(definitionsMatch[1]);
   const properties = ['fontSize', 'fontWeight', 'textAlign', 'textColor', 'backgroundColor', 'borderColor', 'borderRadius', 'padding'];
@@ -675,7 +675,7 @@ test('every admin visual editor target is wired to real JSX and all eight deskto
       mobile: { elementStyles: mobileStyles }
     }
   }));
-  const cssRules = [...stylesheet.matchAll(/([^{}]+)\\{([^{}]*)\\}/g)];
+  const cssRules = [...stylesheet.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
 
   assert.equal(Object.keys(definitions).length, 35, 'Update this regression test when adding/removing canonical visual targets');
   for (const [key, definition] of Object.entries(definitions)) {
