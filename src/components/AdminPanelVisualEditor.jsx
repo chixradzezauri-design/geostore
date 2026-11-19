@@ -8,6 +8,7 @@ import {
   createAdminPanelModuleBackup,
   restoreAdminPanelModuleBackup,
   deleteAdminPanelModuleBackup,
+  compareAdminPanelModuleBackup,
   resetAdminPanelVisualViewport,
   resetAdminPanelVisualElement
 } from '../utils/adminPanelVisualDesign.js';
@@ -498,6 +499,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [showFavoriteStylePresets, setShowFavoriteStylePresets] = useState(false);
   const [expandedStyleHistoryId, setExpandedStyleHistoryId] = useState(null);
   const [expandedStyleBackupId, setExpandedStyleBackupId] = useState(null);
+  const [expandedModuleBackupId, setExpandedModuleBackupId] = useState(null);
   const [selectedBackupStyleIds, setSelectedBackupStyleIds] = useState([]);
   const [bulkStylePresetCategory, setBulkStylePresetCategory] = useState('საერთო');
   const elementCardRefs = useRef({});
@@ -1683,8 +1685,25 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
               <div className="space-y-2">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).slice().reverse().map(backup => (
                 <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2">
                   <div className="min-w-0"><p className="text-[10px] font-bold text-slate-200">{new Date(backup.savedAt).toLocaleString('ka-GE')}</p><p className="text-[9px] text-slate-400">{backup.reason} · {backup.viewport}</p></div>
-                  <div className="flex gap-1"><button type="button" onClick={() => restoreModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">ასლის აღდგენა</button><button type="button" onClick={() => removeModuleBackup(backup.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[9px] font-bold text-rose-200">წაშლა</button></div>
+                  <div className="flex gap-1"><button type="button" onClick={() => setExpandedModuleBackupId(current => current === backup.id ? null : backup.id)} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">{expandedModuleBackupId === backup.id ? "შედარების დახურვა" : "შედარება"}</button><button type="button" onClick={() => restoreModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">ასლის აღდგენა</button><button type="button" onClick={() => removeModuleBackup(backup.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[9px] font-bold text-rose-200">წაშლა</button></div>
                 </div>
+                {expandedModuleBackupId === backup.id && (() => {
+                  const comparison = compareAdminPanelModuleBackup(normalized, backup.id);
+                  return (
+                    <div className="mt-2 rounded-lg border border-violet-400/25 bg-violet-950/15 p-3" aria-live="polite">
+                      <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-black text-violet-200">შედარება · შენახული ასლი / მიმდინარე დიზაინი</p><span className="text-[10px] font-bold text-violet-200">{comparison?.changedCount || 0} განსხვავება</span></div>
+                      {!comparison || comparison.unchanged ? <p className="mt-2 text-[10px] text-emerald-300">დიზაინი უცვლელია — ასლი და მიმდინარე მდგომარეობა ემთხვევა.</p> : (
+                        <ul className="mt-2 max-h-64 space-y-2 overflow-y-auto">{comparison.differences.map(item => (
+                          <li key={item.path} className="grid grid-cols-1 gap-1 border-b border-slate-700/70 pb-2 text-[9px] sm:grid-cols-3">
+                            <span className="break-all font-bold text-slate-200">{item.path}</span>
+                            <span className="break-all text-slate-400"><span className="text-sky-300">ასლი:</span> {item.saved === null ? "—" : JSON.stringify(item.saved)}</span>
+                            <span className="break-all text-slate-300"><span className="text-amber-300">ახლა:</span> {item.current === null ? "—" : JSON.stringify(item.current)}</span>
+                          </li>
+                        ))}</ul>
+                      )}
+                    </div>
+                  );
+                })()}
               ))}</div>
             ) : <p className="rounded-lg border border-dashed border-slate-700 p-3 text-center text-[10px] text-slate-500">ამ მოდულისა და ხედისთვის ასლი ჯერ არ არის შენახული.</p>}
           </section>
