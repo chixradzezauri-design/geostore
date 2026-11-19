@@ -935,7 +935,7 @@ test('visual design API uses optimistic concurrency tokens and exposes conflict 
 
 
 test('saved admin style presets are bounded, uniquely identified and safely normalized', () => {
-  const sourcePresets = Array.from({ length: 31 }, (_, index) => ({
+  const sourcePresets = [{ id: 'empty-first', name: '   ', style: { fontSize: 14 } }, ...Array.from({ length: 31 }, (_, index) => ({
     id: index < 2 ? 'duplicate-preset-id' : `preset-${index}`,
     name: `Preset ${index}`,
     style: {
@@ -949,8 +949,7 @@ test('saved admin style presets are bounded, uniquely identified and safely norm
       textAlign: 'not-a-valid-alignment',
       unsupportedProperty: 'position:fixed'
     }
-  }));
-  sourcePresets.push({ id: 'empty', name: '   ', style: { fontSize: 14 } });
+  }))];
 
   const design = normalizeAdminPanelVisualDesign({ stylePresets: sourcePresets });
   assert.equal(design.stylePresets.length, 30);
