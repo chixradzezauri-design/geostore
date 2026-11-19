@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ADMIN_PANEL_CONTENT_FIELDS,
+  ADMIN_PANEL_ELEMENT_DEFINITIONS,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   normalizeAdminPanelVisualDesign,
   createAdminStylePresetBackup,
