@@ -727,7 +727,10 @@ export function restoreAdminPanelModuleBackup(rawDesign, backupId) {
         if (saved[backup.moduleId]) currentGroup[backup.moduleId] = saved[backup.moduleId];
         else delete currentGroup[backup.moduleId];
       } else {
-        const keys = group === 'elementStyles' ? Object.keys(snapshot.elementStyles || {}) : Object.keys(snapshot.theme || {});
+        const prefixes = { orders: 'order', staff: 'staff', inventory: 'inventory', analytics: 'analytics', support: 'support', discounts: 'discount', banners: 'banner', categories: 'category', coupons: 'coupon' };
+        const keys = group === 'elementStyles'
+          ? Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => key.startsWith(prefixes[backup.moduleId]))
+          : [`${backup.moduleId}SectionBackground`, `${backup.moduleId}SectionBorder`].filter(key => THEME_KEYS.includes(key));
         for (const key of keys) {
           if (saved[key] !== undefined) currentGroup[key] = saved[key];
           else delete currentGroup[key];
