@@ -390,7 +390,7 @@ export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
   const design = normalizeStorefrontVisualDesign(rawDesign);
   const viewport = ['desktop', 'tablet', 'mobile'].includes(requestedViewport)
     ? requestedViewport
-    : (typeof window !== 'undefined' && window.innerWidth <= 767
+    : (typeof window !== 'undefined' && window.innerWidth <= 640
       ? 'mobile'
       : typeof window !== 'undefined' && window.innerWidth <= 1023 ? 'tablet' : 'desktop');
   const responsive = viewport === 'desktop' ? {} : (design.responsive?.[viewport] || {});
@@ -452,7 +452,7 @@ export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewp
   const baseValue = isPlainObject(rawElementStyles[elementId]) ? rawElementStyles[elementId] : {};
   const viewport = ['desktop', 'tablet', 'mobile'].includes(requestedViewport)
     ? requestedViewport
-    : (typeof window !== 'undefined' && window.innerWidth <= 767
+    : (typeof window !== 'undefined' && window.innerWidth <= 640
       ? 'mobile'
       : typeof window !== 'undefined' && window.innerWidth <= 1023 ? 'tablet' : 'desktop');
   const responsiveValue = viewport === 'desktop' ? {} : (raw.responsive?.[viewport]?.elementStyles?.[elementId] || {});
