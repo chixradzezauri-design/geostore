@@ -1310,3 +1310,19 @@ test('admin style library searches style values and filters by colors, typograph
   assert.match(editor, /სტილის პარამეტრების ტიპის ფილტრი/);
   assert.match(editor, /პირველად დამატებული/);
 });
+
+
+test('admin style backup preview supports safe selective multi-style restoration', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /selectedBackupStyleIds, setSelectedBackupStyleIds/);
+  assert.match(editor, /const restoreSelectedStylesFromBackup = backup =>/);
+  assert.match(editor, /სარეზერვო ასლიდან ნაწილობრივი აღდგენა/);
+  assert.match(editor, /მონიშნულის აღდგენა/);
+  assert.match(editor, /ყველას მონიშვნა/);
+  assert.match(editor, /მონიშვნის მოხსნა/);
+  assert.match(editor, /stylePresets\.length \+ additions\.length > 30/);
+  assert.match(editor, /selectedKeys\.has\(key\)/);
+  assert.match(editor, /დუბლირების თავიდან ასაცილებლად აღდგენა შეჩერდა/);
+  assert.match(editor, /history: \[\.\.\.\(preset\.history \|\| \[\]\), \.\.\.\(current\.history \|\| \[\]\)/);
+  assert.match(editor, /setSelectedStylePresetIds\(selected\.map\(preset => preset\.id\)\)/);
+});
