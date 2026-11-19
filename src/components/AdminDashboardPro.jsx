@@ -20,6 +20,7 @@ import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { mergeCrmCustomersFromOrders } from '../utils/adminCrm.js';
+const StorefrontVisualEditor = React.lazy(() => import('./StorefrontVisualEditor'));
 import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
 
@@ -49,6 +50,7 @@ const ADMIN_TAB_PERMISSION = Object.freeze({
   broadcasts: 'owner',
   banners: 'settings',
   categories: 'settings',
+  visual_editor: 'settings',
   coupons: 'settings',
   // Vendor planning stays owner-only; customer CRM is backed by authenticated RPCs.
   vendors: 'owner',
@@ -58,7 +60,7 @@ const ADMIN_TAB_PERMISSION = Object.freeze({
 const STAFF_DEFAULT_TAB_ORDER = [
   'orders', 'products', 'support', 'messages', 'expenses',
   'analytics', 'inventory', 'replenishment', 'settings',
-  'banners', 'categories', 'coupons', 'vendors', 'calculator', 'users'
+  'banners', 'categories', 'visual_editor', 'coupons', 'vendors', 'calculator', 'users'
 ];
 
 const SUPABASE_ANON_KEY = supabase.supabaseKey;
@@ -4390,6 +4392,7 @@ export default function AdminDashboardPro({
             { id: 'broadcasts', label: '📢 შეტყობინებები', icon: Send },
             { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0, icon: Megaphone },
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
+            { id: 'visual_editor', label: '🎨 მთავარი გვერდის დიზაინი', icon: ImageIcon },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: crmUsers.length, icon: Users },
@@ -6202,6 +6205,24 @@ export default function AdminDashboardPro({
               </button>
             </form>
           </div>
+        )}
+
+        {visibleAdminTab === 'visual_editor' && (
+          <React.Suspense fallback={<div role="status" className="rounded-2xl border border-slate-700 bg-slate-900 p-6 text-sm text-slate-300">ვიზუალური რედაქტორი იტვირთება…</div>}>
+            <StorefrontVisualEditor
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+              categoriesList={safeCategories}
+              bannersList={bannersList || []}
+              products={products || []}
+              formatPrice={formatPrice}
+              isOwner={isOwner}
+              onSaveStorefrontDraft={onSaveStorefrontDraft}
+              storefrontDraftBusy={storefrontDraftBusy}
+              onPublishStorefront={onPublishStorefront}
+              storefrontPublishBusy={storefrontPublishBusy}
+            />
+          </React.Suspense>
         )}
 
         {visibleAdminTab === 'banners' && (
