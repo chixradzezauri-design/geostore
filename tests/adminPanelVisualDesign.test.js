@@ -818,15 +818,15 @@ test('admin visual editor provides searchable, category-filtered quick access to
 test('visual editor keyboard shortcuts support undo/redo without hijacking text editing', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /const handleHistoryShortcut = event =>/);
-  assert.match(editor, /event\.ctrlKey \|\| event\.metaKey/);
-  assert.match(editor, /event\.key\.toLowerCase\(\)/);
-  assert.match(editor, /key === 'z' && event\.shiftKey/);
+  assert.match(editor, /event\\.ctrlKey \\|\\| event\\.metaKey/);
+  assert.match(editor, /event\\.key\\.toLowerCase\\(\\)/);
+  assert.match(editor, /key === 'z' && event\\.shiftKey/);
   assert.match(editor, /key === 'y'/);
-  assert.match(editor, /redoChange\(\)/);
-  assert.match(editor, /undoChange\(\)/);
-  assert.match(editor, /input:\\(\?:not\(\[type="range"\]\):not\(\[type="color"\]\)\\)/);
-  assert.match(editor, /window\.addEventListener\('keydown', handleHistoryShortcut\)/);
-  assert.match(editor, /window\.removeEventListener\('keydown', handleHistoryShortcut\)/);
-  assert.match(editor, /title="Undo \(Ctrl\\/Cmd\\+Z\)"/);
-  assert.match(editor, /title="Redo \(Ctrl\\/Cmd\\+Y or Shift\\+Z\)"/);
+  assert.match(editor, /redoChange\\(\\)/);
+  assert.match(editor, /undoChange\\(\\)/);
+  assert.ok(editor.includes('input:not([type="range"]):not([type="color"]), textarea, select, [contenteditable="true"]'));
+  assert.ok(editor.includes("window.addEventListener('keydown', handleHistoryShortcut)"));
+  assert.ok(editor.includes("window.removeEventListener('keydown', handleHistoryShortcut)"));
+  assert.ok(editor.includes('title="Undo (Ctrl/Cmd+Z)"'));
+  assert.ok(editor.includes('title="Redo (Ctrl/Cmd+Y or Shift+Z)"'));
 });
