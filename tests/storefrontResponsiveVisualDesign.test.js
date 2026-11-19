@@ -36,6 +36,27 @@ test('responsive layout values are clamped and invalid values are ignored', () =
   assert.equal(Object.hasOwn(design.responsive.mobile.layout, 'contentWidth'), false);
 });
 
+test('storefront image styles support independently clamped horizontal and vertical focal positioning', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'hero.image': { objectPositionX: 25, objectPositionY: 70 }
+    },
+    responsive: {
+      mobile: {
+        elementStyles: {
+          'hero.image': { objectPositionX: 140, objectPositionY: -20 }
+        }
+      }
+    }
+  });
+
+  const desktop = buildStorefrontElementStyle(design, 'hero.image', 'desktop');
+  const mobile = buildStorefrontElementStyle(design, 'hero.image', 'mobile');
+
+  assert.equal(desktop.objectPosition, '25% 70%');
+  assert.equal(mobile.objectPosition, '100% 0%');
+});
+
 test('storefront style builder applies only the requested device layout override', () => {
   const design = normalizeStorefrontVisualDesign({
     responsive: {
