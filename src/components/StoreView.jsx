@@ -25,7 +25,8 @@ export default function StoreView({
   comparisonList = [],
   toggleComparison,
   addToCart,
-  formatPrice
+  formatPrice,
+  onProductOrderChange
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -259,6 +260,15 @@ export default function StoreView({
       });
     }
 
+    if (sortBy === 'default' && Array.isArray(siteSettings?.visualDesign?.productOrder) && siteSettings.visualDesign.productOrder.length) {
+      const orderIndex = new Map(siteSettings.visualDesign.productOrder.map((id, index) => [String(id), index]));
+      result.sort((a, b) => {
+        const aIndex = orderIndex.has(String(a.id)) ? orderIndex.get(String(a.id)) : Number.MAX_SAFE_INTEGER;
+        const bIndex = orderIndex.has(String(b.id)) ? orderIndex.get(String(b.id)) : Number.MAX_SAFE_INTEGER;
+        return aIndex - bIndex;
+      });
+    }
+
     if (sortBy === 'price-asc' || sortBy === 'price-desc') {
       const direction = sortBy === 'price-asc' ? 1 : -1;
       result.sort((a, b) => {
@@ -284,6 +294,21 @@ export default function StoreView({
     safeProductPage * PRODUCTS_PER_PAGE
   );
   const productPaginationItems = getPaginationItems(safeProductPage, totalProductPages);
+
+  const handleProductReorder = (sourceId, targetId) => {
+    if (typeof onProductOrderChange !== 'function' || sortBy !== 'default' || !sourceId || !targetId || sourceId === targetId) return;
+    const ids = activeProducts.map(product => String(product.id)).filter(Boolean);
+    const current = Array.isArray(siteSettings?.visualDesign?.productOrder)
+      ? [...siteSettings.visualDesign.productOrder]
+      : ids;
+    ids.forEach(id => { if (!current.includes(id)) current.push(id); });
+    const from = current.indexOf(String(sourceId));
+    const to = current.indexOf(String(targetId));
+    if (from < 0 || to < 0) return;
+    current.splice(from, 1);
+    current.splice(to, 0, String(sourceId));
+    onProductOrderChange(current);
+  };
   const paginationLabels = currentLang === 'en'
     ? { showing: 'Showing', of: 'of', products: 'products', previous: 'Previous', next: 'Next', aria: 'Product pages' }
     : currentLang === 'ru'
@@ -704,7 +729,16 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <article data-visual-editor-target="product.card" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.card')} key={prod.id} className="gs-catalog-product-card group flex flex-col">
+              <article
+                data-visual-editor-target="product.card"
+                style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.card')}
+                key={prod.id}
+                draggable={typeof onProductOrderChange === 'function' && sortBy === 'default'}
+                onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(prod.id)); }}
+                onDragOver={event => { if (typeof onProductOrderChange === 'function' && sortBy === 'default') { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }}
+                onDrop={event => { event.preventDefault(); handleProductReorder(event.dataTransfer.getData('text/plain'), String(prod.id)); }}
+                className="gs-catalog-product-card group flex flex-col"
+              >
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}

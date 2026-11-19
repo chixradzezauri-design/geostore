@@ -33,7 +33,8 @@ export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
     flashSaleSubtitle: '', flashSaleBadge: '', productButtonText: '', bannerButtonText: ''
   },
   sections: { hero: true, banners: true, flashSale: true, categories: true, filters: true, products: true },
-  sectionOrder: SECTION_IDS
+  sectionOrder: SECTION_IDS,
+  productOrder: []
 });
 
 const isPlainObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -71,6 +72,8 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
   const defaults = DEFAULT_STOREFRONT_VISUAL_DESIGN;
   const safeText = (value, maxLength) => String(value ?? '').slice(0, maxLength);
   const requestedOrder = Array.isArray(raw.sectionOrder) ? raw.sectionOrder : defaults.sectionOrder;
+  const requestedProductOrder = Array.isArray(raw.productOrder) ? raw.productOrder : [];
+  const productOrder = [...new Set(requestedProductOrder.map(id => String(id ?? '').trim()).filter(id => id && id.length <= 128))].slice(0, 2000);
   const sectionOrder = [];
 
   requestedOrder.forEach(id => {
@@ -148,7 +151,8 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       productButtonText: safeText(copy.productButtonText, 40), bannerButtonText: safeText(copy.bannerButtonText, 50)
     },
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
-    sectionOrder
+    sectionOrder,
+    productOrder
   };
 }
 

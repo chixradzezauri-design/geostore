@@ -164,3 +164,10 @@ test('element styles support bounded width, height, opacity and safe image fit c
   assert.equal(style.objectPosition, '100% center');
   assert.equal(buildStorefrontElementStyle({ elementStyles: { 'hero.title': { objectFit: 'url(javascript:1)' } } }, 'hero.title').objectFit, undefined);
 });
+
+test('product ordering accepts unique bounded IDs and ignores empty values', () => {
+  const design = normalizeStorefrontVisualDesign({
+    productOrder: ['sku-2', 'sku-1', 'sku-2', '', null, 'sku-3']
+  });
+  assert.deepEqual(design.productOrder, ['sku-2', 'sku-1', 'sku-3']);
+});

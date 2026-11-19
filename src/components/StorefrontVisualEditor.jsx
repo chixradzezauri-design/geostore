@@ -518,7 +518,7 @@ export default function StorefrontVisualEditor({
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-black text-white">ცოცხალი Preview</h3>
-              <p className="text-[10px] text-slate-400">{selectionMode ? 'დააჭირეთ მონიშნულ ელემენტს — არჩევის რეჟიმში მოქმედებები უსაფრთხოდ დაბლოკილია.' : 'მონაცემები რეალურია; კალათისა და შეკვეთის მოქმედებები Preview-ში გამორთულია.'}</p>
+              <p className="text-[10px] text-slate-400">{selectionMode ? 'დააჭირეთ ელემენტს სტილის შესაცვლელად. პროდუქტის დეტალები გახსენით არჩევის რეჟიმის გამორთვით, შემდეგ ჩართეთ რეჟიმი და მონიშნეთ დეტალური ფანჯრის ელემენტები.' : 'სექციები და პროდუქტები შეგიძლიათ გადაადგილოთ გადათრევით. პროდუქტის დეტალების გასახსნელად დააჭირეთ პროდუქტს; კალათა და შეკვეთა Preview-ში გამორთულია.'}</p>
             </div>
             <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
@@ -571,6 +571,7 @@ export default function StorefrontVisualEditor({
             </div>
             <div className="gs-visual-preview-content">
               <StoreView
+                onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
                 siteSettings={siteSettings}
                 banners={safeBanners}
