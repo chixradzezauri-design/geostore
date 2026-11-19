@@ -422,3 +422,26 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
   assert.match(editor, /ყველა მოწყობილობაზე გამოჩნდეს/);
   assert.match(editor, /შენახულია საერთო საცავში/);
 });
+
+
+test('every admin visual module selector is present on a real AdminDashboardPro element', () => {
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  const moduleTargets = {
+    staff: ['admin-staff-panel', 'admin-staff-list-panel'],
+    inventory: ['admin-inventory-panel'],
+    analytics: ['admin-analytics-card', 'admin-analytics-toolbar'],
+    orders: ['admin-orders-panel'],
+    support: ['admin-support-panel'],
+    discounts: ['admin-discounts-panel'],
+    banners: ['admin-banners'],
+    categories: ['admin-category-manager'],
+    coupons: ['admin-coupons-panel']
+  };
+
+  for (const [moduleName, classNames] of Object.entries(moduleTargets)) {
+    for (const className of classNames) {
+      assert.match(dashboard, new RegExp('className="[^"]*' + className + '(?:\\s|")'));
+    }
+    assert.match(dashboard, new RegExp('--admin-vd-' + moduleName + '-backgroundColor-active'));
+  }
+});
