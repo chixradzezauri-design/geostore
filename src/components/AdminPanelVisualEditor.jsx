@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import {
   ADMIN_PANEL_CONTENT_FIELDS,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
-  normalizeAdminPanelVisualDesign
+  normalizeAdminPanelVisualDesign,
+  resetAdminPanelVisualViewport
 } from '../utils/adminPanelVisualDesign.js';
 
 const VIEWPORTS = [
@@ -461,7 +462,7 @@ const PRESETS = {
   light: { accent: '#0f766e', canvas: '#eef2f7', panel: '#ffffff', surface: '#f8fafc', text: '#172033', muted: '#596579', border: '#cbd5e1', navActiveBackground: '#0f766e', navActiveText: '#ffffff', navInactiveBackground: '#f8fafc', navInactiveText: '#596579', headerBackground: '#ffffff', headerBorder: '#cbd5e1', tableHeaderBackground: '#f1f5f9', tableHeaderText: '#596579', tableRowBackground: '#ffffff', tableRowHover: '#e2e8f0', filterBackground: '#ffffff', filterText: '#172033', filterBorder: '#cbd5e1', primaryButtonBackground: '#0f766e', primaryButtonText: '#ffffff', primaryButtonBorder: '#0f766e', inputBackground: '#ffffff', inputText: '#172033', inputBorder: '#cbd5e1', inputFocus: '#0f766e', contentCardBackground: '#ffffff', contentCardBorder: '#cbd5e1', cardTitleText: '#172033', cardMutedText: '#596579', cardShadowColor: '#64748b', cardHoverBorder: '#0f766e', modalBackground: '#ffffff', modalText: '#172033', modalBorder: '#cbd5e1', modalOverlayBackground: '#64748b', staffSectionBackground: '#ffffff', staffSectionBorder: '#cbd5e1', inventorySectionBackground: '#ffffff', inventorySectionBorder: '#cbd5e1', analyticsSectionBackground: '#ffffff', analyticsSectionBorder: '#cbd5e1' , ordersSectionBackground: '#ffffff', ordersSectionBorder: '#cbd5e1', supportSectionBackground: '#ffffff', supportSectionBorder: '#cbd5e1', discountsSectionBackground: '#ffffff', discountsSectionBorder: '#cbd5e1', bannersSectionBackground: '#ffffff', bannersSectionBorder: '#cbd5e1', categoriesSectionBackground: '#ffffff', categoriesSectionBorder: '#cbd5e1', couponsSectionBackground: '#ffffff', couponsSectionBorder: '#cbd5e1'}
 };
 
-export default function AdminPanelVisualEditor({ design, onChange, onReset, syncStatus = 'saved' }) {
+export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const active = viewport === 'desktop'
@@ -586,13 +587,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
   };
 
   const resetViewport = () => {
-    if (viewport === 'desktop') {
-      onReset?.();
-      return;
-    }
-    const responsive = { ...(normalized.responsive || {}) };
-    delete responsive[viewport];
-    onChange(normalizeAdminPanelVisualDesign({ ...normalized, responsive }));
+    onChange(resetAdminPanelVisualViewport(normalized, viewport));
   };
 
   return (

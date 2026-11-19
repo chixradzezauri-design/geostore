@@ -6413,7 +6413,6 @@ export default function AdminDashboardPro({
               design={adminVisualDesign}
               syncStatus={adminVisualSyncStatus}
               onChange={handleAdminVisualDesignChange}
-              onReset={() => handleAdminVisualDesignChange(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN)}
             />
           ) : (
             <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">

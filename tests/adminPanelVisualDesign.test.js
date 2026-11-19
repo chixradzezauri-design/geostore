@@ -8,6 +8,7 @@ import {
   buildAdminPanelVisualStyle,
   loadAdminPanelVisualDesign,
   normalizeAdminPanelVisualDesign,
+  resetAdminPanelVisualViewport,
   saveAdminPanelVisualDesign
 } from '../src/utils/adminPanelVisualDesign.js';
 
@@ -704,4 +705,69 @@ test('every admin visual editor target is wired to real JSX and all eight deskto
     assert.equal(generated[`--admin-vd-element-mobile-${key}-fontSize`], '13px');
     assert.equal(generated[`--admin-vd-element-mobile-${key}-padding`], '8px');
   }
+});
+
+
+test('desktop reset restores desktop styles but preserves content and tablet/mobile overrides', () => {
+  const source = normalizeAdminPanelVisualDesign({
+    theme: { accent: '#123456' },
+    layout: { fontSize: 15 },
+    components: { orders: { titleFontSize: 21 } },
+    elementStyles: { orderCard: { fontSize: 19 } },
+    content: { ordersTitle: 'ჩემი სათაური' },
+    responsive: {
+      tablet: { theme: { accent: '#234567' }, layout: { fontSize: 14 } },
+      mobile: { theme: { accent: '#345678' }, layout: { fontSize: 12 } }
+    }
+  });
+
+  const reset = resetAdminPanelVisualViewport(source, 'desktop');
+
+  assert.deepEqual(reset.theme, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme);
+  assert.deepEqual(reset.layout, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.layout);
+  assert.deepEqual(reset.components, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.components);
+  assert.deepEqual(reset.elementStyles, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles);
+  assert.deepEqual(reset.content, source.content);
+  assert.deepEqual(reset.responsive.tablet, source.responsive.tablet);
+  assert.deepEqual(reset.responsive.mobile, source.responsive.mobile);
+});
+
+test('tablet reset removes only tablet overrides and preserves desktop, mobile and content', () => {
+  const source = normalizeAdminPanelVisualDesign({
+    theme: { accent: '#123456' },
+    layout: { fontSize: 15 },
+    content: { ordersTitle: 'ჩემი სათაური' },
+    responsive: {
+      tablet: { theme: { accent: '#234567' }, layout: { fontSize: 14 } },
+      mobile: { theme: { accent: '#345678' }, layout: { fontSize: 12 } }
+    }
+  });
+
+  const reset = resetAdminPanelVisualViewport(source, 'tablet');
+
+  assert.deepEqual(reset.theme, source.theme);
+  assert.deepEqual(reset.layout, source.layout);
+  assert.deepEqual(reset.content, source.content);
+  assert.deepEqual(reset.responsive.tablet, { theme: {}, components: source.components, elementStyles: source.elementStyles, layout: {} });
+  assert.deepEqual(reset.responsive.mobile, source.responsive.mobile);
+});
+
+test('mobile reset removes only mobile overrides and preserves desktop, tablet and content', () => {
+  const source = normalizeAdminPanelVisualDesign({
+    theme: { accent: '#123456' },
+    layout: { fontSize: 15 },
+    content: { ordersTitle: 'ჩემი სათაური' },
+    responsive: {
+      tablet: { theme: { accent: '#234567' }, layout: { fontSize: 14 } },
+      mobile: { theme: { accent: '#345678' }, layout: { fontSize: 12 } }
+    }
+  });
+
+  const reset = resetAdminPanelVisualViewport(source, 'mobile');
+
+  assert.deepEqual(reset.theme, source.theme);
+  assert.deepEqual(reset.layout, source.layout);
+  assert.deepEqual(reset.content, source.content);
+  assert.deepEqual(reset.responsive.mobile, { theme: {}, components: source.components, elementStyles: source.elementStyles, layout: {} });
+  assert.deepEqual(reset.responsive.tablet, source.responsive.tablet);
 });

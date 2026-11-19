@@ -571,6 +571,26 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
   return { version: 1, theme, layout, components, content, elementStyles, responsive };
 }
 
+export function resetAdminPanelVisualViewport(rawDesign, viewport) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+
+  if (viewport === 'desktop') {
+    return normalizeAdminPanelVisualDesign({
+      ...design,
+      theme: DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme,
+      layout: DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.layout,
+      components: DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.components,
+      elementStyles: DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles
+    });
+  }
+
+  if (viewport !== 'tablet' && viewport !== 'mobile') return design;
+
+  const responsive = { ...design.responsive };
+  delete responsive[viewport];
+  return normalizeAdminPanelVisualDesign({ ...design, responsive });
+}
+
 const effectiveViewport = (design, viewport) => ({
   theme: { ...design.theme, ...(design.responsive?.[viewport]?.theme || {}) },
   layout: { ...design.layout, ...(design.responsive?.[viewport]?.layout || {}) }
