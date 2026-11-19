@@ -692,7 +692,7 @@ test('every admin visual editor target is wired to real JSX and all eight deskto
     }
 
     assert.equal(generated[`--admin-vd-element-${key}-fontSize`], '17px');
-    assert.equal(generated[`--admin-vd-element-${key}-fontWeight`], '800px');
+    assert.equal(generated[`--admin-vd-element-${key}-fontWeight`], '800');
     assert.equal(generated[`--admin-vd-element-${key}-textAlign`], 'center');
     assert.equal(generated[`--admin-vd-element-${key}-textColor`], '#123456');
     assert.equal(generated[`--admin-vd-element-${key}-backgroundColor`], '#234567');
