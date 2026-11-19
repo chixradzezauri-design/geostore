@@ -250,7 +250,7 @@ test('all supported visual style properties remain independent across elements a
   const design = normalizeStorefrontVisualDesign({
     elementStyles: {
       'hero.title': desktopStyle,
-      'hero.subtitle': { textColor: '#abcdef' }
+      'hero.description': { textColor: '#abcdef' }
     },
     responsive: {
       tablet: { elementStyles: { 'hero.title': tabletStyle } },
@@ -300,7 +300,7 @@ test('all supported visual style properties remain independent across elements a
   assert.equal(mobile.paddingLeft, '8px');
   assert.equal(mobile.backgroundColor, '#223344');
 
-  assert.equal(buildStorefrontElementStyle(design, 'hero.subtitle', 'desktop').color, '#abcdef');
-  assert.equal(buildStorefrontElementStyle(design, 'hero.subtitle', 'tablet').color, '#abcdef');
-  assert.equal(buildStorefrontElementStyle(design, 'hero.subtitle', 'mobile').color, '#abcdef');
+  assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'desktop').color, '#abcdef');
+  assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'tablet').color, '#abcdef');
+  assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'mobile').color, '#abcdef');
 });
