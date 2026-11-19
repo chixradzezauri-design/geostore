@@ -304,3 +304,30 @@ test('all supported visual style properties remain independent across elements a
   assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'tablet').color, '#abcdef');
   assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'mobile').color, '#abcdef');
 });
+
+test('direct-edit storefront text targets stay connected to rendered settings and shared draft saving', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const components = await Promise.all([
+    '../src/components/StoreView.jsx',
+    '../src/components/Header.jsx',
+    '../src/components/StorefrontFooter.jsx'
+  ].map(path => readFile(new URL(path, import.meta.url), 'utf8')));
+  const targetMap = editor.slice(
+    editor.indexOf('const VISUAL_EDITOR_TARGETS = {'),
+    editor.indexOf('const VISUAL_EDITOR_TREE = [')
+  );
+  const editableTargets = [...targetMap.matchAll(/^\\s{2}'([^']+)': \\{[^}]*settingKey: '([^']+)'[^}]*\\}/gm)];
+  assert.ok(editableTargets.length >= 8, 'expected direct text editing across storefront regions');
+
+  for (const [targetId, settingKey] of editableTargets) {
+    assert.ok(
+      components.some(source => source.includes(settingKey)),
+      `direct-edit target ${targetId} is not connected to a rendered setting: ${settingKey}`
+    );
+  }
+
+  assert.ok(editor.includes('siteSettings?.[selectedElement.settingKey]'));
+  assert.ok(editor.includes('setSiteSettings(current => ({ ...(current || {}), [key]: value }))'));
+  assert.ok(editor.includes('const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign }'));
+  assert.ok(editor.includes('onSaveStorefrontDraft(snapshot)'));
+});
