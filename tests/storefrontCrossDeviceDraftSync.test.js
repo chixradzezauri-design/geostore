@@ -47,3 +47,17 @@ test('successful version restore resets editor history without marking the resto
   assert.match(restore, /setDesign\(restoredDesign\)/);
   assert.doesNotMatch(restore, /commitDesign\(/);
 });
+
+test('late initial draft hydration preserves edits made while loading', () => {
+  const initial = app.split('const loadStorefrontDraft = async () =>')[1]?.split('}, [hasSettingsAccess]')[0] || '';
+  assert.match(initial, /storefrontCurrentSnapshotRef\.current !== snapshotBeforeLoad/);
+  assert.match(initial, /storefrontSaveLock\.current \|\| storefrontPublishLock\.current/);
+  assert.ok(initial.indexOf('storefrontCurrentSnapshotRef.current !== snapshotBeforeLoad') < initial.indexOf('setCategoriesList(sharedSnapshot.categories)'));
+});
+
+test('in-flight shared refresh rechecks the active effect and latest editor snapshot', () => {
+  const refresh = app.split('const refreshSharedStorefrontDraft = async () =>')[1]?.split('const handleVisibilityChange')[0] || '';
+  assert.match(refresh, /const latestSnapshot = storefrontCurrentSnapshotRef\.current/);
+  assert.match(refresh, /if \(!active \|\| storefrontDraftLocalDirtyRef\.current/);
+  assert.match(app, /storefrontCurrentSnapshotRef\.current = JSON\.stringify\(\{ categories, banners: bannersList, siteSettings \}\)/);
+});
