@@ -776,6 +776,17 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const filteredStylePresets = useMemo(() => groupedStylePresets.flatMap(group => group.items), [groupedStylePresets]);
   const toggleStylePresetSelection = id => setSelectedStylePresetIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
   const selectedStylePresets = normalized.stylePresets.filter(item => selectedStylePresetIds.includes(item.id));
+  const comparableStylePresets = selectedStylePresets.slice(0, 4);
+  const styleComparisonFields = [
+    { key: 'fontSize', label: 'ტექსტის ზომა', suffix: ' px' },
+    { key: 'fontWeight', label: 'ტექსტის სისქე', suffix: '' },
+    { key: 'borderRadius', label: 'კუთხეების მომრგვალება', suffix: ' px' },
+    { key: 'padding', label: 'შიდა დაშორება', suffix: ' px' },
+    { key: 'textAlign', label: 'ტექსტის გასწორება', suffix: '' },
+    { key: 'textColor', label: 'ტექსტის ფერი', suffix: '' },
+    { key: 'backgroundColor', label: 'ფონის ფერი', suffix: '' },
+    { key: 'borderColor', label: 'ჩარჩოს ფერი', suffix: '' }
+  ];
   const selectAllStylePresets = () => setSelectedStylePresetIds(normalized.stylePresets.map(item => item.id));
   const removeSelectedStylePresets = () => {
     if (!selectedStylePresets.length) return;
@@ -1122,6 +1133,22 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             {filteredElementEntries.length} / {Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).length} ელემენტი
           </div>
         </div>
+        {selectedStylePresets.length >= 2 && (
+          <section className="space-y-3 rounded-xl border border-sky-400/30 bg-sky-950/15 p-3" aria-label="შერჩეული სტილების შედარება">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div><h4 className="text-xs font-black text-sky-200">სტილების შედარება</h4><p className="mt-1 text-[10px] text-slate-400">შეადარე მონიშნული სტილების პარამეტრები გამოყენებამდე. შედარება ცვლილებებს არ ახორციელებს.</p></div>
+              <span className="rounded-full border border-sky-400/30 px-2 py-1 text-[10px] tabular-nums text-sky-200">{selectedStylePresets.length} მონიშნულია</span>
+            </div>
+            {selectedStylePresets.length > 4 && <p className="text-[10px] text-amber-200">შედარებაში ნაჩვენებია პირველი 4 მონიშნული სტილი. დანარჩენი მონიშნულები შენარჩუნებულია.</p>}
+            <div className="overflow-x-auto rounded-lg border border-slate-700">
+              <table className="w-full min-w-[560px] border-collapse text-left text-[10px]">
+                <thead className="bg-slate-900"><tr><th scope="col" className="sticky left-0 z-10 min-w-32 border-b border-r border-slate-700 bg-slate-900 p-2 text-slate-300">პარამეტრი</th>{comparableStylePresets.map(preset => <th key={preset.id} scope="col" className="min-w-32 border-b border-slate-700 p-2 font-bold text-sky-200">{preset.name}</th>)}</tr></thead>
+                <tbody>{styleComparisonFields.map(field => <tr key={field.key} className="border-b border-slate-800 last:border-0"><th scope="row" className="sticky left-0 z-10 border-r border-slate-700 bg-slate-950 p-2 font-semibold text-slate-300">{field.label}</th>{comparableStylePresets.map(preset => { const value = preset.style[field.key]; return <td key={preset.id} className="p-2 text-slate-200">{value == null || value === '' ? '—' : field.key.endsWith('Color') ? <span className="inline-flex items-center gap-2"><i className="h-4 w-4 rounded border border-white/30" style={{ backgroundColor: value }} /><code>{value}</code></span> : `${value}${field.suffix}`}</td>; })}</tr>)}</tbody>
+              </table>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2"><button type="button" onClick={() => setSelectedStylePresetIds([])} className="rounded-md border border-slate-600 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">შედარების გასუფთავება</button><button type="button" onClick={() => exportSavedElementStyles(comparableStylePresets, 'geostore-admin-compared-style-presets.json')} className="rounded-md border border-sky-400/30 px-2.5 py-1.5 text-[10px] font-bold text-sky-200">შედარებული სტილების ექსპორტი</button></div>
+          </section>
+        )}
         <section className="space-y-3 rounded-xl border border-emerald-400/25 bg-slate-950/60 p-3 sm:col-span-2" aria-label="შენახული სტილების ბიბლიოთეკა">
           <div className="flex flex-col gap-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-black text-white">შენახული სტილების ბიბლიოთეკა</h3><p className="text-[11px] text-slate-400">შეინახეთ ელემენტის სტილი და გამოიყენეთ სხვა ელემენტზე.</p></div><span className="text-[10px] font-bold text-slate-400">{normalized.stylePresets.length} / 30</span></div><div className="flex flex-wrap gap-2"><button type="button" onClick={saveSelectedElementStyle} disabled={!selectedElementKey || normalized.stylePresets.length >= 30} className="rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950 disabled:opacity-40">არჩეული ელემენტის სტილის შენახვა</button><button type="button" onClick={exportSavedElementStyles} disabled={!normalized.stylePresets.length} className="rounded-lg border border-sky-400/40 px-3 py-2 text-[11px] font-bold text-sky-200 disabled:opacity-40">ყველას JSON ექსპორტი</button><button type="button" onClick={() => exportSavedElementStyles(selectedStylePresets, 'geostore-admin-selected-style-presets.json')} disabled={!selectedStylePresets.length} className="rounded-lg border border-sky-400/40 px-3 py-2 text-[11px] font-bold text-sky-200 disabled:opacity-40">მონიშნულის ექსპორტი ({selectedStylePresets.length})</button><button type="button" onClick={removeSelectedStylePresets} disabled={!selectedStylePresets.length} className="rounded-lg border border-rose-400/40 px-3 py-2 text-[11px] font-bold text-rose-200 disabled:opacity-40">მონიშნულის წაშლა ({selectedStylePresets.length})</button><button type="button" onClick={selectAllStylePresets} disabled={!normalized.stylePresets.length || selectedStylePresets.length === normalized.stylePresets.length} className="rounded-lg border border-slate-600 px-3 py-2 text-[11px] font-bold text-slate-200 disabled:opacity-40">ყველას მონიშვნა</button><button type="button" onClick={() => setSelectedStylePresetIds([])} disabled={!selectedStylePresets.length} className="rounded-lg border border-slate-600 px-3 py-2 text-[11px] font-bold text-slate-200 disabled:opacity-40">მონიშვნის მოხსნა</button><button type="button" onClick={() => stylePresetFileInputRef.current?.click()} disabled={normalized.stylePresets.length >= 30} className="rounded-lg border border-violet-400/40 px-3 py-2 text-[11px] font-bold text-violet-200 disabled:opacity-40">JSON იმპორტი</button><input ref={stylePresetFileInputRef} type="file" accept="application/json,.json" onChange={importSavedElementStyles} className="hidden" aria-label="GEOSTORE სტილების JSON ფაილის არჩევა" /></div></div>
           {!selectedElementKey && <p className="text-xs text-amber-200">ჯერ აირჩიეთ ელემენტი ქვემოთ მოცემული სიიდან.</p>}
