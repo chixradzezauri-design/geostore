@@ -5306,7 +5306,7 @@ export default function AdminDashboardPro({
                             isOwner ? (
                               <button
                                 type="button"
-                                onClick={() => { reactivationTriggerRef.current = document.activeElement; setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                                onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
                                 aria-label={`შეკვეთა #${o.id} ხელახლა გააქტიურება`}
                                 title={isDeliveredOrderStatus(o.status)
                                   ? 'მთავარი ადმინისტრატორის პაროლის დადასტურებით დაბრუნდება ახალ სტატუსზე; მარაგი უცვლელი დარჩება.'
@@ -5332,16 +5332,6 @@ export default function AdminDashboardPro({
                         ) : (
                           <div className="admin-order-status-actions flex flex-wrap items-center justify-start sm:justify-end gap-1 bg-slate-900 p-1 rounded-2xl border border-emerald-500/20 w-full sm:w-auto">
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'ახალი' ? 'bg-blue-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ახალი</button>
-                            {isDeliveredOrderStatus(o.status) && (
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}
-                                className="px-2.5 py-1.5 rounded-xl font-black text-[10px] cursor-pointer transition bg-emerald-400/15 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-400/25"
-                                title="დასრულებული შეკვეთის ხელახლა გააქტიურება მარაგის განმეორებითი ჩამოჭრის გარეშე"
-                              >
-                                ხელახლა გააქტიურება
-                              </button>
-                            )}
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'მუშავდება')} disabled={isDeliveredOrderStatus(o.status) || isShippedOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'მუშავდება' ? 'bg-amber-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>მუშავდება</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'გაგზავნილი')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${getOrderStatusFilterKey(o.status) === 'გაგზავნილი' ? 'bg-cyan-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>გაგზავნილი</button>
                             <button onClick={() => handleUpdateOrderStatus(o.id, 'დასრულებული')} disabled={isDeliveredOrderStatus(o.status)} className={`px-2.5 py-1.5 rounded-xl font-bold text-[10px] cursor-pointer transition disabled:opacity-40 disabled:cursor-not-allowed ${isDeliveredOrderStatus(o.status) ? 'bg-emerald-400 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}>ჩაბარებული</button>

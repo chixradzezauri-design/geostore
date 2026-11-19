@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261117130000_reopen_completed_orders.sql', import.meta.url), 'utf8');
+const permissionMigration = await readFile(new URL('../supabase/migrations/20261119100000_revoke_anon_completed_order_reactivation.sql', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 
 test('completed order reactivation is protected by the primary admin and fresh password authentication', () => {
@@ -42,4 +43,14 @@ test('completed and cancelled order reactivation controls are clear, mobile-acce
   assert.match(admin, /ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია/);
   assert.match(admin, /დასრულებულის ხელახლა გააქტიურება/);
   assert.match(admin, /გაუქმებულის ხელახლა გააქტიურება/);
+});
+
+test('completed-order reactivation wrapper explicitly revokes anon execution', () => {
+  assert.match(permissionMigration, /REVOKE ALL ON FUNCTION public\\.admin_reopen_completed_order\\(text\\) FROM PUBLIC, anon/i);
+  assert.match(permissionMigration, /GRANT EXECUTE ON FUNCTION public\\.admin_reopen_completed_order\\(text\\) TO authenticated/i);
+});
+
+test('completed-order row action uses the guarded status handler instead of opening the dialog directly', () => {
+  assert.match(admin, /onClick=\\{\\(\\) => handleUpdateOrderStatus\\(o\\.id, 'ახალი'\\)\\}/);
+  assert.doesNotMatch(admin, /setReactivationOrder\\(o\\);/);
 });
