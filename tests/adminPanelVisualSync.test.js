@@ -17,9 +17,10 @@ test('admin visual design is loaded and saved through the shared Supabase RPCs',
 
 test('admin visual design cloud access is restricted to the primary admin identity and role', () => {
   const ownerGuard = /auth\.uid\(\) IS DISTINCT FROM '[0-9a-f-]{36}'::uuid[\s\S]*?auth\.jwt\(\)->'app_metadata'->>'role'[\s\S]*?IS DISTINCT FROM 'admin'/;
+  assert.match(baseMigration, ownerGuard);
   assert.match(migration, ownerGuard);
-  assert.match(migration, /REVOKE ALL ON TABLE private\.admin_panel_visual_settings FROM PUBLIC, anon, authenticated/);
-  assert.match(migration, /ALTER TABLE private\.admin_panel_visual_settings FORCE ROW LEVEL SECURITY/);
+  assert.match(baseMigration, /REVOKE ALL ON TABLE private\.admin_panel_visual_settings FROM PUBLIC, anon, authenticated/);
+  assert.match(baseMigration, /ALTER TABLE private\.admin_panel_visual_settings FORCE ROW LEVEL SECURITY/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.save_admin_panel_visual_design_state\(jsonb, timestamptz\) FROM PUBLIC, anon/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_admin_panel_visual_design_state\(jsonb, timestamptz\) TO authenticated/);
 });
