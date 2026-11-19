@@ -1538,6 +1538,7 @@ export default function App() {
     const uploadedAssets = [];
     let storefrontPublished = false;
     let publishRequestStarted = false;
+    const publishEditorSnapshotAtStart = storefrontCurrentSnapshotRef.current;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
@@ -1574,6 +1575,10 @@ export default function App() {
         siteSettings: publishedSiteSettings
       };
       const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
+      // Uploads may take time. Never publish an obsolete snapshot if the editor changed meanwhile.
+      if (storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart) {
+        throw new Error('გამოქვეყნება შეჩერდა: ატვირთვის მიმდინარეობისას რედაქტორში ცვლილებები გაკეთდა. გადაამოწმეთ მიმდინარე მონახაზი და ხელახლა გამოაქვეყნეთ.');
+      }
       publishRequestStarted = true;
       const publishResponse = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/publish_storefront_config`,
