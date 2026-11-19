@@ -784,6 +784,35 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(restored);
     setSelectedStylePresetIds([]);
   };
+  const createManualStyleBackup = () => {
+    if (!normalized.stylePresets.length) {
+      window.alert('სარეზერვო ასლის შესაქმნელად სტილების ბიბლიოთეკა ცარიელი არ უნდა იყოს.');
+      return;
+    }
+    const next = createAdminStylePresetBackup(normalized, 'ხელით შექმნილი სარეზერვო ასლი');
+    if (next.stylePresetBackups.length === normalized.stylePresetBackups.length) return;
+    commitChange(next);
+  };
+  const renameAutomaticStyleBackup = backup => {
+    const nextName = window.prompt('შეიყვანეთ სარეზერვო ასლის ახალი სახელი (მაქსიმუმ 100 სიმბოლო):', backup?.reason || '');
+    if (nextName == null) return;
+    const reason = nextName.trim().slice(0, 100);
+    if (!reason) {
+      window.alert('სარეზერვო ასლის სახელი ცარიელი არ უნდა იყოს.');
+      return;
+    }
+    commitChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      stylePresetBackups: normalized.stylePresetBackups.map(item => item.id === backup.id ? { ...item, reason } : item)
+    }));
+  };
+  const deleteAutomaticStyleBackup = backup => {
+    if (!backup || !window.confirm(`წაიშალოს სარეზერვო ასლი „${backup.reason}“? ეს არ შეცვლის მიმდინარე სტილების ბიბლიოთეკას.`)) return;
+    commitChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      stylePresetBackups: normalized.stylePresetBackups.filter(item => item.id !== backup.id)
+    }));
+  };
   const updateStylePresetCategory = (id, category) => {
     commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
@@ -865,13 +894,18 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(normalizeAdminPanelVisualDesign({ ...protectedDesign, stylePresets: protectedDesign.stylePresets.filter(item => !selectedIds.has(item.id)) }));
     setSelectedStylePresetIds([]);
   };
-  const exportSavedElementStyles = (presets = normalized.stylePresets, filename = 'geostore-admin-style-presets.json') => {
+  const exportSavedElementStyles = (presets = normalized.stylePresets, filename = 'geostore-admin-style-presets.json', backupMetadata = null) => {
     if (!presets.length) return;
     const payload = {
       format: 'geostore-admin-style-presets',
       version: 2,
       exportedAt: new Date().toISOString(),
-      metadata: { includesCategories: true, includesFavorites: true, includesVersionHistory: true },
+      metadata: {
+        includesCategories: true,
+        includesFavorites: true,
+        includesVersionHistory: true,
+        ...(backupMetadata ? { automaticBackup: backupMetadata } : {})
+      },
       stylePresets: presets
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -1283,13 +1317,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <section className="space-y-2 rounded-xl border border-amber-400/25 bg-amber-950/10 p-3" aria-label="სტილების ავტომატური სარეზერვო ასლები">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div><h4 className="text-xs font-black text-amber-200">ავტომატური სარეზერვო ასლები</h4><p className="text-[10px] text-slate-400">წაშლამდე და აღდგენამდე შენახული ბოლო 10 მდგომარეობა. აღდგენისას მიმდინარე ვერსიაც დაცული იქნება.</p></div>
-                <span className="text-[10px] font-bold text-amber-200">{normalized.stylePresetBackups.length} / 10</span>
+                <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-amber-200">{normalized.stylePresetBackups.length} / 10</span><button type="button" onClick={createManualStyleBackup} disabled={!normalized.stylePresets.length || normalized.stylePresetBackups.length >= 10} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200 disabled:opacity-40">ასლის შექმნა</button></div>
               </div>
               <div className="space-y-2">
                 {normalized.stylePresetBackups.slice().reverse().map(backup => (
                   <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900/70 p-2">
                     <div className="min-w-0"><p className="truncate text-[11px] font-bold text-slate-200">{backup.reason}</p><p className="text-[10px] text-slate-400">{new Date(backup.savedAt).toLocaleString('ka-GE')} · {backup.stylePresets.length} სტილი</p></div>
-                    <button type="button" onClick={() => restoreAutomaticStyleBackup(backup)} className="rounded-md border border-amber-400/40 px-3 py-1.5 text-[10px] font-bold text-amber-200">ამ ასლის აღდგენა</button>
+                    <div className="flex flex-wrap gap-1"><button type="button" onClick={() => exportSavedElementStyles(backup.stylePresets, `geostore-admin-style-backup-${backup.id}.json`, { id: backup.id, savedAt: backup.savedAt, reason: backup.reason })} className="rounded-md border border-sky-400/40 px-2.5 py-1.5 text-[10px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => renameAutomaticStyleBackup(backup)} className="rounded-md border border-slate-600 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => restoreAutomaticStyleBackup(backup)} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200">აღდგენა</button><button type="button" onClick={() => deleteAutomaticStyleBackup(backup)} className="rounded-md border border-rose-400/40 px-2.5 py-1.5 text-[10px] font-bold text-rose-200">წაშლა</button></div>
                   </div>
                 ))}
               </div>
