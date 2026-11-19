@@ -270,3 +270,45 @@ test('button and navigation typography are bounded and responsive', () => {
   assert.equal(style['--admin-vd-mobile-navItemFontSize'], '12px');
   assert.equal(style['--admin-vd-mobile-navItemFontWeight'], '700');
 });
+
+
+test('table, form and filter controls are bounded and inherit across viewports', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    layout: {
+      tableCellPaddingY: 18,
+      tableHeaderFontSize: 15,
+      tableHeaderFontWeight: 850,
+      tableRowFontSize: 14,
+      tableRowMinHeight: 70,
+      filterControlHeight: 46,
+      filterGap: 18,
+      inputFontSize: 16,
+      inputFontWeight: 600
+    },
+    responsive: {
+      tablet: { layout: { tableCellPaddingY: 14, tableHeaderFontSize: 13, tableRowMinHeight: 60, filterGap: 12, inputFontSize: 14 } },
+      mobile: { layout: { tableCellPaddingY: 10, tableRowFontSize: 12, filterControlHeight: 38, inputFontWeight: 500 } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+
+  assert.equal(style['--admin-vd-tableCellPaddingY'], '18px');
+  assert.equal(style['--admin-vd-tableHeaderFontSize'], '15px');
+  assert.equal(style['--admin-vd-tableHeaderFontWeight'], '850');
+  assert.equal(style['--admin-vd-tableRowFontSize'], '14px');
+  assert.equal(style['--admin-vd-tableRowMinHeight'], '70px');
+  assert.equal(style['--admin-vd-filterControlHeight'], '46px');
+  assert.equal(style['--admin-vd-filterGap'], '18px');
+  assert.equal(style['--admin-vd-inputFontSize'], '16px');
+  assert.equal(style['--admin-vd-inputFontWeight'], '600');
+  assert.equal(style['--admin-vd-tablet-tableCellPaddingY'], '14px');
+  assert.equal(style['--admin-vd-tablet-tableHeaderFontSize'], '13px');
+  assert.equal(style['--admin-vd-tablet-tableRowMinHeight'], '60px');
+  assert.equal(style['--admin-vd-tablet-filterGap'], '12px');
+  assert.equal(style['--admin-vd-tablet-inputFontSize'], '14px');
+  assert.equal(style['--admin-vd-mobile-tableCellPaddingY'], '10px');
+  assert.equal(style['--admin-vd-mobile-tableHeaderFontSize'], '15px');
+  assert.equal(style['--admin-vd-mobile-tableRowFontSize'], '12px');
+  assert.equal(style['--admin-vd-mobile-filterControlHeight'], '38px');
+  assert.equal(style['--admin-vd-mobile-inputFontWeight'], '500');
+});
