@@ -1355,12 +1355,13 @@
 
 
  
-/* STAGE 115 — restore dark admin finance and vendor surfaces.
-   index.css contains an older paper-surface rule for these wrappers.
+/* STAGE 115/116 — restore dark admin finance, vendor and settings surfaces.
+   index.css contains older paper-surface rules for these outer wrappers.
    Keep their existing inner cards and functionality unchanged. */
 .admin-dashboard-pro.admin-dashboard-shell :is(
   .admin-expenses,
-  .admin-vendors-panel
+  .admin-vendors-panel,
+  .admin-settings-panel
 ) {
   background: transparent !important;
   color: var(--admin-text) !important;
