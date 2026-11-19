@@ -214,6 +214,7 @@ export default function StorefrontVisualEditor({
   const [selectedVersionId, setSelectedVersionId] = useState('');
   const [selectedVersionSnapshot, setSelectedVersionSnapshot] = useState(null);
   const [versionRestoreBusy, setVersionRestoreBusy] = useState(false);
+  const versionInspectRequestRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -231,19 +232,28 @@ export default function StorefrontVisualEditor({
       }
     };
     loadVersionHistory();
-    return () => { active = false; };
+    return () => {
+      active = false;
+      versionInspectRequestRef.current += 1;
+    };
   }, []);
 
   const inspectStorefrontVersion = async (versionId) => {
+    const requestId = versionInspectRequestRef.current + 1;
+    versionInspectRequestRef.current = requestId;
     setSelectedVersionId(versionId);
     setSelectedVersionSnapshot(null);
     setVersionHistoryError('');
     try {
       const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at,snapshot').eq('config_key', 'storefront').eq('id', versionId).single();
       if (error) throw error;
-      setSelectedVersionSnapshot(data);
+      if (versionInspectRequestRef.current === requestId && String(data?.id || '') === String(versionId)) {
+        setSelectedVersionSnapshot(data);
+      }
     } catch (error) {
-      setVersionHistoryError(error?.message || 'არჩეული ვერსიის დეტალები ვერ ჩაიტვირთა.');
+      if (versionInspectRequestRef.current === requestId) {
+        setVersionHistoryError(error?.message || 'არჩეული ვერსიის დეტალები ვერ ჩაიტვირთა.');
+      }
     }
   };
 
@@ -619,6 +629,9 @@ export default function StorefrontVisualEditor({
     const published = await onPublishStorefront();
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
     if (published === true) {
+      versionInspectRequestRef.current += 1;
+      setSelectedVersionId('');
+      setSelectedVersionSnapshot(null);
       const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at').eq('config_key', 'storefront').order('created_at', { ascending: false }).limit(20);
       if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
       else {
