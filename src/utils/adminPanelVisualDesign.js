@@ -37,7 +37,15 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     ordersSectionBackground: '#0f172a',
     ordersSectionBorder: '#334155',
     supportSectionBackground: '#0f172a',
-    supportSectionBorder: '#334155'
+    supportSectionBorder: '#334155',
+    discountsSectionBackground: '#0f172a',
+    discountsSectionBorder: '#334155',
+    bannersSectionBackground: '#0f172a',
+    bannersSectionBorder: '#334155',
+    categoriesSectionBackground: '#0f172a',
+    categoriesSectionBorder: '#334155',
+    couponsSectionBackground: '#0f172a',
+    couponsSectionBorder: '#334155'
   },
   layout: {
     fontSize: 13,
