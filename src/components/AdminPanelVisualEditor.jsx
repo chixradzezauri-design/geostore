@@ -834,7 +834,6 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     if (!backup) return;
     const selected = backup.stylePresets.filter(preset => selectedBackupStyleIds.includes(preset.id));
     if (!selected.length) return;
-    const selectedIds = new Set(selected.map(preset => preset.id));
     const styleKey = style => JSON.stringify(Object.entries(style || {}).sort(([left], [right]) => left.localeCompare(right)));
     const currentById = new Map(normalized.stylePresets.map(preset => [preset.id, preset]));
     const selectedKeys = new Set();
