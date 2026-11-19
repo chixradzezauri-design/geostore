@@ -106,9 +106,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
       style[`--admin-vd-${prefix}${key}`] = value;
     }
     for (const [key, value] of Object.entries(values.layout)) {
-      style[`--admin-vd-${prefix}${key}`] = key !== 'sectionGap'
-        ? `${value}px`
-        : String(value);
+      style[`--admin-vd-${prefix}${key}`] = `${value}px`;
     }
   }
 
