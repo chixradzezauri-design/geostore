@@ -93,6 +93,15 @@
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-couponsSectionBackground);
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-couponsSectionBorder);
   --admin-vd-staff-radius-active: var(--admin-vd-staff-radius);
+  --admin-vd-staff-borderStyle-active: var(--admin-vd-staff-borderStyle);
+  --admin-vd-inventory-borderStyle-active: var(--admin-vd-inventory-borderStyle);
+  --admin-vd-analytics-borderStyle-active: var(--admin-vd-analytics-borderStyle);
+  --admin-vd-orders-borderStyle-active: var(--admin-vd-orders-borderStyle);
+  --admin-vd-support-borderStyle-active: var(--admin-vd-support-borderStyle);
+  --admin-vd-discounts-borderStyle-active: var(--admin-vd-discounts-borderStyle);
+  --admin-vd-banners-borderStyle-active: var(--admin-vd-banners-borderStyle);
+  --admin-vd-categories-borderStyle-active: var(--admin-vd-categories-borderStyle);
+  --admin-vd-coupons-borderStyle-active: var(--admin-vd-coupons-borderStyle);
   --admin-vd-staff-titleFontWeight-active: var(--admin-vd-staff-titleFontWeight);
   --admin-vd-staff-bodyFontWeight-active: var(--admin-vd-staff-bodyFontWeight);
   --admin-vd-staff-textAlign-active: var(--admin-vd-staff-textAlign);
@@ -579,6 +588,15 @@
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-tablet-couponsSectionBackground, var(--admin-vd-couponsSectionBackground));
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-tablet-couponsSectionBorder, var(--admin-vd-couponsSectionBorder));
     --admin-vd-staff-radius-active: var(--admin-vd-tablet-staff-radius);
+    --admin-vd-staff-borderStyle-active: var(--admin-vd-tablet-staff-borderStyle, var(--admin-vd-staff-borderStyle));
+    --admin-vd-inventory-borderStyle-active: var(--admin-vd-tablet-inventory-borderStyle, var(--admin-vd-inventory-borderStyle));
+    --admin-vd-analytics-borderStyle-active: var(--admin-vd-tablet-analytics-borderStyle, var(--admin-vd-analytics-borderStyle));
+    --admin-vd-orders-borderStyle-active: var(--admin-vd-tablet-orders-borderStyle, var(--admin-vd-orders-borderStyle));
+    --admin-vd-support-borderStyle-active: var(--admin-vd-tablet-support-borderStyle, var(--admin-vd-support-borderStyle));
+    --admin-vd-discounts-borderStyle-active: var(--admin-vd-tablet-discounts-borderStyle, var(--admin-vd-discounts-borderStyle));
+    --admin-vd-banners-borderStyle-active: var(--admin-vd-tablet-banners-borderStyle, var(--admin-vd-banners-borderStyle));
+    --admin-vd-categories-borderStyle-active: var(--admin-vd-tablet-categories-borderStyle, var(--admin-vd-categories-borderStyle));
+    --admin-vd-coupons-borderStyle-active: var(--admin-vd-tablet-coupons-borderStyle, var(--admin-vd-coupons-borderStyle));
     --admin-vd-staff-padding-active: var(--admin-vd-tablet-staff-padding);
     --admin-vd-staff-borderWidth-active: var(--admin-vd-tablet-staff-borderWidth);
     --admin-vd-staff-shadowBlur-active: var(--admin-vd-tablet-staff-shadowBlur);
@@ -758,6 +776,15 @@
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-mobile-couponsSectionBackground, var(--admin-vd-tablet-couponsSectionBackground, var(--admin-vd-couponsSectionBackground)));
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-mobile-couponsSectionBorder, var(--admin-vd-tablet-couponsSectionBorder, var(--admin-vd-couponsSectionBorder)));
     --admin-vd-staff-radius-active: var(--admin-vd-mobile-staff-radius, var(--admin-vd-tablet-staff-radius, var(--admin-vd-staff-radius)));
+    --admin-vd-staff-borderStyle-active: var(--admin-vd-mobile-staff-borderStyle, var(--admin-vd-tablet-staff-borderStyle, var(--admin-vd-staff-borderStyle)));
+    --admin-vd-inventory-borderStyle-active: var(--admin-vd-mobile-inventory-borderStyle, var(--admin-vd-tablet-inventory-borderStyle, var(--admin-vd-inventory-borderStyle)));
+    --admin-vd-analytics-borderStyle-active: var(--admin-vd-mobile-analytics-borderStyle, var(--admin-vd-tablet-analytics-borderStyle, var(--admin-vd-analytics-borderStyle)));
+    --admin-vd-orders-borderStyle-active: var(--admin-vd-mobile-orders-borderStyle, var(--admin-vd-tablet-orders-borderStyle, var(--admin-vd-orders-borderStyle)));
+    --admin-vd-support-borderStyle-active: var(--admin-vd-mobile-support-borderStyle, var(--admin-vd-tablet-support-borderStyle, var(--admin-vd-support-borderStyle)));
+    --admin-vd-discounts-borderStyle-active: var(--admin-vd-mobile-discounts-borderStyle, var(--admin-vd-tablet-discounts-borderStyle, var(--admin-vd-discounts-borderStyle)));
+    --admin-vd-banners-borderStyle-active: var(--admin-vd-mobile-banners-borderStyle, var(--admin-vd-tablet-banners-borderStyle, var(--admin-vd-banners-borderStyle)));
+    --admin-vd-categories-borderStyle-active: var(--admin-vd-mobile-categories-borderStyle, var(--admin-vd-tablet-categories-borderStyle, var(--admin-vd-categories-borderStyle)));
+    --admin-vd-coupons-borderStyle-active: var(--admin-vd-mobile-coupons-borderStyle, var(--admin-vd-tablet-coupons-borderStyle, var(--admin-vd-coupons-borderStyle)));
     --admin-vd-staff-padding-active: var(--admin-vd-mobile-staff-padding, var(--admin-vd-tablet-staff-padding, var(--admin-vd-staff-padding)));
     --admin-vd-staff-borderWidth-active: var(--admin-vd-mobile-staff-borderWidth, var(--admin-vd-tablet-staff-borderWidth, var(--admin-vd-staff-borderWidth)));
     --admin-vd-staff-shadowBlur-active: var(--admin-vd-mobile-staff-shadowBlur, var(--admin-vd-tablet-staff-shadowBlur, var(--admin-vd-staff-shadowBlur)));
@@ -975,3 +1002,32 @@
   font-weight: var(--admin-vd-coupons-bodyFontWeight-active) !important;
 }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel :is(h2, h3, h4) { font-weight: var(--admin-vd-coupons-titleFontWeight-active) !important; }
+
+/* Independent border styles for all editable admin modules. */
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-staff-panel, .admin-staff-list-panel) {
+  border-style: var(--admin-vd-staff-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel {
+  border-style: var(--admin-vd-inventory-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-analytics-card, .admin-analytics-toolbar) {
+  border-style: var(--admin-vd-analytics-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel {
+  border-style: var(--admin-vd-orders-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-panel {
+  border-style: var(--admin-vd-support-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-discounts-panel {
+  border-style: var(--admin-vd-discounts-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banners {
+  border-style: var(--admin-vd-banners-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-manager {
+  border-style: var(--admin-vd-categories-borderStyle-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel {
+  border-style: var(--admin-vd-coupons-borderStyle-active) !important;
+}
