@@ -1299,7 +1299,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     const category = ELEMENT_CATEGORIES.find(item => item.id === elementCategory);
     if (!category) { window.alert('ჯერ აირჩიეთ კონკრეტული მოდული.'); return; }
     const nextDesign = createAdminPanelModuleBackup(normalized, category, viewport);
-    if (nextDesign.moduleDesignBackups.length === normalized.moduleDesignBackups.length) {
+    if (nextDesign.moduleDesignBackups.at(-1)?.moduleId !== category.id || nextDesign.moduleDesignBackups.at(-1)?.viewport !== viewport) {
       window.alert('მოდულის სარეზერვო ასლი ვერ შეიქმნა. გადაამოწმეთ მოდულის არჩევანი.');
       return;
     }
@@ -1310,8 +1310,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     if (!backup || backup.moduleId !== elementCategory || backup.viewport !== viewport) return;
     const confirmed = window.confirm(`აღდგეს „${backup.moduleLabel}“ მოდულის ${backup.viewport} ხედის ასლი? სხვა მოდულები და დანარჩენი ხედები უცვლელი დარჩება.`);
     if (!confirmed) return;
+    const restoredDesign = restoreAdminPanelModuleBackup(normalized, backup.id);
     const protectedDesign = createAdminPanelModuleBackup(normalized, ELEMENT_CATEGORIES.find(item => item.id === backup.moduleId), backup.viewport);
-    commitChange(restoreAdminPanelModuleBackup(protectedDesign, backup.id));
+    commitChange({ ...restoredDesign, moduleDesignBackups: protectedDesign.moduleDesignBackups });
   };
 
   const removeModuleBackup = backupId => {
