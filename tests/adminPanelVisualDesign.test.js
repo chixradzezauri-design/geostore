@@ -497,3 +497,17 @@ test('per-module typography alignment and font weights are normalized and emitte
   assert.equal(style['--admin-vd-orders-titleFontWeight'], '900');
   assert.equal(style['--admin-vd-orders-textAlign'], 'center');
 });
+
+
+test('per-module border styles accept only supported CSS values and remain responsive', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    components: { orders: { borderStyle: 'dashed' }, staff: { borderStyle: 'expression(alert(1))' } },
+    responsive: { tablet: { components: { orders: { borderStyle: 'dotted' } } }, mobile: { components: { orders: { borderStyle: 'none' } } } }
+  });
+  assert.equal(design.components.orders.borderStyle, 'dashed');
+  assert.equal(design.components.staff.borderStyle, 'solid');
+  const style = buildAdminPanelVisualStyle(design);
+  assert.equal(style['--admin-vd-orders-borderStyle'], 'dashed');
+  assert.equal(style['--admin-vd-tablet-orders-borderStyle'], 'dotted');
+  assert.equal(style['--admin-vd-mobile-orders-borderStyle'], 'none');
+});
