@@ -746,6 +746,49 @@ export function restoreAdminPanelModuleBackup(rawDesign, backupId) {
   return normalizeAdminPanelVisualDesign(next);
 }
 
+export function compareAdminPanelModuleBackup(rawDesign, backupId) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  const backup = design.moduleDesignBackups.find(item => item.id === backupId);
+  if (!backup) return null;
+  const prefixes = { orders: 'order', staff: 'staff', inventory: 'inventory', analytics: 'analytics', support: 'support', discounts: 'discount', banners: 'banner', categories: 'category', coupons: 'coupon' };
+  const prefix = prefixes[backup.moduleId];
+  if (!prefix) return null;
+  const category = {
+    id: backup.moduleId,
+    label: backup.moduleLabel,
+    keys: Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => key.startsWith(prefix))
+  };
+  const currentSnapshot = createAdminPanelModuleBackup(design, category, backup.viewport).moduleDesignBackups.at(-1)?.snapshot;
+  if (!currentSnapshot) return null;
+  const flatten = (value, path = '', output = {}) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      for (const [key, child] of Object.entries(value)) flatten(child, path ? `${path}.${key}` : key, output);
+    } else {
+      output[path] = value;
+    }
+    return output;
+  };
+  const savedValues = flatten(backup.snapshot);
+  const currentValues = flatten(currentSnapshot);
+  const paths = [...new Set([...Object.keys(savedValues), ...Object.keys(currentValues)])].sort();
+  const differences = paths.filter(path => JSON.stringify(savedValues[path] ?? null) !== JSON.stringify(currentValues[path] ?? null))
+    .map(path => ({
+      path,
+      saved: Object.hasOwn(savedValues, path) ? savedValues[path] : null,
+      current: Object.hasOwn(currentValues, path) ? currentValues[path] : null
+    }));
+  return {
+    backupId: backup.id,
+    moduleId: backup.moduleId,
+    moduleLabel: backup.moduleLabel,
+    viewport: backup.viewport,
+    savedAt: backup.savedAt,
+    changedCount: differences.length,
+    unchanged: differences.length === 0,
+    differences
+  };
+}
+
 export function deleteAdminPanelModuleBackup(rawDesign, backupId) {
   const design = normalizeAdminPanelVisualDesign(rawDesign);
   return normalizeAdminPanelVisualDesign({ ...design, moduleDesignBackups: design.moduleDesignBackups.filter(backup => backup.id !== backupId) });
