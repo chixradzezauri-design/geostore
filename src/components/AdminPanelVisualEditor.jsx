@@ -512,7 +512,6 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
 
   // Select mapped elements from the real admin module without triggering its actions.
   useEffect(() => {
-    if (!directSelectionMode) return undefined;
     const handlePreviewClick = event => {
       const target = event.target;
       if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
@@ -520,6 +519,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
+      if (!directSelectionMode) return;
       const match = Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).find(([, definition]) => {
         try { return Boolean(target.closest(definition.selector)); } catch { return false; }
       });
@@ -530,8 +530,28 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       const category = ELEMENT_CATEGORIES.find(item => item.keys.includes(key));
       if (category) setElementCategory(category.id);
     };
+    const handlePreviewSubmit = event => {
+      if (event.target instanceof Element && event.target.closest('.admin-dashboard-shell') && !event.target.closest('.admin-visual-editor-panel')) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+      }
+    };
+    const handlePreviewKeydown = event => {
+      if (event.target instanceof Element && event.target.closest('.admin-dashboard-shell') && !event.target.closest('.admin-visual-editor-panel')) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+      }
+    };
     document.addEventListener('click', handlePreviewClick, true);
-    return () => document.removeEventListener('click', handlePreviewClick, true);
+    document.addEventListener('submit', handlePreviewSubmit, true);
+    document.addEventListener('keydown', handlePreviewKeydown, true);
+    return () => {
+      document.removeEventListener('click', handlePreviewClick, true);
+      document.removeEventListener('submit', handlePreviewSubmit, true);
+      document.removeEventListener('keydown', handlePreviewKeydown, true);
+    };
   }, [directSelectionMode]);
   const expandedStyleBackup = useMemo(
     () => normalized.stylePresetBackups.find(backup => backup.id === expandedStyleBackupId) || null,
@@ -1493,7 +1513,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h3 className="text-sm font-black text-white">ცოცხალი ადმინპანელის Preview</h3>
-            <p className="mt-1 text-[10px] leading-4 text-slate-400">ქვემოთ ჩანს რეალური მოდული მიმდინარე მონაცემებით. აირჩიეთ მოდული და ჩართეთ პირდაპირი მონიშვნა — რედაქტირების რეჟიმში მოქმედების ღილაკები უსაფრთხოდ გაითიშება.</p>
+            <p className="mt-1 text-[10px] leading-4 text-slate-400">ქვემოთ ჩანს რეალური მოდული მიმდინარე მონაცემებით, მაგრამ Preview ყოველთვის მხოლოდ სანახავია — შეკვეთების, პროდუქტებისა და სხვა რეალური მოქმედებების შესრულება დაბლოკილია. ჩართეთ პირდაპირი მონიშვნა სასურველი ელემენტის ასარჩევად.</p>
           </div>
           <label className="flex shrink-0 items-center gap-2 text-[10px] font-bold text-slate-300">
             მოდული
