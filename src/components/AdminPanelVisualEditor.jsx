@@ -140,7 +140,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -174,7 +176,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -208,7 +212,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -242,7 +248,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -276,7 +284,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -310,7 +320,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -344,7 +356,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -378,7 +392,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   },
   {
@@ -412,7 +428,9 @@ const COMPONENT_FIELDS = [
         "min": 0,
         "max": 40,
         "suffix": "px"
-      }
+      },
+      { "key": "fontSize", "label": "ტექსტის ზომა", "min": 10, "max": 20, "suffix": "px" },
+      { "key": "titleFontSize", "label": "სათაურის ზომა", "min": 12, "max": 28, "suffix": "px" }
     ]
   }
 ];
@@ -646,6 +664,18 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
                       className="w-full accent-emerald-400"
                       aria-label={component.label + ' — ' + property.label}
                     />
+                  </label>
+                ))}
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {[
+                  { key: 'textColor', label: 'ტექსტის ფერი' },
+                  { key: 'backgroundColor', label: 'ბლოკის ფონი' },
+                  { key: 'borderColor', label: 'ჩარჩოს ფერი' }
+                ].map(field => (
+                  <label key={field.key} className="flex items-center justify-between gap-2 rounded-lg border border-slate-700/70 bg-slate-900/70 p-2 text-[10px] text-slate-300">
+                    <span>{field.label}</span>
+                    <input type="color" value={active.components[component.key][field.key]} onChange={event => updateComponentValue(component.key, field.key, event.target.value)} aria-label={component.label + ' — ' + field.label} className="h-8 w-11 cursor-pointer rounded border border-slate-600 bg-slate-900 p-1" />
                   </label>
                 ))}
               </div>
