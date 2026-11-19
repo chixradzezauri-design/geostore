@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildAdminPanelVisualStyle, findMostSpecificAdminPanelVisualElement } from '../src/utils/adminPanelVisualDesign.js';
+import { ADMIN_PANEL_ELEMENT_DEFINITIONS, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, buildAdminPanelVisualStyle, findMostSpecificAdminPanelVisualElement } from '../src/utils/adminPanelVisualDesign.js';
 
 test('direct selection prefers a nested admin element over its parent container', () => {
   const parent = { parentElement: null };
@@ -94,5 +94,25 @@ test('admin live preview exposes every module with fine-grained visual targets',
 
   for (const moduleId of ['orders', 'staff', 'inventory', 'analytics', 'support', 'discounts', 'banners', 'categories', 'coupons', 'replenishment']) {
     assert.ok(editor.includes(`<option value="${moduleId}">`), `missing live preview option for ${moduleId}`);
+  }
+});
+
+
+test('every admin visual target maps all eight editable style properties to live CSS', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const css = await readFile(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  const targets = Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS);
+  assert.equal(targets.length, 35, 'unexpected admin visual target count');
+
+  for (const [key, definition] of targets) {
+    assert.ok(css.includes(definition.selector), `missing CSS selector for ${key}: ${definition.selector}`);
+    const fields = Object.keys(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles[key] || {});
+    assert.equal(fields.length, 8, `unexpected editable property count for ${key}`);
+    for (const field of fields) {
+      assert.ok(
+        css.includes(`var(--admin-vd-element-${key}-${field}`),
+        `missing live CSS binding for ${key}.${field}`
+      );
+    }
   }
 });
