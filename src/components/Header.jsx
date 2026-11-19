@@ -120,7 +120,7 @@ export default function Header({
             <span data-visual-editor-target="header.logo" style={visualStyle('header.logo')} className="gs-brand-monogram" aria-hidden="true">G</span>
             <span className="gs-brand-wordmark">
               <span data-visual-editor-target="header.storeName" style={visualStyle('header.storeName')} className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
-              <span data-visual-editor-target="header.caption" style={visualStyle('header.caption')} className="gs-brand-caption">CURATED FOR YOU</span>
+              <span data-visual-editor-target="header.caption" style={visualStyle('header.caption')} className="gs-brand-caption">{siteSettings?.headerCaptionText || 'CURATED FOR YOU'}</span>
             </span>
           </span>
         </button>
@@ -147,8 +147,8 @@ export default function Header({
               style={visualStyle('header.search.input')}
               value={searchQuery || ''}
               onChange={(event) => setSearchQuery?.(event.target.value)}
-              placeholder={t.searchPlaceholder || 'მოძებნე პროდუქტი'}
-              aria-label={t.searchPlaceholder || 'მოძებნე პროდუქტი'}
+              placeholder={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
+              aria-label={siteSettings?.headerSearchPlaceholder || t.searchPlaceholder || 'მოძებნე პროდუქტი'}
             />
           </label>
           <button
