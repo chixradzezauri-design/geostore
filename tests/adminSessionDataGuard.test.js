@@ -36,3 +36,10 @@ test('ending an admin session clears private snapshots before paint and invalida
 test('unsupported direct support-ticket deletion is not exposed in the admin UI', () => {
   assert.ok(!admin.includes('handleDeleteTicket'));
 });
+test('CRM loading indicator is limited to the initial fetch and stays hidden during background refreshes', () => {
+  assert.ok(admin.includes('const crmHasLoadedRef = useRef(false)'));
+  assert.ok(admin.includes('if (!crmHasLoadedRef.current) setCrmLoading(true)'));
+  assert.ok(admin.includes('crmHasLoadedRef.current = true;'));
+  assert.ok(admin.includes('if (sessionVersion === crmSessionVersion.current) {'));
+  assert.ok(admin.includes('setCrmLoading(false);'));
+});
