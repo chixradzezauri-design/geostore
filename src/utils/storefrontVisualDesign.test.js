@@ -130,6 +130,19 @@ test('element style builder independently rejects unsafe alignment and font-weig
   assert.equal(style.fontWeight, undefined);
 });
 
+test('catalog product image target supports independent safe image styling', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'product.image': { objectFit: 'cover', objectPositionX: 72, width: 85, opacity: 90 }
+    }
+  });
+  const style = buildStorefrontElementStyle(design, 'product.image');
+  assert.equal(style.objectFit, 'cover');
+  assert.equal(style.objectPosition, '72% center');
+  assert.equal(style.width, '85%');
+  assert.equal(style.opacity, '0.9');
+});
+
 test('product detail targets support independent safe styling', () => {
   const design = normalizeStorefrontVisualDesign({
     elementStyles: {
