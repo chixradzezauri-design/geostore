@@ -23,7 +23,7 @@ test('content styles target existing sections and all original tabs remain avail
   assert.deepEqual(ids, [
     'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
     'products', 'inventory', 'replenishment', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
-    'banners', 'categories', 'visual_editor', 'coupons', 'vendors', 'users', 'settings'
+    'banners', 'categories', 'visual_editor', 'admin_visual_editor', 'coupons', 'vendors', 'users', 'settings'
   ]);
 });
 
