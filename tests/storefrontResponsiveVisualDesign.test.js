@@ -316,7 +316,7 @@ test('direct-edit storefront text targets stay connected to rendered settings an
     editor.indexOf('const VISUAL_EDITOR_TARGETS = {'),
     editor.indexOf('const VISUAL_EDITOR_TREE = [')
   );
-  const editableTargets = [...targetMap.matchAll(/^\\s{2}'([^']+)': \\{[^}]*settingKey: '([^']+)'[^}]*\\}/gm)];
+  const editableTargets = [...targetMap.matchAll(/^\s{2}'([^']+)': \{[^}]*settingKey: '([^']+)'[^}]*\}/gm)];
   assert.ok(editableTargets.length >= 8, 'expected direct text editing across storefront regions');
 
   for (const [targetId, settingKey] of editableTargets) {
