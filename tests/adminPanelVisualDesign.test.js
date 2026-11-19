@@ -478,3 +478,22 @@ test('admin visual editor exposes text editing and live admin modules consume th
   }
   assert.match(dashboard, /visualContent=\{adminVisualDesign\.content\}/);
 });
+
+
+test('per-module typography alignment and font weights are normalized and emitted safely', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    components: {
+      orders: { titleFontWeight: 900, bodyFontWeight: 300, textAlign: 'center' },
+      staff: { titleFontWeight: 9999, bodyFontWeight: 'invalid', textAlign: 'justify' }
+    }
+  });
+  assert.equal(design.components.orders.titleFontWeight, 900);
+  assert.equal(design.components.orders.bodyFontWeight, 300);
+  assert.equal(design.components.orders.textAlign, 'center');
+  assert.equal(design.components.staff.titleFontWeight, 900);
+  assert.equal(design.components.staff.bodyFontWeight, 400);
+  assert.equal(design.components.staff.textAlign, 'left');
+  const style = buildAdminPanelVisualStyle(design);
+  assert.equal(style['--admin-vd-orders-titleFontWeight'], '900');
+  assert.equal(style['--admin-vd-orders-textAlign'], 'center');
+});
