@@ -18,9 +18,29 @@
   --admin-vd-navItemRadius-active: var(--admin-vd-navItemRadius);
   --admin-vd-navItemPaddingY-active: var(--admin-vd-navItemPaddingY);
   --admin-vd-sectionGap-active: var(--admin-vd-sectionGap);
+  --admin-vd-headerBackground-active: var(--admin-vd-headerBackground);
+  --admin-vd-headerBorder-active: var(--admin-vd-headerBorder);
+  --admin-vd-tableHeaderBackground-active: var(--admin-vd-tableHeaderBackground);
+  --admin-vd-tableHeaderText-active: var(--admin-vd-tableHeaderText);
+  --admin-vd-inputBackground-active: var(--admin-vd-inputBackground);
+  --admin-vd-inputText-active: var(--admin-vd-inputText);
+  --admin-vd-inputBorder-active: var(--admin-vd-inputBorder);
+  --admin-vd-inputFocus-active: var(--admin-vd-inputFocus);
+  --admin-vd-headerRadius-active: var(--admin-vd-headerRadius);
+  --admin-vd-headerPadding-active: var(--admin-vd-headerPadding);
+  --admin-vd-tableCellPadding-active: var(--admin-vd-tableCellPadding);
+  --admin-vd-inputRadius-active: var(--admin-vd-inputRadius);
+  --admin-vd-inputHeight-active: var(--admin-vd-inputHeight);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-header="true"] {
+  background-color: var(--admin-vd-headerBackground-active) !important;
+  border-color: var(--admin-vd-headerBorder-active) !important;
+  border-radius: var(--admin-vd-headerRadius-active) !important;
+  padding: var(--admin-vd-headerPadding-active) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/80,
@@ -92,6 +112,26 @@
   width: 100%;
 }
 
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead { background-color: var(--admin-vd-tableHeaderBackground-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPadding-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody td { padding: var(--admin-vd-tableCellPadding-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+.admin-dashboard-pro[data-admin-visual-design="enabled"] select,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] textarea {
+  min-height: var(--admin-vd-inputHeight-active);
+  border-radius: var(--admin-vd-inputRadius-active) !important;
+  border-color: var(--admin-vd-inputBorder-active) !important;
+  background-color: var(--admin-vd-inputBackground-active) !important;
+  color: var(--admin-vd-inputText-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] input:focus,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] select:focus,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] textarea:focus {
+  border-color: var(--admin-vd-inputFocus-active) !important;
+  outline-color: var(--admin-vd-inputFocus-active) !important;
+}
+
 @media (min-width: 1024px) {
   .admin-dashboard-pro[data-admin-visual-design="enabled"] > div:first-child {
     width: var(--admin-vd-sidebarWidth-active) !important;
@@ -120,6 +160,19 @@
     --admin-vd-navItemRadius-active: var(--admin-vd-tablet-navItemRadius, var(--admin-vd-navItemRadius));
     --admin-vd-navItemPaddingY-active: var(--admin-vd-tablet-navItemPaddingY, var(--admin-vd-navItemPaddingY));
     --admin-vd-sectionGap-active: var(--admin-vd-tablet-sectionGap, var(--admin-vd-sectionGap));
+    --admin-vd-headerBackground-active: var(--admin-vd-tablet-headerBackground, var(--admin-vd-headerBackground));
+    --admin-vd-headerBorder-active: var(--admin-vd-tablet-headerBorder, var(--admin-vd-headerBorder));
+    --admin-vd-tableHeaderBackground-active: var(--admin-vd-tablet-tableHeaderBackground, var(--admin-vd-tableHeaderBackground));
+    --admin-vd-tableHeaderText-active: var(--admin-vd-tablet-tableHeaderText, var(--admin-vd-tableHeaderText));
+    --admin-vd-inputBackground-active: var(--admin-vd-tablet-inputBackground, var(--admin-vd-inputBackground));
+    --admin-vd-inputText-active: var(--admin-vd-tablet-inputText, var(--admin-vd-inputText));
+    --admin-vd-inputBorder-active: var(--admin-vd-tablet-inputBorder, var(--admin-vd-inputBorder));
+    --admin-vd-inputFocus-active: var(--admin-vd-tablet-inputFocus, var(--admin-vd-inputFocus));
+    --admin-vd-headerRadius-active: var(--admin-vd-tablet-headerRadius, var(--admin-vd-headerRadius));
+    --admin-vd-headerPadding-active: var(--admin-vd-tablet-headerPadding, var(--admin-vd-headerPadding));
+    --admin-vd-tableCellPadding-active: var(--admin-vd-tablet-tableCellPadding, var(--admin-vd-tableCellPadding));
+    --admin-vd-inputRadius-active: var(--admin-vd-tablet-inputRadius, var(--admin-vd-inputRadius));
+    --admin-vd-inputHeight-active: var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight));
   }
 }
 
@@ -144,5 +197,18 @@
     --admin-vd-navItemRadius-active: var(--admin-vd-mobile-navItemRadius, var(--admin-vd-tablet-navItemRadius, var(--admin-vd-navItemRadius)));
     --admin-vd-navItemPaddingY-active: var(--admin-vd-mobile-navItemPaddingY, var(--admin-vd-tablet-navItemPaddingY, var(--admin-vd-navItemPaddingY)));
     --admin-vd-sectionGap-active: var(--admin-vd-mobile-sectionGap, var(--admin-vd-tablet-sectionGap, var(--admin-vd-sectionGap)));
+    --admin-vd-headerBackground-active: var(--admin-vd-mobile-headerBackground, var(--admin-vd-tablet-headerBackground, var(--admin-vd-headerBackground)));
+    --admin-vd-headerBorder-active: var(--admin-vd-mobile-headerBorder, var(--admin-vd-tablet-headerBorder, var(--admin-vd-headerBorder)));
+    --admin-vd-tableHeaderBackground-active: var(--admin-vd-mobile-tableHeaderBackground, var(--admin-vd-tablet-tableHeaderBackground, var(--admin-vd-tableHeaderBackground)));
+    --admin-vd-tableHeaderText-active: var(--admin-vd-mobile-tableHeaderText, var(--admin-vd-tablet-tableHeaderText, var(--admin-vd-tableHeaderText)));
+    --admin-vd-inputBackground-active: var(--admin-vd-mobile-inputBackground, var(--admin-vd-tablet-inputBackground, var(--admin-vd-inputBackground)));
+    --admin-vd-inputText-active: var(--admin-vd-mobile-inputText, var(--admin-vd-tablet-inputText, var(--admin-vd-inputText)));
+    --admin-vd-inputBorder-active: var(--admin-vd-mobile-inputBorder, var(--admin-vd-tablet-inputBorder, var(--admin-vd-inputBorder)));
+    --admin-vd-inputFocus-active: var(--admin-vd-mobile-inputFocus, var(--admin-vd-tablet-inputFocus, var(--admin-vd-inputFocus)));
+    --admin-vd-headerRadius-active: var(--admin-vd-mobile-headerRadius, var(--admin-vd-tablet-headerRadius, var(--admin-vd-headerRadius)));
+    --admin-vd-headerPadding-active: var(--admin-vd-mobile-headerPadding, var(--admin-vd-tablet-headerPadding, var(--admin-vd-headerPadding)));
+    --admin-vd-tableCellPadding-active: var(--admin-vd-mobile-tableCellPadding, var(--admin-vd-tablet-tableCellPadding, var(--admin-vd-tableCellPadding)));
+    --admin-vd-inputRadius-active: var(--admin-vd-mobile-inputRadius, var(--admin-vd-tablet-inputRadius, var(--admin-vd-inputRadius)));
+    --admin-vd-inputHeight-active: var(--admin-vd-mobile-inputHeight, var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight)));
   }
 }
