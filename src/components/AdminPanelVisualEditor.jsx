@@ -1170,19 +1170,22 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   };
 
 
-  const exportAdminModuleBackup = backup => {
-    if (!backup) return;
+  const exportAdminModuleBackup = (backupOrList = normalized.moduleDesignBackups) => {
+    const backups = Array.isArray(backupOrList) ? backupOrList : backupOrList ? [backupOrList] : [];
+    if (!backups.length) return;
     const payload = {
       format: 'geostore-admin-module-design-backups',
       version: 1,
       exportedAt: new Date().toISOString(),
-      moduleDesignBackups: [backup]
+      moduleDesignBackups: backups
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `geostore-${backup.moduleId}-${backup.viewport}-design-backup.json`;
+    link.download = Array.isArray(backupOrList)
+      ? 'geostore-all-module-design-backups.json'
+      : `geostore-${backups[0].moduleId}-${backups[0].viewport}-design-backup.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -1205,20 +1208,42 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       if (validated.length !== parsed.moduleDesignBackups.length) {
         throw new Error('ფაილში არის დაზიანებული ან არასრული ასლი. არსებული დიზაინი უცვლელი დარჩა.');
       }
+      const fingerprint = backup => JSON.stringify({
+        moduleId: backup.moduleId,
+        viewport: backup.viewport,
+        savedAt: backup.savedAt,
+        snapshot: backup.snapshot
+      });
+      const knownBackups = new Set(normalized.moduleDesignBackups.map(fingerprint));
+      const additions = [];
+      let skippedDuplicates = 0;
+      validated.forEach((backup, index) => {
+        const signature = fingerprint(backup);
+        if (knownBackups.has(signature)) {
+          skippedDuplicates += 1;
+          return;
+        }
+        knownBackups.add(signature);
+        const importedId = `admin-module-import-${Date.now().toString(36)}-${index}-${window.crypto?.randomUUID?.() || 'copy'}`;
+        additions.push({
+          ...backup,
+          id: importedId,
+          reason: `იმპორტირებული ასლი · ${backup.reason}`.slice(0, 100)
+        });
+      });
+      if (!additions.length) {
+        window.alert(`ახალი ასლი არ დამატებულა. დუბლიკატი: ${skippedDuplicates}.`);
+        return;
+      }
       const available = Math.max(0, 10 - normalized.moduleDesignBackups.length);
-      const overflow = Math.max(0, validated.length - available);
+      const overflow = Math.max(0, additions.length - available);
       if (overflow && !window.confirm(`მაქსიმუმ 10 ასლის ლიმიტისთვის საჭიროა ${overflow} ყველაზე ძველი არსებული ასლის ჩანაცვლება. გაგრძელდეს?`)) return;
-      const additions = validated.map((backup, index) => ({
-        ...backup,
-        id: `admin-module-import-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 7)}`,
-        reason: `იმპორტირებული ასლი · ${backup.reason}`.slice(0, 100)
-      }));
       const retained = normalized.moduleDesignBackups.slice(overflow);
       commitChange(normalizeAdminPanelVisualDesign({
         ...normalized,
         moduleDesignBackups: [...retained, ...additions].slice(-10)
       }));
-      window.alert(`იმპორტირებულია ${additions.length} მოდულის სარეზერვო ასლი.`);
+      window.alert(`იმპორტირებულია ${additions.length} ახალი ასლი; გამოტოვებულია დუბლიკატი: ${skippedDuplicates}.`);
     } catch (error) {
       window.alert(error?.message || 'მოდულის სარეზერვო ფაილის იმპორტი ვერ შესრულდა.');
     } finally {
@@ -1737,7 +1762,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <section className="space-y-2 rounded-xl border border-sky-400/20 bg-sky-950/10 p-3" aria-label="მოდულის დიზაინის სარეზერვო ასლები">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><h3 className="text-xs font-black text-sky-200">მოდულის სარეზერვო ასლები · {ELEMENT_CATEGORIES.find(category => category.id === elementCategory)?.label}</h3><p className="text-[10px] text-slate-400">ინახება მხოლოდ არჩეული მოდულისა და მიმდინარე ხედის დიზაინი. მაქსიმუმ 10 ასლი მთლიანად.</p></div>
-              <div className="flex flex-wrap items-center gap-1"><span className="text-[10px] tabular-nums text-slate-400">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory).length} ასლი</span><button type="button" onClick={() => moduleBackupFileInputRef.current?.click()} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">JSON იმპორტი</button><input ref={moduleBackupFileInputRef} type="file" accept="application/json,.json" onChange={importAdminModuleBackups} className="hidden" aria-label="მოდულის სარეზერვო JSON ფაილის არჩევა" /></div>
+              <div className="flex flex-wrap items-center gap-1"><span className="text-[10px] tabular-nums text-slate-400">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory).length} ასლი · სულ {normalized.moduleDesignBackups.length}/10</span><button type="button" onClick={() => exportAdminModuleBackup()} disabled={!normalized.moduleDesignBackups.length} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200 disabled:opacity-40">ყველა ასლის JSON ექსპორტი</button><button type="button" onClick={() => moduleBackupFileInputRef.current?.click()} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">JSON იმპორტი</button><input ref={moduleBackupFileInputRef} type="file" accept="application/json,.json" onChange={importAdminModuleBackups} className="hidden" aria-label="მოდულის სარეზერვო JSON ფაილის არჩევა" /></div>
             </div>
             {normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).length ? (
               <div className="space-y-2">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).slice().reverse().map(backup => (
