@@ -35,6 +35,17 @@ test('replenishment planner uses protected settings RPCs and does not mutate sto
   assert.match(admin, /სისტემა მარაგს ავტომატურად არ ცვლის/);
 });
 
+test('inventory replenishment planner paginates long result lists without changing stock data', () => {
+  assert.match(admin, /const REPLENISHMENT_PER_PAGE = 10/);
+  assert.match(admin, /const totalReplenishmentPages = Math\.max\(1, Math\.ceil\(filteredReplenishmentPositions\.length \/ REPLENISHMENT_PER_PAGE\)\)/);
+  assert.match(admin, /paginatedReplenishmentPositions = filteredReplenishmentPositions\.slice/);
+  assert.match(admin, /paginatedReplenishmentPositions\.map\(position =>/);
+  assert.match(admin, /setReplenishmentPage\(1\)/);
+  assert.match(admin, /aria-label="მარაგის შევსების გეგმის გვერდები"/);
+  assert.match(admin, /replenishmentPaginationItems\.map/);
+  assert.match(admin, /სისტემა მარაგს ავტომატურად არ ცვლის/);
+});
+
 test('responsive admin navigation safeguards remain in place', () => {
   assert.match(css, /position:\s*sticky/);
   assert.match(css, /max-height:\s*calc\(100dvh - 24px\)/);
