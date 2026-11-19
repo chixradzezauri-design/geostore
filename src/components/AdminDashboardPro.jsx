@@ -955,6 +955,17 @@ export default function AdminDashboardPro({
   const adminVisualSkipNextSaveRef = useRef(false);
   const adminVisualSaveQueueRef = useRef(Promise.resolve());
   const adminVisualSaveVersionRef = useRef(0);
+  const adminVisualDesignRef = useRef(adminVisualDesign);
+  const adminVisualSyncStatusRef = useRef(adminVisualSyncStatus);
+  const adminVisualHasLocalChangesRef = useRef(false);
+  adminVisualSyncStatusRef.current = adminVisualSyncStatus;
+  const handleAdminVisualDesignChange = (value) => {
+    const normalized = normalizeAdminPanelVisualDesign(value);
+    adminVisualSaveVersionRef.current += 1;
+    adminVisualHasLocalChangesRef.current = true;
+    adminVisualDesignRef.current = normalized;
+    setAdminVisualDesign(normalized);
+  };
   const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(adminVisualDesign), [adminVisualDesign]);
 
   useEffect(() => {
@@ -991,6 +1002,8 @@ export default function AdminDashboardPro({
 
         adminVisualSkipNextSaveRef.current = true;
         const normalized = normalizeAdminPanelVisualDesign(nextDesign || DEFAULT_ADMIN_PANEL_VISUAL_DESIGN);
+        adminVisualDesignRef.current = normalized;
+        adminVisualHasLocalChangesRef.current = false;
         setAdminVisualDesign(normalized);
         saveAdminPanelVisualDesign(normalized);
         setAdminVisualDesignReady(true);
@@ -999,7 +1012,10 @@ export default function AdminDashboardPro({
         if (!active) return;
         // Keep the last local appearance visible, but never pretend it synced.
         adminVisualSkipNextSaveRef.current = true;
-        setAdminVisualDesign(loadAdminPanelVisualDesign());
+        const localFallback = loadAdminPanelVisualDesign();
+        adminVisualDesignRef.current = localFallback;
+        adminVisualHasLocalChangesRef.current = false;
+        setAdminVisualDesign(localFallback);
         setAdminVisualSyncStatus('error');
         setAdminVisualDesignReady(false);
         console.error('GEOSTORE shared admin visual settings failed to load:', error);
@@ -1027,6 +1043,7 @@ export default function AdminDashboardPro({
         .then(() => saveAdminPanelVisualDesignToCloud(adminVisualDesign))
         .then(() => {
           if (active && saveVersion === adminVisualSaveVersionRef.current) {
+            adminVisualHasLocalChangesRef.current = false;
             setAdminVisualSyncStatus('saved');
           }
         })
@@ -1043,6 +1060,65 @@ export default function AdminDashboardPro({
       window.clearTimeout(timer);
     };
   }, [adminVisualDesign, adminVisualDesignReady, adminLoggedIn, isOwner]);
+
+  // Keep already-open owner sessions in sync with changes saved from another device.
+  // A local unsaved draft always wins over a background refresh.
+  useEffect(() => {
+    if (!adminLoggedIn || !isOwner || !adminVisualDesignReady || adminVisualSyncStatus !== 'saved') return;
+    let active = true;
+    let inFlight = false;
+
+    const refreshSharedDesign = async () => {
+      if (
+        inFlight ||
+        !active ||
+        document.visibilityState === 'hidden' ||
+        adminVisualHasLocalChangesRef.current ||
+        adminVisualSyncStatusRef.current !== 'saved'
+      ) return;
+
+      inFlight = true;
+      const requestVersion = adminVisualSaveVersionRef.current;
+      try {
+        const sharedDesign = await fetchAdminPanelVisualDesign();
+        if (
+          !active ||
+          !sharedDesign ||
+          requestVersion !== adminVisualSaveVersionRef.current ||
+          adminVisualHasLocalChangesRef.current ||
+          adminVisualSyncStatusRef.current !== 'saved'
+        ) return;
+
+        const normalized = normalizeAdminPanelVisualDesign(sharedDesign);
+        if (JSON.stringify(normalized) === JSON.stringify(adminVisualDesignRef.current)) return;
+
+        adminVisualSkipNextSaveRef.current = true;
+        adminVisualDesignRef.current = normalized;
+        saveAdminPanelVisualDesign(normalized);
+        setAdminVisualDesign(normalized);
+      } catch (error) {
+        // A transient background refresh failure must not overwrite a valid local draft
+        // or misreport the last successful save as failed.
+        console.warn('GEOSTORE shared admin visual refresh failed:', error);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshSharedDesign();
+    };
+    window.addEventListener('focus', refreshSharedDesign);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const interval = window.setInterval(refreshSharedDesign, 30000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshSharedDesign);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [adminLoggedIn, isOwner, adminVisualDesignReady, adminVisualSyncStatus]);
 
   useEffect(() => {
     if (!adminLoggedIn) return;
@@ -6335,8 +6411,8 @@ export default function AdminDashboardPro({
             <AdminPanelVisualEditor
               design={adminVisualDesign}
               syncStatus={adminVisualSyncStatus}
-              onChange={value => setAdminVisualDesign(normalizeAdminPanelVisualDesign(value))}
-              onReset={() => setAdminVisualDesign(normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))}
+              onChange={handleAdminVisualDesignChange}
+              onReset={() => handleAdminVisualDesignChange(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN)}
             />
           ) : (
             <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
