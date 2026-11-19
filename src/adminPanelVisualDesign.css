@@ -90,6 +90,21 @@
   background-color: var(--admin-vd-surface-active) !important;
 }
 
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel {
+  background-color: var(--admin-vd-staffSectionBackground-active) !important;
+  border-color: var(--admin-vd-staffSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel {
+  background-color: var(--admin-vd-inventorySectionBackground-active) !important;
+  border-color: var(--admin-vd-inventorySectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-toolbar,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
+  background-color: var(--admin-vd-analyticsSectionBackground-active) !important;
+  border-color: var(--admin-vd-analyticsSectionBorder-active) !important;
+}
+
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
   color: var(--admin-vd-text-active) !important;
 }
@@ -235,6 +250,12 @@
   --admin-vd-modalPadding-active: var(--admin-vd-tablet-modalPadding, var(--admin-vd-modalPadding));
   --admin-vd-modalOverlayBackground-active: var(--admin-vd-tablet-modalOverlayBackground, var(--admin-vd-modalOverlayBackground));
   --admin-vd-modalOverlayOpacity-active: var(--admin-vd-tablet-modalOverlayOpacity, var(--admin-vd-modalOverlayOpacity));
+  --admin-vd-staffSectionBackground-active: var(--admin-vd-tablet-staffSectionBackground, var(--admin-vd-staffSectionBackground));
+  --admin-vd-staffSectionBorder-active: var(--admin-vd-tablet-staffSectionBorder, var(--admin-vd-staffSectionBorder));
+  --admin-vd-inventorySectionBackground-active: var(--admin-vd-tablet-inventorySectionBackground, var(--admin-vd-inventorySectionBackground));
+  --admin-vd-inventorySectionBorder-active: var(--admin-vd-tablet-inventorySectionBorder, var(--admin-vd-inventorySectionBorder));
+  --admin-vd-analyticsSectionBackground-active: var(--admin-vd-tablet-analyticsSectionBackground, var(--admin-vd-analyticsSectionBackground));
+  --admin-vd-analyticsSectionBorder-active: var(--admin-vd-tablet-analyticsSectionBorder, var(--admin-vd-analyticsSectionBorder));
   }
 }
 
@@ -283,5 +304,11 @@
   --admin-vd-modalPadding-active: var(--admin-vd-mobile-modalPadding, var(--admin-vd-tablet-modalPadding, var(--admin-vd-modalPadding)));
   --admin-vd-modalOverlayBackground-active: var(--admin-vd-mobile-modalOverlayBackground, var(--admin-vd-tablet-modalOverlayBackground, var(--admin-vd-modalOverlayBackground)));
   --admin-vd-modalOverlayOpacity-active: var(--admin-vd-mobile-modalOverlayOpacity, var(--admin-vd-tablet-modalOverlayOpacity, var(--admin-vd-modalOverlayOpacity)));
+  --admin-vd-staffSectionBackground-active: var(--admin-vd-mobile-staffSectionBackground, var(--admin-vd-tablet-staffSectionBackground, var(--admin-vd-staffSectionBackground)));
+  --admin-vd-staffSectionBorder-active: var(--admin-vd-mobile-staffSectionBorder, var(--admin-vd-tablet-staffSectionBorder, var(--admin-vd-staffSectionBorder)));
+  --admin-vd-inventorySectionBackground-active: var(--admin-vd-mobile-inventorySectionBackground, var(--admin-vd-tablet-inventorySectionBackground, var(--admin-vd-inventorySectionBackground)));
+  --admin-vd-inventorySectionBorder-active: var(--admin-vd-mobile-inventorySectionBorder, var(--admin-vd-tablet-inventorySectionBorder, var(--admin-vd-inventorySectionBorder)));
+  --admin-vd-analyticsSectionBackground-active: var(--admin-vd-mobile-analyticsSectionBackground, var(--admin-vd-tablet-analyticsSectionBackground, var(--admin-vd-analyticsSectionBackground)));
+  --admin-vd-analyticsSectionBorder-active: var(--admin-vd-mobile-analyticsSectionBorder, var(--admin-vd-tablet-analyticsSectionBorder, var(--admin-vd-analyticsSectionBorder)));
   }
 }
