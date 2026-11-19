@@ -251,3 +251,48 @@ test('real storefront header and footer expose independent safe visual targets',
     assert.equal(style.padding, '8px', id + ' padding');
   }
 });
+
+
+test('custom storefront sections normalize safely with bounded blocks, styles and URLs', () => {
+  const design = normalizeStorefrontVisualDesign({
+    customSections: [{
+      id: 'promo section 1', title: 'Campaign', visible: true,
+      backgroundColor: '#123456', textColor: 'url(javascript:alert(1))', padding: 999, align: 'center',
+      blocks: [
+        { id: 'heading-1', type: 'heading', text: 'New collection' },
+        { id: 'image-1', type: 'image', imageUrl: 'javascript:alert(1)', alt: 'Campaign' },
+        { id: 'button-1', type: 'button', label: 'Explore', url: 'javascript:alert(1)' },
+        { id: 'video-1', type: 'video', videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+        { id: 'bad-1', type: 'unknown', text: 'Safe fallback' }
+      ]
+    }]
+  });
+  const [section] = design.customSections;
+  assert.equal(section.id, 'promosection1');
+  assert.equal(section.backgroundColor, '#123456');
+  assert.equal(section.textColor, '#29241f');
+  assert.equal(section.padding, 80);
+  assert.equal(section.align, 'center');
+  assert.equal(section.blocks[1].imageUrl, '');
+  assert.equal(section.blocks[2].url, '');
+  assert.equal(section.blocks[3].videoUrl, 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+  assert.equal(section.blocks[4].type, 'text');
+});
+
+test('custom storefront section links and video embeds reject unsafe hosts and protocols', () => {
+  const design = normalizeStorefrontVisualDesign({
+    customSections: [{ id: 'safe-links', blocks: [
+      { id: 'external', type: 'button', label: 'External', url: 'https://example.com/path' },
+      { id: 'internal', type: 'button', label: 'Internal', url: '/privacy' },
+      { id: 'protocol-relative', type: 'button', label: 'Unsafe', url: '//evil.example' },
+      { id: 'bad-video', type: 'video', videoUrl: 'https://evil.example/embed/123' },
+      { id: 'vimeo', type: 'video', videoUrl: 'https://vimeo.com/12345678' }
+    ] }]
+  });
+  const blocks = design.customSections[0].blocks;
+  assert.equal(blocks[0].url, 'https://example.com/path');
+  assert.equal(blocks[1].url, '/privacy');
+  assert.equal(blocks[2].url, '');
+  assert.equal(blocks[3].videoUrl, '');
+  assert.equal(blocks[4].videoUrl, 'https://player.vimeo.com/video/12345678');
+});
