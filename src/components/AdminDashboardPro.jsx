@@ -19,6 +19,8 @@ import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
 import { isClothingProductCategory, isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
+import { mergeCrmCustomersFromOrders } from '../utils/adminCrm.js';
+import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -48,9 +50,9 @@ const ADMIN_TAB_PERMISSION = Object.freeze({
   banners: 'settings',
   categories: 'settings',
   coupons: 'settings',
-  // Legacy browser-local directories remain owner-only until server-backed.
+  // Vendor planning stays owner-only; customer CRM is backed by authenticated RPCs.
   vendors: 'owner',
-  users: 'owner',
+  users: 'crm',
   settings: 'settings'
 });
 const STAFF_DEFAULT_TAB_ORDER = [
@@ -942,6 +944,10 @@ export default function AdminDashboardPro({
     if (!canAccessAdminTab(adminTab)) setAdminTab(getDefaultAdminTab());
   }, [adminLoggedIn, adminAccess, adminTab]); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [serverCustomers, setServerCustomers] = useState([]);
+  const [crmLoading, setCrmLoading] = useState(false);
+  const [crmError, setCrmError] = useState('');
+  const crmSessionVersion = useRef(0);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
   const [productPage, setProductPage] = useState(1);
@@ -1240,6 +1246,44 @@ export default function AdminDashboardPro({
     void fetchInventoryReplenishmentSettings();
     return () => { replenishmentRequestRef.current += 1; };
   }, [hasProductsPermission]);
+
+  const fetchAdminCustomers = async (sessionVersion = crmSessionVersion.current) => {
+    if (sessionVersion !== crmSessionVersion.current || !adminLoggedIn || !hasCrmPermission) return false;
+    setCrmLoading(true);
+    try {
+      const headers = await getSupabaseHeaders();
+      if (sessionVersion !== crmSessionVersion.current) return false;
+      const rows = await fetchAdminCustomerDirectory({ supabaseUrl: SUPABASE_URL, headers });
+      if (sessionVersion !== crmSessionVersion.current) return false;
+      setServerCustomers(rows);
+      setCrmError('');
+      return true;
+    } catch (error) {
+      if (sessionVersion !== crmSessionVersion.current) return false;
+      console.error('GEOSTORE persistent CRM fetch failed:', error);
+      setCrmError(error?.message || 'CRM მომხმარებლების ჩატვირთვა ვერ მოხერხდა.');
+      return false;
+    } finally {
+      if (sessionVersion === crmSessionVersion.current) setCrmLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    crmSessionVersion.current += 1;
+    const sessionVersion = crmSessionVersion.current;
+    if (!adminLoggedIn || !hasCrmPermission) {
+      setServerCustomers([]);
+      setCrmLoading(false);
+      setCrmError('');
+      return () => { crmSessionVersion.current += 1; };
+    }
+    void fetchAdminCustomers(sessionVersion);
+    const interval = setInterval(() => { void fetchAdminCustomers(sessionVersion); }, 30000);
+    return () => {
+      crmSessionVersion.current += 1;
+      clearInterval(interval);
+    };
+  }, [adminLoggedIn, hasCrmPermission]);
 
   const fetchExpenses = async () => {
     try {
@@ -3886,47 +3930,127 @@ export default function AdminDashboardPro({
     logActivity('გადმოიწერა შეკვეთების CSV ექსპორტი');
   };
 
-  const handleToggleVipUser = (userId) => {
+  const persistServerCustomerProfile = async (customer, changes = {}) => {
+    const requestVersion = crmSessionVersion.current;
+    if (!adminLoggedIn || !hasCrmPermission) return false;
+    const profile = {
+      id: customer.id,
+      isVip: Boolean(changes.isVip ?? customer.isVip),
+      isBlocked: Boolean(changes.isBlocked ?? customer.isBlocked),
+      discountPercent: Number(changes.discountPercent ?? customer.discountPercent) || 0,
+      adminNotes: String(changes.adminNotes ?? customer.adminNotes ?? '')
+    };
+    const headers = await getSupabaseHeaders();
+    if (requestVersion !== crmSessionVersion.current) return false;
+    const saved = await saveAdminCustomerCrmProfile({ supabaseUrl: SUPABASE_URL, headers, profile });
+    if (requestVersion !== crmSessionVersion.current) return false;
+    setServerCustomers(previous => previous.map(row => String(row.id) === String(customer.id)
+      ? {
+          ...row,
+          isVip: Boolean(saved?.is_vip ?? profile.isVip),
+          isBlocked: Boolean(saved?.is_blocked ?? profile.isBlocked),
+          discountPercent: Number(saved?.discount_percent ?? profile.discountPercent) || 0,
+          adminNotes: String(saved?.admin_notes ?? profile.adminNotes)
+        }
+      : row
+    ));
+    return true;
+  };
+
+  const handleToggleVipUser = async (userId) => {
+    const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (customer?.isServerCustomer) {
+      const requestVersion = crmSessionVersion.current;
+      try {
+        const saved = await persistServerCustomerProfile(customer, { isVip: !customer.isVip });
+        if (!saved || requestVersion !== crmSessionVersion.current) return;
+        logActivity(`შეიცვალა ბაზაში შენახული მომხმარებლის VIP სტატუსი (ID: ${userId})`);
+      } catch (error) {
+        if (requestVersion === crmSessionVersion.current) alert(error?.message || 'CRM VIP სტატუსის შენახვა ვერ მოხერხდა.');
+      }
+      return;
+    }
     if (typeof setUsersList === 'function') {
-      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
+      setUsersList(previous => (previous || []).map(user =>
+        user.id === userId || user.email === userId ? { ...user, isVip: !user.isVip } : user
+      ));
     }
     logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
   };
 
-  const handleToggleBlockUser = (userId) => {
+  const handleToggleBlockUser = async (userId) => {
+    const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (customer?.isServerCustomer) {
+      const requestVersion = crmSessionVersion.current;
+      try {
+        const saved = await persistServerCustomerProfile(customer, { isBlocked: !customer.isBlocked });
+        if (!saved || requestVersion !== crmSessionVersion.current) return;
+        logActivity(`შეიცვალა ბაზაში შენახული CRM შეზღუდვის ნიშანი (ID: ${userId})`);
+      } catch (error) {
+        if (requestVersion === crmSessionVersion.current) alert(error?.message || 'CRM შეზღუდვის ნიშნის შენახვა ვერ მოხერხდა.');
+      }
+      return;
+    }
     if (typeof setUsersList === 'function') {
-      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
+      setUsersList(previous => (previous || []).map(user =>
+        user.id === userId || user.email === userId ? { ...user, isBlocked: !user.isBlocked } : user
+      ));
     }
     logActivity(`შეიცვალა მხოლოდ CRM ჩანაწერის შეზღუდვის ნიშანი (ID: ${userId})`);
   };
 
   const handleDeleteUser = (userId, userName) => {
+    const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (customer?.isServerCustomer) {
+      alert('რეალური Supabase Auth მომხმარებლის ანგარიშის წაშლა CRM-იდან დაუშვებელია.');
+      return;
+    }
     if (window.confirm(`წაიშლება მხოლოდ ამ მოწყობილობაზე შენახული CRM ჩანაწერი "${userName || userId}". Supabase Auth ანგარიში და შეკვეთები არ წაიშლება. გავაგრძელოთ?`)) {
       if (typeof setUsersList === 'function') {
-        setUsersList(prev => (prev || []).filter(u => u.id !== userId && u.email !== userId));
+        setUsersList(previous => (previous || []).filter(user => user.id !== userId && user.email !== userId));
       }
       logActivity(`წაიშალა მხოლოდ ლოკალური CRM ჩანაწერი: ${userName || userId}`);
     }
   };
 
-  const handleSaveUserCrm = (userId) => {
+  const handleSaveUserCrm = async (userId) => {
+    const customer = crmUsers.find(user => user.id === userId || user.email === userId);
+    if (customer?.isServerCustomer) {
+      const requestVersion = crmSessionVersion.current;
+      try {
+        const saved = await persistServerCustomerProfile(customer, {
+          discountPercent: editUserDiscount,
+          adminNotes: editUserNotes
+        });
+        if (!saved || requestVersion !== crmSessionVersion.current) return;
+      } catch (error) {
+        if (requestVersion === crmSessionVersion.current) alert(error?.message || 'CRM მონაცემების ბაზაში შენახვა ვერ მოხერხდა.');
+        return;
+      }
+      setEditingUserId(null);
+      setEditUserDiscount('');
+      setEditUserNotes('');
+      logActivity(`განახლდა ბაზაში შენახული CRM მონაცემები (ID: ${userId})`);
+      alert('CRM მონაცემები წარმატებით შეინახა Supabase-ში!');
+      return;
+    }
     if (typeof setUsersList === 'function') {
-      setUsersList(prev => (prev || []).map(u => {
-        if (u.id === userId || u.email === userId) {
+      setUsersList(previous => (previous || []).map(user => {
+        if (user.id === userId || user.email === userId) {
           return {
-            ...u,
+            ...user,
             discountPercent: Number(editUserDiscount) || 0,
             adminNotes: editUserNotes
           };
         }
-        return u;
+        return user;
       }));
     }
     setEditingUserId(null);
     setEditUserDiscount('');
     setEditUserNotes('');
     logActivity(`განახლდა CRM მონაცემები მომხმარებლისთვის (ID: ${userId})`);
-    alert('✅ მომხმარებლის მონაცემები წარმატებით განახლდა!');
+    alert('მომხმარებლის CRM ჩანაწერი განახლდა ამ მოწყობილობაზე.');
   };
 
   const handleRestoreStorefrontVersion = (version) => {
@@ -3969,10 +4093,21 @@ export default function AdminDashboardPro({
     await onSaveStorefrontDraft(normalized);
   };
 
-  const filteredUsers = (usersList || []).filter(u => 
-    u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
-    u.email?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-    u.phone?.toLowerCase().includes(userSearchQuery.toLowerCase())
+  const mergedCrmCustomers = mergeCrmCustomersFromOrders(
+    [...(Array.isArray(usersList) ? usersList : []), ...(Array.isArray(serverCustomers) ? serverCustomers : [])],
+    Array.isArray(orders) ? orders : []
+  );
+  const crmUsers = mergedCrmCustomers.map(customer => {
+    const server = serverCustomers.find(row =>
+      String(row.id) === String(customer.id) ||
+      (row.email && String(row.email).toLowerCase() === String(customer.email || '').toLowerCase())
+    );
+    return server ? { ...customer, ...server, isServerCustomer: true } : customer;
+  });
+  const filteredUsers = crmUsers.filter(u =>
+    String(u.name || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    String(u.email || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    String(u.phone || '').toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
   const normalizedProductSearch = String(productSearchQuery || '').trim().toLocaleLowerCase();
@@ -4130,7 +4265,7 @@ export default function AdminDashboardPro({
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
-            { id: 'users', label: '👥 CRM მომხმარებლები', count: usersList?.length || 0, icon: Users },
+            { id: 'users', label: '👥 CRM მომხმარებლები', count: crmUsers.length, icon: Users },
             { id: 'settings', label: '⚙️ პარამეტრები & უსაფრთხოება', icon: Settings }
           ].filter(tab => canAccessAdminTab(tab.id)).map(tab => {
             const IconComp = tab.icon;
@@ -6197,7 +6332,7 @@ export default function AdminDashboardPro({
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
-                <Users className="w-5 h-5 text-emerald-400" /> CRM ჩანაწერები — ლოკალური სია ({usersList?.length || 0})
+                <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
                 <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
@@ -6205,8 +6340,10 @@ export default function AdminDashboardPro({
               </div>
             </div>
             <p className="text-amber-200/90 text-[11px] leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">
-              ეს არის ძველი CRM სია, რომელიც ინახება მხოლოდ ამ მოწყობილობის ბრაუზერში. VIP/შეზღუდვის ნიშნები აქ მხოლოდ CRM ჩანაწერს ეხება — ისინი არ ცვლიან Supabase Auth ანგარიშის უფლებებს. ჩანაწერის წაშლა არ შლის რეალურ ანგარიშს, შეკვეთებს ან ბაზის მონაცემებს.
+              რეგისტრირებული მომხმარებლები და CRM პროფილები იტვირთება Supabase-იდან. ძველი ლოკალური ჩანაწერები შენარჩუნებულია და გაერთიანებულია სიაში; CRM შეზღუდვის ნიშანი არ ცვლის Auth ანგარიშის უფლებებს.
             </p>
+            {crmLoading && <p className="text-emerald-300 text-xs">CRM მონაცემები იტვირთება...</p>}
+            {crmError && <p className="text-amber-200 text-xs bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2">Supabase CRM: {crmError} ძველი ლოკალური ჩანაწერები არ შეცვლილა.</p>}
 
             <div className="admin-crm-list space-y-4">
               {(!filteredUsers || filteredUsers.length === 0) ? (
@@ -6264,13 +6401,12 @@ export default function AdminDashboardPro({
                             <Edit3 className="w-4 h-4" />
                           </button>
 
-                          <button 
-                            onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
+                          {!u.isServerCustomer && (<button onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </button>)}
                         </div>
                       </div>
 
