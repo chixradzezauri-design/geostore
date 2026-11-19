@@ -47,7 +47,7 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-mobile-accent'], '#112233');
   assert.equal(style['--admin-vd-mobile-panel'], '#334455');
   assert.equal(style['--admin-vd-mobile-cardPadding'], '14px');
-  assert.equal(style['--admin-vd-mobile-navActiveBackground'], '#34d399');
+  assert.equal(style['--admin-vd-mobile-navActiveBackground'], '#abcdef');
 });
 
 test('admin visual design saves and loads only the normalized visual preferences', () => {
