@@ -855,8 +855,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     if (!presets.length) return;
     const payload = {
       format: 'geostore-admin-style-presets',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
+      metadata: { includesCategories: true, includesFavorites: true, includesVersionHistory: true },
       stylePresets: presets
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -876,7 +877,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     try {
       if (file.size > 100 * 1024) throw new Error('ფაილი 100 KB-ზე დიდი არ უნდა იყოს.');
       const parsed = JSON.parse(await file.text());
-      if (!Array.isArray(parsed) && (parsed?.format !== 'geostore-admin-style-presets' || parsed?.version !== 1)) {
+      if (!Array.isArray(parsed) && (parsed?.format !== 'geostore-admin-style-presets' || ![1, 2].includes(parsed?.version))) {
         throw new Error('JSON ფაილის ფორმატი ან ვერსია მხარდაჭერილი არ არის.');
       }
       const sourcePresets = Array.isArray(parsed) ? parsed : parsed.stylePresets;
@@ -914,7 +915,8 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         ...normalized,
         stylePresets: [...normalized.stylePresets, ...additions]
       }));
-      const limitSkipped = Math.max(0, uniqueImportedPresets.length - additions.length);\n      window.alert(`დაემატა ${additions.length} სტილი.${duplicateCount ? ` დუბლიკატი გამოტოვებულია: ${duplicateCount}.` : ''}${limitSkipped ? ` ლიმიტის გამო გამოტოვებულია: ${limitSkipped}.` : ''}`);
+      const limitSkipped = Math.max(0, uniqueImportedPresets.length - additions.length);
+      window.alert(`დაემატა ${additions.length} სტილი.${duplicateCount ? ` დუბლიკატი გამოტოვებულია: ${duplicateCount}.` : ''}${limitSkipped ? ` ლიმიტის გამო გამოტოვებულია: ${limitSkipped}.` : ''}`);
     } catch (error) {
       window.alert(error?.message || 'სტილების ფაილის იმპორტი ვერ შესრულდა.');
     } finally {
