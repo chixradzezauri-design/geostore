@@ -584,7 +584,18 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
           ? new Date(preset.createdAt).toISOString()
           : null;
         const favorite = preset?.favorite === true;
-        return { id, name, category, createdAt, favorite, style };
+        const history = Array.isArray(preset?.history)
+          ? preset.history.slice(-10).map(entry => {
+              const savedAt = typeof entry?.savedAt === 'string' && Number.isFinite(Date.parse(entry.savedAt))
+                ? new Date(entry.savedAt).toISOString()
+                : null;
+              const entryStyle = isObject(entry?.style)
+                ? normalizeElementStyles({ orderCard: entry.style }, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles, true).orderCard
+                : {};
+              return savedAt && Object.keys(entryStyle).length ? { savedAt, style: entryStyle } : null;
+            }).filter(Boolean)
+          : [];
+        return { id, name, category, createdAt, favorite, style, history };
       }).filter(preset => preset.name && Object.keys(preset.style).length).slice(0, 30)
     : [];
 
