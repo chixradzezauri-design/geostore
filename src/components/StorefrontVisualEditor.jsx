@@ -4,6 +4,8 @@ import {
   Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon, MousePointer2
 } from 'lucide-react';
 import StoreView from './StoreView';
+import Header from './Header';
+import StorefrontFooter from './StorefrontFooter';
 import {
   DEFAULT_STOREFRONT_VISUAL_DESIGN,
   normalizeStorefrontVisualDesign,
@@ -48,7 +50,29 @@ const VISUAL_EDITOR_TARGETS = {
   'product.detail.price': { label: 'პროდუქტის დეტალური ფასი', help: 'ფასის მნიშვნელობა მოდის პროდუქტის მონაცემებიდან; აქ იცვლება ფასის ვიზუალური სტილი.' },
   'product.detail.description': { label: 'პროდუქტის დეტალური აღწერა', help: 'აღწერის ტექსტი შეცვალეთ პროდუქტების მართვის განყოფილებაში; აქ ცვლით მის ვიზუალურ სტილს.' },
   'product.detail.variants': { label: 'ზომები და ვარიანტები', help: 'ზომები, ფერები და მარაგი უცვლელად იმართება პროდუქტის პარამეტრებში; აქ იცვლება ბლოკის დიზაინი.' },
-  'product.detail.purchase': { label: 'დეტალური კალათის ღილაკი', help: 'კალათაში დამატების ფუნქცია უცვლელია; აქ იცვლება მხოლოდ ღილაკის ვიზუალი.' }
+  'product.detail.purchase': { label: 'დეტალური კალათის ღილაკი', help: 'კალათაში დამატების ფუნქცია უცვლელია; აქ იცვლება მხოლოდ ღილაკის ვიზუალი.' },
+  'header': { label: 'საიტის Header', help: 'შეცვალეთ ზედა ნაწილის საერთო ფონი, ფერები, ზომა და დაშორებები.' },
+  'header.announcement': { label: 'ზედა საინფორმაციო ზოლი', help: 'შეცვალეთ ზედა ზოლის ფონი, ტექსტის ფერი, ზომა და დაშორებები.' },
+  'header.announcement.text': { label: 'ზედა ზოლის ტექსტი', settingKey: 'topBarText', help: 'ტექსტი და მისი ვიზუალური სტილი აქედან შეცვალეთ.' },
+  'header.brand': { label: 'ლოგოს ბლოკი', help: 'შეცვალეთ ლოგოს ბლოკის ზომა, ფონი, ჩარჩო და დაშორებები.' },
+  'header.logo': { label: 'ლოგოს ნიშანი', help: 'შეცვალეთ ლოგოს ნიშნის ფერი, ზომა, ფონი და მომრგვალება.' },
+  'header.storeName': { label: 'მაღაზიის სახელი', settingKey: 'storeName', help: 'მაღაზიის სახელი და მისი ტიპოგრაფია აქედან შეცვალეთ.' },
+  'header.caption': { label: 'ლოგოს ქვედა წარწერა', help: 'შეცვალეთ ლოგოს ქვედა წარწერის ფერი და ტიპოგრაფია.' },
+  'header.menu.toggle': { label: 'მენიუს ღილაკი', help: 'შეცვალეთ მენიუს ღილაკის ფერი, ზომა და ფორმა.' },
+  'header.search': { label: 'საძიებო ზოლი', help: 'შეცვალეთ საძიებო ზოლის ფონი, ზომა და განლაგება.' },
+  'header.search.input': { label: 'ძიების ველი', help: 'შეცვალეთ საძიებო ველის ტექსტი, ფონი, ჩარჩო და ზომა.' },
+  'header.search.button': { label: 'ფოტოთი ძიების ღილაკი', help: 'შეცვალეთ ფოტოთი ძიების ღილაკის ფერი და ფორმა.' },
+  'header.menu': { label: 'სანავიგაციო მენიუ', help: 'შეცვალეთ მენიუს საერთო ფონი, ზომა, ჩარჩო და ჩრდილი.' },
+  'header.menu.heading': { label: 'მენიუს ზედა ნაწილი', help: 'შეცვალეთ მენიუს ზედა ნაწილის ფერები და დაშორებები.' },
+  'header.menu.section': { label: 'მენიუს სექცია', help: 'შეცვალეთ მენიუს სექციის საერთო სტილი.' },
+  'header.menu.sectionTitle': { label: 'მენიუს სექციის სათაური', help: 'შეცვალეთ სექციის სათაურის ფერი და ტიპოგრაფია.' },
+  'header.menu.link': { label: 'მენიუს ბმული და ღილაკი', help: 'შეცვალეთ მენიუს ბმულების ფერი, ფონი და ფორმა.' },
+  'header.menu.footer': { label: 'მენიუს ქვედა ნაწილი', help: 'შეცვალეთ ენის არჩევის ბლოკის სტილი.' },
+  'header.menu.languageButton': { label: 'ენის ღილაკი', help: 'შეცვალეთ ენის ღილაკის ფერი და ფორმა.' },
+  'footer': { label: 'საიტის Footer', help: 'შეცვალეთ ქვედა ნაწილის ფონი, ზომა, ჩარჩო და დაშორებები.' },
+  'footer.links': { label: 'Footer ბმულების ზოლი', help: 'შეცვალეთ ბმულების ზოლის განლაგება და საერთო ფერები.' },
+  'footer.link': { label: 'Footer ბმული', help: 'შეცვალეთ პირობების, კონფიდენციალურობის და გარანტიის ბმულების ვიზუალი.' },
+  'footer.copyright': { label: 'საავტორო წარწერა', help: 'შეცვალეთ საავტორო წარწერის ფერი და ტიპოგრაფია.' }
 };
 const SECTION_LABELS = {
   hero: 'მთავარი ბლოკი (Hero)',
@@ -584,24 +608,62 @@ export default function StorefrontVisualEditor({
             .gs-visual-preview-frame[data-visual-editor-selected="product.detail.description"] [data-visual-editor-target="product.detail.description"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.detail.variants"] [data-visual-editor-target="product.detail.variants"],
             .gs-visual-preview-frame[data-visual-editor-selected="product.detail.purchase"] [data-visual-editor-target="product.detail.purchase"],
-            .gs-visual-preview-frame[data-visual-editor-selected="product.button"] [data-visual-editor-target="product.button"] {
+            .gs-visual-preview-frame[data-visual-editor-selected="product.button"] [data-visual-editor-target="product.button"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header"] [data-visual-editor-target="header"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.announcement"] [data-visual-editor-target="header.announcement"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.announcement.text"] [data-visual-editor-target="header.announcement.text"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.brand"] [data-visual-editor-target="header.brand"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.logo"] [data-visual-editor-target="header.logo"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.storeName"] [data-visual-editor-target="header.storeName"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.caption"] [data-visual-editor-target="header.caption"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.toggle"] [data-visual-editor-target="header.menu.toggle"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.search"] [data-visual-editor-target="header.search"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.search.input"] [data-visual-editor-target="header.search.input"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.search.button"] [data-visual-editor-target="header.search.button"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu"] [data-visual-editor-target="header.menu"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.heading"] [data-visual-editor-target="header.menu.heading"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.section"] [data-visual-editor-target="header.menu.section"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.sectionTitle"] [data-visual-editor-target="header.menu.sectionTitle"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.link"] [data-visual-editor-target="header.menu.link"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.footer"] [data-visual-editor-target="header.menu.footer"],
+            .gs-visual-preview-frame[data-visual-editor-selected="header.menu.languageButton"] [data-visual-editor-target="header.menu.languageButton"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer"] [data-visual-editor-target="footer"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.links"] [data-visual-editor-target="footer.links"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.link"] [data-visual-editor-target="footer.link"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.copyright"] [data-visual-editor-target="footer.copyright"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.copyright"] [data-visual-editor-target="footer.copyright"] {
               outline: 2px solid #34d399 !important; outline-offset: 3px; position: relative; z-index: 3;
             }
           `}</style>
           <div onClickCapture={handlePreviewSelect} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : '100%' }}>
-            <div className="gs-site-header gs-visual-preview-header">
-              <div>{siteSettings?.topBarText || 'GEOSTORE — ტანსაცმელი, ფეხსაცმელი და აქსესუარები'}</div>
-              <div className="max-w-7xl">
-                <div className="gs-brand-lockup">
-                  <span className="gs-brand-monogram">G</span>
-                  <span className="gs-brand-wordmark">
-                    <strong className="gs-brand-name">{siteSettings?.storeName || 'GEOSTORE'}</strong>
-                    <span className="gs-brand-caption">STYLE · COLLECTION · GEORGIA</span>
-                  </span>
-                </div>
-                <span className="hidden text-[10px] font-semibold sm:inline">მთავარი გვერდის Preview</span>
-              </div>
-            </div>
+            <Header
+              siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
+              visualDesign={design}
+              setActiveTab={NOOP}
+              activeTab="store"
+              wishlistCount={0}
+              cartCount={0}
+              comparisonCount={0}
+              adminLoggedIn={false}
+              setIsAuthOpen={NOOP}
+              setAuthMode={NOOP}
+              setIsAiAssistantOpen={NOOP}
+              setIsImageSearchOpen={NOOP}
+              setIsComparisonOpen={NOOP}
+              setIsTrackerOpen={NOOP}
+              setIsNotificationsOpen={NOOP}
+              setSupportOpen={NOOP}
+              setIsTermsOpen={NOOP}
+              setIsWarrantyOpen={NOOP}
+              searchQuery=""
+              setSearchQuery={NOOP}
+              categories={safeCategories}
+              selectedCategory={previewCategory}
+              setSelectedCategory={setPreviewCategory}
+              handleInstallClick={NOOP}
+              currentLang="ka"
+              setCurrLang={NOOP}
+            />
             <div className="gs-visual-preview-content">
               <StoreView
                 onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
@@ -620,6 +682,15 @@ export default function StorefrontVisualEditor({
                 formatPrice={formatPrice || (value => String(Number(value || 0).toLocaleString('ka-GE')) + ' ₾')}
               />
             </div>
+            <StorefrontFooter
+              siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
+              visualDesign={design}
+              activeTab="store"
+              setActiveTab={NOOP}
+              setIsTermsOpen={NOOP}
+              setIsWarrantyOpen={NOOP}
+              currentLang="ka"
+            />
           </div>
         </div>
       </div>

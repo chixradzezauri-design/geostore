@@ -6,9 +6,11 @@ import {
   FileText, ShieldCheck, Download
 } from 'lucide-react';
 import { translations } from '../utils/translations';
+import { buildStorefrontElementStyle } from '../utils/storefrontVisualDesign.js';
 
 export default function Header({
   siteSettings,
+  visualDesign = siteSettings?.visualDesign,
   setActiveTab,
   activeTab,
   wishlistCount = 0,
@@ -98,33 +100,34 @@ export default function Header({
     ? 'Main navigation'
     : currentLang === 'ru' ? 'Главная навигация' : 'მთავარი ნავიგაცია';
   const categoryName = (category) => typeof category === 'string' ? category : (category?.name || '');
+  const visualStyle = (targetId) => buildStorefrontElementStyle(visualDesign, targetId);
 
   return (
-    <header ref={headerRef} className={`gs-site-header${menuOpen ? ' is-menu-open' : ''}`}>
-      <div className="gs-site-announcement">
+    <header ref={headerRef} data-visual-editor-target="header" style={visualStyle('header')} className={`gs-site-header${menuOpen ? ' is-menu-open' : ''}`}>
+      <div data-visual-editor-target="header.announcement" style={visualStyle('header.announcement')} className="gs-site-announcement">
         <Sparkles aria-hidden="true" />
-        <span>{siteSettings?.topBarText || t.topBarText}</span>
+        <span data-visual-editor-target="header.announcement.text" style={visualStyle('header.announcement.text')}>{siteSettings?.topBarText || t.topBarText}</span>
       </div>
 
       <div className="gs-site-header-inner">
         <button
           type="button"
-          className="gs-brand-button"
+          data-visual-editor-target="header.brand" style={visualStyle('header.brand')} className="gs-brand-button"
           onClick={() => goTo('store')}
           aria-label={siteSettings?.storeName || t.storeName}
         >
           <span className="gs-brand-lockup">
-            <span className="gs-brand-monogram" aria-hidden="true">G</span>
+            <span data-visual-editor-target="header.logo" style={visualStyle('header.logo')} className="gs-brand-monogram" aria-hidden="true">G</span>
             <span className="gs-brand-wordmark">
-              <span className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
-              <span className="gs-brand-caption">CURATED FOR YOU</span>
+              <span data-visual-editor-target="header.storeName" style={visualStyle('header.storeName')} className="gs-brand-name">{siteSettings?.storeName || t.storeName}</span>
+              <span data-visual-editor-target="header.caption" style={visualStyle('header.caption')} className="gs-brand-caption">CURATED FOR YOU</span>
             </span>
           </span>
         </button>
 
         <button
           type="button"
-          className="gs-menu-toggle"
+          data-visual-editor-target="header.menu.toggle" style={visualStyle('header.menu.toggle')} className="gs-menu-toggle"
           onClick={() => setMenuOpen((open) => !open)}
           aria-label={menuToggleLabel}
           aria-expanded={menuOpen}
@@ -135,11 +138,13 @@ export default function Header({
       </div>
 
       {activeTab === 'store' && (
-        <div className="gs-header-search-row" role="search">
+        <div data-visual-editor-target="header.search" style={visualStyle('header.search')} className="gs-header-search-row" role="search">
           <label className="gs-header-search">
             <Search aria-hidden="true" />
             <input
               type="search"
+              data-visual-editor-target="header.search.input"
+              style={visualStyle('header.search.input')}
               value={searchQuery || ''}
               onChange={(event) => setSearchQuery?.(event.target.value)}
               placeholder={t.searchPlaceholder || 'მოძებნე პროდუქტი'}
@@ -148,7 +153,7 @@ export default function Header({
           </label>
           <button
             type="button"
-            className="gs-header-image-search"
+            data-visual-editor-target="header.search.button" style={visualStyle('header.search.button')} className="gs-header-image-search"
             onClick={() => runAction(setIsImageSearchOpen)}
             aria-label={currentLang === 'en' ? 'Search by photo' : currentLang === 'ru' ? 'Поиск по фото' : 'პროდუქტის ფოტოთი ძიება'}
             title={currentLang === 'en' ? 'Search by photo' : currentLang === 'ru' ? 'Поиск по фото' : 'პროდუქტის ფოტოთი ძიება'}
@@ -159,23 +164,23 @@ export default function Header({
       )}
 
       {menuOpen && (
-        <nav id="geostore-main-menu" className="gs-main-menu" aria-label={mainNavigationLabel}>
-          <div className="gs-menu-heading">
+        <nav id="geostore-main-menu" data-visual-editor-target="header.menu" style={visualStyle('header.menu')} className="gs-main-menu" aria-label={mainNavigationLabel}>
+          <div data-visual-editor-target="header.menu.heading" style={visualStyle('header.menu.heading')} className="gs-menu-heading">
             <div className="gs-menu-brand">
               <strong>GEOSTORE</strong>
               <span>{currentUser ? (currentUser.name || currentUser.email || t.profile) : mainMenuLabel}</span>
             </div>
             {currentUser ? (
-              <button type="button" className="gs-menu-account" onClick={() => goTo('profile')}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-account" onClick={() => goTo('profile')}>
                 <User aria-hidden="true" />
                 <span>{t.profile || 'პროფილი'}</span>
               </button>
             ) : (
               <div className="gs-menu-auth">
-                <button type="button" className="gs-menu-login" onClick={() => openAuth('login')}>
+                <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-login" onClick={() => openAuth('login')}>
                   {t.login || 'შესვლა'}
                 </button>
-                <button type="button" className="gs-menu-register" onClick={() => openAuth('register')}>
+                <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-register" onClick={() => openAuth('register')}>
                   {t.register || 'რეგისტრაცია'}
                 </button>
               </div>
@@ -183,36 +188,36 @@ export default function Header({
           </div>
 
 
-          <section className="gs-menu-section" aria-label={storeAccountLabel}>
-            <p className="gs-menu-section-title">{storeAccountLabel}</p>
-            <button type="button" className={linkClass('store')} onClick={() => goTo('store')}>
+          <section data-visual-editor-target="header.menu.section" style={visualStyle('header.menu.section')} className="gs-menu-section" aria-label={storeAccountLabel}>
+            <p data-visual-editor-target="header.menu.sectionTitle" style={visualStyle('header.menu.sectionTitle')} className="gs-menu-section-title">{storeAccountLabel}</p>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('store')} onClick={() => goTo('store')}>
               <Store aria-hidden="true" /><span>{storeLabel}</span>
             </button>
-            <button type="button" className={linkClass('cart')} onClick={() => goTo('cart')}>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('cart')} onClick={() => goTo('cart')}>
               <ShoppingBag aria-hidden="true" /><span>{t.cart || 'კალათა'}</span>
               <span className="gs-menu-count">{cartCount}</span>
             </button>
-            <button type="button" className={linkClass('wishlist')} onClick={() => goTo('wishlist')}>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('wishlist')} onClick={() => goTo('wishlist')}>
               <Heart aria-hidden="true" /><span>{t.wishlist || 'ფავორიტები'}</span>
               <span className="gs-menu-count">{wishlistCount}</span>
             </button>
             {currentUser && (
-              <button type="button" className={linkClass('profile')} onClick={() => goTo('profile')}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('profile')} onClick={() => goTo('profile')}>
                 <User aria-hidden="true" /><span>{t.profile || 'პროფილი'}</span>
               </button>
             )}
             {adminLoggedIn && (
-              <button type="button" className={linkClass('admin')} onClick={() => goTo('admin')}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={linkClass('admin')} onClick={() => goTo('admin')}>
                 <ShieldCheck aria-hidden="true" /><span>{adminLabel}</span>
               </button>
             )}
           </section>
 
-          <section className="gs-menu-section gs-menu-categories" aria-label={categoryLabel}>
-            <p className="gs-menu-section-title">{categoryLabel}</p>
+          <section data-visual-editor-target="header.menu.section" style={visualStyle('header.menu.section')} className="gs-menu-section gs-menu-categories" aria-label={categoryLabel}>
+            <p data-visual-editor-target="header.menu.sectionTitle" style={visualStyle('header.menu.sectionTitle')} className="gs-menu-section-title">{categoryLabel}</p>
             <button
               type="button"
-              className={'gs-menu-link gs-menu-category-link' + (selectedCategory === 'ყველა' ? ' is-active' : '')}
+              data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={'gs-menu-link gs-menu-category-link' + (selectedCategory === 'ყველა' ? ' is-active' : '')}
               aria-pressed={selectedCategory === 'ყველა'}
               onClick={() => {
                 if (typeof setSelectedCategory === 'function') setSelectedCategory('ყველა');
@@ -228,7 +233,7 @@ export default function Header({
                 <button
                   key={category?.id || name || index}
                   type="button"
-                  className={'gs-menu-link gs-menu-category-link' + (selectedCategory === name ? ' is-active' : '')}
+                  data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className={'gs-menu-link gs-menu-category-link' + (selectedCategory === name ? ' is-active' : '')}
                   aria-pressed={selectedCategory === name}
                   onClick={() => {
                     if (typeof setSelectedCategory === 'function') setSelectedCategory(name);
@@ -243,47 +248,47 @@ export default function Header({
           </section>
 
           <section className="gs-menu-section" aria-label={servicesLabel}>
-            <p className="gs-menu-section-title">{servicesLabel}</p>
-            <button type="button" className="gs-menu-link" onClick={() => runAction(setIsTrackerOpen)}>
+            <p data-visual-editor-target="header.menu.sectionTitle" style={visualStyle('header.menu.sectionTitle')} className="gs-menu-section-title">{servicesLabel}</p>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsTrackerOpen)}>
               <PackageCheck aria-hidden="true" /><span>{t.orderTracker || 'შეკვეთის მოძებნა'}</span>
             </button>
-            <button type="button" className="gs-menu-link" onClick={() => runAction(setIsNotificationsOpen)}>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsNotificationsOpen)}>
               <Bell aria-hidden="true" /><span>{t.notifications || 'შეტყობინებები'}</span>
               {unreadNotificationsCount > 0 && <span className="gs-menu-count is-highlight">{unreadNotificationsCount}</span>}
             </button>
-            <button type="button" className="gs-menu-link" onClick={() => runAction(setIsComparisonOpen)}>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsComparisonOpen)}>
               <Scale aria-hidden="true" /><span>{t.comparison || 'შედარება'}</span>
               <span className="gs-menu-count">{comparisonCount}</span>
             </button>
-            <button type="button" className="gs-menu-link" onClick={() => runAction(setIsAiAssistantOpen)}>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsAiAssistantOpen)}>
               <Bot aria-hidden="true" /><span>{t.aiAssistant || 'AI ასისტენტი'}</span>
             </button>
-            <button type="button" className="gs-menu-link" onClick={() => goTo('wardrobe')}>
+            <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => goTo('wardrobe')}>
               <Shirt aria-hidden="true" /><span>{t.wardrobe || 'ჩემი გარდერობი'}</span>
             </button>
             {typeof setSupportOpen === 'function' && (
-              <button type="button" className="gs-menu-link" onClick={() => runAction(setSupportOpen)}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setSupportOpen)}>
                 <MessageCircle aria-hidden="true" /><span>{t.supportChat || 'კონსულტაცია / ჩათი'}</span>
               </button>
             )}
             {typeof setIsTermsOpen === 'function' && (
-              <button type="button" className="gs-menu-link" onClick={() => runAction(setIsTermsOpen)}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsTermsOpen)}>
                 <FileText aria-hidden="true" /><span>{t.terms || 'წესები და პირობები'}</span>
               </button>
             )}
             {typeof setIsWarrantyOpen === 'function' && (
-              <button type="button" className="gs-menu-link" onClick={() => runAction(setIsWarrantyOpen)}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => runAction(setIsWarrantyOpen)}>
                 <ShieldCheck aria-hidden="true" /><span>{t.warranty || 'საგარანტიო წესები'}</span>
               </button>
             )}
             {typeof handleInstallClick === 'function' && (
-              <button type="button" className="gs-menu-link" onClick={() => { handleInstallClick(); closeMenu(); }}>
+              <button type="button" data-visual-editor-target="header.menu.link" style={visualStyle('header.menu.link')} className="gs-menu-link" onClick={() => { handleInstallClick(); closeMenu(); }}>
                 <Download aria-hidden="true" /><span>{installLabel}</span>
               </button>
             )}
           </section>
 
-          <div className="gs-menu-footer">
+          <div data-visual-editor-target="header.menu.footer" style={visualStyle('header.menu.footer')} className="gs-menu-footer">
             <span><Globe aria-hidden="true" /> {languageLabel}</span>
             <div className="gs-menu-languages">
               {['ka', 'en', 'ru'].map((lang) => (
@@ -291,7 +296,7 @@ export default function Header({
                   key={lang}
                   type="button"
                   onClick={() => handleLangChange(lang)}
-                  className={currentLang === lang ? 'is-selected' : ''}
+                  data-visual-editor-target="header.menu.languageButton" style={visualStyle('header.menu.languageButton')} className={currentLang === lang ? 'is-selected' : ''}
                   aria-pressed={currentLang === lang}
                 >
                   {lang === 'ka' ? 'GEO' : lang.toUpperCase()}

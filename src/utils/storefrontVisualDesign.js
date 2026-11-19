@@ -6,7 +6,12 @@ const ELEMENT_STYLE_IDS = [
   'categories', 'categories.title', 'categories.description', 'category.card', 'category.title', 'category.description',
   'filters', 'filters.priceLabel', 'filters.input', 'filters.clearButton', 'filters.sortLabel', 'filters.sortSelect', 'product.card', 'product.image', 'product.title', 'product.button',
   'product.detail.image', 'product.detail.title', 'product.detail.price',
-  'product.detail.description', 'product.detail.variants', 'product.detail.purchase'
+  'product.detail.description', 'product.detail.variants', 'product.detail.purchase',
+  'header', 'header.announcement', 'header.announcement.text', 'header.brand', 'header.logo',
+  'header.storeName', 'header.caption', 'header.menu.toggle', 'header.search', 'header.search.input',
+  'header.search.button', 'header.menu', 'header.menu.heading', 'header.menu.section',
+  'header.menu.sectionTitle', 'header.menu.link', 'header.menu.footer', 'header.menu.languageButton',
+  'footer', 'footer.links', 'footer.link', 'footer.copyright'
 ];
 
 export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({

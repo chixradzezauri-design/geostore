@@ -6,6 +6,7 @@ import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'rea
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
+import StorefrontFooter from './components/StorefrontFooter';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
@@ -3214,6 +3215,7 @@ export default function App() {
       <div className="w-full max-w-full overflow-visible">
         <Header
           siteSettings={siteSettings}
+          visualDesign={activeTab !== 'admin' ? siteSettings?.visualDesign : null}
           setActiveTab={setActiveTab}
           activeTab={activeTab}
           wishlistCount={wishlist.length}
@@ -4507,41 +4509,15 @@ export default function App() {
         </div>
       )}
 
-      <footer className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">
-        <div className="geostore-footer-links flex flex-wrap justify-center items-center gap-4 px-2 text-slate-400 font-bold">
-          <button
-            onClick={() => setIsTermsOpen(true)}
-            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <FileText className="w-4 h-4" />
-            {t.terms}
-          </button>
-
-          <span>•</span>
-          <button
-            type="button"
-            onClick={() => setActiveTab('privacy')}
-            aria-current={activeTab === 'privacy' ? 'page' : undefined}
-            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            {t.privacy}
-          </button>
-
-          <span>•</span>
-
-
-          <button
-            onClick={() => setIsWarrantyOpen(true)}
-            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            {t.warranty}
-          </button>
-        </div>
-
-        <p>© 2026 GEOSTORE. {t.allRightsReserved}</p>
-      </footer>
+      <StorefrontFooter
+        siteSettings={siteSettings}
+        visualDesign={activeTab !== 'admin' ? siteSettings?.visualDesign : null}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        setIsTermsOpen={setIsTermsOpen}
+        setIsWarrantyOpen={setIsWarrantyOpen}
+        currentLang={currentLang}
+      />
     </div>
   );
 }

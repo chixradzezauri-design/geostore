@@ -235,3 +235,19 @@ test('product ordering accepts unique bounded IDs and ignores empty values', () 
   });
   assert.deepEqual(design.productOrder, ['sku-2', 'sku-1', 'sku-3']);
 });
+
+
+test('real storefront header and footer expose independent safe visual targets', () => {
+  const targetIds = ["header","header.announcement","header.announcement.text","header.brand","header.logo","header.storeName","header.caption","header.menu.toggle","header.search","header.search.input","header.search.button","header.menu","header.menu.heading","header.menu.section","header.menu.sectionTitle","header.menu.link","header.menu.footer","header.menu.languageButton","footer","footer.links","footer.link","footer.copyright"];
+  const elementStyles = Object.fromEntries(targetIds.map(id => [id, {
+    textColor: '#ffffff', backgroundColor: '#101010', borderColor: '#abcdef', padding: 8
+  }]));
+  const design = normalizeStorefrontVisualDesign({ elementStyles });
+  for (const id of targetIds) {
+    const style = buildStorefrontElementStyle(design, id);
+    assert.equal(style.color, '#ffffff', id + ' text color');
+    assert.equal(style.backgroundColor, '#101010', id + ' background');
+    assert.equal(style.borderColor, '#abcdef', id + ' border');
+    assert.equal(style.padding, '8px', id + ' padding');
+  }
+});
