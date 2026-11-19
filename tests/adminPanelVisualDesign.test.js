@@ -12,7 +12,7 @@ import {
 test('admin visual design rejects unsafe colors and clamps layout values', () => {
   const design = normalizeAdminPanelVisualDesign({
     theme: { accent: 'url(javascript:alert(1))', panel: '#123456' },
-    layout: { fontSize: 99, cardRadius: -4, cardPadding: 100, sidebarWidth: 10 }
+    layout: { fontSize: 99, cardRadius: -4, cardPadding: 100, sidebarWidth: 10, buttonRadius: 99, navItemRadius: -2, navItemPaddingY: 99, sectionGap: 2 }
   });
 
   assert.equal(design.theme.accent, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme.accent);
@@ -21,26 +21,33 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
   assert.equal(design.layout.cardRadius, 10);
   assert.equal(design.layout.cardPadding, 32);
   assert.equal(design.layout.sidebarWidth, 240);
+  assert.equal(design.layout.buttonRadius, 28);
+  assert.equal(design.layout.navItemRadius, 0);
+  assert.equal(design.layout.navItemPaddingY, 20);
+  assert.equal(design.layout.sectionGap, 12);
 });
 
 test('tablet and mobile admin visual overrides inherit unset desktop values', () => {
   const design = normalizeAdminPanelVisualDesign({
-    theme: { accent: '#112233', panel: '#223344' },
+    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef' },
     layout: { fontSize: 14, cardRadius: 20 },
     responsive: {
-      tablet: { theme: { accent: '#abcdef' }, layout: { fontSize: 13 } },
+      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566' }, layout: { fontSize: 13, navItemRadius: 8 } },
       mobile: { theme: { panel: '#334455' }, layout: { cardPadding: 14 } }
     }
   });
   const style = buildAdminPanelVisualStyle(design);
 
   assert.equal(style['--admin-vd-accent'], '#112233');
-  assert.equal(style['--admin-vd-tablet-accent'], '#abcdef');
+  assert.equal(style['--admin-vd-tablet-accent'], '#123456');
+  assert.equal(style['--admin-vd-tablet-navActiveBackground'], '#445566');
+  assert.equal(style['--admin-vd-tablet-navItemRadius'], '8px');
   assert.equal(style['--admin-vd-tablet-panel'], '#223344');
   assert.equal(style['--admin-vd-tablet-fontSize'], '13px');
   assert.equal(style['--admin-vd-mobile-accent'], '#112233');
   assert.equal(style['--admin-vd-mobile-panel'], '#334455');
   assert.equal(style['--admin-vd-mobile-cardPadding'], '14px');
+  assert.equal(style['--admin-vd-mobile-navActiveBackground'], '#34d399');
 });
 
 test('admin visual design saves and loads only the normalized visual preferences', () => {
