@@ -219,3 +219,30 @@ test('admin typography sizes and weights are bounded and responsive', () => {
   assert.equal(style['--admin-vd-mobile-titleFontSize'], '20px');
   assert.equal(style['--admin-vd-mobile-bodyFontWeight'], '500');
 });
+
+
+test('admin input placeholder color and focus ring width support responsive overrides', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    theme: { inputPlaceholder: '#64748b' },
+    layout: { inputFocusRingWidth: 3 },
+    responsive: {
+      tablet: {
+        theme: { inputPlaceholder: '#94a3b8' },
+        layout: { inputFocusRingWidth: 2 }
+      },
+      mobile: {
+        layout: { inputFocusRingWidth: 0 }
+      }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+
+  assert.equal(design.theme.inputPlaceholder, '#64748b');
+  assert.equal(design.layout.inputFocusRingWidth, 3);
+  assert.equal(style['--admin-vd-inputPlaceholder'], '#64748b');
+  assert.equal(style['--admin-vd-tablet-inputPlaceholder'], '#94a3b8');
+  assert.equal(style['--admin-vd-mobile-inputPlaceholder'], '#64748b');
+  assert.equal(style['--admin-vd-inputFocusRingWidth'], '3px');
+  assert.equal(style['--admin-vd-tablet-inputFocusRingWidth'], '2px');
+  assert.equal(style['--admin-vd-mobile-inputFocusRingWidth'], '0px');
+});
