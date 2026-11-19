@@ -1935,6 +1935,14 @@ export default function AdminDashboardPro({
   const [activityLogs, setActivityLogs] = useState([]);
   const [activityLogsLoading, setActivityLogsLoading] = useState(false);
   const [activityLogsError, setActivityLogsError] = useState('');
+  const ACTIVITY_LOGS_PER_PAGE = 20;
+  const [activityLogsPage, setActivityLogsPage] = useState(1);
+  const activityLogsTotalPages = Math.max(1, Math.ceil(activityLogs.length / ACTIVITY_LOGS_PER_PAGE));
+  const safeActivityLogsPage = Math.min(activityLogsPage, activityLogsTotalPages);
+  const paginatedActivityLogs = activityLogs.slice(
+    (safeActivityLogsPage - 1) * ACTIVITY_LOGS_PER_PAGE,
+    safeActivityLogsPage * ACTIVITY_LOGS_PER_PAGE
+  );
 
   useLayoutEffect(() => {
     adminSessionActiveRef.current = Boolean(adminLoggedIn);
@@ -2005,7 +2013,7 @@ export default function AdminDashboardPro({
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/list_admin_activity_logs`, {
         method: 'POST',
         headers: await getSupabaseHeaders(),
-        body: JSON.stringify({ p_limit: 100 })
+        body: JSON.stringify({ p_limit: 200 })
       });
       if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) throw new Error(await response.text());
@@ -2017,6 +2025,7 @@ export default function AdminDashboardPro({
         action: log.action,
         time: log.created_at ? new Date(log.created_at).toLocaleString('ka-GE') : ''
       })));
+      setActivityLogsPage(1);
       setActivityLogsError('');
     } catch (error) {
       if (isCurrentAdminSession(requestSessionVersion)) setActivityLogsError(error?.message || 'აქტივობების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
@@ -6129,12 +6138,44 @@ export default function AdminDashboardPro({
               {!activityLogsLoading && activityLogs.length === 0 && !activityLogsError && (
                 <p className="text-xs text-slate-400">შენახული აქტივობები ჯერ არ არის.</p>
               )}
-              {activityLogs.map(log => (
+              {paginatedActivityLogs.map(log => (
                 <div key={log.id} className="bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs shadow-inner">
                   <span className="font-bold text-slate-200 break-words min-w-0">{log.action}</span>
                   <span className="text-slate-500 text-[10px] shrink-0">{log.time}</span>
                 </div>
               ))}
+              {activityLogs.length > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-emerald-500/15 pt-3">
+                  <p className="text-[10px] text-slate-500">
+                    ბოლო {activityLogs.length} ჩანაწერი · გვერდი {safeActivityLogsPage}/{activityLogsTotalPages}
+                  </p>
+                  {activityLogsTotalPages > 1 && (
+                    <nav aria-label="აქტივობების ისტორიის გვერდები" className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActivityLogsPage(Math.max(1, safeActivityLogsPage - 1))}
+                        disabled={safeActivityLogsPage === 1}
+                        className="rounded-lg border border-emerald-500/20 px-3 py-2 text-[10px] font-bold text-slate-200 disabled:opacity-40"
+                      >წინა</button>
+                      {Array.from({ length: activityLogsTotalPages }, (_, index) => index + 1).map(page => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setActivityLogsPage(page)}
+                          aria-current={safeActivityLogsPage === page ? 'page' : undefined}
+                          className={`min-w-8 rounded-lg border px-3 py-2 text-[10px] font-black ${safeActivityLogsPage === page ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-emerald-500/20 text-slate-200'}`}
+                        >{page}</button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setActivityLogsPage(Math.min(activityLogsTotalPages, safeActivityLogsPage + 1))}
+                        disabled={safeActivityLogsPage === activityLogsTotalPages}
+                        className="rounded-lg border border-emerald-500/20 px-3 py-2 text-[10px] font-bold text-slate-200 disabled:opacity-40"
+                      >შემდეგი</button>
+                    </nav>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
