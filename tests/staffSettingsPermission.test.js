@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
+const draftConcurrencyMigration = await readFile(new URL('../supabase/migrations/20261119170000_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
 const heroStorageMigration = await readFile(new URL('../supabase/migrations/20261119110000_add_storefront_hero_storage_scope.sql', import.meta.url), 'utf8');
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
@@ -34,18 +35,19 @@ test('storefront media uploads are permission-checked at the Storage RLS boundar
   assert.match(migration, /public read active coupons/);
 });
 
-test('storefront draft saves use a scoped server RPC and cannot mutate published fields', () => {
-  const draftRpc = migration.split('CREATE OR REPLACE FUNCTION private.save_storefront_draft')[1]?.split('CREATE OR REPLACE FUNCTION public.save_storefront_draft')[0] || '';
-  assert.match(draftRpc, /public\.has_staff_permission\('settings'\)/);
-  assert.match(draftRpc, /ON CONFLICT \(config_key\) DO UPDATE/);
-  assert.match(draftRpc, /SET draft_config = EXCLUDED\.draft_config/);
-  assert.match(draftRpc, /updated_by = EXCLUDED\.updated_by/);
-  assert.match(draftRpc, /draft_updated_at = EXCLUDED\.draft_updated_at/);
+test('storefront draft saves use a scoped optimistic-concurrency RPC and cannot mutate published fields', () => {
+  const draftRpc = draftConcurrencyMigration.split('CREATE OR REPLACE FUNCTION private.save_storefront_draft')[1]?.split('CREATE OR REPLACE FUNCTION public.save_storefront_draft')[0] || '';
+  assert.match(draftRpc, /public\\.has_staff_permission\\('settings'\\)/);
+  assert.match(draftRpc, /p_expected_draft_updated_at timestamptz/);
+  assert.match(draftRpc, /pg_advisory_xact_lock/);
+  assert.match(draftRpc, /p_expected_draft_updated_at IS DISTINCT FROM v_current_updated_at/);
+  assert.match(draftRpc, /draft_updated_at = GREATEST/);
+  assert.match(draftRpc, /USING ERRCODE = '40001'/);
   assert.doesNotMatch(draftRpc, /published_config|is_published|published_at/);
-  assert.match(app, /rest\/v1\/rpc\/save_storefront_draft/);
-  assert.doesNotMatch(app, /rest\/v1\/storefront_config\?on_conflict=config_key/);
+  assert.match(app, /rest\\/v1\\/rpc\\/save_storefront_draft/);
+  assert.match(app, /p_expected_draft_updated_at: storefrontDraftUpdatedAtRef\\.current/);
+  assert.doesNotMatch(app, /rest\\/v1\\/storefront_config\\?on_conflict=config_key/);
 });
-
 test('settings staff can edit drafts but cannot publish storefront configuration', () => {
   assert.match(migration, /REVOKE INSERT \(is_published, published_at, published_config\)/);
   assert.match(migration, /UPDATE \(is_published, published_at, published_config\)/);
