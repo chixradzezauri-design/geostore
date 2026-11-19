@@ -65,6 +65,20 @@ const safeImageUrl = value => {
   }
 };
 
+const normalizeResponsiveLayout = rawLayout => {
+  const layout = isPlainObject(rawLayout) ? rawLayout : {};
+  const fields = {
+    contentWidth: [960, 1600], sectionGap: [16, 72], heroHeight: [320, 680],
+    categoryCardHeight: [110, 260], categoryColumns: [2, 6], productColumns: [2, 5],
+    heroContentWidth: [40, 90], bannerHeight: [150, 340], productImageRatio: [0.7, 1.2],
+    cardRadius: [0, 28], buttonRadius: [0, 28]
+  };
+  return Object.fromEntries(Object.entries(fields)
+    .map(([key, bounds]) => [key, clamp(layout[key], bounds[0], bounds[1], null)])
+    .filter(([, value]) => value !== null)
+    .map(([key, value]) => [key, ['categoryColumns', 'productColumns'].includes(key) ? Math.round(value) : value]));
+};
+
 export function normalizeStorefrontVisualDesign(rawDesign) {
   const raw = isPlainObject(rawDesign) ? rawDesign : {};
   const theme = isPlainObject(raw.theme) ? raw.theme : {};
@@ -165,7 +179,11 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     },
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
     sectionOrder,
-    productOrder
+    productOrder,
+    responsive: {
+      tablet: { layout: normalizeResponsiveLayout(raw.responsive?.tablet?.layout) },
+      mobile: { layout: normalizeResponsiveLayout(raw.responsive?.mobile?.layout) }
+    }
   };
 }
 
@@ -175,11 +193,17 @@ const FONT_STACKS = {
   arial: "Arial, 'Noto Sans Georgian', sans-serif"
 };
 
-export function buildStorefrontVisualStyle(rawDesign) {
+export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
   const design = normalizeStorefrontVisualDesign(rawDesign);
+  const viewport = ['desktop', 'tablet', 'mobile'].includes(requestedViewport)
+    ? requestedViewport
+    : (typeof window !== 'undefined' && window.innerWidth <= 767
+      ? 'mobile'
+      : typeof window !== 'undefined' && window.innerWidth <= 1023 ? 'tablet' : 'desktop');
+  const responsiveLayout = viewport === 'desktop' ? {} : (design.responsive?.[viewport]?.layout || {});
+  const layout = { ...design.layout, ...responsiveLayout };
   const theme = design.theme;
   const typography = design.typography;
-  const layout = design.layout;
   const hero = design.hero;
   const sections = design.sections;
   const style = {
