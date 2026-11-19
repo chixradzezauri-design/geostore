@@ -4765,15 +4765,15 @@ export default function AdminDashboardPro({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-white/5 bg-slate-950/70 p-4">
+              <div className="admin-inventory-history-metric rounded-2xl border border-white/5 bg-slate-950/70 p-4">
                 <p className="text-[10px] font-bold text-slate-400">ჩატვირთული ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-white">{inventoryMovementRows.length}</strong>
               </div>
-              <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
+              <div className="admin-inventory-history-metric rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
                 <p className="text-[10px] font-bold text-slate-400">მარაგის ზრდის ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-emerald-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) > 0).length}</strong>
               </div>
-              <div className="rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4">
+              <div className="admin-inventory-history-metric rounded-2xl border border-rose-500/15 bg-rose-500/5 p-4">
                 <p className="text-[10px] font-bold text-slate-400">მარაგის შემცირების ჩანაწერები</p>
                 <strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{inventoryMovementRows.filter(row => Number(row.quantity_delta) < 0).length}</strong>
               </div>
@@ -4809,7 +4809,7 @@ export default function AdminDashboardPro({
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {inventoryMovementRows.map(movement => (
-                      <tr key={movement.id} className="bg-slate-900/60 transition hover:bg-slate-800/70">
+                      <tr key={movement.id} className="admin-inventory-movement-row bg-slate-900/60 transition hover:bg-slate-800/70">
                         <td className="whitespace-nowrap px-4 py-3 text-slate-400">{movement.occurred_at ? new Date(movement.occurred_at).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
                         <td className="px-4 py-3">
                           <strong className="block max-w-[260px] truncate text-white">{movement.product_name || movement.product_id}</strong>
