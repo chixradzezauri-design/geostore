@@ -585,7 +585,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
           : null;
         const favorite = preset?.favorite === true;
         const history = Array.isArray(preset?.history)
-          ? preset.history.slice(-10).map(entry => {
+          ? preset.history.map(entry => {
               const savedAt = typeof entry?.savedAt === 'string' && Number.isFinite(Date.parse(entry.savedAt))
                 ? new Date(entry.savedAt).toISOString()
                 : null;
@@ -593,14 +593,14 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
                 ? normalizeElementStyles({ orderCard: entry.style }, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles, true).orderCard
                 : {};
               return savedAt && Object.keys(entryStyle).length ? { savedAt, style: entryStyle } : null;
-            }).filter(Boolean)
+            }).filter(Boolean).slice(-10)
           : [];
         return { id, name, category, createdAt, favorite, style, history };
       }).filter(preset => preset.name && Object.keys(preset.style).length).slice(0, 30)
     : [];
 
   const moduleDesignBackups = Array.isArray(raw.moduleDesignBackups)
-    ? raw.moduleDesignBackups.slice(-10).map(backup => {
+    ? raw.moduleDesignBackups.map(backup => {
         const savedAt = typeof backup?.savedAt === 'string' && Number.isFinite(Date.parse(backup.savedAt)) ? new Date(backup.savedAt).toISOString() : null;
         const id = typeof backup?.id === 'string' ? backup.id.trim().slice(0, 100) : '';
         const moduleId = typeof backup?.moduleId === 'string' ? backup.moduleId.trim() : '';
@@ -624,15 +624,15 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
           elementStyles: Object.fromEntries(Object.entries(responsiveSource.elementStyles || {}).filter(([key]) => Object.hasOwn(elementSnapshot, key)))
         } };
         return { id, savedAt, moduleId, moduleLabel, viewport, reason, snapshot: {
-          theme: Object.fromEntries(sectionThemeKeys.map(key => [key, safeSnapshot.theme[key]])),
-          components: { [moduleId]: safeSnapshot.components[moduleId] }, content: contentSnapshot,
-          elementStyles: elementSnapshot, responsive: responsiveSnapshot
+          theme: viewport === 'desktop' ? Object.fromEntries(sectionThemeKeys.map(key => [key, safeSnapshot.theme[key]])) : {},
+          components: viewport === 'desktop' ? { [moduleId]: safeSnapshot.components[moduleId] } : {}, content: contentSnapshot,
+          elementStyles: viewport === 'desktop' ? elementSnapshot : {}, responsive: responsiveSnapshot
         } };
-      }).filter(Boolean)
+      }).filter(Boolean).slice(-10)
     : [];
 
   const stylePresetBackups = Array.isArray(raw.stylePresetBackups)
-    ? raw.stylePresetBackups.slice(-10).map(backup => {
+    ? raw.stylePresetBackups.map(backup => {
         const savedAt = typeof backup?.savedAt === 'string' && Number.isFinite(Date.parse(backup.savedAt))
           ? new Date(backup.savedAt).toISOString()
           : null;
@@ -641,10 +641,10 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
           : [];
         const id = typeof backup?.id === 'string' ? backup.id.trim().slice(0, 100) : '';
         const reason = typeof backup?.reason === 'string' ? backup.reason.trim().slice(0, 100) : 'ავტომატური დაცვა';
-        return savedAt && id && backupPresets.length
+        return savedAt && id && Array.isArray(backup?.stylePresets)
           ? { id, savedAt, reason, stylePresets: backupPresets }
           : null;
-      }).filter(Boolean)
+      }).filter(Boolean).slice(-10)
     : [];
 
   return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets, stylePresetBackups, moduleDesignBackups };
