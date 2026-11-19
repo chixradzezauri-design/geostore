@@ -11,6 +11,7 @@ const productCompare = readFileSync(new URL('../src/components/ProductCompareMod
 const wardrobe = readFileSync(new URL('../src/components/AIDigitalWardrobe.jsx', import.meta.url), 'utf8');
 const aiAssistant = readFileSync(new URL('../src/components/AiAssistantModal.jsx', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
 
 test('storefront navigation styles do not leak into the AI assistant header', () => {
   assert.doesNotMatch(css, /\.geostore-fashion-store\s+header\b/);
@@ -103,7 +104,8 @@ test('mobile navigation retains login and registration inside the hamburger menu
 });
 
 test('mobile footer policy links use a compact responsive layout', () => {
-  assert.match(app, /className="geostore-footer-links/);
+  assert.match(app, /<StorefrontFooter/);
+  assert.match(footer, /className="geostore-footer-links/);
   const footerStyles = css.slice(css.lastIndexOf('GEOSTORE — compact footer and floating assistance dock'));
   assert.match(footerStyles, /\.geostore-footer-links\{[\s\S]*?display:grid!important;/);
   assert.match(footerStyles, /grid-template-columns:1fr!important/);
