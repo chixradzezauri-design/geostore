@@ -410,6 +410,8 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
   assert.match(dashboard, /fetchAdminPanelVisualDesign\(\)/);
   assert.match(dashboard, /saveAdminPanelVisualDesignToCloud\(adminVisualDesign\)/);
   assert.match(dashboard, /adminVisualDesignReady/);
+  assert.match(dashboard, /ადმინპანელის საერთო დიზაინი იტვირთება/);
+  assert.match(dashboard, /setAdminVisualReloadKey\(value => value \+ 1\)/);
   assert.match(migration, /private\.admin_panel_visual_settings/);
   assert.match(migration, /auth\.uid\(\) IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid/);
   assert.match(migration, /auth\.jwt\(\)->'app_metadata'->>'role'/);
