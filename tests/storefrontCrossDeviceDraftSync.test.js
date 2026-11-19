@@ -66,7 +66,7 @@ test('successful publication advances the local draft baseline as well as its ti
   const publish = app.split('const handlePublishStorefront = async () =>')[1]?.split('  useEffect(() => {')[0] || '';
   assert.match(publish, /storefrontDraftUpdatedAtRef\.current = publishResult\.draft_updated_at/);
   assert.match(publish, /storefrontDraftBaselineRef\.current = JSON\.stringify\(\{ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings \}\)/);
-  assert.match(publish, /storefrontDraftLocalDirtyRef\.current = false/);
+  assert.match(publish, /storefrontDraftLocalDirtyRef\.current = editsArrivedDuringPublish/);
 });
 
 test('publish rejects a stale editor snapshot before sending the publication RPC', () => {
