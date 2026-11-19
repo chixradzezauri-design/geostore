@@ -266,7 +266,15 @@ export default function StorefrontVisualEditor({
     try {
       const restored = await onRestoreStorefrontVersion(selectedVersionId, selectedVersionSnapshot.snapshot);
       if (restored === true) {
-        commitDesign(normalizeStorefrontVisualDesign(selectedVersionSnapshot.snapshot?.siteSettings?.visualDesign));
+        const restoredDesign = normalizeStorefrontVisualDesign(selectedVersionSnapshot.snapshot?.siteSettings?.visualDesign);
+        designRef.current = restoredDesign;
+        localDesignDirtyRef.current = false;
+        historyRef.current = [restoredDesign];
+        historyIndexRef.current = 0;
+        setHistory([restoredDesign]);
+        setHistoryIndex(0);
+        setDesign(restoredDesign);
+        setSelectedElement(null);
         setSaveMessage('ძველი ვერსია მონახაზში აღდგა. გამოსაჩენად ცალკე გამოაქვეყნეთ.');
       }
     } finally {
