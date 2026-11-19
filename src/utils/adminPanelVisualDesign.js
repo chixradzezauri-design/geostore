@@ -23,7 +23,10 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     inputBorder: '#334155',
     inputFocus: '#34d399',
     contentCardBackground: '#0f172a',
-    contentCardBorder: '#334155'
+    contentCardBorder: '#334155',
+    modalBackground: '#0d0d10',
+    modalText: '#f8fafc',
+    modalBorder: '#334155'
   },
   layout: {
     fontSize: 13,
@@ -40,7 +43,9 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     inputRadius: 12,
     inputHeight: 44,
     cardBorderWidth: 1,
-    cardShadowBlur: 24
+    cardShadowBlur: 24,
+    modalRadius: 28,
+    modalPadding: 24
   },
   responsive: {
     tablet: { theme: {}, layout: {} },
@@ -64,7 +69,9 @@ const LAYOUT_LIMITS = {
   inputRadius: [0, 20],
   inputHeight: [36, 52],
   cardBorderWidth: [0, 3],
-  cardShadowBlur: [0, 36]
+  cardShadowBlur: [0, 36],
+  modalRadius: [12, 40],
+  modalPadding: [12, 36]
 };
 
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
