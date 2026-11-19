@@ -246,6 +246,12 @@ test('admin style library supports bounded JSON import and export actions', () =
   assert.match(editor, /30 - normalized\.stylePresets\.length/);
   assert.match(editor, /JSON ექსპორტი/);
   assert.match(editor, /JSON იმპორტი/);
+  assert.match(editor, /parsed\?\.format !== 'geostore-admin-style-presets'/);
+  assert.match(editor, /parsed\?\.version !== 1/);
+  assert.match(editor, /Aa · GEOSTORE/);
+  assert.match(editor, /preset\.style\.backgroundColor \|\| '#0f172a'/);
+  assert.match(editor, /preset\.style\.textColor \|\| '#e2e8f0'/);
+  assert.match(editor, /preset\.style\.borderColor \|\| '#334155'/);
 });
 
 test('admin visual design storage failures fall back safely without throwing', () => {
