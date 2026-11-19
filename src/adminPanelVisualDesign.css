@@ -1,0 +1,95 @@
+.admin-dashboard-pro[data-admin-visual-design="enabled"] {
+  --admin-vd-accent-active: var(--admin-vd-accent);
+  --admin-vd-canvas-active: var(--admin-vd-canvas);
+  --admin-vd-panel-active: var(--admin-vd-panel);
+  --admin-vd-surface-active: var(--admin-vd-surface);
+  --admin-vd-text-active: var(--admin-vd-text);
+  --admin-vd-muted-active: var(--admin-vd-muted);
+  --admin-vd-border-active: var(--admin-vd-border);
+  --admin-vd-fontSize-active: var(--admin-vd-fontSize);
+  --admin-vd-cardRadius-active: var(--admin-vd-cardRadius);
+  --admin-vd-cardPadding-active: var(--admin-vd-cardPadding);
+  --admin-vd-sidebarWidth-active: var(--admin-vd-sidebarWidth);
+  color: var(--admin-vd-text-active);
+  font-size: var(--admin-vd-fontSize-active);
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/80,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/90 {
+  background-color: var(--admin-vd-panel-active) !important;
+  border-color: var(--admin-vd-border-active) !important;
+  border-radius: var(--admin-vd-cardRadius-active) !important;
+  padding: var(--admin-vd-cardPadding-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-950\/60,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-950\/70 {
+  background-color: var(--admin-vd-surface-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
+  color: var(--admin-vd-text-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-slate-300,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-slate-400 {
+  color: var(--admin-vd-muted-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-emerald-400,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .text-emerald-300 {
+  color: var(--admin-vd-accent-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/30,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/20,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .border-emerald-500\/10 {
+  border-color: var(--admin-vd-border-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-emerald-500 {
+  background-color: var(--admin-vd-accent-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] > div:first-child {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] > div:first-child {
+    width: var(--admin-vd-sidebarWidth-active) !important;
+    flex: 0 0 var(--admin-vd-sidebarWidth-active);
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] {
+    --admin-vd-accent-active: var(--admin-vd-tablet-accent, var(--admin-vd-accent));
+    --admin-vd-canvas-active: var(--admin-vd-tablet-canvas, var(--admin-vd-canvas));
+    --admin-vd-panel-active: var(--admin-vd-tablet-panel, var(--admin-vd-panel));
+    --admin-vd-surface-active: var(--admin-vd-tablet-surface, var(--admin-vd-surface));
+    --admin-vd-text-active: var(--admin-vd-tablet-text, var(--admin-vd-text));
+    --admin-vd-muted-active: var(--admin-vd-tablet-muted, var(--admin-vd-muted));
+    --admin-vd-border-active: var(--admin-vd-tablet-border, var(--admin-vd-border));
+    --admin-vd-fontSize-active: var(--admin-vd-tablet-fontSize, var(--admin-vd-fontSize));
+    --admin-vd-cardRadius-active: var(--admin-vd-tablet-cardRadius, var(--admin-vd-cardRadius));
+    --admin-vd-cardPadding-active: var(--admin-vd-tablet-cardPadding, var(--admin-vd-cardPadding));
+    --admin-vd-sidebarWidth-active: var(--admin-vd-tablet-sidebarWidth, var(--admin-vd-sidebarWidth));
+  }
+}
+
+@media (max-width: 639px) {
+  .admin-dashboard-pro[data-admin-visual-design="enabled"] {
+    --admin-vd-accent-active: var(--admin-vd-mobile-accent, var(--admin-vd-tablet-accent, var(--admin-vd-accent)));
+    --admin-vd-canvas-active: var(--admin-vd-mobile-canvas, var(--admin-vd-tablet-canvas, var(--admin-vd-canvas)));
+    --admin-vd-panel-active: var(--admin-vd-mobile-panel, var(--admin-vd-tablet-panel, var(--admin-vd-panel)));
+    --admin-vd-surface-active: var(--admin-vd-mobile-surface, var(--admin-vd-tablet-surface, var(--admin-vd-surface)));
+    --admin-vd-text-active: var(--admin-vd-mobile-text, var(--admin-vd-tablet-text, var(--admin-vd-text)));
+    --admin-vd-muted-active: var(--admin-vd-mobile-muted, var(--admin-vd-tablet-muted, var(--admin-vd-muted)));
+    --admin-vd-border-active: var(--admin-vd-mobile-border, var(--admin-vd-tablet-border, var(--admin-vd-border)));
+    --admin-vd-fontSize-active: var(--admin-vd-mobile-fontSize, var(--admin-vd-tablet-fontSize, var(--admin-vd-fontSize)));
+    --admin-vd-cardRadius-active: var(--admin-vd-mobile-cardRadius, var(--admin-vd-tablet-cardRadius, var(--admin-vd-cardRadius)));
+    --admin-vd-cardPadding-active: var(--admin-vd-mobile-cardPadding, var(--admin-vd-tablet-cardPadding, var(--admin-vd-cardPadding)));
+    --admin-vd-sidebarWidth-active: var(--admin-vd-mobile-sidebarWidth, var(--admin-vd-tablet-sidebarWidth, var(--admin-vd-sidebarWidth)));
+  }
+}
