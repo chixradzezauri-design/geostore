@@ -973,11 +973,13 @@ export default function AdminDashboardPro({
   const [replenishmentLoading, setReplenishmentLoading] = useState(false);
   const [replenishmentError, setReplenishmentError] = useState('');
   const [replenishmentQuery, setReplenishmentQuery] = useState('');
+  const [replenishmentPage, setReplenishmentPage] = useState(1);
   const [replenishmentDrafts, setReplenishmentDrafts] = useState({});
   const [replenishmentSavingKey, setReplenishmentSavingKey] = useState('');
   const replenishmentRequestRef = useRef(0);
   const ORDERS_PER_PAGE = 5;
   const PRODUCTS_PER_PAGE = 10;
+  const REPLENISHMENT_PER_PAGE = 10;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
@@ -4293,6 +4295,13 @@ export default function AdminDashboardPro({
 
   const replenishmentPositions = buildInventoryReplenishmentPlan(products, replenishmentSettings);
   const filteredReplenishmentPositions = filterInventoryReplenishmentPlan(replenishmentPositions, replenishmentQuery);
+  const totalReplenishmentPages = Math.max(1, Math.ceil(filteredReplenishmentPositions.length / REPLENISHMENT_PER_PAGE));
+  const safeReplenishmentPage = Math.min(Math.max(1, replenishmentPage), totalReplenishmentPages);
+  const paginatedReplenishmentPositions = filteredReplenishmentPositions.slice(
+    (safeReplenishmentPage - 1) * REPLENISHMENT_PER_PAGE,
+    safeReplenishmentPage * REPLENISHMENT_PER_PAGE
+  );
+  const replenishmentPaginationItems = getPaginationItems(safeReplenishmentPage, totalReplenishmentPages);
 
   // Command Center uses only the data already loaded by the existing admin workflows.
   // It is a read-only operational overview: no stock, order or ticket state is mutated here.
@@ -4724,7 +4733,7 @@ export default function AdminDashboardPro({
                 <h3 id="admin-replenishment-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის შევსების გეგმა</h3>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის დაბალი მარაგის ზღვარი, სამიზნე რაოდენობა და შესავსები ერთეულების რეკომენდაცია. სისტემა მარაგს ავტომატურად არ ცვლის.</p>
               </div>
-              <input type="search" value={replenishmentQuery} onChange={event => setReplenishmentQuery(event.target.value)} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="w-full xl:max-w-sm min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
+              <input type="search" value={replenishmentQuery} onChange={event => { setReplenishmentQuery(event.target.value); setReplenishmentPage(1); }} placeholder="პროდუქტის, SKU-ის ან ზომის ძიება..." aria-label="მარაგის შევსების გეგმის ძიება" className="w-full xl:max-w-sm min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-4 py-3 text-xs text-white outline-none focus:border-emerald-400" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4"><p className="text-[10px] font-bold text-slate-400">დაბალი მარაგის პოზიციები</p><strong className="mt-2 block text-2xl font-black tabular-nums text-rose-300">{replenishmentPositions.filter(position => position.isLowStock).length}</strong></div>
@@ -4736,7 +4745,7 @@ export default function AdminDashboardPro({
             <div className="space-y-3">
               {filteredReplenishmentPositions.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center"><Truck className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 text-sm font-black text-white">შესაბამისი მარაგის პოზიცია ვერ მოიძებნა</p><p className="mt-1 text-xs text-slate-400">შეამოწმეთ ძიება ან დაამატეთ პროდუქტის მარაგი.</p></div>
-              ) : filteredReplenishmentPositions.map(position => {
+              ) : paginatedReplenishmentPositions.map(position => {
                 const draft = replenishmentDrafts[position.key] || {};
                 const thresholdValue = draft.threshold ?? position.threshold;
                 const targetValue = draft.target ?? position.target;
@@ -4752,6 +4761,22 @@ export default function AdminDashboardPro({
                 );
               })}
             </div>
+            {totalReplenishmentPages > 1 && (
+              <div className="space-y-3 border-t border-emerald-500/15 pt-4">
+                <p className="text-center text-[10px] text-slate-400" aria-live="polite">
+                  ნაჩვენებია {(safeReplenishmentPage - 1) * REPLENISHMENT_PER_PAGE + 1}–{Math.min(safeReplenishmentPage * REPLENISHMENT_PER_PAGE, filteredReplenishmentPositions.length)} / {filteredReplenishmentPositions.length} პოზიცია
+                </p>
+                <nav aria-label="მარაგის შევსების გეგმის გვერდები" className="flex flex-wrap items-center justify-center gap-1.5">
+                  <button type="button" onClick={() => setReplenishmentPage(Math.max(1, safeReplenishmentPage - 1))} disabled={safeReplenishmentPage === 1} className="min-h-10 rounded-xl border border-emerald-500/20 px-3 py-2 text-[10px] font-bold text-slate-200 disabled:cursor-not-allowed disabled:opacity-35 hover:border-emerald-400">წინა</button>
+                  {replenishmentPaginationItems.map((page, index) => page === '…' ? (
+                    <span key={`replenishment-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                  ) : (
+                    <button key={page} type="button" onClick={() => setReplenishmentPage(page)} aria-current={safeReplenishmentPage === page ? 'page' : undefined} className={`min-h-10 min-w-9 rounded-xl border px-3 py-2 text-[10px] font-black transition ${safeReplenishmentPage === page ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-emerald-500/20 text-slate-200 hover:border-emerald-400'}`}>{page}</button>
+                  ))}
+                  <button type="button" onClick={() => setReplenishmentPage(Math.min(totalReplenishmentPages, safeReplenishmentPage + 1))} disabled={safeReplenishmentPage === totalReplenishmentPages} className="min-h-10 rounded-xl border border-emerald-500/20 px-3 py-2 text-[10px] font-bold text-slate-200 disabled:cursor-not-allowed disabled:opacity-35 hover:border-emerald-400">შემდეგი</button>
+                </nav>
+              </div>
+            )}
             <p className="text-[10px] leading-5 text-slate-500">საწყისი პარამეტრებია 5 ერთეული (დაბალი მარაგის ზღვარი) და 20 ერთეული (სამიზნე მარაგი). შენახული პარამეტრები გამოიყენება კონკრეტულ პროდუქტზე ან ვარიანტზე. რეკომენდაცია არ ქმნის შესყიდვის შეკვეთას და არ ცვლის მარაგს.</p>
           </section>
         )}
