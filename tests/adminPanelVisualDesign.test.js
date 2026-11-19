@@ -359,7 +359,7 @@ test('module geometry remains scoped to the admin visual design and supports all
     assert.match(css, new RegExp('--admin-vd-' + moduleName + '-borderWidth-active'));
     assert.match(css, new RegExp('--admin-vd-' + moduleName + '-shadowBlur-active'));
   }
-  assert.match(css, /--admin-vd-mobile-orders-radius: var\(--admin-vd-mobile-orders-radius/);
+  assert.match(css, /--admin-vd-orders-radius-active: var\(--admin-vd-mobile-orders-radius, var\(--admin-vd-tablet-orders-radius, var\(--admin-vd-orders-radius\)\)\)/);
   assert.match(css, /--admin-vd-mobile-support-radius-active: var\(--admin-vd-mobile-support-radius, var\(--admin-vd-tablet-support-radius, var\(--admin-vd-support-radius\)\)\)/);
 });
 
