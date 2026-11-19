@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ADMIN_PANEL_FONT_FAMILIES,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   normalizeAdminPanelVisualDesign
 } from '../utils/adminPanelVisualDesign.js';
