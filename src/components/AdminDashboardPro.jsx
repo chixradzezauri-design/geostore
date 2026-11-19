@@ -511,7 +511,7 @@ const STAFF_ROLE_LABELS = Object.fromEntries(
   STAFF_ROLE_OPTIONS.map(({ value, label }) => [value, label])
 );
 
-function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
+function AdminStaffManagement({ usersList = [], logActivity, isOwner, visualContent = {} }) {
   const [staffList, setStaffList] = useState([]);
   const [legacyStaffList] = useState(() => {
     try {
@@ -745,7 +745,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
       {staffListNotice && <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">{staffListNotice}</div>}
 
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
-        <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> არსებული მომხმარებლის დაკავშირება</h3>
+        <h3 className="font-black text-white text-base flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" /> {visualContent.staffExistingUsersTitle || 'არსებული მომხმარებლის დაკავშირება'}</h3>
         <form onSubmit={handleAddExistingUser} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
           <select value={selectedUserEmail} onChange={(event) => setSelectedUserEmail(event.target.value)} className="min-w-0 bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
             <option value="">აირჩიეთ საიტზე არსებული მომხმარებელი</option>
@@ -760,7 +760,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
       </section>
 
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
-        <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის მოწვევა</h3>
+        <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> {visualContent.staffInviteTitle || 'ახალი თანამშრომლის მოწვევა'}</h3>
         <form onSubmit={handleInviteStaff} className="admin-staff-create-form space-y-4 text-xs">
           <div className="admin-staff-create-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
@@ -814,7 +814,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
 
       <section className="admin-staff-list-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-black text-white text-base">სერვერზე დაკავშირებული თანამშრომლები ({staffList.length})</h3>
+          <h3 className="font-black text-white text-base">{visualContent.staffListTitle || 'სერვერზე დაკავშირებული თანამშრომლები'} ({staffList.length})</h3>
           <button type="button" onClick={() => refreshStaffList()} disabled={staffListLoading || staffActionBusy} className="rounded-xl border border-emerald-500/25 px-3 py-2 text-xs font-bold text-emerald-200 disabled:opacity-50">
             {staffListLoading ? 'იტვირთება…' : 'სიის განახლება'}
           </button>
@@ -4483,7 +4483,7 @@ export default function AdminDashboardPro({
             { id: 'staff', label: '👔 თანამშრომლები & როლები', icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
-            { id: 'inventory', label: '📚 მარაგის მოძრაობების ისტორია', icon: Layers },
+            { id: 'inventory', label: '📚 {adminVisualDesign.content.inventoryTitle}', icon: Layers },
             { id: 'replenishment', label: '📦 მარაგის შევსების გეგმა', count: replenishmentPositions.filter(position => position.isLowStock).length, icon: Truck },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
@@ -4727,7 +4727,7 @@ export default function AdminDashboardPro({
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY AUDIT</p>
                 <h3 id="admin-inventory-title" className="mt-1 text-lg sm:text-xl font-black text-white">მარაგის მოძრაობების ისტორია</h3>
-                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">თითოეული პროდუქტისა და ვარიანტის მარაგის ცვლილება — საწყისი/საბოლოო რაოდენობა, მიზეზი და შეკვეთის კავშირი.</p>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">{adminVisualDesign.content.inventoryDescription}</p>
               </div>
               <div className="flex w-full flex-col sm:flex-row gap-2 xl:max-w-xl">
                 <input
@@ -4908,8 +4908,8 @@ export default function AdminDashboardPro({
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
               <div>
-                <h3 className="text-white font-black text-sm">ფინანსური პერიოდი</h3>
-                <p className="text-slate-400 text-[10px] mt-1">მოგებაში ითვლება მხოლოდ ჩაბარებული/დასრულებული შეკვეთები</p>
+                <h3 className="text-white font-black text-sm">{adminVisualDesign.content.analyticsPeriodTitle}</h3>
+                <p className="text-slate-400 text-[10px] mt-1">{adminVisualDesign.content.analyticsPeriodDescription}</p>
               </div>
               <select value={analyticsPeriod} onChange={e => setAnalyticsPeriod(e.target.value)} className="bg-slate-950 border border-emerald-500/30 text-white rounded-xl px-4 py-3 text-xs font-bold">
                 <option value="all">მთელი პერიოდი</option>
@@ -5301,6 +5301,7 @@ export default function AdminDashboardPro({
             usersList={usersList}
             logActivity={logActivity}
             isOwner={isOwner}
+            visualContent={adminVisualDesign.content}
           />
         )}
 
@@ -5310,15 +5311,15 @@ export default function AdminDashboardPro({
             <div className="admin-orders-header admin-orders-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
                 <h3 className="font-black text-white text-lg flex items-center gap-2.5">
-                  <PackageCheck className="w-6 h-6 text-emerald-400" /> შეკვეთების სრული მართვის სისტემა ({filteredOrders.length})
+                  <PackageCheck className="w-6 h-6 text-emerald-400" /> {adminVisualDesign.content.ordersTitle} ({filteredOrders.length})
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">მართეთ, გაფილტრეთ და აკონტროლეთ თითოეული შეკვეთა დეტალურად</p>
+                <p className="text-xs text-slate-400 mt-1">{adminVisualDesign.content.ordersDescription}</p>
               </div>
               <button 
                 onClick={handleExportOrders}
                 className="bg-slate-950 hover:bg-slate-900 text-emerald-400 border border-emerald-500/30 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow"
               >
-                <Download className="w-4 h-4" /> შეკვეთების ექსპორტი (CSV)
+                <Download className="w-4 h-4" /> {adminVisualDesign.content.ordersExportLabel}
               </button>
             </div>
 
@@ -5619,7 +5620,7 @@ export default function AdminDashboardPro({
         {visibleAdminTab === 'support' && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-              <HelpCircle className="w-5 h-5 text-emerald-400" /> მომხმარებელთა მხარდაჭერა და პასუხები ({supportTickets?.length || 0})
+              <HelpCircle className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.supportTitle} ({supportTickets?.length || 0})
             </h3>
             {supportTicketsError && (
               <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
@@ -5629,7 +5630,7 @@ export default function AdminDashboardPro({
             )}
             <div className="admin-support-list space-y-4">
               {(!supportTickets || supportTickets.length === 0) ? (
-                <p className="text-slate-500 text-xs py-8 text-center">მხარდაჭერის ტიგეტები არ არის.</p>
+                <p className="text-slate-500 text-xs py-8 text-center">{adminVisualDesign.content.supportEmptyLabel}</p>
               ) : (
                 supportTickets.map(t => (
                   <div key={t.id} className="admin-support-ticket bg-slate-950/60 p-5 sm:p-6 rounded-3xl border border-emerald-500/20 space-y-4 text-xs shadow-inner">
@@ -6186,12 +6187,12 @@ export default function AdminDashboardPro({
         {visibleAdminTab === 'discounts' && (
           <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-              <Zap className="w-5 h-5 text-emerald-400" /> მასობრივი ფლეშ-ფასდაკლებების გააქტიურება
+              <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
             </h3>
             {flashSaleAdminSummary.count > 0 && (
               <div className="gs-admin-flash-sale-active" aria-live="polite">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.14em]">მოქმედი ფლეშ-აქცია</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.14em]">{adminVisualDesign.content.discountsActiveLabel}</span>
                   <strong>{flashSaleAdminSummary.count} პროდუქტი</strong>
                 </div>
                 {flashSaleAdminSummary.nextEndsAt !== null && (
@@ -6353,7 +6354,7 @@ export default function AdminDashboardPro({
           <div className="admin-banners space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Megaphone className="w-5 h-5 text-emerald-400" /> ახალი სარეკლამო ბანერის დამატება
+                <Megaphone className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.bannersCreateTitle}
               </h3>
               <form onSubmit={handleAddBanner} className="admin-banner-form space-y-4 text-xs">
                 <div className="admin-banner-fields grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -6361,11 +6362,11 @@ export default function AdminDashboardPro({
                   <input type="text" placeholder="ქვესათაური / აღწერა" maxLength={240} value={bannerForm.subtitle} onChange={e => setBannerForm({...bannerForm, subtitle: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
                 <input type="text" placeholder="ბანერის ფოტოს URL (HTTP/HTTPS)" maxLength={2048} value={bannerForm.image} onChange={e => setBannerForm({...bannerForm, image: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">ბანერის დამატება</button>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{adminVisualDesign.content.bannersSubmitLabel}</button>
               </form>
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">აქტიური ბანერები ({bannersList?.length || 0})</h3>
+              <h3 className="font-black text-white text-base">{adminVisualDesign.content.bannersListTitle} ({bannersList?.length || 0})</h3>
               <div className="admin-banner-list grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(bannersList || []).map(b => (
                   <div key={b.id} className="admin-banner-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs gap-3 shadow-inner">
@@ -6388,7 +6389,7 @@ export default function AdminDashboardPro({
           <div className="admin-category-manager space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <FolderTree className="w-5 h-5 text-emerald-400" /> ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან)
+                <FolderTree className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.categoriesCreateTitle}
               </h3>
               <form onSubmit={handleAddCategory} className="admin-category-form space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -6434,12 +6435,12 @@ export default function AdminDashboardPro({
                   )}
                 </div>
 
-                <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კატეგორიის დამატება 🚀</button>
+                <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{adminVisualDesign.content.categoriesSubmitLabel}</button>
               </form>
             </div>
 
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">კატეგორიებისა და სუბკატეგორიების იერარქია და ფოტოების მართვა</h3>
+              <h3 className="font-black text-white text-base">{adminVisualDesign.content.categoriesTreeTitle}</h3>
               <p className="text-xs leading-relaxed text-slate-400 bg-slate-950/70 border border-slate-700 rounded-xl p-3">კატეგორიების დამატება, რედაქტირება და დალაგება ჯერ მონახაზში ინახება. ცვლილებების Supabase-ში შესანახად გამოიყენეთ „მონახაზის შენახვა“, ხოლო მომხმარებლებისთვის გამოსაჩენად — „გამოქვეყნება“.</p>
               <div className="admin-category-tree space-y-4">
                 {mainCategories.length === 0 ? (
@@ -6589,17 +6590,17 @@ export default function AdminDashboardPro({
           <div className="admin-coupons-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
-                <Tag className="w-5 h-5 text-emerald-400" /> ახალი კუპონის შექმნა
+                <Tag className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.couponsCreateTitle}
               </h3>
               <form onSubmit={handleCreateCoupon} className="admin-coupon-form grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-xs">
                 <input type="text" placeholder="კოდი" aria-label="კუპონის კოდი" required maxLength={64} value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 uppercase shadow-inner" />
                 <input type="number" placeholder="ფასდაკლება %" aria-label="ფასდაკლება პროცენტებში" required min="0.01" max="100" step="0.01" inputMode="decimal" value={couponForm.discountPercent} onChange={e => setCouponForm({...couponForm, discountPercent: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <input type="number" placeholder="მინ. შეკვეთა (₾)" aria-label="მინიმალური შეკვეთის თანხა ლარში" min="0" max="1000000000" step="0.01" inputMode="decimal" value={couponForm.minOrderGEL} onChange={e => setCouponForm({...couponForm, minOrderGEL: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none focus:border-emerald-400 shadow-inner" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">კუპონის დამატება</button>
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black p-3.5 rounded-2xl shadow-xl shadow-emerald-500/20 transition cursor-pointer">{adminVisualDesign.content.couponsSubmitLabel}</button>
               </form>
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">აქტიური კუპონები ({coupons?.length || 0})</h3>
+              <h3 className="font-black text-white text-base">{adminVisualDesign.content.couponsListTitle} ({coupons?.length || 0})</h3>
               <div className="admin-coupon-list grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {(coupons || []).map(c => (
                   <div key={c.id} className="admin-coupon-card bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex justify-between items-center text-xs shadow-inner">
