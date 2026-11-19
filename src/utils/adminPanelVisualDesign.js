@@ -599,6 +599,38 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
       }).filter(preset => preset.name && Object.keys(preset.style).length).slice(0, 30)
     : [];
 
+  const moduleDesignBackups = Array.isArray(raw.moduleDesignBackups)
+    ? raw.moduleDesignBackups.slice(-10).map(backup => {
+        const savedAt = typeof backup?.savedAt === 'string' && Number.isFinite(Date.parse(backup.savedAt)) ? new Date(backup.savedAt).toISOString() : null;
+        const id = typeof backup?.id === 'string' ? backup.id.trim().slice(0, 100) : '';
+        const moduleId = typeof backup?.moduleId === 'string' ? backup.moduleId.trim() : '';
+        const allowedModuleIds = ['orders', 'staff', 'inventory', 'analytics', 'support', 'discounts', 'banners', 'categories', 'coupons'];
+        const viewport = ['desktop', 'tablet', 'mobile'].includes(backup?.viewport) ? backup.viewport : '';
+        const moduleLabel = typeof backup?.moduleLabel === 'string' ? backup.moduleLabel.trim().slice(0, 60) : '';
+        const reason = typeof backup?.reason === 'string' ? backup.reason.trim().slice(0, 100) : 'მოდულის დიზაინის ასლი';
+        if (!savedAt || !id || !allowedModuleIds.includes(moduleId) || !viewport || !moduleLabel || !isObject(backup?.snapshot)) return null;
+        const safeSnapshot = normalizeAdminPanelVisualDesign({
+          theme: backup.snapshot.theme, components: backup.snapshot.components, content: backup.snapshot.content,
+          elementStyles: backup.snapshot.elementStyles, responsive: backup.snapshot.responsive
+        });
+        const prefix = { orders: 'order', staff: 'staff', inventory: 'inventory', analytics: 'analytics', support: 'support', discounts: 'discount', banners: 'banner', categories: 'category', coupons: 'coupon' }[moduleId];
+        const sectionThemeKeys = [`${moduleId}SectionBackground`, `${moduleId}SectionBorder`].filter(key => THEME_KEYS.includes(key));
+        const elementSnapshot = Object.fromEntries(Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => key.startsWith(prefix)).map(key => [key, safeSnapshot.elementStyles[key]]));
+        const contentSnapshot = Object.fromEntries(ADMIN_PANEL_CONTENT_FIELDS.filter(field => field.key.toLowerCase().startsWith(moduleId)).map(field => [field.key, safeSnapshot.content[field.key]]));
+        const responsiveSource = safeSnapshot.responsive[viewport] || {};
+        const responsiveSnapshot = viewport === 'desktop' ? {} : { [viewport]: {
+          theme: Object.fromEntries(sectionThemeKeys.filter(key => responsiveSource.theme?.[key]).map(key => [key, responsiveSource.theme[key]])),
+          components: responsiveSource.components?.[moduleId] ? { [moduleId]: responsiveSource.components[moduleId] } : {},
+          elementStyles: Object.fromEntries(Object.entries(responsiveSource.elementStyles || {}).filter(([key]) => Object.hasOwn(elementSnapshot, key)))
+        } };
+        return { id, savedAt, moduleId, moduleLabel, viewport, reason, snapshot: {
+          theme: Object.fromEntries(sectionThemeKeys.map(key => [key, safeSnapshot.theme[key]])),
+          components: { [moduleId]: safeSnapshot.components[moduleId] }, content: contentSnapshot,
+          elementStyles: elementSnapshot, responsive: responsiveSnapshot
+        } };
+      }).filter(Boolean)
+    : [];
+
   const stylePresetBackups = Array.isArray(raw.stylePresetBackups)
     ? raw.stylePresetBackups.slice(-10).map(backup => {
         const savedAt = typeof backup?.savedAt === 'string' && Number.isFinite(Date.parse(backup.savedAt))
@@ -615,7 +647,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
       }).filter(Boolean)
     : [];
 
-  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets, stylePresetBackups };
+  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets, stylePresetBackups, moduleDesignBackups };
 }
 
 export function createAdminStylePresetBackup(rawDesign, reason = 'მნიშვნელოვანი ცვლილების წინ') {
@@ -642,6 +674,78 @@ export function restoreAdminStylePresetBackup(rawDesign, backupId) {
     ...protectedCurrent,
     stylePresets: backup.stylePresets
   });
+}
+
+export function createAdminPanelModuleBackup(rawDesign, category, viewport) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  const prefixes = { orders: 'order', staff: 'staff', inventory: 'inventory', analytics: 'analytics', support: 'support', discounts: 'discount', banners: 'banner', categories: 'category', coupons: 'coupon' };
+  const prefix = prefixes[category?.id];
+  if (!prefix || !['desktop', 'tablet', 'mobile'].includes(viewport)) return design;
+  const elementKeys = (Array.isArray(category.keys) ? category.keys : []).filter(key => key.startsWith(prefix) && Object.hasOwn(ADMIN_PANEL_ELEMENT_DEFINITIONS, key));
+  if (!elementKeys.length) return design;
+  const responsiveSource = viewport === 'desktop' ? {} : design.responsive[viewport] || {};
+  const sectionThemeKeys = [`${category.id}SectionBackground`, `${category.id}SectionBorder`].filter(key => THEME_KEYS.includes(key));
+  const contentSnapshot = Object.fromEntries(ADMIN_PANEL_CONTENT_FIELDS.filter(field => field.key.toLowerCase().startsWith(category.id)).map(field => [field.key, design.content[field.key]]));
+  const snapshot = viewport === 'desktop' ? {
+    theme: Object.fromEntries(sectionThemeKeys.map(key => [key, design.theme[key]])),
+    components: { [category.id]: design.components[category.id] }, content: contentSnapshot,
+    elementStyles: Object.fromEntries(elementKeys.map(key => [key, design.elementStyles[key]])), responsive: {}
+  } : {
+    theme: {}, components: {}, content: contentSnapshot, elementStyles: {},
+    responsive: { [viewport]: {
+      theme: Object.fromEntries(sectionThemeKeys.filter(key => responsiveSource.theme?.[key]).map(key => [key, responsiveSource.theme[key]])),
+      components: responsiveSource.components?.[category.id] ? { [category.id]: responsiveSource.components[category.id] } : {},
+      elementStyles: Object.fromEntries(elementKeys.filter(key => responsiveSource.elementStyles?.[key]).map(key => [key, responsiveSource.elementStyles[key]]))
+    } }
+  };
+  const backup = {
+    id: `admin-module-backup-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    savedAt: new Date().toISOString(), moduleId: category.id,
+    moduleLabel: String(category.label || category.id).slice(0, 60), viewport,
+    reason: 'მოდულის ხელით შენახული ასლი', snapshot
+  };
+  return normalizeAdminPanelVisualDesign({ ...design, moduleDesignBackups: [...design.moduleDesignBackups, backup].slice(-10) });
+}
+
+export function restoreAdminPanelModuleBackup(rawDesign, backupId) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  const backup = design.moduleDesignBackups.find(item => item.id === backupId);
+  if (!backup) return design;
+  const snapshot = backup.snapshot;
+  const next = { ...design, content: { ...design.content, ...snapshot.content } };
+  if (backup.viewport === 'desktop') {
+    next.theme = { ...design.theme, ...snapshot.theme };
+    next.components = { ...design.components, ...snapshot.components };
+    next.elementStyles = { ...design.elementStyles, ...snapshot.elementStyles };
+  } else {
+    const responsive = { ...design.responsive };
+    const current = { ...(responsive[backup.viewport] || {}) };
+    for (const group of ['theme', 'components', 'elementStyles']) {
+      const saved = snapshot.responsive?.[backup.viewport]?.[group] || {};
+      const currentGroup = { ...(current[group] || {}) };
+      if (group === 'components') {
+        if (saved[backup.moduleId]) currentGroup[backup.moduleId] = saved[backup.moduleId];
+        else delete currentGroup[backup.moduleId];
+      } else {
+        const keys = group === 'elementStyles' ? Object.keys(snapshot.elementStyles || {}) : Object.keys(snapshot.theme || {});
+        for (const key of keys) {
+          if (saved[key] !== undefined) currentGroup[key] = saved[key];
+          else delete currentGroup[key];
+        }
+      }
+      if (Object.keys(currentGroup).length) current[group] = currentGroup;
+      else delete current[group];
+    }
+    if (Object.keys(current).length) responsive[backup.viewport] = current;
+    else delete responsive[backup.viewport];
+    next.responsive = responsive;
+  }
+  return normalizeAdminPanelVisualDesign(next);
+}
+
+export function deleteAdminPanelModuleBackup(rawDesign, backupId) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  return normalizeAdminPanelVisualDesign({ ...design, moduleDesignBackups: design.moduleDesignBackups.filter(backup => backup.id !== backupId) });
 }
 
 export function resetAdminPanelVisualElement(rawDesign, viewport, elementKey) {
