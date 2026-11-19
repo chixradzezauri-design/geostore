@@ -65,3 +65,11 @@ test('Command Center remains a read-only overview using existing operational dat
   assert.match(admin, /commandCenterLowStockGroups/);
   assert.match(admin, /flashSaleAdminSummary\.expiringCount/);
 });
+test('admin activity history displays paginated results and requests the supported latest 200 rows', () => {
+  assert.match(admin, /ACTIVITY_LOGS_PER_PAGE = 20/);
+  assert.match(admin, /p_limit: 200/);
+  assert.match(admin, /paginatedActivityLogs = activityLogs\.slice/);
+  assert.match(admin, /paginatedActivityLogs\.map\(log =>/);
+  assert.match(admin, /aria-label="აქტივობების ისტორიის გვერდები"/);
+  assert.match(admin, /setActivityLogsPage\(1\)/);
+});
