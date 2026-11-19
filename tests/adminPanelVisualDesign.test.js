@@ -1233,4 +1233,7 @@ test('admin style backup restore rejects malformed or lossy preset data before r
   assert.match(editor, /existing library|არსებული ბიბლიოთეკა უცვლელი დარჩა/);
   assert.match(editor, /preset\.history\.length > 10/);
   assert.match(editor, /ids\.has\(id\)/);
+  assert.match(editor, /typeof preset\.id !== 'string'/);
+  assert.match(editor, /preset\.id\.trim\(\)\.length > 80/);
+  assert.match(editor, /preset\.name\.trim\(\)\.length > 40/);
 });
