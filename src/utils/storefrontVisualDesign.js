@@ -180,10 +180,50 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
     sectionOrder,
     productOrder,
-    responsive: {
-      tablet: { layout: normalizeResponsiveLayout(raw.responsive?.tablet?.layout) },
-      mobile: { layout: normalizeResponsiveLayout(raw.responsive?.mobile?.layout) }
-    }
+    responsive: Object.fromEntries(['tablet', 'mobile'].map(viewport => {
+      const responsive = isPlainObject(raw.responsive?.[viewport]) ? raw.responsive[viewport] : {};
+      const responsiveTheme = isPlainObject(responsive.theme) ? responsive.theme : {};
+      const responsiveTypography = isPlainObject(responsive.typography) ? responsive.typography : {};
+      const responsiveStyles = isPlainObject(responsive.elementStyles) ? responsive.elementStyles : {};
+      return [viewport, {
+        layout: normalizeResponsiveLayout(responsive.layout),
+        theme: Object.fromEntries(Object.keys(defaults.theme).map(key => [key,
+          responsiveTheme[key] == null ? '' : safeColor(responsiveTheme[key], '')
+        ]).filter(([, value]) => value)),
+        typography: {
+          fontFamily: ['manrope', 'georgia', 'arial'].includes(responsiveTypography.fontFamily) ? responsiveTypography.fontFamily : '',
+          headingFontFamily: ['manrope', 'georgia', 'arial'].includes(responsiveTypography.headingFontFamily) ? responsiveTypography.headingFontFamily : '',
+          baseFontSize: clamp(responsiveTypography.baseFontSize, 12, 18, null),
+          headingScale: clamp(responsiveTypography.headingScale, 0.8, 1.25, null)
+        },
+        elementStyles: Object.fromEntries(ELEMENT_STYLE_IDS.map(id => {
+          const value = isPlainObject(responsiveStyles[id]) ? responsiveStyles[id] : {};
+          const normalized = {};
+          const textColor = safeColor(value.textColor, '');
+          const backgroundColor = safeColor(value.backgroundColor, '');
+          const borderColor = safeColor(value.borderColor, '');
+          if (textColor) normalized.textColor = textColor;
+          if (backgroundColor) normalized.backgroundColor = backgroundColor;
+          if (borderColor) normalized.borderColor = borderColor;
+          const numeric = {
+            borderWidth: [0, 12], lineHeight: [0.8, 2.5], letterSpacing: [-2, 12],
+            fontSize: [10, 64], padding: [0, 48], borderRadius: [0, 32],
+            width: [10, 100], minHeight: [0, 600], opacity: [0, 100], objectPositionX: [0, 100]
+          };
+          Object.entries(numeric).forEach(([key, bounds]) => {
+            const valueNumber = clamp(value[key], bounds[0], bounds[1], null);
+            if (valueNumber !== null) normalized[key] = valueNumber;
+          });
+          if (['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform)) normalized.textTransform = value.textTransform;
+          if (['inherit', 'manrope', 'georgia', 'arial'].includes(value.fontFamily)) normalized.fontFamily = value.fontFamily;
+          if (['none', 'soft', 'medium', 'strong'].includes(value.boxShadow)) normalized.boxShadow = value.boxShadow;
+          if (['left', 'center', 'right'].includes(value.textAlign)) normalized.textAlign = value.textAlign;
+          if ([400, 500, 600, 700, 800, 900].includes(Number(value.fontWeight))) normalized.fontWeight = Number(value.fontWeight);
+          if (['cover', 'contain', 'fill'].includes(value.objectFit)) normalized.objectFit = value.objectFit;
+          return [id, normalized];
+        }))
+      }];
+    }))
   };
 }
 
@@ -200,10 +240,11 @@ export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
     : (typeof window !== 'undefined' && window.innerWidth <= 767
       ? 'mobile'
       : typeof window !== 'undefined' && window.innerWidth <= 1023 ? 'tablet' : 'desktop');
-  const responsiveLayout = viewport === 'desktop' ? {} : (design.responsive?.[viewport]?.layout || {});
-  const layout = { ...design.layout, ...responsiveLayout };
-  const theme = design.theme;
-  const typography = design.typography;
+  const responsive = viewport === 'desktop' ? {} : (design.responsive?.[viewport] || {});
+  const layout = { ...design.layout, ...(responsive.layout || {}) };
+  const theme = { ...design.theme, ...(responsive.theme || {}) };
+  const typography = { ...design.typography, ...(responsive.typography || {}) };
+  const elementStyles = responsive.elementStyles || {};
   const hero = design.hero;
   const sections = design.sections;
   const style = {
@@ -251,11 +292,14 @@ export function buildStorefrontVisualStyle(rawDesign, requestedViewport) {
 }
 
 
-export function buildStorefrontElementStyle(rawDesign, elementId) {
+export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewport = 'desktop') {
   if (!ELEMENT_STYLE_IDS.includes(elementId)) return {};
   const raw = isPlainObject(rawDesign) ? rawDesign : {};
   const rawElementStyles = isPlainObject(raw.elementStyles) ? raw.elementStyles : {};
-  const value = isPlainObject(rawElementStyles[elementId]) ? rawElementStyles[elementId] : {};
+  const baseValue = isPlainObject(rawElementStyles[elementId]) ? rawElementStyles[elementId] : {};
+  const viewport = ['desktop', 'tablet', 'mobile'].includes(requestedViewport) ? requestedViewport : 'desktop';
+  const responsiveValue = viewport === 'desktop' ? {} : (raw.responsive?.[viewport]?.elementStyles?.[elementId] || {});
+  const value = { ...baseValue, ...responsiveValue };
   const style = {};
   const textColor = safeColor(value.textColor, '');
   const backgroundColor = safeColor(value.backgroundColor, '');
