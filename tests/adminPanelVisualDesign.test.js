@@ -1297,3 +1297,16 @@ test('admin style backups support safe single-style restore without replacing th
   assert.match(editor, /ამ სტილის აღდგენა/);
   assert.match(editor, /protectedDesign\.stylePresets\.map\(item => item\.id === preset\.id \? restoredPreset : item\)/);
 });
+
+
+test('admin style library searches style values and filters by colors, typography and spacing', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /stylePresetPropertyFilter, setStylePresetPropertyFilter/);
+  assert.match(editor, /JSON\.stringify\(preset\.style\)/);
+  assert.match(editor, /stylePresetPropertyFilter === 'colors'/);
+  assert.match(editor, /stylePresetPropertyFilter === 'typography'/);
+  assert.match(editor, /stylePresetPropertyFilter === 'spacing'/);
+  assert.match(editor, /value="oldest"/);
+  assert.match(editor, /სტილის პარამეტრების ტიპის ფილტრი/);
+  assert.match(editor, /პირველად დამატებული/);
+});
