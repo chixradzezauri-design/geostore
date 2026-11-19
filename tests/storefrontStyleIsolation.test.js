@@ -198,3 +198,15 @@ test('stage 43 repairs the mobile size-selector header and compacts the single-i
   assert.match(stage43, /\.gs-flash-sale-card:only-child\{[\s\S]*?grid-template-columns:minmax\(0,112px\) minmax\(0,1fr\)!important;/);
   assert.match(stage43, /\.gs-product-dialog\{[^}]*max-height:min\(92dvh,900px\)!important;/);
 });
+
+
+test('visual editor uses the real Header and Footer components and provides a navigator for all editable targets', () => {
+  assert.match(visualEditor, /import Header from '\.\/Header';/);
+  assert.match(visualEditor, /import StorefrontFooter from '\.\/StorefrontFooter';/);
+  assert.match(visualEditor, /<Header[\s\S]*?setActiveTab=\{NOOP\}[\s\S]*?setIsAuthOpen=\{NOOP\}/);
+  assert.match(visualEditor, /<StorefrontFooter[\s\S]*?setActiveTab=\{NOOP\}[\s\S]*?setIsTermsOpen=\{NOOP\}/);
+  assert.match(visualEditor, /const VISUAL_EDITOR_TREE = \[/);
+  assert.match(visualEditor, /const selectElementFromTree = targetId =>/);
+  assert.match(visualEditor, /კომპონენტების იერარქია/);
+  assert.match(visualEditor, /metadata\.label/);
+});
