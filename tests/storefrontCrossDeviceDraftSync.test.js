@@ -76,3 +76,11 @@ test('publish rejects a stale editor snapshot before sending the publication RPC
   assert.ok(publish.indexOf('storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart') < publish.indexOf('publishRequestStarted = true'));
   assert.match(publish, /if \(!storefrontPublished && uploadedAssets\.length\)/);
 });
+
+test('draft save rejects obsolete snapshots before the save RPC', () => {
+  const save = app.split('const handleSaveStorefrontDraft = async (')[1]?.split('const handlePublishStorefront = async () =>')[0] || '';
+  assert.match(save, /const saveEditorSnapshotAtStart = storefrontCurrentSnapshotRef\.current/);
+  assert.match(save, /storefrontCurrentSnapshotRef\.current !== saveEditorSnapshotAtStart/);
+  assert.ok(save.indexOf('storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart') < save.indexOf('rpc/save_storefront_draft'));
+  assert.match(save, /if \(!draftSaveCommitted && uploadedAssets\.length\)/);
+});
