@@ -296,3 +296,35 @@ test('custom storefront section links and video embeds reject unsafe hosts and p
   assert.equal(blocks[3].videoUrl, '');
   assert.equal(blocks[4].videoUrl, 'https://player.vimeo.com/video/12345678');
 });
+
+
+test('custom section responsive styles are safely normalized per viewport without changing desktop defaults', () => {
+  const design = normalizeStorefrontVisualDesign({
+    customSections: [{
+      id: 'responsive-1',
+      backgroundColor: '#ffffff', textColor: '#111111', padding: 24, maxWidth: 1200,
+      responsive: {
+        tablet: { backgroundColor: '#123456', padding: 36, maxWidth: 900, align: 'center', marginTop: 28, borderRadius: 22 },
+        mobile: { textColor: '#abcdef', padding: 12, maxWidth: 99999, marginBottom: -10, minHeight: 1200, align: 'right' },
+        desktop: { padding: 999 }
+      },
+      blocks: [{ id: 'heading', type: 'heading', text: 'Responsive section' }]
+    }]
+  });
+  const section = design.customSections[0];
+  assert.equal(section.padding, 24);
+  assert.equal(section.maxWidth, 1200);
+  assert.equal(section.responsive.tablet.backgroundColor, '#123456');
+  assert.equal(section.responsive.tablet.padding, 36);
+  assert.equal(section.responsive.tablet.maxWidth, 900);
+  assert.equal(section.responsive.tablet.align, 'center');
+  assert.equal(section.responsive.tablet.marginTop, 28);
+  assert.equal(section.responsive.tablet.borderRadius, 22);
+  assert.equal(section.responsive.mobile.textColor, '#abcdef');
+  assert.equal(section.responsive.mobile.padding, 12);
+  assert.equal(section.responsive.mobile.maxWidth, 1600);
+  assert.equal(section.responsive.mobile.marginBottom, undefined);
+  assert.equal(section.responsive.mobile.minHeight, 800);
+  assert.equal(section.responsive.mobile.align, 'right');
+  assert.deepEqual(section.responsive.desktop, {});
+});
