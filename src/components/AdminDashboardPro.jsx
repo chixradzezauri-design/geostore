@@ -952,6 +952,7 @@ export default function AdminDashboardPro({
   const visibleAdminTab = canAccessAdminTab(adminTab) ? adminTab : getDefaultAdminTab();
   // Keep a real, read-only admin module mounted behind the visual editor for live inspection.
   const adminContentTab = visibleAdminTab === 'admin_visual_editor' ? adminVisualPreviewTab : visibleAdminTab;
+  useEffect(() => { if (adminTab !== 'admin_visual_editor' && adminTab !== 'visual_editor' && canAccessAdminTab(adminTab)) setAdminVisualPreviewTab(adminTab); }, [adminTab, adminAccess]);
   const [adminVisualDesign, setAdminVisualDesign] = useState(() => normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN));
   const [adminVisualDesignReady, setAdminVisualDesignReady] = useState(false);
   const [adminVisualSyncStatus, setAdminVisualSyncStatus] = useState('idle');
@@ -4596,7 +4597,7 @@ export default function AdminDashboardPro({
                 type="button"
                 data-admin-visual-nav-item="true"
                 data-admin-visual-nav-active={isActive ? 'true' : 'false'}
-                onClick={() => { if (tab.id !== 'admin_visual_editor' && tab.id !== 'visual_editor') setAdminVisualPreviewTab(tab.id); setAdminTab(tab.id); }}
+                onClick={() => setAdminTab(tab.id)}
                 className={`w-full px-3.5 sm:px-4 py-3 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${
                   isActive 
                     ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-102' 
@@ -4687,7 +4688,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminContentTab === 'command' && (
+        {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
           <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
             <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
               <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
@@ -4936,7 +4937,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminContentTab === 'replenishment' && (
+        {(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment') && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
