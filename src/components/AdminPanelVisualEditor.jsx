@@ -884,8 +884,17 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       const validated = normalizeAdminPanelVisualDesign({ stylePresets: sourcePresets });
       if (!validated.stylePresets.length) throw new Error('ფაილში დასამატებელი ვალიდური სტილი არ არის.');
       const existingNames = new Set(normalized.stylePresets.map(item => item.name.toLocaleLowerCase()));
+      const styleKey = style => JSON.stringify(Object.fromEntries(Object.entries(style || {}).sort(([a], [b]) => a.localeCompare(b))));
+      const knownStyleKeys = new Set(normalized.stylePresets.map(item => styleKey(item.style)));
+      let duplicateCount = 0;
+      const uniqueImportedPresets = validated.stylePresets.filter(preset => {
+        const key = styleKey(preset.style);
+        if (knownStyleKeys.has(key)) { duplicateCount += 1; return false; }
+        knownStyleKeys.add(key);
+        return true;
+      });
       const available = Math.max(0, 30 - normalized.stylePresets.length);
-      const additions = validated.stylePresets.slice(0, available).map((preset, index) => {
+      const additions = uniqueImportedPresets.slice(0, available).map((preset, index) => {
         const baseName = preset.name.slice(0, 32);
         let name = baseName;
         let suffix = 2;
@@ -905,7 +914,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         ...normalized,
         stylePresets: [...normalized.stylePresets, ...additions]
       }));
-      window.alert(`დაემატა ${additions.length} სტილი.${validated.stylePresets.length > additions.length ? ' ნაწილი გამოტოვებულია 30-სტილიანი ლიმიტის გამო.' : ''}`);
+      const limitSkipped = Math.max(0, uniqueImportedPresets.length - additions.length);\n      window.alert(`დაემატა ${additions.length} სტილი.${duplicateCount ? ` დუბლიკატი გამოტოვებულია: ${duplicateCount}.` : ''}${limitSkipped ? ` ლიმიტის გამო გამოტოვებულია: ${limitSkipped}.` : ''}`);
     } catch (error) {
       window.alert(error?.message || 'სტილების ფაილის იმპორტი ვერ შესრულდა.');
     } finally {
