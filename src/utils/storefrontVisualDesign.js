@@ -154,10 +154,18 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
         lineHeight: clamp(value.lineHeight, 0.8, 2.5, null),
         letterSpacing: clamp(value.letterSpacing, -2, 12, null),
         textTransform: ['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform) ? value.textTransform : '',
+        textDecoration: ['none', 'underline', 'line-through'].includes(value.textDecoration) ? value.textDecoration : '',
+        fontStyle: ['normal', 'italic'].includes(value.fontStyle) ? value.fontStyle : '',
         fontFamily: ['inherit', 'manrope', 'georgia', 'arial'].includes(value.fontFamily) ? value.fontFamily : '',
         boxShadow: ['none', 'soft', 'medium', 'strong'].includes(value.boxShadow) ? value.boxShadow : '',
         fontSize: clamp(value.fontSize, 10, 64, null),
         padding: clamp(value.padding, 0, 48, null),
+        paddingX: clamp(value.paddingX, 0, 64, null),
+        paddingY: clamp(value.paddingY, 0, 64, null),
+        marginTop: clamp(value.marginTop, 0, 120, null),
+        marginBottom: clamp(value.marginBottom, 0, 120, null),
+        minWidth: clamp(value.minWidth, 0, 800, null),
+        maxWidth: clamp(value.maxWidth, 0, 1200, null),
         borderRadius: clamp(value.borderRadius, 0, 32, null),
         textAlign: ['left', 'center', 'right'].includes(value.textAlign) ? value.textAlign : '',
         fontWeight: [400, 500, 600, 700, 800, 900].includes(Number(value.fontWeight)) ? Number(value.fontWeight) : null,
@@ -207,14 +215,17 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
           if (borderColor) normalized.borderColor = borderColor;
           const numeric = {
             borderWidth: [0, 12], lineHeight: [0.8, 2.5], letterSpacing: [-2, 12],
-            fontSize: [10, 64], padding: [0, 48], borderRadius: [0, 32],
-            width: [10, 100], minHeight: [0, 600], opacity: [0, 100], objectPositionX: [0, 100]
+            fontSize: [10, 64], padding: [0, 48], paddingX: [0, 64], paddingY: [0, 64],
+            marginTop: [0, 120], marginBottom: [0, 120], minWidth: [0, 800], maxWidth: [0, 1200],
+            borderRadius: [0, 32], width: [10, 100], minHeight: [0, 600], opacity: [0, 100], objectPositionX: [0, 100]
           };
           Object.entries(numeric).forEach(([key, bounds]) => {
             const valueNumber = clamp(value[key], bounds[0], bounds[1], null);
             if (valueNumber !== null) normalized[key] = valueNumber;
           });
           if (['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform)) normalized.textTransform = value.textTransform;
+          if (['none', 'underline', 'line-through'].includes(value.textDecoration)) normalized.textDecoration = value.textDecoration;
+          if (['normal', 'italic'].includes(value.fontStyle)) normalized.fontStyle = value.fontStyle;
           if (['inherit', 'manrope', 'georgia', 'arial'].includes(value.fontFamily)) normalized.fontFamily = value.fontFamily;
           if (['none', 'soft', 'medium', 'strong'].includes(value.boxShadow)) normalized.boxShadow = value.boxShadow;
           if (['left', 'center', 'right'].includes(value.textAlign)) normalized.textAlign = value.textAlign;
@@ -314,6 +325,8 @@ export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewp
   if (lineHeight !== null) style.lineHeight = String(lineHeight);
   if (letterSpacing !== null) style.letterSpacing = String(letterSpacing) + 'px';
   if (['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform)) style.textTransform = value.textTransform;
+  if (['none', 'underline', 'line-through'].includes(value.textDecoration)) style.textDecoration = value.textDecoration;
+  if (['normal', 'italic'].includes(value.fontStyle)) style.fontStyle = value.fontStyle;
   const fontStacks = { inherit: 'inherit', manrope: FONT_STACKS.manrope, georgia: FONT_STACKS.georgia, arial: FONT_STACKS.arial };
   if (fontStacks[value.fontFamily]) style.fontFamily = fontStacks[value.fontFamily];
   const shadows = { none: 'none', soft: '0 2px 10px rgba(0,0,0,.12)', medium: '0 8px 24px rgba(0,0,0,.2)', strong: '0 16px 40px rgba(0,0,0,.32)' };
@@ -323,6 +336,18 @@ export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewp
   const borderRadius = clamp(value.borderRadius, 0, 32, null);
   if (fontSize !== null) style.fontSize = String(fontSize) + 'px';
   if (padding !== null) style.padding = String(padding) + 'px';
+  const paddingX = clamp(value.paddingX, 0, 64, null);
+  const paddingY = clamp(value.paddingY, 0, 64, null);
+  const marginTop = clamp(value.marginTop, 0, 120, null);
+  const marginBottom = clamp(value.marginBottom, 0, 120, null);
+  const minWidth = clamp(value.minWidth, 0, 800, null);
+  const maxWidth = clamp(value.maxWidth, 0, 1200, null);
+  if (paddingX !== null) { style.paddingLeft = String(paddingX) + 'px'; style.paddingRight = String(paddingX) + 'px'; }
+  if (paddingY !== null) { style.paddingTop = String(paddingY) + 'px'; style.paddingBottom = String(paddingY) + 'px'; }
+  if (marginTop !== null) style.marginTop = String(marginTop) + 'px';
+  if (marginBottom !== null) style.marginBottom = String(marginBottom) + 'px';
+  if (minWidth !== null) style.minWidth = String(minWidth) + 'px';
+  if (maxWidth !== null && maxWidth > 0) style.maxWidth = String(maxWidth) + 'px';
   if (borderRadius !== null) style.borderRadius = String(borderRadius) + 'px';
   if (['left', 'center', 'right'].includes(value.textAlign)) style.textAlign = value.textAlign;
   const fontWeight = value.fontWeight == null ? null : Number(value.fontWeight);
