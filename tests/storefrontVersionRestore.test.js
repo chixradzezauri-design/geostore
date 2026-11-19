@@ -32,7 +32,7 @@ test('restoring a storefront version updates draft fields only and never publish
 test('published version comparison is read-only and compares the full draft snapshot', () => {
   assert.match(editor, /const flattenStorefrontSnapshot =/);
   assert.match(editor, /const compareStorefrontSnapshots =/);
-  assert.match(editor, /categories: safeCategories,[\\s\\S]*banners: safeBanners,[\\s\\S]*siteSettings: siteSettings/);
+  assert.match(editor, /categories: safeCategories,[\s\S]*banners: safeBanners,[\s\S]*siteSettings: siteSettings/);
   assert.match(editor, /მიმდინარე მონახაზთან შედარება/);
   assert.match(editor, /განსხვავება არ არის/);
   assert.match(editor, /გამოქვეყნებული:/);
