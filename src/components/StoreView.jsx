@@ -285,7 +285,7 @@ export default function StoreView({
     }
 
     return result;
-  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang]);
+  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang, siteSettings?.visualDesign?.productOrder]);
 
   const totalProductPages = Math.max(1, Math.ceil(processedProducts.length / PRODUCTS_PER_PAGE));
   const safeProductPage = Math.min(Math.max(1, productPage), totalProductPages);
