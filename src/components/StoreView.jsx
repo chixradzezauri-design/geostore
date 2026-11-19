@@ -414,8 +414,8 @@ export default function StoreView({
                 <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
                 <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
                   <h2 data-visual-editor-target="banner.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
-                  {banner?.subtitle && <p className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
-                  {safeTarget && <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
+                  {banner?.subtitle && <p data-visual-editor-target="banner.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
+                  {safeTarget && <span data-visual-editor-target="banner.button" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
                 </div>
               </div>
             );
@@ -657,7 +657,7 @@ export default function StoreView({
       {/* Filters & Sorting */}
       <div data-visual-editor-target="filters" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+          <div data-visual-editor-target="filters.priceLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
           <input 
@@ -669,7 +669,7 @@ export default function StoreView({
             aria-label={storeText.minPrice}
             value={minPrice}
             onChange={e => setMinPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           <span className="text-slate-500">-</span>
           <input 
@@ -681,22 +681,22 @@ export default function StoreView({
             aria-label={storeText.maxPrice}
             value={maxPrice}
             onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
+            <button data-visual-editor-target="filters.clearButton" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.clearButton')} onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
           )}
         </div>
 
         <div className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
-          <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+          <div data-visual-editor-target="filters.sortLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.sortLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
           <select 
             aria-label={storeText.sort}
             value={sortBy} 
             onChange={e => setSortBy(e.target.value)}
-            className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
+            data-visual-editor-target="filters.sortSelect" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.sortSelect')} className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
             <option value="default">{storeText.defaultSort}</option>
             <option value="price-asc">{storeText.priceLow}</option>
