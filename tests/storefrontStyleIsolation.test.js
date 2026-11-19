@@ -322,9 +322,9 @@ test('storefront visual editor navigator lists only selectable real DOM targets'
   const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.url), 'utf8');
   const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
   const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
-  const targetBlock = editor.match(/const VISUAL_EDITOR_TARGETS = \\{([\\s\\S]*?)\\n\\};/);
+  const targetBlock = editor.match(/const VISUAL_EDITOR_TARGETS = \{([\s\S]*?)\n\};/);
   assert.ok(targetBlock, 'visual editor target registry exists');
-  const registered = [...targetBlock[1].matchAll(/^\\s*'([^']+)'\\s*:/gm)].map(match => match[1]);
-  const actual = [...new Set([header, store, footer].join('\\n').matchAll(/data-visual-editor-target=["']([^"']+)["']/g))].map(match => match[1]);
+  const registered = [...targetBlock[1].matchAll(/^\s*'([^']+)'\s*:/gm)].map(match => match[1]);
+  const actual = [...new Set([header, store, footer].join('\n').matchAll(/data-visual-editor-target=["']([^"']+)["']/g))].map(match => match[1]);
   assert.deepEqual(registered.sort(), actual.sort());
 });
