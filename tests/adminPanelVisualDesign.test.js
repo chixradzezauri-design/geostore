@@ -447,3 +447,30 @@ test('every admin visual module selector is present on a real AdminDashboardPro 
     assert.match(visualCss, new RegExp('--admin-vd-' + moduleName + '-backgroundColor-active'));
   }
 });
+
+
+test('admin visual content overrides are normalized, bounded and available across all modules', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    content: {
+      ordersTitle: 'ჩემი შეკვეთები',
+      ordersDescription: 'ახალი განმარტება',
+      categoriesCreateTitle: 'კატეგორიის სათაური'.repeat(40),
+      couponsSubmitLabel: 123
+    }
+  });
+  assert.equal(design.content.ordersTitle, 'ჩემი შეკვეთები');
+  assert.equal(design.content.ordersDescription, 'ახალი განმარტება');
+  assert.equal(design.content.categoriesCreateTitle.length, 260);
+  assert.equal(design.content.couponsSubmitLabel, 'კუპონის დამატება');
+  assert.equal(design.content.inventoryTitle, 'მარაგის მოძრაობების ისტორია');
+});
+
+test('admin visual editor exposes text editing and live admin modules consume the overrides', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /ტექსტების რედაქტირება/);
+  assert.match(editor, /ADMIN_PANEL_CONTENT_FIELDS\.map/);
+  for (const key of ['staffInviteTitle','inventoryTitle','analyticsPeriodTitle','ordersTitle','supportTitle','discountsTitle','bannersCreateTitle','categoriesCreateTitle','couponsCreateTitle']) {
+    assert.match(dashboard, new RegExp('adminVisualDesign\\.content\\.' + key));
+  }
+});
