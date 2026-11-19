@@ -348,3 +348,21 @@ test('custom section placement accepts supported storefront anchors and safely d
     'after-filters', 'after-products', 'after-products', 'after-products'
   ]);
 });
+
+
+test('reusable visual style presets are normalized, bounded, and limited to twenty', () => {
+  const rawPresets = Array.from({ length: 22 }, (_, index) => ({
+    id: 'preset-' + index,
+    name: 'სტილი ' + index,
+    style: { backgroundColor: '#123456', fontSize: 999, borderRadius: 80, textAlign: 'center' }
+  }));
+  rawPresets.push({ id: 'bad-color', name: 'უსაფრთხოება', style: { backgroundColor: 'url(javascript:alert(1))' } });
+  const design = normalizeStorefrontVisualDesign({ stylePresets: rawPresets });
+  assert.equal(design.stylePresets.length, 20);
+  assert.equal(design.stylePresets[0].style.backgroundColor, '#123456');
+  assert.equal(design.stylePresets[0].style.fontSize, 64);
+  assert.equal(design.stylePresets[0].style.borderRadius, 32);
+  assert.equal(design.stylePresets[0].style.textAlign, 'center');
+  const invalid = normalizeStorefrontVisualDesign({ stylePresets: [{ id: 'empty', name: 'ცარიელი', style: {} }] });
+  assert.deepEqual(invalid.stylePresets, []);
+});
