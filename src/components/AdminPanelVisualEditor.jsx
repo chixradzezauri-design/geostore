@@ -492,6 +492,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [showFavoriteStylePresets, setShowFavoriteStylePresets] = useState(false);
   const [expandedStyleHistoryId, setExpandedStyleHistoryId] = useState(null);
   const [expandedStyleBackupId, setExpandedStyleBackupId] = useState(null);
+  const [selectedBackupStyleIds, setSelectedBackupStyleIds] = useState([]);
   const [bulkStylePresetCategory, setBulkStylePresetCategory] = useState('საერთო');
   const elementCardRefs = useRef({});
   const stylePresetFileInputRef = useRef(null);
@@ -826,6 +827,43 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       : [...protectedDesign.stylePresets, restoredPreset];
     commitChange(normalizeAdminPanelVisualDesign({ ...protectedDesign, stylePresets }));
     setSelectedStylePresetIds([preset.id]);
+  };
+
+  const toggleBackupStyleSelection = id => setSelectedBackupStyleIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
+  const restoreSelectedStylesFromBackup = backup => {
+    if (!backup) return;
+    const selected = backup.stylePresets.filter(preset => selectedBackupStyleIds.includes(preset.id));
+    if (!selected.length) return;
+    const selectedIds = new Set(selected.map(preset => preset.id));
+    const styleKey = style => JSON.stringify(Object.entries(style || {}).sort(([left], [right]) => left.localeCompare(right)));
+    const currentById = new Map(normalized.stylePresets.map(preset => [preset.id, preset]));
+    const selectedKeys = new Set();
+    for (const preset of selected) {
+      const key = styleKey(preset.style);
+      if (selectedKeys.has(key)) { window.alert('მონიშნულ სარეზერვო სტილებში იდენტური ასლებია. მონიშნეთ მხოლოდ ერთი თითოეული ერთნაირი სტილიდან.'); return; }
+      selectedKeys.add(key);
+      const duplicate = normalized.stylePresets.find(item => item.id !== preset.id && styleKey(item.style) === key);
+      if (duplicate) { window.alert(`„${preset.name}“ ემთხვევა მიმდინარე სტილს „${duplicate.name}“. დუბლირების თავიდან ასაცილებლად აღდგენა შეჩერდა.`); return; }
+    }
+    const additions = selected.filter(preset => !currentById.has(preset.id));
+    if (normalized.stylePresets.length + additions.length > 30) { window.alert(`აღდგენისთვის საჭიროა ${additions.length} ახალი ადგილი, მაგრამ ბიბლიოთეკაში მხოლოდ ${30 - normalized.stylePresets.length} თავისუფალი ადგილია. არაფერი შეცვლილა.`); return; }
+    const changed = selected.filter(preset => { const current = currentById.get(preset.id); return !current || JSON.stringify(current) !== JSON.stringify(preset); });
+    if (!changed.length) { window.alert('მონიშნული სტილები უკვე ემთხვევა სარეზერვო ასლს.'); return; }
+    const rotationWarning = normalized.stylePresetBackups.length >= 10 ? '\nშენიშვნა: ყველაზე ძველი სარეზერვო ასლი ჩანაცვლდება.' : '';
+    if (!window.confirm(`აღდგეს მონიშნული ${selected.length} სტილი? დაემატება ${additions.length}, განახლდება ${changed.length - additions.length}. სხვა სტილები უცვლელი დარჩება. მიმდინარე ბიბლიოთეკა წინასწარ შეინახება.${rotationWarning}`)) return;
+    const protectedDesign = createAdminStylePresetBackup(normalized, `სარეზერვო ასლიდან ნაწილობრივი აღდგენა: ${selected.length} სტილი`);
+    const restoredAt = new Date().toISOString();
+    const selectedById = new Map(selected.map(preset => [preset.id, preset]));
+    const stylePresets = protectedDesign.stylePresets.map(current => {
+      const preset = selectedById.get(current.id);
+      if (!preset) return current;
+      return { ...preset, history: [...(preset.history || []), ...(current.history || []), { savedAt: restoredAt, style: { ...current.style } }].slice(-10) };
+    });
+    const existingIds = new Set(stylePresets.map(preset => preset.id));
+    selected.forEach(preset => { if (!existingIds.has(preset.id)) stylePresets.push({ ...preset, history: (preset.history || []).slice(-10) }); });
+    commitChange(normalizeAdminPanelVisualDesign({ ...protectedDesign, stylePresets }));
+    setSelectedStylePresetIds(selected.map(preset => preset.id));
+    setSelectedBackupStyleIds([]);
   };
 
   const restoreAutomaticStyleBackup = backup => {
@@ -1402,10 +1440,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                 {normalized.stylePresetBackups.slice().reverse().map(backup => (
                   <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900/70 p-2">
                     <div className="min-w-0"><p className="truncate text-[11px] font-bold text-slate-200">{backup.reason}</p><p className="text-[10px] text-slate-400">{new Date(backup.savedAt).toLocaleString('ka-GE')} · {backup.stylePresets.length} სტილი</p></div>
-                    <div className="flex flex-wrap gap-1"><button type="button" onClick={() => setExpandedStyleBackupId(current => current === backup.id ? null : backup.id)} aria-expanded={expandedStyleBackupId === backup.id} className="rounded-md border border-violet-400/40 px-2.5 py-1.5 text-[10px] font-bold text-violet-200">{expandedStyleBackupId === backup.id ? 'შიგთავსის დამალვა' : 'შიგთავსის ნახვა'}</button><button type="button" onClick={() => exportSavedElementStyles(backup.stylePresets, `geostore-admin-style-backup-${backup.id}.json`, { id: backup.id, savedAt: backup.savedAt, reason: backup.reason })} className="rounded-md border border-sky-400/40 px-2.5 py-1.5 text-[10px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => renameAutomaticStyleBackup(backup)} className="rounded-md border border-slate-600 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => restoreAutomaticStyleBackup(backup)} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200">აღდგენა</button><button type="button" onClick={() => deleteAutomaticStyleBackup(backup)} className="rounded-md border border-rose-400/40 px-2.5 py-1.5 text-[10px] font-bold text-rose-200">წაშლა</button></div>
+                    <div className="flex flex-wrap gap-1"><button type="button" onClick={() => { setExpandedStyleBackupId(current => current === backup.id ? null : backup.id); setSelectedBackupStyleIds([]); }} aria-expanded={expandedStyleBackupId === backup.id} className="rounded-md border border-violet-400/40 px-2.5 py-1.5 text-[10px] font-bold text-violet-200">{expandedStyleBackupId === backup.id ? 'შიგთავსის დამალვა' : 'შიგთავსის ნახვა'}</button><button type="button" onClick={() => exportSavedElementStyles(backup.stylePresets, `geostore-admin-style-backup-${backup.id}.json`, { id: backup.id, savedAt: backup.savedAt, reason: backup.reason })} className="rounded-md border border-sky-400/40 px-2.5 py-1.5 text-[10px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => renameAutomaticStyleBackup(backup)} className="rounded-md border border-slate-600 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => restoreAutomaticStyleBackup(backup)} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200">აღდგენა</button><button type="button" onClick={() => deleteAutomaticStyleBackup(backup)} className="rounded-md border border-rose-400/40 px-2.5 py-1.5 text-[10px] font-bold text-rose-200">წაშლა</button></div>
                     {expandedStyleBackupId === backup.id && <div className="mt-2 w-full space-y-2 rounded-lg border border-violet-400/20 bg-slate-950/70 p-3">
                       <div className="flex flex-wrap gap-2 text-[10px]"><span className="rounded bg-slate-800 px-2 py-1 text-emerald-200">ასლში: {backup.stylePresets.length}</span><span className="rounded bg-slate-800 px-2 py-1 text-sky-200">ახალი: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.added.length : 0}</span><span className="rounded bg-slate-800 px-2 py-1 text-amber-200">შეცვლილი: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.changed.length : 0}</span><span className="rounded bg-slate-800 px-2 py-1 text-rose-200">აღდგენისას მოცილდება: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.removed.length : 0}</span></div>
-                      <p className="text-[10px] text-slate-400">ქვემოთ ნაჩვენებია ამ ასლში შენახული სტილები. აღდგენა შეცვლის მიმდინარე სტილების ბიბლიოთეკას, მაგრამ მის ასლს წინასწარ შეინახავს.</p>
+                       <p className="text-[10px] text-slate-400">ამ ასლიდან შეგიძლიათ ერთი ან რამდენიმე სტილის აღდგენა ისე, რომ სხვა სტილები უცვლელი დარჩეს.</p>
+                       {backup.stylePresets.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 p-2"><span className="text-[10px] text-slate-300">მონიშნულია: {selectedBackupStyleIds.filter(id => backup.stylePresets.some(preset => preset.id === id)).length}</span><div className="flex flex-wrap gap-1"><button type="button" onClick={() => setSelectedBackupStyleIds(backup.stylePresets.map(preset => preset.id))} className="rounded-md border border-slate-600 px-2 py-1 text-[9px] font-bold text-slate-200">ყველას მონიშვნა</button><button type="button" onClick={() => setSelectedBackupStyleIds([])} className="rounded-md border border-slate-600 px-2 py-1 text-[9px] font-bold text-slate-200">მონიშვნის მოხსნა</button><button type="button" onClick={() => restoreSelectedStylesFromBackup(backup)} disabled={!backup.stylePresets.some(preset => selectedBackupStyleIds.includes(preset.id))} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[9px] font-bold text-emerald-200 disabled:opacity-40">მონიშნულის აღდგენა</button></div></div>}
+                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{backup.stylePresets.map(preset => <div key={preset.id} className={`flex min-w-0 items-center justify-between gap-2 rounded-md border p-2 ${selectedBackupStyleIds.includes(preset.id) ? 'border-emerald-400/50 bg-emerald-400/5' : 'border-slate-800'}`}><div className="flex min-w-0 items-center gap-2"><input type="checkbox" checked={selectedBackupStyleIds.includes(preset.id)} onChange={() => toggleBackupStyleSelection(preset.id)} aria-label={preset.name + ' სარეზერვო სტილის მონიშვნა'} className="h-4 w-4 shrink-0 accent-emerald-400" /><span className="h-8 w-8 shrink-0 rounded-md border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#475569' }} /><span className="min-w-0"><span className="block truncate text-[10px] font-bold text-slate-200">{preset.name}</span><span className="block truncate text-[9px] text-slate-500">{preset.category} · {Object.keys(preset.style).length} პარამეტრი</span></span></div><button type="button" onClick={() => restoreSingleStyleFromBackup(backup, preset)} className="shrink-0 rounded-md border border-emerald-400/40 px-2 py-1.5 text-[9px] font-bold text-emerald-200">ამ სტილის აღდგენა</button></div>)}</div>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{backup.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 items-center justify-between gap-2 rounded-md border border-slate-800 p-2"><div className="flex min-w-0 items-center gap-2"><span className="h-8 w-8 shrink-0 rounded-md border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#475569' }} /><span className="min-w-0"><span className="block truncate text-[10px] font-bold text-slate-200">{preset.name}</span><span className="block truncate text-[9px] text-slate-500">{preset.category} · {Object.keys(preset.style).length} პარამეტრი</span></span></div><button type="button" onClick={() => restoreSingleStyleFromBackup(backup, preset)} className="shrink-0 rounded-md border border-emerald-400/40 px-2 py-1.5 text-[9px] font-bold text-emerald-200">ამ სტილის აღდგენა</button></div>)}</div>
                       {backup.stylePresets.length === 0 && <p className="text-[10px] text-slate-500">ამ ასლში სტილები არ არის.</p>}
                     </div>}
