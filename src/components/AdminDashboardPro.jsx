@@ -4414,6 +4414,9 @@ export default function AdminDashboardPro({
             return (
               <button
                 key={tab.id}
+                type="button"
+                data-admin-visual-nav-item="true"
+                data-admin-visual-nav-active={isActive ? 'true' : 'false'}
                 onClick={() => setAdminTab(tab.id)}
                 className={`w-full px-3.5 sm:px-4 py-3 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${
                   isActive 
