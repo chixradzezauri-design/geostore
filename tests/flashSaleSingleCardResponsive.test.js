@@ -58,19 +58,20 @@ test('two Flash Sale products keep card text and prices shrink-safe and horizont
 });
 
 
+
 test('one and two Flash Sale products use a readable auto-fit grid on narrow iPhones', () => {
   const narrowPhoneFixStart = css.lastIndexOf('GEOSTORE — Stage 43.3: keep Flash Sale cards readable on narrow phones');
   const narrowPhoneFix = css.slice(narrowPhoneFixStart);
 
   assert.ok(narrowPhoneFixStart >= 0);
-  assert.match(narrowPhoneFix, /@media\\s*\\(\\s*max-width:\\s*640px\\s*\\)/);
+  assert.match(narrowPhoneFix, /@media\s*\(\s*max-width:\s*640px\s*\)/);
   assert.match(
     narrowPhoneFix,
-    /\\.gs-flash-sale-section\\s*>\\s*\\.grid\\s*\\{[^}]*grid-template-columns:\\s*repeat\\(auto-fit,\\s*minmax\\(min\\(100%,\\s*220px\\),\\s*1fr\\)\\)\\s*!important;/s
+    /\.gs-flash-sale-section\s*>\s*\.grid\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*220px\),\s*1fr\)\)\s*!important;/s
   );
   assert.match(
     narrowPhoneFix,
-    /\\.gs-flash-sale-section\\s*>\\s*\\.grid\\s*>\\s*\\.gs-flash-sale-card\\s*\\{[^}]*width:\\s*100%\\s*!important;[^}]*min-width:\\s*0\\s*!important;[^}]*max-width:\\s*100%\\s*!important;/s
+    /\.gs-flash-sale-section\s*>\s*\.grid\s*>\s*\.gs-flash-sale-card\s*\{[^}]*width:\s*100%\s*!important;[^}]*min-width:\s*0\s*!important;[^}]*max-width:\s*100%\s*!important;/s
   );
 
   const columnsForContainer = (width, minCard = 220, gap = 12) =>
