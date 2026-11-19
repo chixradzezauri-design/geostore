@@ -2928,21 +2928,49 @@ export default function AdminDashboardPro({
   };
 
   const persistServerCustomerProfile = async (customer, changes = {}) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return false;
     const profile = { id: customer.id, isVip: Boolean(changes.isVip ?? customer.isVip), isBlocked: Boolean(changes.isBlocked ?? customer.isBlocked), discountPercent: Number(changes.discountPercent ?? customer.discountPercent) || 0, adminNotes: String(changes.adminNotes ?? customer.adminNotes ?? '') };
-    const saved = await saveAdminCustomerCrmProfile({ supabaseUrl: SUPABASE_URL, headers: await getSupabaseHeaders(), profile });
+    const headers = await getSupabaseHeaders();
+    if (!isCurrentAdminSession(requestSessionVersion)) return false;
+    const saved = await saveAdminCustomerCrmProfile({ supabaseUrl: SUPABASE_URL, headers, profile });
+    if (!isCurrentAdminSession(requestSessionVersion)) return false;
     setServerCustomers(prev => prev.map(row => String(row.id) === String(customer.id) ? { ...row, isVip: Boolean(saved?.is_vip ?? profile.isVip), isBlocked: Boolean(saved?.is_blocked ?? profile.isBlocked), discountPercent: Number(saved?.discount_percent ?? profile.discountPercent) || 0, adminNotes: String(saved?.admin_notes ?? profile.adminNotes) } : row));
+    return true;
   };
   const handleToggleVipUser = async (userId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     const customer = crmUsers.find(u => u.id === userId || u.email === userId);
-    if (customer?.isServerCustomer) { try { await persistServerCustomerProfile(customer, { isVip: !customer.isVip }); } catch (error) { alert(error?.message || 'VIP სტატუსის შენახვა ვერ მოხერხდა.'); return; } }
-    else if (typeof setUsersList === 'function') setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
-    logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
+    if (customer?.isServerCustomer) {
+      try {
+        const saved = await persistServerCustomerProfile(customer, { isVip: !customer.isVip });
+        if (!saved || !isCurrentAdminSession(requestSessionVersion)) return;
+      } catch (error) {
+        if (isCurrentAdminSession(requestSessionVersion)) alert(error?.message || 'VIP სტატუსის შენახვა ვერ მოხერხდა.');
+        return;
+      }
+    } else if (typeof setUsersList === 'function') {
+      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isVip: !u.isVip } : u));
+    }
+    if (isCurrentAdminSession(requestSessionVersion)) logActivity(`შეიცვალა მომხმარებლის (ID: ${userId}) VIP სტატუსი`);
   };
   const handleToggleBlockUser = async (userId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     const customer = crmUsers.find(u => u.id === userId || u.email === userId);
-    if (customer?.isServerCustomer) { try { await persistServerCustomerProfile(customer, { isBlocked: !customer.isBlocked }); } catch (error) { alert(error?.message || 'CRM ნიშნის შენახვა ვერ მოხერხდა.'); return; } }
-    else if (typeof setUsersList === 'function') setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
-    logActivity(`შეიცვალა მხოლოდ CRM ჩანაწერის შეზღუდვის ნიშანი (ID: ${userId})`);
+    if (customer?.isServerCustomer) {
+      try {
+        const saved = await persistServerCustomerProfile(customer, { isBlocked: !customer.isBlocked });
+        if (!saved || !isCurrentAdminSession(requestSessionVersion)) return;
+      } catch (error) {
+        if (isCurrentAdminSession(requestSessionVersion)) alert(error?.message || 'CRM ნიშნის შენახვა ვერ მოხერხდა.');
+        return;
+      }
+    } else if (typeof setUsersList === 'function') {
+      setUsersList(prev => (prev || []).map(u => (u.id === userId || u.email === userId) ? { ...u, isBlocked: !u.isBlocked } : u));
+    }
+    if (isCurrentAdminSession(requestSessionVersion)) logActivity(`შეიცვალა მხოლოდ CRM ჩანაწერის შეზღუდვის ნიშანი (ID: ${userId})`);
   };
 
   const handleDeleteUser = (userId, userName) => {
