@@ -478,6 +478,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
   const [viewport, setViewport] = useState('desktop');
   const [elementSearch, setElementSearch] = useState('');
   const [elementCategory, setElementCategory] = useState('all');
+  const [showCustomizedOnly, setShowCustomizedOnly] = useState(false);
   const [selectedElementKey, setSelectedElementKey] = useState('');
   const elementCardRefs = useRef({});
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
@@ -559,16 +560,27 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
         ]))
       };
 
+  const customizedElementKeys = useMemo(() => new Set(
+    Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => {
+      if (viewport === 'desktop') {
+        return JSON.stringify(normalized.elementStyles[key]) !== JSON.stringify(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles[key]);
+      }
+      const viewportOverrides = normalized.responsive?.[viewport]?.elementStyles?.[key];
+      return Boolean(viewportOverrides && Object.keys(viewportOverrides).length > 0);
+    })
+  ), [normalized, viewport]);
+
   const filteredElementEntries = useMemo(() => {
     const query = elementSearch.trim().toLocaleLowerCase();
     const category = ELEMENT_CATEGORIES.find(item => item.id === elementCategory);
     const allowedKeys = category ? new Set(category.keys) : null;
     return Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(([key, item]) => {
       if (allowedKeys && !allowedKeys.has(key)) return false;
+      if (showCustomizedOnly && !customizedElementKeys.has(key)) return false;
       if (!query) return true;
       return item.label.toLocaleLowerCase().includes(query) || key.toLocaleLowerCase().includes(query) || item.selector.toLocaleLowerCase().includes(query);
     });
-  }, [elementSearch, elementCategory]);
+  }, [elementSearch, elementCategory, showCustomizedOnly, customizedElementKeys]);
 
   const focusElementEditor = key => {
     setSelectedElementKey(key);
@@ -908,6 +920,17 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
               {ELEMENT_CATEGORIES.map(category => <option key={category.id} value={category.id}>{category.label}</option>)}
             </select>
           </label>
+          <label className="flex min-h-10 items-center gap-2 text-[11px] font-semibold text-slate-200 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={showCustomizedOnly}
+              onChange={event => setShowCustomizedOnly(event.target.checked)}
+              className="h-4 w-4 accent-emerald-400"
+              aria-label="მხოლოდ შეცვლილი ელემენტების ჩვენება"
+            />
+            მხოლოდ ამ მოწყობილობის ხედში შეცვლილი ელემენტები
+            <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-emerald-300">{customizedElementKeys.size}</span>
+          </label>
           <div className="text-[11px] font-semibold tabular-nums text-emerald-300 sm:pb-2" role="status" aria-live="polite">
             {filteredElementEntries.length} / {Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).length} ელემენტი
           </div>
@@ -925,7 +948,12 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
               aria-current={selectedElementKey === key ? 'true' : undefined}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h4 className="text-xs font-black text-emerald-200">{item.label}</h4>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <h4 className="text-xs font-black text-emerald-200">{item.label}</h4>
+                  {customizedElementKeys.has(key) && (
+                    <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[9px] font-bold text-emerald-300">შეცვლილია</span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => focusElementEditor(key)}

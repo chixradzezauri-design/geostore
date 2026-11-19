@@ -834,3 +834,16 @@ test('visual editor keyboard shortcuts support undo/redo without hijacking text 
     assert.ok(editor.includes(snippet), `Missing keyboard shortcut behavior: ${snippet}`);
   }
 });
+
+
+test('visual editor can isolate element styles customized for the active viewport', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const customizedElementKeys = useMemo\(\(\) => new Set\(/);
+  assert.match(editor, /normalized\.elementStyles\[key\]/);
+  assert.match(editor, /DEFAULT_ADMIN_PANEL_VISUAL_DESIGN\.elementStyles\[key\]/);
+  assert.match(editor, /normalized\.responsive\?\.\[viewport\]\?\.elementStyles\?\.\[key\]/);
+  assert.match(editor, /showCustomizedOnly && !customizedElementKeys\.has\(key\)/);
+  assert.match(editor, /მხოლოდ ამ მოწყობილობის ხედში შეცვლილი ელემენტები/);
+  assert.match(editor, /customizedElementKeys\.has\(key\) &&/);
+  assert.match(editor, /შეცვლილია/);
+});
