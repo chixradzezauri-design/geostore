@@ -916,6 +916,7 @@ export default function AdminDashboardPro({
   bannersList = [],
   setBannersList,
   onSaveStorefrontDraft,
+  onRestoreStorefrontVersion,
   storefrontDraftBusy = false,
   onPublishStorefront,
   storefrontPublishBusy = false,
@@ -6408,6 +6409,7 @@ export default function AdminDashboardPro({
               formatPrice={formatPrice}
               isOwner={isOwner}
               onSaveStorefrontDraft={onSaveStorefrontDraft}
+              onRestoreStorefrontVersion={onRestoreStorefrontVersion}
               storefrontDraftBusy={storefrontDraftBusy}
               onPublishStorefront={onPublishStorefront}
               storefrontPublishBusy={storefrontPublishBusy}
