@@ -23,6 +23,9 @@ import { mergeCrmCustomersFromOrders } from '../utils/adminCrm.js';
 const StorefrontVisualEditor = React.lazy(() => import('./StorefrontVisualEditor'));
 import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
+import AdminPanelVisualEditor from './AdminPanelVisualEditor';
+import { buildAdminPanelVisualStyle, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, loadAdminPanelVisualDesign, normalizeAdminPanelVisualDesign, saveAdminPanelVisualDesign } from '../utils/adminPanelVisualDesign.js';
+import '../adminPanelVisualDesign.css';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
 const getLocalDateInputValue = () => {
@@ -51,6 +54,7 @@ const ADMIN_TAB_PERMISSION = Object.freeze({
   banners: 'settings',
   categories: 'settings',
   visual_editor: 'settings',
+  admin_visual_editor: 'owner',
   coupons: 'settings',
   // Vendor planning stays owner-only; customer CRM is backed by authenticated RPCs.
   vendors: 'owner',
@@ -943,6 +947,12 @@ export default function AdminDashboardPro({
   };
   // Render a permitted tab immediately; the effect below only synchronizes state.
   const visibleAdminTab = canAccessAdminTab(adminTab) ? adminTab : getDefaultAdminTab();
+  const [adminVisualDesign, setAdminVisualDesign] = useState(() => loadAdminPanelVisualDesign());
+  const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(adminVisualDesign), [adminVisualDesign]);
+
+  useEffect(() => {
+    if (isOwner) saveAdminPanelVisualDesign(adminVisualDesign);
+  }, [adminVisualDesign, isOwner]);
 
   useEffect(() => {
     if (!adminLoggedIn) return;
@@ -4359,7 +4369,7 @@ export default function AdminDashboardPro({
     .slice(0, 6);
 
   return (
-    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0">
+    <div className="admin-dashboard-pro admin-dashboard-shell flex flex-col lg:flex-row gap-6 sm:gap-8 w-full pb-16 items-start px-2 sm:px-0" style={isOwner ? adminVisualStyle : undefined} data-admin-visual-design={isOwner ? 'enabled' : undefined}>
       
       {/* 🧭 SIDEBAR NAVIGATION MENU */}
       <div className="w-full lg:w-72 bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 space-y-5 sm:space-y-6 shadow-2xl backdrop-blur-3xl shrink-0">
@@ -4393,6 +4403,7 @@ export default function AdminDashboardPro({
             { id: 'banners', label: '🖼️ ბანერები', count: bannersList?.length || 0, icon: Megaphone },
             { id: 'categories', label: '📂 კატეგორიები & სუბკატეგორიები', count: safeCategories.length, icon: FolderTree },
             { id: 'visual_editor', label: '🎨 მთავარი გვერდის დიზაინი', icon: ImageIcon },
+            { id: 'admin_visual_editor', label: '🛠️ ადმინ პანელის დიზაინი', icon: Settings },
             { id: 'coupons', label: '🎫 კუპონები', count: coupons?.length || 0, icon: Tag },
             { id: 'vendors', label: '🏪 ვენდორები', count: vendorsList?.length || 0, icon: Store },
             { id: 'users', label: '👥 CRM მომხმარებლები', count: crmUsers.length, icon: Users },
@@ -6223,6 +6234,14 @@ export default function AdminDashboardPro({
               storefrontPublishBusy={storefrontPublishBusy}
             />
           </React.Suspense>
+        )}
+
+        {visibleAdminTab === 'admin_visual_editor' && isOwner && (
+          <AdminPanelVisualEditor
+            design={adminVisualDesign}
+            onChange={value => setAdminVisualDesign(normalizeAdminPanelVisualDesign(value))}
+            onReset={() => setAdminVisualDesign(normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))}
+          />
         )}
 
         {visibleAdminTab === 'banners' && (
