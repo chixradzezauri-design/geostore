@@ -1062,3 +1062,28 @@ test('saved admin style presets are bounded, uniquely identified and safely norm
   assert.equal(design.stylePresets[0].style.backgroundColor, '#123456');
   assert.equal(Object.hasOwn(design.stylePresets[0].style, 'unsupportedProperty'), false);
 });
+
+
+test('saved admin style presets normalize categories and preserve backward compatibility', () => {
+  const design = normalizeAdminPanelVisualDesign({ stylePresets: [
+    { id: 'legacy', name: 'Legacy style', style: { fontSize: 14 } },
+    { id: 'orders', name: 'Orders style', category: 'შეკვეთები', style: { fontSize: 15 } },
+    { id: 'invalid', name: 'Invalid category', category: 'unknown-category', style: { fontSize: 16 } }
+  ] });
+  assert.equal(design.stylePresets[0].category, 'საერთო');
+  assert.equal(design.stylePresets[1].category, 'შეკვეთები');
+  assert.equal(design.stylePresets[2].category, 'საერთო');
+});
+
+test('admin style library supports category assignment, search and filtering', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const \[stylePresetSearch, setStylePresetSearch\] = useState\(''\)/);
+  assert.match(editor, /const \[stylePresetCategory, setStylePresetCategory\] = useState\('all'\)/);
+  assert.match(editor, /const updateStylePresetCategory = \(id, category\) =>/);
+  assert.match(editor, /const filteredStylePresets = useMemo\(\(\) =>/);
+  assert.match(editor, /value=\{stylePresetSearch\}/);
+  assert.match(editor, /value=\{stylePresetCategory\}/);
+  assert.match(editor, /value=\{preset\.category\}/);
+  assert.match(editor, /filteredStylePresets\.map/);
+  assert.match(editor, /ამ ძიებით სტილი ვერ მოიძებნა/);
+});
