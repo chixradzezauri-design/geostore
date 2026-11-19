@@ -35,6 +35,11 @@
   --admin-vd-contentCardBorder-active: var(--admin-vd-contentCardBorder);
   --admin-vd-cardBorderWidth-active: var(--admin-vd-cardBorderWidth);
   --admin-vd-cardShadowBlur-active: var(--admin-vd-cardShadowBlur);
+  --admin-vd-modalBackground-active: var(--admin-vd-modalBackground);
+  --admin-vd-modalText-active: var(--admin-vd-modalText);
+  --admin-vd-modalBorder-active: var(--admin-vd-modalBorder);
+  --admin-vd-modalRadius-active: var(--admin-vd-modalRadius);
+  --admin-vd-modalPadding-active: var(--admin-vd-modalPadding);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -144,11 +149,11 @@
 /* Existing dialogs: visual-only styling; preserve positioning, scrolling and behavior. */
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-detail-modal,
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-reactivation-form {
-  background-color: var(--admin-vd-panel-active) !important;
-  color: var(--admin-vd-text-active) !important;
-  border-color: var(--admin-vd-border-active) !important;
-  border-radius: var(--admin-vd-cardRadius-active) !important;
-  padding: var(--admin-vd-cardPadding-active) !important;
+  background-color: var(--admin-vd-modalBackground-active) !important;
+  color: var(--admin-vd-modalText-active) !important;
+  border-color: var(--admin-vd-modalBorder-active) !important;
+  border-radius: var(--admin-vd-modalRadius-active) !important;
+  padding: var(--admin-vd-modalPadding-active) !important;
   box-shadow: 0 12px var(--admin-vd-cardShadowBlur-active) rgba(0, 0, 0, 0.28) !important;
 }
 
@@ -216,6 +221,11 @@
   --admin-vd-contentCardBorder-active: var(--admin-vd-tablet-contentCardBorder, var(--admin-vd-contentCardBorder));
   --admin-vd-cardBorderWidth-active: var(--admin-vd-tablet-cardBorderWidth, var(--admin-vd-cardBorderWidth));
   --admin-vd-cardShadowBlur-active: var(--admin-vd-tablet-cardShadowBlur, var(--admin-vd-cardShadowBlur));
+  --admin-vd-modalBackground-active: var(--admin-vd-tablet-modalBackground, var(--admin-vd-modalBackground));
+  --admin-vd-modalText-active: var(--admin-vd-tablet-modalText, var(--admin-vd-modalText));
+  --admin-vd-modalBorder-active: var(--admin-vd-tablet-modalBorder, var(--admin-vd-modalBorder));
+  --admin-vd-modalRadius-active: var(--admin-vd-tablet-modalRadius, var(--admin-vd-modalRadius));
+  --admin-vd-modalPadding-active: var(--admin-vd-tablet-modalPadding, var(--admin-vd-modalPadding));
   }
 }
 
@@ -257,5 +267,10 @@
   --admin-vd-contentCardBorder-active: var(--admin-vd-mobile-contentCardBorder, var(--admin-vd-tablet-contentCardBorder, var(--admin-vd-contentCardBorder)));
   --admin-vd-cardBorderWidth-active: var(--admin-vd-mobile-cardBorderWidth, var(--admin-vd-tablet-cardBorderWidth, var(--admin-vd-cardBorderWidth)));
   --admin-vd-cardShadowBlur-active: var(--admin-vd-mobile-cardShadowBlur, var(--admin-vd-tablet-cardShadowBlur, var(--admin-vd-cardShadowBlur)));
+  --admin-vd-modalBackground-active: var(--admin-vd-mobile-modalBackground, var(--admin-vd-tablet-modalBackground, var(--admin-vd-modalBackground)));
+  --admin-vd-modalText-active: var(--admin-vd-mobile-modalText, var(--admin-vd-tablet-modalText, var(--admin-vd-modalText)));
+  --admin-vd-modalBorder-active: var(--admin-vd-mobile-modalBorder, var(--admin-vd-tablet-modalBorder, var(--admin-vd-modalBorder)));
+  --admin-vd-modalRadius-active: var(--admin-vd-mobile-modalRadius, var(--admin-vd-tablet-modalRadius, var(--admin-vd-modalRadius)));
+  --admin-vd-modalPadding-active: var(--admin-vd-mobile-modalPadding, var(--admin-vd-tablet-modalPadding, var(--admin-vd-modalPadding)));
   }
 }
