@@ -88,7 +88,7 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-inventorySectionBorder'], '#bbccdd');
   assert.equal(style['--admin-vd-analyticsSectionBackground'], '#ccddee');
   assert.equal(style['--admin-vd-ordersSectionBackground'], '#0f172a');
-  assert.equal(style['--admin-vd-supportSectionBorder'], '#334455');
+  assert.equal(style['--admin-vd-supportSectionBorder'], '#334155');
   assert.equal(style['--admin-vd-tablet-ordersSectionBackground'], '#ddeeff');
   assert.equal(style['--admin-vd-tablet-supportSectionBorder'], '#aabbcc');
   assert.equal(style['--admin-vd-tablet-staffSectionBackground'], '#ddeeff');
