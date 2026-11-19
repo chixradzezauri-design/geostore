@@ -96,38 +96,83 @@
   --admin-vd-staff-padding-active: var(--admin-vd-staff-padding);
   --admin-vd-staff-borderWidth-active: var(--admin-vd-staff-borderWidth);
   --admin-vd-staff-shadowBlur-active: var(--admin-vd-staff-shadowBlur);
+  --admin-vd-staff-fontSize-active: var(--admin-vd-staff-fontSize);
+  --admin-vd-staff-titleFontSize-active: var(--admin-vd-staff-titleFontSize);
+  --admin-vd-staff-textColor-active: var(--admin-vd-staff-textColor);
+  --admin-vd-staff-backgroundColor-active: var(--admin-vd-staff-backgroundColor);
+  --admin-vd-staff-borderColor-active: var(--admin-vd-staff-borderColor);
   --admin-vd-inventory-radius-active: var(--admin-vd-inventory-radius);
   --admin-vd-inventory-padding-active: var(--admin-vd-inventory-padding);
   --admin-vd-inventory-borderWidth-active: var(--admin-vd-inventory-borderWidth);
   --admin-vd-inventory-shadowBlur-active: var(--admin-vd-inventory-shadowBlur);
+  --admin-vd-inventory-fontSize-active: var(--admin-vd-inventory-fontSize);
+  --admin-vd-inventory-titleFontSize-active: var(--admin-vd-inventory-titleFontSize);
+  --admin-vd-inventory-textColor-active: var(--admin-vd-inventory-textColor);
+  --admin-vd-inventory-backgroundColor-active: var(--admin-vd-inventory-backgroundColor);
+  --admin-vd-inventory-borderColor-active: var(--admin-vd-inventory-borderColor);
   --admin-vd-analytics-radius-active: var(--admin-vd-analytics-radius);
   --admin-vd-analytics-padding-active: var(--admin-vd-analytics-padding);
   --admin-vd-analytics-borderWidth-active: var(--admin-vd-analytics-borderWidth);
   --admin-vd-analytics-shadowBlur-active: var(--admin-vd-analytics-shadowBlur);
+  --admin-vd-analytics-fontSize-active: var(--admin-vd-analytics-fontSize);
+  --admin-vd-analytics-titleFontSize-active: var(--admin-vd-analytics-titleFontSize);
+  --admin-vd-analytics-textColor-active: var(--admin-vd-analytics-textColor);
+  --admin-vd-analytics-backgroundColor-active: var(--admin-vd-analytics-backgroundColor);
+  --admin-vd-analytics-borderColor-active: var(--admin-vd-analytics-borderColor);
   --admin-vd-orders-radius-active: var(--admin-vd-orders-radius);
   --admin-vd-orders-padding-active: var(--admin-vd-orders-padding);
   --admin-vd-orders-borderWidth-active: var(--admin-vd-orders-borderWidth);
   --admin-vd-orders-shadowBlur-active: var(--admin-vd-orders-shadowBlur);
+  --admin-vd-orders-fontSize-active: var(--admin-vd-orders-fontSize);
+  --admin-vd-orders-titleFontSize-active: var(--admin-vd-orders-titleFontSize);
+  --admin-vd-orders-textColor-active: var(--admin-vd-orders-textColor);
+  --admin-vd-orders-backgroundColor-active: var(--admin-vd-orders-backgroundColor);
+  --admin-vd-orders-borderColor-active: var(--admin-vd-orders-borderColor);
   --admin-vd-support-radius-active: var(--admin-vd-support-radius);
   --admin-vd-support-padding-active: var(--admin-vd-support-padding);
   --admin-vd-support-borderWidth-active: var(--admin-vd-support-borderWidth);
   --admin-vd-support-shadowBlur-active: var(--admin-vd-support-shadowBlur);
+  --admin-vd-support-fontSize-active: var(--admin-vd-support-fontSize);
+  --admin-vd-support-titleFontSize-active: var(--admin-vd-support-titleFontSize);
+  --admin-vd-support-textColor-active: var(--admin-vd-support-textColor);
+  --admin-vd-support-backgroundColor-active: var(--admin-vd-support-backgroundColor);
+  --admin-vd-support-borderColor-active: var(--admin-vd-support-borderColor);
   --admin-vd-discounts-radius-active: var(--admin-vd-discounts-radius);
   --admin-vd-discounts-padding-active: var(--admin-vd-discounts-padding);
   --admin-vd-discounts-borderWidth-active: var(--admin-vd-discounts-borderWidth);
   --admin-vd-discounts-shadowBlur-active: var(--admin-vd-discounts-shadowBlur);
+  --admin-vd-discounts-fontSize-active: var(--admin-vd-discounts-fontSize);
+  --admin-vd-discounts-titleFontSize-active: var(--admin-vd-discounts-titleFontSize);
+  --admin-vd-discounts-textColor-active: var(--admin-vd-discounts-textColor);
+  --admin-vd-discounts-backgroundColor-active: var(--admin-vd-discounts-backgroundColor);
+  --admin-vd-discounts-borderColor-active: var(--admin-vd-discounts-borderColor);
   --admin-vd-banners-radius-active: var(--admin-vd-banners-radius);
   --admin-vd-banners-padding-active: var(--admin-vd-banners-padding);
   --admin-vd-banners-borderWidth-active: var(--admin-vd-banners-borderWidth);
   --admin-vd-banners-shadowBlur-active: var(--admin-vd-banners-shadowBlur);
+  --admin-vd-banners-fontSize-active: var(--admin-vd-banners-fontSize);
+  --admin-vd-banners-titleFontSize-active: var(--admin-vd-banners-titleFontSize);
+  --admin-vd-banners-textColor-active: var(--admin-vd-banners-textColor);
+  --admin-vd-banners-backgroundColor-active: var(--admin-vd-banners-backgroundColor);
+  --admin-vd-banners-borderColor-active: var(--admin-vd-banners-borderColor);
   --admin-vd-categories-radius-active: var(--admin-vd-categories-radius);
   --admin-vd-categories-padding-active: var(--admin-vd-categories-padding);
   --admin-vd-categories-borderWidth-active: var(--admin-vd-categories-borderWidth);
   --admin-vd-categories-shadowBlur-active: var(--admin-vd-categories-shadowBlur);
+  --admin-vd-categories-fontSize-active: var(--admin-vd-categories-fontSize);
+  --admin-vd-categories-titleFontSize-active: var(--admin-vd-categories-titleFontSize);
+  --admin-vd-categories-textColor-active: var(--admin-vd-categories-textColor);
+  --admin-vd-categories-backgroundColor-active: var(--admin-vd-categories-backgroundColor);
+  --admin-vd-categories-borderColor-active: var(--admin-vd-categories-borderColor);
   --admin-vd-coupons-radius-active: var(--admin-vd-coupons-radius);
   --admin-vd-coupons-padding-active: var(--admin-vd-coupons-padding);
   --admin-vd-coupons-borderWidth-active: var(--admin-vd-coupons-borderWidth);
   --admin-vd-coupons-shadowBlur-active: var(--admin-vd-coupons-shadowBlur);
+  --admin-vd-coupons-fontSize-active: var(--admin-vd-coupons-fontSize);
+  --admin-vd-coupons-titleFontSize-active: var(--admin-vd-coupons-titleFontSize);
+  --admin-vd-coupons-textColor-active: var(--admin-vd-coupons-textColor);
+  --admin-vd-coupons-backgroundColor-active: var(--admin-vd-coupons-backgroundColor);
+  --admin-vd-coupons-borderColor-active: var(--admin-vd-coupons-borderColor);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -644,38 +689,83 @@
     --admin-vd-staff-padding-active: var(--admin-vd-mobile-staff-padding, var(--admin-vd-tablet-staff-padding, var(--admin-vd-staff-padding)));
     --admin-vd-staff-borderWidth-active: var(--admin-vd-mobile-staff-borderWidth, var(--admin-vd-tablet-staff-borderWidth, var(--admin-vd-staff-borderWidth)));
     --admin-vd-staff-shadowBlur-active: var(--admin-vd-mobile-staff-shadowBlur, var(--admin-vd-tablet-staff-shadowBlur, var(--admin-vd-staff-shadowBlur)));
+    --admin-vd-staff-fontSize-active: var(--admin-vd-mobile-staff-fontSize, var(--admin-vd-tablet-staff-fontSize, var(--admin-vd-staff-fontSize)));
+    --admin-vd-staff-titleFontSize-active: var(--admin-vd-mobile-staff-titleFontSize, var(--admin-vd-tablet-staff-titleFontSize, var(--admin-vd-staff-titleFontSize)));
+    --admin-vd-staff-textColor-active: var(--admin-vd-mobile-staff-textColor, var(--admin-vd-tablet-staff-textColor, var(--admin-vd-staff-textColor)));
+    --admin-vd-staff-backgroundColor-active: var(--admin-vd-mobile-staff-backgroundColor, var(--admin-vd-tablet-staff-backgroundColor, var(--admin-vd-staff-backgroundColor)));
+    --admin-vd-staff-borderColor-active: var(--admin-vd-mobile-staff-borderColor, var(--admin-vd-tablet-staff-borderColor, var(--admin-vd-staff-borderColor)));
     --admin-vd-inventory-radius-active: var(--admin-vd-mobile-inventory-radius, var(--admin-vd-tablet-inventory-radius, var(--admin-vd-inventory-radius)));
     --admin-vd-inventory-padding-active: var(--admin-vd-mobile-inventory-padding, var(--admin-vd-tablet-inventory-padding, var(--admin-vd-inventory-padding)));
     --admin-vd-inventory-borderWidth-active: var(--admin-vd-mobile-inventory-borderWidth, var(--admin-vd-tablet-inventory-borderWidth, var(--admin-vd-inventory-borderWidth)));
     --admin-vd-inventory-shadowBlur-active: var(--admin-vd-mobile-inventory-shadowBlur, var(--admin-vd-tablet-inventory-shadowBlur, var(--admin-vd-inventory-shadowBlur)));
+    --admin-vd-inventory-fontSize-active: var(--admin-vd-mobile-inventory-fontSize, var(--admin-vd-tablet-inventory-fontSize, var(--admin-vd-inventory-fontSize)));
+    --admin-vd-inventory-titleFontSize-active: var(--admin-vd-mobile-inventory-titleFontSize, var(--admin-vd-tablet-inventory-titleFontSize, var(--admin-vd-inventory-titleFontSize)));
+    --admin-vd-inventory-textColor-active: var(--admin-vd-mobile-inventory-textColor, var(--admin-vd-tablet-inventory-textColor, var(--admin-vd-inventory-textColor)));
+    --admin-vd-inventory-backgroundColor-active: var(--admin-vd-mobile-inventory-backgroundColor, var(--admin-vd-tablet-inventory-backgroundColor, var(--admin-vd-inventory-backgroundColor)));
+    --admin-vd-inventory-borderColor-active: var(--admin-vd-mobile-inventory-borderColor, var(--admin-vd-tablet-inventory-borderColor, var(--admin-vd-inventory-borderColor)));
     --admin-vd-analytics-radius-active: var(--admin-vd-mobile-analytics-radius, var(--admin-vd-tablet-analytics-radius, var(--admin-vd-analytics-radius)));
     --admin-vd-analytics-padding-active: var(--admin-vd-mobile-analytics-padding, var(--admin-vd-tablet-analytics-padding, var(--admin-vd-analytics-padding)));
     --admin-vd-analytics-borderWidth-active: var(--admin-vd-mobile-analytics-borderWidth, var(--admin-vd-tablet-analytics-borderWidth, var(--admin-vd-analytics-borderWidth)));
     --admin-vd-analytics-shadowBlur-active: var(--admin-vd-mobile-analytics-shadowBlur, var(--admin-vd-tablet-analytics-shadowBlur, var(--admin-vd-analytics-shadowBlur)));
+    --admin-vd-analytics-fontSize-active: var(--admin-vd-mobile-analytics-fontSize, var(--admin-vd-tablet-analytics-fontSize, var(--admin-vd-analytics-fontSize)));
+    --admin-vd-analytics-titleFontSize-active: var(--admin-vd-mobile-analytics-titleFontSize, var(--admin-vd-tablet-analytics-titleFontSize, var(--admin-vd-analytics-titleFontSize)));
+    --admin-vd-analytics-textColor-active: var(--admin-vd-mobile-analytics-textColor, var(--admin-vd-tablet-analytics-textColor, var(--admin-vd-analytics-textColor)));
+    --admin-vd-analytics-backgroundColor-active: var(--admin-vd-mobile-analytics-backgroundColor, var(--admin-vd-tablet-analytics-backgroundColor, var(--admin-vd-analytics-backgroundColor)));
+    --admin-vd-analytics-borderColor-active: var(--admin-vd-mobile-analytics-borderColor, var(--admin-vd-tablet-analytics-borderColor, var(--admin-vd-analytics-borderColor)));
     --admin-vd-orders-radius-active: var(--admin-vd-mobile-orders-radius, var(--admin-vd-tablet-orders-radius, var(--admin-vd-orders-radius)));
     --admin-vd-orders-padding-active: var(--admin-vd-mobile-orders-padding, var(--admin-vd-tablet-orders-padding, var(--admin-vd-orders-padding)));
     --admin-vd-orders-borderWidth-active: var(--admin-vd-mobile-orders-borderWidth, var(--admin-vd-tablet-orders-borderWidth, var(--admin-vd-orders-borderWidth)));
     --admin-vd-orders-shadowBlur-active: var(--admin-vd-mobile-orders-shadowBlur, var(--admin-vd-tablet-orders-shadowBlur, var(--admin-vd-orders-shadowBlur)));
+    --admin-vd-orders-fontSize-active: var(--admin-vd-mobile-orders-fontSize, var(--admin-vd-tablet-orders-fontSize, var(--admin-vd-orders-fontSize)));
+    --admin-vd-orders-titleFontSize-active: var(--admin-vd-mobile-orders-titleFontSize, var(--admin-vd-tablet-orders-titleFontSize, var(--admin-vd-orders-titleFontSize)));
+    --admin-vd-orders-textColor-active: var(--admin-vd-mobile-orders-textColor, var(--admin-vd-tablet-orders-textColor, var(--admin-vd-orders-textColor)));
+    --admin-vd-orders-backgroundColor-active: var(--admin-vd-mobile-orders-backgroundColor, var(--admin-vd-tablet-orders-backgroundColor, var(--admin-vd-orders-backgroundColor)));
+    --admin-vd-orders-borderColor-active: var(--admin-vd-mobile-orders-borderColor, var(--admin-vd-tablet-orders-borderColor, var(--admin-vd-orders-borderColor)));
     --admin-vd-support-radius-active: var(--admin-vd-mobile-support-radius, var(--admin-vd-tablet-support-radius, var(--admin-vd-support-radius)));
     --admin-vd-support-padding-active: var(--admin-vd-mobile-support-padding, var(--admin-vd-tablet-support-padding, var(--admin-vd-support-padding)));
     --admin-vd-support-borderWidth-active: var(--admin-vd-mobile-support-borderWidth, var(--admin-vd-tablet-support-borderWidth, var(--admin-vd-support-borderWidth)));
     --admin-vd-support-shadowBlur-active: var(--admin-vd-mobile-support-shadowBlur, var(--admin-vd-tablet-support-shadowBlur, var(--admin-vd-support-shadowBlur)));
+    --admin-vd-support-fontSize-active: var(--admin-vd-mobile-support-fontSize, var(--admin-vd-tablet-support-fontSize, var(--admin-vd-support-fontSize)));
+    --admin-vd-support-titleFontSize-active: var(--admin-vd-mobile-support-titleFontSize, var(--admin-vd-tablet-support-titleFontSize, var(--admin-vd-support-titleFontSize)));
+    --admin-vd-support-textColor-active: var(--admin-vd-mobile-support-textColor, var(--admin-vd-tablet-support-textColor, var(--admin-vd-support-textColor)));
+    --admin-vd-support-backgroundColor-active: var(--admin-vd-mobile-support-backgroundColor, var(--admin-vd-tablet-support-backgroundColor, var(--admin-vd-support-backgroundColor)));
+    --admin-vd-support-borderColor-active: var(--admin-vd-mobile-support-borderColor, var(--admin-vd-tablet-support-borderColor, var(--admin-vd-support-borderColor)));
     --admin-vd-discounts-radius-active: var(--admin-vd-mobile-discounts-radius, var(--admin-vd-tablet-discounts-radius, var(--admin-vd-discounts-radius)));
     --admin-vd-discounts-padding-active: var(--admin-vd-mobile-discounts-padding, var(--admin-vd-tablet-discounts-padding, var(--admin-vd-discounts-padding)));
     --admin-vd-discounts-borderWidth-active: var(--admin-vd-mobile-discounts-borderWidth, var(--admin-vd-tablet-discounts-borderWidth, var(--admin-vd-discounts-borderWidth)));
     --admin-vd-discounts-shadowBlur-active: var(--admin-vd-mobile-discounts-shadowBlur, var(--admin-vd-tablet-discounts-shadowBlur, var(--admin-vd-discounts-shadowBlur)));
+    --admin-vd-discounts-fontSize-active: var(--admin-vd-mobile-discounts-fontSize, var(--admin-vd-tablet-discounts-fontSize, var(--admin-vd-discounts-fontSize)));
+    --admin-vd-discounts-titleFontSize-active: var(--admin-vd-mobile-discounts-titleFontSize, var(--admin-vd-tablet-discounts-titleFontSize, var(--admin-vd-discounts-titleFontSize)));
+    --admin-vd-discounts-textColor-active: var(--admin-vd-mobile-discounts-textColor, var(--admin-vd-tablet-discounts-textColor, var(--admin-vd-discounts-textColor)));
+    --admin-vd-discounts-backgroundColor-active: var(--admin-vd-mobile-discounts-backgroundColor, var(--admin-vd-tablet-discounts-backgroundColor, var(--admin-vd-discounts-backgroundColor)));
+    --admin-vd-discounts-borderColor-active: var(--admin-vd-mobile-discounts-borderColor, var(--admin-vd-tablet-discounts-borderColor, var(--admin-vd-discounts-borderColor)));
     --admin-vd-banners-radius-active: var(--admin-vd-mobile-banners-radius, var(--admin-vd-tablet-banners-radius, var(--admin-vd-banners-radius)));
     --admin-vd-banners-padding-active: var(--admin-vd-mobile-banners-padding, var(--admin-vd-tablet-banners-padding, var(--admin-vd-banners-padding)));
     --admin-vd-banners-borderWidth-active: var(--admin-vd-mobile-banners-borderWidth, var(--admin-vd-tablet-banners-borderWidth, var(--admin-vd-banners-borderWidth)));
     --admin-vd-banners-shadowBlur-active: var(--admin-vd-mobile-banners-shadowBlur, var(--admin-vd-tablet-banners-shadowBlur, var(--admin-vd-banners-shadowBlur)));
+    --admin-vd-banners-fontSize-active: var(--admin-vd-mobile-banners-fontSize, var(--admin-vd-tablet-banners-fontSize, var(--admin-vd-banners-fontSize)));
+    --admin-vd-banners-titleFontSize-active: var(--admin-vd-mobile-banners-titleFontSize, var(--admin-vd-tablet-banners-titleFontSize, var(--admin-vd-banners-titleFontSize)));
+    --admin-vd-banners-textColor-active: var(--admin-vd-mobile-banners-textColor, var(--admin-vd-tablet-banners-textColor, var(--admin-vd-banners-textColor)));
+    --admin-vd-banners-backgroundColor-active: var(--admin-vd-mobile-banners-backgroundColor, var(--admin-vd-tablet-banners-backgroundColor, var(--admin-vd-banners-backgroundColor)));
+    --admin-vd-banners-borderColor-active: var(--admin-vd-mobile-banners-borderColor, var(--admin-vd-tablet-banners-borderColor, var(--admin-vd-banners-borderColor)));
     --admin-vd-categories-radius-active: var(--admin-vd-mobile-categories-radius, var(--admin-vd-tablet-categories-radius, var(--admin-vd-categories-radius)));
     --admin-vd-categories-padding-active: var(--admin-vd-mobile-categories-padding, var(--admin-vd-tablet-categories-padding, var(--admin-vd-categories-padding)));
     --admin-vd-categories-borderWidth-active: var(--admin-vd-mobile-categories-borderWidth, var(--admin-vd-tablet-categories-borderWidth, var(--admin-vd-categories-borderWidth)));
     --admin-vd-categories-shadowBlur-active: var(--admin-vd-mobile-categories-shadowBlur, var(--admin-vd-tablet-categories-shadowBlur, var(--admin-vd-categories-shadowBlur)));
+    --admin-vd-categories-fontSize-active: var(--admin-vd-mobile-categories-fontSize, var(--admin-vd-tablet-categories-fontSize, var(--admin-vd-categories-fontSize)));
+    --admin-vd-categories-titleFontSize-active: var(--admin-vd-mobile-categories-titleFontSize, var(--admin-vd-tablet-categories-titleFontSize, var(--admin-vd-categories-titleFontSize)));
+    --admin-vd-categories-textColor-active: var(--admin-vd-mobile-categories-textColor, var(--admin-vd-tablet-categories-textColor, var(--admin-vd-categories-textColor)));
+    --admin-vd-categories-backgroundColor-active: var(--admin-vd-mobile-categories-backgroundColor, var(--admin-vd-tablet-categories-backgroundColor, var(--admin-vd-categories-backgroundColor)));
+    --admin-vd-categories-borderColor-active: var(--admin-vd-mobile-categories-borderColor, var(--admin-vd-tablet-categories-borderColor, var(--admin-vd-categories-borderColor)));
     --admin-vd-coupons-radius-active: var(--admin-vd-mobile-coupons-radius, var(--admin-vd-tablet-coupons-radius, var(--admin-vd-coupons-radius)));
     --admin-vd-coupons-padding-active: var(--admin-vd-mobile-coupons-padding, var(--admin-vd-tablet-coupons-padding, var(--admin-vd-coupons-padding)));
     --admin-vd-coupons-borderWidth-active: var(--admin-vd-mobile-coupons-borderWidth, var(--admin-vd-tablet-coupons-borderWidth, var(--admin-vd-coupons-borderWidth)));
     --admin-vd-coupons-shadowBlur-active: var(--admin-vd-mobile-coupons-shadowBlur, var(--admin-vd-tablet-coupons-shadowBlur, var(--admin-vd-coupons-shadowBlur)));
+    --admin-vd-coupons-fontSize-active: var(--admin-vd-mobile-coupons-fontSize, var(--admin-vd-tablet-coupons-fontSize, var(--admin-vd-coupons-fontSize)));
+    --admin-vd-coupons-titleFontSize-active: var(--admin-vd-mobile-coupons-titleFontSize, var(--admin-vd-tablet-coupons-titleFontSize, var(--admin-vd-coupons-titleFontSize)));
+    --admin-vd-coupons-textColor-active: var(--admin-vd-mobile-coupons-textColor, var(--admin-vd-tablet-coupons-textColor, var(--admin-vd-coupons-textColor)));
+    --admin-vd-coupons-backgroundColor-active: var(--admin-vd-mobile-coupons-backgroundColor, var(--admin-vd-tablet-coupons-backgroundColor, var(--admin-vd-coupons-backgroundColor)));
+    --admin-vd-coupons-borderColor-active: var(--admin-vd-mobile-coupons-borderColor, var(--admin-vd-tablet-coupons-borderColor, var(--admin-vd-coupons-borderColor)));
   }
 }
 
@@ -699,3 +789,69 @@
   background-color: var(--admin-vd-inputBackground-active);
   color: var(--admin-vd-inputText-active);
 }
+
+
+/* Per-module typography and surface controls from Admin Studio */
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-staff-panel, .admin-staff-list-panel) {
+  color: var(--admin-vd-staff-textColor-active) !important;
+  background-color: var(--admin-vd-staff-backgroundColor-active) !important;
+  border-color: var(--admin-vd-staff-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-staff-panel, .admin-staff-list-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-staff-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-staff-panel, .admin-staff-list-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-staff-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-inventory-panel) {
+  color: var(--admin-vd-inventory-textColor-active) !important;
+  background-color: var(--admin-vd-inventory-backgroundColor-active) !important;
+  border-color: var(--admin-vd-inventory-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-inventory-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-inventory-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-inventory-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-inventory-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-analytics-card, .admin-analytics-toolbar) {
+  color: var(--admin-vd-analytics-textColor-active) !important;
+  background-color: var(--admin-vd-analytics-backgroundColor-active) !important;
+  border-color: var(--admin-vd-analytics-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-analytics-card, .admin-analytics-toolbar) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-analytics-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-analytics-card, .admin-analytics-toolbar) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-analytics-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-orders-panel) {
+  color: var(--admin-vd-orders-textColor-active) !important;
+  background-color: var(--admin-vd-orders-backgroundColor-active) !important;
+  border-color: var(--admin-vd-orders-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-orders-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-orders-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-orders-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-orders-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-support-panel) {
+  color: var(--admin-vd-support-textColor-active) !important;
+  background-color: var(--admin-vd-support-backgroundColor-active) !important;
+  border-color: var(--admin-vd-support-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-support-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-support-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-support-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-support-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-discounts-panel) {
+  color: var(--admin-vd-discounts-textColor-active) !important;
+  background-color: var(--admin-vd-discounts-backgroundColor-active) !important;
+  border-color: var(--admin-vd-discounts-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-discounts-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-discounts-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-discounts-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-discounts-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-banners) {
+  color: var(--admin-vd-banners-textColor-active) !important;
+  background-color: var(--admin-vd-banners-backgroundColor-active) !important;
+  border-color: var(--admin-vd-banners-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-banners) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-banners-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-banners) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-banners-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-category-manager) {
+  color: var(--admin-vd-categories-textColor-active) !important;
+  background-color: var(--admin-vd-categories-backgroundColor-active) !important;
+  border-color: var(--admin-vd-categories-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-category-manager) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-categories-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-category-manager) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-categories-titleFontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-coupons-panel) {
+  color: var(--admin-vd-coupons-textColor-active) !important;
+  background-color: var(--admin-vd-coupons-backgroundColor-active) !important;
+  border-color: var(--admin-vd-coupons-borderColor-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-coupons-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-coupons-fontSize-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-coupons-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-coupons-titleFontSize-active) !important; }
