@@ -372,3 +372,28 @@ test('admin visual editor exposes independent module geometry controls for deskt
     assert.match(editor, new RegExp('"key": "' + moduleName + '"'));
   }
 });
+
+
+test('admin modules expose independent typography and surface colors with responsive overrides', () => {
+  const design = normalizeAdminPanelVisualDesign({ components: { orders: { fontSize: 16, titleFontSize: 24, textColor: '#123456', backgroundColor: '#223344', borderColor: '#334455' } }, responsive: { tablet: { components: { orders: { fontSize: 14, textColor: '#abcdef' } } }, mobile: { components: { orders: { titleFontSize: 18, backgroundColor: '#445566' } } } } });
+  const style = buildAdminPanelVisualStyle(design);
+  assert.equal(style['--admin-vd-orders-fontSize'], '16px');
+  assert.equal(style['--admin-vd-orders-titleFontSize'], '24px');
+  assert.equal(style['--admin-vd-orders-textColor'], '#123456');
+  assert.equal(style['--admin-vd-orders-backgroundColor'], '#223344');
+  assert.equal(style['--admin-vd-orders-borderColor'], '#334455');
+  assert.equal(style['--admin-vd-tablet-orders-fontSize'], '14px');
+  assert.equal(style['--admin-vd-tablet-orders-textColor'], '#abcdef');
+  assert.equal(style['--admin-vd-mobile-orders-fontSize'], '14px');
+  assert.equal(style['--admin-vd-mobile-orders-titleFontSize'], '18px');
+  assert.equal(style['--admin-vd-mobile-orders-backgroundColor'], '#445566');
+  assert.equal(normalizeAdminPanelVisualDesign({ components: { orders: { textColor: 'url(javascript:alert(1))' } } }).components.orders.textColor, '#e2e8f0');
+});
+
+test('admin visual editor exposes module typography and individual color controls', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /titleFontSize/);
+  assert.match(editor, /ტექსტის ფერი/);
+  assert.match(editor, /ბლოკის ფონი/);
+  assert.match(editor, /ჩარჩოს ფერი/);
+});
