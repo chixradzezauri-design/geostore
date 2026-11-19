@@ -41,6 +41,10 @@
   --admin-vd-inputHeight-active: var(--admin-vd-inputHeight);
   --admin-vd-contentCardBackground-active: var(--admin-vd-contentCardBackground);
   --admin-vd-contentCardBorder-active: var(--admin-vd-contentCardBorder);
+  --admin-vd-cardTitleText-active: var(--admin-vd-cardTitleText);
+  --admin-vd-cardMutedText-active: var(--admin-vd-cardMutedText);
+  --admin-vd-cardShadowColor-active: var(--admin-vd-cardShadowColor);
+  --admin-vd-cardHoverBorder-active: var(--admin-vd-cardHoverBorder);
   --admin-vd-cardBorderWidth-active: var(--admin-vd-cardBorderWidth);
   --admin-vd-cardShadowBlur-active: var(--admin-vd-cardShadowBlur);
   --admin-vd-modalBackground-active: var(--admin-vd-modalBackground);
@@ -100,7 +104,31 @@
   background-color: var(--admin-vd-contentCardBackground-active) !important;
   border-color: var(--admin-vd-contentCardBorder-active) !important;
   border-width: var(--admin-vd-cardBorderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-cardShadowBlur-active) rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 0 8px var(--admin-vd-cardShadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(
+  .admin-command-kpi, .admin-command-panel, .admin-analytics-card,
+  .admin-staff-card, .admin-order-card, .admin-product-card,
+  .admin-support-ticket, .admin-crm-user-card
+) :is(h2, h3, h4) {
+  color: var(--admin-vd-cardTitleText-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(
+  .admin-command-kpi, .admin-command-panel, .admin-analytics-card,
+  .admin-staff-card, .admin-order-card, .admin-product-card,
+  .admin-support-ticket, .admin-crm-user-card
+) > :is(p, small) {
+  color: var(--admin-vd-cardMutedText-active);
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(
+  .admin-command-kpi, .admin-command-panel, .admin-analytics-card,
+  .admin-staff-card, .admin-order-card, .admin-product-card,
+  .admin-support-ticket, .admin-crm-user-card
+):hover {
+  border-color: var(--admin-vd-cardHoverBorder-active) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/80,
@@ -311,6 +339,10 @@
     --admin-vd-inputHeight-active: var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight));
   --admin-vd-contentCardBackground-active: var(--admin-vd-tablet-contentCardBackground, var(--admin-vd-contentCardBackground));
   --admin-vd-contentCardBorder-active: var(--admin-vd-tablet-contentCardBorder, var(--admin-vd-contentCardBorder));
+  --admin-vd-cardTitleText-active: var(--admin-vd-tablet-cardTitleText, var(--admin-vd-cardTitleText));
+  --admin-vd-cardMutedText-active: var(--admin-vd-tablet-cardMutedText, var(--admin-vd-cardMutedText));
+  --admin-vd-cardShadowColor-active: var(--admin-vd-tablet-cardShadowColor, var(--admin-vd-cardShadowColor));
+  --admin-vd-cardHoverBorder-active: var(--admin-vd-tablet-cardHoverBorder, var(--admin-vd-cardHoverBorder));
   --admin-vd-cardBorderWidth-active: var(--admin-vd-tablet-cardBorderWidth, var(--admin-vd-cardBorderWidth));
   --admin-vd-cardShadowBlur-active: var(--admin-vd-tablet-cardShadowBlur, var(--admin-vd-cardShadowBlur));
   --admin-vd-modalBackground-active: var(--admin-vd-tablet-modalBackground, var(--admin-vd-modalBackground));
@@ -385,6 +417,10 @@
     --admin-vd-inputHeight-active: var(--admin-vd-mobile-inputHeight, var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight)));
   --admin-vd-contentCardBackground-active: var(--admin-vd-mobile-contentCardBackground, var(--admin-vd-tablet-contentCardBackground, var(--admin-vd-contentCardBackground)));
   --admin-vd-contentCardBorder-active: var(--admin-vd-mobile-contentCardBorder, var(--admin-vd-tablet-contentCardBorder, var(--admin-vd-contentCardBorder)));
+  --admin-vd-cardTitleText-active: var(--admin-vd-mobile-cardTitleText, var(--admin-vd-tablet-cardTitleText, var(--admin-vd-cardTitleText)));
+  --admin-vd-cardMutedText-active: var(--admin-vd-mobile-cardMutedText, var(--admin-vd-tablet-cardMutedText, var(--admin-vd-cardMutedText)));
+  --admin-vd-cardShadowColor-active: var(--admin-vd-mobile-cardShadowColor, var(--admin-vd-tablet-cardShadowColor, var(--admin-vd-cardShadowColor)));
+  --admin-vd-cardHoverBorder-active: var(--admin-vd-mobile-cardHoverBorder, var(--admin-vd-tablet-cardHoverBorder, var(--admin-vd-cardHoverBorder)));
   --admin-vd-cardBorderWidth-active: var(--admin-vd-mobile-cardBorderWidth, var(--admin-vd-tablet-cardBorderWidth, var(--admin-vd-cardBorderWidth)));
   --admin-vd-cardShadowBlur-active: var(--admin-vd-mobile-cardShadowBlur, var(--admin-vd-tablet-cardShadowBlur, var(--admin-vd-cardShadowBlur)));
   --admin-vd-modalBackground-active: var(--admin-vd-mobile-modalBackground, var(--admin-vd-tablet-modalBackground, var(--admin-vd-modalBackground)));
