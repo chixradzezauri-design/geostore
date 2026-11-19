@@ -1133,3 +1133,15 @@ test('admin style library supports favorite toggling and favorite-only filtering
   assert.match(editor, /რჩეულებში დამატება/);
   assert.match(editor, /რჩეულებიდან ამოღება/);
 });
+
+
+test('admin style library can apply a saved style to multiple selected elements', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const \[selectedElementKeys, setSelectedElementKeys\] = useState\(\[\]\)/);
+  assert.match(editor, /const applySavedElementStyleToTargets = \(preset, targetKeys\) =>/);
+  assert.match(editor, /const applySavedElementStyleToSelected = preset =>/);
+  assert.match(editor, /next\.elementStyles\[key\] = \{ \.\.\.next\.elementStyles\[key\], \.\.\.preset\.style \}/);
+  assert.match(editor, /elementStyles\[key\] = \{ \.\.\.\(elementStyles\[key\] \|\| \{\}\), \.\.\.preset\.style \}/);
+  assert.match(editor, /მონიშნულ \{selectedElementKeys\.length\}-ზე/);
+  assert.match(editor, /მონიშვნის მოხსნა/);
+});
