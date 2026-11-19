@@ -29,7 +29,9 @@ const COLOR_FIELDS = [
   { key: 'inputBackground', label: 'ფორმის ველების ფონი' },
   { key: 'inputText', label: 'ფორმის ველების ტექსტი' },
   { key: 'inputBorder', label: 'ფორმის ველების ჩარჩო' },
-  { key: 'inputFocus', label: 'ველის აქტიური ჩარჩო' }
+  { key: 'inputFocus', label: 'ველის აქტიური ჩარჩო' },
+  { key: 'contentCardBackground', label: 'შიდა ბარათების ფონი' },
+  { key: 'contentCardBorder', label: 'შიდა ბარათების ჩარჩო' }
 ];
 
 const RANGE_FIELDS = [
@@ -45,14 +47,16 @@ const RANGE_FIELDS = [
   { key: 'headerPadding', label: 'ზედა პანელის შიდა დაშორება', min: 12, max: 32, suffix: 'px' },
   { key: 'tableCellPadding', label: 'ცხრილის უჯრების დაშორება', min: 6, max: 20, suffix: 'px' },
   { key: 'inputRadius', label: 'ფორმის ველების მომრგვალება', min: 0, max: 20, suffix: 'px' },
-  { key: 'inputHeight', label: 'ფორმის ველების სიმაღლე', min: 36, max: 52, suffix: 'px' }
+  { key: 'inputHeight', label: 'ფორმის ველების სიმაღლე', min: 36, max: 52, suffix: 'px' },
+  { key: 'cardBorderWidth', label: 'ბარათის ჩარჩოს სისქე', min: 0, max: 3, suffix: 'px' },
+  { key: 'cardShadowBlur', label: 'ბარათის ჩრდილის სიძლიერე', min: 0, max: 36, suffix: 'px' }
 ];
 
 const PRESETS = {
-  emerald: { accent: '#34d399', canvas: '#020617', panel: '#0f172a', surface: '#020617', text: '#f8fafc', muted: '#94a3b8', border: '#334155', navActiveBackground: '#34d399', navActiveText: '#020617', navInactiveBackground: '#020617', navInactiveText: '#94a3b8', headerBackground: '#0f172a', headerBorder: '#334155', tableHeaderBackground: '#020617', tableHeaderText: '#94a3b8', inputBackground: '#020617', inputText: '#f8fafc', inputBorder: '#334155', inputFocus: '#34d399' },
-  blue: { accent: '#60a5fa', canvas: '#0b1220', panel: '#142033', surface: '#0b1728', text: '#f8fafc', muted: '#a8b7ca', border: '#34445c', navActiveBackground: '#60a5fa', navActiveText: '#0b1220', navInactiveBackground: '#0b1728', navInactiveText: '#a8b7ca', headerBackground: '#142033', headerBorder: '#34445c', tableHeaderBackground: '#0b1728', tableHeaderText: '#a8b7ca', inputBackground: '#0b1728', inputText: '#f8fafc', inputBorder: '#34445c', inputFocus: '#60a5fa' },
-  violet: { accent: '#c4b5fd', canvas: '#100d1d', panel: '#211a33', surface: '#171326', text: '#faf8ff', muted: '#b8aecb', border: '#493d60', navActiveBackground: '#c4b5fd', navActiveText: '#100d1d', navInactiveBackground: '#171326', navInactiveText: '#b8aecb', headerBackground: '#211a33', headerBorder: '#493d60', tableHeaderBackground: '#171326', tableHeaderText: '#b8aecb', inputBackground: '#171326', inputText: '#faf8ff', inputBorder: '#493d60', inputFocus: '#c4b5fd' },
-  light: { accent: '#0f766e', canvas: '#eef2f7', panel: '#ffffff', surface: '#f8fafc', text: '#172033', muted: '#596579', border: '#cbd5e1', navActiveBackground: '#0f766e', navActiveText: '#ffffff', navInactiveBackground: '#f8fafc', navInactiveText: '#596579', headerBackground: '#ffffff', headerBorder: '#cbd5e1', tableHeaderBackground: '#f1f5f9', tableHeaderText: '#596579', inputBackground: '#ffffff', inputText: '#172033', inputBorder: '#cbd5e1', inputFocus: '#0f766e' }
+  emerald: { accent: '#34d399', canvas: '#020617', panel: '#0f172a', surface: '#020617', text: '#f8fafc', muted: '#94a3b8', border: '#334155', navActiveBackground: '#34d399', navActiveText: '#020617', navInactiveBackground: '#020617', navInactiveText: '#94a3b8', headerBackground: '#0f172a', headerBorder: '#334155', tableHeaderBackground: '#020617', tableHeaderText: '#94a3b8', inputBackground: '#020617', inputText: '#f8fafc', inputBorder: '#334155', inputFocus: '#34d399', contentCardBackground: '#0f172a', contentCardBorder: '#334155' },
+  blue: { accent: '#60a5fa', canvas: '#0b1220', panel: '#142033', surface: '#0b1728', text: '#f8fafc', muted: '#a8b7ca', border: '#34445c', navActiveBackground: '#60a5fa', navActiveText: '#0b1220', navInactiveBackground: '#0b1728', navInactiveText: '#a8b7ca', headerBackground: '#142033', headerBorder: '#34445c', tableHeaderBackground: '#0b1728', tableHeaderText: '#a8b7ca', inputBackground: '#0b1728', inputText: '#f8fafc', inputBorder: '#34445c', inputFocus: '#60a5fa', contentCardBackground: '#142033', contentCardBorder: '#34445c' },
+  violet: { accent: '#c4b5fd', canvas: '#100d1d', panel: '#211a33', surface: '#171326', text: '#faf8ff', muted: '#b8aecb', border: '#493d60', navActiveBackground: '#c4b5fd', navActiveText: '#100d1d', navInactiveBackground: '#171326', navInactiveText: '#b8aecb', headerBackground: '#211a33', headerBorder: '#493d60', tableHeaderBackground: '#171326', tableHeaderText: '#b8aecb', inputBackground: '#171326', inputText: '#faf8ff', inputBorder: '#493d60', inputFocus: '#c4b5fd', contentCardBackground: '#211a33', contentCardBorder: '#493d60' },
+  light: { accent: '#0f766e', canvas: '#eef2f7', panel: '#ffffff', surface: '#f8fafc', text: '#172033', muted: '#596579', border: '#cbd5e1', navActiveBackground: '#0f766e', navActiveText: '#ffffff', navInactiveBackground: '#f8fafc', navInactiveText: '#596579', headerBackground: '#ffffff', headerBorder: '#cbd5e1', tableHeaderBackground: '#f1f5f9', tableHeaderText: '#596579', inputBackground: '#ffffff', inputText: '#172033', inputBorder: '#cbd5e1', inputFocus: '#0f766e', contentCardBackground: '#ffffff', contentCardBorder: '#cbd5e1' }
 };
 
 export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
