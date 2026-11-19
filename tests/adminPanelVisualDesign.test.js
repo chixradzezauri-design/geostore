@@ -1367,6 +1367,20 @@ test('admin visual editor safely restores selected customized elements in the ac
   assert.match(editor, /სხვა ხედები და დანარჩენი ელემენტები უცვლელი დარჩება/);
 });
 
+test('admin visual editor exposes per-element history and restores only that element in the active viewport', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /expandedElementHistoryKeys, setExpandedElementHistoryKeys/);
+  assert.match(editor, /const getElementHistoryEntries = key =>/);
+  assert.match(editor, /historyRef\.current\.past/);
+  assert.match(editor, /\.slice\(0, 5\)/);
+  assert.match(editor, /const restoreElementHistoryEntry = \(key, entry\) =>/);
+  assert.match(editor, /ამ ელემენტის წინა დიზაინის აღდგენა\?/);
+  assert.match(editor, /elementStyles: \{ \.\.\.normalized\.elementStyles, \[key\]: \{ \.\.\.entry\.snapshot\.elementStyles\[key\] \} \}/);
+  assert.match(editor, /const previousOverride = entry\.snapshot\.responsive\?\.\[viewport\]\?\.elementStyles\?\.\[key\]/);
+  assert.match(editor, /ამ ელემენტის ცვლილებების ისტორია/);
+  assert.match(editor, /სხვა ელემენტების პარამეტრები უცვლელი დარჩება/);
+});
+
 test('admin visual editor compares each element against its initial design values', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /ELEMENT_STYLE_DIFF_FIELDS/);
