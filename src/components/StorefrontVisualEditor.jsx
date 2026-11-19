@@ -416,6 +416,25 @@ export default function StorefrontVisualEditor({
     });
   };
 
+  const resetSelectedElementStyle = () => {
+    if (!selectedElement) return;
+    if (previewMode !== 'desktop') {
+      const responsive = { ...(design.responsive || {}) };
+      const viewport = { ...(responsive[previewMode] || {}) };
+      const elementStyles = { ...(viewport.elementStyles || {}) };
+      delete elementStyles[selectedElement.id];
+      if (Object.keys(elementStyles).length) viewport.elementStyles = elementStyles;
+      else delete viewport.elementStyles;
+      if (Object.keys(viewport).length) responsive[previewMode] = viewport;
+      else delete responsive[previewMode];
+      commitDesign({ ...design, responsive });
+      return;
+    }
+    const elementStyles = { ...(design.elementStyles || {}) };
+    delete elementStyles[selectedElement.id];
+    commitDesign({ ...design, elementStyles });
+  };
+
   const clearViewportOverrides = () => {
     if (previewMode === 'desktop' || !design.responsive?.[previewMode]) return;
     const responsive = { ...(design.responsive || {}) };
@@ -834,6 +853,10 @@ export default function StorefrontVisualEditor({
                       <span className="flex justify-between"><span>ფოტოს ჰორიზონტალური პოზიცია</span><b>{selectedElementStyle.objectPositionX ?? 50}%</b></span>
                       <input type="range" min="0" max="100" step="1" value={selectedElementStyle.objectPositionX ?? 50} onChange={event => updateSelectedElementStyle('objectPositionX', Number(event.target.value))} className="w-full accent-emerald-400" />
                     </label>
+                    <label className="block space-y-1 text-[10px] text-slate-300">
+                      <span className="flex justify-between"><span>ფოტოს ვერტიკალური პოზიცია</span><b>{selectedElementStyle.objectPositionY ?? 50}%</b></span>
+                      <input type="range" min="0" max="100" step="1" value={selectedElementStyle.objectPositionY ?? 50} onChange={event => updateSelectedElementStyle('objectPositionY', Number(event.target.value))} className="w-full accent-emerald-400" />
+                    </label>
                   </>
                 )}
                 <div className="grid grid-cols-2 gap-2">
@@ -877,7 +900,10 @@ export default function StorefrontVisualEditor({
                   ) : <p className="text-[10px] leading-4 text-slate-400">შეინახეთ ღილაკის, სათაურის, ბარათის ან სხვა ელემენტის სტილი და გამოიყენეთ სხვა მონიშნულ კომპონენტზეც.</p>}
                   <p className="text-[9px] leading-4 text-slate-500">სტილები ინახება საერთო ვიზუალურ მონახაზში და ხელმისაწვდომია ყველა მოწყობილობაზე. მაქსიმუმ 20 ჩანაწერი.</p>
                 </div>
-                <button type="button" onClick={() => { updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', ''); updateSelectedElementStyle('borderColor', ''); }} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', ''); updateSelectedElementStyle('borderColor', ''); }} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
+                  <button type="button" onClick={resetSelectedElementStyle} className="w-full rounded-lg border border-rose-500/40 px-3 py-2 text-[10px] font-bold text-rose-200">ამ ელემენტის სტილის სრულად განულება</button>
+                </div>
                 <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help} სტილები ცალკე ინახება თითოეული ელემენტისთვის.</p>
               </div>
             )}
