@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { findMostSpecificAdminPanelVisualElement } from '../src/utils/adminPanelVisualDesign.js';
+import { buildAdminPanelVisualStyle, findMostSpecificAdminPanelVisualElement } from '../src/utils/adminPanelVisualDesign.js';
 
 test('direct selection prefers a nested admin element over its parent container', () => {
   const parent = { parentElement: null };
@@ -59,4 +59,31 @@ test('admin visual element styles use the same tablet and mobile breakpoints as 
   assert.equal(css.includes('@media (max-width: 639px)'), false);
   assert.equal(css.includes('@media (min-width: 768px) and (max-width: 1023px)'), false);
   assert.equal(css.includes('@media (max-width: 767px)'), false);
+});
+
+test('admin element styles preserve desktop values and inherit tablet values on mobile', () => {
+  const style = buildAdminPanelVisualStyle({
+    elementStyles: {
+      orderCard: { fontSize: 16, textColor: '#112233' }
+    },
+    responsive: {
+      tablet: {
+        elementStyles: {
+          orderCard: { fontSize: 18 }
+        }
+      },
+      mobile: {
+        elementStyles: {
+          orderCard: { textColor: '#abcdef' }
+        }
+      }
+    }
+  });
+
+  assert.equal(style['--admin-vd-element-orderCard-fontSize'], '16px');
+  assert.equal(style['--admin-vd-element-tablet-orderCard-fontSize'], '18px');
+  assert.equal(style['--admin-vd-element-mobile-orderCard-fontSize'], '18px');
+  assert.equal(style['--admin-vd-element-orderCard-textColor'], '#112233');
+  assert.equal(style['--admin-vd-element-tablet-orderCard-textColor'], '#112233');
+  assert.equal(style['--admin-vd-element-mobile-orderCard-textColor'], '#abcdef');
 });
