@@ -4688,7 +4688,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
+        {(visibleAdminTab === 'command' || (visibleAdminTab === 'command' || adminContentTab === 'command')) && (
           <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
             <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
               <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
@@ -4811,7 +4811,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminContentTab === 'inventory' && (
+        {(visibleAdminTab === 'inventory' || adminContentTab === 'inventory') && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
@@ -4937,7 +4937,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment') && (
+        {(visibleAdminTab === 'replenishment' || (visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment')) && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
@@ -4994,7 +4994,7 @@ export default function AdminDashboardPro({
         )}
 
         {visibleAdminTab === 'analytics' && !isOwner && <StaffAnalyticsSummary />}
-        {adminContentTab === 'analytics' && isOwner && (
+        {(visibleAdminTab === 'analytics' || adminContentTab === 'analytics') && isOwner && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
               <div>
@@ -5265,7 +5265,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'calculator' && (
+        {(visibleAdminTab === 'calculator' || adminContentTab === 'calculator') && (
           <div className="admin-profit-calculator bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Calculator className="w-5 h-5 text-emerald-400" /> გაყიდვებისა და მოგების კალკულატორი
@@ -5305,7 +5305,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'expenses' && (
+        {(visibleAdminTab === 'expenses' || adminContentTab === 'expenses') && (
           <div className="admin-expenses space-y-6">
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -5364,7 +5364,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'ai_analyst' && (
+        {(visibleAdminTab === 'ai_analyst' || adminContentTab === 'ai_analyst') && (
           <div className="admin-ai-analyst bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Sparkles className="w-5 h-5 text-emerald-400" /> AI ბიზნეს ასისტენტი & ანალიტიკოსი
@@ -5386,7 +5386,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'staff' && (
+        {(visibleAdminTab === 'staff' || adminContentTab === 'staff') && (
           <AdminStaffManagement
             usersList={usersList}
             logActivity={logActivity}
@@ -5396,7 +5396,7 @@ export default function AdminDashboardPro({
         )}
 
         {/* 📦 შეკვეთების სრული და პროფესიონალური მართვის პანელი */}
-        {adminContentTab === 'orders' && (
+        {(visibleAdminTab === 'orders' || adminContentTab === 'orders') && (
           <div className="admin-orders-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-6 shadow-2xl backdrop-blur-2xl">
             <div className="admin-orders-header admin-orders-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-5">
               <div>
@@ -5707,7 +5707,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'support' && (
+        {(visibleAdminTab === 'support' || adminContentTab === 'support') && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <HelpCircle className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.supportTitle} ({supportTickets?.length || 0})
@@ -5816,7 +5816,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'products' && (
+        {(visibleAdminTab === 'products' || adminContentTab === 'products') && (
           <div className="admin-products-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
@@ -6230,7 +6230,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'messages' && (
+        {(visibleAdminTab === 'messages' || adminContentTab === 'messages') && (
           <div className="admin-support-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-emerald-500/20 pb-4">
               <div>
@@ -6274,7 +6274,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'discounts' && (
+        {(visibleAdminTab === 'discounts' || adminContentTab === 'discounts') && (
           <div className="admin-discounts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Zap className="w-5 h-5 text-emerald-400" /> {adminVisualDesign.content.discountsTitle}
@@ -6327,7 +6327,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'logs' && (
+        {(visibleAdminTab === 'logs' || adminContentTab === 'logs') && (
           <div className="admin-audit-logs-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Activity className="w-5 h-5 text-emerald-400" /> სისტემური აქტივობების ჟურნალი (Audit Logs)
@@ -6380,7 +6380,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'broadcasts' && (
+        {(visibleAdminTab === 'broadcasts' || adminContentTab === 'broadcasts') && (
           <div className="admin-broadcasts-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
               <Send className="w-5 h-5 text-emerald-400" /> სატესტო შეტყობინება (მხოლოდ ამ მოწყობილობაზე)
@@ -6444,7 +6444,7 @@ export default function AdminDashboardPro({
           )
         )}
 
-        {adminContentTab === 'banners' && (
+        {(visibleAdminTab === 'banners' || adminContentTab === 'banners') && (
           <div className="admin-banners space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -6479,7 +6479,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'categories' && (
+        {(visibleAdminTab === 'categories' || adminContentTab === 'categories') && (
           <div className="admin-category-manager space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -6680,7 +6680,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'coupons' && (
+        {(visibleAdminTab === 'coupons' || adminContentTab === 'coupons') && (
           <div className="admin-coupons-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -6710,7 +6710,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'vendors' && (
+        {(visibleAdminTab === 'vendors' || adminContentTab === 'vendors') && (
           <div className="admin-vendors-panel space-y-6">
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
@@ -6744,7 +6744,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'users' && (
+        {(visibleAdminTab === 'users' || adminContentTab === 'users') && (
           <div className="admin-crm-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-500/20 pb-4">
               <h3 className="font-black text-white text-base flex items-center gap-2.5">
@@ -6865,7 +6865,7 @@ export default function AdminDashboardPro({
           </div>
         )}
 
-        {adminContentTab === 'settings' && (
+        {(visibleAdminTab === 'settings' || adminContentTab === 'settings') && (
           <div className="admin-settings-panel space-y-6">
             <div className="admin-security-notice bg-slate-900/80 border border-amber-500/30 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] space-y-3 shadow-2xl backdrop-blur-2xl">
               <h3 className="font-black text-white text-base">ადმინისტრატორის ანგარიშის დაცვა</h3>
