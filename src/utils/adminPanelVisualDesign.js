@@ -264,63 +264,63 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "inventory": {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "analytics": {
     "radius": 24,
     "padding": 20,
     "borderWidth": 1,
     "shadowBlur": 20,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "orders": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "support": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "discounts": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "banners": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "categories": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "coupons": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 },
   content: DEFAULT_ADMIN_PANEL_CONTENT,
@@ -337,63 +337,63 @@ const COMPONENT_DEFAULTS = {
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "inventory": {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "analytics": {
     "radius": 24,
     "padding": 20,
     "borderWidth": 1,
     "shadowBlur": 20,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "orders": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "support": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "discounts": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 24,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "banners": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "categories": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "coupons": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
     "shadowBlur": 22,
-    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
+    fontSize: 13, titleFontSize: 16, titleFontWeight: 700, bodyFontWeight: 400, textAlign: 'left', borderStyle: 'solid', textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 };
 const COMPONENT_LIMITS = {
@@ -419,7 +419,7 @@ const COMPONENT_LIMITS = {
   bodyFontWeight: [300, 800]
 };
 const COMPONENT_COLOR_DEFAULTS = { textColor: "#e2e8f0", backgroundColor: "#0f172a", borderColor: "#334155" };
-const COMPONENT_ENUM_DEFAULTS = { textAlign: ['left', 'center', 'right'] };
+const COMPONENT_ENUM_DEFAULTS = { textAlign: ['left', 'center', 'right'], borderStyle: ['solid', 'dashed', 'dotted', 'none'] };
 
 const normalizeComponents = (source, fallback, partial = false) => Object.fromEntries(
   Object.entries(COMPONENT_DEFAULTS).map(([component, defaults]) => {
