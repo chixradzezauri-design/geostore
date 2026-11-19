@@ -33,7 +33,11 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     inventorySectionBackground: '#0f172a',
     inventorySectionBorder: '#334155',
     analyticsSectionBackground: '#0f172a',
-    analyticsSectionBorder: '#334155'
+    analyticsSectionBorder: '#334155',
+    ordersSectionBackground: '#0f172a',
+    ordersSectionBorder: '#334155',
+    supportSectionBackground: '#0f172a',
+    supportSectionBorder: '#334155'
   },
   layout: {
     fontSize: 13,
