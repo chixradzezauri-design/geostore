@@ -1252,3 +1252,51 @@
     border-radius: 16px !important;
   }
 }
+
+/* STAGE 113 — responsive staff invitation form. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-form,
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-fields,
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-grid {
+  min-width: 0;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-fields > :is(input, select) {
+  width: 100%;
+  min-height: 46px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-grid > label {
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid rgba(126, 157, 187, .16);
+  border-radius: 12px;
+  background: rgba(5, 16, 29, .42);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-grid input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-submit {
+  min-height: 48px;
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-form {
+    gap: 13px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-fields {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-create-submit {
+    width: 100%;
+    padding-inline: 12px !important;
+    line-height: 1.4;
+  }
+}
+@media (min-width: 420px) and (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-staff-permission-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

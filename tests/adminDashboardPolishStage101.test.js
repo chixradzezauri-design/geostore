@@ -71,3 +71,15 @@ test('Stage 112 keeps the mobile Command Center compact and its main action visi
   assert.match(polish, /\.admin-command-hero button \{[\s\S]*?width: 100%[\s\S]*?min-height: 48px/);
   assert.match(polish, /\.admin-command-kpi > strong \{[\s\S]*?font-size: 24px/);
 });
+
+test('Stage 113 staff invitation form stays readable and touch-accessible on phones', () => {
+  assert.match(admin, /className="admin-staff-create-form/);
+  assert.match(admin, /className="admin-staff-create-fields/);
+  assert.match(admin, /className="admin-staff-permission-grid/);
+  assert.match(admin, /className="admin-staff-create-submit/);
+  assert.match(polish, /STAGE 113 — responsive staff invitation form/);
+  assert.match(polish, /\.admin-staff-create-fields > :is\(input, select\)[\s\S]*?min-height: 46px/);
+  assert.match(polish, /\.admin-staff-permission-grid > label[\s\S]*?min-height: 42px/);
+  assert.match(polish, /\.admin-staff-create-submit[\s\S]*?min-height: 48px/);
+  assert.match(polish, /@media \(min-width: 420px\) and \(max-width: 640px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+});

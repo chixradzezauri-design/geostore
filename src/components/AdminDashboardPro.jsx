@@ -754,8 +754,8 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
 
       <section className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4">
         <h3 className="font-black text-white text-base flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-400" /> ახალი თანამშრომლის მოწვევა</h3>
-        <form onSubmit={handleInviteStaff} className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form onSubmit={handleInviteStaff} className="admin-staff-create-form space-y-4 text-xs">
+          <div className="admin-staff-create-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input type="text" required minLength={2} maxLength={100} value={staffForm.display_name} onChange={(event) => setStaffForm((current) => ({ ...current, display_name: event.target.value }))} placeholder="თანამშრომლის სახელი" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
             <input type="email" required maxLength={254} value={staffForm.email} onChange={(event) => setStaffForm((current) => ({ ...current, email: event.target.value }))} placeholder="ელფოსტა" className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white" />
             <select value={staffForm.role} onChange={(event) => setStaffForm((current) => ({ ...current, role: event.target.value }))} className="bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white">
@@ -764,7 +764,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
           </div>
           <div className="rounded-2xl border border-emerald-500/15 bg-slate-950 p-4 space-y-3">
             <p className="font-bold text-slate-300">მიანიჭეთ მხოლოდ საჭირო მოდულები:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="admin-staff-permission-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {STAFF_PERMISSION_OPTIONS.map((permission) => (
                 <label key={permission.key} className="flex items-center gap-2 text-slate-300 cursor-pointer">
                   <input type="checkbox" checked={staffForm.permissions[permission.key]} onChange={(event) => setStaffForm((current) => ({
@@ -776,7 +776,7 @@ function AdminStaffManagement({ usersList = [], logActivity, isOwner }) {
               ))}
             </div>
           </div>
-          <button type="submit" disabled={staffActionBusy} className="rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
+          <button type="submit" disabled={staffActionBusy} className="admin-staff-create-submit rounded-xl bg-emerald-500 px-5 py-3 font-black text-slate-950 disabled:opacity-50">
             {staffActionBusy ? 'მოწვევა იგზავნება…' : 'Supabase Auth-ში მოწვევა და უფლებების მინიჭება'}
           </button>
         </form>
