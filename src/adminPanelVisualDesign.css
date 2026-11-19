@@ -10,6 +10,14 @@
   --admin-vd-cardRadius-active: var(--admin-vd-cardRadius);
   --admin-vd-cardPadding-active: var(--admin-vd-cardPadding);
   --admin-vd-sidebarWidth-active: var(--admin-vd-sidebarWidth);
+  --admin-vd-navActiveBackground-active: var(--admin-vd-navActiveBackground);
+  --admin-vd-navActiveText-active: var(--admin-vd-navActiveText);
+  --admin-vd-navInactiveBackground-active: var(--admin-vd-navInactiveBackground);
+  --admin-vd-navInactiveText-active: var(--admin-vd-navInactiveText);
+  --admin-vd-buttonRadius-active: var(--admin-vd-buttonRadius);
+  --admin-vd-navItemRadius-active: var(--admin-vd-navItemRadius);
+  --admin-vd-navItemPaddingY-active: var(--admin-vd-navItemPaddingY);
+  --admin-vd-sectionGap-active: var(--admin-vd-sectionGap);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -52,6 +60,30 @@
   background-color: var(--admin-vd-accent-active) !important;
 }
 
+.admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-nav-item="true"] {
+  border-radius: var(--admin-vd-navItemRadius-active) !important;
+  padding-top: var(--admin-vd-navItemPaddingY-active) !important;
+  padding-bottom: var(--admin-vd-navItemPaddingY-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-nav-active="true"] {
+  background-color: var(--admin-vd-navActiveBackground-active) !important;
+  color: var(--admin-vd-navActiveText-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-nav-active="false"] {
+  background-color: var(--admin-vd-navInactiveBackground-active) !important;
+  color: var(--admin-vd-navInactiveText-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] button:not([data-admin-visual-nav-item="true"]) {
+  border-radius: var(--admin-vd-buttonRadius-active) !important;
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] {
+  gap: var(--admin-vd-sectionGap-active) !important;
+}
+
 .admin-dashboard-pro[data-admin-visual-design="enabled"] > div:first-child {
   width: 100%;
 }
@@ -76,6 +108,14 @@
     --admin-vd-cardRadius-active: var(--admin-vd-tablet-cardRadius, var(--admin-vd-cardRadius));
     --admin-vd-cardPadding-active: var(--admin-vd-tablet-cardPadding, var(--admin-vd-cardPadding));
     --admin-vd-sidebarWidth-active: var(--admin-vd-tablet-sidebarWidth, var(--admin-vd-sidebarWidth));
+    --admin-vd-navActiveBackground-active: var(--admin-vd-tablet-navActiveBackground, var(--admin-vd-navActiveBackground));
+    --admin-vd-navActiveText-active: var(--admin-vd-tablet-navActiveText, var(--admin-vd-navActiveText));
+    --admin-vd-navInactiveBackground-active: var(--admin-vd-tablet-navInactiveBackground, var(--admin-vd-navInactiveBackground));
+    --admin-vd-navInactiveText-active: var(--admin-vd-tablet-navInactiveText, var(--admin-vd-navInactiveText));
+    --admin-vd-buttonRadius-active: var(--admin-vd-tablet-buttonRadius, var(--admin-vd-buttonRadius));
+    --admin-vd-navItemRadius-active: var(--admin-vd-tablet-navItemRadius, var(--admin-vd-navItemRadius));
+    --admin-vd-navItemPaddingY-active: var(--admin-vd-tablet-navItemPaddingY, var(--admin-vd-navItemPaddingY));
+    --admin-vd-sectionGap-active: var(--admin-vd-tablet-sectionGap, var(--admin-vd-sectionGap));
   }
 }
 
@@ -92,5 +132,13 @@
     --admin-vd-cardRadius-active: var(--admin-vd-mobile-cardRadius, var(--admin-vd-tablet-cardRadius, var(--admin-vd-cardRadius)));
     --admin-vd-cardPadding-active: var(--admin-vd-mobile-cardPadding, var(--admin-vd-tablet-cardPadding, var(--admin-vd-cardPadding)));
     --admin-vd-sidebarWidth-active: var(--admin-vd-mobile-sidebarWidth, var(--admin-vd-tablet-sidebarWidth, var(--admin-vd-sidebarWidth)));
+    --admin-vd-navActiveBackground-active: var(--admin-vd-mobile-navActiveBackground, var(--admin-vd-tablet-navActiveBackground, var(--admin-vd-navActiveBackground)));
+    --admin-vd-navActiveText-active: var(--admin-vd-mobile-navActiveText, var(--admin-vd-tablet-navActiveText, var(--admin-vd-navActiveText)));
+    --admin-vd-navInactiveBackground-active: var(--admin-vd-mobile-navInactiveBackground, var(--admin-vd-tablet-navInactiveBackground, var(--admin-vd-navInactiveBackground)));
+    --admin-vd-navInactiveText-active: var(--admin-vd-mobile-navInactiveText, var(--admin-vd-tablet-navInactiveText, var(--admin-vd-navInactiveText)));
+    --admin-vd-buttonRadius-active: var(--admin-vd-mobile-buttonRadius, var(--admin-vd-tablet-buttonRadius, var(--admin-vd-buttonRadius)));
+    --admin-vd-navItemRadius-active: var(--admin-vd-mobile-navItemRadius, var(--admin-vd-tablet-navItemRadius, var(--admin-vd-navItemRadius)));
+    --admin-vd-navItemPaddingY-active: var(--admin-vd-mobile-navItemPaddingY, var(--admin-vd-tablet-navItemPaddingY, var(--admin-vd-navItemPaddingY)));
+    --admin-vd-sectionGap-active: var(--admin-vd-mobile-sectionGap, var(--admin-vd-tablet-sectionGap, var(--admin-vd-sectionGap)));
   }
 }
