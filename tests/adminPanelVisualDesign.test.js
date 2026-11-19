@@ -20,6 +20,10 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
   assert.equal(design.theme.staffSectionBackground, '#0f172a');
   assert.equal(design.theme.ordersSectionBackground, '#0f172a');
   assert.equal(design.theme.supportSectionBorder, '#334155');
+  assert.equal(design.theme.discountsSectionBackground, '#0f172a');
+  assert.equal(design.theme.bannersSectionBorder, '#334155');
+  assert.equal(design.theme.categoriesSectionBackground, '#0f172a');
+  assert.equal(design.theme.couponsSectionBorder, '#334155');
   assert.equal(design.layout.fontSize, 16);
   assert.equal(design.layout.cardRadius, 10);
   assert.equal(design.layout.cardPadding, 32);
@@ -42,7 +46,7 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
 
 test('tablet and mobile admin visual overrides inherit unset desktop values', () => {
   const design = normalizeAdminPanelVisualDesign({
-    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', staffSectionBackground: '#aabbcc', inventorySectionBorder: '#bbccdd', analyticsSectionBackground: '#ccddee', ordersSectionBackground: '#ddeeff', supportSectionBorder: '#aabbcc', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678', modalOverlayBackground: '#123456' },
+    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', staffSectionBackground: '#aabbcc', inventorySectionBorder: '#bbccdd', analyticsSectionBackground: '#ccddee', ordersSectionBackground: '#ddeeff', supportSectionBorder: '#aabbcc', discountsSectionBackground: '#ddeeff', bannersSectionBorder: '#aabbcc', categoriesSectionBackground: '#ccddee', couponsSectionBorder: '#bbccdd', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678', modalOverlayBackground: '#123456' },
     layout: { fontSize: 14, cardRadius: 20, sectionGap: 30, headerPadding: 28, tableCellPadding: 10, inputHeight: 48, cardBorderWidth: 2, cardShadowBlur: 30, modalRadius: 32, modalPadding: 30, modalOverlayOpacity: 90 },
     responsive: {
       tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', inputFocus: '#778899', contentCardBackground: '#8899aa', modalBackground: '#7788aa', modalOverlayBackground: '#abcdef', staffSectionBackground: '#ddeeff' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12, modalRadius: 18, modalPadding: 16, modalOverlayOpacity: 70 } },
@@ -91,6 +95,10 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-supportSectionBorder'], '#aabbcc');
   assert.equal(style['--admin-vd-tablet-ordersSectionBackground'], '#ddeeff');
   assert.equal(style['--admin-vd-tablet-supportSectionBorder'], '#aabbcc');
+  assert.equal(style['--admin-vd-discountsSectionBackground'], '#ddeeff');
+  assert.equal(style['--admin-vd-bannersSectionBorder'], '#aabbcc');
+  assert.equal(style['--admin-vd-categoriesSectionBackground'], '#ccddee');
+  assert.equal(style['--admin-vd-couponsSectionBorder'], '#bbccdd');
   assert.equal(style['--admin-vd-tablet-staffSectionBackground'], '#ddeeff');
   assert.equal(style['--admin-vd-tablet-contentCardBackground'], '#8899aa');
   assert.equal(style['--admin-vd-tablet-cardBorderWidth'], '1px');
