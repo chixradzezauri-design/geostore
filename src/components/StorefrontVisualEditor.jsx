@@ -1170,8 +1170,9 @@ export default function StorefrontVisualEditor({
             .gs-visual-preview-frame[data-visual-editor-selected="header.menu.languageButton"] [data-visual-editor-target="header.menu.languageButton"],
             .gs-visual-preview-frame[data-visual-editor-selected="footer"] [data-visual-editor-target="footer"],
             .gs-visual-preview-frame[data-visual-editor-selected="footer.links"] [data-visual-editor-target="footer.links"],
-            .gs-visual-preview-frame[data-visual-editor-selected="footer.link"] [data-visual-editor-target="footer.link"],
-            .gs-visual-preview-frame[data-visual-editor-selected="footer.copyright"] [data-visual-editor-target="footer.copyright"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.termsLink"] [data-visual-editor-target="footer.termsLink"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.privacyLink"] [data-visual-editor-target="footer.privacyLink"],
+            .gs-visual-preview-frame[data-visual-editor-selected="footer.warrantyLink"] [data-visual-editor-target="footer.warrantyLink"],
             .gs-visual-preview-frame[data-visual-editor-selected="footer.copyright"] [data-visual-editor-target="footer.copyright"] {
               outline: 2px solid #34d399 !important; outline-offset: 3px; position: relative; z-index: 3;
             }
