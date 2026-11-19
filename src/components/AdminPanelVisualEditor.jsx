@@ -734,7 +734,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
                 </select>
               </label>
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                [
+                {[
                   { key: 'textColor', label: 'ტექსტის ფერი' },
                   { key: 'backgroundColor', label: 'ბლოკის ფონი' },
                   { key: 'borderColor', label: 'ჩარჩოს ფერი' }
