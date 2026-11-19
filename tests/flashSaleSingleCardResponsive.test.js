@@ -56,3 +56,27 @@ test('two Flash Sale products keep card text and prices shrink-safe and horizont
     /\.gs-flash-sale-card\s*>\s*button\s*\{[\s\S]*?writing-mode:\s*horizontal-tb\s*!important;/
   );
 });
+
+
+test('one and two Flash Sale products use a readable auto-fit grid on narrow iPhones', () => {
+  const narrowPhoneFixStart = css.lastIndexOf('GEOSTORE — Stage 43.3: keep Flash Sale cards readable on narrow phones');
+  const narrowPhoneFix = css.slice(narrowPhoneFixStart);
+
+  assert.ok(narrowPhoneFixStart >= 0);
+  assert.match(narrowPhoneFix, /@media\\s*\\(\\s*max-width:\\s*640px\\s*\\)/);
+  assert.match(
+    narrowPhoneFix,
+    /\\.gs-flash-sale-section\\s*>\\s*\\.grid\\s*\\{[^}]*grid-template-columns:\\s*repeat\\(auto-fit,\\s*minmax\\(min\\(100%,\\s*220px\\),\\s*1fr\\)\\)\\s*!important;/s
+  );
+  assert.match(
+    narrowPhoneFix,
+    /\\.gs-flash-sale-section\\s*>\\s*\\.grid\\s*>\\s*\\.gs-flash-sale-card\\s*\\{[^}]*width:\\s*100%\\s*!important;[^}]*min-width:\\s*0\\s*!important;[^}]*max-width:\\s*100%\\s*!important;/s
+  );
+
+  const columnsForContainer = (width, minCard = 220, gap = 12) =>
+    Math.max(1, Math.floor((width + gap) / (minCard + gap)));
+  assert.equal(columnsForContainer(272), 1, '320px iPhone content stays single-column');
+  assert.equal(columnsForContainer(327), 1, '375px iPhone content stays single-column');
+  assert.equal(columnsForContainer(382), 1, '430px iPhone content stays single-column');
+  assert.equal(columnsForContainer(560), 2, 'wider mobile/tablet content can use two columns');
+});
