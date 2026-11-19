@@ -72,7 +72,6 @@ const VISUAL_EDITOR_TARGETS = {
   'header.menu.languageButton': { label: 'ენის ღილაკი', help: 'შეცვალეთ ენის ღილაკის ფერი და ფორმა.' },
   'footer': { label: 'საიტის Footer', help: 'შეცვალეთ ქვედა ნაწილის ფონი, ზომა, ჩარჩო და დაშორებები.' },
   'footer.links': { label: 'Footer ბმულების ზოლი', help: 'შეცვალეთ ბმულების ზოლის განლაგება და საერთო ფერები.' },
-  'footer.link': { label: 'Footer ბმული', help: 'შეცვალეთ Footer ბმულების საერთო ვიზუალი.' },
   'footer.termsLink': { label: 'Footer — წესები და პირობები', settingKey: 'footerTermsText', help: 'შეცვალეთ ბმულის ტექსტი; ცარიელი ველი აბრუნებს ენის შესაბამის თარგმანს.' },
   'footer.privacyLink': { label: 'Footer — კონფიდენციალურობა', settingKey: 'footerPrivacyText', help: 'შეცვალეთ ბმულის ტექსტი; ცარიელი ველი აბრუნებს ენის შესაბამის თარგმანს.' },
   'footer.warrantyLink': { label: 'Footer — გარანტია', settingKey: 'footerWarrantyText', help: 'შეცვალეთ ბმულის ტექსტი; ცარიელი ველი აბრუნებს ენის შესაბამის თარგმანს.' },
