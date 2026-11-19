@@ -794,6 +794,22 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   };
   const toggleElementBatchSelection = key => setSelectedElementKeys(current => current.includes(key) ? current.filter(item => item !== key) : [...current, key]);
   const selectAllFilteredElements = () => setSelectedElementKeys(filteredElementEntries.map(([key]) => key));
+  const selectVisibleElementsPreservingOthers = () => setSelectedElementKeys(current => [...new Set([...current, ...filteredElementEntries.map(([key]) => key)])]);
+  const clearVisibleElementSelection = () => {
+    const visibleKeys = new Set(filteredElementEntries.map(([key]) => key));
+    setSelectedElementKeys(current => current.filter(key => !visibleKeys.has(key)));
+  };
+  const toggleVisibleElementSelection = () => {
+    const visibleKeys = filteredElementEntries.map(([key]) => key);
+    const visibleSet = new Set(visibleKeys);
+    setSelectedElementKeys(current => {
+      const currentSet = new Set(current);
+      const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every(key => currentSet.has(key));
+      if (allVisibleSelected) return current.filter(key => !visibleSet.has(key));
+      return [...new Set([...current, ...visibleKeys])];
+    });
+  };
+  const visibleSelectedElementCount = filteredElementEntries.filter(([key]) => selectedElementKeys.includes(key)).length;
   const removeSavedElementStyle = id => {
     const target = normalized.stylePresets.find(item => item.id === id);
     if (!target || !window.confirm(`წაიშალოს სტილი „${target.name}“? წაშლამდე ავტომატური ასლი შეინახება.`)) return;
@@ -1489,10 +1505,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           </>}
         </section>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2">
-          <span className="text-[11px] text-slate-300">რამდენიმე ელემენტის მონიშვნა: {selectedElementKeys.length}</span>
+          <span className="text-[11px] text-slate-300">მონიშნულია: {selectedElementKeys.length} · ნაჩვენებიდან: {visibleSelectedElementCount}</span>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={selectAllFilteredElements} disabled={!filteredElementEntries.length} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200 disabled:opacity-40">ნაჩვენების მონიშვნა</button>
-            <button type="button" onClick={() => setSelectedElementKeys([])} disabled={!selectedElementKeys.length} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200 disabled:opacity-40">მონიშვნის მოხსნა</button>
+            <button type="button" onClick={selectVisibleElementsPreservingOthers} disabled={!filteredElementEntries.length || visibleSelectedElementCount === filteredElementEntries.length} className="rounded-md border border-sky-400/40 px-2 py-1 text-[10px] font-bold text-sky-200 disabled:opacity-40">ნაჩვენების დამატება</button>
+            <button type="button" onClick={clearVisibleElementSelection} disabled={!visibleSelectedElementCount} className="rounded-md border border-amber-400/40 px-2 py-1 text-[10px] font-bold text-amber-200 disabled:opacity-40">ნაჩვენების მოხსნა</button>
+            <button type="button" onClick={toggleVisibleElementSelection} disabled={!filteredElementEntries.length} className="rounded-md border border-violet-400/40 px-2 py-1 text-[10px] font-bold text-violet-200 disabled:opacity-40">ნაჩვენების გადართვა</button>
+            <button type="button" onClick={() => setSelectedElementKeys([])} disabled={!selectedElementKeys.length} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200 disabled:opacity-40">ყველას მოხსნა</button>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
