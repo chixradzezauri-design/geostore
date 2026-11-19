@@ -1611,6 +1611,9 @@ export default function App() {
         throw new Error('საიტი გამოქვეყნდა, თუმცა ახალი საერთო ვერსიის დრო ვერ დადასტურდა. ატვირთული ფაილები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი.');
       }
       storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at;
+      // Publishing also advances the shared draft version; keep the local baseline in sync.
+      storefrontDraftBaselineRef.current = JSON.stringify({ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings });
+      storefrontDraftLocalDirtyRef.current = false;
 
       // Commit the uploaded Hero URL to editor state only after publish is confirmed.
       if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
