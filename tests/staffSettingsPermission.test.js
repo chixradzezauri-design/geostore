@@ -37,16 +37,18 @@ test('storefront media uploads are permission-checked at the Storage RLS boundar
 
 test('storefront draft saves use a scoped optimistic-concurrency RPC and cannot mutate published fields', () => {
   const draftRpc = draftConcurrencyMigration.split('CREATE OR REPLACE FUNCTION private.save_storefront_draft')[1]?.split('CREATE OR REPLACE FUNCTION public.save_storefront_draft')[0] || '';
-  assert.match(draftRpc, /public\\.has_staff_permission\\('settings'\\)/);
-  assert.match(draftRpc, /p_expected_draft_updated_at timestamptz/);
-  assert.match(draftRpc, /pg_advisory_xact_lock/);
-  assert.match(draftRpc, /p_expected_draft_updated_at IS DISTINCT FROM v_current_updated_at/);
-  assert.match(draftRpc, /draft_updated_at = GREATEST/);
-  assert.match(draftRpc, /USING ERRCODE = '40001'/);
-  assert.doesNotMatch(draftRpc, /published_config|is_published|published_at/);
-  assert.match(app, /rest\\/v1\\/rpc\\/save_storefront_draft/);
-  assert.match(app, /p_expected_draft_updated_at: storefrontDraftUpdatedAtRef\\.current/);
-  assert.doesNotMatch(app, /rest\\/v1\\/storefront_config\\?on_conflict=config_key/);
+  for (const phrase of [
+    "public.has_staff_permission('settings')",
+    'p_expected_draft_updated_at timestamptz',
+    'pg_advisory_xact_lock',
+    'p_expected_draft_updated_at IS DISTINCT FROM v_current_updated_at',
+    'draft_updated_at = GREATEST',
+    "USING ERRCODE = '40001'"
+  ]) assert.ok(draftRpc.includes(phrase), phrase);
+  assert.equal(/published_config|is_published|published_at/.test(draftRpc), false);
+  assert.ok(app.includes('/rest/v1/rpc/save_storefront_draft'));
+  assert.ok(app.includes('p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current'));
+  assert.equal(app.includes('/rest/v1/storefront_config?on_conflict=config_key'), false);
 });
 test('settings staff can edit drafts but cannot publish storefront configuration', () => {
   assert.match(migration, /REVOKE INSERT \(is_published, published_at, published_config\)/);
@@ -58,7 +60,7 @@ test('settings staff can edit drafts but cannot publish storefront configuration
 test('activity logging accepts active module staff but activity-log viewing stays owner-only', () => {
   assert.match(migration, /private\.write_admin_activity_log/);
   for (const permission of ['products', 'orders', 'analytics', 'expenses', 'crm', 'support', 'settings']) {
-    assert.match(migration, new RegExp(`has_staff_permission\\(''${permission}''\\)`));
+    assert.ok(migration.includes(`has_staff_permission(''${permission}'')`));
   }
   assert.match(migration, /admin activity-log viewing/);
 });
