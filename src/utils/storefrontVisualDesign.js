@@ -209,8 +209,10 @@ export function buildStorefrontElementStyle(rawDesign, elementId) {
   const rawElementStyles = isPlainObject(raw.elementStyles) ? raw.elementStyles : {};
   const value = isPlainObject(rawElementStyles[elementId]) ? rawElementStyles[elementId] : {};
   const style = {};
-  if (value.textColor) style.color = value.textColor;
-  if (value.backgroundColor) style.backgroundColor = value.backgroundColor;
+  const textColor = safeColor(value.textColor, '');
+  const backgroundColor = safeColor(value.backgroundColor, '');
+  if (textColor) style.color = textColor;
+  if (backgroundColor) style.backgroundColor = backgroundColor;
   if (value.fontSize !== null) style.fontSize = String(value.fontSize) + 'px';
   if (value.padding !== null) style.padding = String(value.padding) + 'px';
   if (value.borderRadius !== null) style.borderRadius = String(value.borderRadius) + 'px';

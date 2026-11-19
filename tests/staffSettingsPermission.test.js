@@ -76,12 +76,12 @@ test('hero image Storage operations are restricted to settings staff and preserv
   for (const policy of ['Storefront media scoped upload', 'Storefront media scoped update', 'Storefront media scoped delete']) {
     assert.ok(heroStorageMigration.includes(policy), policy);
   }
-  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/hero\/%'/g) || []).length, 3);
-  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/categories\/%'/g) || []).length, 3);
-  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/banners\/%'/g) || []).length, 3);
-  assert.equal((heroStorageMigration.match(/name LIKE 'products\/%'/g) || []).length, 3);
-  assert.equal((heroStorageMigration.match(/public\.has_staff_permission\('settings'\)/g) || []).length, 3);
-  assert.equal((heroStorageMigration.match(/public\.has_staff_permission\('products'\)/g) || []).length, 3);
+  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/hero\/%'/g) || []).length, 4);
+  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/categories\/%'/g) || []).length, 4);
+  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/banners\/%'/g) || []).length, 4);
+  assert.equal((heroStorageMigration.match(/name LIKE 'products\/%'/g) || []).length, 4);
+  assert.equal((heroStorageMigration.match(/public\.has_staff_permission\('settings'\)/g) || []).length, 4);
+  assert.equal((heroStorageMigration.match(/public\.has_staff_permission\('products'\)/g) || []).length, 4);
   assert.match(app, /safePath\.startsWith\('storefront\/hero\/'\)/);
   assert.match(app, /safePath\.startsWith\('storefront\/categories\/'\)/);
   assert.match(app, /safePath\.startsWith\('storefront\/banners\/'\)/);
