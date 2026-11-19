@@ -73,10 +73,10 @@ test('responsive colors and typography override only their own viewport and inhe
   assert.equal(tablet['--gs-canvas'], '#abcdef');
   assert.equal(tablet['--gs-accent'], '#445566');
   assert.equal(tablet['--gs-base-font-size'], '16px');
-  assert.equal(tablet['--gs-heading-font-family'], 'Georgia, serif');
+  assert.equal(tablet['--gs-heading-font-family'], "Georgia, 'Noto Serif Georgian', serif");
   assert.equal(mobile['--gs-canvas'], '#112233');
   assert.equal(mobile['--gs-accent'], '#123456');
-  assert.equal(mobile['--gs-font-family'], 'Arial, sans-serif');
+  assert.equal(mobile['--gs-font-family'], "Arial, 'Noto Sans Georgian', sans-serif");
   assert.equal(mobile['--gs-heading-scale'], '1.1');
 });
 
