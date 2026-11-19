@@ -465,12 +465,15 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
   const [viewport, setViewport] = useState('desktop');
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const active = viewport === 'desktop'
-    ? { theme: normalized.theme, layout: normalized.layout, components: normalized.components }
+    ? { theme: normalized.theme, layout: normalized.layout, components: normalized.components, elementStyles: normalized.elementStyles }
     : {
         theme: { ...normalized.theme, ...(normalized.responsive?.[viewport]?.theme || {}) },
         layout: { ...normalized.layout, ...(normalized.responsive?.[viewport]?.layout || {}) },
         components: Object.fromEntries(Object.entries(normalized.components).map(([key, value]) => [
           key, { ...value, ...(normalized.responsive?.[viewport]?.components?.[key] || {}) }
+        ])),
+        elementStyles: Object.fromEntries(Object.entries(normalized.elementStyles).map(([key, value]) => [
+          key, { ...value, ...(normalized.responsive?.[viewport]?.elementStyles?.[key] || {}) }
         ]))
       };
 
@@ -527,6 +530,35 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
             ...(normalized.responsive?.[viewport]?.components || {}),
             [component]: {
               ...(normalized.responsive?.[viewport]?.components?.[component] || {}),
+              [property]: value
+            }
+          }
+        }
+      }
+    }));
+  };
+
+  const updateElementValue = (element, property, value) => {
+    if (viewport === 'desktop') {
+      onChange(normalizeAdminPanelVisualDesign({
+        ...normalized,
+        elementStyles: {
+          ...normalized.elementStyles,
+          [element]: { ...normalized.elementStyles[element], [property]: value }
+        }
+      }));
+      return;
+    }
+    onChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      responsive: {
+        ...(normalized.responsive || {}),
+        [viewport]: {
+          ...(normalized.responsive?.[viewport] || {}),
+          elementStyles: {
+            ...(normalized.responsive?.[viewport]?.elementStyles || {}),
+            [element]: {
+              ...(normalized.responsive?.[viewport]?.elementStyles?.[element] || {}),
               [property]: value
             }
           }
@@ -745,6 +777,52 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
                   </label>
                 ))}
               </div>
+            </section>
+          ))}
+        </div>
+      </div>
+
+
+      <div className="space-y-4 rounded-2xl border border-emerald-400/20 bg-slate-950/50 p-3 sm:p-4">
+        <div>
+          <h3 className="text-sm font-black text-white">შიდა ელემენტების ინდივიდუალური რედაქტირება</h3>
+          <p className="mt-1 text-[11px] leading-5 text-slate-400">შეკვეთების მოდულში ცალკე შეცვალეთ სათაური, ფილტრები, ბარათები, მომხმარებლის ინფორმაცია, მოქმედებები, სტატუსი და გვერდების ნავიგაცია. პარამეტრები მოწყობილობის ხედის მიხედვით ინახება.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).map(([key, item]) => (
+            <section key={key} className="space-y-3 rounded-xl border border-slate-700/80 bg-slate-900/70 p-3" aria-label={item.label}>
+              <h4 className="text-xs font-black text-emerald-200">{item.label}</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'fontSize', label: 'ტექსტის ზომა', min: 10, max: 24, suffix: 'px' },
+                  { key: 'fontWeight', label: 'ტექსტის სისქე', min: 300, max: 900, suffix: '' },
+                  { key: 'borderRadius', label: 'მომრგვალება', min: 0, max: 32, suffix: 'px' },
+                  { key: 'padding', label: 'შიდა დაშორება', min: 0, max: 32, suffix: 'px' }
+                ].map(field => (
+                  <label key={field.key} className="min-w-0 space-y-1 text-[10px] text-slate-300">
+                    <span className="flex items-center justify-between gap-1"><span>{field.label}</span><b className="tabular-nums text-emerald-300">{active.elementStyles[key][field.key]}{field.suffix}</b></span>
+                    <input type="range" min={field.min} max={field.max} step="1" value={active.elementStyles[key][field.key]} onChange={event => updateElementValue(key, field.key, Number(event.target.value))} className="w-full accent-emerald-400" aria-label={item.label + ' — ' + field.label} />
+                  </label>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'textColor', label: 'ტექსტის ფერი' },
+                  { key: 'backgroundColor', label: 'ფონის ფერი' },
+                  { key: 'borderColor', label: 'ჩარჩოს ფერი' }
+                ].map(field => (
+                  <label key={field.key} className="flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-[10px] text-slate-300">
+                    <span>{field.label}</span>
+                    <input type="color" value={active.elementStyles[key][field.key]} onChange={event => updateElementValue(key, field.key, event.target.value)} aria-label={item.label + ' — ' + field.label} className="h-8 w-10 rounded border border-slate-600 bg-slate-900 p-1" />
+                  </label>
+                ))}
+              </div>
+              <label className="flex items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-[10px] text-slate-300">
+                <span>ტექსტის გასწორება</span>
+                <select value={active.elementStyles[key].textAlign} onChange={event => updateElementValue(key, 'textAlign', event.target.value)} className="rounded-md border border-slate-600 bg-slate-900 px-2 py-1.5 text-white" aria-label={item.label + ' — ტექსტის გასწორება'}>
+                  <option value="left">მარცხნივ</option><option value="center">ცენტრში</option><option value="right">მარჯვნივ</option>
+                </select>
+              </label>
             </section>
           ))}
         </div>
