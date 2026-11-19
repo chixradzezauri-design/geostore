@@ -505,6 +505,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const elementCardRefs = useRef({});
   const stylePresetFileInputRef = useRef(null);
   const stylePresetImportModeRef = useRef('merge');
+  const moduleBackupFileInputRef = useRef(null);
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const expandedStyleBackup = useMemo(
     () => normalized.stylePresetBackups.find(backup => backup.id === expandedStyleBackupId) || null,
@@ -1168,6 +1169,63 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+
+  const exportAdminModuleBackup = backup => {
+    if (!backup) return;
+    const payload = {
+      format: 'geostore-admin-module-design-backups',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      moduleDesignBackups: [backup]
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `geostore-${backup.moduleId}-${backup.viewport}-design-backup.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const importAdminModuleBackups = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      if (file.size > 250 * 1024) throw new Error('მოდულის სარეზერვო ფაილი 250 KB-ზე დიდი არ უნდა იყოს.');
+      const parsed = JSON.parse(await file.text());
+      if (parsed?.format !== 'geostore-admin-module-design-backups' || parsed?.version !== 1 || !Array.isArray(parsed.moduleDesignBackups)) {
+        throw new Error('მოდულის სარეზერვო ფაილის ფორმატი ან ვერსია მხარდაჭერილი არ არის.');
+      }
+      if (!parsed.moduleDesignBackups.length || parsed.moduleDesignBackups.length > 10) {
+        throw new Error('ფაილში უნდა იყოს 1-დან 10-მდე მოდულის სარეზერვო ასლი.');
+      }
+      const validated = normalizeAdminPanelVisualDesign({ moduleDesignBackups: parsed.moduleDesignBackups }).moduleDesignBackups;
+      if (validated.length !== parsed.moduleDesignBackups.length) {
+        throw new Error('ფაილში არის დაზიანებული ან არასრული ასლი. არსებული დიზაინი უცვლელი დარჩა.');
+      }
+      const available = Math.max(0, 10 - normalized.moduleDesignBackups.length);
+      const overflow = Math.max(0, validated.length - available);
+      if (overflow && !window.confirm(`მაქსიმუმ 10 ასლის ლიმიტისთვის საჭიროა ${overflow} ყველაზე ძველი არსებული ასლის ჩანაცვლება. გაგრძელდეს?`)) return;
+      const additions = validated.map((backup, index) => ({
+        ...backup,
+        id: `admin-module-import-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 7)}`,
+        reason: `იმპორტირებული ასლი · ${backup.reason}`.slice(0, 100)
+      }));
+      const retained = normalized.moduleDesignBackups.slice(overflow);
+      commitChange(normalizeAdminPanelVisualDesign({
+        ...normalized,
+        moduleDesignBackups: [...retained, ...additions].slice(-10)
+      }));
+      window.alert(`იმპორტირებულია ${additions.length} მოდულის სარეზერვო ასლი.`);
+    } catch (error) {
+      window.alert(error?.message || 'მოდულის სარეზერვო ფაილის იმპორტი ვერ შესრულდა.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   const importSavedElementStyles = async event => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -1679,13 +1737,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <section className="space-y-2 rounded-xl border border-sky-400/20 bg-sky-950/10 p-3" aria-label="მოდულის დიზაინის სარეზერვო ასლები">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><h3 className="text-xs font-black text-sky-200">მოდულის სარეზერვო ასლები · {ELEMENT_CATEGORIES.find(category => category.id === elementCategory)?.label}</h3><p className="text-[10px] text-slate-400">ინახება მხოლოდ არჩეული მოდულისა და მიმდინარე ხედის დიზაინი. მაქსიმუმ 10 ასლი მთლიანად.</p></div>
-              <span className="text-[10px] tabular-nums text-slate-400">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory).length} ასლი</span>
+              <div className="flex flex-wrap items-center gap-1"><span className="text-[10px] tabular-nums text-slate-400">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory).length} ასლი</span><button type="button" onClick={() => moduleBackupFileInputRef.current?.click()} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">JSON იმპორტი</button><input ref={moduleBackupFileInputRef} type="file" accept="application/json,.json" onChange={importAdminModuleBackups} className="hidden" aria-label="მოდულის სარეზერვო JSON ფაილის არჩევა" /></div>
             </div>
             {normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).length ? (
               <div className="space-y-2">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).slice().reverse().map(backup => (
                 <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2">
                   <div className="min-w-0"><p className="text-[10px] font-bold text-slate-200">{new Date(backup.savedAt).toLocaleString('ka-GE')}</p><p className="text-[9px] text-slate-400">{backup.reason} · {backup.viewport}</p></div>
-                  <div className="flex gap-1"><button type="button" onClick={() => setExpandedModuleBackupId(current => current === backup.id ? null : backup.id)} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">{expandedModuleBackupId === backup.id ? "შედარების დახურვა" : "შედარება"}</button><button type="button" onClick={() => restoreModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">ასლის აღდგენა</button><button type="button" onClick={() => removeModuleBackup(backup.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[9px] font-bold text-rose-200">წაშლა</button></div>
+                  <div className="flex gap-1"><button type="button" onClick={() => setExpandedModuleBackupId(current => current === backup.id ? null : backup.id)} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">{expandedModuleBackupId === backup.id ? "შედარების დახურვა" : "შედარება"}</button><button type="button" onClick={() => exportAdminModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => restoreModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">ასლის აღდგენა</button><button type="button" onClick={() => removeModuleBackup(backup.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[9px] font-bold text-rose-200">წაშლა</button></div>
                 </div>
                 {expandedModuleBackupId === backup.id && (() => {
                   const comparison = compareAdminPanelModuleBackup(normalized, backup.id);
