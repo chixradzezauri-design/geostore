@@ -1087,3 +1087,25 @@ test('admin style library supports category assignment, search and filtering', (
   assert.match(editor, /filteredStylePresets\.map/);
   assert.match(editor, /ამ ძიებით სტილი ვერ მოიძებნა/);
 });
+
+
+test('admin style presets retain valid creation dates and safely normalize legacy dates', () => {
+  const design = normalizeAdminPanelVisualDesign({ stylePresets: [
+    { id: 'dated', name: 'Dated', category: 'შეკვეთები', createdAt: '2026-11-19T10:00:00.000Z', style: { fontSize: 14 } },
+    { id: 'legacy-date', name: 'Legacy date', createdAt: 'not-a-date', style: { fontSize: 15 } }
+  ] });
+  assert.equal(design.stylePresets[0].createdAt, '2026-11-19T10:00:00.000Z');
+  assert.equal(design.stylePresets[1].createdAt, null);
+});
+
+test('admin style library groups categories and supports deterministic sort modes', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const \[stylePresetSort, setStylePresetSort\] = useState\('newest'\)/);
+  assert.match(editor, /const groupedStylePresets = useMemo\(\(\) =>/);
+  assert.match(editor, /groupedStylePresets\.map\(group/);
+  assert.match(editor, /group\.items\.map\(preset/);
+  assert.match(editor, /value="newest"/);
+  assert.match(editor, /value="name"/);
+  assert.match(editor, /value="category"/);
+  assert.match(editor, /createdAt: new Date\(\)\.toISOString\(\)/);
+});
