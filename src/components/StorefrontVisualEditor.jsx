@@ -152,9 +152,19 @@ export default function StorefrontVisualEditor({
   const [selectedElement, setSelectedElement] = useState(null);
   const [draggedSection, setDraggedSection] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
-  const activeLayout = previewMode === 'desktop'
-    ? design.layout
-    : { ...design.layout, ...(design.responsive?.[previewMode]?.layout || {}) };
+  const activeResponsive = previewMode === 'desktop' ? {} : (design.responsive?.[previewMode] || {});
+  const activeLayout = { ...design.layout, ...(activeResponsive.layout || {}) };
+  const activeTheme = { ...design.theme, ...(activeResponsive.theme || {}) };
+  const activeTypography = { ...design.typography, ...(activeResponsive.typography || {}) };
+  const previewDesign = useMemo(() => ({
+    ...design,
+    layout: { ...design.layout, ...(activeResponsive.layout || {}) },
+    theme: { ...design.theme, ...(activeResponsive.theme || {}) },
+    typography: { ...design.typography, ...(activeResponsive.typography || {}) },
+    elementStyles: Object.fromEntries(Object.entries({ ...(design.elementStyles || {}) }).map(([id, style]) => [
+      id, { ...(style || {}), ...(activeResponsive.elementStyles?.[id] || {}) }
+    ]))
+  }), [design, previewMode]);
   const previewStyle = useMemo(() => buildStorefrontVisualStyle(design, previewMode), [design, previewMode]);
   const safeProducts = Array.isArray(products) ? products : [];
   const safeCategories = Array.isArray(categoriesList) ? categoriesList : [];
@@ -175,14 +185,14 @@ export default function StorefrontVisualEditor({
   };
 
   const updateGroup = (group, key, value) => {
-    if (group === 'layout' && previewMode !== 'desktop') {
+    if (previewMode !== 'desktop' && ['layout', 'theme', 'typography'].includes(group)) {
       commitDesign({
         ...design,
         responsive: {
           ...(design.responsive || {}),
           [previewMode]: {
             ...(design.responsive?.[previewMode] || {}),
-            layout: { ...(design.responsive?.[previewMode]?.layout || {}), [key]: value }
+            [group]: { ...(design.responsive?.[previewMode]?.[group] || {}), [key]: value }
           }
         }
       });
@@ -225,11 +235,33 @@ export default function StorefrontVisualEditor({
   };
 
   const selectedElementStyle = selectedElement
-    ? (design.elementStyles?.[selectedElement.id] || {})
+    ? {
+        ...(design.elementStyles?.[selectedElement.id] || {}),
+        ...(activeResponsive.elementStyles?.[selectedElement.id] || {})
+      }
     : {};
 
   const updateSelectedElementStyle = (key, value) => {
     if (!selectedElement) return;
+    if (previewMode !== 'desktop') {
+      commitDesign({
+        ...design,
+        responsive: {
+          ...(design.responsive || {}),
+          [previewMode]: {
+            ...(design.responsive?.[previewMode] || {}),
+            elementStyles: {
+              ...(design.responsive?.[previewMode]?.elementStyles || {}),
+              [selectedElement.id]: {
+                ...(design.responsive?.[previewMode]?.elementStyles?.[selectedElement.id] || {}),
+                [key]: value
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
     commitDesign({
       ...design,
       elementStyles: {
@@ -240,6 +272,14 @@ export default function StorefrontVisualEditor({
         }
       }
     });
+  };
+
+  const clearViewportOverrides = () => {
+    if (previewMode === 'desktop' || !design.responsive?.[previewMode]) return;
+    const responsive = { ...(design.responsive || {}) };
+    delete responsive[previewMode];
+    commitDesign({ ...design, responsive });
+    setSelectedElement(null);
   };
 
   const handleHeroFileChange = event => {
@@ -304,7 +344,18 @@ export default function StorefrontVisualEditor({
 
   const applyPreset = preset => {
     const nextTheme = THEME_PRESETS[preset];
-    if (nextTheme) commitDesign({ ...design, theme: { ...nextTheme } });
+    if (!nextTheme) return;
+    if (previewMode !== 'desktop') {
+      commitDesign({
+        ...design,
+        responsive: {
+          ...(design.responsive || {}),
+          [previewMode]: { ...(design.responsive?.[previewMode] || {}), theme: { ...nextTheme } }
+        }
+      });
+      return;
+    }
+    commitDesign({ ...design, theme: { ...nextTheme } });
   };
 
   const saveDraft = async () => {
@@ -486,18 +537,19 @@ export default function StorefrontVisualEditor({
               <button type="button" onClick={() => applyPreset('dark')} className="rounded-full border border-slate-500 px-3 py-2 text-[11px] font-bold text-slate-100">Dark</button>
               <button type="button" onClick={() => applyPreset('clean')} className="rounded-full border border-blue-300/40 px-3 py-2 text-[11px] font-bold text-blue-100">Clean</button>
             </div>
+            {previewMode !== 'desktop' && <p className="mt-3 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[10px] leading-4 text-emerald-100">მიმდინარე რეჟიმი: {previewMode === 'tablet' ? 'Tablet' : 'Mobile'}. აქ შეცვლილი ფერები და შრიფტები მხოლოდ ამ მოწყობილობაზე იმოქმედებს; ცარიელი პარამეტრები Desktop-ის საერთო დიზაინს მემკვიდრეობით იღებს.</p>}
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <ColorControl label="გვერდის ფონი" value={design.theme.canvas} onChange={value => updateGroup('theme', 'canvas', value)} />
-              <ColorControl label="ბლოკების ფონი" value={design.theme.surface} onChange={value => updateGroup('theme', 'surface', value)} />
-              <ColorControl label="ბარათების ფონი" value={design.theme.surfaceSoft} onChange={value => updateGroup('theme', 'surfaceSoft', value)} />
-              <ColorControl label="ძირითადი ტექსტი" value={design.theme.ink} onChange={value => updateGroup('theme', 'ink', value)} />
-              <ColorControl label="მეორეული ტექსტი" value={design.theme.muted} onChange={value => updateGroup('theme', 'muted', value)} />
-              <ColorControl label="ხაზები / საზღვრები" value={design.theme.line} onChange={value => updateGroup('theme', 'line', value)} />
-              <ColorControl label="აქცენტის ფერი" value={design.theme.accent} onChange={value => updateGroup('theme', 'accent', value)} />
-              <ColorControl label="ზედა ზოლის ფონი" value={design.theme.accentDark} onChange={value => updateGroup('theme', 'accentDark', value)} />
-              <ColorControl label="ღილაკის ფონი" value={design.theme.buttonBackground} onChange={value => updateGroup('theme', 'buttonBackground', value)} />
-              <ColorControl label="ღილაკის ტექსტი" value={design.theme.buttonText} onChange={value => updateGroup('theme', 'buttonText', value)} />
-              <ColorControl label="მთავარი სათაურის ფერი" value={design.theme.heroText} onChange={value => updateGroup('theme', 'heroText', value)} />
+              <ColorControl label="გვერდის ფონი" value={activeTheme.canvas} onChange={value => updateGroup('theme', 'canvas', value)} />
+              <ColorControl label="ბლოკების ფონი" value={activeTheme.surface} onChange={value => updateGroup('theme', 'surface', value)} />
+              <ColorControl label="ბარათების ფონი" value={activeTheme.surfaceSoft} onChange={value => updateGroup('theme', 'surfaceSoft', value)} />
+              <ColorControl label="ძირითადი ტექსტი" value={activeTheme.ink} onChange={value => updateGroup('theme', 'ink', value)} />
+              <ColorControl label="მეორეული ტექსტი" value={activeTheme.muted} onChange={value => updateGroup('theme', 'muted', value)} />
+              <ColorControl label="ხაზები / საზღვრები" value={activeTheme.line} onChange={value => updateGroup('theme', 'line', value)} />
+              <ColorControl label="აქცენტის ფერი" value={activeTheme.accent} onChange={value => updateGroup('theme', 'accent', value)} />
+              <ColorControl label="ზედა ზოლის ფონი" value={activeTheme.accentDark} onChange={value => updateGroup('theme', 'accentDark', value)} />
+              <ColorControl label="ღილაკის ფონი" value={activeTheme.buttonBackground} onChange={value => updateGroup('theme', 'buttonBackground', value)} />
+              <ColorControl label="ღილაკის ტექსტი" value={activeTheme.buttonText} onChange={value => updateGroup('theme', 'buttonText', value)} />
+              <ColorControl label="მთავარი სათაურის ფერი" value={activeTheme.heroText} onChange={value => updateGroup('theme', 'heroText', value)} />
             </div>
           </details>
 
@@ -505,19 +557,19 @@ export default function StorefrontVisualEditor({
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Layout className="h-4 w-4 text-emerald-300" /> შრიფტი და ზომები</summary>
             <div className="mt-4 space-y-3">
               <label className="block space-y-1.5 text-xs font-semibold text-slate-300">შრიფტის სტილი
-                <select value={design.typography.fontFamily} onChange={event => updateGroup('typography', 'fontFamily', event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white">
+                <select value={activeTypography.fontFamily} onChange={event => updateGroup('typography', 'fontFamily', event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white">
                   <option value="manrope">Manrope / ქართული</option>
                   <option value="georgia">Georgia — კლასიკური</option>
                   <option value="arial">Arial — მინიმალისტური</option>
                 </select>
               </label>
               <label className="block space-y-1.5 text-xs font-semibold text-slate-300">სათაურების შრიფტი
-                <select value={design.typography.headingFontFamily} onChange={event => updateGroup('typography', 'headingFontFamily', event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white">
+                <select value={activeTypography.headingFontFamily} onChange={event => updateGroup('typography', 'headingFontFamily', event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white">
                   <option value="georgia">Georgia — კლასიკური</option><option value="manrope">Manrope / ქართული</option><option value="arial">Arial — მარტივი</option>
                 </select>
               </label>
-              <RangeControl label="ძირითადი ტექსტის ზომა" value={design.typography.baseFontSize} min={12} max={18} unit=" px" onChange={value => updateGroup('typography', 'baseFontSize', value)} />
-              <RangeControl label="სათაურების მასშტაბი" value={design.typography.headingScale} min={0.8} max={1.25} step={0.05} unit="×" onChange={value => updateGroup('typography', 'headingScale', value)} />
+              <RangeControl label="ძირითადი ტექსტის ზომა" value={activeTypography.baseFontSize} min={12} max={18} unit=" px" onChange={value => updateGroup('typography', 'baseFontSize', value)} />
+              <RangeControl label="სათაურების მასშტაბი" value={activeTypography.headingScale} min={0.8} max={1.25} step={0.05} unit="×" onChange={value => updateGroup('typography', 'headingScale', value)} />
               <RangeControl label="გვერდის სიგანე" value={activeLayout.contentWidth} min={960} max={1600} step={20} unit=" px" onChange={value => updateGroup('layout', 'contentWidth', value)} />
               <RangeControl label="სექციებს შორის დაშორება" value={activeLayout.sectionGap} min={16} max={72} unit=" px" onChange={value => updateGroup('layout', 'sectionGap', value)} />
               <RangeControl label="მთავარი ბლოკის სიმაღლე" value={activeLayout.heroHeight} min={320} max={680} step={10} unit=" px" onChange={value => updateGroup('layout', 'heroHeight', value)} />
@@ -581,10 +633,13 @@ export default function StorefrontVisualEditor({
               <h3 className="text-sm font-black text-white">ცოცხალი Preview</h3>
               <p className="text-[10px] text-slate-400">{selectionMode ? 'დააჭირეთ ელემენტს სტილის შესაცვლელად. პროდუქტის დეტალები გახსენით არჩევის რეჟიმის გამორთვით, შემდეგ ჩართეთ რეჟიმი და მონიშნეთ დეტალური ფანჯრის ელემენტები.' : 'სექციები და პროდუქტები შეგიძლიათ გადაადგილოთ გადათრევით. პროდუქტის დეტალების გასახსნელად დააჭირეთ პროდუქტს; კალათა და შეკვეთა Preview-ში გამორთულია.'}</p>
             </div>
-            <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
+            <div className="flex flex-wrap items-center gap-2">
+              {previewMode !== 'desktop' && <button type="button" onClick={clearViewportOverrides} disabled={!design.responsive?.[previewMode]} className="rounded-lg border border-amber-300/40 px-2.5 py-2 text-[10px] font-bold text-amber-100 disabled:opacity-40">ამ მოწყობილობის პარამეტრების გასუფთავება</button>}
+              <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
               <button type="button" onClick={() => setPreviewMode('tablet')} aria-pressed={previewMode === 'tablet'} className={previewMode === 'tablet' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Tablet</button>
               <button type="button" onClick={() => setPreviewMode('mobile')} aria-pressed={previewMode === 'mobile'} className={previewMode === 'mobile' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Smartphone className="mr-1 inline h-3.5 w-3.5" /> Mobile</button>
+              </div>
             </div>
           </div>
           <style>{`
@@ -654,8 +709,8 @@ export default function StorefrontVisualEditor({
           `}</style>
           <div onClickCapture={handlePreviewSelect} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : previewMode === 'tablet' ? '820px' : '100%' }}>
             <Header
-              siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
-              visualDesign={design}
+              siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
+              visualDesign={previewDesign}
               setActiveTab={NOOP}
               activeTab="store"
               wishlistCount={0}
@@ -685,7 +740,7 @@ export default function StorefrontVisualEditor({
               <StoreView
                 onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
-                siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
+                siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
                 banners={safeBanners}
                 categories={safeCategories}
                 selectedCategory={previewCategory}
@@ -700,8 +755,8 @@ export default function StorefrontVisualEditor({
               />
             </div>
             <StorefrontFooter
-              siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
-              visualDesign={design}
+              siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
+              visualDesign={previewDesign}
               activeTab="store"
               setActiveTab={NOOP}
               setIsTermsOpen={NOOP}
