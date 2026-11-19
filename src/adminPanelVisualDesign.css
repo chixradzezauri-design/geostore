@@ -76,6 +76,10 @@
   color: var(--admin-vd-navInactiveText-active) !important;
 }
 
+.admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-nav-item="true"] svg {
+  color: currentColor !important;
+}
+
 .admin-dashboard-pro[data-admin-visual-design="enabled"] button:not([data-admin-visual-nav-item="true"]) {
   border-radius: var(--admin-vd-buttonRadius-active) !important;
 }
