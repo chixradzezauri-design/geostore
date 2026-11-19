@@ -485,6 +485,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [selectedElementKey, setSelectedElementKey] = useState('');
   const [selectedElementKeys, setSelectedElementKeys] = useState([]);
   const [expandedElementDiffKeys, setExpandedElementDiffKeys] = useState([]);
+  const [expandedElementHistoryKeys, setExpandedElementHistoryKeys] = useState([]);
   const [selectedStylePresetIds, setSelectedStylePresetIds] = useState([]);
   const [selectedStylePropertyKeys, setSelectedStylePropertyKeys] = useState(["fontSize","fontWeight","textAlign","textColor","backgroundColor","borderColor","borderRadius","padding"]);
   const [stylePresetSearch, setStylePresetSearch] = useState('');
@@ -614,6 +615,46 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const toggleElementDiff = key => setExpandedElementDiffKeys(current => current.includes(key)
     ? current.filter(item => item !== key)
     : [...current, key]);
+
+  const getElementHistoryEntries = key => {
+    const seen = new Set([JSON.stringify(active.elementStyles[key] || {})]);
+    return [...historyRef.current.past].reverse().reduce((entries, snapshot, index) => {
+      const baseStyle = snapshot.elementStyles?.[key] || DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles[key] || {};
+      const override = viewport === 'desktop' ? {} : snapshot.responsive?.[viewport]?.elementStyles?.[key] || {};
+      const style = { ...baseStyle, ...override };
+      const signature = JSON.stringify(style);
+      if (seen.has(signature)) return entries;
+      seen.add(signature);
+      entries.push({ index: index + 1, style, snapshot });
+      return entries;
+    }, []).slice(0, 5);
+  };
+
+  const restoreElementHistoryEntry = (key, entry) => {
+    if (!entry?.snapshot || !ADMIN_PANEL_ELEMENT_DEFINITIONS[key]) return;
+    const confirmed = window.confirm('ამ ელემენტის წინა დიზაინის აღდგენა? სხვა ელემენტების პარამეტრები უცვლელი დარჩება.');
+    if (!confirmed) return;
+    let nextDesign;
+    if (viewport === 'desktop') {
+      nextDesign = normalizeAdminPanelVisualDesign({
+        ...normalized,
+        elementStyles: { ...normalized.elementStyles, [key]: { ...entry.snapshot.elementStyles[key] } }
+      });
+    } else {
+      const responsive = { ...(normalized.responsive || {}) };
+      const viewportSettings = { ...(responsive[viewport] || {}) };
+      const elementStyles = { ...(viewportSettings.elementStyles || {}) };
+      const previousOverride = entry.snapshot.responsive?.[viewport]?.elementStyles?.[key];
+      if (previousOverride && Object.keys(previousOverride).length) elementStyles[key] = { ...previousOverride };
+      else delete elementStyles[key];
+      if (Object.keys(elementStyles).length) viewportSettings.elementStyles = elementStyles;
+      else delete viewportSettings.elementStyles;
+      responsive[viewport] = viewportSettings;
+      nextDesign = normalizeAdminPanelVisualDesign({ ...normalized, responsive });
+    }
+    commitChange(nextDesign);
+    setExpandedElementHistoryKeys(current => current.filter(item => item !== key));
+  };
 
   const customizedElementKeys = useMemo(() => new Set(
     Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => {
@@ -1573,6 +1614,19 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                 >
                   {selectedElementKey === key ? 'არჩეულია' : 'რედაქტირება'}
                 </button>
+              </div>
+              <div className="rounded-lg border border-amber-400/20 bg-amber-950/10 p-2">
+                <button type="button" onClick={() => setExpandedElementHistoryKeys(current => current.includes(key) ? current.filter(item => item !== key) : [...current, key])} aria-expanded={expandedElementHistoryKeys.includes(key)} className="flex w-full items-center justify-between gap-2 text-left text-[10px] font-bold text-amber-200">
+                  <span>ამ ელემენტის ცვლილებების ისტორია · {getElementHistoryEntries(key).length}</span>
+                  <span>{expandedElementHistoryKeys.includes(key) ? 'დახურვა' : 'ნახვა'}</span>
+                </button>
+                {expandedElementHistoryKeys.includes(key) && <div className="mt-2 space-y-2">
+                  {getElementHistoryEntries(key).length ? getElementHistoryEntries(key).map(entry => <div key={entry.index} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/70 p-2">
+                    <div className="min-w-0"><p className="text-[10px] font-bold text-slate-200">წინა ვერსია {entry.index}</p><p className="text-[9px] text-slate-400">ცვლილებამდე შენახული მდგომარეობა</p></div>
+                    <button type="button" onClick={() => restoreElementHistoryEntry(key, entry)} className="rounded-md border border-amber-400/30 px-2 py-1 text-[9px] font-bold text-amber-200">ამ ვერსიის აღდგენა</button>
+                  </div>) : <p className="text-[10px] text-slate-500">ამ ელემენტისთვის მიმდინარე სესიაში წინა ვერსია ჯერ არ არის.</p>}
+                  <p className="text-[9px] text-slate-500">ნაჩვენებია მაქსიმუმ 5 ბოლო განსხვავებული ვერსია. ისტორია ეფუძნება მიმდინარე რედაქტორის Undo/Redo ჩანაწერებს.</p>
+                </div>}
               </div>
               {(() => {
                 const differences = getElementStyleDifferences(key);
