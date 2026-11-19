@@ -84,3 +84,17 @@ test('draft save rejects obsolete snapshots before the save RPC', () => {
   assert.ok(save.indexOf('storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart') < save.indexOf('rpc/save_storefront_draft'));
   assert.match(save, /if \(!draftSaveCommitted && uploadedAssets\.length\)/);
 });
+
+test('edits made during an in-flight save stay in the editor after server commit', () => {
+  const save = app.split('const handleSaveStorefrontDraft = async (')[1]?.split('const handleRestoreStorefrontVersion = async (')[0] || '';
+  assert.match(save, /const editsArrivedDuringSave = storefrontCurrentSnapshotRef\.current !== saveEditorSnapshotAtStart/);
+  assert.match(save, /storefrontDraftLocalDirtyRef\.current = editsArrivedDuringSave/);
+  assert.ok(save.indexOf('if (editsArrivedDuringSave)') < save.indexOf('setCategoriesList(draftCategories)'));
+});
+
+test('edits made during an in-flight publish stay unpublished in the editor', () => {
+  const publish = app.split('const handlePublishStorefront = async () =>')[1]?.split('  useEffect(() => {')[0] || '';
+  assert.match(publish, /const editsArrivedDuringPublish = storefrontCurrentSnapshotRef\.current !== publishEditorSnapshotAtStart/);
+  assert.match(publish, /storefrontDraftLocalDirtyRef\.current = editsArrivedDuringPublish/);
+  assert.ok(publish.indexOf('if (editsArrivedDuringPublish)') < publish.indexOf('setCategoriesList(publishedCategories)'));
+});
