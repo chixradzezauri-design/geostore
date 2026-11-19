@@ -898,7 +898,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           });
         const ids = new Set();
         const invalidIndex = sourcePresets.findIndex(preset => {
-          if (!preset || typeof preset !== 'object' || Array.isArray(preset) || typeof preset.name !== 'string' || !preset.name.trim()
+          if (!preset || typeof preset !== 'object' || Array.isArray(preset)
+            || typeof preset.id !== 'string' || !preset.id.trim() || preset.id.trim().length > 80
+            || typeof preset.name !== 'string' || !preset.name.trim() || preset.name.trim().length > 40
             || !validStyle(preset.style) || (preset.category != null && !allowedCategories.has(preset.category))
             || (preset.favorite != null && typeof preset.favorite !== 'boolean')
             || (preset.createdAt != null && (typeof preset.createdAt !== 'string' || !Number.isFinite(Date.parse(preset.createdAt))))
