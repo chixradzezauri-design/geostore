@@ -49,7 +49,7 @@ test('legacy deployed clients retain a temporary permission-checked compatibilit
   assert.match(compatibilityMigration, /private\.save_storefront_draft\(\s*p_snapshot,[\s\S]*?\)/);
   assert.match(compatibilityMigration, /REVOKE ALL ON FUNCTION public\.save_storefront_draft\(jsonb\) FROM PUBLIC, anon/);
   assert.match(compatibilityMigration, /GRANT EXECUTE ON FUNCTION public\.save_storefront_draft\(jsonb\) TO authenticated/);
-  assert.match(compatibilityMigration, /remove this overload after all deployed clients use the two-argument RPC/i);
+  assert.match(compatibilityMigration, /remove this overload[\\s\\S]*after all deployed clients use the two-argument RPC/i);
 });
 
 test('committed draft saves never clean up media when the response cannot be verified', () => {
