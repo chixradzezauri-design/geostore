@@ -488,6 +488,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [stylePresetSearch, setStylePresetSearch] = useState('');
   const [stylePresetCategory, setStylePresetCategory] = useState('all');
   const [stylePresetSort, setStylePresetSort] = useState('newest');
+  const [stylePresetPropertyFilter, setStylePresetPropertyFilter] = useState('all');
   const [showFavoriteStylePresets, setShowFavoriteStylePresets] = useState(false);
   const [expandedStyleHistoryId, setExpandedStyleHistoryId] = useState(null);
   const [expandedStyleBackupId, setExpandedStyleBackupId] = useState(null);
@@ -911,17 +912,28 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     const categoryOrder = ['საერთო', ...ELEMENT_CATEGORIES.map(item => item.label)];
     const filtered = normalized.stylePresets.filter(preset => {
       const matchesCategory = stylePresetCategory === 'all' || preset.category === stylePresetCategory;
-      const matchesSearch = !query || `${preset.name} ${preset.category}`.toLocaleLowerCase().includes(query);
+      const searchableText = `${preset.name} ${preset.category} ${JSON.stringify(preset.style)}`.toLocaleLowerCase();
+      const matchesSearch = !query || searchableText.includes(query);
+      const colorKeys = ['textColor', 'backgroundColor', 'borderColor'];
+      const typographyKeys = ['fontSize', 'fontWeight', 'textAlign'];
+      const spacingKeys = ['borderRadius', 'padding'];
+      const propertyKeys = stylePresetPropertyFilter === 'colors' ? colorKeys
+        : stylePresetPropertyFilter === 'typography' ? typographyKeys
+          : stylePresetPropertyFilter === 'spacing' ? spacingKeys : [];
+      const matchesProperty = !propertyKeys.length || propertyKeys.some(key => preset.style?.[key] !== undefined);
       const matchesFavorite = !showFavoriteStylePresets || preset.favorite;
-      return matchesCategory && matchesSearch && matchesFavorite;
+      return matchesCategory && matchesSearch && matchesProperty && matchesFavorite;
     });
     const sorted = [...filtered].sort((a, b) => {
       if (stylePresetSort === 'name') return a.name.localeCompare(b.name, 'ka');
       if (stylePresetSort === 'category') return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category) || a.name.localeCompare(b.name, 'ka');
-      return (Date.parse(b.createdAt || '') || 0) - (Date.parse(a.createdAt || '') || 0) || a.name.localeCompare(b.name, 'ka');
+      const aDate = Date.parse(a.createdAt || '') || 0;
+      const bDate = Date.parse(b.createdAt || '') || 0;
+      if (stylePresetSort === 'oldest') return aDate - bDate || a.name.localeCompare(b.name, 'ka');
+      return bDate - aDate || a.name.localeCompare(b.name, 'ka');
     });
     return categoryOrder.map(category => ({ category, items: sorted.filter(preset => preset.category === category) })).filter(group => group.items.length);
-  }, [normalized.stylePresets, stylePresetSearch, stylePresetCategory, stylePresetSort, showFavoriteStylePresets]);
+  }, [normalized.stylePresets, stylePresetSearch, stylePresetCategory, stylePresetSort, stylePresetPropertyFilter, showFavoriteStylePresets]);
   const filteredStylePresets = useMemo(() => groupedStylePresets.flatMap(group => group.items), [groupedStylePresets]);
   const toggleStylePresetSelection = id => setSelectedStylePresetIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
   const selectedStylePresets = normalized.stylePresets.filter(item => selectedStylePresetIds.includes(item.id));
@@ -1404,8 +1416,8 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           )}
           {!selectedElementKey && <p className="text-xs text-amber-200">ჯერ აირჩიეთ ელემენტი ქვემოთ მოცემული სიიდან.</p>}
           {normalized.stylePresets.length === 0 ? <p className="text-xs text-slate-500">ბიბლიოთეკა ჯერ ცარიელია.</p> : <>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_220px]">
-              <input type="search" value={stylePresetSearch} onChange={event => setStylePresetSearch(event.target.value)} placeholder="სტილის სახელით ან კატეგორიით ძებნა..." aria-label="სტილების ბიბლიოთეკის ძებნა" className="min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500" />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input type="search" value={stylePresetSearch} onChange={event => setStylePresetSearch(event.target.value)} placeholder="სახელი, კატეგორია, ფერი ან ზომა..." aria-label="სტილების ბიბლიოთეკის ძებნა სახელით, კატეგორიით ან სტილის პარამეტრით" className="min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder:text-slate-500" />
               <select value={stylePresetCategory} onChange={event => setStylePresetCategory(event.target.value)} aria-label="სტილის კატეგორიის ფილტრი" className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white">
                 <option value="all">ყველა კატეგორია</option><option value="საერთო">საერთო</option>
                 {ELEMENT_CATEGORIES.map(category => <option key={category.id} value={category.label}>{category.label}</option>)}
@@ -1414,7 +1426,12 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="flex items-center gap-2 text-[11px] text-slate-400">დალაგება
                 <select value={stylePresetSort} onChange={event => setStylePresetSort(event.target.value)} aria-label="სტილების დალაგება" className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white">
-                  <option value="newest">ბოლოს დამატებული</option><option value="name">სახელით (ა-ჰ)</option><option value="category">კატეგორიით</option>
+                  <option value="newest">ბოლოს დამატებული</option><option value="oldest">პირველად დამატებული</option><option value="name">სახელით (ა-ჰ)</option><option value="category">კატეგორიით</option>
+                </select>
+              </label>
+              <label className="flex items-center gap-2 text-[11px] text-slate-400">ტიპი
+                <select value={stylePresetPropertyFilter} onChange={event => setStylePresetPropertyFilter(event.target.value)} aria-label="სტილის პარამეტრების ტიპის ფილტრი" className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white">
+                  <option value="all">ყველა პარამეტრი</option><option value="colors">ფერები</option><option value="typography">ტიპოგრაფია</option><option value="spacing">ზომები და დაშორებები</option>
                 </select>
               </label>
               <label className="flex items-center gap-2 text-[11px] text-slate-300"><input type="checkbox" checked={showFavoriteStylePresets} onChange={event => setShowFavoriteStylePresets(event.target.checked)} className="h-4 w-4 accent-amber-400" aria-label="მხოლოდ რჩეული სტილების ჩვენება" />მხოლოდ რჩეულები</label>
