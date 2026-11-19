@@ -190,12 +190,12 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
         theme: Object.fromEntries(Object.keys(defaults.theme).map(key => [key,
           responsiveTheme[key] == null ? '' : safeColor(responsiveTheme[key], '')
         ]).filter(([, value]) => value)),
-        typography: {
-          fontFamily: ['manrope', 'georgia', 'arial'].includes(responsiveTypography.fontFamily) ? responsiveTypography.fontFamily : '',
-          headingFontFamily: ['manrope', 'georgia', 'arial'].includes(responsiveTypography.headingFontFamily) ? responsiveTypography.headingFontFamily : '',
-          baseFontSize: clamp(responsiveTypography.baseFontSize, 12, 18, null),
-          headingScale: clamp(responsiveTypography.headingScale, 0.8, 1.25, null)
-        },
+        typography: Object.fromEntries([
+          ['fontFamily', ['manrope', 'georgia', 'arial'].includes(responsiveTypography.fontFamily) ? responsiveTypography.fontFamily : ''],
+          ['headingFontFamily', ['manrope', 'georgia', 'arial'].includes(responsiveTypography.headingFontFamily) ? responsiveTypography.headingFontFamily : ''],
+          ['baseFontSize', clamp(responsiveTypography.baseFontSize, 12, 18, null)],
+          ['headingScale', clamp(responsiveTypography.headingScale, 0.8, 1.25, null)]
+        ].filter(([, value]) => value !== '' && value !== null)),
         elementStyles: Object.fromEntries(ELEMENT_STYLE_IDS.map(id => {
           const value = isPlainObject(responsiveStyles[id]) ? responsiveStyles[id] : {};
           const normalized = {};
