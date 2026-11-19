@@ -1833,7 +1833,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => resetElement(key)
+                  onClick={() => resetElement(key)}
                   disabled={!customizedElementKeys.has(key)}
                   className="rounded-lg border border-rose-400/25 px-2.5 py-1.5 text-[10px] font-semibold text-rose-200 transition hover:bg-rose-400/10 disabled:cursor-not-allowed disabled:opacity-35"
                   aria-label={item.label + ' დიზაინის საწყის მდგომარეობაში აღდგენა'}
