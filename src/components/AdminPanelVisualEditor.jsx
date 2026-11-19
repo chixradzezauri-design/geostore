@@ -1741,6 +1741,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             </div>
             {normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).length ? (
               <div className="space-y-2">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).slice().reverse().map(backup => (
+                <>
                 <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2">
                   <div className="min-w-0"><p className="text-[10px] font-bold text-slate-200">{new Date(backup.savedAt).toLocaleString('ka-GE')}</p><p className="text-[9px] text-slate-400">{backup.reason} · {backup.viewport}</p></div>
                   <div className="flex gap-1"><button type="button" onClick={() => setExpandedModuleBackupId(current => current === backup.id ? null : backup.id)} className="rounded-md border border-violet-400/40 px-2 py-1 text-[9px] font-bold text-violet-200">{expandedModuleBackupId === backup.id ? "შედარების დახურვა" : "შედარება"}</button><button type="button" onClick={() => exportAdminModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => restoreModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">ასლის აღდგენა</button><button type="button" onClick={() => removeModuleBackup(backup.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[9px] font-bold text-rose-200">წაშლა</button></div>
@@ -1762,6 +1763,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                     </div>
                   );
                 })()}
+                </>
               ))}</div>
             ) : <p className="rounded-lg border border-dashed border-slate-700 p-3 text-center text-[10px] text-slate-500">ამ მოდულისა და ხედისთვის ასლი ჯერ არ არის შენახული.</p>}
           </section>
