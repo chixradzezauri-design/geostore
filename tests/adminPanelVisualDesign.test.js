@@ -1222,3 +1222,15 @@ test('admin style backup restore explicitly confirms replacement and guards over
   assert.match(editor, /stylePresetImportModeRef\.current = 'merge'/);
   assert.match(editor, /სრული აღდგენა/);
 });
+
+
+test('admin style backup restore rejects malformed or lossy preset data before replacing current styles', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const allowedStyleKeys = new Set/);
+  assert.match(editor, /const validStyle = style =>/);
+  assert.match(editor, /invalidIndex !== -1 \|\| validated\.stylePresets\.length !== sourcePresets\.length/);
+  assert.match(editor, /სარეზერვო ფაილი დაზიანებულია ან არასრულია/);
+  assert.match(editor, /existing library|არსებული ბიბლიოთეკა უცვლელი დარჩა/);
+  assert.match(editor, /preset\.history\.length > 10/);
+  assert.match(editor, /ids\.has\(id\)/);
+});
