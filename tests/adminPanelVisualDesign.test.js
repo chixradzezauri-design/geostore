@@ -904,3 +904,14 @@ test('visual editor exposes a per-element reset without resetting sibling styles
   assert.match(editor, /ამ ელემენტის აღდგენა/);
   assert.match(editor, /disabled=\{!customizedElementKeys\.has\(key\)\}/);
 });
+
+test('visual editor offers an explicit retry when shared saving fails', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /syncStatus === 'error'/);
+  assert.match(editor, /onClick=\{onRetrySave\}/);
+  assert.match(editor, /შენახვის ხელახლა ცდა/);
+  assert.match(dashboard, /const retryAdminVisualSave = \(\) =>/);
+  assert.match(dashboard, /onRetrySave=\{retryAdminVisualSave\}/);
+  assert.match(dashboard, /handleAdminVisualDesignChange\(\{ \.\.\.adminVisualDesign \}\)/);
+});

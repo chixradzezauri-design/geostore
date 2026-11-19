@@ -475,7 +475,7 @@ const PRESETS = {
   light: { accent: '#0f766e', canvas: '#eef2f7', panel: '#ffffff', surface: '#f8fafc', text: '#172033', muted: '#596579', border: '#cbd5e1', navActiveBackground: '#0f766e', navActiveText: '#ffffff', navInactiveBackground: '#f8fafc', navInactiveText: '#596579', headerBackground: '#ffffff', headerBorder: '#cbd5e1', tableHeaderBackground: '#f1f5f9', tableHeaderText: '#596579', tableRowBackground: '#ffffff', tableRowHover: '#e2e8f0', filterBackground: '#ffffff', filterText: '#172033', filterBorder: '#cbd5e1', primaryButtonBackground: '#0f766e', primaryButtonText: '#ffffff', primaryButtonBorder: '#0f766e', inputBackground: '#ffffff', inputText: '#172033', inputBorder: '#cbd5e1', inputFocus: '#0f766e', contentCardBackground: '#ffffff', contentCardBorder: '#cbd5e1', cardTitleText: '#172033', cardMutedText: '#596579', cardShadowColor: '#64748b', cardHoverBorder: '#0f766e', modalBackground: '#ffffff', modalText: '#172033', modalBorder: '#cbd5e1', modalOverlayBackground: '#64748b', staffSectionBackground: '#ffffff', staffSectionBorder: '#cbd5e1', inventorySectionBackground: '#ffffff', inventorySectionBorder: '#cbd5e1', analyticsSectionBackground: '#ffffff', analyticsSectionBorder: '#cbd5e1' , ordersSectionBackground: '#ffffff', ordersSectionBorder: '#cbd5e1', supportSectionBackground: '#ffffff', supportSectionBorder: '#cbd5e1', discountsSectionBackground: '#ffffff', discountsSectionBorder: '#cbd5e1', bannersSectionBackground: '#ffffff', bannersSectionBorder: '#cbd5e1', categoriesSectionBackground: '#ffffff', categoriesSectionBorder: '#cbd5e1', couponsSectionBackground: '#ffffff', couponsSectionBorder: '#cbd5e1'}
 };
 
-export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 'saved' }) {
+export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
   const [elementSearch, setElementSearch] = useState('');
   const [elementCategory, setElementCategory] = useState('all');
@@ -714,6 +714,11 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
           <p role="status" aria-live="polite" className={`mt-2 text-[11px] font-semibold ${syncStatus === 'error' ? 'text-rose-300' : syncStatus === 'saving' || syncStatus === 'loading' ? 'text-amber-200' : 'text-emerald-300'}`}>
             {syncStatus === 'loading' ? 'საერთო დიზაინი იტვირთება…' : syncStatus === 'saving' ? 'ცვლილებები ყველა მოწყობილობისთვის ინახება…' : syncStatus === 'error' ? 'საერთო შენახვა ვერ მოხერხდა — ცვლილებები ჯერ სხვა მოწყობილობაზე არ გამოჩნდება.' : 'შენახულია საერთო საცავში — ხელმისაწვდომია ყველა მოწყობილობიდან.'}
           </p>
+          {syncStatus === 'error' && (
+            <button type="button" onClick={onRetrySave} className="mt-2 rounded-lg border border-rose-400/40 px-3 py-1.5 text-[10px] font-bold text-rose-200 transition hover:bg-rose-400/10">
+              შენახვის ხელახლა ცდა
+            </button>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={undoChange} disabled={!historyState.canUndo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="ბოლო ცვლილების გაუქმება" title="Undo (Ctrl/Cmd+Z)">↶ Undo</button>

@@ -966,6 +966,9 @@ export default function AdminDashboardPro({
     adminVisualDesignRef.current = normalized;
     setAdminVisualDesign(normalized);
   };
+  const retryAdminVisualSave = () => {
+    handleAdminVisualDesignChange({ ...adminVisualDesign });
+  };
   const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(adminVisualDesign), [adminVisualDesign]);
 
   useEffect(() => {
@@ -6413,6 +6416,7 @@ export default function AdminDashboardPro({
               design={adminVisualDesign}
               syncStatus={adminVisualSyncStatus}
               onChange={handleAdminVisualDesignChange}
+              onRetrySave={retryAdminVisualSave}
             />
           ) : (
             <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
