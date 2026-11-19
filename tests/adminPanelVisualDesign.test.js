@@ -796,20 +796,20 @@ test('visual editor exposes bounded undo/redo history and routes editor mutation
 test('admin visual editor provides searchable, category-filtered quick access to all 35 element editors', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   const utility = readFileSync(new URL('../src/utils/adminPanelVisualDesign.js', import.meta.url), 'utf8');
-  const definitionsMatch = utility.match(/const ADMIN_PANEL_ELEMENT_DEFINITIONS = Object\\.freeze\\((\\{.*?\\})\\);/s);
+  const definitionsMatch = utility.match(/const ADMIN_PANEL_ELEMENT_DEFINITIONS = Object\.freeze\((\{.*?\})\);/s);
   assert.ok(definitionsMatch, 'Could not read canonical element definitions');
   const definitions = JSON.parse(definitionsMatch[1]);
-  const categoryMatch = editor.match(/const ELEMENT_CATEGORIES = \\[([\\s\\S]*?)\\n\\];/);
+  const categoryMatch = editor.match(/const ELEMENT_CATEGORIES = \[([\s\S]*?)\n\];/);
   assert.ok(categoryMatch, 'Missing element category definitions');
-  const categoryKeys = [...categoryMatch[1].matchAll(/keys: \\[([^\\]]+)\\]/g)]
+  const categoryKeys = [...categoryMatch[1].matchAll(/keys: \[([^\]]+)\]/g)]
     .flatMap(match => [...match[1].matchAll(/'([^']+)'/g)].map(item => item[1]));
   assert.equal(categoryKeys.length, 35, 'Every element must belong to one category');
   assert.equal(new Set(categoryKeys).size, 35, 'Element categories must not contain duplicates');
   assert.deepEqual([...categoryKeys].sort(), Object.keys(definitions).sort(), 'Category groups must cover every canonical visual target');
-  assert.match(editor, /value=\\{elementSearch\\}/);
-  assert.match(editor, /value=\\{elementCategory\\}/);
-  assert.match(editor, /filteredElementEntries\\.map/);
-  assert.match(editor, /focusElementEditor\\(key\\)/);
+  assert.match(editor, /value=\{elementSearch\}/);
+  assert.match(editor, /value=\{elementCategory\}/);
+  assert.match(editor, /filteredElementEntries\.map/);
+  assert.match(editor, /focusElementEditor\(key\)/);
   assert.match(editor, /scrollIntoView/);
   assert.match(editor, /ამ ძიებით ელემენტი ვერ მოიძებნა/);
 });
