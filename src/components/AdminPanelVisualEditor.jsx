@@ -5,6 +5,9 @@ import {
   normalizeAdminPanelVisualDesign,
   createAdminStylePresetBackup,
   restoreAdminStylePresetBackup,
+  createAdminPanelModuleBackup,
+  restoreAdminPanelModuleBackup,
+  deleteAdminPanelModuleBackup,
   resetAdminPanelVisualViewport,
   resetAdminPanelVisualElement
 } from '../utils/adminPanelVisualDesign.js';
@@ -1291,6 +1294,31 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(nextDesign);
     setSelectedElementKeys(current => current.filter(key => !targets.includes(key)));
   };
+  
+  const createCurrentModuleBackup = () => {
+    const category = ELEMENT_CATEGORIES.find(item => item.id === elementCategory);
+    if (!category) { window.alert('ჯერ აირჩიეთ კონკრეტული მოდული.'); return; }
+    const nextDesign = createAdminPanelModuleBackup(normalized, category, viewport);
+    if (nextDesign.moduleDesignBackups.length === normalized.moduleDesignBackups.length) {
+      window.alert('მოდულის სარეზერვო ასლი ვერ შეიქმნა. გადაამოწმეთ მოდულის არჩევანი.');
+      return;
+    }
+    commitChange(nextDesign);
+  };
+
+  const restoreModuleBackup = backup => {
+    if (!backup || backup.moduleId !== elementCategory || backup.viewport !== viewport) return;
+    const confirmed = window.confirm(`აღდგეს „${backup.moduleLabel}“ მოდულის ${backup.viewport} ხედის ასლი? სხვა მოდულები და დანარჩენი ხედები უცვლელი დარჩება.`);
+    if (!confirmed) return;
+    const protectedDesign = createAdminPanelModuleBackup(normalized, ELEMENT_CATEGORIES.find(item => item.id === backup.moduleId), backup.viewport);
+    commitChange(restoreAdminPanelModuleBackup(protectedDesign, backup.id));
+  };
+
+  const removeModuleBackup = backupId => {
+    if (!window.confirm('წაიშალოს მხოლოდ ეს მოდულის სარეზერვო ასლი?')) return;
+    commitChange(deleteAdminPanelModuleBackup(normalized, backupId));
+  };
+
 
   const resetSelectedElements = () => {
     const targets = selectedElementKeys.filter(key => customizedElementKeys.has(key));
@@ -1641,9 +1669,25 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <button type="button" onClick={clearVisibleElementSelection} disabled={!visibleSelectedElementCount} className="rounded-md border border-amber-400/40 px-2 py-1 text-[10px] font-bold text-amber-200 disabled:opacity-40">ნაჩვენების მოხსნა</button>
             <button type="button" onClick={toggleVisibleElementSelection} disabled={!filteredElementEntries.length} className="rounded-md border border-violet-400/40 px-2 py-1 text-[10px] font-bold text-violet-200 disabled:opacity-40">ნაჩვენების გადართვა</button>
             <button type="button" onClick={() => setSelectedElementKeys([])} disabled={!selectedElementKeys.length} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200 disabled:opacity-40">ყველას მოხსნა</button>
-            <button type="button" onClick={resetSelectedElements} disabled={!selectedElementKeys.some(key => customizedElementKeys.has(key))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მონიშნული შეცვლილის აღდგენა ({selectedElementKeys.filter(key => customizedElementKeys.has(key)).length})</button><button type="button" onClick={resetCurrentModuleElements} disabled={!ELEMENT_CATEGORIES.some(category => category.id === elementCategory && category.keys.some(key => customizedElementKeys.has(key)))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მოდულის საწყისზე დაბრუნება</button>
+            <button type="button" onClick={resetSelectedElements} disabled={!selectedElementKeys.some(key => customizedElementKeys.has(key))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მონიშნული შეცვლილის აღდგენა ({selectedElementKeys.filter(key => customizedElementKeys.has(key)).length})</button><button type="button" onClick={createCurrentModuleBackup} disabled={!ELEMENT_CATEGORIES.some(category => category.id === elementCategory)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[10px] font-bold text-sky-200 disabled:opacity-40">მოდულის ასლის შენახვა</button><button type="button" onClick={resetCurrentModuleElements} disabled={!ELEMENT_CATEGORIES.some(category => category.id === elementCategory && category.keys.some(key => customizedElementKeys.has(key)))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მოდულის საწყისზე დაბრუნება</button>
           </div>
         </div>
+        {ELEMENT_CATEGORIES.some(category => category.id === elementCategory) && (
+          <section className="space-y-2 rounded-xl border border-sky-400/20 bg-sky-950/10 p-3" aria-label="მოდულის დიზაინის სარეზერვო ასლები">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div><h3 className="text-xs font-black text-sky-200">მოდულის სარეზერვო ასლები · {ELEMENT_CATEGORIES.find(category => category.id === elementCategory)?.label}</h3><p className="text-[10px] text-slate-400">ინახება მხოლოდ არჩეული მოდულისა და მიმდინარე ხედის დიზაინი. მაქსიმუმ 10 ასლი მთლიანად.</p></div>
+              <span className="text-[10px] tabular-nums text-slate-400">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory).length} ასლი</span>
+            </div>
+            {normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).length ? (
+              <div className="space-y-2">{normalized.moduleDesignBackups.filter(backup => backup.moduleId === elementCategory && backup.viewport === viewport).slice().reverse().map(backup => (
+                <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-950/70 p-2">
+                  <div className="min-w-0"><p className="text-[10px] font-bold text-slate-200">{new Date(backup.savedAt).toLocaleString('ka-GE')}</p><p className="text-[9px] text-slate-400">{backup.reason} · {backup.viewport}</p></div>
+                  <div className="flex gap-1"><button type="button" onClick={() => restoreModuleBackup(backup)} className="rounded-md border border-sky-400/40 px-2 py-1 text-[9px] font-bold text-sky-200">ასლის აღდგენა</button><button type="button" onClick={() => removeModuleBackup(backup.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[9px] font-bold text-rose-200">წაშლა</button></div>
+                </div>
+              ))}</div>
+            ) : <p className="rounded-lg border border-dashed border-slate-700 p-3 text-center text-[10px] text-slate-500">ამ მოდულისა და ხედისთვის ასლი ჯერ არ არის შენახული.</p>}
+          </section>
+        )}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {filteredElementEntries.map(([key, item]) => (
             <section
