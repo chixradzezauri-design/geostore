@@ -246,3 +246,27 @@ test('admin input placeholder color and focus ring width support responsive over
   assert.equal(style['--admin-vd-tablet-inputFocusRingWidth'], '2px');
   assert.equal(style['--admin-vd-mobile-inputFocusRingWidth'], '0px');
 });
+
+
+test('button and navigation typography are bounded and responsive', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    layout: { buttonFontSize: 17, buttonFontWeight: 750, navItemFontSize: 15, navItemFontWeight: 700 },
+    responsive: {
+      tablet: { layout: { buttonFontSize: 14, navItemFontSize: 13, navItemFontWeight: 600 } },
+      mobile: { layout: { buttonFontWeight: 500, navItemFontSize: 12 } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+
+  assert.equal(style['--admin-vd-buttonFontSize'], '17px');
+  assert.equal(style['--admin-vd-buttonFontWeight'], '750');
+  assert.equal(style['--admin-vd-navItemFontSize'], '15px');
+  assert.equal(style['--admin-vd-navItemFontWeight'], '700');
+  assert.equal(style['--admin-vd-tablet-buttonFontSize'], '14px');
+  assert.equal(style['--admin-vd-tablet-navItemFontSize'], '13px');
+  assert.equal(style['--admin-vd-tablet-navItemFontWeight'], '600');
+  assert.equal(style['--admin-vd-mobile-buttonFontSize'], '17px');
+  assert.equal(style['--admin-vd-mobile-buttonFontWeight'], '500');
+  assert.equal(style['--admin-vd-mobile-navItemFontSize'], '12px');
+  assert.equal(style['--admin-vd-mobile-navItemFontWeight'], '700');
+});
