@@ -1377,6 +1377,55 @@ export default function App() {
     }
   };
 
+  const handleRestoreStorefrontVersion = async (versionId) => {
+    if (!hasSettingsAccess || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return false;
+    if (!versionId || !storefrontDraftUpdatedAtRef.current) {
+      alert('მონახაზის მიმდინარე ვერსიის დრო ვერ დადასტურდა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return false;
+    }
+    storefrontSaveLock.current = true;
+    setStorefrontDraftBusy(true);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/restore_storefront_draft_from_version`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders({ authenticated: true }),
+        body: JSON.stringify({
+          p_version_id: versionId,
+          p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current
+        })
+      });
+      if (!response.ok) {
+        const detail = await response.text();
+        let code = '';
+        try { code = JSON.parse(detail)?.code || ''; } catch {}
+        if (code === '40001') throw new Error('აღდგენა შეჩერდა: სხვა მოწყობილობაზე მონახაზი შეიცვალა. განაახლეთ გვერდი და ხელახლა აირჩიეთ ვერსია.');
+        throw new Error('ვერსიის მონახაზში აღდგენა ვერ მოხერხდა: ' + detail);
+      }
+      const result = await response.json();
+      const snapshot = result?.snapshot;
+      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+        throw new Error('სერვერმა აღდგენილი მონახაზის ფორმატი ვერ დაადასტურა.');
+      }
+      const restoredCategories = validateStorefrontCategorySnapshot(snapshot.categories, products);
+      const restoredBanners = validateStorefrontBannerSnapshot(snapshot.banners);
+      const restoredSettings = validateStorefrontSiteSettings(snapshot.siteSettings);
+      storefrontDraftUpdatedAtRef.current = typeof result?.draft_updated_at === 'string'
+        ? result.draft_updated_at
+        : storefrontDraftUpdatedAtRef.current;
+      setCategoriesList(restoredCategories);
+      setBannersList(restoredBanners);
+      setSiteSettings(restoredSettings);
+      alert('ძველი ვერსია აღდგა საერთო მონახაზში. საიტზე ცვლილებები ჯერ არ გამოქვეყნებულა.');
+      return true;
+    } catch (error) {
+      alert(error?.message || 'ვერსიის აღდგენა ვერ მოხერხდა.');
+      return false;
+    } finally {
+      storefrontSaveLock.current = false;
+      setStorefrontDraftBusy(false);
+    }
+  };
+
   const handlePublishStorefront = async () => {
     if (!adminAccess.is_admin || storefrontPublishBusy || storefrontDraftBusy || storefrontPublishLock.current || storefrontSaveLock.current) return;
     storefrontPublishLock.current = true;
@@ -3375,6 +3424,7 @@ export default function App() {
             bannersList={bannersList || []}
             setBannersList={setBannersList}
             onSaveStorefrontDraft={handleSaveStorefrontDraft}
+            onRestoreStorefrontVersion={handleRestoreStorefrontVersion}
             storefrontDraftBusy={storefrontDraftBusy}
             onPublishStorefront={handlePublishStorefront}
             storefrontPublishBusy={storefrontPublishBusy}
