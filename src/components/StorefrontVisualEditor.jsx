@@ -151,7 +151,45 @@ function RangeControl({ label, value, min, max, step = 1, unit = '', onChange })
 
 const flattenStorefrontSnapshot = (value, prefix = '', output = {}) => {
   if (Array.isArray(value)) {
-    if (!value.length) output[prefix || '
+    if (!value.length) output[prefix || '$'] = '[]';
+    value.forEach((item, index) => flattenStorefrontSnapshot(item, prefix ? \`\${prefix}[\${index}]\` : \`[\${index}]\`, output));
+    return output;
+  }
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value).sort(([left], [right]) => left.localeCompare(right));
+    if (!entries.length) output[prefix || '$'] = '{}';
+    entries.forEach(([key, item]) => flattenStorefrontSnapshot(item, prefix ? \`\${prefix}.\${key}\` : key, output));
+    return output;
+  }
+  output[prefix || '$'] = value === undefined ? '(არ არის)' : value === null ? 'null' : String(value);
+  return output;
+};
+
+const compareStorefrontSnapshots = (publishedSnapshot, currentDraftSnapshot) => {
+  const published = flattenStorefrontSnapshot(publishedSnapshot);
+  const current = flattenStorefrontSnapshot(currentDraftSnapshot);
+  const paths = [...new Set([...Object.keys(published), ...Object.keys(current)])].sort();
+  const differences = paths
+    .filter(path => published[path] !== current[path])
+    .map(path => ({
+      path,
+      published: Object.prototype.hasOwnProperty.call(published, path) ? published[path] : '(არ არის)',
+      draft: Object.prototype.hasOwnProperty.call(current, path) ? current[path] : '(არ არის)'
+    }));
+  return {
+    changedCount: differences.length,
+    unchanged: differences.length === 0,
+    differences: differences.slice(0, 60),
+    truncated: differences.length > 60
+  };
+};
+
+const formatSnapshotDiffValue = value => {
+  const text = String(value);
+  return text.length > 180 ? \`\${text.slice(0, 177)}…\` : text;
+};
+
+export default function StorefrontVisualEditor({
   siteSettings = {},
   setSiteSettings,
   categoriesList = [],
