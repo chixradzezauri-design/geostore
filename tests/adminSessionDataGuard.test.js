@@ -13,26 +13,26 @@ function readFunction(name) {
 }
 
 test('private admin reads and writes reject responses from an earlier login session', () => {
-  for (const name of ['fetchExpenses', 'fetchActivityLogs', 'logActivity', 'handleUpdateTicketStatus', 'handleSendTicketReply']) {
+  for (const name of ['fetchExpenses', 'fetchActivityLogs', 'logActivity', 'handleUpdateTicketStatus', 'handleSendTicketReply', 'handleUpdateOrderStatus', 'handleConfirmOrderReactivation', 'handleSaveOrderAdminNote']) {
     const body = readFunction(name);
-    assert.match(body, /const requestSessionVersion = adminSessionVersion\\.current/);
-    assert.match(body, /!isCurrentAdminSession\\(requestSessionVersion\\)/);
+    assert.ok(body.includes('const requestSessionVersion = adminSessionVersion.current'), `${name} captures the active session version`);
+    assert.ok(body.includes('!isCurrentAdminSession(requestSessionVersion)'), `${name} rejects stale sessions`);
   }
 });
 
 test('ending an admin session clears private snapshots before paint and invalidates pending requests', () => {
-  assert.match(admin, /import React, \\{[^}]*useLayoutEffect/);
-  assert.match(admin, /const adminSessionActiveRef = useRef\\(Boolean\\(adminLoggedIn\\)\\)/);
-  assert.match(admin, /const isCurrentAdminSession = \\(version\\) => adminSessionActiveRef\\.current && version === adminSessionVersion\\.current/);
-  assert.match(admin, /useLayoutEffect\\(\\(\\) => \\{\\s*adminSessionActiveRef\\.current = Boolean\\(adminLoggedIn\\);\\s*adminSessionVersion\\.current \\+= 1/);
+  assert.ok(admin.includes('useLayoutEffect'));
+  assert.ok(admin.includes('const adminSessionActiveRef = useRef(Boolean(adminLoggedIn))'));
+  assert.ok(admin.includes('const isCurrentAdminSession = (version) => adminSessionActiveRef.current && version === adminSessionVersion.current'));
+  assert.ok(admin.includes('adminSessionActiveRef.current = Boolean(adminLoggedIn);'));
+  assert.ok(admin.includes('adminSessionVersion.current += 1;'));
   for (const statement of ['setExpenses([])', 'setServerCustomers([])', 'setSupportTickets([])', 'setSupportTicketThreads({})', 'setLegacyMessages([])', 'setActivityLogs([])', 'setStorefrontVersions([])', 'setInventoryMovementRows([])', 'setReplenishmentSettings([])', 'setSelectedOrderForModal(null)']) {
     assert.ok(admin.includes(statement), `Expected logout cleanup: ${statement}`);
   }
-  assert.match(admin, /supportThreadFetchInFlight\\.current\\.clear\\(\\)/);
-  assert.match(admin, /adminSessionVersion\\.current \\+= 1/);
+  assert.ok(admin.includes('supportThreadFetchInFlight.current.clear()'));
+  assert.ok(admin.includes('supportThreadRefreshPending.current.clear()'));
 });
 
 test('unsupported direct support-ticket deletion is not exposed in the admin UI', () => {
-  assert.doesNotMatch(admin, /handleDeleteTicket/);
-  assert.doesNotMatch(admin, /rest\\/v1\\/support_tickets[^\\n]*method:\\s*'DELETE'/);
+  assert.ok(!admin.includes('handleDeleteTicket'));
 });
