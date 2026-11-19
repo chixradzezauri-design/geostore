@@ -648,6 +648,8 @@ export default function App() {
   const storefrontSaveLock = useRef(false);
   const storefrontPublishLock = useRef(false);
   const storefrontDraftUpdatedAtRef = useRef(null);
+  const storefrontDraftBaselineRef = useRef(null);
+  const storefrontDraftLocalDirtyRef = useRef(false);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -936,11 +938,16 @@ export default function App() {
         storefrontDraftUpdatedAtRef.current = typeof rows?.[0]?.draft_updated_at === 'string' ? rows[0].draft_updated_at : null;
         const draft = rows?.[0]?.draft_config;
         if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
-        if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
-        if (Array.isArray(draft.banners)) setBannersList(draft.banners);
-        if (draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings)) {
-          setSiteSettings(draft.siteSettings);
-        }
+        const sharedSnapshot = {
+          categories: Array.isArray(draft.categories) ? draft.categories : categories,
+          banners: Array.isArray(draft.banners) ? draft.banners : bannersList,
+          siteSettings: draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings) ? draft.siteSettings : siteSettings
+        };
+        storefrontDraftBaselineRef.current = JSON.stringify(sharedSnapshot);
+        storefrontDraftLocalDirtyRef.current = false;
+        setCategoriesList(sharedSnapshot.categories);
+        setBannersList(sharedSnapshot.banners);
+        setSiteSettings(sharedSnapshot.siteSettings);
       } catch (error) {
         console.error('Storefront draft load error:', error);
       }
@@ -948,6 +955,68 @@ export default function App() {
     loadStorefrontDraft();
     return () => { active = false; };
   }, [hasSettingsAccess]);
+
+  useEffect(() => {
+    if (!hasSettingsAccess || !storefrontDraftBaselineRef.current) return;
+    const currentSnapshot = JSON.stringify({ categories, banners: bannersList, siteSettings });
+    storefrontDraftLocalDirtyRef.current = currentSnapshot !== storefrontDraftBaselineRef.current;
+  }, [hasSettingsAccess, categories, bannersList, siteSettings]);
+
+  useEffect(() => {
+    if (!hasSettingsAccess) return undefined;
+    let active = true;
+    let inFlight = false;
+    const refreshSharedStorefrontDraft = async () => {
+      if (!active || document.visibilityState !== 'visible' || inFlight ||
+          storefrontSaveLock.current || storefrontPublishLock.current ||
+          storefrontDraftLocalDirtyRef.current || !storefrontDraftBaselineRef.current) return;
+      inFlight = true;
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config,draft_updated_at`,
+          { headers: await getSupabaseHeaders({ authenticated: true }) }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        const row = rows?.[0];
+        const remoteUpdatedAt = typeof row?.draft_updated_at === 'string' ? row.draft_updated_at : null;
+        if (!row?.draft_config || typeof row.draft_config !== 'object' || Array.isArray(row.draft_config) ||
+            !remoteUpdatedAt || remoteUpdatedAt === storefrontDraftUpdatedAtRef.current) return;
+        // Recheck after the network request: never replace edits made while the request was in flight.
+        const latestSnapshot = JSON.stringify({ categories, banners: bannersList, siteSettings });
+        if (storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current ||
+            storefrontSaveLock.current || storefrontPublishLock.current) return;
+        const draft = row.draft_config;
+        const nextSnapshot = {
+          categories: Array.isArray(draft.categories) ? draft.categories : categories,
+          banners: Array.isArray(draft.banners) ? draft.banners : bannersList,
+          siteSettings: draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings) ? draft.siteSettings : siteSettings
+        };
+        storefrontDraftUpdatedAtRef.current = remoteUpdatedAt;
+        storefrontDraftBaselineRef.current = JSON.stringify(nextSnapshot);
+        storefrontDraftLocalDirtyRef.current = false;
+        setCategoriesList(nextSnapshot.categories);
+        setBannersList(nextSnapshot.banners);
+        setSiteSettings(nextSnapshot.siteSettings);
+      } catch (error) {
+        console.warn('Shared storefront draft refresh failed:', error);
+      } finally {
+        inFlight = false;
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshSharedStorefrontDraft();
+    };
+    window.addEventListener('focus', refreshSharedStorefrontDraft);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const interval = window.setInterval(() => void refreshSharedStorefrontDraft(), 30000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshSharedStorefrontDraft);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [hasSettingsAccess, categories, bannersList, siteSettings]);
 
   useEffect(() => {
     // Settings-authorized staff load the private draft in the separate authenticated effect above.
@@ -1369,6 +1438,8 @@ export default function App() {
         throw new Error('მონახაზი სერვერმა შეინახა, მაგრამ მისი ახალი ვერსიის დრო ვერ დადასტურდა. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
       }
       storefrontDraftUpdatedAtRef.current = savedDraftUpdatedAt;
+      storefrontDraftBaselineRef.current = JSON.stringify({ categories: draftCategories, banners: draftBanners, siteSettings: draftSiteSettings });
+      storefrontDraftLocalDirtyRef.current = false;
 
       // Commit the uploaded Hero URL to editor state only after the draft RPC succeeds.
       if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
@@ -1433,6 +1504,8 @@ export default function App() {
         throw new Error('აღდგენის პასუხი არასრულია. განაახლეთ გვერდი, რათა საერთო მონახაზის მიმდინარე ვერსია ჩაიტვირთოს.');
       }
       storefrontDraftUpdatedAtRef.current = result.draft_updated_at;
+      storefrontDraftBaselineRef.current = JSON.stringify({ categories: restoredCategories, banners: restoredBanners, siteSettings: restoredSettings });
+      storefrontDraftLocalDirtyRef.current = false;
       setCategoriesList(restoredCategories);
       setBannersList(restoredBanners);
       setSiteSettings(restoredSettings);
