@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
-import { buildStorefrontElementStyle } from '../utils/storefrontVisualDesign.js';
+import { buildStorefrontElementStyle, normalizeStorefrontCustomSections } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
 import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown } from '../utils/flashSaleTime.js';
@@ -37,6 +37,7 @@ export default function StoreView({
   })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max' };
 
   const visualCopy = siteSettings?.visualDesign?.copy || {};
+  const customSections = normalizeStorefrontCustomSections(siteSettings?.visualDesign?.customSections);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
@@ -1198,6 +1199,23 @@ export default function StoreView({
           </div>
         </div>
       )}
+
+
+      {customSections.filter(section => section.visible).map(section => (
+        <section key={section.id} aria-label={section.title || 'Custom storefront section'} className="gs-custom-storefront-section mx-auto w-full max-w-[var(--gs-content-width,1440px)] overflow-hidden rounded-2xl" style={{ backgroundColor: section.backgroundColor, color: section.textColor, padding: section.padding + 'px', textAlign: section.align }}>
+          <div className="mx-auto flex w-full max-w-full flex-col gap-4">
+            {section.blocks.map(block => {
+              if (block.type === 'heading') return <h2 key={block.id} className="text-xl sm:text-2xl font-bold leading-tight">{block.text}</h2>;
+              if (block.type === 'text') return <p key={block.id} className="whitespace-pre-line text-sm sm:text-base leading-relaxed">{block.text}</p>;
+              if (block.type === 'image') return block.imageUrl ? <img key={block.id} src={block.imageUrl} alt={block.alt} loading="lazy" decoding="async" className="h-auto max-h-[560px] w-full rounded-xl object-cover" /> : null;
+              if (block.type === 'video') return block.videoUrl ? <div key={block.id} className="aspect-video w-full overflow-hidden rounded-xl"><iframe src={block.videoUrl} title={section.title || 'GEOSTORE video'} loading="lazy" className="h-full w-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div> : null;
+              if (block.type === 'button') return block.url && block.label ? <a key={block.id} href={block.url} target={block.url.startsWith('http') ? '_blank' : undefined} rel={block.url.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-11 items-center justify-center self-start rounded-xl bg-[var(--gs-button-bg,#29241f)] px-5 py-3 text-sm font-bold text-[var(--gs-button-text,#ffffff)] no-underline">{block.label}</a> : null;
+              if (block.type === 'spacer') return <div key={block.id} aria-hidden="true" className="h-6 sm:h-10" />;
+              return null;
+            })}
+          </div>
+        </section>
+      ))}
 
       {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
