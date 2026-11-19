@@ -1353,3 +1353,19 @@ test('admin element selection can add, clear and toggle only visible filtered el
   assert.match(editor, /ნაჩვენების გადართვა/);
   assert.match(editor, /ნაჩვენებიდან: \{visibleSelectedElementCount\}/);
 });
+
+
+test('admin visual editor compares each element against its initial design values', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /ELEMENT_STYLE_DIFF_FIELDS/);
+  assert.match(editor, /getElementStyleDifferences/);
+  assert.match(editor, /DEFAULT_ADMIN_PANEL_VISUAL_DESIGN\.elementStyles\[key\]/);
+  assert.match(editor, /expandedElementDiffKeys/);
+  assert.match(editor, /toggleElementDiff/);
+  assert.match(editor, /საწყისთან შედარება/);
+  assert.match(editor, /საწყისი:/);
+  assert.match(editor, /ახლა:/);
+  for (const property of ['fontSize', 'fontWeight', 'textAlign', 'textColor', 'backgroundColor', 'borderColor', 'borderRadius', 'padding']) {
+    assert.ok(editor.includes(`key: '${property}'`), `missing comparison field: ${property}`);
+  }
+});
