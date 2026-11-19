@@ -928,8 +928,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         if (invalidIndex !== -1 || validated.stylePresets.length !== sourcePresets.length) {
           throw new Error(`სარეზერვო ფაილი დაზიანებულია ან არასრულია (სტილი №${invalidIndex + 1}). არსებული ბიბლიოთეკა უცვლელი დარჩა.`);
         }
-        if (!window.confirm(`სრული აღდგენა ჩაანაცვლებს ამჟამინდელ ${normalized.stylePresets.length} სტილს სარეზერვო ფაილში არსებული ${validated.stylePresets.length} სტილით. გაგრძელდეს?`)) return;
-        commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: validated.stylePresets }));
+        if (!window.confirm(`სრული აღდგენა ჩაანაცვლებს ამჟამინდელ ${normalized.stylePresets.length} სტილს სარეზერვო ფაილში არსებული ${validated.stylePresets.length} სტილით. მიმდინარე ბიბლიოთეკა ავტომატურად შეინახება. გაგრძელდეს?`)) return;
+        const protectedDesign = createAdminStylePresetBackup(normalized, 'სრული JSON აღდგენის წინ');
+        commitChange(normalizeAdminPanelVisualDesign({ ...protectedDesign, stylePresets: validated.stylePresets }));
         window.alert(`სარეზერვო ასლიდან აღდგა ${validated.stylePresets.length} სტილი.`);
         return;
       }
