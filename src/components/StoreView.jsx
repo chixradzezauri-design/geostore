@@ -425,7 +425,7 @@ export default function StoreView({
       </div>
     </section>
     );
-  })};
+  });
 
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
