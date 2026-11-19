@@ -1284,3 +1284,16 @@ test('admin style editor protects single, bulk and full-restore deletion paths w
   assert.match(editor, /ავტომატური სარეზერვო ასლები/);
   assert.match(editor, /ამ ასლის აღდგენა/);
 });
+
+
+test('admin style backups support safe single-style restore without replacing the library', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const restoreSingleStyleFromBackup = \(backup, preset\) =>/);
+  assert.match(editor, /ერთი სტილის აღდგენამდე:/);
+  assert.match(editor, /დანარჩენი სტილები უცვლელი დარჩება/);
+  assert.match(editor, /დუბლიკატი არ დაემატა/);
+  assert.match(editor, /normalized\.stylePresets\.length >= 30/);
+  assert.match(editor, /history: \[\.\.\.\(preset\.history \|\| \[\]\), \.\.\.\(current\.history \|\| \[\]\)/);
+  assert.match(editor, /ამ სტილის აღდგენა/);
+  assert.match(editor, /protectedDesign\.stylePresets\.map\(item => item\.id === preset\.id \? restoredPreset : item\)/);
+});
