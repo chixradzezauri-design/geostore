@@ -30,3 +30,20 @@ test('successful save and version restore advance the shared baseline and timest
   assert.match(restore, /storefrontDraftLocalDirtyRef\.current = false/);
   assert.match(restore, /p_expected_draft_updated_at: storefrontDraftUpdatedAtRef\.current/);
 });
+
+test('version restore rejects unsaved local changes before calling the server', () => {
+  const restore = app.split('const handleRestoreStorefrontVersion')[1]?.split('const handlePublishStorefront')[0] || '';
+  assert.match(restore, /storefrontDraftLocalDirtyRef\.current/);
+  assert.match(restore, /JSON\.stringify\(\{ categories, banners: bannersList, siteSettings \}\) !== storefrontDraftBaselineRef\.current/);
+  assert.ok(restore.indexOf('storefrontDraftLocalDirtyRef.current') < restore.indexOf('rpc/restore_storefront_draft_from_version'));
+});
+
+test('successful version restore resets editor history without marking the restored draft dirty', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const restore = editor.split('const restoreSelectedStorefrontVersion')[1]?.split('const activeResponsive')[0] || '';
+  assert.match(restore, /localDesignDirtyRef\.current = false/);
+  assert.match(restore, /historyRef\.current = \[restoredDesign\]/);
+  assert.match(restore, /historyIndexRef\.current = 0/);
+  assert.match(restore, /setDesign\(restoredDesign\)/);
+  assert.doesNotMatch(restore, /commitDesign\(/);
+});
