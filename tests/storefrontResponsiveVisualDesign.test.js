@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_STOREFRONT_VISUAL_DESIGN,
   normalizeStorefrontVisualDesign,
-  buildStorefrontVisualStyle
+  buildStorefrontVisualStyle,
+  buildStorefrontElementStyle
 } from '../src/utils/storefrontVisualDesign.js';
 
 test('responsive storefront layouts are normalized independently for tablet and mobile', () => {
@@ -51,4 +52,52 @@ test('storefront style builder applies only the requested device layout override
   assert.equal(tablet['--gs-product-columns'], '3');
   assert.equal(mobile['--gs-product-columns'], '2');
   assert.equal(mobile['--gs-hero-height'], '350px');
+});
+
+test('responsive colors and typography override only their own viewport and inherit unset values', () => {
+  const design = normalizeStorefrontVisualDesign({
+    theme: { canvas: '#112233', accent: '#445566' },
+    typography: { fontFamily: 'manrope', headingFontFamily: 'georgia', baseFontSize: 15, headingScale: 1 },
+    responsive: {
+      tablet: { theme: { canvas: '#abcdef' }, typography: { baseFontSize: 16 } },
+      mobile: { theme: { accent: '#123456' }, typography: { fontFamily: 'arial', headingScale: 1.1 } }
+    }
+  });
+
+  const desktop = buildStorefrontVisualStyle(design, 'desktop');
+  const tablet = buildStorefrontVisualStyle(design, 'tablet');
+  const mobile = buildStorefrontVisualStyle(design, 'mobile');
+
+  assert.equal(desktop['--gs-canvas'], '#112233');
+  assert.equal(desktop['--gs-base-font-size'], '15px');
+  assert.equal(tablet['--gs-canvas'], '#abcdef');
+  assert.equal(tablet['--gs-accent'], '#445566');
+  assert.equal(tablet['--gs-base-font-size'], '16px');
+  assert.equal(tablet['--gs-heading-font-family'], 'Georgia, serif');
+  assert.equal(mobile['--gs-canvas'], '#112233');
+  assert.equal(mobile['--gs-accent'], '#123456');
+  assert.equal(mobile['--gs-font-family'], 'Arial, sans-serif');
+  assert.equal(mobile['--gs-heading-scale'], '1.1');
+});
+
+test('responsive element styles merge over desktop styles without changing desktop', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: { 'hero.title': { textColor: '#111111', fontSize: 30, padding: 8 } },
+    responsive: {
+      tablet: { elementStyles: { 'hero.title': { textColor: '#222222' } } },
+      mobile: { elementStyles: { 'hero.title': { fontSize: 22, padding: 4 } } }
+    }
+  });
+
+  const desktop = buildStorefrontElementStyle(design, 'hero.title', 'desktop');
+  const tablet = buildStorefrontElementStyle(design, 'hero.title', 'tablet');
+  const mobile = buildStorefrontElementStyle(design, 'hero.title', 'mobile');
+
+  assert.equal(desktop.color, '#111111');
+  assert.equal(desktop.fontSize, '30px');
+  assert.equal(tablet.color, '#222222');
+  assert.equal(tablet.fontSize, '30px');
+  assert.equal(mobile.color, '#111111');
+  assert.equal(mobile.fontSize, '22px');
+  assert.equal(mobile.padding, '4px');
 });
