@@ -110,13 +110,154 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     modalPadding: 24,
     modalOverlayOpacity: 82
   },
+  components: {
+  "staff": {
+    "radius": 30,
+    "padding": 24,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "inventory": {
+    "radius": 30,
+    "padding": 24,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "analytics": {
+    "radius": 24,
+    "padding": 20,
+    "borderWidth": 1,
+    "shadowBlur": 20
+  },
+  "orders": {
+    "radius": 32,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 24
+  },
+  "support": {
+    "radius": 32,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 24
+  },
+  "discounts": {
+    "radius": 32,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 24
+  },
+  "banners": {
+    "radius": 30,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "categories": {
+    "radius": 30,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "coupons": {
+    "radius": 30,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  }
+},
   responsive: {
-    tablet: { theme: {}, layout: {} },
-    mobile: { theme: {}, layout: {} }
+    tablet: { theme: {}, layout: {}, components: {} },
+    mobile: { theme: {}, layout: {}, components: {} }
   }
 });
 
 const THEME_KEYS = Object.keys(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme);
+const COMPONENT_DEFAULTS = {
+  "staff": {
+    "radius": 30,
+    "padding": 24,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "inventory": {
+    "radius": 30,
+    "padding": 24,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "analytics": {
+    "radius": 24,
+    "padding": 20,
+    "borderWidth": 1,
+    "shadowBlur": 20
+  },
+  "orders": {
+    "radius": 32,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 24
+  },
+  "support": {
+    "radius": 32,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 24
+  },
+  "discounts": {
+    "radius": 32,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 24
+  },
+  "banners": {
+    "radius": 30,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "categories": {
+    "radius": 30,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  },
+  "coupons": {
+    "radius": 30,
+    "padding": 28,
+    "borderWidth": 1,
+    "shadowBlur": 22
+  }
+};
+const COMPONENT_LIMITS = {
+  "radius": [
+    0,
+    48
+  ],
+  "padding": [
+    4,
+    48
+  ],
+  "borderWidth": [
+    0,
+    4
+  ],
+  "shadowBlur": [
+    0,
+    40
+  ]
+};
+
+const normalizeComponents = (source, fallback, partial = false) => Object.fromEntries(
+  Object.entries(COMPONENT_DEFAULTS).map(([component, defaults]) => {
+    const values = isObject(source?.[component]) ? source[component] : {};
+    const base = fallback?.[component] || defaults;
+    return [component, Object.fromEntries(Object.entries(COMPONENT_LIMITS)
+      .filter(([key]) => !partial || (values[key] != null && values[key] !== ''))
+      .map(([key, bounds]) => [key, clampNumber(values[key], bounds, partial ? base[key] : defaults[key])]))];
+  })
+);
+
 const LAYOUT_LIMITS = {
   fontSize: [11, 16],
   titleFontSize: [14, 32],
@@ -184,6 +325,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
   const raw = isObject(rawDesign) ? rawDesign : {};
   const theme = normalizeTheme(raw.theme, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme);
   const layout = normalizeLayout(raw.layout, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.layout);
+  const components = normalizeComponents(raw.components, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.components);
   const responsive = {};
 
   for (const viewport of ['tablet', 'mobile']) {
@@ -194,6 +336,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
       theme: Object.fromEntries(THEME_KEYS
         .filter(key => responsiveTheme[key] != null && responsiveTheme[key] !== '')
         .map(key => [key, safeColor(responsiveTheme[key], theme[key])])),
+      components: normalizeComponents(source.components, components, true),
       layout: {
         ...Object.fromEntries(Object.entries(LAYOUT_LIMITS)
           .filter(([key]) => responsiveLayout[key] != null && responsiveLayout[key] !== '')
@@ -205,7 +348,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
     };
   }
 
-  return { version: 1, theme, layout, responsive };
+  return { version: 1, theme, layout, components, responsive };
 }
 
 const effectiveViewport = (design, viewport) => ({
@@ -219,6 +362,24 @@ export function buildAdminPanelVisualStyle(rawDesign) {
   const tablet = effectiveViewport(design, 'tablet');
   const mobile = effectiveViewport(design, 'mobile');
   const style = {};
+
+  const responsiveComponents = {
+    tablet: normalizeComponents(design.responsive?.tablet?.components, design.components, true),
+    mobile: normalizeComponents(design.responsive?.mobile?.components, design.components, true)
+  };
+  const componentViewports = [
+    ['', design.components],
+    ['tablet-', Object.fromEntries(Object.entries(design.components).map(([name, base]) => [name, { ...base, ...(responsiveComponents.tablet[name] || {}) }]))],
+    ['mobile-', Object.fromEntries(Object.entries(design.components).map(([name, base]) => [name, { ...base, ...(responsiveComponents.tablet[name] || {}), ...(responsiveComponents.mobile[name] || {}) }]))]
+  ];
+
+  for (const [prefix, values] of componentViewports) {
+    for (const [component, settings] of Object.entries(values)) {
+      for (const [key, value] of Object.entries(settings)) {
+        style[`--admin-vd-${prefix}${component}-${key}`] = `${value}px`;
+      }
+    }
+  }
 
   for (const [prefix, values] of [['', desktop], ['tablet-', tablet], ['mobile-', mobile]]) {
     for (const [key, value] of Object.entries(values.theme)) {
