@@ -30,7 +30,7 @@ test('draft conflict is reported without silently replacing the local edit or pu
 test('committed draft saves never clean up media when the response cannot be verified', () => {
   const saveHandler = app.split('const handleSaveStorefrontDraft')[1]?.split('const handleRestoreStorefrontVersion')[0] || '';
   assert.match(saveHandler, /let draftSaveCommitted = false/);
-  assert.match(saveHandler, /draftSaveCommitted = true;[\\s\\S]*savedDraftState = await response\.json\(\)/);
+  assert.match(saveHandler, /draftSaveCommitted = true;[\s\S]*savedDraftState = await response\.json\(\)/);
   assert.match(saveHandler, /Number\.isFinite\(Date\.parse\(savedDraftUpdatedAt\)\)/);
   assert.match(saveHandler, /if \(!draftSaveCommitted && uploadedAssets\.length\)/);
   assert.match(saveHandler, /else if \(draftSaveCommitted && uploadedAssets\.length\)/);
