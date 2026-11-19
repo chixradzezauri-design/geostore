@@ -1478,7 +1478,7 @@ test('admin module backups are limited to ten and invalid entries are discarded'
 test('admin visual editor exposes isolated per-module backup, restore and delete controls', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /createAdminPanelModuleBackup\(normalized, category, viewport\)/);
-  assert.match(editor, /restoreAdminPanelModuleBackup\\(normalized, backup\\.id\\)/);
+  assert.match(editor, /restoreAdminPanelModuleBackup\(normalized, backup\.id\)/);
   assert.match(editor, /deleteAdminPanelModuleBackup\(normalized, backupId\)/);
   assert.match(editor, /მოდულის სარეზერვო ასლები/);
   assert.match(editor, /სხვა მოდულები და დანარჩენი ხედები უცვლელი დარჩება/);
