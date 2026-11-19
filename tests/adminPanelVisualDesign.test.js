@@ -553,3 +553,26 @@ test('fine-grained order editor selectors exist in the real admin dashboard mark
     assert.ok(stylesheet.includes(`.${selector}`), `Missing visual editor CSS selector: ${selector}`);
   }
 });
+
+
+test('desktop order sub-element CSS uses concrete design keys and never leaves template placeholders', () => {
+  const css = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  const selectors = {
+    '.admin-orders-header': 'orderHeader',
+    '.admin-orders-toolbar': 'orderToolbar',
+    '.admin-order-card': 'orderCard',
+    '.admin-order-card-heading': 'orderCardHeading',
+    '.admin-order-card-customer': 'orderCustomer',
+    '.admin-order-actions': 'orderActions',
+    '.admin-order-status-badge': 'orderStatusBadge',
+    '.admin-orders-pagination': 'orderPagination',
+    '.admin-order-detail-modal': 'orderDetailModal'
+  };
+  for (const [selector, key] of Object.entries(selectors)) {
+    const escaped = selector.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+    const match = css.match(new RegExp('\\\\.admin-dashboard-pro\\\\[data-admin-visual-design="enabled"\\\\] ' + escaped + ' \\\\{([\\\\s\\\\S]*?)\\\\n\\\\}'));
+    assert.ok(match, `Missing desktop style rule for ${selector}`);
+    assert.match(match[1], new RegExp('--admin-vd-element-' + key + '-fontSize'));
+    assert.doesNotMatch(match[1], /\\$\\{key\\}/);
+  }
+});
