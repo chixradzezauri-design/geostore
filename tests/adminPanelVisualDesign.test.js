@@ -1515,3 +1515,25 @@ test('admin module backup comparison identifies an unchanged design', () => {
   assert.equal(comparison.unchanged, true);
   assert.equal(comparison.changedCount, 0);
 });
+
+
+test('admin module backup JSON controls export and safely import validated module backups', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /geostore-admin-module-design-backups/);
+  assert.match(editor, /normalizeAdminPanelVisualDesign\(\{ moduleDesignBackups: parsed\.moduleDesignBackups \}\)/);
+  assert.match(editor, /250 \* 1024/);
+  assert.match(editor, /moduleBackupFileInputRef/);
+  assert.match(editor, /JSON იმპორტი/);
+  assert.match(editor, /JSON ექსპორტი/);
+  assert.match(editor, /მაქსიმუმ 10 ასლის ლიმიტისთვის/);
+});
+
+test('module backup import normalization rejects malformed records and caps the collection', () => {
+  const valid = createAdminPanelModuleBackup(normalizeAdminPanelVisualDesign({}), {
+    id: 'orders', label: 'შეკვეთები', keys: ['orderHeader', 'orderCard']
+  }, 'desktop').moduleDesignBackups[0];
+  const imported = normalizeAdminPanelVisualDesign({ moduleDesignBackups: [valid] });
+  assert.equal(imported.moduleDesignBackups.length, 1);
+  assert.equal(normalizeAdminPanelVisualDesign({ moduleDesignBackups: [{ ...valid, viewport: 'wide' }] }).moduleDesignBackups.length, 0);
+  assert.equal(normalizeAdminPanelVisualDesign({ moduleDesignBackups: Array.from({ length: 12 }, (_, index) => ({ ...valid, id: `import-${index}` })) }).moduleDesignBackups.length, 10);
+});
