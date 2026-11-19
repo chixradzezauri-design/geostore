@@ -236,6 +236,18 @@ test('admin style library exposes safe rename, duplicate, apply and delete actio
   assert.match(editor, /disabled=\{normalized\.stylePresets\.length >= 30\}/);
 });
 
+test('admin style library supports bounded JSON import and export actions', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const exportSavedElementStyles = \(\) =>/);
+  assert.match(editor, /format: 'geostore-admin-style-presets'/);
+  assert.match(editor, /const importSavedElementStyles = async event =>/);
+  assert.match(editor, /file\.size > 100 \* 1024/);
+  assert.match(editor, /normalizeAdminPanelVisualDesign\(\{ stylePresets: sourcePresets \}\)/);
+  assert.match(editor, /30 - normalized\.stylePresets\.length/);
+  assert.match(editor, /JSON ექსპორტი/);
+  assert.match(editor, /JSON იმპორტი/);
+});
+
 test('admin visual design storage failures fall back safely without throwing', () => {
   const brokenStorage = {
     getItem() { throw new Error('blocked'); },
