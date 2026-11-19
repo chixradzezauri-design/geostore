@@ -159,6 +159,9 @@ const DEFAULT_ADMIN_PANEL_CONTENT = Object.freeze({
   "couponsSubmitLabel": "კუპონის დამატება"
 });
 
+const ADMIN_PANEL_ELEMENT_DEFINITIONS = Object.freeze({"orderHeader":{"label":"შეკვეთები — სათაური","selector":".admin-orders-header"},"orderToolbar":{"label":"შეკვეთები — ძებნა და ფილტრები","selector":".admin-orders-toolbar"},"orderCard":{"label":"შეკვეთის ბარათი","selector":".admin-order-card"},"orderCardHeading":{"label":"შეკვეთის ბარათის ზედა ნაწილი","selector":".admin-order-card-heading"},"orderCustomer":{"label":"მომხმარებლის ინფორმაცია","selector":".admin-order-card-customer"},"orderActions":{"label":"შეკვეთის მოქმედებების ღილაკები","selector":".admin-order-actions"},"orderStatusBadge":{"label":"შეკვეთის სტატუსის წარწერა","selector":".admin-order-status-badge"},"orderPagination":{"label":"შეკვეთების გვერდების ნავიგაცია","selector":".admin-orders-pagination"},"orderDetailModal":{"label":"შეკვეთის დეტალების ფანჯარა","selector":".admin-order-detail-modal"}});
+const DEFAULT_ADMIN_PANEL_ELEMENT_STYLES = Object.freeze({"orderHeader":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderToolbar":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderCard":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderCardHeading":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderCustomer":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderActions":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderStatusBadge":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderPagination":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12},"orderDetailModal":{"fontSize":12,"fontWeight":500,"textAlign":"left","textColor":"#e2e8f0","backgroundColor":"#0f172a","borderColor":"#334155","borderRadius":12,"padding":12}});
+
 export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
   version: 1,
   theme: {
@@ -324,9 +327,10 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
   }
 },
   content: DEFAULT_ADMIN_PANEL_CONTENT,
+  elementStyles: DEFAULT_ADMIN_PANEL_ELEMENT_STYLES,
   responsive: {
-    tablet: { theme: {}, layout: {}, components: {} },
-    mobile: { theme: {}, layout: {}, components: {} }
+    tablet: { theme: {}, layout: {}, components: {}, elementStyles: {} },
+    mobile: { theme: {}, layout: {}, components: {}, elementStyles: {} }
   }
 });
 
@@ -438,6 +442,28 @@ const normalizeComponents = (source, fallback, partial = false) => Object.fromEn
   })
 );
 
+
+const ELEMENT_STYLE_LIMITS = { fontSize: [10, 24], fontWeight: [300, 900], borderRadius: [0, 32], padding: [0, 32] };
+const ELEMENT_STYLE_COLORS = { textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155' };
+const ELEMENT_STYLE_ENUMS = { textAlign: ['left', 'center', 'right'] };
+
+const normalizeElementStyles = (source, fallback = DEFAULT_ADMIN_PANEL_ELEMENT_STYLES, partial = false) => Object.fromEntries(
+  Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).map(([key]) => {
+    const values = isObject(source?.[key]) ? source[key] : {};
+    const base = fallback?.[key] || DEFAULT_ADMIN_PANEL_ELEMENT_STYLES[key];
+    const numeric = Object.fromEntries(Object.entries(ELEMENT_STYLE_LIMITS)
+      .filter(([field]) => !partial || values[field] != null)
+      .map(([field, bounds]) => [field, clampNumber(values[field], bounds, partial ? base[field] : DEFAULT_ADMIN_PANEL_ELEMENT_STYLES[key][field])]));
+    const colors = Object.fromEntries(Object.entries(ELEMENT_STYLE_COLORS)
+      .filter(([field]) => !partial || values[field] != null)
+      .map(([field, defaultColor]) => [field, safeColor(values[field], partial ? base[field] : defaultColor)]));
+    const enums = Object.fromEntries(Object.entries(ELEMENT_STYLE_ENUMS)
+      .filter(([field]) => !partial || values[field] != null)
+      .map(([field, allowed]) => [field, allowed.includes(values[field]) ? values[field] : (partial ? base[field] : allowed[0])]));
+    return [key, { ...numeric, ...colors, ...enums }];
+  })
+);
+
 const LAYOUT_LIMITS = {
   fontSize: [11, 16],
   titleFontSize: [14, 32],
@@ -518,6 +544,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
   const layout = normalizeLayout(raw.layout, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.layout);
   const components = normalizeComponents(raw.components, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.components);
   const content = normalizeContent(raw.content);
+  const elementStyles = normalizeElementStyles(raw.elementStyles);
   const responsive = {};
 
   for (const viewport of ['tablet', 'mobile']) {
@@ -529,6 +556,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
         .filter(key => responsiveTheme[key] != null && responsiveTheme[key] !== '')
         .map(key => [key, safeColor(responsiveTheme[key], theme[key])])),
       components: normalizeComponents(source.components, components, true),
+      elementStyles: normalizeElementStyles(source.elementStyles, elementStyles, true),
       layout: {
         ...Object.fromEntries(Object.entries(LAYOUT_LIMITS)
           .filter(([key]) => responsiveLayout[key] != null && responsiveLayout[key] !== '')
@@ -540,7 +568,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
     };
   }
 
-  return { version: 1, theme, layout, components, content, responsive };
+  return { version: 1, theme, layout, components, content, elementStyles, responsive };
 }
 
 const effectiveViewport = (design, viewport) => ({
@@ -569,6 +597,24 @@ export function buildAdminPanelVisualStyle(rawDesign) {
     for (const [component, settings] of Object.entries(values)) {
       for (const [key, value] of Object.entries(settings)) {
         style[`--admin-vd-${prefix}${component}-${key}`] = COMPONENT_COLOR_DEFAULTS[key] || COMPONENT_ENUM_DEFAULTS[key] ? value : key.endsWith('FontWeight') ? String(value) : `${value}px`;
+      }
+    }
+  }
+
+
+  const responsiveElementStyles = {
+    tablet: normalizeElementStyles(design.responsive?.tablet?.elementStyles, design.elementStyles, true),
+    mobile: normalizeElementStyles(design.responsive?.mobile?.elementStyles, design.elementStyles, true)
+  };
+  const elementViewports = [
+    ['', design.elementStyles],
+    ['tablet-', Object.fromEntries(Object.entries(design.elementStyles).map(([name, base]) => [name, { ...base, ...(responsiveElementStyles.tablet[name] || {}) }]))],
+    ['mobile-', Object.fromEntries(Object.entries(design.elementStyles).map(([name, base]) => [name, { ...base, ...(responsiveElementStyles.tablet[name] || {}), ...(responsiveElementStyles.mobile[name] || {}) }]))]
+  ];
+  for (const [prefix, values] of elementViewports) {
+    for (const [element, settings] of Object.entries(values)) {
+      for (const [key, value] of Object.entries(settings)) {
+        style[`--admin-vd-element-${prefix}${element}-${key}`] = ELEMENT_STYLE_COLORS[key] || ELEMENT_STYLE_ENUMS[key] ? value : `${value}px`;
       }
     }
   }
