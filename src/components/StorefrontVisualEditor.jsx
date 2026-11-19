@@ -382,6 +382,56 @@ export default function StorefrontVisualEditor({
     customIdCounter.current += 1;
     return prefix + '-' + Date.now().toString(36) + '-' + customIdCounter.current.toString(36);
   };
+
+  const saveSelectedStylePreset = () => {
+    if (!selectedElement) return;
+    const name = window.prompt('დაარქვით სახელი ამ სტილს (მაგ.: მთავარი ღილაკი, სათაური, ბარათი):', selectedElement.label);
+    if (!name || !name.trim()) return;
+    if ((design.stylePresets || []).length >= 20) {
+      setSaveMessage('სტილების ბიბლიოთეკა სავსეა (მაქსიმუმ 20). წაშალეთ ძველი სტილი ახალი ჩანაწერის შესაქმნელად.');
+      return;
+    }
+    const style = Object.fromEntries(Object.entries(selectedElementStyle).filter(([, value]) => value !== '' && value !== null && value !== undefined));
+    if (!Object.keys(style).length) {
+      setSaveMessage('ჯერ შეცვალეთ ამ ელემენტის ვიზუალური პარამეტრები და შემდეგ შეინახეთ სტილი.');
+      return;
+    }
+    commitDesign({ ...design, stylePresets: [...(design.stylePresets || []), {
+      id: nextCustomId('style-preset'), name: name.trim().slice(0, 40), style
+    }] });
+    setSaveMessage('სტილი შენახულია ბიბლიოთეკაში და ხელახლა გამოყენება შეგიძლიათ.');
+  };
+  const applyStylePreset = preset => {
+    if (!selectedElement || !preset?.style) return;
+    if (previewMode !== 'desktop') {
+      commitDesign({
+        ...design,
+        responsive: {
+          ...(design.responsive || {}),
+          [previewMode]: {
+            ...(design.responsive?.[previewMode] || {}),
+            elementStyles: {
+              ...(design.responsive?.[previewMode]?.elementStyles || {}),
+              [selectedElement.id]: { ...(design.responsive?.[previewMode]?.elementStyles?.[selectedElement.id] || {}), ...preset.style }
+            }
+          }
+        }
+      });
+    } else {
+      commitDesign({
+        ...design,
+        elementStyles: {
+          ...(design.elementStyles || {}),
+          [selectedElement.id]: { ...(design.elementStyles?.[selectedElement.id] || {}), ...preset.style }
+        }
+      });
+    }
+    setSaveMessage('„' + preset.name + '“ სტილი გამოყენებულია მონიშნულ ელემენტზე.');
+  };
+  const removeStylePreset = presetId => commitDesign({
+    ...design, stylePresets: (design.stylePresets || []).filter(preset => preset.id !== presetId)
+  });
+
   const addCustomSection = () => {
     if ((design.customSections || []).length >= 12) { setSaveMessage('შეგიძლიათ მაქსიმუმ 12 საკუთარი სექციის შექმნა.'); return; }
     const id = nextCustomId('custom-section');
@@ -634,6 +684,23 @@ export default function StorefrontVisualEditor({
                   <label className="space-y-1 text-[10px] text-slate-300"><span>ტექსტის სტილი</span><select value={selectedElementStyle.fontStyle || 'normal'} onChange={event => updateSelectedElementStyle('fontStyle', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="normal">ჩვეულებრივი</option><option value="italic">დახრილი</option></select></label>
                   <label className="space-y-1 text-[10px] text-slate-300"><span>ხაზგასმა</span><select value={selectedElementStyle.textDecoration || 'none'} onChange={event => updateSelectedElementStyle('textDecoration', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="none">გარეშე</option><option value="underline">ქვედა ხაზი</option><option value="line-through">გადახაზვა</option></select></label>
                   <label className="space-y-1 text-[10px] text-slate-300"><span>შრიფტი</span><select value={selectedElementStyle.fontFamily || 'inherit'} onChange={event => updateSelectedElementStyle('fontFamily', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="inherit">მემკვიდრეობით</option><option value="manrope">Manrope</option><option value="georgia">Georgia</option><option value="arial">Arial</option></select></label>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-emerald-400/25 bg-emerald-400/5 p-3">
+                  <div className="flex items-center justify-between gap-2"><span className="text-[11px] font-black text-emerald-200">სტილების ბიბლიოთეკა</span><span className="text-[10px] text-slate-400">{(design.stylePresets || []).length}/20</span></div>
+                  <button type="button" onClick={saveSelectedStylePreset} disabled={(design.stylePresets || []).length >= 20} className="w-full rounded-lg bg-emerald-400 px-3 py-2 text-[10px] font-black text-slate-950 disabled:opacity-40">მონიშნული ელემენტის სტილის შენახვა</button>
+                  {(design.stylePresets || []).length > 0 ? (
+                    <div className="space-y-1.5">
+                      {(design.stylePresets || []).map(preset => (
+                        <div key={preset.id} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-2.5 py-2">
+                          <span className="min-w-0 flex-1 truncate text-[10px] font-semibold text-slate-200">{preset.name}</span>
+                          <button type="button" onClick={() => applyStylePreset(preset)} className="rounded-md bg-slate-700 px-2 py-1.5 text-[10px] font-bold text-white">გამოყენება</button>
+                          <button type="button" onClick={() => removeStylePreset(preset.id)} aria-label={preset.name + ' სტილის წაშლა'} className="rounded-md border border-rose-500/30 px-2 py-1.5 text-[10px] text-rose-200">წაშლა</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <p className="text-[10px] leading-4 text-slate-400">შეინახეთ ღილაკის, სათაურის, ბარათის ან სხვა ელემენტის სტილი და გამოიყენეთ სხვა მონიშნულ კომპონენტზეც.</p>}
+                  <p className="text-[9px] leading-4 text-slate-500">სტილები ინახება საერთო ვიზუალურ მონახაზში და ხელმისაწვდომია ყველა მოწყობილობაზე. მაქსიმუმ 20 ჩანაწერი.</p>
                 </div>
                 <button type="button" onClick={() => { updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', ''); updateSelectedElementStyle('borderColor', ''); }} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
                 <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help} სტილები ცალკე ინახება თითოეული ელემენტისთვის.</p>
