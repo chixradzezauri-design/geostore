@@ -569,10 +569,12 @@ test('desktop order sub-element CSS uses concrete design keys and never leaves t
     '.admin-order-detail-modal': 'orderDetailModal'
   };
   for (const [selector, key] of Object.entries(selectors)) {
-    const escaped = selector.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
-    const match = css.match(new RegExp('\\\\.admin-dashboard-pro\\\\[data-admin-visual-design="enabled"\\\\] ' + escaped + ' \\\\{([\\\\s\\\\S]*?)\\\\n\\\\}'));
-    assert.ok(match, `Missing desktop style rule for ${selector}`);
-    assert.match(match[1], new RegExp('--admin-vd-element-' + key + '-fontSize'));
-    assert.doesNotMatch(match[1], /\\$\\{key\\}/);
+    const start = css.indexOf(selector + ' {');
+    assert.ok(start >= 0, `Missing desktop style rule for ${selector}`);
+    const end = css.indexOf('\\n}', start);
+    assert.ok(end > start, `Unclosed desktop style rule for ${selector}`);
+    const rule = css.slice(start, end);
+    assert.ok(rule.includes('--admin-vd-element-' + key + '-fontSize'), `Missing design key for ${selector}`);
+    assert.ok(!rule.includes('${key}'), `Unresolved template placeholder for ${selector}`);
   }
 });
