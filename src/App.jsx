@@ -1297,6 +1297,7 @@ export default function App() {
     storefrontSaveLock.current = true;
     setStorefrontDraftBusy(true);
     const uploadedAssets = [];
+    let draftSaveCommitted = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) {
@@ -1354,10 +1355,20 @@ export default function App() {
         }
         throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + errorText);
       }
-      const savedDraftState = await response.json();
-      storefrontDraftUpdatedAtRef.current = typeof savedDraftState?.draft_updated_at === 'string'
-        ? savedDraftState.draft_updated_at
-        : storefrontDraftUpdatedAtRef.current;
+      // A successful RPC response means Postgres committed the draft. Never
+      // delete uploaded media after this point, even if response parsing fails.
+      draftSaveCommitted = true;
+      let savedDraftState;
+      try {
+        savedDraftState = await response.json();
+      } catch {
+        throw new Error('მონახაზი შესაძლოა შენახულია, მაგრამ სერვერის პასუხი ვერ წავიკითხეთ. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
+      }
+      const savedDraftUpdatedAt = savedDraftState?.draft_updated_at;
+      if (typeof savedDraftUpdatedAt !== 'string' || !Number.isFinite(Date.parse(savedDraftUpdatedAt))) {
+        throw new Error('მონახაზი სერვერმა შეინახა, მაგრამ მისი ახალი ვერსიის დრო ვერ დადასტურდა. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
+      }
+      storefrontDraftUpdatedAtRef.current = savedDraftUpdatedAt;
 
       // Commit the uploaded Hero URL to editor state only after the draft RPC succeeds.
       if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
@@ -1368,7 +1379,11 @@ export default function App() {
       alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
       return true;
     } catch (error) {
-      if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
+      if (!draftSaveCommitted && uploadedAssets.length) {
+        await cleanupStorefrontUploads(uploadedAssets);
+      } else if (draftSaveCommitted && uploadedAssets.length) {
+        console.warn('Storefront draft save was committed; uploaded assets were retained for safety.');
+      }
       alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
       return false;
     } finally {
