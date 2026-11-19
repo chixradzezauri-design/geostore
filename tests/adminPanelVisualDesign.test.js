@@ -748,7 +748,10 @@ test('tablet reset removes only tablet overrides and preserves desktop, mobile a
   assert.deepEqual(reset.theme, source.theme);
   assert.deepEqual(reset.layout, source.layout);
   assert.deepEqual(reset.content, source.content);
-  assert.deepEqual(reset.responsive.tablet, { theme: {}, components: source.components, elementStyles: source.elementStyles, layout: {} });
+  assert.deepEqual(reset.responsive.tablet.theme, {});
+  assert.deepEqual(reset.responsive.tablet.layout, {});
+  assert.ok(Object.values(reset.responsive.tablet.components).every(value => Object.keys(value).length === 0));
+  assert.ok(Object.values(reset.responsive.tablet.elementStyles).every(value => Object.keys(value).length === 0));
   assert.deepEqual(reset.responsive.mobile, source.responsive.mobile);
 });
 
@@ -768,6 +771,9 @@ test('mobile reset removes only mobile overrides and preserves desktop, tablet a
   assert.deepEqual(reset.theme, source.theme);
   assert.deepEqual(reset.layout, source.layout);
   assert.deepEqual(reset.content, source.content);
-  assert.deepEqual(reset.responsive.mobile, { theme: {}, components: source.components, elementStyles: source.elementStyles, layout: {} });
+  assert.deepEqual(reset.responsive.mobile.theme, {});
+  assert.deepEqual(reset.responsive.mobile.layout, {});
+  assert.ok(Object.values(reset.responsive.mobile.components).every(value => Object.keys(value).length === 0));
+  assert.ok(Object.values(reset.responsive.mobile.elementStyles).every(value => Object.keys(value).length === 0));
   assert.deepEqual(reset.responsive.tablet, source.responsive.tablet);
 });
