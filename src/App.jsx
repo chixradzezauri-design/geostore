@@ -183,7 +183,7 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
   }
 
   const extension = STOREFRONT_IMAGE_TYPES[mimeType];
-  const safeFolder = folder === 'banners' ? 'banners' : 'categories';
+  const safeFolder = ['categories', 'banners', 'hero'].includes(folder) ? folder : 'categories';
   if (!window.crypto?.getRandomValues) throw new Error('უსაფრთხო ატვირთვისთვის ბრაუზერის კრიპტოგრაფიული ფუნქცია მიუწვდომელია.');
   const randomBytes = new Uint8Array(12);
   window.crypto.getRandomValues(randomBytes);
@@ -1316,10 +1316,20 @@ export default function App() {
         draftBanners.push({ ...banner, image });
       }
 
+      const draftSiteSettings = validateStorefrontSiteSettings(settingsOverride);
+      const draftHeroImage = draftSiteSettings?.visualDesign?.hero?.imageUrl;
+      if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
+        const uploadedHeroImage = await uploadStorefrontImage(draftHeroImage, 'hero', 0, session.user.id, uploadedAssets);
+        draftSiteSettings.visualDesign = {
+          ...draftSiteSettings.visualDesign,
+          hero: { ...(draftSiteSettings.visualDesign.hero || {}), imageUrl: uploadedHeroImage }
+        };
+        setSiteSettings(draftSiteSettings);
+      }
       const snapshot = {
         categories: draftCategories,
         banners: draftBanners,
-        siteSettings: validateStorefrontSiteSettings(settingsOverride)
+        siteSettings: draftSiteSettings
       };
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/save_storefront_draft`,
@@ -1373,10 +1383,20 @@ export default function App() {
         publishedBanners.push({ ...banner, image });
       }
 
+      const publishedSiteSettings = validateStorefrontSiteSettings(siteSettings);
+      const publishedHeroImage = publishedSiteSettings?.visualDesign?.hero?.imageUrl;
+      if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
+        const uploadedHeroImage = await uploadStorefrontImage(publishedHeroImage, 'hero', 0, session.user.id, uploadedAssets);
+        publishedSiteSettings.visualDesign = {
+          ...publishedSiteSettings.visualDesign,
+          hero: { ...(publishedSiteSettings.visualDesign.hero || {}), imageUrl: uploadedHeroImage }
+        };
+        setSiteSettings(publishedSiteSettings);
+      }
       const snapshot = {
         categories: publishedCategories,
         banners: publishedBanners,
-        siteSettings: validateStorefrontSiteSettings(siteSettings)
+        siteSettings: publishedSiteSettings
       };
       const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
       publishRequestStarted = true;

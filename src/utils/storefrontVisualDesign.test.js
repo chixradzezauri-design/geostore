@@ -50,3 +50,26 @@ test('style builder exposes theme, section visibility and order as safe CSS vari
   assert.equal(style['--gs-order-hero'], '2');
   assert.equal(style['--gs-hero-image'], undefined);
 });
+
+
+test('normalization supports independent heading font, custom section copy and responsive media dimensions', () => {
+  const design = normalizeStorefrontVisualDesign({
+    typography: { headingFontFamily: 'georgia' },
+    copy: { heroEyebrow: 'New season', categoriesTitle: 'Discover', heroStampTitle: 'STYLE\nEDIT' },
+    layout: { heroContentWidth: 84, bannerHeight: 300, productImageRatio: 1.1 }
+  });
+  assert.equal(design.typography.headingFontFamily, 'georgia');
+  assert.equal(design.copy.heroEyebrow, 'New season');
+  assert.equal(design.copy.heroStampTitle, 'STYLE\nEDIT');
+  assert.equal(design.layout.heroContentWidth, 84);
+  assert.equal(design.layout.bannerHeight, 300);
+  assert.equal(design.layout.productImageRatio, 1.1);
+});
+
+test('temporary local hero image data URLs are accepted for preview before secure upload', () => {
+  const design = normalizeStorefrontVisualDesign({
+    hero: { imageUrl: 'data:image/png;base64,iVBORw0KGgo=' }
+  });
+  assert.equal(design.hero.imageUrl, 'data:image/png;base64,iVBORw0KGgo=');
+  assert.match(buildStorefrontVisualStyle(design)['--gs-hero-image'], /^url\("data:image\/png;base64,/);
+});

@@ -8,13 +8,20 @@ export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
     accent: '#92785f', accentDark: '#302a24',
     buttonBackground: '#29241f', buttonText: '#ffffff', heroText: '#25201c'
   },
-  typography: { fontFamily: 'manrope', baseFontSize: 14, headingScale: 1 },
+  typography: { fontFamily: 'manrope', headingFontFamily: 'georgia', baseFontSize: 14, headingScale: 1 },
   layout: {
     contentWidth: 1440, sectionGap: 42, heroHeight: 480,
     categoryCardHeight: 160, categoryColumns: 4, productColumns: 4,
+    heroContentWidth: 68, bannerHeight: 220, productImageRatio: 0.8,
     cardRadius: 4, buttonRadius: 4
   },
   hero: { imageUrl: '', overlayOpacity: 92, imagePositionX: 50 },
+  copy: {
+    heroEyebrow: '', heroKicker: '', heroButton: '', heroNote: '',
+    heroStampTop: '', heroStampTitle: '', heroStampBottom: '',
+    categoriesTitle: '', categoriesSubtitle: '', flashSaleTitle: '',
+    flashSaleSubtitle: '', flashSaleBadge: '', productButtonText: '', bannerButtonText: ''
+  },
   sections: { hero: true, banners: true, flashSale: true, categories: true, filters: true, products: true },
   sectionOrder: SECTION_IDS
 });
@@ -30,7 +37,9 @@ const safeColor = (value, fallback) => {
 };
 const safeImageUrl = value => {
   const raw = String(value ?? '').trim();
-  if (!raw || raw.length > 2048) return '';
+  if (!raw || raw.length > 7 * 1024 * 1024) return '';
+  if (/^data:image\/(?:jpeg|png|webp|gif);base64,[a-z0-9+/=]+$/i.test(raw)) return raw;
+  if (raw.length > 2048) return '';
   try {
     const url = new URL(raw);
     return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
@@ -46,7 +55,9 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
   const layout = isPlainObject(raw.layout) ? raw.layout : {};
   const hero = isPlainObject(raw.hero) ? raw.hero : {};
   const sections = isPlainObject(raw.sections) ? raw.sections : {};
+  const copy = isPlainObject(raw.copy) ? raw.copy : {};
   const defaults = DEFAULT_STOREFRONT_VISUAL_DESIGN;
+  const safeText = (value, maxLength) => String(value ?? '').slice(0, maxLength);
   const requestedOrder = Array.isArray(raw.sectionOrder) ? raw.sectionOrder : defaults.sectionOrder;
   const sectionOrder = [];
 
@@ -74,6 +85,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     },
     typography: {
       fontFamily: ['manrope', 'georgia', 'arial'].includes(typography.fontFamily) ? typography.fontFamily : defaults.typography.fontFamily,
+      headingFontFamily: ['manrope', 'georgia', 'arial'].includes(typography.headingFontFamily) ? typography.headingFontFamily : defaults.typography.headingFontFamily,
       baseFontSize: clamp(typography.baseFontSize, 12, 18, defaults.typography.baseFontSize),
       headingScale: clamp(typography.headingScale, 0.8, 1.25, defaults.typography.headingScale)
     },
@@ -84,6 +96,9 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       categoryCardHeight: clamp(layout.categoryCardHeight, 110, 260, defaults.layout.categoryCardHeight),
       categoryColumns: Math.round(clamp(layout.categoryColumns, 2, 6, defaults.layout.categoryColumns)),
       productColumns: Math.round(clamp(layout.productColumns, 2, 5, defaults.layout.productColumns)),
+      heroContentWidth: clamp(layout.heroContentWidth, 40, 90, defaults.layout.heroContentWidth),
+      bannerHeight: clamp(layout.bannerHeight, 150, 340, defaults.layout.bannerHeight),
+      productImageRatio: clamp(layout.productImageRatio, 0.7, 1.2, defaults.layout.productImageRatio),
       cardRadius: clamp(layout.cardRadius, 0, 28, defaults.layout.cardRadius),
       buttonRadius: clamp(layout.buttonRadius, 0, 28, defaults.layout.buttonRadius)
     },
@@ -91,6 +106,15 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       imageUrl: safeImageUrl(hero.imageUrl),
       overlayOpacity: Math.round(clamp(hero.overlayOpacity, 0, 100, defaults.hero.overlayOpacity)),
       imagePositionX: Math.round(clamp(hero.imagePositionX, 0, 100, defaults.hero.imagePositionX))
+    },
+    copy: {
+      heroEyebrow: safeText(copy.heroEyebrow, 60), heroKicker: safeText(copy.heroKicker, 80),
+      heroButton: safeText(copy.heroButton, 50), heroNote: safeText(copy.heroNote, 80),
+      heroStampTop: safeText(copy.heroStampTop, 30), heroStampTitle: safeText(copy.heroStampTitle, 40),
+      heroStampBottom: safeText(copy.heroStampBottom, 40), categoriesTitle: safeText(copy.categoriesTitle, 100),
+      categoriesSubtitle: safeText(copy.categoriesSubtitle, 160), flashSaleTitle: safeText(copy.flashSaleTitle, 60),
+      flashSaleSubtitle: safeText(copy.flashSaleSubtitle, 120), flashSaleBadge: safeText(copy.flashSaleBadge, 60),
+      productButtonText: safeText(copy.productButtonText, 40), bannerButtonText: safeText(copy.bannerButtonText, 50)
     },
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
     sectionOrder
@@ -123,6 +147,7 @@ export function buildStorefrontVisualStyle(rawDesign) {
     '--gs-button-text': theme.buttonText,
     '--gs-hero-text': theme.heroText,
     '--gs-font-family': FONT_STACKS[typography.fontFamily],
+    '--gs-heading-font-family': FONT_STACKS[typography.headingFontFamily],
     '--gs-base-font-size': String(typography.baseFontSize) + 'px',
     '--gs-heading-scale': String(typography.headingScale),
     '--gs-content-width': String(layout.contentWidth) + 'px',
@@ -131,6 +156,9 @@ export function buildStorefrontVisualStyle(rawDesign) {
     '--gs-category-card-height': String(layout.categoryCardHeight) + 'px',
     '--gs-category-columns': String(layout.categoryColumns),
     '--gs-product-columns': String(layout.productColumns),
+    '--gs-hero-content-width': String(layout.heroContentWidth) + '%',
+    '--gs-banner-height': String(layout.bannerHeight) + 'px',
+    '--gs-product-image-ratio': String(layout.productImageRatio),
     '--gs-card-radius': String(layout.cardRadius) + 'px',
     '--gs-button-radius': String(layout.buttonRadius) + 'px',
     '--gs-hero-image-x': String(hero.imagePositionX) + '%',

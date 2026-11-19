@@ -114,6 +114,24 @@ export default function StorefrontVisualEditor({
     setSaveMessage('ტექსტის ცვლილებები მონახაზში ჯერ არ შენახულა.');
   };
 
+  const handleHeroFileChange = event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type) || file.size <= 0 || file.size > 5 * 1024 * 1024) {
+      setSaveMessage('აირჩიეთ JPG, PNG, WEBP ან GIF ფოტო, მაქსიმუმ 5 MB.');
+      event.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') updateGroup('hero', 'imageUrl', reader.result);
+    };
+    reader.onerror = () => setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
   const undo = () => {
     if (historyIndexRef.current <= 0) return;
     const nextIndex = historyIndexRef.current - 1;
@@ -205,6 +223,25 @@ export default function StorefrontVisualEditor({
           </details>
 
           <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Type className="h-4 w-4 text-emerald-300" /> სექციების წარწერები და ღილაკები</summary>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                ['heroEyebrow', 'Hero ზედა წარწერა', 60], ['heroKicker', 'Hero მცირე სათაური', 80],
+                ['heroButton', 'Hero ღილაკი', 50], ['heroNote', 'Hero ქვედა წარწერა', 80],
+                ['heroStampTop', 'Hero დეკორატიული ზედა ტექსტი', 30], ['heroStampTitle', 'Hero დეკორატიული სათაური', 40],
+                ['heroStampBottom', 'Hero დეკორატიული ქვედა ტექსტი', 40], ['categoriesTitle', 'კატეგორიების სათაური', 100],
+                ['categoriesSubtitle', 'კატეგორიების აღწერა', 160], ['flashSaleTitle', 'Flash Sale სათაური', 60],
+                ['flashSaleSubtitle', 'Flash Sale აღწერა', 120], ['flashSaleBadge', 'Flash Sale პატარა წარწერა', 60],
+                ['productButtonText', 'პროდუქტის ღილაკის ტექსტი', 40], ['bannerButtonText', 'ბანერის ღილაკის ტექსტი', 50]
+              ].map(([key, label, maxLength]) => (
+                <label key={key} className="block space-y-1.5 text-xs font-semibold text-slate-300">{label}
+                  <input value={design.copy[key]} maxLength={maxLength} onChange={event => updateGroup('copy', key, event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white" />
+                </label>
+              ))}
+            </div>
+          </details>
+
+          <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Palette className="h-4 w-4 text-emerald-300" /> ფერები და თემები</summary>
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" onClick={() => applyPreset('luxury')} className="rounded-full border border-amber-300/40 px-3 py-2 text-[11px] font-bold text-amber-100">Luxury</button>
@@ -236,11 +273,19 @@ export default function StorefrontVisualEditor({
                   <option value="arial">Arial — მინიმალისტური</option>
                 </select>
               </label>
+              <label className="block space-y-1.5 text-xs font-semibold text-slate-300">სათაურების შრიფტი
+                <select value={design.typography.headingFontFamily} onChange={event => updateGroup('typography', 'headingFontFamily', event.target.value)} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white">
+                  <option value="georgia">Georgia — კლასიკური</option><option value="manrope">Manrope / ქართული</option><option value="arial">Arial — მარტივი</option>
+                </select>
+              </label>
               <RangeControl label="ძირითადი ტექსტის ზომა" value={design.typography.baseFontSize} min={12} max={18} unit=" px" onChange={value => updateGroup('typography', 'baseFontSize', value)} />
               <RangeControl label="სათაურების მასშტაბი" value={design.typography.headingScale} min={0.8} max={1.25} step={0.05} unit="×" onChange={value => updateGroup('typography', 'headingScale', value)} />
               <RangeControl label="გვერდის სიგანე" value={design.layout.contentWidth} min={960} max={1600} step={20} unit=" px" onChange={value => updateGroup('layout', 'contentWidth', value)} />
               <RangeControl label="სექციებს შორის დაშორება" value={design.layout.sectionGap} min={16} max={72} unit=" px" onChange={value => updateGroup('layout', 'sectionGap', value)} />
               <RangeControl label="მთავარი ბლოკის სიმაღლე" value={design.layout.heroHeight} min={320} max={680} step={10} unit=" px" onChange={value => updateGroup('layout', 'heroHeight', value)} />
+              <RangeControl label="Hero ტექსტის ბლოკის სიგანე" value={design.layout.heroContentWidth} min={40} max={90} unit="%" onChange={value => updateGroup('layout', 'heroContentWidth', value)} />
+              <RangeControl label="ბანერის სიმაღლე" value={design.layout.bannerHeight} min={150} max={340} step={10} unit=" px" onChange={value => updateGroup('layout', 'bannerHeight', value)} />
+              <RangeControl label="პროდუქტის ფოტოს პროპორცია" value={design.layout.productImageRatio} min={0.7} max={1.2} step={0.05} onChange={value => updateGroup('layout', 'productImageRatio', value)} />
               <RangeControl label="კატეგორიის ბარათის სიმაღლე" value={design.layout.categoryCardHeight} min={110} max={260} step={5} unit=" px" onChange={value => updateGroup('layout', 'categoryCardHeight', value)} />
               <RangeControl label="კატეგორიები ერთ რიგში (Desktop)" value={design.layout.categoryColumns} min={2} max={6} onChange={value => updateGroup('layout', 'categoryColumns', value)} />
               <RangeControl label="პროდუქტები ერთ რიგში (Desktop)" value={design.layout.productColumns} min={2} max={5} onChange={value => updateGroup('layout', 'productColumns', value)} />
@@ -253,9 +298,12 @@ export default function StorefrontVisualEditor({
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><ImageIcon className="h-4 w-4 text-emerald-300" /> მთავარი ფოტოს მართვა</summary>
             <div className="mt-4 space-y-3">
               <label className="block space-y-1.5 text-xs font-semibold text-slate-300">Hero ფოტოს HTTP/HTTPS ბმული
-                <input type="url" maxLength={2048} value={design.hero.imageUrl} onChange={event => updateGroup('hero', 'imageUrl', event.target.value)} placeholder="https://..." className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white" />
+                <input type="text" maxLength={7 * 1024 * 1024} value={design.hero.imageUrl.startsWith('data:') ? 'მოწყობილობიდან არჩეული ფოტო' : design.hero.imageUrl} onChange={event => updateGroup('hero', 'imageUrl', event.target.value)} placeholder="https://..." className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white" />
               </label>
-              <p className="text-[10px] leading-5 text-slate-500">კატეგორიისა და ბანერის ფოტოების ატვირთვა კვლავ არსებულ „კატეგორიები“ და „ბანერები“ განყოფილებებში ხდება.</p>
+              <label className="block space-y-1.5 text-xs font-semibold text-slate-300">ან ატვირთეთ ფოტო მოწყობილობიდან (მაქს. 5 MB)
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleHeroFileChange} className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-400 file:px-3 file:py-2 file:text-xs file:font-black file:text-slate-950" />
+              </label>
+              <p className="text-[10px] leading-5 text-slate-500">ფაილი ჯერ მხოლოდ მონახაზში აირჩევა; Supabase Storage-ში უსაფრთხოდ აიტვირთება მონახაზის შენახვისას. კატეგორიებისა და ბანერების ატვირთვა კვლავ შესაბამის არსებულ განყოფილებებში ხდება.</p>
               <RangeControl label="ფოტოს მარცხნივ / მარჯვნივ პოზიცია" value={design.hero.imagePositionX} min={0} max={100} unit="%" onChange={value => updateGroup('hero', 'imagePositionX', value)} />
               <RangeControl label="ფოტოზე ღია ფენის ინტენსივობა" value={design.hero.overlayOpacity} min={0} max={100} unit="%" onChange={value => updateGroup('hero', 'overlayOpacity', value)} />
             </div>

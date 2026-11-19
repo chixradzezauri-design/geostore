@@ -20326,3 +20326,51 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     height: clamp(106px, calc(var(--gs-category-card-height, 160px) * .75), 190px) !important;
   }
 }
+
+
+/* Visual Studio phase 2 — finer typography, banner and product-media controls. */
+.geostore-fashion-store .geostore-storefront h1,
+.geostore-fashion-store .geostore-storefront h2,
+.geostore-fashion-store .geostore-storefront h3,
+.geostore-fashion-store .geostore-storefront h4 {
+  font-family: var(--gs-heading-font-family, Georgia, serif) !important;
+}
+.geostore-fashion-store .gs-fashion-hero__content {
+  max-width: var(--gs-hero-content-width, 68%) !important;
+}
+.geostore-fashion-store .gs-fashion-hero__stamp strong {
+  white-space: pre-line !important;
+}
+.geostore-fashion-store .gs-published-banners > a > div,
+.geostore-fashion-store .gs-published-banners > div > div {
+  min-height: var(--gs-banner-height, 220px) !important;
+}
+.geostore-fashion-store .gs-published-banners > a > div > div,
+.geostore-fashion-store .gs-published-banners > div > div > div {
+  min-height: var(--gs-banner-height, 220px) !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-catalog-product-media {
+  aspect-ratio: var(--gs-product-image-ratio, .8) !important;
+}
+.gs-visual-preview-frame .gs-visual-preview-header .gs-brand-name {
+  color: var(--gs-ink, #29241f) !important;
+}
+.gs-visual-preview-frame .gs-visual-preview-header .gs-brand-caption {
+  color: var(--gs-accent, #92785f) !important;
+}
+@media (max-width: 767px) {
+  .geostore-fashion-store .geostore-storefront {
+    gap: clamp(20px, calc(var(--gs-section-gap, 42px) * .67), 36px) !important;
+  }
+  .geostore-fashion-store .gs-fashion-hero__content {
+    max-width: 100% !important;
+  }
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-media {
+    aspect-ratio: var(--gs-product-image-ratio, .8) !important;
+    height: auto !important;
+  }
+  .geostore-fashion-store .gs-published-banners > a > div,
+  .geostore-fashion-store .gs-published-banners > div > div {
+    min-height: max(150px, calc(var(--gs-banner-height, 220px) * .85)) !important;
+  }
+}
