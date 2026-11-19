@@ -108,6 +108,7 @@ test('unset element styles remain unset after repeated normalization and render 
   assert.equal(secondPass.elementStyles['hero.title'].padding, null);
   assert.equal(secondPass.elementStyles['hero.title'].borderRadius, null);
   assert.deepEqual(buildStorefrontElementStyle(secondPass, 'hero.title'), {});
+  assert.deepEqual(buildStorefrontElementStyle({ version: 1 }, 'hero.title'), {});
 });
 
 test('element style builder independently rejects unsafe alignment and font-weight values', () => {

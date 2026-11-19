@@ -213,9 +213,12 @@ export function buildStorefrontElementStyle(rawDesign, elementId) {
   const backgroundColor = safeColor(value.backgroundColor, '');
   if (textColor) style.color = textColor;
   if (backgroundColor) style.backgroundColor = backgroundColor;
-  if (value.fontSize !== null) style.fontSize = String(value.fontSize) + 'px';
-  if (value.padding !== null) style.padding = String(value.padding) + 'px';
-  if (value.borderRadius !== null) style.borderRadius = String(value.borderRadius) + 'px';
+  const fontSize = clamp(value.fontSize, 10, 64, null);
+  const padding = clamp(value.padding, 0, 48, null);
+  const borderRadius = clamp(value.borderRadius, 0, 32, null);
+  if (fontSize !== null) style.fontSize = String(fontSize) + 'px';
+  if (padding !== null) style.padding = String(padding) + 'px';
+  if (borderRadius !== null) style.borderRadius = String(borderRadius) + 'px';
   if (['left', 'center', 'right'].includes(value.textAlign)) style.textAlign = value.textAlign;
   const fontWeight = value.fontWeight == null ? null : Number(value.fontWeight);
   if ([400, 500, 600, 700, 800, 900].includes(fontWeight)) style.fontWeight = fontWeight;
