@@ -951,6 +951,7 @@ export default function AdminDashboardPro({
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmError, setCrmError] = useState('');
   const crmSessionVersion = useRef(0);
+  const crmHasLoadedRef = useRef(false);
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('ყველა');
   const [productPage, setProductPage] = useState(1);
@@ -1254,7 +1255,7 @@ export default function AdminDashboardPro({
 
   const fetchAdminCustomers = async (sessionVersion = crmSessionVersion.current) => {
     if (sessionVersion !== crmSessionVersion.current || !adminLoggedIn || !hasCrmPermission) return false;
-    setCrmLoading(true);
+    if (!crmHasLoadedRef.current) setCrmLoading(true);
     try {
       const headers = await getSupabaseHeaders();
       if (sessionVersion !== crmSessionVersion.current) return false;
@@ -1269,15 +1270,20 @@ export default function AdminDashboardPro({
       setCrmError(error?.message || 'CRM მომხმარებლების ჩატვირთვა ვერ მოხერხდა.');
       return false;
     } finally {
-      if (sessionVersion === crmSessionVersion.current) setCrmLoading(false);
+      if (sessionVersion === crmSessionVersion.current) {
+        crmHasLoadedRef.current = true;
+        setCrmLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     crmSessionVersion.current += 1;
     const sessionVersion = crmSessionVersion.current;
+    crmHasLoadedRef.current = false;
     if (!adminLoggedIn || !hasCrmPermission) {
       setServerCustomers([]);
+      crmHasLoadedRef.current = true;
       setCrmLoading(false);
       setCrmError('');
       return () => { crmSessionVersion.current += 1; };
