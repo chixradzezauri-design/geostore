@@ -274,6 +274,29 @@ test('visual editor element geometry controls are normalized and rendered safely
   assert.equal(mobile.textDecoration, 'line-through');
 });
 
+test('element-level responsive styles automatically follow the real device viewport', async () => {
+  const { buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
+  const design = {
+    elementStyles: { 'header.caption': { paddingX: 18 } },
+    responsive: {
+      tablet: { elementStyles: { 'header.caption': { paddingX: 12 } } },
+      mobile: { elementStyles: { 'header.caption': { paddingX: 8 } } }
+    }
+  };
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  try {
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 390 } });
+    assert.equal(buildStorefrontElementStyle(design, 'header.caption').paddingLeft, '8px');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 900 } });
+    assert.equal(buildStorefrontElementStyle(design, 'header.caption').paddingLeft, '12px');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 1280 } });
+    assert.equal(buildStorefrontElementStyle(design, 'header.caption').paddingLeft, '18px');
+  } finally {
+    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete globalThis.window;
+  }
+});
+
 test('visual editor element geometry values are clamped and unsupported text styles are ignored', async () => {
   const { normalizeStorefrontVisualDesign, buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
   const design = normalizeStorefrontVisualDesign({
