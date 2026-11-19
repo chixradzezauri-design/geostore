@@ -687,6 +687,26 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     const id = `admin-style-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: [...normalized.stylePresets, { id, name: name.trim().slice(0, 40), style }] }));
   };
+  const renameSavedElementStyle = id => {
+    const preset = normalized.stylePresets.find(item => item.id === id);
+    if (!preset) return;
+    const name = window.prompt('შეცვალეთ შენახული სტილის სახელი:', preset.name);
+    if (!name || !name.trim()) return;
+    commitChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      stylePresets: normalized.stylePresets.map(item => item.id === id ? { ...item, name: name.trim().slice(0, 40) } : item)
+    }));
+  };
+  const duplicateSavedElementStyle = preset => {
+    if (!preset || normalized.stylePresets.length >= 30) return;
+    const name = window.prompt('დაარქვით ასლს სახელი:', `${preset.name} — ასლი`);
+    if (!name || !name.trim()) return;
+    const id = `admin-style-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    commitChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      stylePresets: [...normalized.stylePresets, { ...preset, id, name: name.trim().slice(0, 40), style: { ...preset.style } }]
+    }));
+  };
   const applySavedElementStyle = preset => {
     if (!selectedElementKey || !preset?.style) return;
     const next = { ...normalized };
@@ -974,7 +994,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
         <section className="space-y-3 rounded-xl border border-emerald-400/25 bg-slate-950/60 p-3 sm:col-span-2" aria-label="შენახული სტილების ბიბლიოთეკა">
           <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-black text-white">შენახული სტილების ბიბლიოთეკა</h3><p className="text-[11px] text-slate-400">შეინახეთ ელემენტის სტილი და გამოიყენეთ სხვა ელემენტზე.</p></div><button type="button" onClick={saveSelectedElementStyle} disabled={!selectedElementKey || normalized.stylePresets.length >= 30} className="rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950 disabled:opacity-40">არჩეული ელემენტის სტილის შენახვა</button></div>
           {!selectedElementKey && <p className="text-xs text-amber-200">ჯერ აირჩიეთ ელემენტი ქვემოთ მოცემული სიიდან.</p>}
-          {normalized.stylePresets.length === 0 ? <p className="text-xs text-slate-500">ბიბლიოთეკა ჯერ ცარიელია.</p> : <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{normalized.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900 p-2"><span className="min-w-0 truncate text-xs font-bold text-slate-200">{preset.name}</span><div className="flex shrink-0 gap-1"><button type="button" onClick={() => applySavedElementStyle(preset)} disabled={!selectedElementKey} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[10px] font-bold text-emerald-200 disabled:opacity-40">გამოყენება</button><button type="button" onClick={() => removeSavedElementStyle(preset.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[10px] font-bold text-rose-200">წაშლა</button></div></div>)}</div>}
+          {normalized.stylePresets.length === 0 ? <p className="text-xs text-slate-500">ბიბლიოთეკა ჯერ ცარიელია.</p> : <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{normalized.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 flex-col gap-2 rounded-lg border border-slate-700 bg-slate-900 p-2"><span className="truncate text-xs font-bold text-slate-200">{preset.name}</span><div className="flex flex-wrap gap-1"><button type="button" onClick={() => applySavedElementStyle(preset)} disabled={!selectedElementKey} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[10px] font-bold text-emerald-200 disabled:opacity-40">გამოყენება</button><button type="button" onClick={() => renameSavedElementStyle(preset.id)} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => duplicateSavedElementStyle(preset)} disabled={normalized.stylePresets.length >= 30} className="rounded-md border border-sky-400/30 px-2 py-1 text-[10px] font-bold text-sky-200 disabled:opacity-40">დუბლირება</button><button type="button" onClick={() => removeSavedElementStyle(preset.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[10px] font-bold text-rose-200">წაშლა</button></div></div>)}</div>}
         </section>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {filteredElementEntries.map(([key, item]) => (
