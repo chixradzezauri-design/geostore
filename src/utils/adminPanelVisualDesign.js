@@ -614,7 +614,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
   for (const [prefix, values] of elementViewports) {
     for (const [element, settings] of Object.entries(values)) {
       for (const [key, value] of Object.entries(settings)) {
-        style[`--admin-vd-element-${prefix}${element}-${key}`] = ELEMENT_STYLE_COLORS[key] || ELEMENT_STYLE_ENUMS[key] ? value : `${value}px`;
+        style[`--admin-vd-element-${prefix}${element}-${key}`] = ELEMENT_STYLE_COLORS[key] || ELEMENT_STYLE_ENUMS[key] ? value : key === 'fontWeight' ? String(value) : `${value}px`;
       }
     }
   }
