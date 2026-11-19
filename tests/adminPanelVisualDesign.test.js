@@ -928,6 +928,7 @@ test('visual design API uses optimistic concurrency tokens and exposes conflict 
   assert.match(editor, /syncStatus === 'conflict'/);
   assert.match(editor, /სხვა მოწყობილობაზე დიზაინი უკვე შეიცვალა/);
   assert.match(migration, /FOR UPDATE/);
+  assert.match(migration, /GREATEST\(clock_timestamp\(\), v_current_updated_at \+ interval '1 microsecond'\)/);
   assert.match(migration, /ERRCODE = '40001'/);
   assert.match(migration, /auth\.uid\(\) IS DISTINCT FROM/);
 });

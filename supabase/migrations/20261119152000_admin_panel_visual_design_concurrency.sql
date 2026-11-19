@@ -82,7 +82,7 @@ BEGIN
     UPDATE private.admin_panel_visual_settings
        SET design = p_design,
            updated_by = auth.uid(),
-           updated_at = clock_timestamp()
+           updated_at = GREATEST(clock_timestamp(), v_current_updated_at + interval '1 microsecond')
      WHERE singleton IS TRUE
      RETURNING updated_at INTO v_saved_updated_at;
   END IF;
