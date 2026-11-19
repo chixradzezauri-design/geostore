@@ -57,10 +57,10 @@ const VISUAL_EDITOR_TARGETS = {
   'header.brand': { label: 'ლოგოს ბლოკი', help: 'შეცვალეთ ლოგოს ბლოკის ზომა, ფონი, ჩარჩო და დაშორებები.' },
   'header.logo': { label: 'ლოგოს ნიშანი', help: 'შეცვალეთ ლოგოს ნიშნის ფერი, ზომა, ფონი და მომრგვალება.' },
   'header.storeName': { label: 'მაღაზიის სახელი', settingKey: 'storeName', help: 'მაღაზიის სახელი და მისი ტიპოგრაფია აქედან შეცვალეთ.' },
-  'header.caption': { label: 'ლოგოს ქვედა წარწერა', help: 'შეცვალეთ ლოგოს ქვედა წარწერის ფერი და ტიპოგრაფია.' },
+  'header.caption': { label: 'ლოგოს ქვედა წარწერა', settingKey: 'headerCaptionText', help: 'შეცვალეთ ლოგოს ქვედა ტექსტი. ცარიელი ველი აბრუნებს ნაგულისხმევ წარწერას.' },
   'header.menu.toggle': { label: 'მენიუს ღილაკი', help: 'შეცვალეთ მენიუს ღილაკის ფერი, ზომა და ფორმა.' },
   'header.search': { label: 'საძიებო ზოლი', help: 'შეცვალეთ საძიებო ზოლის ფონი, ზომა და განლაგება.' },
-  'header.search.input': { label: 'ძიების ველი', help: 'შეცვალეთ საძიებო ველის ტექსტი, ფონი, ჩარჩო და ზომა.' },
+  'header.search.input': { label: 'ძიების ველი', settingKey: 'headerSearchPlaceholder', help: 'შეცვალეთ საძიებო ველის placeholder ყველა ენაზე; გასუფთავება აბრუნებს თარგმნილ ნაგულისხმევ ტექსტს.' },
   'header.search.button': { label: 'ფოტოთი ძიების ღილაკი', help: 'შეცვალეთ ფოტოთი ძიების ღილაკის ფერი და ფორმა.' },
   'header.menu': { label: 'სანავიგაციო მენიუ', help: 'შეცვალეთ მენიუს საერთო ფონი, ზომა, ჩარჩო და ჩრდილი.' },
   'header.menu.heading': { label: 'მენიუს ზედა ნაწილი', help: 'შეცვალეთ მენიუს ზედა ნაწილის ფერები და დაშორებები.' },
@@ -71,8 +71,11 @@ const VISUAL_EDITOR_TARGETS = {
   'header.menu.languageButton': { label: 'ენის ღილაკი', help: 'შეცვალეთ ენის ღილაკის ფერი და ფორმა.' },
   'footer': { label: 'საიტის Footer', help: 'შეცვალეთ ქვედა ნაწილის ფონი, ზომა, ჩარჩო და დაშორებები.' },
   'footer.links': { label: 'Footer ბმულების ზოლი', help: 'შეცვალეთ ბმულების ზოლის განლაგება და საერთო ფერები.' },
-  'footer.link': { label: 'Footer ბმული', help: 'შეცვალეთ პირობების, კონფიდენციალურობის და გარანტიის ბმულების ვიზუალი.' },
-  'footer.copyright': { label: 'საავტორო წარწერა', help: 'შეცვალეთ საავტორო წარწერის ფერი და ტიპოგრაფია.' }
+  'footer.link': { label: 'Footer ბმული', help: 'შეცვალეთ Footer ბმულების საერთო ვიზუალი.' },
+  'footer.termsLink': { label: 'Footer — წესები და პირობები', settingKey: 'footerTermsText', help: 'შეცვალეთ ბმულის ტექსტი; ცარიელი ველი აბრუნებს ენის შესაბამის თარგმანს.' },
+  'footer.privacyLink': { label: 'Footer — კონფიდენციალურობა', settingKey: 'footerPrivacyText', help: 'შეცვალეთ ბმულის ტექსტი; ცარიელი ველი აბრუნებს ენის შესაბამის თარგმანს.' },
+  'footer.warrantyLink': { label: 'Footer — გარანტია', settingKey: 'footerWarrantyText', help: 'შეცვალეთ ბმულის ტექსტი; ცარიელი ველი აბრუნებს ენის შესაბამის თარგმანს.' },
+  'footer.copyright': { label: 'საავტორო წარწერა', settingKey: 'footerCopyrightText', help: 'შეცვალეთ Footer-ის საავტორო ტექსტი. ცარიელი ველი აბრუნებს ნაგულისხმევ ტექსტს.' }
 };
 const VISUAL_EDITOR_TREE = [
   {
@@ -482,7 +485,7 @@ export default function StorefrontVisualEditor({
                   selectedElement.multiline ? (
                     <textarea value={selectedElementValue} maxLength={240} rows={3} onChange={event => updateSelectedElement(event.target.value)} aria-label={selectedElement.label} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white" />
                   ) : (
-                    <input value={selectedElementValue} maxLength={selectedElement.settingKey === 'heroTitle' ? 120 : selectedElement.group === 'hero' ? 2048 : 120} onChange={event => updateSelectedElement(event.target.value)} aria-label={selectedElement.label} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white" />
+                    <input value={selectedElementValue} maxLength={selectedElement.settingKey === 'heroTitle' ? 120 : selectedElement.group === 'hero' ? 2048 : 180} onChange={event => updateSelectedElement(event.target.value)} aria-label={selectedElement.label} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white" />
                   )
                 ) : null}
                 <div className="grid grid-cols-2 gap-2">
