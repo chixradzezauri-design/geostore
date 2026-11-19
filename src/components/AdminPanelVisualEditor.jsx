@@ -484,6 +484,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [showCustomizedOnly, setShowCustomizedOnly] = useState(false);
   const [selectedElementKey, setSelectedElementKey] = useState('');
   const [selectedElementKeys, setSelectedElementKeys] = useState([]);
+  const [expandedElementDiffKeys, setExpandedElementDiffKeys] = useState([]);
   const [selectedStylePresetIds, setSelectedStylePresetIds] = useState([]);
   const [selectedStylePropertyKeys, setSelectedStylePropertyKeys] = useState(["fontSize","fontWeight","textAlign","textColor","backgroundColor","borderColor","borderRadius","padding"]);
   const [stylePresetSearch, setStylePresetSearch] = useState('');
@@ -592,6 +593,27 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           key, { ...value, ...(normalized.responsive?.[viewport]?.elementStyles?.[key] || {}) }
         ]))
       };
+
+  const ELEMENT_STYLE_DIFF_FIELDS = [
+    { key: 'fontSize', label: 'ტექსტის ზომა', suffix: 'px' },
+    { key: 'fontWeight', label: 'ტექსტის სისქე', suffix: '' },
+    { key: 'textAlign', label: 'ტექსტის გასწორება', suffix: '' },
+    { key: 'textColor', label: 'ტექსტის ფერი', suffix: '' },
+    { key: 'backgroundColor', label: 'ფონის ფერი', suffix: '' },
+    { key: 'borderColor', label: 'ჩარჩოს ფერი', suffix: '' },
+    { key: 'borderRadius', label: 'კუთხეები', suffix: 'px' },
+    { key: 'padding', label: 'შიდა დაშორება', suffix: 'px' }
+  ];
+  const getElementStyleDifferences = key => {
+    const currentStyle = active.elementStyles[key] || {};
+    const defaultStyle = DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles[key] || {};
+    return ELEMENT_STYLE_DIFF_FIELDS
+      .filter(field => String(currentStyle[field.key]) !== String(defaultStyle[field.key]))
+      .map(field => ({ ...field, current: currentStyle[field.key], initial: defaultStyle[field.key] }));
+  };
+  const toggleElementDiff = key => setExpandedElementDiffKeys(current => current.includes(key)
+    ? current.filter(item => item !== key)
+    : [...current, key]);
 
   const customizedElementKeys = useMemo(() => new Set(
     Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => {
@@ -1541,10 +1563,33 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                   {selectedElementKey === key ? 'არჩეულია' : 'რედაქტირება'}
                 </button>
               </div>
+              {(() => {
+                const differences = getElementStyleDifferences(key);
+                return differences.length > 0 ? (
+                  <div className="rounded-lg border border-sky-400/20 bg-sky-950/10 p-2">
+                    <button type="button" onClick={() => toggleElementDiff(key)} aria-expanded={expandedElementDiffKeys.includes(key)} className="flex w-full items-center justify-between gap-2 text-left text-[10px] font-bold text-sky-200">
+                      <span>საწყისთან შედარება · {differences.length} განსხვავება</span>
+                      <span>{expandedElementDiffKeys.includes(key) ? 'დახურვა' : 'ნახვა'}</span>
+                    </button>
+                    {expandedElementDiffKeys.includes(key) && (
+                      <div className="mt-2 grid grid-cols-1 gap-1.5">
+                        {differences.map(field => (
+                          <div key={field.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 rounded-md bg-slate-950/70 p-2 text-[9px]">
+                            <span className="min-w-0 text-slate-400">{field.label}<span className="mt-1 block break-all text-slate-500">საწყისი: {String(field.initial ?? '—')}{field.suffix}</span></span>
+                            <span className="min-w-0 break-all font-bold text-sky-200">ახლა: {String(field.current ?? '—')}{field.suffix}
+                              {field.key.toLowerCase().includes('color') && <span className="ml-1 inline-block h-3 w-3 rounded-sm border border-white/30 align-middle" style={{ backgroundColor: field.current }} />}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : null;
+              })()}
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => resetElement(key)}
+                  onClick={() => resetElement(key)
                   disabled={!customizedElementKeys.has(key)}
                   className="rounded-lg border border-rose-400/25 px-2.5 py-1.5 text-[10px] font-semibold text-rose-200 transition hover:bg-rose-400/10 disabled:cursor-not-allowed disabled:opacity-35"
                   aria-label={item.label + ' დიზაინის საწყის მდგომარეობაში აღდგენა'}
