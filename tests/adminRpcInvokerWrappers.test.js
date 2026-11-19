@@ -16,6 +16,12 @@ const pairs = [
   ['has_staff_permission', 'has_staff_permission'],
 ];
 
+test('every SQL function definition is terminated before the next statement', () => {
+  const definitions = migration.match(/^\\$function\\$;$/gm) || [];
+  assert.equal(definitions.length, 12);
+  assert.doesNotMatch(migration, /^\\$function\\$/m);
+});
+
 test('all six privileged implementations are in the private schema', () => {
   for (const [, privateName] of pairs) {
     assert.match(migration, new RegExp('CREATE OR REPLACE FUNCTION private\\.' + privateName + '\\('));
