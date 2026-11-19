@@ -70,6 +70,10 @@ const COLOR_FIELDS = [
 
 const RANGE_FIELDS = [
   { key: 'fontSize', label: 'საბაზისო ტექსტის ზომა', min: 11, max: 16, suffix: 'px' },
+  { key: 'titleFontSize', label: 'სათაურების ზომა', min: 14, max: 32, suffix: 'px' },
+  { key: 'bodyFontSize', label: 'ძირითადი ტექსტის ზომა', min: 11, max: 18, suffix: 'px' },
+  { key: 'headingFontWeight', label: 'სათაურების სისქე', min: 500, max: 900, suffix: 'weight' },
+  { key: 'bodyFontWeight', label: 'ტექსტის სისქე', min: 400, max: 700, suffix: 'weight' },
   { key: 'cardRadius', label: 'ბლოკების მომრგვალება', min: 10, max: 36, suffix: 'px' },
   { key: 'cardPadding', label: 'ბლოკების შიდა დაშორება', min: 12, max: 32, suffix: 'px' },
   { key: 'sidebarWidth', label: 'გვერდითი მენიუს სიგანე', min: 240, max: 360, suffix: 'px' },
