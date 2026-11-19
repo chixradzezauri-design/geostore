@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  ADMIN_PANEL_CONTENT_FIELDS,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   normalizeAdminPanelVisualDesign
 } from '../utils/adminPanelVisualDesign.js';
@@ -479,6 +480,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
     }));
   };
 
+  const updateContentValue = (key, value) => {
+    onChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      content: { ...normalized.content, [key]: value }
+    }));
+  };
+
   const updateComponentValue = (component, property, value) => {
     if (viewport === 'desktop') {
       onChange(normalizeAdminPanelVisualDesign({
@@ -636,6 +644,26 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
                 className="w-full accent-emerald-400"
                 aria-label={field.label}
               />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <h3 className="text-sm font-black text-white">ტექსტების რედაქტირება</h3>
+          <p className="mt-1 text-[11px] leading-5 text-slate-400">შეცვალეთ ადმინპანელის მოდულების სათაურები, განმარტებები და ღილაკების წარწერები. ფუნქციები და მოქმედებები უცვლელი რჩება.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {ADMIN_PANEL_CONTENT_FIELDS.map(field => (
+            <label key={field.key} className="block space-y-2 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3 text-xs text-slate-200">
+              <span className="font-semibold">{field.label}</span>
+              {field.multiline ? (
+                <textarea value={normalized.content[field.key]} onChange={event => updateContentValue(field.key, event.target.value)} maxLength={field.maxLength} rows={3} className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-white" />
+              ) : (
+                <input type="text" value={normalized.content[field.key]} onChange={event => updateContentValue(field.key, event.target.value)} maxLength={field.maxLength} className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-white" />
+              )}
+              <span className="block text-right text-[10px] text-slate-500">{normalized.content[field.key].length}/{field.maxLength}</span>
             </label>
           ))}
         </div>
