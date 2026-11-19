@@ -484,6 +484,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [selectedStylePresetIds, setSelectedStylePresetIds] = useState([]);
   const [stylePresetSearch, setStylePresetSearch] = useState('');
   const [stylePresetCategory, setStylePresetCategory] = useState('all');
+  const [stylePresetSort, setStylePresetSort] = useState('newest');
   const elementCardRefs = useRef({});
   const stylePresetFileInputRef = useRef(null);
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
@@ -690,7 +691,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     const style = { ...(active.elementStyles[selectedElementKey] || {}) };
     const category = ELEMENT_CATEGORIES.find(item => item.keys.includes(selectedElementKey))?.label || 'საერთო';
     const id = `admin-style-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: [...normalized.stylePresets, { id, name: name.trim().slice(0, 40), category, style }] }));
+    commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: [...normalized.stylePresets, { id, name: name.trim().slice(0, 40), category, createdAt: new Date().toISOString(), style }] }));
   };
   const renameSavedElementStyle = id => {
     const preset = normalized.stylePresets.find(item => item.id === id);
@@ -709,7 +710,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     const id = `admin-style-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
-      stylePresets: [...normalized.stylePresets, { ...preset, id, name: name.trim().slice(0, 40), style: { ...preset.style } }]
+      stylePresets: [...normalized.stylePresets, { ...preset, id, name: name.trim().slice(0, 40), createdAt: new Date().toISOString(), style: { ...preset.style } }]
     }));
   };
   const applySavedElementStyle = preset => {
@@ -729,14 +730,22 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       stylePresets: normalized.stylePresets.map(item => item.id === id ? { ...item, category } : item)
     }));
   };
-  const filteredStylePresets = useMemo(() => {
+  const groupedStylePresets = useMemo(() => {
     const query = stylePresetSearch.trim().toLocaleLowerCase();
-    return normalized.stylePresets.filter(preset => {
+    const categoryOrder = ['საერთო', ...ELEMENT_CATEGORIES.map(item => item.label)];
+    const filtered = normalized.stylePresets.filter(preset => {
       const matchesCategory = stylePresetCategory === 'all' || preset.category === stylePresetCategory;
       const matchesSearch = !query || `${preset.name} ${preset.category}`.toLocaleLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
-  }, [normalized.stylePresets, stylePresetSearch, stylePresetCategory]);
+    const sorted = [...filtered].sort((a, b) => {
+      if (stylePresetSort === 'name') return a.name.localeCompare(b.name, 'ka');
+      if (stylePresetSort === 'category') return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category) || a.name.localeCompare(b.name, 'ka');
+      return (Date.parse(b.createdAt || '') || 0) - (Date.parse(a.createdAt || '') || 0) || a.name.localeCompare(b.name, 'ka');
+    });
+    return categoryOrder.map(category => ({ category, items: sorted.filter(preset => preset.category === category) })).filter(group => group.items.length);
+  }, [normalized.stylePresets, stylePresetSearch, stylePresetCategory, stylePresetSort]);
+  const filteredStylePresets = useMemo(() => groupedStylePresets.flatMap(group => group.items), [groupedStylePresets]);
   const toggleStylePresetSelection = id => setSelectedStylePresetIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
   const selectedStylePresets = normalized.stylePresets.filter(item => selectedStylePresetIds.includes(item.id));
   const selectAllStylePresets = () => setSelectedStylePresetIds(normalized.stylePresets.map(item => item.id));
@@ -1096,8 +1105,16 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                 {ELEMENT_CATEGORIES.map(category => <option key={category.id} value={category.label}>{category.label}</option>)}
               </select>
             </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="flex items-center gap-2 text-[11px] text-slate-400">დალაგება
+                <select value={stylePresetSort} onChange={event => setStylePresetSort(event.target.value)} aria-label="სტილების დალაგება" className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white">
+                  <option value="newest">ბოლოს დამატებული</option><option value="name">სახელით (ა-ჰ)</option><option value="category">კატეგორიით</option>
+                </select>
+              </label>
+              <span className="text-[10px] text-slate-400">კატეგორიების მიხედვით დაჯგუფებული</span>
+            </div>
             <p className="text-[10px] text-slate-400" role="status" aria-live="polite">{filteredStylePresets.length} / {normalized.stylePresets.length} სტილი ნაჩვენებია</p>
-            {filteredStylePresets.length === 0 ? <p className="rounded-lg border border-dashed border-slate-700 p-4 text-center text-xs text-slate-500">ამ ძიებით სტილი ვერ მოიძებნა.</p> : <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{filteredStylePresets.map(preset => <div key={preset.id} className={`flex min-w-0 flex-col gap-2 rounded-lg border bg-slate-900 p-2 ${selectedStylePresetIds.includes(preset.id) ? 'border-emerald-400 ring-1 ring-emerald-400/30' : 'border-slate-700'}`}><label className="flex min-w-0 items-center gap-2"><input type="checkbox" checked={selectedStylePresetIds.includes(preset.id)} onChange={() => toggleStylePresetSelection(preset.id)} aria-label={preset.name + ' სტილის მონიშვნა'} className="h-4 w-4 shrink-0 accent-emerald-400" /><span className="truncate text-xs font-bold text-slate-200">{preset.name}</span></label><select value={preset.category} onChange={event => updateStylePresetCategory(preset.id, event.target.value)} aria-label={preset.name + ' სტილის კატეგორია'} className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-[10px] text-slate-300"><option value="საერთო">საერთო</option>{ELEMENT_CATEGORIES.map(category => <option key={category.id} value={category.label}>{category.label}</option>)}</select><div className="flex min-h-14 items-center justify-between gap-2 rounded-lg border p-2" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#334155', borderRadius: `${preset.style.borderRadius ?? 8}px`, padding: `${Math.min(preset.style.padding ?? 8, 16)}px` }} aria-label={preset.name + ' სტილის ვიზუალური ნიმუში'}><span className="min-w-0 truncate font-bold" style={{ fontSize: `${preset.style.fontSize ?? 13}px`, fontWeight: preset.style.fontWeight ?? 700, textAlign: preset.style.textAlign || 'left' }}>Aa · GEOSTORE</span><span className="flex shrink-0 gap-1" aria-hidden="true"><i className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: preset.style.textColor || '#e2e8f0' }} /><i className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a' }} /><i className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: preset.style.borderColor || '#334155' }} /></span></div><div className="flex flex-wrap gap-1"><button type="button" onClick={() => applySavedElementStyle(preset)} disabled={!selectedElementKey} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[10px] font-bold text-emerald-200 disabled:opacity-40">გამოყენება</button><button type="button" onClick={() => renameSavedElementStyle(preset.id)} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => duplicateSavedElementStyle(preset)} disabled={normalized.stylePresets.length >= 30} className="rounded-md border border-sky-400/30 px-2 py-1 text-[10px] font-bold text-sky-200 disabled:opacity-40">დუბლირება</button><button type="button" onClick={() => removeSavedElementStyle(preset.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[10px] font-bold text-rose-200">წაშლა</button></div></div>)}</div>}
+            {filteredStylePresets.length === 0 ? <p className="rounded-lg border border-dashed border-slate-700 p-4 text-center text-xs text-slate-500">ამ ძიებით სტილი ვერ მოიძებნა.</p> : <div className="space-y-4">{groupedStylePresets.map(group => <section key={group.category} className="space-y-2" aria-label={group.category + ' სტილები'}><div className="flex items-center justify-between border-b border-slate-800 pb-1"><h4 className="text-[11px] font-black text-emerald-200">{group.category}</h4><span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] tabular-nums text-slate-400">{group.items.length}</span></div><div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{group.items.map(preset => <div key={preset.id} className={`flex min-w-0 flex-col gap-2 rounded-lg border bg-slate-900 p-2 ${selectedStylePresetIds.includes(preset.id) ? 'border-emerald-400 ring-1 ring-emerald-400/30' : 'border-slate-700'}`}><label className="flex min-w-0 items-center gap-2"><input type="checkbox" checked={selectedStylePresetIds.includes(preset.id)} onChange={() => toggleStylePresetSelection(preset.id)} aria-label={preset.name + ' სტილის მონიშვნა'} className="h-4 w-4 shrink-0 accent-emerald-400" /><span className="truncate text-xs font-bold text-slate-200">{preset.name}</span></label><select value={preset.category} onChange={event => updateStylePresetCategory(preset.id, event.target.value)} aria-label={preset.name + ' სტილის კატეგორია'} className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-[10px] text-slate-300"><option value="საერთო">საერთო</option>{ELEMENT_CATEGORIES.map(category => <option key={category.id} value={category.label}>{category.label}</option>)}</select><div className="flex min-h-14 items-center justify-between gap-2 rounded-lg border p-2" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#334155', borderRadius: `${preset.style.borderRadius ?? 8}px`, padding: `${Math.min(preset.style.padding ?? 8, 16)}px` }} aria-label={preset.name + ' სტილის ვიზუალური ნიმუში'}><span className="min-w-0 truncate font-bold" style={{ fontSize: `${preset.style.fontSize ?? 13}px`, fontWeight: preset.style.fontWeight ?? 700, textAlign: preset.style.textAlign || 'left' }}>Aa · GEOSTORE</span><span className="flex shrink-0 gap-1" aria-hidden="true"><i className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: preset.style.textColor || '#e2e8f0' }} /><i className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a' }} /><i className="h-3 w-3 rounded-full border border-white/20" style={{ backgroundColor: preset.style.borderColor || '#334155' }} /></span></div><div className="flex flex-wrap gap-1"><button type="button" onClick={() => applySavedElementStyle(preset)} disabled={!selectedElementKey} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[10px] font-bold text-emerald-200 disabled:opacity-40">გამოყენება</button><button type="button" onClick={() => renameSavedElementStyle(preset.id)} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => duplicateSavedElementStyle(preset)} disabled={normalized.stylePresets.length >= 30} className="rounded-md border border-sky-400/30 px-2 py-1 text-[10px] font-bold text-sky-200 disabled:opacity-40">დუბლირება</button><button type="button" onClick={() => removeSavedElementStyle(preset.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[10px] font-bold text-rose-200">წაშლა</button></div></div>)}</div></section>)}</div>}
           </>}
         </section>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
