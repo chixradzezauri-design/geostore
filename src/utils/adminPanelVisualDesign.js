@@ -161,7 +161,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
         ...Object.fromEntries(Object.entries(LAYOUT_LIMITS)
           .filter(([key]) => responsiveLayout[key] != null && responsiveLayout[key] !== '')
           .map(([key, limits]) => [key, clampNumber(responsiveLayout[key], limits, layout[key])])),
-        ...(responsiveLayout.fontFamily != null && responsiveLayout.fontFamily !== ''
+        ...(Object.hasOwn(ADMIN_PANEL_FONT_FAMILIES, responsiveLayout.fontFamily)
           ? { fontFamily: normalizeFontFamily(responsiveLayout.fontFamily, layout.fontFamily) }
           : {})
       }
