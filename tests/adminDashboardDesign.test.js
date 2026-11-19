@@ -17,7 +17,7 @@ test('all admin sections including Command Center and inventory history remain a
   assert.deepEqual(ids, [
     'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
     'products', 'inventory', 'replenishment', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
-    'banners', 'categories', 'coupons', 'vendors', 'users', 'settings'
+    'banners', 'categories', 'visual_editor', 'coupons', 'vendors', 'users', 'settings'
   ]);
 });
 
