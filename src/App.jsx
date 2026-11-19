@@ -647,6 +647,7 @@ export default function App() {
   const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
   const storefrontSaveLock = useRef(false);
   const storefrontPublishLock = useRef(false);
+  const storefrontDraftUpdatedAtRef = useRef(null);
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -927,11 +928,12 @@ export default function App() {
     const loadStorefrontDraft = async () => {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config`,
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config,draft_updated_at`,
           { headers: await getSupabaseHeaders({ authenticated: true }) }
         );
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
+        storefrontDraftUpdatedAtRef.current = typeof rows?.[0]?.draft_updated_at === 'string' ? rows[0].draft_updated_at : null;
         const draft = rows?.[0]?.draft_config;
         if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
         if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
@@ -1337,10 +1339,25 @@ export default function App() {
         {
           method: 'POST',
           headers: await getSupabaseHeaders({ authenticated: true }),
-          body: JSON.stringify({ p_snapshot: snapshot })
+          body: JSON.stringify({
+            p_snapshot: snapshot,
+            p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current
+          })
         }
       );
-      if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorCode = '';
+        try { errorCode = JSON.parse(errorText)?.code || ''; } catch {}
+        if (errorCode === '40001') {
+          throw new Error('მონახაზის კონფლიქტი: სხვა მოწყობილობაზე ახალი ვერსია შეინახა. თქვენი ცვლილებები ამჯერად არ გადაგვიწერია. განაახლეთ გვერდი, ჩაიტვირთეთ საერთო მონახაზი და შემდეგ გააკეთეთ თქვენი ცვლილებები ხელახლა.');
+        }
+        throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + errorText);
+      }
+      const savedDraftState = await response.json();
+      storefrontDraftUpdatedAtRef.current = typeof savedDraftState?.draft_updated_at === 'string'
+        ? savedDraftState.draft_updated_at
+        : storefrontDraftUpdatedAtRef.current;
 
       // Commit the uploaded Hero URL to editor state only after the draft RPC succeeds.
       if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
