@@ -549,6 +549,15 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     });
     return { added, removed, changed };
   }, [expandedStyleBackup, normalized.stylePresets]);
+  useEffect(() => {
+    const definition = selectedElementKey ? ADMIN_PANEL_ELEMENT_DEFINITIONS[selectedElementKey] : null;
+    if (!definition) return undefined;
+    let elements = [];
+    try { elements = Array.from(document.querySelectorAll('.admin-dashboard-shell ' + definition.selector)); } catch { return undefined; }
+    elements.forEach(element => element.classList.add('admin-visual-element-selected'));
+    return () => elements.forEach(element => element.classList.remove('admin-visual-element-selected'));
+  }, [selectedElementKey]);
+
   const historyRef = useRef({ past: [], future: [], present: normalized });
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
 
@@ -1444,6 +1453,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
 
   return (
     <section className="admin-visual-editor-panel space-y-5 rounded-3xl border border-emerald-400/25 bg-slate-900/90 p-4 sm:p-6" aria-labelledby="admin-visual-editor-title">
+      <style>{`
+        .admin-dashboard-shell .admin-visual-element-selected {
+          outline: 2px solid #34d399 !important;
+          outline-offset: 3px !important;
+          box-shadow: 0 0 0 4px rgba(52, 211, 153, .16) !important;
+        }
+      `}</style>
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-300">GEOSTORE / ADMIN STUDIO</p>
