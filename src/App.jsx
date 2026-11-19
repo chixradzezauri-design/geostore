@@ -1451,7 +1451,12 @@ export default function App() {
       }
       storefrontDraftUpdatedAtRef.current = savedDraftUpdatedAt;
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: draftCategories, banners: draftBanners, siteSettings: draftSiteSettings });
-      storefrontDraftLocalDirtyRef.current = false;
+      const editsArrivedDuringSave = storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart;
+      storefrontDraftLocalDirtyRef.current = editsArrivedDuringSave;
+      if (editsArrivedDuringSave) {
+        alert('მონახაზი სერვერზე შეინახა, მაგრამ შენახვის დროს დამატებითი ცვლილებები გაკეთდა. ეს ცვლილებები რედაქტორში შენარჩუნებულია; ხელახლა შეინახეთ.');
+        return false;
+      }
 
       // Commit the uploaded Hero URL to editor state only after the draft RPC succeeds.
       if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
@@ -1623,7 +1628,12 @@ export default function App() {
       storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at;
       // Publishing also advances the shared draft version; keep the local baseline in sync.
       storefrontDraftBaselineRef.current = JSON.stringify({ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings });
-      storefrontDraftLocalDirtyRef.current = false;
+      const editsArrivedDuringPublish = storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart;
+      storefrontDraftLocalDirtyRef.current = editsArrivedDuringPublish;
+      if (editsArrivedDuringPublish) {
+        alert('საიტი გამოქვეყნდა, მაგრამ გამოქვეყნების დროს დამატებითი ცვლილებები გაკეთდა. ეს ცვლილებები რედაქტორში შენარჩუნებულია და ჯერ არ გამოქვეყნებულა; შეინახეთ ახალი მონახაზი.');
+        return false;
+      }
 
       // Commit the uploaded Hero URL to editor state only after publish is confirmed.
       if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
