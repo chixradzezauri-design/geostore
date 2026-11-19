@@ -46,6 +46,9 @@ test('CRM profile saves and actions cannot restore private data after logout', (
   assert.ok(persist.includes('const headers = await getSupabaseHeaders();'));
   assert.ok(persist.includes('const saved = await saveAdminCustomerCrmProfile'));
   assert.ok(persist.indexOf('const saved = await saveAdminCustomerCrmProfile') < persist.indexOf('setServerCustomers'));
+  const saveHandler = readFunction('handleSaveUserCrm');
+  assert.ok(saveHandler.includes('const requestSessionVersion = adminSessionVersion.current'));
+  assert.ok(saveHandler.includes('if (!saved || !isCurrentAdminSession(requestSessionVersion)) return;'));
   for (const name of ['handleToggleVipUser', 'handleToggleBlockUser']) {
     const body = readFunction(name);
     assert.ok(body.includes('const requestSessionVersion = adminSessionVersion.current'));
