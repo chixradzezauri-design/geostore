@@ -652,7 +652,6 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
 
 export function createAdminStylePresetBackup(rawDesign, reason = 'მნიშვნელოვანი ცვლილების წინ') {
   const design = normalizeAdminPanelVisualDesign(rawDesign);
-  if (!design.stylePresets.length) return design;
   const backup = {
     id: `admin-style-backup-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     savedAt: new Date().toISOString(),
