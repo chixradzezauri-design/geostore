@@ -165,6 +165,24 @@ export default function StorefrontVisualEditor({
     else if (selectedElement.group) updateGroup(selectedElement.group, selectedElement.key, value);
   };
 
+  const selectedElementStyle = selectedElement
+    ? (design.elementStyles?.[selectedElement.id] || {})
+    : {};
+
+  const updateSelectedElementStyle = (key, value) => {
+    if (!selectedElement) return;
+    commitDesign({
+      ...design,
+      elementStyles: {
+        ...(design.elementStyles || {}),
+        [selectedElement.id]: {
+          ...(design.elementStyles?.[selectedElement.id] || {}),
+          [key]: value
+        }
+      }
+    });
+  };
+
   const handleHeroFileChange = event => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -286,7 +304,44 @@ export default function StorefrontVisualEditor({
                     <input value={selectedElementValue} maxLength={selectedElement.settingKey === 'heroTitle' ? 120 : selectedElement.group === 'hero' ? 2048 : 120} onChange={event => updateSelectedElement(event.target.value)} aria-label={selectedElement.label} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white" />
                   )
                 ) : null}
-                <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="space-y-1 text-[10px] text-slate-300">
+                    <span>ტექსტის ფერი</span>
+                    <input type="color" value={selectedElementStyle.textColor || '#29241f'} onChange={event => updateSelectedElementStyle('textColor', event.target.value)} className="gs-visual-color-control h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" />
+                  </label>
+                  <label className="space-y-1 text-[10px] text-slate-300">
+                    <span>ფონის ფერი</span>
+                    <input type="color" value={selectedElementStyle.backgroundColor || '#ffffff'} onChange={event => updateSelectedElementStyle('backgroundColor', event.target.value)} className="gs-visual-color-control h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" />
+                  </label>
+                </div>
+                <label className="block space-y-1 text-[10px] text-slate-300">
+                  <span className="flex justify-between"><span>ტექსტის ზომა</span><b>{selectedElementStyle.fontSize ?? 'ავტო'} px</b></span>
+                  <input type="range" min="10" max="64" step="1" value={selectedElementStyle.fontSize ?? 18} onChange={event => updateSelectedElementStyle('fontSize', Number(event.target.value))} className="w-full accent-emerald-400" />
+                </label>
+                <label className="block space-y-1 text-[10px] text-slate-300">
+                  <span className="flex justify-between"><span>შიდა დაშორება</span><b>{selectedElementStyle.padding ?? 0} px</b></span>
+                  <input type="range" min="0" max="48" step="1" value={selectedElementStyle.padding ?? 0} onChange={event => updateSelectedElementStyle('padding', Number(event.target.value))} className="w-full accent-emerald-400" />
+                </label>
+                <label className="block space-y-1 text-[10px] text-slate-300">
+                  <span className="flex justify-between"><span>კუთხეების მომრგვალება</span><b>{selectedElementStyle.borderRadius ?? 0} px</b></span>
+                  <input type="range" min="0" max="32" step="1" value={selectedElementStyle.borderRadius ?? 0} onChange={event => updateSelectedElementStyle('borderRadius', Number(event.target.value))} className="w-full accent-emerald-400" />
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="space-y-1 text-[10px] text-slate-300">
+                    <span>ტექსტის გასწორება</span>
+                    <select value={selectedElementStyle.textAlign || 'left'} onChange={event => updateSelectedElementStyle('textAlign', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white">
+                      <option value="left">მარცხნივ</option><option value="center">ცენტრში</option><option value="right">მარჯვნივ</option>
+                    </select>
+                  </label>
+                  <label className="space-y-1 text-[10px] text-slate-300">
+                    <span>სისქე</span>
+                    <select value={selectedElementStyle.fontWeight ?? 600} onChange={event => updateSelectedElementStyle('fontWeight', Number(event.target.value))} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white">
+                      <option value="400">ჩვეულებრივი</option><option value="500">საშუალო</option><option value="600">ნახევრად სქელი</option><option value="700">სქელი</option><option value="800">ძალიან სქელი</option><option value="900">მაქსიმალური</option>
+                    </select>
+                  </label>
+                </div>
+                <button type="button" onClick={() => updateSelectedElementStyle('textColor', '') || updateSelectedElementStyle('backgroundColor', '')} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
+                <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help} სტილები ცალკე ინახება თითოეული ელემენტისთვის.</p>
               </div>
             )}
           </section>

@@ -1,4 +1,11 @@
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
+const ELEMENT_STYLE_IDS = [
+  'hero', 'hero.image', 'hero.title', 'hero.description', 'hero.button',
+  'banner', 'banner.card', 'banner.title',
+  'flashSale', 'flashSale.title', 'flashSale.badge', 'flashSale.description',
+  'categories', 'categories.title', 'categories.description',
+  'filters', 'product.card', 'product.title', 'product.button'
+];
 
 export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
   version: 1,
@@ -16,6 +23,7 @@ export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
     cardRadius: 4, buttonRadius: 4
   },
   hero: { imageUrl: '', overlayOpacity: 92, imagePositionX: 50 },
+  elementStyles: {},
   copy: {
     heroEyebrow: '', heroKicker: '', heroButton: '', heroNote: '',
     heroStampTop: '', heroStampTitle: '', heroStampBottom: '',
@@ -56,6 +64,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
   const hero = isPlainObject(raw.hero) ? raw.hero : {};
   const sections = isPlainObject(raw.sections) ? raw.sections : {};
   const copy = isPlainObject(raw.copy) ? raw.copy : {};
+  const rawElementStyles = isPlainObject(raw.elementStyles) ? raw.elementStyles : {};
   const defaults = DEFAULT_STOREFRONT_VISUAL_DESIGN;
   const safeText = (value, maxLength) => String(value ?? '').slice(0, maxLength);
   const requestedOrder = Array.isArray(raw.sectionOrder) ? raw.sectionOrder : defaults.sectionOrder;
@@ -107,6 +116,20 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       overlayOpacity: Math.round(clamp(hero.overlayOpacity, 0, 100, defaults.hero.overlayOpacity)),
       imagePositionX: Math.round(clamp(hero.imagePositionX, 0, 100, defaults.hero.imagePositionX))
     },
+    elementStyles: Object.fromEntries(ELEMENT_STYLE_IDS.map(id => {
+      const value = isPlainObject(rawElementStyles[id]) ? rawElementStyles[id] : {};
+      const textColor = safeColor(value.textColor, '');
+      const backgroundColor = safeColor(value.backgroundColor, '');
+      return [id, {
+        textColor,
+        backgroundColor,
+        fontSize: clamp(value.fontSize, 10, 64, null),
+        padding: clamp(value.padding, 0, 48, null),
+        borderRadius: clamp(value.borderRadius, 0, 32, null),
+        textAlign: ['left', 'center', 'right'].includes(value.textAlign) ? value.textAlign : '',
+        fontWeight: [400, 500, 600, 700, 800, 900].includes(Number(value.fontWeight)) ? Number(value.fontWeight) : null
+      }];
+    })),
     copy: {
       heroEyebrow: safeText(copy.heroEyebrow, 60), heroKicker: safeText(copy.heroKicker, 80),
       heroButton: safeText(copy.heroButton, 50), heroNote: safeText(copy.heroNote, 80),
@@ -175,5 +198,21 @@ export function buildStorefrontVisualStyle(rawDesign) {
   design.sectionOrder.forEach((id, index) => {
     style['--gs-order-' + id] = String(index + 1);
   });
+  return style;
+}
+
+
+export function buildStorefrontElementStyle(rawDesign, elementId) {
+  const design = normalizeStorefrontVisualDesign(rawDesign);
+  if (!ELEMENT_STYLE_IDS.includes(elementId)) return {};
+  const value = design.elementStyles[elementId];
+  const style = {};
+  if (value.textColor) style.color = value.textColor;
+  if (value.backgroundColor) style.backgroundColor = value.backgroundColor;
+  if (value.fontSize !== null) style.fontSize = String(value.fontSize) + 'px';
+  if (value.padding !== null) style.padding = String(value.padding) + 'px';
+  if (value.borderRadius !== null) style.borderRadius = String(value.borderRadius) + 'px';
+  if (value.textAlign) style.textAlign = value.textAlign;
+  if (value.fontWeight !== null) style.fontWeight = value.fontWeight;
   return style;
 }

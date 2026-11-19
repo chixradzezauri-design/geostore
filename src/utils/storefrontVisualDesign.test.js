@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_STOREFRONT_VISUAL_DESIGN,
   normalizeStorefrontVisualDesign,
-  buildStorefrontVisualStyle
+  buildStorefrontVisualStyle,
+  buildStorefrontElementStyle
 } from './storefrontVisualDesign.js';
 
 test('visual design defaults preserve the existing GEOSTORE light theme', () => {
@@ -72,4 +73,30 @@ test('temporary local hero image data URLs are accepted for preview before secur
   });
   assert.equal(design.hero.imageUrl, 'data:image/png;base64,iVBORw0KGgo=');
   assert.match(buildStorefrontVisualStyle(design)['--gs-hero-image'], /^url\("data:image\/png;base64,/);
+});
+
+test('element-level visual styles are normalized, clamped and rendered only for known targets', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'hero.title': {
+        textColor: '#123456',
+        backgroundColor: 'url(javascript:alert(1))',
+        fontSize: 100,
+        padding: -5,
+        borderRadius: 12,
+        textAlign: 'center',
+        fontWeight: 700
+      },
+      'unknown.target': { textColor: '#ffffff', fontSize: 20 }
+    }
+  });
+  assert.equal(design.elementStyles['hero.title'].textColor, '#123456');
+  assert.equal(design.elementStyles['hero.title'].backgroundColor, '');
+  assert.equal(design.elementStyles['hero.title'].fontSize, 64);
+  assert.equal(design.elementStyles['hero.title'].padding, 0);
+  assert.equal(design.elementStyles['hero.title'].borderRadius, 12);
+  assert.equal(design.elementStyles['hero.title'].textAlign, 'center');
+  assert.equal(design.elementStyles['hero.title'].fontWeight, 700);
+  assert.equal(buildStorefrontElementStyle(design, 'hero.title').fontSize, '64px');
+  assert.deepEqual(buildStorefrontElementStyle(design, 'unknown.target'), {});
 });
