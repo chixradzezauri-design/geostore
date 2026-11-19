@@ -8,6 +8,9 @@ import {
   buildAdminPanelVisualStyle,
   createAdminStylePresetBackup,
   restoreAdminStylePresetBackup,
+  createAdminPanelModuleBackup,
+  restoreAdminPanelModuleBackup,
+  deleteAdminPanelModuleBackup,
   loadAdminPanelVisualDesign,
   normalizeAdminPanelVisualDesign,
   resetAdminPanelVisualViewport,
@@ -1429,4 +1432,49 @@ test('admin visual editor compares each element against its initial design value
   for (const property of ['fontSize', 'fontWeight', 'textAlign', 'textColor', 'backgroundColor', 'borderColor', 'borderRadius', 'padding']) {
     assert.ok(editor.includes(`key: '${property}'`), `missing comparison field: ${property}`);
   }
+});
+
+
+test('admin module backups preserve and restore only one module in its selected viewport', () => {
+  const category = { id: 'orders', label: 'შეკვეთები', keys: ['orderHeader', 'orderCard'] };
+  const initial = normalizeAdminPanelVisualDesign({
+    theme: { ordersSectionBackground: '#123456' },
+    components: { orders: { radius: 36 } },
+    elementStyles: { orderHeader: { fontSize: 19 }, orderCard: { padding: 22 }, staffList: { fontSize: 18 } },
+    responsive: { mobile: { elementStyles: { orderHeader: { fontSize: 20 }, staffList: { fontSize: 17 } }, components: { orders: { radius: 18 }, staff: { radius: 12 } } } }
+  });
+  const backedUp = createAdminPanelModuleBackup(initial, category, 'mobile');
+  assert.equal(backedUp.moduleDesignBackups.length, 1);
+  const backup = backedUp.moduleDesignBackups[0];
+  const changed = normalizeAdminPanelVisualDesign({
+    ...backedUp,
+    responsive: { ...backedUp.responsive, mobile: { ...backedUp.responsive.mobile, elementStyles: { ...backedUp.responsive.mobile.elementStyles, orderHeader: { fontSize: 11 }, staffList: { fontSize: 15 } }, components: { ...backedUp.responsive.mobile.components, orders: { radius: 40 } } } }
+  });
+  const restored = restoreAdminPanelModuleBackup(changed, backup.id);
+  assert.equal(restored.responsive.mobile.elementStyles.orderHeader.fontSize, 20);
+  assert.equal(restored.responsive.mobile.elementStyles.staffList.fontSize, 15);
+  assert.equal(restored.responsive.mobile.components.orders.radius, 18);
+  assert.equal(restored.responsive.mobile.components.staff.radius, 12);
+  assert.equal(deleteAdminPanelModuleBackup(restored, backup.id).moduleDesignBackups.length, 0);
+});
+
+test('admin module backups are limited to ten and invalid entries are discarded', () => {
+  const backups = Array.from({ length: 12 }, (_, index) => ({
+    id: `module-${index}`, savedAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+    moduleId: 'orders', moduleLabel: 'შეკვეთები', viewport: 'desktop', reason: 'test',
+    snapshot: { elementStyles: { orderCard: { fontSize: 14 } }, components: { orders: { radius: 20 } }, theme: {}, content: {} }
+  }));
+  const normalized = normalizeAdminPanelVisualDesign({ moduleDesignBackups: [...backups, { id: 'bad', savedAt: 'invalid' }] });
+  assert.equal(normalized.moduleDesignBackups.length, 10);
+  assert.equal(normalized.moduleDesignBackups[0].id, 'module-2');
+  assert.equal(normalized.moduleDesignBackups.at(-1).id, 'module-11');
+});
+
+test('admin visual editor exposes isolated per-module backup, restore and delete controls', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /createAdminPanelModuleBackup\(normalized, category, viewport\)/);
+  assert.match(editor, /restoreAdminPanelModuleBackup\(protectedDesign, backup\.id\)/);
+  assert.match(editor, /deleteAdminPanelModuleBackup\(normalized, backupId\)/);
+  assert.match(editor, /მოდულის სარეზერვო ასლები/);
+  assert.match(editor, /სხვა მოდულები და დანარჩენი ხედები უცვლელი დარჩება/);
 });
