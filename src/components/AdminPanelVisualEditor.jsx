@@ -108,6 +108,315 @@ const RANGE_FIELDS = [
   { key: 'modalOverlayOpacity', label: 'გარე ფონის გამუქება', min: 40, max: 95, suffix: '%' }
 ];
 
+const COMPONENT_FIELDS = [
+  {
+    "key": "staff",
+    "label": "თანამშრომლები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "inventory",
+    "label": "მარაგები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "analytics",
+    "label": "ანალიტიკა",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "orders",
+    "label": "შეკვეთები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "support",
+    "label": "მხარდაჭერა",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "discounts",
+    "label": "ფასდაკლებები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "banners",
+    "label": "ბანერები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "categories",
+    "label": "კატეგორიები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  },
+  {
+    "key": "coupons",
+    "label": "კუპონები",
+    "properties": [
+      {
+        "key": "radius",
+        "label": "კუთხეების მომრგვალება",
+        "min": 0,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "padding",
+        "label": "შიდა დაშორება",
+        "min": 4,
+        "max": 48,
+        "suffix": "px"
+      },
+      {
+        "key": "borderWidth",
+        "label": "ჩარჩოს სისქე",
+        "min": 0,
+        "max": 4,
+        "suffix": "px"
+      },
+      {
+        "key": "shadowBlur",
+        "label": "ჩრდილის სიძლიერე",
+        "min": 0,
+        "max": 40,
+        "suffix": "px"
+      }
+    ]
+  }
+];
+
 const PRESETS = {
   emerald: { accent: '#34d399', canvas: '#020617', panel: '#0f172a', surface: '#020617', text: '#f8fafc', muted: '#94a3b8', border: '#334155', navActiveBackground: '#34d399', navActiveText: '#020617', navInactiveBackground: '#020617', navInactiveText: '#94a3b8', headerBackground: '#0f172a', headerBorder: '#334155', tableHeaderBackground: '#020617', tableHeaderText: '#94a3b8', tableRowBackground: '#0f172a', tableRowHover: '#172554', filterBackground: '#020617', filterText: '#f8fafc', filterBorder: '#334155', primaryButtonBackground: '#059669', primaryButtonText: '#ffffff', primaryButtonBorder: '#10b981', inputBackground: '#020617', inputText: '#f8fafc', inputBorder: '#334155', inputFocus: '#34d399', contentCardBackground: '#0f172a', contentCardBorder: '#334155', cardTitleText: '#f8fafc', cardMutedText: '#94a3b8', cardShadowColor: '#000000', cardHoverBorder: '#34d399', modalBackground: '#0d0d10', modalText: '#f8fafc', modalBorder: '#334155', modalOverlayBackground: '#020617', staffSectionBackground: '#0f172a', staffSectionBorder: '#334155', inventorySectionBackground: '#0f172a', inventorySectionBorder: '#334155', analyticsSectionBackground: '#0f172a', analyticsSectionBorder: '#334155', supportSectionBorder: '#334155', supportSectionBackground: '#0f172a', ordersSectionBorder: '#334155', ordersSectionBackground: '#0f172a' , discountsSectionBackground: '#0f172a', discountsSectionBorder: '#334155', bannersSectionBackground: '#0f172a', bannersSectionBorder: '#334155', categoriesSectionBackground: '#0f172a', categoriesSectionBorder: '#334155', couponsSectionBackground: '#0f172a', couponsSectionBorder: '#334155'},
   blue: { accent: '#60a5fa', canvas: '#0b1220', panel: '#142033', surface: '#0b1728', text: '#f8fafc', muted: '#a8b7ca', border: '#34445c', navActiveBackground: '#60a5fa', navActiveText: '#0b1220', navInactiveBackground: '#0b1728', navInactiveText: '#a8b7ca', headerBackground: '#142033', headerBorder: '#34445c', tableHeaderBackground: '#0b1728', tableHeaderText: '#a8b7ca', tableRowBackground: '#142033', tableRowHover: '#1e3a5f', filterBackground: '#0b1728', filterText: '#f8fafc', filterBorder: '#34445c', primaryButtonBackground: '#2563eb', primaryButtonText: '#ffffff', primaryButtonBorder: '#60a5fa', inputBackground: '#0b1728', inputText: '#f8fafc', inputBorder: '#34445c', inputFocus: '#60a5fa', contentCardBackground: '#142033', contentCardBorder: '#34445c', cardTitleText: '#f8fafc', cardMutedText: '#a8b7ca', cardShadowColor: '#020617', cardHoverBorder: '#60a5fa', modalBackground: '#142033', modalText: '#f8fafc', modalBorder: '#34445c', modalOverlayBackground: '#020617', staffSectionBackground: '#142033', staffSectionBorder: '#34445c', inventorySectionBackground: '#142033', inventorySectionBorder: '#34445c', analyticsSectionBackground: '#142033', analyticsSectionBorder: '#34445c' , ordersSectionBackground: '#142033', ordersSectionBorder: '#34445c', supportSectionBackground: '#142033', supportSectionBorder: '#34445c', discountsSectionBackground: '#142033', discountsSectionBorder: '#34445c', bannersSectionBackground: '#142033', bannersSectionBorder: '#34445c', categoriesSectionBackground: '#142033', categoriesSectionBorder: '#34445c', couponsSectionBackground: '#142033', couponsSectionBorder: '#34445c'},
@@ -119,10 +428,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
   const [viewport, setViewport] = useState('desktop');
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const active = viewport === 'desktop'
-    ? { theme: normalized.theme, layout: normalized.layout }
+    ? { theme: normalized.theme, layout: normalized.layout, components: normalized.components }
     : {
         theme: { ...normalized.theme, ...(normalized.responsive?.[viewport]?.theme || {}) },
-        layout: { ...normalized.layout, ...(normalized.responsive?.[viewport]?.layout || {}) }
+        layout: { ...normalized.layout, ...(normalized.responsive?.[viewport]?.layout || {}) },
+        components: Object.fromEntries(Object.entries(normalized.components).map(([key, value]) => [
+          key, { ...value, ...(normalized.responsive?.[viewport]?.components?.[key] || {}) }
+        ]))
       };
 
   const updateValue = (group, key, value) => {
@@ -143,6 +455,36 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
           [group]: {
             ...(normalized.responsive?.[viewport]?.[group] || {}),
             [key]: value
+          }
+        }
+      }
+    }));
+  };
+
+  const updateComponentValue = (component, property, value) => {
+    if (viewport === 'desktop') {
+      onChange(normalizeAdminPanelVisualDesign({
+        ...normalized,
+        components: {
+          ...normalized.components,
+          [component]: { ...normalized.components[component], [property]: value }
+        }
+      }));
+      return;
+    }
+
+    onChange(normalizeAdminPanelVisualDesign({
+      ...normalized,
+      responsive: {
+        ...(normalized.responsive || {}),
+        [viewport]: {
+          ...(normalized.responsive?.[viewport] || {}),
+          components: {
+            ...(normalized.responsive?.[viewport]?.components || {}),
+            [component]: {
+              ...(normalized.responsive?.[viewport]?.components?.[component] || {}),
+              [property]: value
+            }
           }
         }
       }
@@ -274,6 +616,40 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
                 aria-label={field.label}
               />
             </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-black text-white">მოდულების ინდივიდუალური დიზაინი</h3>
+          <p className="mt-1 text-[11px] leading-5 text-slate-400">თითოეული ბლოკის ზომა ცალკე იმართება. შეუცვლელი Tablet/Mobile მნიშვნელობები Desktop-ის პარამეტრებს მემკვიდრეობით იღებს.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {COMPONENT_FIELDS.map(component => (
+            <section key={component.key} className="rounded-2xl border border-slate-700/80 bg-slate-950/60 p-3 sm:p-4" aria-label={component.label}>
+              <h4 className="mb-3 text-xs font-black text-emerald-200">{component.label}</h4>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {component.properties.map(property => (
+                  <label key={property.key} className="block min-w-0 space-y-1.5 text-[11px] text-slate-300">
+                    <span className="flex items-center justify-between gap-2">
+                      <span>{property.label}</span>
+                      <b className="shrink-0 tabular-nums text-emerald-300">{active.components[component.key][property.key]} {property.suffix}</b>
+                    </span>
+                    <input
+                      type="range"
+                      min={property.min}
+                      max={property.max}
+                      step="1"
+                      value={active.components[component.key][property.key]}
+                      onChange={event => updateComponentValue(component.key, property.key, Number(event.target.value))}
+                      className="w-full accent-emerald-400"
+                      aria-label={component.label + ' — ' + property.label}
+                    />
+                  </label>
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </div>
