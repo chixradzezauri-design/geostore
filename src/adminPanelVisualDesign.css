@@ -1132,7 +1132,7 @@
   padding: var(--admin-vd-element-orderDetailModal-padding) !important;
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 641px) and (max-width: 1023px) {
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-header {
   font-size: var(--admin-vd-element-tablet-orderHeader-fontSize, var(--admin-vd-element-orderHeader-fontSize)) !important;
   font-weight: var(--admin-vd-element-tablet-orderHeader-fontWeight, var(--admin-vd-element-orderHeader-fontWeight)) !important;
@@ -1225,7 +1225,7 @@
 }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 640px) {
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-header {
   font-size: var(--admin-vd-element-mobile-orderHeader-fontSize, var(--admin-vd-element-tablet-orderHeader-fontSize, var(--admin-vd-element-orderHeader-fontSize))) !important;
   font-weight: var(--admin-vd-element-mobile-orderHeader-fontWeight, var(--admin-vd-element-tablet-orderHeader-fontWeight, var(--admin-vd-element-orderHeader-fontWeight))) !important;
@@ -1584,7 +1584,7 @@
   padding: var(--admin-vd-element-couponList-padding) !important;
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 641px) and (max-width: 1023px) {
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel {
   font-size: var(--admin-vd-element-tablet-staffList-fontSize, var(--admin-vd-element-staffList-fontSize)) !important;
   font-weight: var(--admin-vd-element-tablet-staffList-fontWeight, var(--admin-vd-element-staffList-fontWeight)) !important;
@@ -1850,7 +1850,7 @@
 }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 640px) {
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel {
   font-size: var(--admin-vd-element-mobile-staffList-fontSize, var(--admin-vd-element-tablet-staffList-fontSize, var(--admin-vd-element-staffList-fontSize))) !important;
   font-weight: var(--admin-vd-element-mobile-staffList-fontWeight, var(--admin-vd-element-tablet-staffList-fontWeight, var(--admin-vd-element-staffList-fontWeight))) !important;
