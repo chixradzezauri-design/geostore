@@ -9,7 +9,7 @@ test('storefront draft loader captures the shared version used by the next save'
   assert.match(app, /select=draft_config,draft_updated_at/);
   assert.match(app, /storefrontDraftUpdatedAtRef\.current = typeof rows\?\.\[0\]\?\.draft_updated_at === 'string'/);
   assert.match(app, /p_expected_draft_updated_at: storefrontDraftUpdatedAtRef\.current/);
-  assert.match(app, /storefrontDraftUpdatedAtRef\.current = typeof savedDraftState\?\.draft_updated_at === 'string'/);
+  assert.match(app, /const savedDraftUpdatedAt = savedDraftState\?\.draft_updated_at/);
 });
 
 test('storefront draft RPC rejects stale device versions and serializes first-time writes', () => {
@@ -26,4 +26,12 @@ test('draft conflict is reported without silently replacing the local edit or pu
   assert.match(app, /თქვენი ცვლილებები ამჯერად არ გადაგვიწერია/);
   const privateRpc = migration.split('CREATE OR REPLACE FUNCTION private.save_storefront_draft')[1]?.split('CREATE OR REPLACE FUNCTION public.save_storefront_draft')[0] || '';
   assert.doesNotMatch(privateRpc, /published_config|is_published|published_at/);
+});
+test('committed draft saves never clean up media when the response cannot be verified', () => {
+  const saveHandler = app.split('const handleSaveStorefrontDraft')[1]?.split('const handleRestoreStorefrontVersion')[0] || '';
+  assert.match(saveHandler, /let draftSaveCommitted = false/);
+  assert.match(saveHandler, /draftSaveCommitted = true;[\\s\\S]*savedDraftState = await response\.json\(\)/);
+  assert.match(saveHandler, /Number\.isFinite\(Date\.parse\(savedDraftUpdatedAt\)\)/);
+  assert.match(saveHandler, /if \(!draftSaveCommitted && uploadedAssets\.length\)/);
+  assert.match(saveHandler, /else if \(draftSaveCommitted && uploadedAssets\.length\)/);
 });
