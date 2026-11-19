@@ -15,6 +15,7 @@ declare
   v_now timestamptz := clock_timestamp();
   v_version_id uuid;
   v_current_draft_updated_at timestamptz;
+  v_saved_draft_updated_at timestamptz;
   v_category_count integer;
   v_banner_count integer;
   v_bad_count integer;
@@ -131,7 +132,8 @@ begin
       is_published = true,
       draft_updated_at = greatest(excluded.draft_updated_at, public.storefront_config.draft_updated_at + interval '1 microsecond'),
       published_at = excluded.published_at,
-      updated_by = excluded.updated_by;
+      updated_by = excluded.updated_by
+  returning draft_updated_at into v_saved_draft_updated_at;
 
   insert into public.storefront_versions (
     config_key, snapshot, version_label, created_by
@@ -147,7 +149,7 @@ begin
   )
   returning id into v_version_id;
 
-  return jsonb_build_object('version_id', v_version_id, 'published_at', v_now);
+  return jsonb_build_object('version_id', v_version_id, 'published_at', v_now, 'draft_updated_at', v_saved_draft_updated_at);
 end;
 $function$;
 
