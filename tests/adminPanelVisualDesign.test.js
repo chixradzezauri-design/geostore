@@ -1185,3 +1185,11 @@ test('admin style library supports bulk category and favorite management', () =>
   assert.match(editor, /კატეგორიის შეცვლა \(/);
   assert.match(editor, /რჩეულებში დამატება/);
 });
+
+test('admin style library detects identical style presets without auto-deleting them', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /duplicateStyleGroups = useMemo/);
+  assert.match(editor, /selectDuplicateStylePresets/);
+  assert.match(editor, /დუბლირებული ასლების მონიშვნა/);
+  assert.match(editor, /წაშლა ავტომატურად არ ხდება/);
+});
