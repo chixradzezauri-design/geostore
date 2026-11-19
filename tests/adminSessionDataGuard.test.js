@@ -41,15 +41,15 @@ test('ending an admin session clears private snapshots before paint and incremen
 
 test('CRM profile saves and actions cannot restore private data after logout', () => {
   const persist = readFunction('persistServerCustomerProfile');
-  assert.match(persist, /const requestSessionVersion = adminSessionVersion\\.current/);
-  assert.match(persist, /if \\(!isCurrentAdminSession\\(requestSessionVersion\\)\\) return false/);
-  assert.match(persist, /const headers = await getSupabaseHeaders\\(\\)/);
-  assert.match(persist, /const saved = await saveAdminCustomerCrmProfile/);
+  assert.ok(persist.includes('const requestSessionVersion = adminSessionVersion.current'));
+  assert.ok(persist.includes('if (!isCurrentAdminSession(requestSessionVersion)) return false;'));
+  assert.ok(persist.includes('const headers = await getSupabaseHeaders();'));
+  assert.ok(persist.includes('const saved = await saveAdminCustomerCrmProfile'));
   assert.ok(persist.indexOf('const saved = await saveAdminCustomerCrmProfile') < persist.indexOf('setServerCustomers'));
   for (const name of ['handleToggleVipUser', 'handleToggleBlockUser']) {
     const body = readFunction(name);
-    assert.match(body, /const requestSessionVersion = adminSessionVersion\\.current/);
-    assert.match(body, /!isCurrentAdminSession\\(requestSessionVersion\\)/);
+    assert.ok(body.includes('const requestSessionVersion = adminSessionVersion.current'));
+    assert.ok(body.includes('!isCurrentAdminSession(requestSessionVersion)'));
   }
 });
 
