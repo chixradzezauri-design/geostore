@@ -423,6 +423,8 @@ export default function StoreView({
         <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>{visualCopy.heroStampTop || 'CURATED'}</span><strong>{visualCopy.heroStampTitle || 'STYLE\nEDITION'}</strong><span>{visualCopy.heroStampBottom || 'GEORGIA · 2026'}</span></div>
       </section>
 
+      {renderCustomSections('after-hero')}
+
       {Array.isArray(banners) && banners.length > 0 && (
         <section data-visual-editor-target="banner" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner')} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
           {banners.slice(0, 4).map((banner) => {
@@ -452,6 +454,8 @@ export default function StoreView({
           })}
         </section>
       )}
+
+      {renderCustomSections('after-banners')}
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
@@ -528,6 +532,8 @@ export default function StoreView({
           </div>
         </div>
       )}
+
+      {renderCustomSections('after-flash-sale')}
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
       <div data-visual-editor-target="categories" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories')} className="gs-editorial-collections space-y-6">
@@ -681,6 +687,8 @@ export default function StoreView({
         )}
       </div>
 
+      {renderCustomSections('after-categories')}
+
       {/* Filters & Sorting */}
       <div data-visual-editor-target="filters" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
@@ -732,6 +740,8 @@ export default function StoreView({
           </select>
         </div>
       </div>
+
+      {renderCustomSections('after-filters')}
 
       {hasInvalidPriceRange && (
         <p className="gs-price-range-error" role="alert">
@@ -872,6 +882,8 @@ export default function StoreView({
         </div>
       )}
 
+      {renderCustomSections('after-products')}
+
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
@@ -987,7 +999,30 @@ export default function StoreView({
 
                       <div className="gs-size-options-grid flex flex-wrap gap-2 w-full">
                         {availableSizesForSelectedColor.map(size => {
-                          return (
+                          const renderCustomSections = placement => customSections.filter(section => section.visible && (section.placement || 'after-products') === placement).map(section => {
+    const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
+      ? { ...section, ...(section.responsive?.[visualEditorViewport] || {}) }
+      : section;
+    const responsiveCss = !visualEditorViewport ? buildCustomSectionResponsiveCss(section) : '';
+    return (
+    <section key={section.id} data-gs-custom-section={section.id} aria-label={section.title || 'Custom storefront section'} className="gs-custom-storefront-section mx-auto w-full max-w-[var(--gs-content-width,1440px)] overflow-hidden" style={{ backgroundColor: activeSectionStyle.backgroundColor, color: activeSectionStyle.textColor, padding: activeSectionStyle.padding + 'px', textAlign: activeSectionStyle.align, maxWidth: activeSectionStyle.maxWidth + 'px', marginTop: activeSectionStyle.marginTop + 'px', marginBottom: activeSectionStyle.marginBottom + 'px', borderRadius: activeSectionStyle.borderRadius + 'px', minHeight: activeSectionStyle.minHeight ? activeSectionStyle.minHeight + 'px' : undefined }}>
+      {responsiveCss ? <style>{responsiveCss}</style> : null}
+      <div className="mx-auto flex w-full max-w-full flex-col gap-4">
+        {section.blocks.map(block => {
+          if (block.type === 'heading') return <h2 key={block.id} className="text-xl sm:text-2xl font-bold leading-tight">{block.text}</h2>;
+          if (block.type === 'text') return <p key={block.id} className="whitespace-pre-line text-sm sm:text-base leading-relaxed">{block.text}</p>;
+          if (block.type === 'image') return block.imageUrl ? <img key={block.id} src={block.imageUrl} alt={block.alt} loading="lazy" decoding="async" className="h-auto max-h-[560px] w-full rounded-xl object-cover" /> : null;
+          if (block.type === 'video') return block.videoUrl ? <div key={block.id} className="aspect-video w-full overflow-hidden rounded-xl"><iframe src={block.videoUrl} title={section.title || 'GEOSTORE video'} loading="lazy" className="h-full w-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div> : null;
+          if (block.type === 'button') return block.url && block.label ? <a key={block.id} href={block.url} target={block.url.startsWith('http') ? '_blank' : undefined} rel={block.url.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-11 items-center justify-center self-start rounded-xl bg-[var(--gs-button-bg,#29241f)] px-5 py-3 text-sm font-bold text-[var(--gs-button-text,#ffffff)] no-underline">{block.label}</a> : null;
+          if (block.type === 'spacer') return <div key={block.id} aria-hidden="true" className="h-6 sm:h-10" />;
+          return null;
+        })}
+      </div>
+    </section>
+    );
+  })};
+
+  return (
                             <button
                               key={size}
                               type="button"
@@ -1227,28 +1262,9 @@ export default function StoreView({
       )}
 
 
-      {customSections.filter(section => section.visible).map(section => {
-        const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
-          ? { ...section, ...(section.responsive?.[visualEditorViewport] || {}) }
-          : section;
-        const responsiveCss = !visualEditorViewport ? buildCustomSectionResponsiveCss(section) : '';
-        return (
-        <section key={section.id} data-gs-custom-section={section.id} aria-label={section.title || 'Custom storefront section'} className="gs-custom-storefront-section mx-auto w-full max-w-[var(--gs-content-width,1440px)] overflow-hidden" style={{ backgroundColor: activeSectionStyle.backgroundColor, color: activeSectionStyle.textColor, padding: activeSectionStyle.padding + 'px', textAlign: activeSectionStyle.align, maxWidth: activeSectionStyle.maxWidth + 'px', marginTop: activeSectionStyle.marginTop + 'px', marginBottom: activeSectionStyle.marginBottom + 'px', borderRadius: activeSectionStyle.borderRadius + 'px', minHeight: activeSectionStyle.minHeight ? activeSectionStyle.minHeight + 'px' : undefined }}>
-          {responsiveCss ? <style>{responsiveCss}</style> : null}
-          <div className="mx-auto flex w-full max-w-full flex-col gap-4">
-            {section.blocks.map(block => {
-              if (block.type === 'heading') return <h2 key={block.id} className="text-xl sm:text-2xl font-bold leading-tight">{block.text}</h2>;
-              if (block.type === 'text') return <p key={block.id} className="whitespace-pre-line text-sm sm:text-base leading-relaxed">{block.text}</p>;
-              if (block.type === 'image') return block.imageUrl ? <img key={block.id} src={block.imageUrl} alt={block.alt} loading="lazy" decoding="async" className="h-auto max-h-[560px] w-full rounded-xl object-cover" /> : null;
-              if (block.type === 'video') return block.videoUrl ? <div key={block.id} className="aspect-video w-full overflow-hidden rounded-xl"><iframe src={block.videoUrl} title={section.title || 'GEOSTORE video'} loading="lazy" className="h-full w-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div> : null;
-              if (block.type === 'button') return block.url && block.label ? <a key={block.id} href={block.url} target={block.url.startsWith('http') ? '_blank' : undefined} rel={block.url.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-11 items-center justify-center self-start rounded-xl bg-[var(--gs-button-bg,#29241f)] px-5 py-3 text-sm font-bold text-[var(--gs-button-text,#ffffff)] no-underline">{block.label}</a> : null;
-              if (block.type === 'spacer') return <div key={block.id} aria-hidden="true" className="h-6 sm:h-10" />;
-              return null;
-            })}
-          </div>
-        </section>
-        );
-      })}
+      {renderCustomSections('after-products')}
+
+
 
       {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
