@@ -151,17 +151,17 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Unsupported image URL protocol');
       return parsedUrl.href;
     } catch {
-      throw new Error('კატეგორიის ან ბანერის ფოტოს ბმული არასწორია. გამოიყენეთ HTTP ან HTTPS მისამართი.');
+      throw new Error('მაღაზიის ფოტოს ბმული არასწორია. გამოიყენეთ HTTP ან HTTPS მისამართი.');
     }
   }
 
   const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
-  if (!match) throw new Error('კატეგორიის ან ბანერის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
+  if (!match) throw new Error('მაღაზიის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
   const mimeType = match[1].toLowerCase();
   const base64 = match[2];
   const sizeBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
   if (sizeBytes <= 0 || sizeBytes > STOREFRONT_IMAGE_MAX_BYTES) {
-    throw new Error('კატეგორიის ან ბანერის თითოეული ფოტო მაქსიმუმ 5 MB უნდა იყოს.');
+    throw new Error('მაღაზიის თითოეული ფოტო მაქსიმუმ 5 MB უნდა იყოს.');
   }
 
   const binary = atob(base64);
@@ -229,7 +229,8 @@ const cleanupStorefrontUploads = async (uploadedAssets) => {
     const safePath = String(path || '').replace(/^\/+/, '');
     const isManagedStorefrontPath =
       safePath.startsWith('storefront/categories/') ||
-      safePath.startsWith('storefront/banners/');
+      safePath.startsWith('storefront/banners/') ||
+      safePath.startsWith('storefront/hero/');
     if (!isManagedStorefrontPath) return;
 
     const encodedPath = safePath.split('/').map(encodeURIComponent).join('/');

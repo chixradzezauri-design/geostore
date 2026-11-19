@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
+const heroStorageMigration = await readFile(new URL('../supabase/migrations/20261119110000_add_storefront_hero_storage_scope.sql', import.meta.url), 'utf8');
 const foundation = await readFile(new URL('../supabase/migrations/20261117100000_admin_staff_auth_foundation.sql', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
@@ -69,4 +70,19 @@ test('settings staff Storage access is limited to storefront banner and category
     "name LIKE 'products/%'",
     "public.has_staff_permission('products')"
   ]) assert.ok(migration.includes(phrase), phrase);
+});
+
+test('hero image Storage operations are restricted to settings staff and preserve product staff scope', () => {
+  for (const policy of ['Storefront media scoped upload', 'Storefront media scoped update', 'Storefront media scoped delete']) {
+    assert.ok(heroStorageMigration.includes(policy), policy);
+  }
+  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/hero\/%'/g) || []).length, 3);
+  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/categories\/%'/g) || []).length, 3);
+  assert.equal((heroStorageMigration.match(/name LIKE 'storefront\/banners\/%'/g) || []).length, 3);
+  assert.equal((heroStorageMigration.match(/name LIKE 'products\/%'/g) || []).length, 3);
+  assert.equal((heroStorageMigration.match(/public\.has_staff_permission\('settings'\)/g) || []).length, 3);
+  assert.equal((heroStorageMigration.match(/public\.has_staff_permission\('products'\)/g) || []).length, 3);
+  assert.match(app, /safePath\.startsWith\('storefront\/hero\/'\)/);
+  assert.match(app, /safePath\.startsWith\('storefront\/categories\/'\)/);
+  assert.match(app, /safePath\.startsWith\('storefront\/banners\/'\)/);
 });
