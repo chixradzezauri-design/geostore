@@ -63,6 +63,9 @@ test('version history is readable only by settings staff and append-only to brow
   assert.match(publishMigration, /insert into public\.storefront_versions[\s\S]*returning id into v_version_id/i);
   assert.match(editor, /from\('storefront_versions'\)[\s\S]*limit\(20\)/);
   assert.match(editor, /if \(published === true\)[\s\S]*setVersionHistory\(Array\.isArray\(data\) \? data : \[\]\)/);
+  assert.match(editor, /const versionInspectRequestRef = useRef\(0\)/);
+  assert.match(editor, /versionInspectRequestRef\.current === requestId/);
+  assert.match(editor, /versionInspectRequestRef\.current \+= 1/);
 });
 
 test('successful restore refreshes the shared timestamp and all storefront draft sections before a later save', () => {
