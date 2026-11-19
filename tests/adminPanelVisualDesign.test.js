@@ -369,6 +369,6 @@ test('admin visual editor exposes independent module geometry controls for deskt
   assert.match(editor, /updateComponentValue/);
   assert.match(editor, /active\.components\[component\.key\]\[property\.key\]/);
   for (const moduleName of ['staff', 'inventory', 'analytics', 'orders', 'support', 'discounts', 'banners', 'categories', 'coupons']) {
-    assert.match(editor, new RegExp(`key: '${moduleName}'`));
+    assert.match(editor, new RegExp('"key": "' + moduleName + '"'));
   }
 });
