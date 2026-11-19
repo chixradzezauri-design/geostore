@@ -25,6 +25,7 @@ test('restoring a storefront version updates draft fields only and never publish
   assert.match(update, /updated_by = auth\.uid\(\)/);
   assert.match(update, /draft_updated_at = GREATEST/);
   assert.doesNotMatch(update, /published_config|is_published|published_at/);
+  assert.doesNotMatch(rpc, /'snapshot', v_snapshot/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.restore_storefront_draft_from_version\(uuid, timestamptz\) FROM PUBLIC, anon/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.restore_storefront_draft_from_version\(uuid, timestamptz\) TO authenticated/);
 });
