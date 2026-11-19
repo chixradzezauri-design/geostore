@@ -244,7 +244,7 @@ test('admin style library exposes safe rename, duplicate, apply and delete actio
 
 test('admin style library supports bounded JSON import and export actions', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
-  assert.match(editor, /const exportSavedElementStyles = \(\) =>/);
+  assert.match(editor, /const exportSavedElementStyles = \(presets = normalized\.stylePresets, filename =/);
   assert.match(editor, /format: 'geostore-admin-style-presets'/);
   assert.match(editor, /const importSavedElementStyles = async event =>/);
   assert.match(editor, /file\.size > 100 \* 1024/);
@@ -1090,7 +1090,7 @@ test('admin style library supports category assignment, search and filtering', (
   assert.match(editor, /value=\{stylePresetSearch\}/);
   assert.match(editor, /value=\{stylePresetCategory\}/);
   assert.match(editor, /value=\{preset\.category\}/);
-  assert.match(editor, /filteredStylePresets\.map/);
+  assert.match(editor, /groupedStylePresets\.map\(group/);
   assert.match(editor, /ამ ძიებით სტილი ვერ მოიძებნა/);
 });
 
@@ -1146,8 +1146,8 @@ test('admin style library can apply a saved style to multiple selected elements'
   assert.match(editor, /const \[selectedElementKeys, setSelectedElementKeys\] = useState\(\[\]\)/);
   assert.match(editor, /const applySavedElementStyleToTargets = \(preset, targetKeys\) =>/);
   assert.match(editor, /const applySavedElementStyleToSelected = preset =>/);
-  assert.match(editor, /next\.elementStyles\[key\] = \{ \.\.\.next\.elementStyles\[key\], \.\.\.preset\.style \}/);
-  assert.match(editor, /elementStyles\[key\] = \{ \.\.\.\(elementStyles\[key\] \|\| \{\}\), \.\.\.preset\.style \}/);
+  assert.match(editor, /next\.elementStyles\[key\] = \{ \.\.\.next\.elementStyles\[key\], \.\.\.selectedStyle \}/);
+  assert.match(editor, /elementStyles\[key\] = \{ \.\.\.\(elementStyles\[key\] \|\| \{\}\), \.\.\.selectedStyle \}/);
   assert.match(editor, /მონიშნულ \{selectedElementKeys\.length\}-ზე/);
   assert.match(editor, /მონიშვნის მოხსნა/);
 });
@@ -1213,7 +1213,7 @@ test('admin style JSON import skips duplicate style values already in the librar
 test('admin style export v2 preserves library metadata and keeps v1 imports compatible', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /version: 2/);
-  assert.match(editor, /includesCategories: true, includesFavorites: true, includesVersionHistory: true/);
+  assert.match(editor, /includesCategories: true,\s*includesFavorites: true,\s*includesVersionHistory: true/);
   assert.match(editor, /!\[1, 2\]\.includes\(parsed\?\.version\)/);
   assert.doesNotMatch(editor, /\\\\n\s+window\.alert/);
 });
@@ -1286,7 +1286,7 @@ test('admin style editor protects single, bulk and full-restore deletion paths w
   assert.match(editor, /createAdminStylePresetBackup\(normalized, 'სრული JSON აღდგენის წინ'/);
   assert.match(editor, /restoreAdminStylePresetBackup\(normalized, backup\.id\)/);
   assert.match(editor, /ავტომატური სარეზერვო ასლები/);
-  assert.match(editor, /ამ ასლის აღდგენა/);
+  assert.match(editor, /ასლის აღდგენა/);
 });
 
 
