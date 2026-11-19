@@ -408,10 +408,10 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
   const policyMigration = readFileSync(new URL('../supabase/migrations/20261119151000_admin_panel_visual_settings_owner_policy.sql', import.meta.url), 'utf8');
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
 
-  assert.match(api, /rpc\('get_admin_panel_visual_design'\)/);
-  assert.match(api, /rpc\('save_admin_panel_visual_design'/);
+  assert.match(api, /rpc\('get_admin_panel_visual_design_state'\)/);
+  assert.match(api, /rpc\('save_admin_panel_visual_design_state'/);
   assert.match(dashboard, /fetchAdminPanelVisualDesign\(\)/);
-  assert.match(dashboard, /saveAdminPanelVisualDesignToCloud\(adminVisualDesign\)/);
+  assert.match(dashboard, /saveAdminPanelVisualDesignToCloud\(adminVisualDesign, adminVisualUpdatedAtRef\.current\)/);
   assert.match(dashboard, /adminVisualDesignReady/);
   assert.match(dashboard, /ადმინპანელის საერთო დიზაინი იტვირთება/);
   assert.match(dashboard, /setAdminVisualReloadKey\(value => value \+ 1\)/);
