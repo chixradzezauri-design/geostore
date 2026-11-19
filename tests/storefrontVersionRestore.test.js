@@ -6,6 +6,8 @@ const migration = await readFile(new URL('../supabase/migrations/20261119190000_
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+const staffPermissions = await readFile(new URL('../supabase/migrations/20261117150000_staff_settings_permission.sql', import.meta.url), 'utf8');
+const publishMigration = await readFile(new URL('../supabase/migrations/20261107083528_atomic_storefront_publish_and_append_only_versions.sql', import.meta.url), 'utf8');
 
 test('storefront version restore is permission-checked and uses optimistic concurrency', () => {
   const rpc = migration.split('CREATE OR REPLACE FUNCTION private.restore_storefront_draft_from_version')[1]?.split('CREATE OR REPLACE FUNCTION public.restore_storefront_draft_from_version')[0] || '';
@@ -53,4 +55,21 @@ test('storefront history UI loads immutable versions and restore remains a draft
   assert.match(app, /rpc\/restore_storefront_draft_from_version/);
   assert.match(app, /storefrontDraftUpdatedAtRef\.current/);
   assert.match(app, /ძველი ვერსია აღდგა საერთო მონახაზში/);
+});
+test('version history is readable only by settings staff and append-only to browser clients', () => {
+  assert.match(staffPermissions, /Staff with settings permission can read storefront versions/);
+  assert.match(staffPermissions, /USING \(public\.has_staff_permission\('settings'\)\)/);
+  assert.match(publishMigration, /revoke insert, update, delete on table public\.storefront_versions from authenticated/i);
+  assert.match(publishMigration, /insert into public\.storefront_versions[\s\S]*returning id into v_version_id/i);
+  assert.match(editor, /from\('storefront_versions'\)[\s\S]*limit\(20\)/);
+  assert.match(editor, /if \(published === true\)[\s\S]*setVersionHistory\(Array\.isArray\(data\) \? data : \[\]\)/);
+});
+
+test('successful restore refreshes the shared timestamp and all storefront draft sections before a later save', () => {
+  const restoreHandler = app.split('const handleRestoreStorefrontVersion')[1]?.split('const handlePublishStorefront')[0] || '';
+  assert.match(restoreHandler, /storefrontDraftUpdatedAtRef\.current = result\.draft_updated_at/);
+  assert.match(restoreHandler, /setCategoriesList\(restoredCategories\)/);
+  assert.match(restoreHandler, /setBannersList\(restoredBanners\)/);
+  assert.match(restoreHandler, /setSiteSettings\(restoredSettings\)/);
+  assert.match(app, /p_expected_draft_updated_at: storefrontDraftUpdatedAtRef\.current/);
 });
