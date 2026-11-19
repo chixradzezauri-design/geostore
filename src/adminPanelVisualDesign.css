@@ -36,7 +36,7 @@
   font-size: var(--admin-vd-fontSize-active);
 }
 
-.admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-header="true"] {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] > div.flex-1 > [data-admin-visual-header="true"] {
   background-color: var(--admin-vd-headerBackground-active) !important;
   border-color: var(--admin-vd-headerBorder-active) !important;
   border-radius: var(--admin-vd-headerRadius-active) !important;
