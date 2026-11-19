@@ -794,6 +794,39 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(normalizeAdminPanelVisualDesign({ ...protectedDesign, stylePresets: protectedDesign.stylePresets.filter(item => item.id !== id) }));
     setSelectedStylePresetIds(current => current.filter(selectedId => selectedId !== id));
   };
+  const restoreSingleStyleFromBackup = (backup, preset) => {
+    if (!backup || !preset?.id || !preset?.style) return;
+    const current = normalized.stylePresets.find(item => item.id === preset.id);
+    const getStyleKey = style => JSON.stringify(Object.entries(style || {}).sort(([left], [right]) => left.localeCompare(right)));
+    const duplicate = normalized.stylePresets.find(item => item.id !== preset.id && getStyleKey(item.style) === getStyleKey(preset.style));
+    if (duplicate) {
+      window.alert(`ეს სტილი უკვე არსებობს ბიბლიოთეკაში სახელით „${duplicate.name}“. დუბლიკატი არ დაემატა.`);
+      return;
+    }
+    if (!current && normalized.stylePresets.length >= 30) {
+      window.alert('სტილების ბიბლიოთეკა სავსეა (30/30). ერთი სტილის აღსადგენად ჯერ წაშალეთ ან გააერთიანეთ რომელიმე სტილი.');
+      return;
+    }
+    if (current && JSON.stringify(current) === JSON.stringify(preset)) {
+      window.alert('ეს სტილი უკვე ემთხვევა სარეზერვო ასლში შენახულ ვერსიას.');
+      return;
+    }
+    const action = current ? 'განახლდება არსებული სტილი' : 'დაემატება ახალი სტილი';
+    const rotationWarning = normalized.stylePresetBackups.length >= 10 ? '\\nშენიშვნა: მიმდინარე მდგომარეობის დაცვისას ყველაზე ძველი სარეზერვო ასლი ჩანაცვლდება.' : '';
+    if (!window.confirm(`აღდგეს მხოლოდ „${preset.name}“? ${action}. დანარჩენი სტილები უცვლელი დარჩება. მიმდინარე მდგომარეობა ავტომატურად შეინახება.${rotationWarning}`)) return;
+    const protectedDesign = createAdminStylePresetBackup(normalized, `ერთი სტილის აღდგენამდე: ${preset.name}`);
+    const restoredAt = new Date().toISOString();
+    const restoredPreset = current ? {
+      ...preset,
+      history: [...(preset.history || []), ...(current.history || []), { savedAt: restoredAt, style: { ...current.style } }].slice(-10)
+    } : { ...preset, history: (preset.history || []).slice(-10) };
+    const stylePresets = current
+      ? protectedDesign.stylePresets.map(item => item.id === preset.id ? restoredPreset : item)
+      : [...protectedDesign.stylePresets, restoredPreset];
+    commitChange(normalizeAdminPanelVisualDesign({ ...protectedDesign, stylePresets }));
+    setSelectedStylePresetIds([preset.id]);
+  };
+
   const restoreAutomaticStyleBackup = backup => {
     if (!backup) return;
     const comparison = backup.id === expandedStyleBackupId ? expandedStyleBackupDiff : (() => {
@@ -1361,7 +1394,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                     {expandedStyleBackupId === backup.id && <div className="mt-2 w-full space-y-2 rounded-lg border border-violet-400/20 bg-slate-950/70 p-3">
                       <div className="flex flex-wrap gap-2 text-[10px]"><span className="rounded bg-slate-800 px-2 py-1 text-emerald-200">ასლში: {backup.stylePresets.length}</span><span className="rounded bg-slate-800 px-2 py-1 text-sky-200">ახალი: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.added.length : 0}</span><span className="rounded bg-slate-800 px-2 py-1 text-amber-200">შეცვლილი: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.changed.length : 0}</span><span className="rounded bg-slate-800 px-2 py-1 text-rose-200">აღდგენისას მოცილდება: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.removed.length : 0}</span></div>
                       <p className="text-[10px] text-slate-400">ქვემოთ ნაჩვენებია ამ ასლში შენახული სტილები. აღდგენა შეცვლის მიმდინარე სტილების ბიბლიოთეკას, მაგრამ მის ასლს წინასწარ შეინახავს.</p>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{backup.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 items-center gap-2 rounded-md border border-slate-800 p-2"><span className="h-8 w-8 shrink-0 rounded-md border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#475569' }} /><span className="min-w-0"><span className="block truncate text-[10px] font-bold text-slate-200">{preset.name}</span><span className="block truncate text-[9px] text-slate-500">{preset.category} · {Object.keys(preset.style).length} პარამეტრი</span></span></div>)}</div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{backup.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 items-center justify-between gap-2 rounded-md border border-slate-800 p-2"><div className="flex min-w-0 items-center gap-2"><span className="h-8 w-8 shrink-0 rounded-md border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#475569' }} /><span className="min-w-0"><span className="block truncate text-[10px] font-bold text-slate-200">{preset.name}</span><span className="block truncate text-[9px] text-slate-500">{preset.category} · {Object.keys(preset.style).length} პარამეტრი</span></span></div><button type="button" onClick={() => restoreSingleStyleFromBackup(backup, preset)} className="shrink-0 rounded-md border border-emerald-400/40 px-2 py-1.5 text-[9px] font-bold text-emerald-200">ამ სტილის აღდგენა</button></div>)}</div>
                       {backup.stylePresets.length === 0 && <p className="text-[10px] text-slate-500">ამ ასლში სტილები არ არის.</p>}
                     </div>}
                   </div>
