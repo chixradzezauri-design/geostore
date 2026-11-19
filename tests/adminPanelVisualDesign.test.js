@@ -1448,9 +1448,13 @@ test('admin module backups preserve and restore only one module in its selected 
   const backup = backedUp.moduleDesignBackups[0];
   const changed = normalizeAdminPanelVisualDesign({
     ...backedUp,
+    theme: { ...backedUp.theme, ordersSectionBackground: '#654321' },
+    elementStyles: { ...backedUp.elementStyles, orderCard: { padding: 4 } },
     responsive: { ...backedUp.responsive, mobile: { ...backedUp.responsive.mobile, elementStyles: { ...backedUp.responsive.mobile.elementStyles, orderHeader: { fontSize: 11 }, staffList: { fontSize: 15 } }, components: { ...backedUp.responsive.mobile.components, orders: { radius: 40 } } } }
   });
   const restored = restoreAdminPanelModuleBackup(changed, backup.id);
+  assert.equal(restored.responsive.mobile.theme.ordersSectionBackground, '#123456');
+  assert.equal(restored.responsive.mobile.elementStyles.orderCard.padding, 22);
   assert.equal(restored.responsive.mobile.elementStyles.orderHeader.fontSize, 20);
   assert.equal(restored.responsive.mobile.elementStyles.staffList.fontSize, 15);
   assert.equal(restored.responsive.mobile.components.orders.radius, 18);
