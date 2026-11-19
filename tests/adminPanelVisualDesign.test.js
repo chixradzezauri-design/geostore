@@ -881,14 +881,14 @@ test('resetAdminPanelVisualElement resets only the selected element in the activ
   assert.deepEqual(desktop.responsive, source.responsive);
 
   const tablet = resetAdminPanelVisualElement(source, 'tablet', 'orderCard');
-  assert.equal(tablet.responsive.tablet.elementStyles.orderCard, undefined);
+  assert.deepEqual(tablet.responsive.tablet.elementStyles.orderCard, {});
   assert.deepEqual(tablet.responsive.tablet.elementStyles.orderHeader, source.responsive.tablet.elementStyles.orderHeader);
   assert.deepEqual(tablet.responsive.tablet.theme, source.responsive.tablet.theme);
   assert.deepEqual(tablet.responsive.mobile, source.responsive.mobile);
   assert.equal(tablet.elementStyles.orderCard.fontSize, 22);
 
   const mobile = resetAdminPanelVisualElement(source, 'mobile', 'orderCard');
-  assert.equal(mobile.responsive.mobile.elementStyles.orderCard, undefined);
+  assert.deepEqual(mobile.responsive.mobile.elementStyles.orderCard, {});
   assert.deepEqual(mobile.responsive.mobile.elementStyles.orderHeader, source.responsive.mobile.elementStyles.orderHeader);
   assert.deepEqual(mobile.responsive.tablet, source.responsive.tablet);
   assert.equal(mobile.elementStyles.orderCard.fontSize, 22);
