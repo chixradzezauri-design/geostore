@@ -724,8 +724,17 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset, sync
                   <option value="right">მარჯვნივ</option>
                 </select>
               </label>
+              <label className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-slate-700/70 bg-slate-900/70 p-2 text-[11px] text-slate-300">
+                <span>ჩარჩოს სტილი</span>
+                <select value={active.components[component.key].borderStyle} onChange={event => updateComponentValue(component.key, 'borderStyle', event.target.value)} className="rounded-md border border-slate-600 bg-slate-950 px-2 py-1.5 text-white" aria-label={component.label + ' — ჩარჩოს სტილი'}>
+                  <option value="solid">მთლიანი</option>
+                  <option value="dashed">წყვეტილი</option>
+                  <option value="dotted">წერტილოვანი</option>
+                  <option value="none">ჩარჩოს გარეშე</option>
+                </select>
+              </label>
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {[
+                [
                   { key: 'textColor', label: 'ტექსტის ფერი' },
                   { key: 'backgroundColor', label: 'ბლოკის ფონი' },
                   { key: 'borderColor', label: 'ჩარჩოს ფერი' }
