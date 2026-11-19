@@ -1034,102 +1034,102 @@
 
 /* Fine-grained order module element styles. */
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-header {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderHeader-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderHeader-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderHeader-textAlign) !important;
+  color: var(--admin-vd-element-orderHeader-textColor) !important;
+  background-color: var(--admin-vd-element-orderHeader-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderHeader-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderHeader-borderRadius) !important;
+  padding: var(--admin-vd-element-orderHeader-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-toolbar {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderToolbar-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderToolbar-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderToolbar-textAlign) !important;
+  color: var(--admin-vd-element-orderToolbar-textColor) !important;
+  background-color: var(--admin-vd-element-orderToolbar-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderToolbar-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderToolbar-borderRadius) !important;
+  padding: var(--admin-vd-element-orderToolbar-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-card {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderCard-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderCard-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderCard-textAlign) !important;
+  color: var(--admin-vd-element-orderCard-textColor) !important;
+  background-color: var(--admin-vd-element-orderCard-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderCard-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderCard-borderRadius) !important;
+  padding: var(--admin-vd-element-orderCard-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-card-heading {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderCardHeading-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderCardHeading-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderCardHeading-textAlign) !important;
+  color: var(--admin-vd-element-orderCardHeading-textColor) !important;
+  background-color: var(--admin-vd-element-orderCardHeading-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderCardHeading-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderCardHeading-borderRadius) !important;
+  padding: var(--admin-vd-element-orderCardHeading-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-card-customer {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderCustomer-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderCustomer-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderCustomer-textAlign) !important;
+  color: var(--admin-vd-element-orderCustomer-textColor) !important;
+  background-color: var(--admin-vd-element-orderCustomer-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderCustomer-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderCustomer-borderRadius) !important;
+  padding: var(--admin-vd-element-orderCustomer-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-actions {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderActions-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderActions-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderActions-textAlign) !important;
+  color: var(--admin-vd-element-orderActions-textColor) !important;
+  background-color: var(--admin-vd-element-orderActions-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderActions-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderActions-borderRadius) !important;
+  padding: var(--admin-vd-element-orderActions-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-status-badge {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderStatusBadge-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderStatusBadge-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderStatusBadge-textAlign) !important;
+  color: var(--admin-vd-element-orderStatusBadge-textColor) !important;
+  background-color: var(--admin-vd-element-orderStatusBadge-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderStatusBadge-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderStatusBadge-borderRadius) !important;
+  padding: var(--admin-vd-element-orderStatusBadge-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-pagination {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderPagination-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderPagination-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderPagination-textAlign) !important;
+  color: var(--admin-vd-element-orderPagination-textColor) !important;
+  background-color: var(--admin-vd-element-orderPagination-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderPagination-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderPagination-borderRadius) !important;
+  padding: var(--admin-vd-element-orderPagination-padding) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-detail-modal {
-  font-size: var(--admin-vd-element-${key}-fontSize) !important;
-  font-weight: var(--admin-vd-element-${key}-fontWeight) !important;
-  text-align: var(--admin-vd-element-${key}-textAlign) !important;
-  color: var(--admin-vd-element-${key}-textColor) !important;
-  background-color: var(--admin-vd-element-${key}-backgroundColor) !important;
-  border-color: var(--admin-vd-element-${key}-borderColor) !important;
-  border-radius: var(--admin-vd-element-${key}-borderRadius) !important;
-  padding: var(--admin-vd-element-${key}-padding) !important;
+  font-size: var(--admin-vd-element-orderDetailModal-fontSize) !important;
+  font-weight: var(--admin-vd-element-orderDetailModal-fontWeight) !important;
+  text-align: var(--admin-vd-element-orderDetailModal-textAlign) !important;
+  color: var(--admin-vd-element-orderDetailModal-textColor) !important;
+  background-color: var(--admin-vd-element-orderDetailModal-backgroundColor) !important;
+  border-color: var(--admin-vd-element-orderDetailModal-borderColor) !important;
+  border-radius: var(--admin-vd-element-orderDetailModal-borderRadius) !important;
+  padding: var(--admin-vd-element-orderDetailModal-padding) !important;
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
