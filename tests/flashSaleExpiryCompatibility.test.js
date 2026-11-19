@@ -38,7 +38,7 @@ test('unused parallel campaign RPCs cannot compete with product-level flash-sale
 test('admin can see how many flash-sale products remain and when the next one expires', () => {
   assert.match(admin, /flashSaleAdminSummary\.count/);
   assert.match(admin, /flashSaleAdminSummary\.nextEndsAt/);
-  assert.match(admin, /adminVisualDesign\\.content\\.discountsActiveLabel/);
+  assert.match(admin, /adminVisualDesign\.content\.discountsActiveLabel/);
   assert.match(adminVisualDesign, /\"discountsActiveLabel\": \"მოქმედი ფლეშ-აქცია\"/);
 });
 
