@@ -3,7 +3,7 @@ const ELEMENT_STYLE_IDS = [
   'hero', 'hero.image', 'hero.title', 'hero.description', 'hero.button',
   'banner', 'banner.card', 'banner.title',
   'flashSale', 'flashSale.title', 'flashSale.badge', 'flashSale.description',
-  'categories', 'categories.title', 'categories.description',
+  'categories', 'categories.title', 'categories.description', 'category.card', 'category.title', 'category.description',
   'filters', 'product.card', 'product.image', 'product.title', 'product.button',
   'product.detail.image', 'product.detail.title', 'product.detail.price',
   'product.detail.description', 'product.detail.variants', 'product.detail.purchase'
@@ -126,9 +126,17 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
       const value = isPlainObject(rawElementStyles[id]) ? rawElementStyles[id] : {};
       const textColor = safeColor(value.textColor, '');
       const backgroundColor = safeColor(value.backgroundColor, '');
+      const borderColor = safeColor(value.borderColor, '');
       return [id, {
         textColor,
         backgroundColor,
+        borderColor,
+        borderWidth: clamp(value.borderWidth, 0, 12, null),
+        lineHeight: clamp(value.lineHeight, 0.8, 2.5, null),
+        letterSpacing: clamp(value.letterSpacing, -2, 12, null),
+        textTransform: ['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform) ? value.textTransform : '',
+        fontFamily: ['inherit', 'manrope', 'georgia', 'arial'].includes(value.fontFamily) ? value.fontFamily : '',
+        boxShadow: ['none', 'soft', 'medium', 'strong'].includes(value.boxShadow) ? value.boxShadow : '',
         fontSize: clamp(value.fontSize, 10, 64, null),
         padding: clamp(value.padding, 0, 48, null),
         borderRadius: clamp(value.borderRadius, 0, 32, null),
@@ -222,8 +230,21 @@ export function buildStorefrontElementStyle(rawDesign, elementId) {
   const style = {};
   const textColor = safeColor(value.textColor, '');
   const backgroundColor = safeColor(value.backgroundColor, '');
+  const borderColor = safeColor(value.borderColor, '');
   if (textColor) style.color = textColor;
   if (backgroundColor) style.backgroundColor = backgroundColor;
+  if (borderColor) style.borderColor = borderColor;
+  const borderWidth = clamp(value.borderWidth, 0, 12, null);
+  const lineHeight = clamp(value.lineHeight, 0.8, 2.5, null);
+  const letterSpacing = clamp(value.letterSpacing, -2, 12, null);
+  if (borderWidth !== null) style.borderWidth = String(borderWidth) + 'px';
+  if (lineHeight !== null) style.lineHeight = String(lineHeight);
+  if (letterSpacing !== null) style.letterSpacing = String(letterSpacing) + 'px';
+  if (['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform)) style.textTransform = value.textTransform;
+  const fontStacks = { inherit: 'inherit', manrope: FONT_STACKS.manrope, georgia: FONT_STACKS.georgia, arial: FONT_STACKS.arial };
+  if (fontStacks[value.fontFamily]) style.fontFamily = fontStacks[value.fontFamily];
+  const shadows = { none: 'none', soft: '0 2px 10px rgba(0,0,0,.12)', medium: '0 8px 24px rgba(0,0,0,.2)', strong: '0 16px 40px rgba(0,0,0,.32)' };
+  if (shadows[value.boxShadow]) style.boxShadow = shadows[value.boxShadow];
   const fontSize = clamp(value.fontSize, 10, 64, null);
   const padding = clamp(value.padding, 0, 48, null);
   const borderRadius = clamp(value.borderRadius, 0, 32, null);
