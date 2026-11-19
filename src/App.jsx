@@ -1465,6 +1465,10 @@ export default function App() {
 
   const handleRestoreStorefrontVersion = async (versionId, versionSnapshot) => {
     if (!hasSettingsAccess || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return false;
+    if (storefrontDraftLocalDirtyRef.current || (storefrontDraftBaselineRef.current && JSON.stringify({ categories, banners: bannersList, siteSettings }) !== storefrontDraftBaselineRef.current)) {
+      alert('ამ მოწყობილობაზე შეუნახავი ცვლილებები გაქვთ. ჯერ შეინახეთ მონახაზი ან განაახლეთ გვერდი ცვლილებების გაუქმების შემდეგ; ძველი ვერსიის აღდგენა შეჩერებულია.');
+      return false;
+    }
     if (!versionId || !storefrontDraftUpdatedAtRef.current) {
       alert('მონახაზის მიმდინარე ვერსიის დრო ვერ დადასტურდა. განაახლეთ გვერდი და სცადეთ თავიდან.');
       return false;
