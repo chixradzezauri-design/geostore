@@ -386,11 +386,28 @@ export default function StorefrontVisualEditor({
     if ((design.customSections || []).length >= 12) { setSaveMessage('შეგიძლიათ მაქსიმუმ 12 საკუთარი სექციის შექმნა.'); return; }
     const id = nextCustomId('custom-section');
     commitDesign({ ...design, customSections: [...(design.customSections || []), {
-      id, title: 'ახალი სექცია', visible: true, backgroundColor: '#ffffff', textColor: '#29241f', padding: 24, align: 'left',
+      id, title: 'ახალი სექცია', visible: true, backgroundColor: '#ffffff', textColor: '#29241f', padding: 24, align: 'left', maxWidth: 1440, marginTop: 0, marginBottom: 0, borderRadius: 16, minHeight: 0, responsive: {},
       blocks: [{ id: nextCustomId('block'), type: 'heading', text: 'ახალი სათაური', imageUrl: '', videoUrl: '', alt: '', label: '', url: '' }]
     }] });
   };
   const updateCustomSection = (sectionId, key, value) => commitDesign({ ...design, customSections: (design.customSections || []).map(section => section.id === sectionId ? { ...section, [key]: value } : section) });
+  const updateCustomSectionStyle = (sectionId, key, value) => commitDesign({
+    ...design,
+    customSections: (design.customSections || []).map(section => {
+      if (section.id !== sectionId) return section;
+      if (previewMode === 'desktop') return { ...section, [key]: value };
+      return {
+        ...section,
+        responsive: {
+          ...(section.responsive || {}),
+          [previewMode]: { ...(section.responsive?.[previewMode] || {}), [key]: value }
+        }
+      };
+    })
+  });
+  const getCustomSectionStyleValue = (section, key) => previewMode === 'desktop'
+    ? section[key]
+    : section.responsive?.[previewMode]?.[key] ?? section[key];
   const addCustomBlock = (sectionId, type) => commitDesign({
     ...design, customSections: (design.customSections || []).map(section => {
       if (section.id !== sectionId || section.blocks.length >= 10) return section;
@@ -757,14 +774,27 @@ export default function StorefrontVisualEditor({
                     <button type="button" onClick={() => moveCustomSection(section.id, -1)} disabled={sectionIndex === 0} aria-label="სექციის ზემოთ გადატანა" className="rounded-lg border border-slate-700 px-2 py-2 text-slate-300 disabled:opacity-30">↑</button>
                     <button type="button" onClick={() => moveCustomSection(section.id, 1)} disabled={sectionIndex === design.customSections.length - 1} aria-label="სექციის ქვემოთ გადატანა" className="rounded-lg border border-slate-700 px-2 py-2 text-slate-300 disabled:opacity-30">↓</button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <label className="space-y-1 text-[10px] text-slate-300">ფონის ფერი<input type="color" value={section.backgroundColor} onChange={event => updateCustomSection(section.id, 'backgroundColor', event.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
-                    <label className="space-y-1 text-[10px] text-slate-300">ტექსტის ფერი<input type="color" value={section.textColor} onChange={event => updateCustomSection(section.id, 'textColor', event.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
+                  <div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-2.5 py-2 text-[10px] font-bold text-emerald-200">
+                    {previewMode === 'desktop' ? 'Desktop — ძირითადი სტილი' : previewMode === 'tablet' ? 'Tablet — დამოუკიდებელი სტილი' : 'Mobile — დამოუკიდებელი სტილი'}
+                    {previewMode !== 'desktop' && <span className="ml-1 font-normal text-slate-400">ცარიელი პარამეტრი Desktop-ის მნიშვნელობას იყენებს</span>}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <label className="space-y-1 text-[10px] text-slate-300">შიდა დაშორება: {section.padding}px<input type="range" min="0" max="80" value={section.padding} onChange={event => updateCustomSection(section.id, 'padding', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
-                    <label className="space-y-1 text-[10px] text-slate-300">ტექსტის განლაგება<select value={section.align} onChange={event => updateCustomSection(section.id, 'align', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="left">მარცხნივ</option><option value="center">ცენტრში</option><option value="right">მარჯვნივ</option></select></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">ფონის ფერი<input type="color" value={getCustomSectionStyleValue(section, 'backgroundColor')} onChange={event => updateCustomSectionStyle(section.id, 'backgroundColor', event.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">ტექსტის ფერი<input type="color" value={getCustomSectionStyleValue(section, 'textColor')} onChange={event => updateCustomSectionStyle(section.id, 'textColor', event.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="space-y-1 text-[10px] text-slate-300">შიდა დაშორება: {getCustomSectionStyleValue(section, 'padding')}px<input type="range" min="0" max="80" value={getCustomSectionStyleValue(section, 'padding')} onChange={event => updateCustomSectionStyle(section.id, 'padding', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">სიგანე: {getCustomSectionStyleValue(section, 'maxWidth')}px<input type="range" min="280" max="1600" step="10" value={getCustomSectionStyleValue(section, 'maxWidth')} onChange={event => updateCustomSectionStyle(section.id, 'maxWidth', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="space-y-1 text-[10px] text-slate-300">ზედა დაშორება: {getCustomSectionStyleValue(section, 'marginTop')}px<input type="range" min="0" max="160" value={getCustomSectionStyleValue(section, 'marginTop')} onChange={event => updateCustomSectionStyle(section.id, 'marginTop', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">ქვედა დაშორება: {getCustomSectionStyleValue(section, 'marginBottom')}px<input type="range" min="0" max="160" value={getCustomSectionStyleValue(section, 'marginBottom')} onChange={event => updateCustomSectionStyle(section.id, 'marginBottom', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="space-y-1 text-[10px] text-slate-300">მომრგვალება: {getCustomSectionStyleValue(section, 'borderRadius')}px<input type="range" min="0" max="48" value={getCustomSectionStyleValue(section, 'borderRadius')} onChange={event => updateCustomSectionStyle(section.id, 'borderRadius', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">მინ. სიმაღლე: {getCustomSectionStyleValue(section, 'minHeight')}px<input type="range" min="0" max="800" step="10" value={getCustomSectionStyleValue(section, 'minHeight')} onChange={event => updateCustomSectionStyle(section.id, 'minHeight', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                  </div>
+                  <label className="block space-y-1 text-[10px] text-slate-300">ტექსტის განლაგება<select value={getCustomSectionStyleValue(section, 'align')} onChange={event => updateCustomSectionStyle(section.id, 'align', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="left">მარცხნივ</option><option value="center">ცენტრში</option><option value="right">მარჯვნივ</option></select></label>
                   <div className="space-y-2">
                     {section.blocks.map((block, blockIndex) => (
                       <div key={block.id} className="rounded-lg border border-slate-800 bg-slate-900/80 p-2.5 space-y-2">
@@ -911,6 +941,7 @@ export default function StorefrontVisualEditor({
                 onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
                 siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
+                visualEditorViewport={previewMode}
                 banners={safeBanners}
                 categories={safeCategories}
                 selectedCategory={previewCategory}
