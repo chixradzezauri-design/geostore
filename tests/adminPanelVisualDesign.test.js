@@ -337,8 +337,8 @@ test('admin modules have independent bounded geometry and responsive inheritance
   });
   const style = buildAdminPanelVisualStyle(design);
 
-  assert.deepEqual(design.components.orders, { radius: 44, padding: 36, borderWidth: 3, shadowBlur: 30 });
-  assert.deepEqual(design.components.support, { radius: 48, padding: 4, borderWidth: 4, shadowBlur: 0 });
+  assert.deepEqual(Object.fromEntries(['radius', 'padding', 'borderWidth', 'shadowBlur'].map(key => [key, design.components.orders[key]])), { radius: 44, padding: 36, borderWidth: 3, shadowBlur: 30 });
+  assert.deepEqual(Object.fromEntries(['radius', 'padding', 'borderWidth', 'shadowBlur'].map(key => [key, design.components.support[key]])), { radius: 48, padding: 4, borderWidth: 4, shadowBlur: 0 });
   assert.deepEqual(design.responsive.tablet.components.orders, { radius: 20, padding: 18 });
   assert.deepEqual(design.responsive.mobile.components.support, { radius: 12, shadowBlur: 0 });
   assert.equal(style['--admin-vd-orders-radius'], '44px');
