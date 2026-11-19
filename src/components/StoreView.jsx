@@ -544,7 +544,9 @@ export default function StoreView({
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
         <div className="gs-category-grid gs-catalog-category-grid gs-editorial-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div 
+          <div
+            data-visual-editor-target="category.card"
+            style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
             role="button"
             tabIndex={0}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
@@ -564,8 +566,8 @@ export default function StoreView({
               </span>
             </div>
             <div className="relative z-10">
-              <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
+              <h4 data-visual-editor-target="category.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
+              <p data-visual-editor-target="category.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.description')} className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
             </div>
           </div>
 
@@ -579,8 +581,10 @@ export default function StoreView({
             const pCount = getCategoryProductCount(catName, false);
 
             return (
-              <div 
+              <div
                 key={catId}
+                data-visual-editor-target="category.card"
+                style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
                 role="button"
                 tabIndex={0}
                 aria-pressed={isSelected}
@@ -607,8 +611,8 @@ export default function StoreView({
                   </div>
                 </div>
                 <div className="z-10">
-                  <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
+                  <h4 data-visual-editor-target="category.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
+                  <p data-visual-editor-target="category.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                 </div>
               </div>
             );
