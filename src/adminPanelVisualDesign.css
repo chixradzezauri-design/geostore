@@ -22,6 +22,14 @@
   --admin-vd-headerBorder-active: var(--admin-vd-headerBorder);
   --admin-vd-tableHeaderBackground-active: var(--admin-vd-tableHeaderBackground);
   --admin-vd-tableHeaderText-active: var(--admin-vd-tableHeaderText);
+  --admin-vd-tableRowBackground-active: var(--admin-vd-tableRowBackground);
+  --admin-vd-tableRowHover-active: var(--admin-vd-tableRowHover);
+  --admin-vd-filterBackground-active: var(--admin-vd-filterBackground);
+  --admin-vd-filterText-active: var(--admin-vd-filterText);
+  --admin-vd-filterBorder-active: var(--admin-vd-filterBorder);
+  --admin-vd-primaryButtonBackground-active: var(--admin-vd-primaryButtonBackground);
+  --admin-vd-primaryButtonText-active: var(--admin-vd-primaryButtonText);
+  --admin-vd-primaryButtonBorder-active: var(--admin-vd-primaryButtonBorder);
   --admin-vd-inputBackground-active: var(--admin-vd-inputBackground);
   --admin-vd-inputText-active: var(--admin-vd-inputText);
   --admin-vd-inputBorder-active: var(--admin-vd-inputBorder);
@@ -224,6 +232,18 @@
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table thead { background-color: var(--admin-vd-tableHeaderBackground-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPadding-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody td { padding: var(--admin-vd-tableCellPadding-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr { background-color: var(--admin-vd-tableRowBackground-active); }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] table tbody tr:hover { background-color: var(--admin-vd-tableRowHover-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-product-list-filters :is(input, select) {
+  background-color: var(--admin-vd-filterBackground-active) !important;
+  color: var(--admin-vd-filterText-active) !important;
+  border-color: var(--admin-vd-filterBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(form button[type="submit"], .admin-flash-sale-submit) {
+  background-color: var(--admin-vd-primaryButtonBackground-active) !important;
+  color: var(--admin-vd-primaryButtonText-active) !important;
+  border-color: var(--admin-vd-primaryButtonBorder-active) !important;
+}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
 .admin-dashboard-pro[data-admin-visual-design="enabled"] select,
 .admin-dashboard-pro[data-admin-visual-design="enabled"] textarea {
@@ -272,6 +292,14 @@
     --admin-vd-headerBorder-active: var(--admin-vd-tablet-headerBorder, var(--admin-vd-headerBorder));
     --admin-vd-tableHeaderBackground-active: var(--admin-vd-tablet-tableHeaderBackground, var(--admin-vd-tableHeaderBackground));
     --admin-vd-tableHeaderText-active: var(--admin-vd-tablet-tableHeaderText, var(--admin-vd-tableHeaderText));
+    --admin-vd-tableRowBackground-active: var(--admin-vd-tablet-tableRowBackground, var(--admin-vd-tableRowBackground));
+    --admin-vd-tableRowHover-active: var(--admin-vd-tablet-tableRowHover, var(--admin-vd-tableRowHover));
+    --admin-vd-filterBackground-active: var(--admin-vd-tablet-filterBackground, var(--admin-vd-filterBackground));
+    --admin-vd-filterText-active: var(--admin-vd-tablet-filterText, var(--admin-vd-filterText));
+    --admin-vd-filterBorder-active: var(--admin-vd-tablet-filterBorder, var(--admin-vd-filterBorder));
+    --admin-vd-primaryButtonBackground-active: var(--admin-vd-tablet-primaryButtonBackground, var(--admin-vd-primaryButtonBackground));
+    --admin-vd-primaryButtonText-active: var(--admin-vd-tablet-primaryButtonText, var(--admin-vd-primaryButtonText));
+    --admin-vd-primaryButtonBorder-active: var(--admin-vd-tablet-primaryButtonBorder, var(--admin-vd-primaryButtonBorder));
     --admin-vd-inputBackground-active: var(--admin-vd-tablet-inputBackground, var(--admin-vd-inputBackground));
     --admin-vd-inputText-active: var(--admin-vd-tablet-inputText, var(--admin-vd-inputText));
     --admin-vd-inputBorder-active: var(--admin-vd-tablet-inputBorder, var(--admin-vd-inputBorder));
@@ -338,6 +366,14 @@
     --admin-vd-headerBorder-active: var(--admin-vd-mobile-headerBorder, var(--admin-vd-tablet-headerBorder, var(--admin-vd-headerBorder)));
     --admin-vd-tableHeaderBackground-active: var(--admin-vd-mobile-tableHeaderBackground, var(--admin-vd-tablet-tableHeaderBackground, var(--admin-vd-tableHeaderBackground)));
     --admin-vd-tableHeaderText-active: var(--admin-vd-mobile-tableHeaderText, var(--admin-vd-tablet-tableHeaderText, var(--admin-vd-tableHeaderText)));
+    --admin-vd-tableRowBackground-active: var(--admin-vd-mobile-tableRowBackground, var(--admin-vd-tablet-tableRowBackground, var(--admin-vd-tableRowBackground)));
+    --admin-vd-tableRowHover-active: var(--admin-vd-mobile-tableRowHover, var(--admin-vd-tablet-tableRowHover, var(--admin-vd-tableRowHover)));
+    --admin-vd-filterBackground-active: var(--admin-vd-mobile-filterBackground, var(--admin-vd-tablet-filterBackground, var(--admin-vd-filterBackground)));
+    --admin-vd-filterText-active: var(--admin-vd-mobile-filterText, var(--admin-vd-tablet-filterText, var(--admin-vd-filterText)));
+    --admin-vd-filterBorder-active: var(--admin-vd-mobile-filterBorder, var(--admin-vd-tablet-filterBorder, var(--admin-vd-filterBorder)));
+    --admin-vd-primaryButtonBackground-active: var(--admin-vd-mobile-primaryButtonBackground, var(--admin-vd-tablet-primaryButtonBackground, var(--admin-vd-primaryButtonBackground)));
+    --admin-vd-primaryButtonText-active: var(--admin-vd-mobile-primaryButtonText, var(--admin-vd-tablet-primaryButtonText, var(--admin-vd-primaryButtonText)));
+    --admin-vd-primaryButtonBorder-active: var(--admin-vd-mobile-primaryButtonBorder, var(--admin-vd-tablet-primaryButtonBorder, var(--admin-vd-primaryButtonBorder)));
     --admin-vd-inputBackground-active: var(--admin-vd-mobile-inputBackground, var(--admin-vd-tablet-inputBackground, var(--admin-vd-inputBackground)));
     --admin-vd-inputText-active: var(--admin-vd-mobile-inputText, var(--admin-vd-tablet-inputText, var(--admin-vd-inputText)));
     --admin-vd-inputBorder-active: var(--admin-vd-mobile-inputBorder, var(--admin-vd-tablet-inputBorder, var(--admin-vd-inputBorder)));
