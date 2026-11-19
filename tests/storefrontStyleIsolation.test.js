@@ -13,6 +13,7 @@ const aiAssistant = readFileSync(new URL('../src/components/AiAssistantModal.jsx
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
 const visualEditor = readFileSync(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+const designSource = readFileSync(new URL('../src/utils/storefrontVisualDesign.js', import.meta.url), 'utf8');
 
 test('storefront navigation styles do not leak into the AI assistant header', () => {
   assert.doesNotMatch(css, /\.geostore-fashion-store\s+header\b/);
@@ -209,4 +210,30 @@ test('visual editor uses the real Header and Footer components and provides a na
   assert.match(visualEditor, /const selectElementFromTree = targetId =>/);
   assert.match(visualEditor, /კომპონენტების იერარქია/);
   assert.match(visualEditor, /metadata\.label/);
+});
+
+
+test('Header and Footer copy can be edited independently without replacing locale fallbacks or navigation actions', () => {
+  assert.match(visualEditor, /'header\.caption': \{[^}]*settingKey: 'headerCaptionText'/);
+  assert.match(visualEditor, /'header\.search\.input': \{[^}]*settingKey: 'headerSearchPlaceholder'/);
+  assert.match(visualEditor, /'footer\.termsLink': \{[^}]*settingKey: 'footerTermsText'/);
+  assert.match(visualEditor, /'footer\.privacyLink': \{[^}]*settingKey: 'footerPrivacyText'/);
+  assert.match(visualEditor, /'footer\.warrantyLink': \{[^}]*settingKey: 'footerWarrantyText'/);
+  assert.match(visualEditor, /'footer\.copyright': \{[^}]*settingKey: 'footerCopyrightText'/);
+  assert.match(header, /siteSettings\?\.headerCaptionText \|\| 'CURATED FOR YOU'/);
+  assert.match(header, /siteSettings\?\.headerSearchPlaceholder \|\| t\.searchPlaceholder/);
+  assert.match(footer, /siteSettings\?\.footerTermsText \|\| t\.terms/);
+  assert.match(footer, /siteSettings\?\.footerPrivacyText \|\| t\.privacy/);
+  assert.match(footer, /siteSettings\?\.footerWarrantyText \|\| t\.warranty/);
+  assert.match(footer, /siteSettings\?\.footerCopyrightText \|\|/);
+  assert.match(footer, /setIsTermsOpen\?\.\(true\)/);
+  assert.match(footer, /setActiveTab\?\.\('privacy'\)/);
+  assert.match(footer, /setIsWarrantyOpen\?\.\(true\)/);
+});
+
+test('Header and Footer individual link targets are registered for responsive visual styling', () => {
+  assert.match(visualEditor, /'footer\.termsLink': \{/);
+  assert.match(visualEditor, /'footer\.privacyLink': \{/);
+  assert.match(visualEditor, /'footer\.warrantyLink': \{/);
+  assert.match(designSource, /'footer\.termsLink', 'footer\.privacyLink', 'footer\.warrantyLink'/);
 });
