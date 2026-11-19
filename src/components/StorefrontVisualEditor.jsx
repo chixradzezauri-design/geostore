@@ -151,45 +151,7 @@ function RangeControl({ label, value, min, max, step = 1, unit = '', onChange })
 
 const flattenStorefrontSnapshot = (value, prefix = '', output = {}) => {
   if (Array.isArray(value)) {
-    if (!value.length) output[prefix || '$'] = '[]';
-    value.forEach((item, index) => flattenStorefrontSnapshot(item, prefix ? prefix + '[' + index + ']' : '[' + index + ']', output));
-    return output;
-  }
-  if (value && typeof value === 'object') {
-    const entries = Object.entries(value).sort(([left], [right]) => left.localeCompare(right));
-    if (!entries.length) output[prefix || '$'] = '{}';
-    entries.forEach(([key, item]) => flattenStorefrontSnapshot(item, prefix ? prefix + '.' + key : key, output));
-    return output;
-  }
-  output[prefix || '$'] = value === undefined ? '(არ არის)' : value === null ? 'null' : String(value);
-  return output;
-};
-
-const compareStorefrontSnapshots = (publishedSnapshot, currentDraftSnapshot) => {
-  const published = flattenStorefrontSnapshot(publishedSnapshot);
-  const current = flattenStorefrontSnapshot(currentDraftSnapshot);
-  const paths = [...new Set([...Object.keys(published), ...Object.keys(current)])].sort();
-  const differences = paths
-    .filter(path => published[path] !== current[path])
-    .map(path => ({
-      path,
-      published: Object.prototype.hasOwnProperty.call(published, path) ? published[path] : '(არ არის)',
-      draft: Object.prototype.hasOwnProperty.call(current, path) ? current[path] : '(არ არის)'
-    }));
-  return {
-    changedCount: differences.length,
-    unchanged: differences.length === 0,
-    differences: differences.slice(0, 60),
-    truncated: differences.length > 60
-  };
-};
-
-const formatSnapshotDiffValue = value => {
-  const text = String(value);
-  return text.length > 180 ? text.slice(0, 177) + '…' : text;
-};
-
-export default function StorefrontVisualEditor({
+    if (!value.length) output[prefix || '
   siteSettings = {},
   setSiteSettings,
   categoriesList = [],
@@ -296,10 +258,11 @@ export default function StorefrontVisualEditor({
   const safeBanners = Array.isArray(bannersList) ? bannersList : [];
   const selectedVersionDiff = useMemo(() => {
     if (!selectedVersionSnapshot?.snapshot) return null;
-    return compareStorefrontSnapshots(
-      selectedVersionSnapshot.snapshot,
-      { categories: safeCategories, banners: safeBanners, siteSettings: siteSettings || {} }
-    );
+    return compareStorefrontSnapshots(selectedVersionSnapshot.snapshot, {
+      categories: safeCategories,
+      banners: safeBanners,
+      siteSettings: siteSettings || {}
+    });
   }, [selectedVersionSnapshot, safeCategories, safeBanners, siteSettings]);
 
   const commitDesign = nextValue => {
@@ -626,12 +589,7 @@ export default function StorefrontVisualEditor({
     const published = await onPublishStorefront();
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
     if (published === true) {
-      const { data, error } = await supabase
-        .from('storefront_versions')
-        .select('id,version_label,created_at')
-        .eq('config_key', 'storefront')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at').eq('config_key', 'storefront').order('created_at', { ascending: false }).limit(20);
       if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
       else {
         setVersionHistory(Array.isArray(data) ? data : []);
@@ -693,9 +651,7 @@ export default function StorefrontVisualEditor({
                       <div className="rounded-lg border border-slate-700 bg-slate-950/70 p-3 space-y-2" aria-live="polite">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="text-[11px] font-black text-white">მიმდინარე მონახაზთან შედარება</p>
-                          <span className={selectedVersionDiff.unchanged ? 'rounded-full bg-emerald-400/15 px-2 py-1 text-[10px] font-bold text-emerald-200' : 'rounded-full bg-amber-400/15 px-2 py-1 text-[10px] font-bold text-amber-200'}>
-                            {selectedVersionDiff.unchanged ? 'განსხვავება არ არის' : `${selectedVersionDiff.changedCount} ცვლილება`}
-                          </span>
+                          <span className={selectedVersionDiff.unchanged ? 'rounded-full bg-emerald-400/15 px-2 py-1 text-[10px] font-bold text-emerald-200' : 'rounded-full bg-amber-400/15 px-2 py-1 text-[10px] font-bold text-amber-200'}>{selectedVersionDiff.unchanged ? 'განსხვავება არ არის' : selectedVersionDiff.changedCount + ' ცვლილება'}</span>
                         </div>
                         {selectedVersionDiff.unchanged ? (
                           <p className="text-[10px] leading-4 text-emerald-200">არჩეული გამოქვეყნებული ვერსია და მიმდინარე მონახაზი იდენტურია.</p>
@@ -1215,7 +1171,7 @@ export default function StorefrontVisualEditor({
   );
 }
 ] = '[]';
-    value.forEach((item, index) => flattenStorefrontSnapshot(item, prefix ? `${prefix}[${index}]` : `[${index}]`, output));
+    value.forEach((item, index) => flattenStorefrontSnapshot(item, prefix ? prefix + '[' + index + ']' : '[' + index + ']', output));
     return output;
   }
   if (value && typeof value === 'object') {
@@ -1649,21 +1605,6 @@ export default function StorefrontVisualEditor({
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
     const published = await onPublishStorefront();
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
-    if (published === true) {
-      const { data, error } = await supabase
-        .from('storefront_versions')
-        .select('id,version_label,created_at')
-        .eq('config_key', 'storefront')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
-      else {
-        setVersionHistory(Array.isArray(data) ? data : []);
-        setSelectedVersionId('');
-        setSelectedVersionSnapshot(null);
-        setVersionHistoryError('');
-      }
-    }
   };
 
   const resetDesign = () => {
@@ -2215,7 +2156,7 @@ export default function StorefrontVisualEditor({
   );
 }
 ] = '{}';
-    entries.forEach(([key, item]) => flattenStorefrontSnapshot(item, prefix ? `${prefix}.${key}` : key, output));
+    entries.forEach(([key, item]) => flattenStorefrontSnapshot(item, prefix ? prefix + '.' + key : key, output));
     return output;
   }
   output[prefix || '
@@ -2647,21 +2588,6 @@ export default function StorefrontVisualEditor({
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
     const published = await onPublishStorefront();
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
-    if (published === true) {
-      const { data, error } = await supabase
-        .from('storefront_versions')
-        .select('id,version_label,created_at')
-        .eq('config_key', 'storefront')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
-      else {
-        setVersionHistory(Array.isArray(data) ? data : []);
-        setSelectedVersionId('');
-        setSelectedVersionSnapshot(null);
-        setVersionHistoryError('');
-      }
-    }
   };
 
   const resetDesign = () => {
@@ -3220,26 +3146,18 @@ const compareStorefrontSnapshots = (publishedSnapshot, currentDraftSnapshot) => 
   const published = flattenStorefrontSnapshot(publishedSnapshot);
   const current = flattenStorefrontSnapshot(currentDraftSnapshot);
   const paths = [...new Set([...Object.keys(published), ...Object.keys(current)])].sort();
-  const differences = paths
-    .filter(path => published[path] !== current[path])
-    .map(path => ({
-      path,
-      published: Object.prototype.hasOwnProperty.call(published, path) ? published[path] : '(არ არის)',
-      draft: Object.prototype.hasOwnProperty.call(current, path) ? current[path] : '(არ არის)'
-    }));
-  return {
-    changedCount: differences.length,
-    unchanged: differences.length === 0,
-    differences: differences.slice(0, 60),
-    truncated: differences.length > 60
-  };
+  const differences = paths.filter(path => published[path] !== current[path]).map(path => ({
+    path,
+    published: Object.prototype.hasOwnProperty.call(published, path) ? published[path] : '(არ არის)',
+    draft: Object.prototype.hasOwnProperty.call(current, path) ? current[path] : '(არ არის)'
+  }));
+  return { changedCount: differences.length, unchanged: differences.length === 0, differences: differences.slice(0, 60), truncated: differences.length > 60 };
 };
 
 const formatSnapshotDiffValue = value => {
   const text = String(value);
-  return text.length > 180 ? `${text.slice(0, 177)}…` : text;
+  return text.length > 180 ? text.slice(0, 177) + '…' : text;
 };
-
 export default function StorefrontVisualEditor({
   siteSettings = {},
   setSiteSettings,
@@ -3669,21 +3587,6 @@ export default function StorefrontVisualEditor({
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
     const published = await onPublishStorefront();
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
-    if (published === true) {
-      const { data, error } = await supabase
-        .from('storefront_versions')
-        .select('id,version_label,created_at')
-        .eq('config_key', 'storefront')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
-      else {
-        setVersionHistory(Array.isArray(data) ? data : []);
-        setSelectedVersionId('');
-        setSelectedVersionSnapshot(null);
-        setVersionHistoryError('');
-      }
-    }
   };
 
   const resetDesign = () => {
