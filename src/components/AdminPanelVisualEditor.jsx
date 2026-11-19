@@ -886,7 +886,33 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       const validated = normalizeAdminPanelVisualDesign({ stylePresets: sourcePresets });
       if (!validated.stylePresets.length) throw new Error('ფაილში დასამატებელი ვალიდური სტილი არ არის.');
       if (stylePresetImportModeRef.current === 'restore') {
+        const allowedStyleKeys = new Set(['fontSize', 'fontWeight', 'borderRadius', 'padding', 'textColor', 'backgroundColor', 'borderColor', 'textAlign']);
+        const allowedCategories = new Set(['საერთო', 'შეკვეთები', 'თანამშრომლები', 'მარაგები', 'ანალიტიკა', 'მხარდაჭერა', 'ფასდაკლებები', 'ბანერები', 'კატეგორიები', 'კუპონები']);
+        const validStyle = style => style && typeof style === 'object' && !Array.isArray(style) && Object.keys(style).length > 0
+          && Object.entries(style).every(([key, value]) => {
+            if (!allowedStyleKeys.has(key)) return false;
+            if (['textColor', 'backgroundColor', 'borderColor'].includes(key)) return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+            if (key === 'textAlign') return ['left', 'center', 'right'].includes(value);
+            const limits = { fontSize: [10, 24], fontWeight: [300, 900], borderRadius: [0, 32], padding: [0, 32] }[key];
+            return typeof value === 'number' && Number.isFinite(value) && value >= limits[0] && value <= limits[1];
+          });
+        const ids = new Set();
+        const invalidIndex = sourcePresets.findIndex(preset => {
+          if (!preset || typeof preset !== 'object' || Array.isArray(preset) || typeof preset.name !== 'string' || !preset.name.trim()
+            || !validStyle(preset.style) || (preset.category != null && !allowedCategories.has(preset.category))
+            || (preset.favorite != null && typeof preset.favorite !== 'boolean')
+            || (preset.createdAt != null && (typeof preset.createdAt !== 'string' || !Number.isFinite(Date.parse(preset.createdAt))))
+            || (preset.history != null && (!Array.isArray(preset.history) || preset.history.length > 10
+              || preset.history.some(entry => !entry || typeof entry.savedAt !== 'string' || !Number.isFinite(Date.parse(entry.savedAt)) || !validStyle(entry.style))))) return true;
+          const id = typeof preset.id === 'string' ? preset.id.trim() : '';
+          if (id && ids.has(id)) return true;
+          if (id) ids.add(id);
+          return false;
+        });
         if (sourcePresets.length > 30) throw new Error('სარეზერვო ფაილში 30-ზე მეტი სტილია. აღდგენა შეჩერდა მონაცემების დაკარგვის თავიდან ასაცილებლად.');
+        if (invalidIndex !== -1 || validated.stylePresets.length !== sourcePresets.length) {
+          throw new Error(`სარეზერვო ფაილი დაზიანებულია ან არასრულია (სტილი №${invalidIndex + 1}). არსებული ბიბლიოთეკა უცვლელი დარჩა.`);
+        }
         if (!window.confirm(`სრული აღდგენა ჩაანაცვლებს ამჟამინდელ ${normalized.stylePresets.length} სტილს სარეზერვო ფაილში არსებული ${validated.stylePresets.length} სტილით. გაგრძელდეს?`)) return;
         commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: validated.stylePresets }));
         window.alert(`სარეზერვო ასლიდან აღდგა ${validated.stylePresets.length} სტილი.`);
