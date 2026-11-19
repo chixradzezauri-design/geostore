@@ -305,7 +305,8 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
         minHeight: clamp(value.minHeight, 0, 600, null),
         opacity: clamp(value.opacity, 0, 100, null),
         objectFit: ['cover', 'contain', 'fill'].includes(value.objectFit) ? value.objectFit : '',
-        objectPositionX: clamp(value.objectPositionX, 0, 100, null)
+        objectPositionX: clamp(value.objectPositionX, 0, 100, null),
+        objectPositionY: clamp(value.objectPositionY, 0, 100, null)
       }];
     })),
     copy: {
@@ -358,7 +359,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
             borderWidth: [0, 12], lineHeight: [0.8, 2.5], letterSpacing: [-2, 12],
             fontSize: [10, 64], padding: [0, 48], paddingX: [0, 64], paddingY: [0, 64],
             marginTop: [0, 120], marginBottom: [0, 120], minWidth: [0, 800], maxWidth: [0, 1200],
-            borderRadius: [0, 32], width: [10, 100], minHeight: [0, 600], opacity: [0, 100], objectPositionX: [0, 100]
+            borderRadius: [0, 32], width: [10, 100], minHeight: [0, 600], opacity: [0, 100], objectPositionX: [0, 100], objectPositionY: [0, 100]
           };
           Object.entries(numeric).forEach(([key, bounds]) => {
             const valueNumber = clamp(value[key], bounds[0], bounds[1], null);
