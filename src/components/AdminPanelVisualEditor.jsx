@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ADMIN_PANEL_CONTENT_FIELDS,
   ADMIN_PANEL_ELEMENT_DEFINITIONS,
+  findMostSpecificAdminPanelVisualElement,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   normalizeAdminPanelVisualDesign,
   createAdminStylePresetBackup,
@@ -520,11 +521,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       event.stopPropagation();
       event.stopImmediatePropagation?.();
       if (!directSelectionMode) return;
-      const match = Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).find(([, definition]) => {
-        try { return Boolean(target.closest(definition.selector)); } catch { return false; }
-      });
+      const match = findMostSpecificAdminPanelVisualElement(target);
       if (!match) return;
-      const [key] = match;
+      const { key } = match;
       setSelectedElementKey(key);
       setSelectedElementKeys(current => current.includes(key) ? current : [...current, key]);
       const category = ELEMENT_CATEGORIES.find(item => item.keys.includes(key));
