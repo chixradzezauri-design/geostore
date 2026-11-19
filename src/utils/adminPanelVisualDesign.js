@@ -583,7 +583,8 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
         const createdAt = typeof preset?.createdAt === 'string' && Number.isFinite(Date.parse(preset.createdAt))
           ? new Date(preset.createdAt).toISOString()
           : null;
-        return { id, name, category, createdAt, style };
+        const favorite = preset?.favorite === true;
+        return { id, name, category, createdAt, favorite, style };
       }).filter(preset => preset.name && Object.keys(preset.style).length).slice(0, 30)
     : [];
 
