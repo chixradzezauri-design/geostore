@@ -176,23 +176,23 @@
   border-radius: var(--admin-vd-staff-radius-active) !important;
   padding: var(--admin-vd-staff-padding-active) !important;
   border-width: var(--admin-vd-staff-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-staff-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  box-shadow: 0 0 var(--admin-vd-staff-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
   border-radius: var(--admin-vd-inventory-radius-active) !important;
   padding: var(--admin-vd-inventory-padding-active) !important;
   border-width: var(--admin-vd-inventory-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-inventory-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  box-shadow: 0 0 var(--admin-vd-inventory-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
   border-radius: var(--admin-vd-orders-radius-active) !important;
   padding: var(--admin-vd-orders-padding-active) !important;
   border-width: var(--admin-vd-orders-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-orders-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  box-shadow: 0 0 var(--admin-vd-orders-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
   border-radius: var(--admin-vd-support-radius-active) !important;
   padding: var(--admin-vd-support-padding-active) !important;
   border-width: var(--admin-vd-support-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-support-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  box-shadow: 0 0 var(--admin-vd-support-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
   border-radius: var(--admin-vd-discounts-radius-active) !important;
   padding: var(--admin-vd-discounts-padding-active) !important;
   border-width: var(--admin-vd-discounts-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-discounts-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
+  box-shadow: 0 0 var(--admin-vd-discounts-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] :is(
   .admin-command-kpi, .admin-command-panel, .admin-analytics-card,
@@ -248,7 +248,7 @@
   border-radius: var(--admin-vd-analytics-radius-active) !important;
   padding: var(--admin-vd-analytics-padding-active) !important;
   border-width: var(--admin-vd-analytics-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-analytics-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
+  box-shadow: 0 0 var(--admin-vd-analytics-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel {
   background-color: var(--admin-vd-ordersSectionBackground-active) !important;
   border-color: var(--admin-vd-ordersSectionBorder-active) !important;
@@ -268,7 +268,7 @@
   border-radius: var(--admin-vd-banners-radius-active) !important;
   padding: var(--admin-vd-banners-padding-active) !important;
   border-width: var(--admin-vd-banners-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-banners-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
+  box-shadow: 0 0 var(--admin-vd-banners-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-manager {
   background-color: var(--admin-vd-categoriesSectionBackground-active) !important;
   border-color: var(--admin-vd-categoriesSectionBorder-active) !important;
@@ -276,7 +276,7 @@
   border-radius: var(--admin-vd-categories-radius-active) !important;
   padding: var(--admin-vd-categories-padding-active) !important;
   border-width: var(--admin-vd-categories-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-categories-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
+  box-shadow: 0 0 var(--admin-vd-categories-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel {
   background-color: var(--admin-vd-couponsSectionBackground-active) !important;
   border-color: var(--admin-vd-couponsSectionBorder-active) !important;
@@ -284,7 +284,7 @@
   border-radius: var(--admin-vd-coupons-radius-active) !important;
   padding: var(--admin-vd-coupons-padding-active) !important;
   border-width: var(--admin-vd-coupons-borderWidth-active) !important;
-  box-shadow: 0 8px var(--admin-vd-coupons-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
+  box-shadow: 0 0 var(--admin-vd-coupons-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
   color: var(--admin-vd-text-active) !important;
