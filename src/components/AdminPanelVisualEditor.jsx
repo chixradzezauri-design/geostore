@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  ADMIN_PANEL_FONT_FAMILIES,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   normalizeAdminPanelVisualDesign
 } from '../utils/adminPanelVisualDesign.js';
@@ -213,6 +214,26 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-sm font-black text-white">ტიპოგრაფია</h3>
+        <label className="block max-w-xl space-y-2 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3 text-xs text-slate-200">
+          <span>ადმინ პანელის შრიფტი</span>
+          <select
+            value={active.layout.fontFamily}
+            onChange={event => updateValue('layout', 'fontFamily', event.target.value)}
+            className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm text-white"
+            aria-label="ადმინ პანელის შრიფტი"
+          >
+            <option value="system">სისტემური — უნივერსალური</option>
+            <option value="georgian">ქართული — Noto Sans Georgian</option>
+            <option value="modern">თანამედროვე — Inter</option>
+            <option value="serif">კლასიკური — Serif</option>
+            <option value="mono">ტექნიკური — Monospace</option>
+          </select>
+          <span className="block text-[11px] leading-5 text-slate-400">შრიფტი იცვლება მხოლოდ ადმინ პანელის ამ ხედში; Tablet და Mobile პარამეტრები დამოუკიდებლად შეგიძლიათ დააყენოთ.</span>
+        </label>
       </div>
 
       <div className="space-y-4">
