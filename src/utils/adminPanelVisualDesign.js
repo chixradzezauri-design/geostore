@@ -263,8 +263,11 @@ const COMPONENT_LIMITS = {
   "shadowBlur": [
     0,
     40
-  ]
+  ],
+  fontSize: [10, 20],
+  titleFontSize: [12, 28]
 };
+const COMPONENT_COLOR_DEFAULTS = { textColor: "#e2e8f0", backgroundColor: "#0f172a", borderColor: "#334155" };
 
 const normalizeComponents = (source, fallback, partial = false) => Object.fromEntries(
   Object.entries(COMPONENT_DEFAULTS).map(([component, defaults]) => {
