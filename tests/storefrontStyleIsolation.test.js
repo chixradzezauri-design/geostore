@@ -104,8 +104,10 @@ test('mobile navigation retains login and registration inside the hamburger menu
   assert.match(authRule, /display:grid!important;/);
 });
 
-test('visual editor preview passes the current draft design to the live StoreView', () => {
-  assert.match(visualEditor, /siteSettings=\{\{ \.\.\.\(siteSettings \|\| \{\}\), visualDesign: design \}\}/);
+test('visual editor preview passes the merged responsive draft design to live storefront components', () => {
+  assert.match(visualEditor, /siteSettings=\{\{ \.\.\.\(siteSettings \|\| \{\}\), visualDesign: previewDesign \}\}/);
+  assert.match(visualEditor, /visualDesign=\{previewDesign\}/);
+  assert.match(visualEditor, /elementStyles: Object\.fromEntries\([\s\S]*?activeResponsive\.elementStyles/);
 });
 
 test('mobile footer policy links use a compact responsive layout', () => {
