@@ -61,3 +61,10 @@ test('in-flight shared refresh rechecks the active effect and latest editor snap
   assert.match(refresh, /if \(!active \|\| storefrontDraftLocalDirtyRef\.current/);
   assert.match(app, /storefrontCurrentSnapshotRef\.current = JSON\.stringify\(\{ categories, banners: bannersList, siteSettings \}\)/);
 });
+
+test('successful publication advances the local draft baseline as well as its timestamp', () => {
+  const publish = app.split('const handlePublishStorefront = async () =>')[1]?.split('  useEffect(() => {')[0] || '';
+  assert.match(publish, /storefrontDraftUpdatedAtRef\.current = publishResult\.draft_updated_at/);
+  assert.match(publish, /storefrontDraftBaselineRef\.current = JSON\.stringify\(\{ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings \}\)/);
+  assert.match(publish, /storefrontDraftLocalDirtyRef\.current = false/);
+});
