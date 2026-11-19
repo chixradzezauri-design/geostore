@@ -30,9 +30,9 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
 test('tablet and mobile admin visual overrides inherit unset desktop values', () => {
   const design = normalizeAdminPanelVisualDesign({
     theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef' },
-    layout: { fontSize: 14, cardRadius: 20 },
+    layout: { fontSize: 14, cardRadius: 20, sectionGap: 30 },
     responsive: {
-      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566' }, layout: { fontSize: 13, navItemRadius: 8 } },
+      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18 } },
       mobile: { theme: { panel: '#334455' }, layout: { cardPadding: 14 } }
     }
   });
@@ -42,6 +42,8 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-tablet-accent'], '#123456');
   assert.equal(style['--admin-vd-tablet-navActiveBackground'], '#445566');
   assert.equal(style['--admin-vd-tablet-navItemRadius'], '8px');
+  assert.equal(style['--admin-vd-tablet-sectionGap'], '18px');
+  assert.equal(style['--admin-vd-sectionGap'], '30px');
   assert.equal(style['--admin-vd-tablet-panel'], '#223344');
   assert.equal(style['--admin-vd-tablet-fontSize'], '13px');
   assert.equal(style['--admin-vd-mobile-accent'], '#112233');
