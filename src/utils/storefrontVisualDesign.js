@@ -119,13 +119,42 @@ export function normalizeStorefrontCustomSections(rawSections) {
         url: type === 'button' ? safeLinkUrl(rawBlock.url) : ''
       };
     }).filter(Boolean);
+    const normalizeSectionStyle = source => {
+      const value = isPlainObject(source) ? source : {};
+      const style = {};
+      const backgroundColor = safeColor(value.backgroundColor, '');
+      const textColor = safeColor(value.textColor, '');
+      if (backgroundColor) style.backgroundColor = backgroundColor;
+      if (textColor) style.textColor = textColor;
+      if (['left', 'center', 'right'].includes(value.align)) style.align = value.align;
+      const numeric = {
+        padding: [0, 80], maxWidth: [280, 1600], marginTop: [0, 160],
+        marginBottom: [0, 160], borderRadius: [0, 48], minHeight: [0, 800]
+      };
+      Object.entries(numeric).forEach(([key, bounds]) => {
+        const number = clamp(value[key], bounds[0], bounds[1], null);
+        if (number !== null) style[key] = number;
+      });
+      return style;
+    };
+    const baseStyle = normalizeSectionStyle(rawSection);
+    const responsiveSource = isPlainObject(rawSection.responsive) ? rawSection.responsive : {};
+    const responsive = Object.fromEntries(['tablet', 'mobile'].map(viewport => [
+      viewport, normalizeSectionStyle(responsiveSource[viewport])
+    ]));
     return {
       id: sectionId, title: String(rawSection.title ?? '').slice(0, 100),
       visible: rawSection.visible !== false,
-      backgroundColor: safeColor(rawSection.backgroundColor, '#ffffff'),
-      textColor: safeColor(rawSection.textColor, '#29241f'),
-      padding: clamp(rawSection.padding, 0, 80, 24),
-      align: ['left', 'center', 'right'].includes(rawSection.align) ? rawSection.align : 'left',
+      backgroundColor: baseStyle.backgroundColor || '#ffffff',
+      textColor: baseStyle.textColor || '#29241f',
+      padding: baseStyle.padding ?? 24,
+      align: baseStyle.align || 'left',
+      maxWidth: baseStyle.maxWidth ?? 1440,
+      marginTop: baseStyle.marginTop ?? 0,
+      marginBottom: baseStyle.marginBottom ?? 0,
+      borderRadius: baseStyle.borderRadius ?? 16,
+      minHeight: baseStyle.minHeight ?? 0,
+      responsive,
       blocks
     };
   }).filter(Boolean);
