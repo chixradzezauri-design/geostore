@@ -817,6 +817,21 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const filteredStylePresets = useMemo(() => groupedStylePresets.flatMap(group => group.items), [groupedStylePresets]);
   const toggleStylePresetSelection = id => setSelectedStylePresetIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
   const selectedStylePresets = normalized.stylePresets.filter(item => selectedStylePresetIds.includes(item.id));
+  const duplicateStyleGroups = useMemo(() => {
+    const stableStyleKey = style => JSON.stringify(Object.fromEntries(Object.entries(style || {}).sort(([a], [b]) => a.localeCompare(b))));
+    const groups = new Map();
+    normalized.stylePresets.forEach(preset => {
+      const key = stableStyleKey(preset.style);
+      const group = groups.get(key) || [];
+      group.push(preset);
+      groups.set(key, group);
+    });
+    return [...groups.values()].filter(group => group.length > 1);
+  }, [normalized.stylePresets]);
+  const selectDuplicateStylePresets = () => {
+    const duplicateIds = duplicateStyleGroups.flatMap(group => group.slice(1).map(item => item.id));
+    setSelectedStylePresetIds(duplicateIds);
+  };
   const comparableStylePresets = selectedStylePresets.slice(0, 4);
   const styleComparisonFields = [
     { key: 'fontSize', label: 'ტექსტის ზომა', suffix: ' px' },
@@ -1174,6 +1189,16 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             {filteredElementEntries.length} / {Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).length} ელემენტი
           </div>
         </div>
+        {duplicateStyleGroups.length > 0 && (
+          <section className="space-y-2 rounded-xl border border-amber-400/30 bg-amber-950/10 p-3 sm:col-span-2" aria-label="დუბლირებული სტილების აღმოჩენა">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div><h4 className="text-xs font-black text-amber-200">ერთნაირი სტილები აღმოჩენილია</h4><p className="mt-1 text-[10px] text-slate-400">ნაპოვნია {duplicateStyleGroups.length} ჯგუფი. თითოეულ ჯგუფში პირველი სტილი რჩება მთავარ ასლად; დანარჩენები მხოლოდ მოსანიშნად გამოიყოფა.</p></div>
+              <button type="button" onClick={selectDuplicateStylePresets} className="rounded-md border border-amber-400/40 px-3 py-2 text-[10px] font-bold text-amber-200">დუბლირებული ასლების მონიშვნა ({duplicateStyleGroups.reduce((sum, group) => sum + group.length - 1, 0)})</button>
+            </div>
+            <div className="space-y-1">{duplicateStyleGroups.map((group, index) => <p key={group.map(item => item.id).join(':')} className="text-[10px] text-slate-300"><span className="font-bold text-amber-200">ჯგუფი {index + 1}:</span> {group.map(item => item.name).join(' · ')} <span className="text-slate-500">({group.length} ერთნაირი სტილი)</span></p>)}</div>
+            <p className="text-[10px] text-slate-500">წაშლა ავტომატურად არ ხდება — მონიშნული ასლები გადაამოწმეთ და სურვილის შემთხვევაში გამოიყენეთ არსებული „მონიშნულის წაშლა“.</p>
+          </section>
+        )}
         {selectedStylePresets.length >= 2 && (
           <section className="space-y-3 rounded-xl border border-sky-400/30 bg-sky-950/15 p-3" aria-label="შერჩეული სტილების შედარება">
             <div className="flex flex-wrap items-center justify-between gap-2">
