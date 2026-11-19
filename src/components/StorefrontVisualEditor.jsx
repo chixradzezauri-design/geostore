@@ -165,6 +165,12 @@ export default function StorefrontVisualEditor({
       id, { ...(style || {}), ...(activeResponsive.elementStyles?.[id] || {}) }
     ]))
   }), [design, previewMode]);
+  const hasViewportOverrides = previewMode !== 'desktop' && Boolean(
+    Object.keys(activeResponsive.layout || {}).length ||
+    Object.keys(activeResponsive.theme || {}).length ||
+    Object.keys(activeResponsive.typography || {}).length ||
+    Object.values(activeResponsive.elementStyles || {}).some(style => Object.keys(style || {}).length > 0)
+  );
   const previewStyle = useMemo(() => buildStorefrontVisualStyle(design, previewMode), [design, previewMode]);
   const safeProducts = Array.isArray(products) ? products : [];
   const safeCategories = Array.isArray(categoriesList) ? categoriesList : [];
@@ -634,7 +640,7 @@ export default function StorefrontVisualEditor({
               <p className="text-[10px] text-slate-400">{selectionMode ? 'დააჭირეთ ელემენტს სტილის შესაცვლელად. პროდუქტის დეტალები გახსენით არჩევის რეჟიმის გამორთვით, შემდეგ ჩართეთ რეჟიმი და მონიშნეთ დეტალური ფანჯრის ელემენტები.' : 'სექციები და პროდუქტები შეგიძლიათ გადაადგილოთ გადათრევით. პროდუქტის დეტალების გასახსნელად დააჭირეთ პროდუქტს; კალათა და შეკვეთა Preview-ში გამორთულია.'}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {previewMode !== 'desktop' && <button type="button" onClick={clearViewportOverrides} disabled={!design.responsive?.[previewMode]} className="rounded-lg border border-amber-300/40 px-2.5 py-2 text-[10px] font-bold text-amber-100 disabled:opacity-40">ამ მოწყობილობის პარამეტრების გასუფთავება</button>}
+              {previewMode !== 'desktop' && <button type="button" onClick={clearViewportOverrides} disabled={!hasViewportOverrides} className="rounded-lg border border-amber-300/40 px-2.5 py-2 text-[10px] font-bold text-amber-100 disabled:opacity-40">ამ მოწყობილობის პარამეტრების გასუფთავება</button>}
               <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
               <button type="button" onClick={() => setPreviewMode('tablet')} aria-pressed={previewMode === 'tablet'} className={previewMode === 'tablet' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Tablet</button>
