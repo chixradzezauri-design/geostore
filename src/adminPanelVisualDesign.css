@@ -93,6 +93,33 @@
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-couponsSectionBackground);
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-couponsSectionBorder);
   --admin-vd-staff-radius-active: var(--admin-vd-staff-radius);
+  --admin-vd-staff-titleFontWeight-active: var(--admin-vd-staff-titleFontWeight);
+  --admin-vd-staff-bodyFontWeight-active: var(--admin-vd-staff-bodyFontWeight);
+  --admin-vd-staff-textAlign-active: var(--admin-vd-staff-textAlign);
+  --admin-vd-inventory-titleFontWeight-active: var(--admin-vd-inventory-titleFontWeight);
+  --admin-vd-inventory-bodyFontWeight-active: var(--admin-vd-inventory-bodyFontWeight);
+  --admin-vd-inventory-textAlign-active: var(--admin-vd-inventory-textAlign);
+  --admin-vd-analytics-titleFontWeight-active: var(--admin-vd-analytics-titleFontWeight);
+  --admin-vd-analytics-bodyFontWeight-active: var(--admin-vd-analytics-bodyFontWeight);
+  --admin-vd-analytics-textAlign-active: var(--admin-vd-analytics-textAlign);
+  --admin-vd-orders-titleFontWeight-active: var(--admin-vd-orders-titleFontWeight);
+  --admin-vd-orders-bodyFontWeight-active: var(--admin-vd-orders-bodyFontWeight);
+  --admin-vd-orders-textAlign-active: var(--admin-vd-orders-textAlign);
+  --admin-vd-support-titleFontWeight-active: var(--admin-vd-support-titleFontWeight);
+  --admin-vd-support-bodyFontWeight-active: var(--admin-vd-support-bodyFontWeight);
+  --admin-vd-support-textAlign-active: var(--admin-vd-support-textAlign);
+  --admin-vd-discounts-titleFontWeight-active: var(--admin-vd-discounts-titleFontWeight);
+  --admin-vd-discounts-bodyFontWeight-active: var(--admin-vd-discounts-bodyFontWeight);
+  --admin-vd-discounts-textAlign-active: var(--admin-vd-discounts-textAlign);
+  --admin-vd-banners-titleFontWeight-active: var(--admin-vd-banners-titleFontWeight);
+  --admin-vd-banners-bodyFontWeight-active: var(--admin-vd-banners-bodyFontWeight);
+  --admin-vd-banners-textAlign-active: var(--admin-vd-banners-textAlign);
+  --admin-vd-categories-titleFontWeight-active: var(--admin-vd-categories-titleFontWeight);
+  --admin-vd-categories-bodyFontWeight-active: var(--admin-vd-categories-bodyFontWeight);
+  --admin-vd-categories-textAlign-active: var(--admin-vd-categories-textAlign);
+  --admin-vd-coupons-titleFontWeight-active: var(--admin-vd-coupons-titleFontWeight);
+  --admin-vd-coupons-bodyFontWeight-active: var(--admin-vd-coupons-bodyFontWeight);
+  --admin-vd-coupons-textAlign-active: var(--admin-vd-coupons-textAlign);
   --admin-vd-staff-padding-active: var(--admin-vd-staff-padding);
   --admin-vd-staff-borderWidth-active: var(--admin-vd-staff-borderWidth);
   --admin-vd-staff-shadowBlur-active: var(--admin-vd-staff-shadowBlur);
@@ -900,3 +927,51 @@
 }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-coupons-panel) :is(p, label, span, td, th, small, li) { font-size: var(--admin-vd-coupons-fontSize-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-coupons-panel) :is(h1, h2, h3, h4) { font-size: var(--admin-vd-coupons-titleFontSize-active) !important; }
+
+
+/* Per-module typography alignment and weight controls. */
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-staff-panel, .admin-staff-list-panel) {
+  text-align: var(--admin-vd-staff-textAlign-active) !important;
+  font-weight: var(--admin-vd-staff-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-staff-panel, .admin-staff-list-panel) :is(h2, h3, h4) { font-weight: var(--admin-vd-staff-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel {
+  text-align: var(--admin-vd-inventory-textAlign-active) !important;
+  font-weight: var(--admin-vd-inventory-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel :is(h2, h3, h4) { font-weight: var(--admin-vd-inventory-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-analytics-card, .admin-analytics-toolbar) {
+  text-align: var(--admin-vd-analytics-textAlign-active) !important;
+  font-weight: var(--admin-vd-analytics-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(.admin-analytics-card, .admin-analytics-toolbar) :is(h2, h3, h4) { font-weight: var(--admin-vd-analytics-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel {
+  text-align: var(--admin-vd-orders-textAlign-active) !important;
+  font-weight: var(--admin-vd-orders-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel :is(h2, h3, h4) { font-weight: var(--admin-vd-orders-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-panel {
+  text-align: var(--admin-vd-support-textAlign-active) !important;
+  font-weight: var(--admin-vd-support-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-panel :is(h2, h3, h4) { font-weight: var(--admin-vd-support-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-discounts-panel {
+  text-align: var(--admin-vd-discounts-textAlign-active) !important;
+  font-weight: var(--admin-vd-discounts-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-discounts-panel :is(h2, h3, h4) { font-weight: var(--admin-vd-discounts-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banners {
+  text-align: var(--admin-vd-banners-textAlign-active) !important;
+  font-weight: var(--admin-vd-banners-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banners :is(h2, h3, h4) { font-weight: var(--admin-vd-banners-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-manager {
+  text-align: var(--admin-vd-categories-textAlign-active) !important;
+  font-weight: var(--admin-vd-categories-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-manager :is(h2, h3, h4) { font-weight: var(--admin-vd-categories-titleFontWeight-active) !important; }
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel {
+  text-align: var(--admin-vd-coupons-textAlign-active) !important;
+  font-weight: var(--admin-vd-coupons-bodyFontWeight-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel :is(h2, h3, h4) { font-weight: var(--admin-vd-coupons-titleFontWeight-active) !important; }
