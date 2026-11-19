@@ -39,7 +39,8 @@ export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
   },
   sections: { hero: true, banners: true, flashSale: true, categories: true, filters: true, products: true },
   sectionOrder: SECTION_IDS,
-  productOrder: []
+  productOrder: [],
+  customSections: []
 });
 
 const isPlainObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -63,6 +64,71 @@ const safeImageUrl = value => {
   } catch {
     return '';
   }
+};
+
+
+const safeLinkUrl = value => {
+  const raw = String(value ?? '').trim();
+  if (!raw || raw.length > 2048 || raw.startsWith('//')) return '';
+  if (raw.startsWith('/')) return raw;
+  try {
+    const url = new URL(raw);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch { return ''; }
+};
+
+const safeVideoUrl = value => {
+  const raw = String(value ?? '').trim();
+  if (!raw || raw.length > 2048) return '';
+  try {
+    const url = new URL(raw);
+    let host = url.hostname.toLowerCase();
+    if (host.startsWith('www.')) host = host.slice(4);
+    const segments = url.pathname.split('/').filter(Boolean);
+    let id = '';
+    if (host === 'youtu.be') id = segments[0] || '';
+    else if (host === 'youtube.com' || host === 'm.youtube.com') {
+      id = url.searchParams.get('v') || ((segments[0] === 'embed' || segments[0] === 'shorts') ? segments[1] : '') || '';
+    } else if (host === 'vimeo.com') {
+      id = segments[segments.length - 1] || '';
+      if (id.length >= 6 && id.length <= 12 && Array.from(id).every(ch => ch >= '0' && ch <= '9')) return 'https://player.vimeo.com/video/' + id;
+      return '';
+    } else return '';
+    const validId = id.length === 11 && Array.from(id).every(ch => /^[a-zA-Z0-9_-]$/.test(ch));
+    return validId ? 'https://www.youtube-nocookie.com/embed/' + id : '';
+  } catch { return ''; }
+};
+
+export function normalizeStorefrontCustomSections(rawSections) {
+  if (!Array.isArray(rawSections)) return [];
+  return rawSections.slice(0, 12).map((rawSection, sectionIndex) => {
+    if (!isPlainObject(rawSection)) return null;
+    const sectionId = String(rawSection.id ?? '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) || 'custom-section-' + sectionIndex;
+    const rawBlocks = Array.isArray(rawSection.blocks) ? rawSection.blocks : [];
+    const blocks = rawBlocks.slice(0, 10).map((rawBlock, blockIndex) => {
+      if (!isPlainObject(rawBlock)) return null;
+      const type = ['heading', 'text', 'image', 'button', 'video', 'spacer'].includes(rawBlock.type) ? rawBlock.type : 'text';
+      const blockId = String(rawBlock.id ?? '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) || sectionId + '-block-' + blockIndex;
+      return {
+        id: blockId, type,
+        text: String(rawBlock.text ?? '').slice(0, type === 'heading' ? 120 : 600),
+        imageUrl: type === 'image' ? safeImageUrl(rawBlock.imageUrl) : '',
+        videoUrl: type === 'video' ? safeVideoUrl(rawBlock.videoUrl) : '',
+        alt: String(rawBlock.alt ?? '').slice(0, 160),
+        label: String(rawBlock.label ?? '').slice(0, 60),
+        url: type === 'button' ? safeLinkUrl(rawBlock.url) : ''
+      };
+    }).filter(Boolean);
+    return {
+      id: sectionId, title: String(rawSection.title ?? '').slice(0, 100),
+      visible: rawSection.visible !== false,
+      backgroundColor: safeColor(rawSection.backgroundColor, '#ffffff'),
+      textColor: safeColor(rawSection.textColor, '#29241f'),
+      padding: clamp(rawSection.padding, 0, 80, 24),
+      align: ['left', 'center', 'right'].includes(rawSection.align) ? rawSection.align : 'left',
+      blocks
+    };
+  }).filter(Boolean);
 };
 
 const normalizeResponsiveLayout = rawLayout => {
@@ -188,6 +254,7 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     sections: Object.fromEntries(SECTION_IDS.map(id => [id, sections[id] !== false])),
     sectionOrder,
     productOrder,
+    customSections: normalizeStorefrontCustomSections(raw.customSections),
     responsive: Object.fromEntries(['tablet', 'mobile'].map(viewport => {
       const responsive = isPlainObject(raw.responsive?.[viewport]) ? raw.responsive[viewport] : {};
       const responsiveTheme = isPlainObject(responsive.theme) ? responsive.theme : {};
