@@ -1,5 +1,16 @@
 export const ADMIN_PANEL_VISUAL_STORAGE_KEY = 'geostore_admin_visual_design_v1';
 
+export const ADMIN_PANEL_FONT_FAMILIES = Object.freeze({
+  system: "Inter, 'Noto Sans Georgian', Arial, sans-serif",
+  georgian: "'Noto Sans Georgian', 'DejaVu Sans', sans-serif",
+  modern: "Inter, 'Noto Sans', 'Noto Sans Georgian', sans-serif",
+  serif: "Georgia, 'Noto Serif Georgian', serif",
+  mono: "'SFMono-Regular', Consolas, 'Liberation Mono', monospace"
+});
+
+const normalizeFontFamily = (value, fallback = 'system') =>
+  Object.hasOwn(ADMIN_PANEL_FONT_FAMILIES, value) ? value : fallback;
+
 export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
   version: 1,
   theme: {
@@ -61,6 +72,7 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
   },
   layout: {
     fontSize: 13,
+    fontFamily: 'system',
     cardRadius: 24,
     cardPadding: 20,
     sidebarWidth: 288,
@@ -123,12 +135,13 @@ const normalizeTheme = (source, fallback) => Object.fromEntries(
   THEME_KEYS.map(key => [key, safeColor(source?.[key], fallback[key])])
 );
 
-const normalizeLayout = (source, fallback) => Object.fromEntries(
-  Object.entries(LAYOUT_LIMITS).map(([key, limits]) => [
+const normalizeLayout = (source, fallback) => ({
+  ...Object.fromEntries(Object.entries(LAYOUT_LIMITS).map(([key, limits]) => [
     key,
     clampNumber(source?.[key], limits, fallback[key])
-  ])
-);
+  ])),
+  fontFamily: normalizeFontFamily(source?.fontFamily, fallback.fontFamily)
+});
 
 export function normalizeAdminPanelVisualDesign(rawDesign) {
   const raw = isObject(rawDesign) ? rawDesign : {};
@@ -144,9 +157,14 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
       theme: Object.fromEntries(THEME_KEYS
         .filter(key => responsiveTheme[key] != null && responsiveTheme[key] !== '')
         .map(key => [key, safeColor(responsiveTheme[key], theme[key])])),
-      layout: Object.fromEntries(Object.entries(LAYOUT_LIMITS)
-        .filter(([key]) => responsiveLayout[key] != null && responsiveLayout[key] !== '')
-        .map(([key, limits]) => [key, clampNumber(responsiveLayout[key], limits, layout[key])]))
+      layout: {
+        ...Object.fromEntries(Object.entries(LAYOUT_LIMITS)
+          .filter(([key]) => responsiveLayout[key] != null && responsiveLayout[key] !== '')
+          .map(([key, limits]) => [key, clampNumber(responsiveLayout[key], limits, layout[key])])),
+        ...(responsiveLayout.fontFamily != null && responsiveLayout.fontFamily !== ''
+          ? { fontFamily: normalizeFontFamily(responsiveLayout.fontFamily, layout.fontFamily) }
+          : {})
+      }
     };
   }
 
@@ -170,7 +188,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
       style[`--admin-vd-${prefix}${key}`] = value;
     }
     for (const [key, value] of Object.entries(values.layout)) {
-      style[`--admin-vd-${prefix}${key}`] = key === 'modalOverlayOpacity' ? `${value}%` : `${value}px`;
+      style[`--admin-vd-${prefix}${key}`] = key === 'modalOverlayOpacity' ? `${value}%` : key === 'fontFamily' ? (ADMIN_PANEL_FONT_FAMILIES[value] || ADMIN_PANEL_FONT_FAMILIES.system) : `${value}px`;
     }
   }
 
