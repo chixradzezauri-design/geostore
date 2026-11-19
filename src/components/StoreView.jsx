@@ -33,8 +33,8 @@ const buildCustomSectionResponsiveCss = section => {
   };
   const tablet = makeRule('tablet');
   const mobile = makeRule('mobile');
-  return (tablet ? '@media (min-width:768px) and (max-width:1023px){' + tablet + '}' : '') +
-    (mobile ? '@media (max-width:767px){' + mobile + '}' : '');
+  return (tablet ? '@media (min-width:641px) and (max-width:1023px){' + tablet + '}' : '') +
+    (mobile ? '@media (max-width:640px){' + mobile + '}' : '');
 };
 
 export default function StoreView({
