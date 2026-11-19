@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   ADMIN_PANEL_FONT_FAMILIES,
   ADMIN_PANEL_VISUAL_STORAGE_KEY,
@@ -311,4 +312,13 @@ test('table, form and filter controls are bounded and inherit across viewports',
   assert.equal(style['--admin-vd-mobile-tableRowFontSize'], '12px');
   assert.equal(style['--admin-vd-mobile-filterControlHeight'], '38px');
   assert.equal(style['--admin-vd-mobile-inputFontWeight'], '500');
+});
+
+
+test('native checkbox, radio and range controls stay scoped to the admin visual editor theme', () => {
+  const css = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  assert.match(css, /\.admin-dashboard-pro\[data-admin-visual-design="enabled"\] :is\(input\[type="checkbox"\], input\[type="radio"\]\)/);
+  assert.match(css, /accent-color: var\(--admin-vd-accent-active\)/);
+  assert.match(css, /\.admin-dashboard-pro\[data-admin-visual-design="enabled"\] input\[type="range"\]/);
+  assert.match(css, /\.admin-dashboard-pro\[data-admin-visual-design="enabled"\] select option/);
 });
