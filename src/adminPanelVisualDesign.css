@@ -31,6 +31,10 @@
   --admin-vd-tableCellPadding-active: var(--admin-vd-tableCellPadding);
   --admin-vd-inputRadius-active: var(--admin-vd-inputRadius);
   --admin-vd-inputHeight-active: var(--admin-vd-inputHeight);
+  --admin-vd-contentCardBackground-active: var(--admin-vd-contentCardBackground);
+  --admin-vd-contentCardBorder-active: var(--admin-vd-contentCardBorder);
+  --admin-vd-cardBorderWidth-active: var(--admin-vd-cardBorderWidth);
+  --admin-vd-cardShadowBlur-active: var(--admin-vd-cardShadowBlur);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -41,6 +45,16 @@
   border-color: var(--admin-vd-headerBorder-active) !important;
   border-radius: var(--admin-vd-headerRadius-active) !important;
   padding: var(--admin-vd-headerPadding-active) !important;
+}
+
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-command-kpi,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-command-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
+  background-color: var(--admin-vd-contentCardBackground-active) !important;
+  border-color: var(--admin-vd-contentCardBorder-active) !important;
+  border-width: var(--admin-vd-cardBorderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-cardShadowBlur-active) rgba(0, 0, 0, 0.22) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .bg-slate-900\/80,
@@ -173,6 +187,10 @@
     --admin-vd-tableCellPadding-active: var(--admin-vd-tablet-tableCellPadding, var(--admin-vd-tableCellPadding));
     --admin-vd-inputRadius-active: var(--admin-vd-tablet-inputRadius, var(--admin-vd-inputRadius));
     --admin-vd-inputHeight-active: var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight));
+  --admin-vd-contentCardBackground-active: var(--admin-vd-tablet-contentCardBackground, var(--admin-vd-contentCardBackground));
+  --admin-vd-contentCardBorder-active: var(--admin-vd-tablet-contentCardBorder, var(--admin-vd-contentCardBorder));
+  --admin-vd-cardBorderWidth-active: var(--admin-vd-tablet-cardBorderWidth, var(--admin-vd-cardBorderWidth));
+  --admin-vd-cardShadowBlur-active: var(--admin-vd-tablet-cardShadowBlur, var(--admin-vd-cardShadowBlur));
   }
 }
 
@@ -210,5 +228,9 @@
     --admin-vd-tableCellPadding-active: var(--admin-vd-mobile-tableCellPadding, var(--admin-vd-tablet-tableCellPadding, var(--admin-vd-tableCellPadding)));
     --admin-vd-inputRadius-active: var(--admin-vd-mobile-inputRadius, var(--admin-vd-tablet-inputRadius, var(--admin-vd-inputRadius)));
     --admin-vd-inputHeight-active: var(--admin-vd-mobile-inputHeight, var(--admin-vd-tablet-inputHeight, var(--admin-vd-inputHeight)));
+  --admin-vd-contentCardBackground-active: var(--admin-vd-mobile-contentCardBackground, var(--admin-vd-tablet-contentCardBackground, var(--admin-vd-contentCardBackground)));
+  --admin-vd-contentCardBorder-active: var(--admin-vd-mobile-contentCardBorder, var(--admin-vd-tablet-contentCardBorder, var(--admin-vd-contentCardBorder)));
+  --admin-vd-cardBorderWidth-active: var(--admin-vd-mobile-cardBorderWidth, var(--admin-vd-tablet-cardBorderWidth, var(--admin-vd-cardBorderWidth)));
+  --admin-vd-cardShadowBlur-active: var(--admin-vd-mobile-cardShadowBlur, var(--admin-vd-tablet-cardShadowBlur, var(--admin-vd-cardShadowBlur)));
   }
 }
