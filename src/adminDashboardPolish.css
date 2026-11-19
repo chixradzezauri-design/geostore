@@ -636,3 +636,549 @@
     transform: none !important;
   }
 }
+
+
+/* STAGE 106 — compact mobile admin header and readable action controls.
+   Preserve all handlers and permissions; only correct the responsive layout. */
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+  min-width: 0;
+  min-height: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child h2 {
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child p {
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  /* Do not let a stretched flex column push the greeting and controls apart. */
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    height: auto !important;
+    min-height: 0 !important;
+    align-self: flex-start;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child h2 {
+    font-size: 15px !important;
+    line-height: 1.3 !important;
+    letter-spacing: -.02em;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child p {
+    margin-top: 4px;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 8px !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px !important;
+    padding: 9px 8px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+    line-height: 1.3;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    min-height: 38px !important;
+    justify-content: center;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+    font-size: 10px !important;
+    line-height: 1.35;
+    text-align: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child {
+    gap: 7px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+    font-size: 9px !important;
+    padding-inline: 6px !important;
+  }
+}
+
+
+/* STAGE 108 — consistent compact typography across the entire admin workspace.
+   Scoped to the admin shell; preserves hierarchy, controls, handlers and content. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  p, span, label, small, th, td, li, dt, dd, figcaption,
+  button, input, select, textarea, option
+) {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  h1, h2, h3, h4, h5, h6
+) {
+  line-height: 1.25;
+  letter-spacing: -.015em;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+  font-size: 16px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+  font-size: 13px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+  font-size: 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  button, input, select, textarea
+) {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-kpi, .admin-command-panel, .admin-order-card,
+  .admin-product-card, .admin-staff-card, .admin-support-ticket,
+  .admin-crm-user-card, .admin-expense-row
+) :is(p, span, small, label, strong, b) {
+  line-height: 1.35;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-command-kpi, .admin-analytics-card
+) :is(h2, h3, h4) {
+  font-size: 13px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-orders-header, .admin-products-header, .admin-staff-list-title,
+  .admin-support-header, .admin-analytics-toolbar
+) :is(h2, h3, p, span, button) {
+  line-height: 1.3;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .text-\\[8px\\], .text-\\[9px\\], .text-\\[10px\\]
+) {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 11px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption,
+    button, input, select, textarea, option
+  ) {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 14px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 12px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption,
+    button, input, select, textarea, option
+  ) {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+    font-size: 10px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    .admin-command-kpi, .admin-analytics-card
+  ) :is(h2, h3, h4) {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption,
+    button, input, select, textarea, option
+  ) {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 12px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 10px;
+  }
+}
+
+
+/* STAGE 109 — hard compact typography and a genuinely short admin header.
+   Override Tailwind text-size utilities inside the admin only. Preserve emphasis
+   for key figures while keeping labels, descriptions and controls compact. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(div, section, article, nav, header, footer) {
+  line-height: inherit;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(p, span, label, small, th, td, li, dt, dd, figcaption, button, input, select, textarea, option, a) {
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.02em;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+/* Keep only key dashboard figures visually prominent. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card :is(p.text-2xl, p.text-3xl) {
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 11px 12px !important;
+  gap: 8px !important;
+  align-items: center;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child h2 {
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child p {
+  margin-top: 3px !important;
+  font-size: 9px !important;
+  line-height: 1.25 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child {
+  gap: 6px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+  min-height: 36px !important;
+  padding: 7px 10px !important;
+  border-radius: 10px !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div {
+  min-height: 32px !important;
+  padding: 6px 9px !important;
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 10px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 14px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 10px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    padding: 9px 10px !important;
+    gap: 7px !important;
+    border-radius: 14px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child h2 {
+    font-size: 12px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child p {
+    font-size: 9px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child {
+    gap: 5px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+    min-height: 34px !important;
+    padding: 6px 7px !important;
+    font-size: 9px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > div {
+    min-height: 29px !important;
+    padding: 5px 7px !important;
+    font-size: 8px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+    font-size: 18px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card :is(p.text-2xl, p.text-3xl) {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(p, span, label, small, th, td, li, dt, dd, figcaption, button, input, select, textarea, option, a) {
+    font-size: 9px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 12px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 11px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child {
+    padding: 8px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:last-child > button {
+    min-height: 32px !important;
+    padding: 5px 6px !important;
+  }
+}
+
+
+/* STAGE 110 — restore a clear type hierarchy without oversized utility text.
+   Scoped to admin only. Keeps labels compact, headings distinct and form controls usable. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(p, span, label, small, th, td, li, dt, dd, figcaption, a, strong, b) {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+  font-size: 17px !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.02em;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(h5, h6) {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(button, input, select, textarea) {
+  min-width: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell button {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell :is(input, select, textarea) {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+  font-size: 21px !important;
+  line-height: 1.1 !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics-card :is(p.text-2xl, p.text-3xl) {
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+}
+
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    font-size: 11px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(p, span, label, small, th, td, li, dt, dd, figcaption, a, strong, b) {
+    font-size: 10.5px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 15px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(p, span, label, small, th, td, li, dt, dd, figcaption, a, strong, b) {
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h1, h2) {
+    font-size: 14px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(h3, h4) {
+    font-size: 12px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell button {
+    font-size: 10px !important;
+    min-height: 34px;
+  }
+
+  /* 16px avoids automatic zoom when editing fields on iPhone/iPad. */
+  .admin-dashboard-pro.admin-dashboard-shell :is(input, select, textarea) {
+    font-size: 16px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpi > strong {
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(p, span, label, small, th, td, li, dt, dd, figcaption, a, strong, b) {
+    font-size: 9.5px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell button {
+    font-size: 9.5px !important;
+  }
+}
+
+
+/* STAGE 111 — minimum readable typography on the narrowest admin screens.
+   Keep compact layout without shrinking interactive text below 11px.
+   Inputs retain 16px on mobile to prevent iOS automatic zoom. */
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell :is(
+    p, span, label, small, th, td, li, dt, dd, figcaption, a, strong, b
+  ) {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell button {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    min-height: 40px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell :is(input, select, textarea) {
+    font-size: 16px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) > div:first-child > div:first-child p {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+}
