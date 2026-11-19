@@ -145,6 +145,7 @@ export function normalizeStorefrontCustomSections(rawSections) {
     return {
       id: sectionId, title: String(rawSection.title ?? '').slice(0, 100),
       visible: rawSection.visible !== false,
+      placement: ['after-hero', 'after-banners', 'after-flash-sale', 'after-categories', 'after-filters', 'after-products'].includes(rawSection.placement) ? rawSection.placement : 'after-products',
       backgroundColor: baseStyle.backgroundColor || '#ffffff',
       textColor: baseStyle.textColor || '#29241f',
       padding: baseStyle.padding ?? 24,
