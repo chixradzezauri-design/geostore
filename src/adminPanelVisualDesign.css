@@ -7,6 +7,10 @@
   --admin-vd-muted-active: var(--admin-vd-muted);
   --admin-vd-border-active: var(--admin-vd-border);
   --admin-vd-fontSize-active: var(--admin-vd-fontSize);
+  --admin-vd-titleFontSize-active: var(--admin-vd-titleFontSize);
+  --admin-vd-bodyFontSize-active: var(--admin-vd-bodyFontSize);
+  --admin-vd-headingFontWeight-active: var(--admin-vd-headingFontWeight);
+  --admin-vd-bodyFontWeight-active: var(--admin-vd-bodyFontWeight);
   --admin-vd-fontFamily-active: var(--admin-vd-fontFamily);
   --admin-vd-cardRadius-active: var(--admin-vd-cardRadius);
   --admin-vd-cardPadding-active: var(--admin-vd-cardPadding);
@@ -77,6 +81,16 @@
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
   font-family: var(--admin-vd-fontFamily-active);
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(h1, h2, h3, h4) {
+  font-size: var(--admin-vd-titleFontSize-active);
+  font-weight: var(--admin-vd-headingFontWeight-active);
+}
+
+.admin-dashboard-pro[data-admin-visual-design="enabled"] :is(p, label, td, th, small, input, textarea, select) {
+  font-size: var(--admin-vd-bodyFontSize-active);
+  font-weight: var(--admin-vd-bodyFontWeight-active);
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] > div.flex-1 > [data-admin-visual-header="true"] {
@@ -307,6 +321,10 @@
     --admin-vd-muted-active: var(--admin-vd-tablet-muted, var(--admin-vd-muted));
     --admin-vd-border-active: var(--admin-vd-tablet-border, var(--admin-vd-border));
     --admin-vd-fontSize-active: var(--admin-vd-tablet-fontSize, var(--admin-vd-fontSize));
+    --admin-vd-titleFontSize-active: var(--admin-vd-tablet-titleFontSize, var(--admin-vd-titleFontSize));
+    --admin-vd-bodyFontSize-active: var(--admin-vd-tablet-bodyFontSize, var(--admin-vd-bodyFontSize));
+    --admin-vd-headingFontWeight-active: var(--admin-vd-tablet-headingFontWeight, var(--admin-vd-headingFontWeight));
+    --admin-vd-bodyFontWeight-active: var(--admin-vd-tablet-bodyFontWeight, var(--admin-vd-bodyFontWeight));
     --admin-vd-fontFamily-active: var(--admin-vd-tablet-fontFamily, var(--admin-vd-fontFamily));
     --admin-vd-cardRadius-active: var(--admin-vd-tablet-cardRadius, var(--admin-vd-cardRadius));
     --admin-vd-cardPadding-active: var(--admin-vd-tablet-cardPadding, var(--admin-vd-cardPadding));
@@ -386,6 +404,10 @@
     --admin-vd-muted-active: var(--admin-vd-mobile-muted, var(--admin-vd-tablet-muted, var(--admin-vd-muted)));
     --admin-vd-border-active: var(--admin-vd-mobile-border, var(--admin-vd-tablet-border, var(--admin-vd-border)));
     --admin-vd-fontSize-active: var(--admin-vd-mobile-fontSize, var(--admin-vd-tablet-fontSize, var(--admin-vd-fontSize)));
+    --admin-vd-titleFontSize-active: var(--admin-vd-mobile-titleFontSize, var(--admin-vd-tablet-titleFontSize, var(--admin-vd-titleFontSize)));
+    --admin-vd-bodyFontSize-active: var(--admin-vd-mobile-bodyFontSize, var(--admin-vd-tablet-bodyFontSize, var(--admin-vd-bodyFontSize)));
+    --admin-vd-headingFontWeight-active: var(--admin-vd-mobile-headingFontWeight, var(--admin-vd-tablet-headingFontWeight, var(--admin-vd-headingFontWeight)));
+    --admin-vd-bodyFontWeight-active: var(--admin-vd-mobile-bodyFontWeight, var(--admin-vd-tablet-bodyFontWeight, var(--admin-vd-bodyFontWeight)));
     --admin-vd-fontFamily-active: var(--admin-vd-mobile-fontFamily, var(--admin-vd-tablet-fontFamily, var(--admin-vd-fontFamily)));
     --admin-vd-cardRadius-active: var(--admin-vd-mobile-cardRadius, var(--admin-vd-tablet-cardRadius, var(--admin-vd-cardRadius)));
     --admin-vd-cardPadding-active: var(--admin-vd-mobile-cardPadding, var(--admin-vd-tablet-cardPadding, var(--admin-vd-cardPadding)));
