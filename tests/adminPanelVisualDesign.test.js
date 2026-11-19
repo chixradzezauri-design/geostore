@@ -1156,3 +1156,22 @@ test('admin style library compares selected presets without mutating them', () =
   assert.match(editor, /geostore-admin-compared-style-presets\.json/);
   assert.match(editor, /შედარება ცვლილებებს არ ახორციელებს/);
 });
+
+
+test('saved admin style preset history is validated and limited to the latest ten versions', () => {
+  const history = Array.from({ length: 12 }, (_, index) => ({ savedAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(), style: { fontSize: 12 + index, textColor: '#123456' } }));
+  const design = normalizeAdminPanelVisualDesign({ stylePresets: [{ id: 'history-test', name: 'ისტორია', style: { fontSize: 18 }, history: [...history, { savedAt: 'invalid-date', style: { fontSize: 20 } }] }] });
+  assert.equal(design.stylePresets[0].history.length, 10);
+  assert.equal(design.stylePresets[0].history[0].style.fontSize, 14);
+  assert.equal(design.stylePresets[0].history.at(-1).style.fontSize, 23);
+  assert.equal(design.stylePresets[0].history.every(entry => Number.isFinite(Date.parse(entry.savedAt))), true);
+});
+
+test('admin style editor can save a new preset version and restore a prior version', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /updateSavedStyleFromSelectedElement/);
+  assert.match(editor, /restoreSavedStyleVersion/);
+  assert.match(editor, /ვერსიების ისტორია/);
+  assert.match(editor, /ამ ვერსიის აღდგენა/);
+  assert.match(editor, /slice\(-10\)/);
+});
