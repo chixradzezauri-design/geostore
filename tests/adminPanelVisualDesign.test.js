@@ -11,6 +11,7 @@ import {
   createAdminPanelModuleBackup,
   restoreAdminPanelModuleBackup,
   deleteAdminPanelModuleBackup,
+  compareAdminPanelModuleBackup,
   loadAdminPanelVisualDesign,
   normalizeAdminPanelVisualDesign,
   resetAdminPanelVisualViewport,
@@ -1481,4 +1482,36 @@ test('admin visual editor exposes isolated per-module backup, restore and delete
   assert.match(editor, /deleteAdminPanelModuleBackup\(normalized, backupId\)/);
   assert.match(editor, /მოდულის სარეზერვო ასლები/);
   assert.match(editor, /სხვა მოდულები და დანარჩენი ხედები უცვლელი დარჩება/);
+});
+
+
+test('admin module backup comparison reports exact differences without changing the design', () => {
+  const category = { id: 'orders', label: 'შეკვეთები', keys: ['orderHeader', 'orderCard'] };
+  const initial = normalizeAdminPanelVisualDesign({
+    elementStyles: { orderHeader: { fontSize: 18 }, orderCard: { padding: 20 }, staffList: { fontSize: 16 } },
+    responsive: { mobile: { elementStyles: { orderHeader: { fontSize: 21 } } } }
+  });
+  const saved = createAdminPanelModuleBackup(initial, category, 'mobile');
+  const backup = saved.moduleDesignBackups.at(-1);
+  const current = normalizeAdminPanelVisualDesign({
+    ...saved,
+    responsive: { ...saved.responsive, mobile: { ...saved.responsive.mobile, elementStyles: { ...saved.responsive.mobile.elementStyles, orderHeader: { fontSize: 13 } } } }
+  });
+  const before = JSON.stringify(current);
+  const comparison = compareAdminPanelModuleBackup(current, backup.id);
+  assert.equal(comparison.moduleId, 'orders');
+  assert.equal(comparison.viewport, 'mobile');
+  assert.equal(comparison.unchanged, false);
+  assert.equal(comparison.changedCount, 1);
+  assert.ok(comparison.differences.some(item => item.path.endsWith('orderHeader.fontSize') && item.saved === 21 && item.current === 13));
+  assert.equal(JSON.stringify(current), before);
+});
+
+test('admin module backup comparison identifies an unchanged design', () => {
+  const category = { id: 'staff', label: 'თანამშრომლები', keys: ['staffList', 'staffCreateForm'] };
+  const saved = createAdminPanelModuleBackup(normalizeAdminPanelVisualDesign({}), category, 'desktop');
+  const backup = saved.moduleDesignBackups.at(-1);
+  const comparison = compareAdminPanelModuleBackup(saved, backup.id);
+  assert.equal(comparison.unchanged, true);
+  assert.equal(comparison.changedCount, 0);
 });
