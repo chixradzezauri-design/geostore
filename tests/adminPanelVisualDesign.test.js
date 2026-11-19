@@ -1338,3 +1338,18 @@ test('admin style presets can apply only selected style properties', () => {
   assert.match(editor, /selectedStylePropertyKeys\.length/);
   assert.match(editor, /STYLE_PROPERTY_OPTIONS\.map\(option/);
 });
+
+
+test('admin element selection can add, clear and toggle only visible filtered elements', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /selectVisibleElementsPreservingOthers/);
+  assert.match(editor, /current => \[\.\.\.new Set\(\[\.\.\.current, \.\.\.filteredElementEntries\.map\(\(\[key\]\) => key\)\]\)\]/);
+  assert.match(editor, /clearVisibleElementSelection/);
+  assert.match(editor, /current\.filter\(key => !visibleKeys\.has\(key\)\)/);
+  assert.match(editor, /toggleVisibleElementSelection/);
+  assert.match(editor, /allVisibleSelected/);
+  assert.match(editor, /ნაჩვენების დამატება/);
+  assert.match(editor, /ნაჩვენების მოხსნა/);
+  assert.match(editor, /ნაჩვენების გადართვა/);
+  assert.match(editor, /ნაჩვენებიდან: \{visibleSelectedElementCount\}/);
+});
