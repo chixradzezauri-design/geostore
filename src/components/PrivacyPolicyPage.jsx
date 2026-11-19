@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, ShieldCheck, MessageSquare, LockKeyhole } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, MessageSquare } from 'lucide-react';
 
 const POLICY = {
   ka: {

@@ -27,7 +27,7 @@ test('privacy policy describes the actual GEOSTORE data flows and customer right
     assert.ok(page.includes(phrase), `Missing policy coverage: ${phrase}`);
   }
   assert.match(page, /მონაცემთა უფლებები|თქვენი უფლებები/);
-  assert.match(page, /არ ვყიდით პირად მონაცემებს|არ ვყიდით პერსონალურ მონაცემებს|არ ვყიდით personal information/);
+  assert.ok(page.includes('პირად მონაცემებს არ ვყიდით.'));
   assert.match(page, /onContact/);
 });
 
