@@ -568,7 +568,9 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
     };
   }
 
-  return { version: 1, theme, layout, components, content, elementStyles, responsive };
+  const stylePresets = Array.isArray(raw.stylePresets) ? raw.stylePresets.slice(0, 30).map((preset, index) => ({ id: typeof preset?.id === 'string' ? preset.id.slice(0, 80) : `admin-style-${index}`, name: typeof preset?.name === 'string' ? preset.name.trim().slice(0, 40) : '', style: isObject(preset?.style) ? Object.fromEntries(Object.entries(preset.style).filter(([key, value]) => ['fontSize', 'fontWeight', 'borderRadius', 'padding', 'textColor', 'backgroundColor', 'borderColor', 'textAlign'].includes(key) && value !== undefined)) : {} })).filter(preset => preset.name && Object.keys(preset.style).length) : [];
+
+  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets };
 }
 
 export function resetAdminPanelVisualElement(rawDesign, viewport, elementKey) {
