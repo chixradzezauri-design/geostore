@@ -5303,12 +5303,24 @@ export default function AdminDashboardPro({
                           (isDeliveredOrderStatus(o.status)
                             ? Boolean(o.stock_deducted_at) && !o.stock_restored_at
                             : Boolean(o.stock_deducted_at) && Boolean(o.stock_restored_at)) ? (
-                            <button
-                              onClick={() => { reactivationTriggerRef.current = document.activeElement; setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
-                              className="admin-order-reactivate-button px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] transition cursor-pointer"
-                            >
-                              <KeyRound className="w-3.5 h-3.5 inline mr-1" /> ხელახლა გააქტიურება
-                            </button>
+                            isOwner ? (
+                              <button
+                                type="button"
+                                onClick={() => { reactivationTriggerRef.current = document.activeElement; setReactivationOrder(o); setReactivationPassword(''); setReactivationError(''); }}
+                                aria-label={`შეკვეთა #${o.id} ხელახლა გააქტიურება`}
+                                title={isDeliveredOrderStatus(o.status)
+                                  ? 'მთავარი ადმინისტრატორის პაროლის დადასტურებით დაბრუნდება ახალ სტატუსზე; მარაგი უცვლელი დარჩება.'
+                                  : 'მთავარი ადმინისტრატორის პაროლის დადასტურებით შემოწმდება და აღდგება მარაგი.'}
+                                className="admin-order-reactivate-button min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition cursor-pointer inline-flex items-center justify-center gap-1.5"
+                              >
+                                <KeyRound className="w-4 h-4 shrink-0" />
+                                {isDeliveredOrderStatus(o.status) ? 'დასრულებულის ხელახლა გააქტიურება' : 'გაუქმებულის ხელახლა გააქტიურება'}
+                              </button>
+                            ) : (
+                              <span className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-slate-400 text-[10px] leading-relaxed">
+                                ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია
+                              </span>
+                            )
                           ) : (
                             <span
                               className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-amber-200 text-[10px] leading-relaxed"
