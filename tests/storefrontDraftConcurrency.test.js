@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const migration = await readFile(new URL('../supabase/migrations/20261119170000_storefront_draft_concurrency.sql', import.meta.url), 'utf8');
+const compatibilityMigration = await readFile(new URL('../supabase/migrations/20261119200000_legacy_storefront_draft_save_compat.sql', import.meta.url), 'utf8');
 
 test('storefront draft loader captures the shared version used by the next save', () => {
   assert.match(app, /select=draft_config,draft_updated_at/);
@@ -41,6 +42,16 @@ test('draft conflict is reported without silently replacing the local edit or pu
   const privateRpc = migration.split('CREATE OR REPLACE FUNCTION private.save_storefront_draft')[1]?.split('CREATE OR REPLACE FUNCTION public.save_storefront_draft')[0] || '';
   assert.doesNotMatch(privateRpc, /published_config|is_published|published_at/);
 });
+test('legacy deployed clients retain a temporary permission-checked compatibility RPC', () => {
+  assert.match(compatibilityMigration, /CREATE OR REPLACE FUNCTION public\.save_storefront_draft\(\s*p_snapshot jsonb\s*\)/);
+  assert.match(compatibilityMigration, /SECURITY INVOKER/);
+  assert.match(compatibilityMigration, /SELECT config\.draft_updated_at[\s\S]*?config_key = 'storefront'/);
+  assert.match(compatibilityMigration, /private\.save_storefront_draft\(\s*p_snapshot,[\s\S]*?\)/);
+  assert.match(compatibilityMigration, /REVOKE ALL ON FUNCTION public\.save_storefront_draft\(jsonb\) FROM PUBLIC, anon/);
+  assert.match(compatibilityMigration, /GRANT EXECUTE ON FUNCTION public\.save_storefront_draft\(jsonb\) TO authenticated/);
+  assert.match(compatibilityMigration, /remove this overload after all deployed clients use the two-argument RPC/i);
+});
+
 test('committed draft saves never clean up media when the response cannot be verified', () => {
   const saveHandler = app.split('const handleSaveStorefrontDraft')[1]?.split('const handleRestoreStorefrontVersion')[0] || '';
   assert.match(saveHandler, /let draftSaveCommitted = false/);
