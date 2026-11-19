@@ -615,13 +615,18 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
         });
         const prefix = { orders: 'order', staff: 'staff', inventory: 'inventory', analytics: 'analytics', support: 'support', discounts: 'discount', banners: 'banner', categories: 'category', coupons: 'coupon' }[moduleId];
         const sectionThemeKeys = [`${moduleId}SectionBackground`, `${moduleId}SectionBorder`].filter(key => THEME_KEYS.includes(key));
-        const elementSnapshot = Object.fromEntries(Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => key.startsWith(prefix)).map(key => [key, safeSnapshot.elementStyles[key]]));
+        const rawElementStyles = viewport === 'desktop'
+          ? backup.snapshot.elementStyles
+          : backup.snapshot.responsive?.[viewport]?.elementStyles;
+        const snapshotElementKeys = Object.keys(isObject(rawElementStyles) ? rawElementStyles : {})
+          .filter(key => key.startsWith(prefix) && Object.hasOwn(ADMIN_PANEL_ELEMENT_DEFINITIONS, key));
+        const elementSnapshot = Object.fromEntries(snapshotElementKeys.filter(key => viewport === 'desktop').map(key => [key, safeSnapshot.elementStyles[key]]));
         const contentSnapshot = Object.fromEntries(ADMIN_PANEL_CONTENT_FIELDS.filter(field => field.key.toLowerCase().startsWith(moduleId)).map(field => [field.key, safeSnapshot.content[field.key]]));
         const responsiveSource = safeSnapshot.responsive[viewport] || {};
         const responsiveSnapshot = viewport === 'desktop' ? {} : { [viewport]: {
           theme: Object.fromEntries(sectionThemeKeys.filter(key => responsiveSource.theme?.[key]).map(key => [key, responsiveSource.theme[key]])),
           components: responsiveSource.components?.[moduleId] ? { [moduleId]: responsiveSource.components[moduleId] } : {},
-          elementStyles: Object.fromEntries(Object.entries(responsiveSource.elementStyles || {}).filter(([key]) => Object.hasOwn(elementSnapshot, key)))
+          elementStyles: Object.fromEntries(Object.entries(responsiveSource.elementStyles || {}).filter(([key]) => snapshotElementKeys.includes(key)))
         } };
         return { id, savedAt, moduleId, moduleLabel, viewport, reason, snapshot: {
           theme: viewport === 'desktop' ? Object.fromEntries(sectionThemeKeys.map(key => [key, safeSnapshot.theme[key]])) : {},
@@ -752,10 +757,14 @@ export function compareAdminPanelModuleBackup(rawDesign, backupId) {
   const prefixes = { orders: 'order', staff: 'staff', inventory: 'inventory', analytics: 'analytics', support: 'support', discounts: 'discount', banners: 'banner', categories: 'category', coupons: 'coupon' };
   const prefix = prefixes[backup.moduleId];
   if (!prefix) return null;
+  const savedResponsive = backup.snapshot.responsive?.[backup.viewport] || {};
+  const savedElementKeys = backup.viewport === 'desktop'
+    ? Object.keys(backup.snapshot.elementStyles || {})
+    : Object.keys(savedResponsive.elementStyles || {});
   const category = {
     id: backup.moduleId,
     label: backup.moduleLabel,
-    keys: Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => key.startsWith(prefix))
+    keys: savedElementKeys.length ? savedElementKeys : Object.keys(ADMIN_PANEL_ELEMENT_DEFINITIONS).filter(key => key.startsWith(prefix))
   };
   const currentSnapshot = createAdminPanelModuleBackup(design, category, backup.viewport).moduleDesignBackups.at(-1)?.snapshot;
   if (!currentSnapshot) return null;
