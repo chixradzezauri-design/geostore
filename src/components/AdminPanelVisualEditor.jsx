@@ -812,7 +812,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
       return;
     }
     const action = current ? 'განახლდება არსებული სტილი' : 'დაემატება ახალი სტილი';
-    const rotationWarning = normalized.stylePresetBackups.length >= 10 ? '\\nშენიშვნა: მიმდინარე მდგომარეობის დაცვისას ყველაზე ძველი სარეზერვო ასლი ჩანაცვლდება.' : '';
+    const rotationWarning = normalized.stylePresetBackups.length >= 10 ? '\nშენიშვნა: მიმდინარე მდგომარეობის დაცვისას ყველაზე ძველი სარეზერვო ასლი ჩანაცვლდება.' : '';
     if (!window.confirm(`აღდგეს მხოლოდ „${preset.name}“? ${action}. დანარჩენი სტილები უცვლელი დარჩება. მიმდინარე მდგომარეობა ავტომატურად შეინახება.${rotationWarning}`)) return;
     const protectedDesign = createAdminStylePresetBackup(normalized, `ერთი სტილის აღდგენამდე: ${preset.name}`);
     const restoredAt = new Date().toISOString();
