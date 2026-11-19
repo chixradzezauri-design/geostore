@@ -20089,3 +20089,20 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     font-size: 10px !important;
   }
 }
+
+
+/* GEOSTORE VIDEO AUDIT — keep the product purchase action pinned inside the modal. */
+.geostore-fashion-store .geostore-storefront .gs-product-dialog {
+  position: relative !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-modal-purchase-bar {
+  position: absolute !important;
+  inset: auto 0 0 0 !important;
+  z-index: 30 !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+.geostore-fashion-store .geostore-storefront .gs-product-modal-body {
+  padding-bottom: max(104px, calc(78px + env(safe-area-inset-bottom))) !important;
+}
