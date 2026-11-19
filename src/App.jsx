@@ -1326,7 +1326,6 @@ export default function App() {
           ...draftSiteSettings.visualDesign,
           hero: { ...(draftSiteSettings.visualDesign.hero || {}), imageUrl: uploadedHeroImage }
         };
-        setSiteSettings(draftSiteSettings);
       }
       const snapshot = {
         categories: draftCategories,
@@ -1343,6 +1342,10 @@ export default function App() {
       );
       if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
 
+      // Commit the uploaded Hero URL to editor state only after the draft RPC succeeds.
+      if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
+        setSiteSettings(draftSiteSettings);
+      }
       setCategoriesList(draftCategories);
       setBannersList(draftBanners);
       alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
@@ -1393,7 +1396,6 @@ export default function App() {
           ...publishedSiteSettings.visualDesign,
           hero: { ...(publishedSiteSettings.visualDesign.hero || {}), imageUrl: uploadedHeroImage }
         };
-        setSiteSettings(publishedSiteSettings);
       }
       const snapshot = {
         categories: publishedCategories,
@@ -1427,6 +1429,10 @@ export default function App() {
         throw new Error('საიტი გამოქვეყნდა, თუმცა ვერსიის დადასტურების პასუხი ვერ მივიღეთ. განაახლეთ ისტორიის სია.');
       }
 
+      // Commit the uploaded Hero URL to editor state only after publish is confirmed.
+      if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
+        setSiteSettings(publishedSiteSettings);
+      }
       setCategoriesList(publishedCategories);
       setBannersList(publishedBanners);
       alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
