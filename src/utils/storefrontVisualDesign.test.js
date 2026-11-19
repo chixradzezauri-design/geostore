@@ -323,8 +323,8 @@ test('custom section responsive styles are safely normalized per viewport withou
   assert.equal(section.responsive.mobile.textColor, '#abcdef');
   assert.equal(section.responsive.mobile.padding, 12);
   assert.equal(section.responsive.mobile.maxWidth, 1600);
-  assert.equal(section.responsive.mobile.marginBottom, undefined);
+  assert.equal(section.responsive.mobile.marginBottom, 0);
   assert.equal(section.responsive.mobile.minHeight, 800);
   assert.equal(section.responsive.mobile.align, 'right');
-  assert.deepEqual(section.responsive.desktop, {});
+  assert.equal(section.responsive.desktop, undefined);
 });
