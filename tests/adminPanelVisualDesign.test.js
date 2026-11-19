@@ -1367,6 +1367,17 @@ test('admin visual editor safely restores selected customized elements in the ac
   assert.match(editor, /სხვა ხედები და დანარჩენი ელემენტები უცვლელი დარჩება/);
 });
 
+test('admin visual editor can reset only customized elements in the active module and viewport', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const resetCurrentModuleElements = \(\) =>/);
+  assert.match(editor, /ELEMENT_CATEGORIES\.find\(item => item\.id === elementCategory\)/);
+  assert.match(editor, /category\.keys\.filter\(key => customizedElementKeys\.has\(key\)\)/);
+  assert.match(editor, /resetAdminPanelVisualElement\(current, viewport, key\)/);
+  assert.match(editor, /სხვა მოდულები და სხვა ხედები უცვლელი დარჩება/);
+  assert.match(editor, /მოდულის საწყისზე დაბრუნება/);
+  assert.match(editor, /disabled=\{!ELEMENT_CATEGORIES\.some\(category => category\.id === elementCategory && category\.keys\.some\(key => customizedElementKeys\.has\(key\)\)\)\}/);
+});
+
 test('admin visual editor can apply a saved style to every element in its module category', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /const applySavedElementStyleToCategory = preset =>/);
