@@ -578,7 +578,9 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
         const name = typeof preset?.name === 'string' ? preset.name.trim().slice(0, 40) : '';
         const sourceStyle = isObject(preset?.style) ? preset.style : {};
         const style = normalizeElementStyles({ orderCard: sourceStyle }, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles, true).orderCard;
-        return { id, name, style };
+        const allowedCategories = ['საერთო', 'შეკვეთები', 'თანამშრომლები', 'მარაგები', 'ანალიტიკა', 'მხარდაჭერა', 'ფასდაკლებები', 'ბანერები', 'კატეგორიები', 'კუპონები'];
+        const category = allowedCategories.includes(preset?.category) ? preset.category : 'საერთო';
+        return { id, name, category, style };
       }).filter(preset => preset.name && Object.keys(preset.style).length).slice(0, 30)
     : [];
 
