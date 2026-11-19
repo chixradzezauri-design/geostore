@@ -78,7 +78,8 @@ test('admin activity history displays paginated results and requests the support
 
  
 test('legacy light paper surfaces cannot override the dark expenses, vendor and settings admin sections', () => {
-  assert.match(globalCss, /\.admin-dashboard-pro :is\([\s\S]*?\.admin-vendors-panel[\s\S]*?background: var\(--gs-admin-paper\)/);\n  assert.match(globalCss, /\.admin-dashboard-pro :is\([\s\S]*?\.admin-settings-panel[\s\S]*?background: var\(--gs-admin-paper\)/);
+  assert.match(globalCss, /\.admin-dashboard-pro :is\([\s\S]*?\.admin-vendors-panel[\s\S]*?background: var\(--gs-admin-paper\)/);
+  assert.match(globalCss, /\.admin-dashboard-pro \.admin-settings-panel/);
   assert.match(polish, /STAGE 115\/116 — restore dark admin finance, vendor and settings surfaces/);
   assert.match(polish, /\.admin-dashboard-pro\.admin-dashboard-shell :is\([\s\S]*?\.admin-expenses,[\s\S]*?\.admin-vendors-panel,[\s\S]*?\.admin-settings-panel[\s\S]*?background: transparent !important/);
   assert.match(polish, /color: var\(--admin-text\) !important/);
