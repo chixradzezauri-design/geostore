@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 const dashboard = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 const api = await readFile(new URL('../src/utils/adminPanelVisualDesignApi.js', import.meta.url), 'utf8');
 const migration = await readFile(new URL('../supabase/migrations/20261119152000_admin_panel_visual_design_concurrency.sql', import.meta.url), 'utf8');
+const baseMigration = await readFile(new URL('../supabase/migrations/20261119150000_admin_panel_visual_design_sync.sql', import.meta.url), 'utf8');
 
 test('admin visual design is loaded and saved through the shared Supabase RPCs', () => {
   assert.match(api, /supabase\.rpc\('get_admin_panel_visual_design_state'\)/);
