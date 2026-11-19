@@ -50,7 +50,20 @@
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-command-kpi,
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-command-panel,
-.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-staff-list-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-inventory-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-discounts-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-audit-logs-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-broadcasts-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-crm-panel,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-security-notice,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-toolbar,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-row,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-replenishment-metric {
   background-color: var(--admin-vd-contentCardBackground-active) !important;
   border-color: var(--admin-vd-contentCardBorder-active) !important;
   border-width: var(--admin-vd-cardBorderWidth-active) !important;
@@ -126,6 +139,18 @@
   width: 100%;
 }
 
+
+
+/* Existing dialogs: visual-only styling; preserve positioning, scrolling and behavior. */
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-detail-modal,
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-order-reactivation-form {
+  background-color: var(--admin-vd-panel-active) !important;
+  color: var(--admin-vd-text-active) !important;
+  border-color: var(--admin-vd-border-active) !important;
+  border-radius: var(--admin-vd-cardRadius-active) !important;
+  padding: var(--admin-vd-cardPadding-active) !important;
+  box-shadow: 0 12px var(--admin-vd-cardShadowBlur-active) rgba(0, 0, 0, 0.28) !important;
+}
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table thead { background-color: var(--admin-vd-tableHeaderBackground-active) !important; }
 .admin-dashboard-pro[data-admin-visual-design="enabled"] table thead th { color: var(--admin-vd-tableHeaderText-active) !important; padding: var(--admin-vd-tableCellPadding-active) !important; }
