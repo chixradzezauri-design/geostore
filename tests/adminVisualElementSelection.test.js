@@ -87,3 +87,12 @@ test('admin element styles preserve desktop values and inherit tablet values on 
   assert.equal(style['--admin-vd-element-tablet-orderCard-textColor'], '#112233');
   assert.equal(style['--admin-vd-element-mobile-orderCard-textColor'], '#abcdef');
 });
+
+test('admin live preview exposes every module with fine-grained visual targets', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const editor = await readFile(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+
+  for (const moduleId of ['orders', 'staff', 'inventory', 'analytics', 'support', 'discounts', 'banners', 'categories', 'coupons', 'replenishment']) {
+    assert.ok(editor.includes(`<option value="${moduleId}">`), `missing live preview option for ${moduleId}`);
+  }
+});
