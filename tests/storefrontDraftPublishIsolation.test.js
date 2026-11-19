@@ -29,8 +29,8 @@ test('anonymous visitors receive column-level access only to published storefron
 });
 
 test('saving or restoring a draft cannot mutate the currently published snapshot', () => {
-  const saveRpc = draftMigration.match(/create or replace function private\.save_storefront_draft[\s\S]*?end;\s*\\$function\\$;/i)?.[0] || '';
-  const restoreRpc = restoreMigration.match(/create or replace function private\.restore_storefront_draft_from_version[\s\S]*?end;\s*\\$function\\$;/i)?.[0] || '';
+  const saveRpc = draftMigration.match(/create or replace function private\.save_storefront_draft[\s\S]*?end;\s*\$function\$;/i)?.[0] || '';
+  const restoreRpc = restoreMigration.match(/create or replace function private\.restore_storefront_draft_from_version[\s\S]*?end;\s*\$function\$;/i)?.[0] || '';
   assert.match(saveRpc, /set draft_config = p_snapshot/i);
   assert.doesNotMatch(saveRpc, /set[\s\S]{0,200}published_config\s*=/i);
   assert.match(restoreRpc, /set draft_config = v_snapshot/i);
