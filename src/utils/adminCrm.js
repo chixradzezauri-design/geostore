@@ -1,6 +1,6 @@
 const normalizeEmail = value => String(value || '').trim().toLowerCase();
 const normalizePhone = value => {
-  const digits = String(value || '').replace(/\\D/g, '');
+  const digits = String(value || '').replace(/\D/g, '');
   // Treat Georgian mobile numbers in local 9-digit and +995 international
   // formats as the same customer identity, while preserving other numbers.
   if (digits.length === 9 && digits.startsWith('5')) return `995${digits}`;
