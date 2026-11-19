@@ -482,12 +482,13 @@ const PRESETS = {
   light: { accent: '#0f766e', canvas: '#eef2f7', panel: '#ffffff', surface: '#f8fafc', text: '#172033', muted: '#596579', border: '#cbd5e1', navActiveBackground: '#0f766e', navActiveText: '#ffffff', navInactiveBackground: '#f8fafc', navInactiveText: '#596579', headerBackground: '#ffffff', headerBorder: '#cbd5e1', tableHeaderBackground: '#f1f5f9', tableHeaderText: '#596579', tableRowBackground: '#ffffff', tableRowHover: '#e2e8f0', filterBackground: '#ffffff', filterText: '#172033', filterBorder: '#cbd5e1', primaryButtonBackground: '#0f766e', primaryButtonText: '#ffffff', primaryButtonBorder: '#0f766e', inputBackground: '#ffffff', inputText: '#172033', inputBorder: '#cbd5e1', inputFocus: '#0f766e', contentCardBackground: '#ffffff', contentCardBorder: '#cbd5e1', cardTitleText: '#172033', cardMutedText: '#596579', cardShadowColor: '#64748b', cardHoverBorder: '#0f766e', modalBackground: '#ffffff', modalText: '#172033', modalBorder: '#cbd5e1', modalOverlayBackground: '#64748b', staffSectionBackground: '#ffffff', staffSectionBorder: '#cbd5e1', inventorySectionBackground: '#ffffff', inventorySectionBorder: '#cbd5e1', analyticsSectionBackground: '#ffffff', analyticsSectionBorder: '#cbd5e1' , ordersSectionBackground: '#ffffff', ordersSectionBorder: '#cbd5e1', supportSectionBackground: '#ffffff', supportSectionBorder: '#cbd5e1', discountsSectionBackground: '#ffffff', discountsSectionBorder: '#cbd5e1', bannersSectionBackground: '#ffffff', bannersSectionBorder: '#cbd5e1', categoriesSectionBackground: '#ffffff', categoriesSectionBorder: '#cbd5e1', couponsSectionBackground: '#ffffff', couponsSectionBorder: '#cbd5e1'}
 };
 
-export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, onReloadRemote, syncStatus = 'saved' }) {
+export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, onReloadRemote, previewTab = 'orders', onPreviewTabChange, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
   const [elementSearch, setElementSearch] = useState('');
   const [elementCategory, setElementCategory] = useState('all');
   const [showCustomizedOnly, setShowCustomizedOnly] = useState(false);
   const [selectedElementKey, setSelectedElementKey] = useState('');
+  const [directSelectionMode, setDirectSelectionMode] = useState(false);
   const [selectedElementKeys, setSelectedElementKeys] = useState([]);
   const [expandedElementDiffKeys, setExpandedElementDiffKeys] = useState([]);
   const [expandedElementHistoryKeys, setExpandedElementHistoryKeys] = useState([]);
@@ -508,6 +509,30 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const stylePresetImportModeRef = useRef('merge');
   const moduleBackupFileInputRef = useRef(null);
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
+
+  // Select mapped elements from the real admin module without triggering its actions.
+  useEffect(() => {
+    if (!directSelectionMode) return undefined;
+    const handlePreviewClick = event => {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest('.admin-visual-editor-panel')) return;
+      if (!target.closest('.admin-dashboard-shell')) return;
+      const match = Object.entries(ADMIN_PANEL_ELEMENT_DEFINITIONS).find(([, definition]) => {
+        try { return Boolean(target.closest(definition.selector)); } catch { return false; }
+      });
+      if (!match) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      const [key] = match;
+      setSelectedElementKey(key);
+      setSelectedElementKeys(current => current.includes(key) ? current : [...current, key]);
+      const category = ELEMENT_CATEGORIES.find(item => item.keys.includes(key));
+      if (category) setElementCategory(category.id);
+    };
+    document.addEventListener('click', handlePreviewClick, true);
+    return () => document.removeEventListener('click', handlePreviewClick, true);
+  }, [directSelectionMode]);
   const expandedStyleBackup = useMemo(
     () => normalized.stylePresetBackups.find(backup => backup.id === expandedStyleBackupId) || null,
     [normalized.stylePresetBackups, expandedStyleBackupId]
@@ -1447,6 +1472,36 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           <button type="button" onClick={resetViewport} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">მიმდინარე ხედის Reset</button>
         </div>
       </header>
+
+      <section className="rounded-2xl border border-sky-400/25 bg-slate-950/70 p-3 space-y-3" aria-label="რეალური ადმინპანელის Preview">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h3 className="text-sm font-black text-white">ცოცხალი ადმინპანელის Preview</h3>
+            <p className="mt-1 text-[10px] leading-4 text-slate-400">ქვემოთ ჩანს რეალური მოდული მიმდინარე მონაცემებით. აირჩიეთ მოდული და ჩართეთ პირდაპირი მონიშვნა — რედაქტირების რეჟიმში მოქმედების ღილაკები უსაფრთხოდ გაითიშება.</p>
+          </div>
+          <label className="flex shrink-0 items-center gap-2 text-[10px] font-bold text-slate-300">
+            მოდული
+            <select value={previewTab} onChange={event => onPreviewTabChange?.(event.target.value)} className="max-w-44 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white">
+              <option value="orders">შეკვეთები</option>
+              <option value="inventory">მარაგები</option>
+              <option value="analytics">ანალიტიკა</option>
+              <option value="support">მხარდაჭერა</option>
+              <option value="products">პროდუქტები</option>
+              <option value="banners">ბანერები</option>
+              <option value="categories">კატეგორიები</option>
+              <option value="coupons">კუპონები</option>
+              <option value="staff">თანამშრომლები</option>
+              <option value="command">მართვის ცენტრი</option>
+            </select>
+          </label>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <button type="button" aria-pressed={directSelectionMode} onClick={() => setDirectSelectionMode(value => !value)} className={directSelectionMode ? "rounded-xl bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950" : "rounded-xl border border-emerald-400/40 px-3 py-2 text-[11px] font-bold text-emerald-200"}>
+            {directSelectionMode ? 'მონიშვნის რეჟიმი ჩართულია' : 'ელემენტის პირდაპირი მონიშვნა'}
+          </button>
+          <span className="text-[10px] text-slate-400">{selectedElementKey ? 'არჩეულია: ' + (ADMIN_PANEL_ELEMENT_DEFINITIONS[selectedElementKey]?.label || selectedElementKey) : 'ელემენტი ჯერ არ არის არჩეული'}</span>
+        </div>
+      </section>
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
         {VIEWPORTS.map(item => (
