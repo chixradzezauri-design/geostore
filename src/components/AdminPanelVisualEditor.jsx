@@ -482,6 +482,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [showCustomizedOnly, setShowCustomizedOnly] = useState(false);
   const [selectedElementKey, setSelectedElementKey] = useState('');
   const elementCardRefs = useRef({});
+  const stylePresetFileInputRef = useRef(null);
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const historyRef = useRef({ past: [], future: [], present: normalized });
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
@@ -715,6 +716,65 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(normalizeAdminPanelVisualDesign(next));
   };
   const removeSavedElementStyle = id => commitChange(normalizeAdminPanelVisualDesign({ ...normalized, stylePresets: normalized.stylePresets.filter(item => item.id !== id) }));
+  const exportSavedElementStyles = () => {
+    if (!normalized.stylePresets.length) return;
+    const payload = {
+      format: 'geostore-admin-style-presets',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      stylePresets: normalized.stylePresets
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'geostore-admin-style-presets.json';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const importSavedElementStyles = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      if (file.size > 100 * 1024) throw new Error('ფაილი 100 KB-ზე დიდი არ უნდა იყოს.');
+      const parsed = JSON.parse(await file.text());
+      const sourcePresets = Array.isArray(parsed) ? parsed : parsed?.stylePresets;
+      if (!Array.isArray(sourcePresets)) throw new Error('ფაილში GEOSTORE-ის სტილების სია ვერ მოიძებნა.');
+      const validated = normalizeAdminPanelVisualDesign({ stylePresets: sourcePresets });
+      if (!validated.stylePresets.length) throw new Error('ფაილში დასამატებელი ვალიდური სტილი არ არის.');
+      const existingNames = new Set(normalized.stylePresets.map(item => item.name.toLocaleLowerCase()));
+      const available = Math.max(0, 30 - normalized.stylePresets.length);
+      const additions = validated.stylePresets.slice(0, available).map((preset, index) => {
+        const baseName = preset.name.slice(0, 32);
+        let name = baseName;
+        let suffix = 2;
+        while (existingNames.has(name.toLocaleLowerCase())) {
+          const ending = ` (${suffix++})`;
+          name = `${baseName.slice(0, 40 - ending.length)}${ending}`;
+        }
+        existingNames.add(name.toLocaleLowerCase());
+        return {
+          ...preset,
+          id: `admin-style-import-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+          name
+        };
+      });
+      if (!additions.length) throw new Error('ბიბლიოთეკა უკვე სავსეა (მაქსიმუმ 30 სტილი).');
+      commitChange(normalizeAdminPanelVisualDesign({
+        ...normalized,
+        stylePresets: [...normalized.stylePresets, ...additions]
+      }));
+      window.alert(`დაემატა ${additions.length} სტილი.${validated.stylePresets.length > additions.length ? ' ნაწილი გამოტოვებულია 30-სტილიანი ლიმიტის გამო.' : ''}`);
+    } catch (error) {
+      window.alert(error?.message || 'სტილების ფაილის იმპორტი ვერ შესრულდა.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
 
   const applyPreset = preset => {
     if (!PRESETS[preset]) return;
@@ -992,7 +1052,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
           </div>
         </div>
         <section className="space-y-3 rounded-xl border border-emerald-400/25 bg-slate-950/60 p-3 sm:col-span-2" aria-label="შენახული სტილების ბიბლიოთეკა">
-          <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-black text-white">შენახული სტილების ბიბლიოთეკა</h3><p className="text-[11px] text-slate-400">შეინახეთ ელემენტის სტილი და გამოიყენეთ სხვა ელემენტზე.</p></div><button type="button" onClick={saveSelectedElementStyle} disabled={!selectedElementKey || normalized.stylePresets.length >= 30} className="rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950 disabled:opacity-40">არჩეული ელემენტის სტილის შენახვა</button></div>
+          <div className="flex flex-col gap-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="text-sm font-black text-white">შენახული სტილების ბიბლიოთეკა</h3><p className="text-[11px] text-slate-400">შეინახეთ ელემენტის სტილი და გამოიყენეთ სხვა ელემენტზე.</p></div><span className="text-[10px] font-bold text-slate-400">{normalized.stylePresets.length} / 30</span></div><div className="flex flex-wrap gap-2"><button type="button" onClick={saveSelectedElementStyle} disabled={!selectedElementKey || normalized.stylePresets.length >= 30} className="rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950 disabled:opacity-40">არჩეული ელემენტის სტილის შენახვა</button><button type="button" onClick={exportSavedElementStyles} disabled={!normalized.stylePresets.length} className="rounded-lg border border-sky-400/40 px-3 py-2 text-[11px] font-bold text-sky-200 disabled:opacity-40">JSON ექსპორტი</button><button type="button" onClick={() => stylePresetFileInputRef.current?.click()} disabled={normalized.stylePresets.length >= 30} className="rounded-lg border border-violet-400/40 px-3 py-2 text-[11px] font-bold text-violet-200 disabled:opacity-40">JSON იმპორტი</button><input ref={stylePresetFileInputRef} type="file" accept="application/json,.json" onChange={importSavedElementStyles} className="hidden" aria-label="GEOSTORE სტილების JSON ფაილის არჩევა" /></div></div>
           {!selectedElementKey && <p className="text-xs text-amber-200">ჯერ აირჩიეთ ელემენტი ქვემოთ მოცემული სიიდან.</p>}
           {normalized.stylePresets.length === 0 ? <p className="text-xs text-slate-500">ბიბლიოთეკა ჯერ ცარიელია.</p> : <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">{normalized.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 flex-col gap-2 rounded-lg border border-slate-700 bg-slate-900 p-2"><span className="truncate text-xs font-bold text-slate-200">{preset.name}</span><div className="flex flex-wrap gap-1"><button type="button" onClick={() => applySavedElementStyle(preset)} disabled={!selectedElementKey} className="rounded-md border border-emerald-400/40 px-2 py-1 text-[10px] font-bold text-emerald-200 disabled:opacity-40">გამოყენება</button><button type="button" onClick={() => renameSavedElementStyle(preset.id)} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => duplicateSavedElementStyle(preset)} disabled={normalized.stylePresets.length >= 30} className="rounded-md border border-sky-400/30 px-2 py-1 text-[10px] font-bold text-sky-200 disabled:opacity-40">დუბლირება</button><button type="button" onClick={() => removeSavedElementStyle(preset.id)} className="rounded-md border border-rose-400/30 px-2 py-1 text-[10px] font-bold text-rose-200">წაშლა</button></div></div>)}</div>}
         </section>
