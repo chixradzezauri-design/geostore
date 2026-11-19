@@ -61,3 +61,13 @@ test('Stage 104 improves narrow-screen readability and prevents horizontal layou
   assert.match(polish, /> :not\(\[hidden\]\) ~ :not\(\[hidden\]\)/);
   assert.match(polish, /margin-top:\s*0 !important/);
 });
+
+test('Stage 112 keeps the mobile Command Center compact and its main action visible', () => {
+  assert.match(admin, /className="admin-command-hero/);
+  assert.match(admin, /className="admin-command-kpis/);
+  assert.match(admin, /onClick=\{\(\) => setAdminTab\('analytics'\)\}/);
+  assert.match(polish, /STAGE 112 — compact Command Center/);
+  assert.match(polish, /\.admin-command-kpis \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\) !important/);
+  assert.match(polish, /\.admin-command-hero button \{[\s\S]*?width: 100%[\s\S]*?min-height: 48px/);
+  assert.match(polish, /\.admin-command-kpi > strong \{[\s\S]*?font-size: 24px/);
+});
