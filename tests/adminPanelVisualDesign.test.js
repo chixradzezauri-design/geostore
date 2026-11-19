@@ -1355,6 +1355,18 @@ test('admin element selection can add, clear and toggle only visible filtered el
 });
 
 
+test('admin visual editor safely restores selected customized elements in the active viewport', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const resetSelectedElements = \(\) =>/);
+  assert.match(editor, /selectedElementKeys\.filter\(key => customizedElementKeys\.has\(key\)\)/);
+  assert.match(editor, /window\.confirm\(\`არჩეული \$\{targets\.length\} შეცვლილი ელემენტის/);
+  assert.match(editor, /targets\.reduce\(\(current, key\) => resetAdminPanelVisualElement\(current, viewport, key\), normalized\)/);
+  assert.match(editor, /commitChange\(nextDesign\)/);
+  assert.match(editor, /setSelectedElementKeys\(current => current\.filter\(key => !targets\.includes\(key\)\)\)/);
+  assert.match(editor, /მონიშნული შეცვლილის აღდგენა/);
+  assert.match(editor, /სხვა ხედები და დანარჩენი ელემენტები უცვლელი დარჩება/);
+});
+
 test('admin visual editor compares each element against its initial design values', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /ELEMENT_STYLE_DIFF_FIELDS/);
