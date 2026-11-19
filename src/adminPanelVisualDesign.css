@@ -42,6 +42,16 @@
   --admin-vd-modalPadding-active: var(--admin-vd-modalPadding);
   --admin-vd-modalOverlayBackground-active: var(--admin-vd-modalOverlayBackground);
   --admin-vd-modalOverlayOpacity-active: var(--admin-vd-modalOverlayOpacity);
+  --admin-vd-staffSectionBackground-active: var(--admin-vd-staffSectionBackground);
+  --admin-vd-staffSectionBorder-active: var(--admin-vd-staffSectionBorder);
+  --admin-vd-inventorySectionBackground-active: var(--admin-vd-inventorySectionBackground);
+  --admin-vd-inventorySectionBorder-active: var(--admin-vd-inventorySectionBorder);
+  --admin-vd-analyticsSectionBackground-active: var(--admin-vd-analyticsSectionBackground);
+  --admin-vd-analyticsSectionBorder-active: var(--admin-vd-analyticsSectionBorder);
+  --admin-vd-ordersSectionBackground-active: var(--admin-vd-ordersSectionBackground);
+  --admin-vd-ordersSectionBorder-active: var(--admin-vd-ordersSectionBorder);
+  --admin-vd-supportSectionBackground-active: var(--admin-vd-supportSectionBackground);
+  --admin-vd-supportSectionBorder-active: var(--admin-vd-supportSectionBorder);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -103,6 +113,14 @@
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
   background-color: var(--admin-vd-analyticsSectionBackground-active) !important;
   border-color: var(--admin-vd-analyticsSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel {
+  background-color: var(--admin-vd-ordersSectionBackground-active) !important;
+  border-color: var(--admin-vd-ordersSectionBorder-active) !important;
+}
+.admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-support-panel {
+  background-color: var(--admin-vd-supportSectionBackground-active) !important;
+  border-color: var(--admin-vd-supportSectionBorder-active) !important;
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
@@ -256,6 +274,10 @@
   --admin-vd-inventorySectionBorder-active: var(--admin-vd-tablet-inventorySectionBorder, var(--admin-vd-inventorySectionBorder));
   --admin-vd-analyticsSectionBackground-active: var(--admin-vd-tablet-analyticsSectionBackground, var(--admin-vd-analyticsSectionBackground));
   --admin-vd-analyticsSectionBorder-active: var(--admin-vd-tablet-analyticsSectionBorder, var(--admin-vd-analyticsSectionBorder));
+  --admin-vd-ordersSectionBackground-active: var(--admin-vd-tablet-ordersSectionBackground, var(--admin-vd-ordersSectionBackground));
+  --admin-vd-ordersSectionBorder-active: var(--admin-vd-tablet-ordersSectionBorder, var(--admin-vd-ordersSectionBorder));
+  --admin-vd-supportSectionBackground-active: var(--admin-vd-tablet-supportSectionBackground, var(--admin-vd-supportSectionBackground));
+  --admin-vd-supportSectionBorder-active: var(--admin-vd-tablet-supportSectionBorder, var(--admin-vd-supportSectionBorder));
   }
 }
 
@@ -310,5 +332,9 @@
   --admin-vd-inventorySectionBorder-active: var(--admin-vd-mobile-inventorySectionBorder, var(--admin-vd-tablet-inventorySectionBorder, var(--admin-vd-inventorySectionBorder)));
   --admin-vd-analyticsSectionBackground-active: var(--admin-vd-mobile-analyticsSectionBackground, var(--admin-vd-tablet-analyticsSectionBackground, var(--admin-vd-analyticsSectionBackground)));
   --admin-vd-analyticsSectionBorder-active: var(--admin-vd-mobile-analyticsSectionBorder, var(--admin-vd-tablet-analyticsSectionBorder, var(--admin-vd-analyticsSectionBorder)));
+  --admin-vd-ordersSectionBackground-active: var(--admin-vd-mobile-ordersSectionBackground, var(--admin-vd-tablet-ordersSectionBackground, var(--admin-vd-ordersSectionBackground)));
+  --admin-vd-ordersSectionBorder-active: var(--admin-vd-mobile-ordersSectionBorder, var(--admin-vd-tablet-ordersSectionBorder, var(--admin-vd-ordersSectionBorder)));
+  --admin-vd-supportSectionBackground-active: var(--admin-vd-mobile-supportSectionBackground, var(--admin-vd-tablet-supportSectionBackground, var(--admin-vd-supportSectionBackground)));
+  --admin-vd-supportSectionBorder-active: var(--admin-vd-mobile-supportSectionBorder, var(--admin-vd-tablet-supportSectionBorder, var(--admin-vd-supportSectionBorder)));
   }
 }
