@@ -1374,6 +1374,7 @@ export default function App() {
     setStorefrontDraftBusy(true);
     const uploadedAssets = [];
     let draftSaveCommitted = false;
+    const saveEditorSnapshotAtStart = storefrontCurrentSnapshotRef.current;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) {
@@ -1411,6 +1412,10 @@ export default function App() {
         banners: draftBanners,
         siteSettings: draftSiteSettings
       };
+      // Do not commit a stale snapshot when edits arrive during image uploads.
+      if (storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart) {
+        throw new Error('მონახაზის შენახვა შეჩერდა: ატვირთვის მიმდინარეობისას ახალი ცვლილებები გაკეთდა. მიმდინარე ცვლილებები შენარჩუნებულია; სცადეთ ხელახლა შენახვა.');
+      }
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/save_storefront_draft`,
         {
