@@ -1109,3 +1109,27 @@ test('admin style library groups categories and supports deterministic sort mode
   assert.match(editor, /value="category"/);
   assert.match(editor, /createdAt: new Date\(\)\.toISOString\(\)/);
 });
+
+
+test('saved admin style presets preserve favorites and default legacy entries to not favorite', () => {
+  const design = normalizeAdminPanelVisualDesign({ stylePresets: [
+    { id: 'favorite', name: 'Favorite style', favorite: true, style: { fontSize: 14 } },
+    { id: 'legacy', name: 'Legacy style', style: { fontSize: 15 } },
+    { id: 'invalid', name: 'Invalid favorite', favorite: 'yes', style: { fontSize: 16 } }
+  ] });
+  assert.equal(design.stylePresets[0].favorite, true);
+  assert.equal(design.stylePresets[1].favorite, false);
+  assert.equal(design.stylePresets[2].favorite, false);
+});
+
+test('admin style library supports favorite toggling and favorite-only filtering', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  const utility = readFileSync(new URL('../src/utils/adminPanelVisualDesign.js', import.meta.url), 'utf8');
+  assert.match(utility, /const favorite = preset\?\.favorite === true/);
+  assert.match(editor, /const \[showFavoriteStylePresets, setShowFavoriteStylePresets\] = useState\(false\)/);
+  assert.match(editor, /const toggleStylePresetFavorite = id =>/);
+  assert.match(editor, /!showFavoriteStylePresets \|\| preset\.favorite/);
+  assert.match(editor, /მხოლოდ რჩეულები/);
+  assert.match(editor, /რჩეულებში დამატება/);
+  assert.match(editor, /რჩეულებიდან ამოღება/);
+});
