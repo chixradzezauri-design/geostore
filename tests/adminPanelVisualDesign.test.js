@@ -1502,7 +1502,6 @@ test('admin module backup comparison reports exact differences without changing 
   assert.equal(comparison.moduleId, 'orders');
   assert.equal(comparison.viewport, 'mobile');
   assert.equal(comparison.unchanged, false);
-  console.log('MODULE_BACKUP_DIFF_DEBUG', JSON.stringify(comparison.differences));
   assert.equal(comparison.changedCount, 1);
   assert.ok(comparison.differences.some(item => item.path.endsWith('orderHeader.fontSize') && item.saved === 21 && item.current === 13));
   assert.equal(JSON.stringify(current), before);
