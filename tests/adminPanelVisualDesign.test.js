@@ -247,7 +247,7 @@ test('admin style library supports bounded JSON import and export actions', () =
   assert.match(editor, /JSON ექსპორტი/);
   assert.match(editor, /JSON იმპორტი/);
   assert.match(editor, /parsed\?\.format !== 'geostore-admin-style-presets'/);
-  assert.match(editor, /parsed\?\.version !== 1/);
+  assert.match(editor, /!\[1, 2\]\.includes\(parsed\?\.version\)/);
   assert.match(editor, /Aa · GEOSTORE/);
   assert.match(editor, /preset\.style\.backgroundColor \|\| '#0f172a'/);
   assert.match(editor, /preset\.style\.textColor \|\| '#e2e8f0'/);
@@ -1201,4 +1201,13 @@ test('admin style JSON import skips duplicate style values already in the librar
   assert.match(editor, /const uniqueImportedPresets = validated\.stylePresets\.filter/);
   assert.match(editor, /duplicateCount \+= 1/);
   assert.match(editor, /დუბლიკატი გამოტოვებულია/);
+});
+
+
+test('admin style export v2 preserves library metadata and keeps v1 imports compatible', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /version: 2/);
+  assert.match(editor, /includesCategories: true, includesFavorites: true, includesVersionHistory: true/);
+  assert.match(editor, /!\[1, 2\]\.includes\(parsed\?\.version\)/);
+  assert.doesNotMatch(editor, /\\\\n\s+window\.alert/);
 });
