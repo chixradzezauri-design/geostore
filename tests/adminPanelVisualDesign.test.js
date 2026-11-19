@@ -532,3 +532,24 @@ test('order sub-element styles normalize safely and inherit independently by vie
   assert.equal(style['--admin-vd-element-tablet-orderCard-fontSize'], '16px');
   assert.equal(style['--admin-vd-element-mobile-orderCard-padding'], '8px');
 });
+
+
+test('fine-grained order editor selectors exist in the real admin dashboard markup', () => {
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  const stylesheet = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  const selectors = [
+    'admin-orders-header',
+    'admin-orders-toolbar',
+    'admin-order-card',
+    'admin-order-card-heading',
+    'admin-order-card-customer',
+    'admin-order-actions',
+    'admin-order-status-badge',
+    'admin-orders-pagination',
+    'admin-order-detail-modal'
+  ];
+  for (const selector of selectors) {
+    assert.ok(dashboard.includes(selector), `Missing real dashboard selector: ${selector}`);
+    assert.ok(stylesheet.includes(`.${selector}`), `Missing visual editor CSS selector: ${selector}`);
+  }
+});
