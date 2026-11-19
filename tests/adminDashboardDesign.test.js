@@ -52,6 +52,10 @@ test('responsive admin navigation safeguards remain in place', () => {
   assert.match(css, /overscroll-behavior:\s*contain/);
   assert.match(css, /@media \(max-width: 1023px\)[\s\S]*?overflow-x:\s*auto/);
   assert.match(css, /min-height:\s*44px/);
+  assert.match(css, /min-width:\s*0 !important/);
+  assert.match(css, /white-space:\s*normal !important/);
+  assert.match(css, /overflow-wrap:\s*anywhere/);
+  assert.match(css, /flex:\s*0 0 auto/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
 });
 
