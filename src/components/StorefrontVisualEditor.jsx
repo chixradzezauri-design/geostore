@@ -668,7 +668,7 @@ export default function StorefrontVisualEditor({
               <StoreView
                 onProductOrderChange={productOrder => commitDesign({ ...design, productOrder })}
                 currentLang="ka"
-                siteSettings={siteSettings}
+                siteSettings={{ ...(siteSettings || {}), visualDesign: design }}
                 banners={safeBanners}
                 categories={safeCategories}
                 selectedCategory={previewCategory}

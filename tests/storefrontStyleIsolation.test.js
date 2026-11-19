@@ -12,6 +12,7 @@ const wardrobe = readFileSync(new URL('../src/components/AIDigitalWardrobe.jsx',
 const aiAssistant = readFileSync(new URL('../src/components/AiAssistantModal.jsx', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
+const visualEditor = readFileSync(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
 
 test('storefront navigation styles do not leak into the AI assistant header', () => {
   assert.doesNotMatch(css, /\.geostore-fashion-store\s+header\b/);
@@ -101,6 +102,10 @@ test('mobile navigation retains login and registration inside the hamburger menu
   const mobileAuthMediaStart = css.lastIndexOf('@media(max-width:640px)', authRuleStart);
   assert.ok(authRuleStart >= 0 && authRuleEnd > authRuleStart && mobileAuthMediaStart >= 0);
   assert.match(authRule, /display:grid!important;/);
+});
+
+test('visual editor preview passes the current draft design to the live StoreView', () => {
+  assert.match(visualEditor, /siteSettings=\{\{ \.\.\.\(siteSettings \|\| \{\}\), visualDesign: design \}\}/);
 });
 
 test('mobile footer policy links use a compact responsive layout', () => {
