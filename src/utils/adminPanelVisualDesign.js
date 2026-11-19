@@ -11,6 +11,154 @@ export const ADMIN_PANEL_FONT_FAMILIES = Object.freeze({
 const normalizeFontFamily = (value, fallback = 'system') =>
   Object.hasOwn(ADMIN_PANEL_FONT_FAMILIES, value) ? value : fallback;
 
+export const ADMIN_PANEL_CONTENT_FIELDS = Object.freeze([
+  {
+    "key": "staffExistingUsersTitle",
+    "label": "თანამშრომლები — არსებული მომხმარებლის დაკავშირება",
+    "maxLength": 100
+  },
+  {
+    "key": "staffInviteTitle",
+    "label": "თანამშრომლები — მოწვევის სათაური",
+    "maxLength": 100
+  },
+  {
+    "key": "staffListTitle",
+    "label": "თანამშრომლები — სიის სათაური",
+    "maxLength": 100
+  },
+  {
+    "key": "inventoryTitle",
+    "label": "მარაგები — სათაური",
+    "maxLength": 120
+  },
+  {
+    "key": "inventoryDescription",
+    "label": "მარაგები — აღწერა",
+    "maxLength": 260,
+    "multiline": true
+  },
+  {
+    "key": "analyticsPeriodTitle",
+    "label": "ანალიტიკა — პერიოდის სათაური",
+    "maxLength": 100
+  },
+  {
+    "key": "analyticsPeriodDescription",
+    "label": "ანალიტიკა — განმარტება",
+    "maxLength": 260,
+    "multiline": true
+  },
+  {
+    "key": "ordersTitle",
+    "label": "შეკვეთები — სათაური",
+    "maxLength": 120
+  },
+  {
+    "key": "ordersDescription",
+    "label": "შეკვეთები — აღწერა",
+    "maxLength": 260,
+    "multiline": true
+  },
+  {
+    "key": "ordersExportLabel",
+    "label": "შეკვეთები — ექსპორტის ღილაკი",
+    "maxLength": 100
+  },
+  {
+    "key": "supportTitle",
+    "label": "მხარდაჭერა — სათაური",
+    "maxLength": 120
+  },
+  {
+    "key": "supportEmptyLabel",
+    "label": "მხარდაჭერა — ცარიელი სიის ტექსტი",
+    "maxLength": 140
+  },
+  {
+    "key": "discountsTitle",
+    "label": "ფლეშ-აქციები — სათაური",
+    "maxLength": 120
+  },
+  {
+    "key": "discountsActiveLabel",
+    "label": "ფლეშ-აქციები — აქტიური აქციის წარწერა",
+    "maxLength": 100
+  },
+  {
+    "key": "bannersCreateTitle",
+    "label": "ბანერები — დამატების სათაური",
+    "maxLength": 140
+  },
+  {
+    "key": "bannersListTitle",
+    "label": "ბანერები — სიის სათაური",
+    "maxLength": 100
+  },
+  {
+    "key": "bannersSubmitLabel",
+    "label": "ბანერები — დამატების ღილაკი",
+    "maxLength": 100
+  },
+  {
+    "key": "categoriesCreateTitle",
+    "label": "კატეგორიები — დამატების სათაური",
+    "maxLength": 260,
+    "multiline": true
+  },
+  {
+    "key": "categoriesTreeTitle",
+    "label": "კატეგორიები — იერარქიის სათაური",
+    "maxLength": 160
+  },
+  {
+    "key": "categoriesSubmitLabel",
+    "label": "კატეგორიები — დამატების ღილაკი",
+    "maxLength": 100
+  },
+  {
+    "key": "couponsCreateTitle",
+    "label": "კუპონები — შექმნის სათაური",
+    "maxLength": 100
+  },
+  {
+    "key": "couponsListTitle",
+    "label": "კუპონები — სიის სათაური",
+    "maxLength": 100
+  },
+  {
+    "key": "couponsSubmitLabel",
+    "label": "კუპონები — შექმნის ღილაკი",
+    "maxLength": 100
+  }
+]);
+
+const DEFAULT_ADMIN_PANEL_CONTENT = Object.freeze({
+  "staffExistingUsersTitle": "არსებული მომხმარებლის დაკავშირება",
+  "staffInviteTitle": "ახალი თანამშრომლის მოწვევა",
+  "staffListTitle": "სერვერზე დაკავშირებული თანამშრომლები",
+  "inventoryTitle": "მარაგის მოძრაობების ისტორია",
+  "inventoryDescription": "თითოეული პროდუქტისა და ვარიანტის მარაგის ცვლილება — საწყისი/საბოლოო რაოდენობა, მიზეზი და შეკვეთის კავშირი.",
+  "analyticsPeriodTitle": "ფინანსური პერიოდი",
+  "analyticsPeriodDescription": "მოგებაში ითვლება მხოლოდ ჩაბარებული/დასრულებული შეკვეთები",
+  "ordersTitle": "შეკვეთების სრული მართვის სისტემა",
+  "ordersDescription": "მართეთ, გაფილტრეთ და აკონტროლეთ თითოეული შეკვეთა დეტალურად",
+  "ordersExportLabel": "შეკვეთების ექსპორტი (CSV)",
+  "supportTitle": "მომხმარებელთა მხარდაჭერა და პასუხები",
+  "supportEmptyLabel": "მხარდაჭერის ტიგეტები არ არის.",
+  "discountsTitle": "მასობრივი ფლეშ-ფასდაკლებების გააქტიურება",
+  "discountsActiveLabel": "მოქმედი ფლეშ-აქცია",
+  "bannersCreateTitle": "ახალი სარეკლამო ბანერის დამატება",
+  "bannersListTitle": "აქტიური ბანერები",
+  "bannersSubmitLabel": "ბანერის დამატება",
+  "categoriesCreateTitle": "ახალი მთავარი კატეგორიის ან სუბკატეგორიის დამატება (ფოტოს ატვირთვა კომპიუტერიდან/მობილურიდან)",
+  "categoriesTreeTitle": "კატეგორიებისა და სუბკატეგორიების იერარქია და ფოტოების მართვა",
+  "categoriesSubmitLabel": "კატეგორიის დამატება 🚀",
+  "couponsCreateTitle": "ახალი კუპონის შექმნა",
+  "couponsListTitle": "აქტიური კუპონები",
+  "couponsSubmitLabel": "კუპონის დამატება"
+});
+
 export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
   version: 1,
   theme: {
@@ -175,6 +323,7 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 },
+  content: DEFAULT_ADMIN_PANEL_CONTENT,
   responsive: {
     tablet: { theme: {}, layout: {}, components: {} },
     mobile: { theme: {}, layout: {}, components: {} }
@@ -338,6 +487,17 @@ const normalizeTheme = (source, fallback) => Object.fromEntries(
   THEME_KEYS.map(key => [key, safeColor(source?.[key], fallback[key])])
 );
 
+const normalizeContent = source => Object.fromEntries(
+  ADMIN_PANEL_CONTENT_FIELDS.map(({ key, maxLength }) => {
+    const rawValue = typeof source?.[key] === 'string' ? source[key] : '';
+    const cleaned = rawValue
+      .replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g, '')
+      .trim()
+      .slice(0, maxLength);
+    return [key, cleaned || DEFAULT_ADMIN_PANEL_CONTENT[key]];
+  })
+);
+
 const normalizeLayout = (source, fallback) => ({
   ...Object.fromEntries(Object.entries(LAYOUT_LIMITS).map(([key, limits]) => [
     key,
@@ -351,6 +511,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
   const theme = normalizeTheme(raw.theme, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme);
   const layout = normalizeLayout(raw.layout, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.layout);
   const components = normalizeComponents(raw.components, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.components);
+  const content = normalizeContent(raw.content);
   const responsive = {};
 
   for (const viewport of ['tablet', 'mobile']) {
@@ -373,7 +534,7 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
     };
   }
 
-  return { version: 1, theme, layout, components, responsive };
+  return { version: 1, theme, layout, components, content, responsive };
 }
 
 const effectiveViewport = (design, viewport) => ({
