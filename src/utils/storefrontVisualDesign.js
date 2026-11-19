@@ -1,7 +1,7 @@
 const SECTION_IDS = ['hero', 'banners', 'flashSale', 'categories', 'filters', 'products'];
 const ELEMENT_STYLE_IDS = [
   'hero', 'hero.image', 'hero.title', 'hero.description', 'hero.button',
-  'banner', 'banner.card', 'banner.title',
+  'banner', 'banner.card', 'banner.image', 'banner.title', 'banner.description', 'banner.button',
   'flashSale', 'flashSale.title', 'flashSale.badge', 'flashSale.description',
   'categories', 'categories.title', 'categories.description', 'category.card', 'category.title', 'category.description',
   'filters', 'product.card', 'product.image', 'product.title', 'product.button',
