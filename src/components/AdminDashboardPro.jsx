@@ -24,7 +24,8 @@ const StorefrontVisualEditor = React.lazy(() => import('./StorefrontVisualEditor
 import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
 import AdminPanelVisualEditor from './AdminPanelVisualEditor';
-import { buildAdminPanelVisualStyle, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, loadAdminPanelVisualDesign, normalizeAdminPanelVisualDesign, saveAdminPanelVisualDesign } from '../utils/adminPanelVisualDesign.js';
+import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, loadAdminPanelVisualDesign, normalizeAdminPanelVisualDesign, saveAdminPanelVisualDesign } from '../utils/adminPanelVisualDesign.js';
+import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
 import '../adminPanelVisualDesign.css';
 
 const SUPABASE_URL = 'https://xmtnszxtnfxnrojionoa.supabase.co';
@@ -947,12 +948,100 @@ export default function AdminDashboardPro({
   };
   // Render a permitted tab immediately; the effect below only synchronizes state.
   const visibleAdminTab = canAccessAdminTab(adminTab) ? adminTab : getDefaultAdminTab();
-  const [adminVisualDesign, setAdminVisualDesign] = useState(() => loadAdminPanelVisualDesign());
+  const [adminVisualDesign, setAdminVisualDesign] = useState(() => normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN));
+  const [adminVisualDesignReady, setAdminVisualDesignReady] = useState(false);
+  const [adminVisualSyncStatus, setAdminVisualSyncStatus] = useState('idle');
+  const adminVisualSkipNextSaveRef = useRef(false);
+  const adminVisualSaveQueueRef = useRef(Promise.resolve());
+  const adminVisualSaveVersionRef = useRef(0);
   const adminVisualStyle = useMemo(() => buildAdminPanelVisualStyle(adminVisualDesign), [adminVisualDesign]);
 
   useEffect(() => {
-    if (isOwner) saveAdminPanelVisualDesign(adminVisualDesign);
-  }, [adminVisualDesign, isOwner]);
+    let active = true;
+    if (!adminLoggedIn || !isOwner) {
+      setAdminVisualDesignReady(false);
+      setAdminVisualSyncStatus('idle');
+      return () => { active = false; };
+    }
+
+    setAdminVisualDesignReady(false);
+    setAdminVisualSyncStatus('loading');
+    const loadSharedDesign = async () => {
+      try {
+        const sharedDesign = await fetchAdminPanelVisualDesign();
+        if (!active) return;
+
+        let nextDesign = sharedDesign;
+        if (!nextDesign) {
+          // One-time migration: preserve settings made in the original browser
+          // when the shared record does not exist yet.
+          nextDesign = loadAdminPanelVisualDesign();
+          let hasLegacySettings = false;
+          try {
+            hasLegacySettings = Boolean(window.localStorage.getItem(ADMIN_PANEL_VISUAL_STORAGE_KEY));
+          } catch {
+            hasLegacySettings = false;
+          }
+          if (hasLegacySettings) {
+            await saveAdminPanelVisualDesignToCloud(nextDesign);
+            if (!active) return;
+          }
+        }
+
+        adminVisualSkipNextSaveRef.current = true;
+        const normalized = normalizeAdminPanelVisualDesign(nextDesign || DEFAULT_ADMIN_PANEL_VISUAL_DESIGN);
+        setAdminVisualDesign(normalized);
+        saveAdminPanelVisualDesign(normalized);
+        setAdminVisualDesignReady(true);
+        setAdminVisualSyncStatus('saved');
+      } catch (error) {
+        if (!active) return;
+        // Keep the last local appearance visible, but never pretend it synced.
+        adminVisualSkipNextSaveRef.current = true;
+        setAdminVisualDesign(loadAdminPanelVisualDesign());
+        setAdminVisualSyncStatus('error');
+        setAdminVisualDesignReady(false);
+        console.error('GEOSTORE shared admin visual settings failed to load:', error);
+      }
+    };
+
+    void loadSharedDesign();
+    return () => { active = false; };
+  }, [adminLoggedIn, isOwner]);
+
+  useEffect(() => {
+    if (!adminLoggedIn || !isOwner || !adminVisualDesignReady) return;
+    if (adminVisualSkipNextSaveRef.current) {
+      adminVisualSkipNextSaveRef.current = false;
+      return;
+    }
+
+    saveAdminPanelVisualDesign(adminVisualDesign);
+    const saveVersion = ++adminVisualSaveVersionRef.current;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setAdminVisualSyncStatus('saving');
+      adminVisualSaveQueueRef.current = adminVisualSaveQueueRef.current
+        .catch(() => undefined)
+        .then(() => saveAdminPanelVisualDesignToCloud(adminVisualDesign))
+        .then(() => {
+          if (active && saveVersion === adminVisualSaveVersionRef.current) {
+            setAdminVisualSyncStatus('saved');
+          }
+        })
+        .catch(error => {
+          if (active && saveVersion === adminVisualSaveVersionRef.current) {
+            setAdminVisualSyncStatus('error');
+          }
+          console.error('GEOSTORE shared admin visual settings failed to save:', error);
+        });
+    }, 650);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [adminVisualDesign, adminVisualDesignReady, adminLoggedIn, isOwner]);
 
   useEffect(() => {
     if (!adminLoggedIn) return;
@@ -6242,6 +6331,7 @@ export default function AdminDashboardPro({
         {visibleAdminTab === 'admin_visual_editor' && isOwner && (
           <AdminPanelVisualEditor
             design={adminVisualDesign}
+            syncStatus={adminVisualSyncStatus}
             onChange={value => setAdminVisualDesign(normalizeAdminPanelVisualDesign(value))}
             onReset={() => setAdminVisualDesign(normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))}
           />
