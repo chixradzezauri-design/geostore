@@ -523,6 +523,29 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
     setHistoryState({ canUndo: past.length > 0, canRedo: future.length > 0 });
     onChange(next);
   };
+
+  useEffect(() => {
+    const handleHistoryShortcut = event => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      const target = event.target;
+      if (target?.closest?.('input:not([type="range"]):not([type="color"]), textarea, select, [contenteditable="true"]')) return;
+
+      const key = event.key.toLowerCase();
+      if (key === 'z' && event.shiftKey) {
+        event.preventDefault();
+        redoChange();
+      } else if (key === 'y') {
+        event.preventDefault();
+        redoChange();
+      } else if (key === 'z') {
+        event.preventDefault();
+        undoChange();
+      }
+    };
+
+    window.addEventListener('keydown', handleHistoryShortcut);
+    return () => window.removeEventListener('keydown', handleHistoryShortcut);
+  }, [undoChange, redoChange]);
   const active = viewport === 'desktop'
     ? { theme: normalized.theme, layout: normalized.layout, components: normalized.components, elementStyles: normalized.elementStyles }
     : {
@@ -676,8 +699,8 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={undoChange} disabled={!historyState.canUndo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="ბოლო ცვლილების გაუქმება" title="Undo (Ctrl+Z)">↶ Undo</button>
-          <button type="button" onClick={redoChange} disabled={!historyState.canRedo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="გაუქმებული ცვლილების დაბრუნება" title="Redo (Ctrl+Y)">↷ Redo</button>
+          <button type="button" onClick={undoChange} disabled={!historyState.canUndo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="ბოლო ცვლილების გაუქმება" title="Undo (Ctrl/Cmd+Z)">↶ Undo</button>
+          <button type="button" onClick={redoChange} disabled={!historyState.canRedo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="გაუქმებული ცვლილების დაბრუნება" title="Redo (Ctrl/Cmd+Y or Shift+Z)">↷ Redo</button>
           <button type="button" onClick={resetViewport} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">მიმდინარე ხედის Reset</button>
         </div>
       </header>
