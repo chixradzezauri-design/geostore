@@ -503,6 +503,8 @@ export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewp
   if (['cover', 'contain', 'fill'].includes(value.objectFit)) style.objectFit = value.objectFit;
   const objectPositionX = value.objectPositionX !== null && Number.isFinite(Number(value.objectPositionX)) ? Math.min(100, Math.max(0, Number(value.objectPositionX))) : null;
   const objectPositionY = value.objectPositionY !== null && Number.isFinite(Number(value.objectPositionY)) ? Math.min(100, Math.max(0, Number(value.objectPositionY))) : null;
-  if (objectPositionX !== null || objectPositionY !== null) style.objectPosition = String(objectPositionX ?? 50) + '% ' + String(objectPositionY ?? 50) + '%';
+  if (objectPositionX !== null && objectPositionY !== null) style.objectPosition = String(objectPositionX) + '% ' + String(objectPositionY) + '%';
+  else if (objectPositionX !== null) style.objectPosition = String(objectPositionX) + '% center';
+  else if (objectPositionY !== null) style.objectPosition = 'center ' + String(objectPositionY) + '%';
   return style;
 }
