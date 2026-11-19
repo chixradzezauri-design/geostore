@@ -131,8 +131,8 @@ test('custom storefront sections use the same tablet and mobile breakpoints as t
     storeView.indexOf('const buildCustomSectionResponsiveCss'),
     storeView.indexOf('export default function StoreView')
   );
-  assert.match(customSectionCss, /@media \\(min-width:641px\\) and \\(max-width:1023px\\)/);
-  assert.match(customSectionCss, /@media \\(max-width:640px\\)/);
-  assert.doesNotMatch(customSectionCss, /@media \\(min-width:768px\\) and \\(max-width:1023px\\)/);
-  assert.doesNotMatch(customSectionCss, /@media \\(max-width:767px\\)/);
+  assert.ok(customSectionCss.includes('@media (min-width:641px) and (max-width:1023px)'));
+  assert.ok(customSectionCss.includes('@media (max-width:640px)'));
+  assert.ok(!customSectionCss.includes('@media (min-width:768px) and (max-width:1023px)'));
+  assert.ok(!customSectionCss.includes('@media (max-width:767px)'));
 });
