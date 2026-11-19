@@ -4,7 +4,7 @@ const ELEMENT_STYLE_IDS = [
   'banner', 'banner.card', 'banner.title',
   'flashSale', 'flashSale.title', 'flashSale.badge', 'flashSale.description',
   'categories', 'categories.title', 'categories.description',
-  'filters', 'product.card', 'product.title', 'product.button',
+  'filters', 'product.card', 'product.image', 'product.title', 'product.button',
   'product.detail.image', 'product.detail.title', 'product.detail.price',
   'product.detail.description', 'product.detail.variants', 'product.detail.purchase'
 ];
