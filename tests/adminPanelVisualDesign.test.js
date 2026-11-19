@@ -1326,3 +1326,15 @@ test('admin style backup preview supports safe selective multi-style restoration
   assert.match(editor, /history: \[\.\.\.\(preset\.history \|\| \[\]\), \.\.\.\(current\.history \|\| \[\]\)/);
   assert.match(editor, /setSelectedStylePresetIds\(selected\.map\(preset => preset\.id\)\)/);
 });
+
+
+test('admin style presets can apply only selected style properties', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /selectedStylePropertyKeys, setSelectedStylePropertyKeys/);
+  assert.match(editor, /const selectedStyle = Object\.fromEntries\(Object\.entries\(preset\?\.style \|\| \{\}\)\.filter\(\(\[key\]\) => selectedStylePropertyKeys\.includes\(key\)\)\)/);
+  assert.match(editor, /რომელი პარამეტრები გადავიტანოთ\?/);
+  assert.match(editor, /დანარჩენი სამიზნე ელემენტზე უცვლელი დარჩება/);
+  assert.match(editor, /setSelectedStylePropertyKeys\(\[\]\)/);
+  assert.match(editor, /selectedStylePropertyKeys\.length/);
+  assert.match(editor, /STYLE_PROPERTY_OPTIONS\.map\(option/);
+});
