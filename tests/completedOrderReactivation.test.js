@@ -46,11 +46,11 @@ test('completed and cancelled order reactivation controls are clear, mobile-acce
 });
 
 test('completed-order reactivation wrapper explicitly revokes anon execution', () => {
-  assert.match(permissionMigration, /REVOKE ALL ON FUNCTION public\\.admin_reopen_completed_order\\(text\\) FROM PUBLIC, anon/i);
-  assert.match(permissionMigration, /GRANT EXECUTE ON FUNCTION public\\.admin_reopen_completed_order\\(text\\) TO authenticated/i);
+  assert.ok(permissionMigration.includes('REVOKE ALL ON FUNCTION public.admin_reopen_completed_order(text) FROM PUBLIC, anon;'));
+  assert.ok(permissionMigration.includes('GRANT EXECUTE ON FUNCTION public.admin_reopen_completed_order(text) TO authenticated;'));
 });
 
 test('completed-order row action uses the guarded status handler instead of opening the dialog directly', () => {
-  assert.match(admin, /onClick=\\{\\(\\) => handleUpdateOrderStatus\\(o\\.id, 'ახალი'\\)\\}/);
-  assert.doesNotMatch(admin, /setReactivationOrder\\(o\\);/);
+  assert.ok(admin.includes("onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}"));
+  assert.ok(!admin.includes('setReactivationOrder(o);'));
 });
