@@ -355,15 +355,15 @@ export default function StoreView({
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
       {/* GEOSTORE FASHION EDITORIAL HERO */}
-      <section className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
-        <div className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
+      <section data-visual-editor-target="hero" className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
+        <div data-visual-editor-target="hero.image" className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
         <div className="gs-fashion-hero__content gs-editorial-hero-content">
           <span className="gs-fashion-eyebrow">{visualCopy.heroEyebrow || 'GEOSTORE / NEW SEASON'}</span>
           <p className="gs-fashion-kicker">{visualCopy.heroKicker || storeText.styleKicker}</p>
-          <h1>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
-          <p className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
+          <h1 data-visual-editor-target="hero.title">{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
+          <p data-visual-editor-target="hero.description" className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
+            <button data-visual-editor-target="hero.button" type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
             <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
           </div>
         </div>
@@ -371,7 +371,7 @@ export default function StoreView({
       </section>
 
       {Array.isArray(banners) && banners.length > 0 && (
-        <section className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
+        <section data-visual-editor-target="banner" className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
           {banners.slice(0, 4).map((banner) => {
             const imageUrl = String(banner?.image || '').trim();
             const targetUrl = String(banner?.link || '').trim();
@@ -381,13 +381,13 @@ export default function StoreView({
               if (['https:', 'http:'].includes(parsed.protocol)) safeTarget = parsed.href;
             } catch {}
             const content = (
-              <div className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
+              <div data-visual-editor-target="banner.card" className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
                 {imageUrl && (
                   <img src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
                 <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
-                  <h2 className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
+                  <h2 data-visual-editor-target="banner.title" className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
                   {banner?.subtitle && <p className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
                   {safeTarget && <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
                 </div>
@@ -402,17 +402,17 @@ export default function StoreView({
 
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
-        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
+        <div data-visual-editor-target="flashSale" className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
                 <Timer className="w-6 h-6" />
               </div>
               <div>
-                <h3 id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
-                  {visualCopy.flashSaleTitle || '⚡ FLASH SALE'} <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{visualCopy.flashSaleBadge || storeText.limitedOffer}</span>
+                <h3 data-visual-editor-target="flashSale.title" id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                  {visualCopy.flashSaleTitle || '⚡ FLASH SALE'} <span data-visual-editor-target="flashSale.badge" className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{visualCopy.flashSaleBadge || storeText.limitedOffer}</span>
                 </h3>
-                <p className="text-slate-400 text-xs">{visualCopy.flashSaleSubtitle || storeText.hurryDiscount}</p>
+                <p data-visual-editor-target="flashSale.description" className="text-slate-400 text-xs">{visualCopy.flashSaleSubtitle || storeText.hurryDiscount}</p>
                 {flashSaleEndAt !== null && (
                   <p className="gs-flash-sale-deadline text-[10px] sm:text-xs text-amber-200/75 mt-1">
                     დასრულდება: {new Date(flashSaleEndAt).toLocaleString('ka-GE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -477,13 +477,13 @@ export default function StoreView({
       )}
 
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div className="gs-editorial-collections space-y-6">
+      <div data-visual-editor-target="categories" className="gs-editorial-collections space-y-6">
         <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
-            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+            <h3 data-visual-editor-target="categories.title" className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
               <FolderTree className="w-4 h-4 text-amber-400" /> {visualCopy.categoriesTitle || storeText.discoverCollections}
             </h3>
-            <p className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
+            <p data-visual-editor-target="categories.description" className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
           </div>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
             {processedProducts?.length || 0} {storeText.productsOnDisplay}
@@ -625,7 +625,7 @@ export default function StoreView({
       </div>
 
       {/* Filters & Sorting */}
-      <div className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div data-visual-editor-target="filters" className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
           <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
@@ -703,7 +703,7 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <article key={prod.id} className="gs-catalog-product-card group flex flex-col">
+              <article data-visual-editor-target="product.card" key={prod.id} className="gs-catalog-product-card group flex flex-col">
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
@@ -752,15 +752,16 @@ export default function StoreView({
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <h3 data-visual-editor-target="product.title" onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => handleOpenProduct(prod)} 
+                <button
+                  data-visual-editor-target="product.button"
+                  onClick={() => handleOpenProduct(prod)}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
                   <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}

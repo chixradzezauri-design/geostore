@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   ChevronDown, ChevronUp, Monitor, RotateCcw, RotateCw,
-  Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon
+  Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon, MousePointer2
 } from 'lucide-react';
 import StoreView from './StoreView';
 import {
@@ -11,6 +11,27 @@ import {
 } from '../utils/storefrontVisualDesign.js';
 
 const NOOP = () => {};
+const VISUAL_EDITOR_TARGETS = {
+  'hero': { label: 'მთავარი Hero ბლოკი', help: 'მთავარი ბლოკის ზომა, ფოტო და განლაგება მარცხენა პარამეტრებში შეცვალეთ.' },
+  'hero.image': { label: 'Hero ფოტო', group: 'hero', key: 'imageUrl', help: 'შეცვალეთ ფოტოს URL ან ატვირთეთ ახალი ფოტო მარცხენა პანელში.' },
+  'hero.title': { label: 'Hero სათაური', settingKey: 'heroTitle', help: 'სათაური პირდაპირ აქედან შეცვალეთ.' },
+  'hero.description': { label: 'Hero აღწერა', settingKey: 'heroSubtitle', multiline: true, help: 'აღწერა პირდაპირ აქედან შეცვალეთ.' },
+  'hero.button': { label: 'Hero ღილაკი', group: 'copy', key: 'heroButton', help: 'ღილაკის ტექსტი პირდაპირ აქედან შეცვალეთ.' },
+  'banner': { label: 'სარეკლამო ბანერები', help: 'ბანერის ფოტო, სათაური და ბმული მართეთ ადმინისტრაციის „ბანერები“ განყოფილებაში.' },
+  'banner.card': { label: 'ბანერის ბარათი', help: 'ბანერის შინაარსი და ბმული მართეთ „ბანერები“ განყოფილებაში.' },
+  'banner.title': { label: 'ბანერის სათაური', help: 'ბანერის ტექსტი მართეთ ადმინისტრაციის „ბანერები“ განყოფილებაში.' },
+  'flashSale': { label: 'Flash Sale ბლოკი', help: 'ბლოკის ფერები და განლაგება შეცვალეთ ფერებისა და ზომების პარამეტრებში.' },
+  'flashSale.title': { label: 'Flash Sale სათაური', group: 'copy', key: 'flashSaleTitle', help: 'სათაური პირდაპირ აქედან შეცვალეთ.' },
+  'flashSale.badge': { label: 'Flash Sale Badge', group: 'copy', key: 'flashSaleBadge', help: 'პატარა წარწერა პირდაპირ აქედან შეცვალეთ.' },
+  'flashSale.description': { label: 'Flash Sale აღწერა', group: 'copy', key: 'flashSaleSubtitle', help: 'აღწერა პირდაპირ აქედან შეცვალეთ.' },
+  'categories': { label: 'კატეგორიების ბლოკი', help: 'კატეგორიების ფოტოები და დასახელებები მართეთ კატეგორიების განყოფილებაში.' },
+  'categories.title': { label: 'კატეგორიების სათაური', group: 'copy', key: 'categoriesTitle', help: 'სათაური პირდაპირ აქედან შეცვალეთ.' },
+  'categories.description': { label: 'კატეგორიების აღწერა', group: 'copy', key: 'categoriesSubtitle', help: 'აღწერა პირდაპირ აქედან შეცვალეთ.' },
+  'filters': { label: 'ფილტრები და დალაგება', help: 'ფილტრების ფერები და განლაგება შეცვალეთ დიზაინის პარამეტრებში.' },
+  'product.card': { label: 'პროდუქტის ბარათი', help: 'პროდუქტის ფოტო, ფასი, დასახელება და მარაგი მართეთ პროდუქტების განყოფილებაში.' },
+  'product.title': { label: 'პროდუქტის დასახელება', help: 'პროდუქტის დასახელება შეცვალეთ პროდუქტების მართვის განყოფილებაში.' },
+  'product.button': { label: 'პროდუქტის ღილაკი', group: 'copy', key: 'productButtonText', help: 'ღილაკის ტექსტი პირდაპირ აქედან შეცვალეთ.' }
+};
 const SECTION_LABELS = {
   hero: 'მთავარი ბლოკი (Hero)',
   banners: 'სარეკლამო ბანერები',
@@ -85,6 +106,8 @@ export default function StorefrontVisualEditor({
   const historyIndexRef = useRef(0);
   const [previewMode, setPreviewMode] = useState('desktop');
   const [previewCategory, setPreviewCategory] = useState('ყველა');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedElement, setSelectedElement] = useState(null);
   const [saveMessage, setSaveMessage] = useState('');
   const previewStyle = useMemo(() => buildStorefrontVisualStyle(design), [design]);
   const safeProducts = Array.isArray(products) ? products : [];
@@ -112,6 +135,34 @@ export default function StorefrontVisualEditor({
   const updateSiteText = (key, value) => {
     if (typeof setSiteSettings === 'function') setSiteSettings(current => ({ ...(current || {}), [key]: value }));
     setSaveMessage('ტექსტის ცვლილებები მონახაზში ჯერ არ შენახულა.');
+  };
+
+  const handlePreviewSelect = event => {
+    if (!selectionMode) return;
+    const target = event.target?.closest?.('[data-visual-editor-target]');
+    if (!target) return;
+    const targetId = target.getAttribute('data-visual-editor-target');
+    const metadata = VISUAL_EDITOR_TARGETS[targetId];
+    if (!metadata) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedElement({ id: targetId, ...metadata });
+  };
+
+  const selectedElementValue = selectedElement
+    ? selectedElement.settingKey
+      ? (siteSettings?.[selectedElement.settingKey] || '')
+      : selectedElement.group === 'hero'
+        ? (design.hero?.imageUrl || '')
+        : selectedElement.group
+          ? (design[selectedElement.group]?.[selectedElement.key] || '')
+          : ''
+    : '';
+
+  const updateSelectedElement = value => {
+    if (!selectedElement) return;
+    if (selectedElement.settingKey) updateSiteText(selectedElement.settingKey, value);
+    else if (selectedElement.group) updateGroup(selectedElement.group, selectedElement.key, value);
   };
 
   const handleHeroFileChange = event => {
@@ -212,6 +263,33 @@ export default function StorefrontVisualEditor({
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
         <aside className="gs-visual-editor-controls min-w-0 space-y-4">
+          <section className="rounded-2xl border border-emerald-400/25 bg-slate-900/90 p-4 space-y-3" aria-label="Preview ელემენტის არჩევა">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="flex items-center gap-2 text-sm font-black text-white"><MousePointer2 className="h-4 w-4 text-emerald-300" /> პირდაპირი არჩევა</h3>
+                <p className="mt-1 text-[10px] leading-4 text-slate-400">ჩართეთ რეჟიმი და Preview-ში დააჭირეთ იმ ელემენტს, რომლის შეცვლაც გსურთ.</p>
+              </div>
+              <button type="button" onClick={() => { setSelectionMode(value => !value); setSelectedElement(null); }} aria-pressed={selectionMode} className={selectionMode ? 'shrink-0 rounded-xl bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950' : 'shrink-0 rounded-xl border border-slate-600 px-3 py-2 text-[11px] font-bold text-slate-200'}>
+                {selectionMode ? 'არჩევა ჩართულია' : 'არჩევის ჩართვა'}
+              </button>
+            </div>
+            {selectedElement && (
+              <div className="rounded-xl border border-emerald-400/30 bg-slate-950/80 p-3 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-black text-emerald-200">{selectedElement.label}</p>
+                  <button type="button" onClick={() => setSelectedElement(null)} className="text-[10px] font-bold text-slate-400 hover:text-white">გასუფთავება</button>
+                </div>
+                {(selectedElement.settingKey || selectedElement.group) ? (
+                  selectedElement.multiline ? (
+                    <textarea value={selectedElementValue} maxLength={240} rows={3} onChange={event => updateSelectedElement(event.target.value)} aria-label={selectedElement.label} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white" />
+                  ) : (
+                    <input value={selectedElementValue} maxLength={selectedElement.settingKey === 'heroTitle' ? 120 : selectedElement.group === 'hero' ? 2048 : 120} onChange={event => updateSelectedElement(event.target.value)} aria-label={selectedElement.label} className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white" />
+                  )
+                ) : null}
+                <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help}</p>
+              </div>
+            )}
+          </section>
           <details open className="rounded-2xl border border-slate-700 bg-slate-900/90 p-4">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-black text-white"><Type className="h-4 w-4 text-emerald-300" /> ტექსტები და სათაურები</summary>
             <div className="mt-4 space-y-3">
@@ -333,14 +411,38 @@ export default function StorefrontVisualEditor({
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-black text-white">ცოცხალი Preview</h3>
-              <p className="text-[10px] text-slate-400">მონაცემები რეალურია; კალათისა და შეკვეთის მოქმედებები Preview-ში გამორთულია.</p>
+              <p className="text-[10px] text-slate-400">{selectionMode ? 'დააჭირეთ მონიშნულ ელემენტს — არჩევის რეჟიმში მოქმედებები უსაფრთხოდ დაბლოკილია.' : 'მონაცემები რეალურია; კალათისა და შეკვეთის მოქმედებები Preview-ში გამორთულია.'}</p>
             </div>
             <div className="flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 p-1">
               <button type="button" onClick={() => setPreviewMode('desktop')} aria-pressed={previewMode === 'desktop'} className={previewMode === 'desktop' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Monitor className="mr-1 inline h-3.5 w-3.5" /> Desktop</button>
               <button type="button" onClick={() => setPreviewMode('mobile')} aria-pressed={previewMode === 'mobile'} className={previewMode === 'mobile' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Smartphone className="mr-1 inline h-3.5 w-3.5" /> Mobile</button>
             </div>
           </div>
-          <div className={previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : '100%' }}>
+          <style>{`
+            .gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target] { cursor: crosshair !important; }
+            .gs-visual-preview-frame[data-visual-editor-selected="hero"] [data-visual-editor-target="hero"],
+            .gs-visual-preview-frame[data-visual-editor-selected="hero.image"] [data-visual-editor-target="hero.image"],
+            .gs-visual-preview-frame[data-visual-editor-selected="hero.title"] [data-visual-editor-target="hero.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="hero.description"] [data-visual-editor-target="hero.description"],
+            .gs-visual-preview-frame[data-visual-editor-selected="hero.button"] [data-visual-editor-target="hero.button"],
+            .gs-visual-preview-frame[data-visual-editor-selected="banner"] [data-visual-editor-target="banner"],
+            .gs-visual-preview-frame[data-visual-editor-selected="banner.card"] [data-visual-editor-target="banner.card"],
+            .gs-visual-preview-frame[data-visual-editor-selected="banner.title"] [data-visual-editor-target="banner.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale"] [data-visual-editor-target="flashSale"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.title"] [data-visual-editor-target="flashSale.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.badge"] [data-visual-editor-target="flashSale.badge"],
+            .gs-visual-preview-frame[data-visual-editor-selected="flashSale.description"] [data-visual-editor-target="flashSale.description"],
+            .gs-visual-preview-frame[data-visual-editor-selected="categories"] [data-visual-editor-target="categories"],
+            .gs-visual-preview-frame[data-visual-editor-selected="categories.title"] [data-visual-editor-target="categories.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="categories.description"] [data-visual-editor-target="categories.description"],
+            .gs-visual-preview-frame[data-visual-editor-selected="filters"] [data-visual-editor-target="filters"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.card"] [data-visual-editor-target="product.card"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.title"] [data-visual-editor-target="product.title"],
+            .gs-visual-preview-frame[data-visual-editor-selected="product.button"] [data-visual-editor-target="product.button"] {
+              outline: 2px solid #34d399 !important; outline-offset: 3px; position: relative; z-index: 3;
+            }
+          `}</style>
+          <div onClickCapture={handlePreviewSelect} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : '100%' }}>
             <div className="gs-site-header gs-visual-preview-header">
               <div>{siteSettings?.topBarText || 'GEOSTORE — ტანსაცმელი, ფეხსაცმელი და აქსესუარები'}</div>
               <div className="max-w-7xl">
