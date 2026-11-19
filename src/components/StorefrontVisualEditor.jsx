@@ -386,7 +386,7 @@ export default function StorefrontVisualEditor({
     if ((design.customSections || []).length >= 12) { setSaveMessage('შეგიძლიათ მაქსიმუმ 12 საკუთარი სექციის შექმნა.'); return; }
     const id = nextCustomId('custom-section');
     commitDesign({ ...design, customSections: [...(design.customSections || []), {
-      id, title: 'ახალი სექცია', visible: true, backgroundColor: '#ffffff', textColor: '#29241f', padding: 24, align: 'left', maxWidth: 1440, marginTop: 0, marginBottom: 0, borderRadius: 16, minHeight: 0, responsive: {},
+      id, title: 'ახალი სექცია', visible: true, placement: 'after-products', backgroundColor: '#ffffff', textColor: '#29241f', padding: 24, align: 'left', maxWidth: 1440, marginTop: 0, marginBottom: 0, borderRadius: 16, minHeight: 0, responsive: {},
       blocks: [{ id: nextCustomId('block'), type: 'heading', text: 'ახალი სათაური', imageUrl: '', videoUrl: '', alt: '', label: '', url: '' }]
     }] });
   };
@@ -774,6 +774,7 @@ export default function StorefrontVisualEditor({
                     <button type="button" onClick={() => moveCustomSection(section.id, -1)} disabled={sectionIndex === 0} aria-label="სექციის ზემოთ გადატანა" className="rounded-lg border border-slate-700 px-2 py-2 text-slate-300 disabled:opacity-30">↑</button>
                     <button type="button" onClick={() => moveCustomSection(section.id, 1)} disabled={sectionIndex === design.customSections.length - 1} aria-label="სექციის ქვემოთ გადატანა" className="rounded-lg border border-slate-700 px-2 py-2 text-slate-300 disabled:opacity-30">↓</button>
                   </div>
+                  <label className="block space-y-1 text-[10px] text-slate-300">სექციის განთავსება<select value={section.placement || 'after-products'} onChange={event => updateCustomSection(section.id, 'placement', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white"><option value="after-hero">მთავარი Hero ბლოკის შემდეგ</option><option value="after-banners">ბანერების შემდეგ</option><option value="after-flash-sale">Flash Sale-ის შემდეგ</option><option value="after-categories">კატეგორიების შემდეგ</option><option value="after-filters">ფილტრების შემდეგ</option><option value="after-products">პროდუქტების შემდეგ</option></select></label>
                   <div className="rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-2.5 py-2 text-[10px] font-bold text-emerald-200">
                     {previewMode === 'desktop' ? 'Desktop — ძირითადი სტილი' : previewMode === 'tablet' ? 'Tablet — დამოუკიდებელი სტილი' : 'Mobile — დამოუკიდებელი სტილი'}
                     {previewMode !== 'desktop' && <span className="ml-1 font-normal text-slate-400">ცარიელი პარამეტრი Desktop-ის მნიშვნელობას იყენებს</span>}
