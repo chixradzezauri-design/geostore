@@ -767,8 +767,24 @@ export function compareAdminPanelModuleBackup(rawDesign, backupId) {
     }
     return output;
   };
-  const savedValues = flatten(backup.snapshot);
-  const currentValues = flatten(currentSnapshot);
+  const savedViewport = backup.viewport === 'desktop'
+    ? backup.snapshot
+    : backup.snapshot.responsive?.[backup.viewport] || {};
+  const currentViewport = backup.viewport === 'desktop'
+    ? currentSnapshot
+    : currentSnapshot.responsive?.[backup.viewport] || {};
+  const savedValues = flatten({
+    theme: savedViewport.theme || backup.snapshot.theme || {},
+    components: savedViewport.components || backup.snapshot.components || {},
+    content: backup.snapshot.content || {},
+    elementStyles: savedViewport.elementStyles || backup.snapshot.elementStyles || {}
+  });
+  const currentValues = flatten({
+    theme: currentViewport.theme || currentSnapshot.theme || {},
+    components: currentViewport.components || currentSnapshot.components || {},
+    content: currentSnapshot.content || {},
+    elementStyles: currentViewport.elementStyles || currentSnapshot.elementStyles || {}
+  });
   const paths = [...new Set([...Object.keys(savedValues), ...Object.keys(currentValues)])].sort();
   const differences = paths.filter(path => JSON.stringify(savedValues[path] ?? null) !== JSON.stringify(currentValues[path] ?? null))
     .map(path => ({
