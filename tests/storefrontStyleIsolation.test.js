@@ -237,3 +237,59 @@ test('Header and Footer individual link targets are registered for responsive vi
   assert.match(visualEditor, /'footer\.warrantyLink': \{/);
   assert.match(designSource, /'footer\.termsLink', 'footer\.privacyLink', 'footer\.warrantyLink'/);
 });
+
+
+test('visual editor element geometry controls are normalized and rendered safely', async () => {
+  const { normalizeStorefrontVisualDesign, buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'header.caption': {
+        paddingX: 18, paddingY: 12, marginTop: 14, marginBottom: 22,
+        minWidth: 120, maxWidth: 480, fontStyle: 'italic', textDecoration: 'underline'
+      }
+    },
+    responsive: {
+      mobile: {
+        elementStyles: {
+          'header.caption': { paddingX: 8, marginBottom: 6, maxWidth: 260, textDecoration: 'line-through' }
+        }
+      }
+    }
+  });
+  const desktop = buildStorefrontElementStyle(design, 'header.caption', 'desktop');
+  const mobile = buildStorefrontElementStyle(design, 'header.caption', 'mobile');
+  assert.equal(desktop.paddingLeft, '18px');
+  assert.equal(desktop.paddingRight, '18px');
+  assert.equal(desktop.paddingTop, '12px');
+  assert.equal(desktop.marginTop, '14px');
+  assert.equal(desktop.marginBottom, '22px');
+  assert.equal(desktop.minWidth, '120px');
+  assert.equal(desktop.maxWidth, '480px');
+  assert.equal(desktop.fontStyle, 'italic');
+  assert.equal(desktop.textDecoration, 'underline');
+  assert.equal(mobile.paddingLeft, '8px');
+  assert.equal(mobile.paddingTop, '12px');
+  assert.equal(mobile.marginBottom, '6px');
+  assert.equal(mobile.maxWidth, '260px');
+  assert.equal(mobile.textDecoration, 'line-through');
+});
+
+test('visual editor element geometry values are clamped and unsupported text styles are ignored', async () => {
+  const { normalizeStorefrontVisualDesign, buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'footer.copyright': {
+        paddingX: 999, marginTop: -20, marginBottom: 999,
+        minWidth: 9999, maxWidth: 9999, fontStyle: 'oblique', textDecoration: 'blink'
+      }
+    }
+  });
+  const style = buildStorefrontElementStyle(design, 'footer.copyright');
+  assert.equal(style.paddingLeft, '64px');
+  assert.equal(style.marginTop, '0px');
+  assert.equal(style.marginBottom, '120px');
+  assert.equal(style.minWidth, '800px');
+  assert.equal(style.maxWidth, '1200px');
+  assert.equal(style.fontStyle, undefined);
+  assert.equal(style.textDecoration, undefined);
+});
