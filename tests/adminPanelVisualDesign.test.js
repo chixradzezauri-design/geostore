@@ -1145,3 +1145,14 @@ test('admin style library can apply a saved style to multiple selected elements'
   assert.match(editor, /მონიშნულ \{selectedElementKeys\.length\}-ზე/);
   assert.match(editor, /მონიშვნის მოხსნა/);
 });
+
+
+test('admin style library compares selected presets without mutating them', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const comparableStylePresets = selectedStylePresets\.slice\(0, 4\)/);
+  assert.match(editor, /შერჩეული სტილების შედარება/);
+  assert.match(editor, /styleComparisonFields =/);
+  assert.match(editor, /შედარების გასუფთავება/);
+  assert.match(editor, /geostore-admin-compared-style-presets\.json/);
+  assert.match(editor, /შედარება ცვლილებებს არ ახორციელებს/);
+});
