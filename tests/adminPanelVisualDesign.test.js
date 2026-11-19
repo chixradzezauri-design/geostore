@@ -646,3 +646,62 @@ test('inventory history visual controls emit valid CSS properties for all respon
   }
   assert.doesNotMatch(historyCss, /  (?:fontSize|fontWeight|textAlign):/);
 });
+
+
+test('every admin visual editor target is wired to real JSX and all eight desktop/tablet/mobile style properties', () => {
+  const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  const utility = readFileSync(new URL('../src/utils/adminPanelVisualDesign.js', import.meta.url), 'utf8');
+  const stylesheet = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  const definitionsMatch = utility.match(/const ADMIN_PANEL_ELEMENT_DEFINITIONS = Object\\.freeze\\((\\{.*?\\})\\);/s);
+  assert.ok(definitionsMatch, 'Could not read the canonical admin visual target definitions');
+  const definitions = JSON.parse(definitionsMatch[1]);
+  const properties = ['fontSize', 'fontWeight', 'textAlign', 'textColor', 'backgroundColor', 'borderColor', 'borderRadius', 'padding'];
+  const testStyles = Object.fromEntries(Object.keys(definitions).map(key => [key, {
+    fontSize: 17,
+    fontWeight: 800,
+    textAlign: 'center',
+    textColor: '#123456',
+    backgroundColor: '#234567',
+    borderColor: '#345678',
+    borderRadius: 19,
+    padding: 21
+  }]));
+  const tabletStyles = Object.fromEntries(Object.keys(definitions).map(key => [key, { fontSize: 15, textColor: '#456789' }]));
+  const mobileStyles = Object.fromEntries(Object.keys(definitions).map(key => [key, { fontSize: 13, padding: 8 }]));
+  const generated = buildAdminPanelVisualStyle(normalizeAdminPanelVisualDesign({
+    elementStyles: testStyles,
+    responsive: {
+      tablet: { elementStyles: tabletStyles },
+      mobile: { elementStyles: mobileStyles }
+    }
+  }));
+  const cssRules = [...stylesheet.matchAll(/([^{}]+)\\{([^{}]*)\\}/g)];
+
+  assert.equal(Object.keys(definitions).length, 35, 'Update this regression test when adding/removing canonical visual targets');
+  for (const [key, definition] of Object.entries(definitions)) {
+    const className = definition.selector.slice(1);
+    assert.ok(dashboard.includes(className), `Missing real JSX class target: ${definition.selector}`);
+
+    const targetRules = cssRules.filter(([, selectors]) => selectors.includes(definition.selector));
+    assert.ok(targetRules.length > 0, `Missing CSS rule for ${definition.selector}`);
+    for (const property of properties) {
+      const desktopVariable = `--admin-vd-element-${key}-${property}`;
+      assert.ok(targetRules.some(([, , declarations]) => declarations.includes(desktopVariable)), `CSS does not apply ${desktopVariable} to ${definition.selector}`);
+      assert.ok(stylesheet.includes(`--admin-vd-element-tablet-${key}-${property}`), `Missing Tablet CSS variable for ${key}.${property}`);
+      assert.ok(stylesheet.includes(`--admin-vd-element-mobile-${key}-${property}`), `Missing Mobile CSS variable for ${key}.${property}`);
+    }
+
+    assert.equal(generated[`--admin-vd-element-${key}-fontSize`], '17px');
+    assert.equal(generated[`--admin-vd-element-${key}-fontWeight`], '800px');
+    assert.equal(generated[`--admin-vd-element-${key}-textAlign`], 'center');
+    assert.equal(generated[`--admin-vd-element-${key}-textColor`], '#123456');
+    assert.equal(generated[`--admin-vd-element-${key}-backgroundColor`], '#234567');
+    assert.equal(generated[`--admin-vd-element-${key}-borderColor`], '#345678');
+    assert.equal(generated[`--admin-vd-element-${key}-borderRadius`], '19px');
+    assert.equal(generated[`--admin-vd-element-${key}-padding`], '21px');
+    assert.equal(generated[`--admin-vd-element-tablet-${key}-fontSize`], '15px');
+    assert.equal(generated[`--admin-vd-element-tablet-${key}-textColor`], '#456789');
+    assert.equal(generated[`--admin-vd-element-mobile-${key}-fontSize`], '13px');
+    assert.equal(generated[`--admin-vd-element-mobile-${key}-padding`], '8px');
+  }
+});
