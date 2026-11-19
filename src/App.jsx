@@ -1498,7 +1498,8 @@ export default function App() {
           headers: await getSupabaseHeaders({ authenticated: true }),
           body: JSON.stringify({
             p_snapshot: snapshot,
-            p_version_label: versionLabel
+            p_version_label: versionLabel,
+            p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current
           })
         }
       );
