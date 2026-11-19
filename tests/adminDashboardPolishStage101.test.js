@@ -45,6 +45,13 @@ test('Stage 104 keeps the admin navigation usable on tablet and mobile', () => {
   assert.match(polish, /max-width:\s*1023px/);
 });
 
+test('Stage 101 uses valid attribute selectors for Tailwind arbitrary text-size classes', () => {
+  assert.ok(polish.includes('[class~="text-[8px]"]'));
+  assert.ok(polish.includes('[class~="text-[9px]"]'));
+  assert.ok(polish.includes('[class~="text-[10px]"]'));
+  assert.ok(!polish.includes('.text-\\\\[8px\\\\]'));
+});
+
 test('Stage 104 improves narrow-screen readability and prevents horizontal layout overflow', () => {
   assert.match(polish, /\[class~="text-\[8px\]"\]/);
   assert.match(polish, /font-size:\s*10px\s*!important/);
@@ -53,4 +60,37 @@ test('Stage 104 improves narrow-screen readability and prevents horizontal layou
   assert.match(polish, /min-height:\s*44px/);
   assert.match(polish, /> :not\(\[hidden\]\) ~ :not\(\[hidden\]\)/);
   assert.match(polish, /margin-top:\s*0 !important/);
+});
+
+test('Stage 112 keeps the mobile Command Center compact and its main action visible', () => {
+  assert.match(admin, /className="admin-command-hero/);
+  assert.match(admin, /className="admin-command-kpis/);
+  assert.match(admin, /onClick=\{\(\) => setAdminTab\('analytics'\)\}/);
+  assert.match(polish, /STAGE 112 — compact Command Center/);
+  assert.match(polish, /\.admin-command-kpis \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\) !important/);
+  assert.match(polish, /\.admin-command-hero button \{[\s\S]*?width: 100%[\s\S]*?min-height: 48px/);
+  assert.match(polish, /\.admin-command-kpi > strong \{[\s\S]*?font-size: 24px/);
+});
+
+test('Stage 113 staff invitation form stays readable and touch-accessible on phones', () => {
+  assert.match(admin, /className="admin-staff-create-form/);
+  assert.match(admin, /className="admin-staff-create-fields/);
+  assert.match(admin, /className="admin-staff-permission-grid/);
+  assert.match(admin, /className="admin-staff-create-submit/);
+  assert.match(polish, /STAGE 113 — responsive staff invitation form/);
+  assert.match(polish, /\.admin-staff-create-fields > :is\(input, select\)[\s\S]*?min-height: 46px/);
+  assert.match(polish, /\.admin-staff-permission-grid > label[\s\S]*?min-height: 42px/);
+  assert.match(polish, /\.admin-staff-create-submit[\s\S]*?min-height: 48px/);
+  assert.match(polish, /@media \(min-width: 420px\) and \(max-width: 640px\)[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+});
+
+test('Stage 114 inventory replenishment cards use a compact two-column mobile layout', () => {
+  assert.match(admin, /className="admin-replenishment-row grid/);
+  assert.match(admin, /className="admin-replenishment-product/);
+  assert.match(admin, /className="admin-replenishment-metric/);
+  assert.match(admin, /className="admin-replenishment-save/);
+  assert.match(polish, /STAGE 114 — compact inventory replenishment cards/);
+  assert.match(polish, /\.admin-replenishment-row \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\) !important/);
+  assert.match(polish, /\.admin-replenishment-product,[\s\S]*?grid-column: 1 \/ -1/);
+  assert.match(polish, /\.admin-replenishment-save button[\s\S]*?min-height: 46px/);
 });

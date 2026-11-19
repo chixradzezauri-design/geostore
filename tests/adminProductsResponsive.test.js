@@ -24,3 +24,17 @@ test('product names, SKU labels and form sections cannot force horizontal overfl
   assert.match(css, /\.admin-product-form,[\s\S]*?min-width: 0/);
   assert.match(css, /\.admin-product-gallery/);
 });
+test('inventory replenishment cards compact to two columns on mobile without clipping fields', () => {
+  assert.match(admin, /className="admin-replenishment-row/);
+  assert.match(admin, /className="admin-replenishment-metric/);
+  assert.match(css, /@media \(max-width: 640px\)[\s\S]*?\.admin-replenishment-row \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.admin-replenishment-product,[\s\S]*?grid-column: 1 \/ -1/);
+  assert.match(css, /\.admin-replenishment-metric input[\s\S]*?font-size: 16px/);
+});
+
+test('size-color and custom variant stock rows wrap safely on narrow screens', () => {
+  assert.match(admin, /admin-size-color-stock-row/);
+  assert.match(admin, /admin-custom-variant-row/);
+  assert.match(css, /\.admin-size-color-stock-identity,[\s\S]*?overflow-wrap: anywhere/);
+  assert.match(css, /\.admin-size-color-stock-control input,[\s\S]*?min-height: 44px/);
+});

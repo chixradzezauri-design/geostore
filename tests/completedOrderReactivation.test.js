@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../supabase/migrations/20261117130000_reopen_completed_orders.sql', import.meta.url), 'utf8');
+const permissionMigration = await readFile(new URL('../supabase/migrations/20261119100000_revoke_anon_completed_order_reactivation.sql', import.meta.url), 'utf8');
 const admin = await readFile(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 
 test('completed order reactivation is protected by the primary admin and fresh password authentication', () => {
@@ -35,4 +36,21 @@ test('admin uses the dedicated completed-order RPC after fresh password verifica
   assert.match(admin, /admin_reopen_completed_order/);
   assert.match(admin, /admin_reactivate_cancelled_order/);
   assert.match(admin, /Boolean\(o\.stock_deducted_at\) && !o\.stock_restored_at/);
+});
+test('completed and cancelled order reactivation controls are clear, mobile-accessible and owner-gated', () => {
+  assert.match(admin, /isOwner \? \([\s\S]*?admin-order-reactivate-button min-h-11 w-full sm:w-auto/);
+  assert.match(admin, /aria-label=\{\`შეკვეთა #\$\{o\.id\} ხელახლა გააქტიურება\`\}/);
+  assert.match(admin, /ხელახლა გააქტიურება მხოლოდ მთავარ ადმინისტრატორს შეუძლია/);
+  assert.match(admin, /დასრულებულის ხელახლა გააქტიურება/);
+  assert.match(admin, /გაუქმებულის ხელახლა გააქტიურება/);
+});
+
+test('completed-order reactivation wrapper explicitly revokes anon execution', () => {
+  assert.ok(permissionMigration.includes('REVOKE ALL ON FUNCTION public.admin_reopen_completed_order(text) FROM PUBLIC, anon;'));
+  assert.ok(permissionMigration.includes('GRANT EXECUTE ON FUNCTION public.admin_reopen_completed_order(text) TO authenticated;'));
+});
+
+test('completed-order row action uses the guarded status handler instead of opening the dialog directly', () => {
+  assert.ok(admin.includes("onClick={() => handleUpdateOrderStatus(o.id, 'ახალი')}"));
+  assert.ok(!admin.includes('setReactivationOrder(o);'));
 });

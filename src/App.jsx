@@ -7,6 +7,7 @@ import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
 const StoreView = lazy(() => import('./components/StoreView'));
+const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
 import {
   MessageSquare,
@@ -3259,6 +3260,20 @@ export default function App() {
           </Suspense>
         )}
 
+        {activeTab === 'privacy' && (
+          <Suspense fallback={(
+            <div role="status" aria-live="polite" className="mx-auto my-10 flex min-h-[30vh] w-full max-w-4xl items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/80 px-4 text-sm text-slate-300">
+              {currentLang === 'ka' ? 'კონფიდენციალურობის გვერდი იტვირთება...' : currentLang === 'ru' ? 'Загрузка политики конфиденциальности…' : 'Loading privacy policy…'}
+            </div>
+          )}>
+            <PrivacyPolicyPage
+              currentLang={currentLang}
+              onClose={() => setActiveTab('store')}
+              onContact={() => setSupportOpen(true)}
+            />
+          </Suspense>
+        )}
+
         {activeTab === 'wardrobe' && (
           <Suspense fallback={null}>
             <AIDigitalWardrobe
@@ -4467,7 +4482,7 @@ export default function App() {
       )}
 
       <footer className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">
-        <div className="geostore-footer-links flex justify-center items-center gap-6 text-slate-400 font-bold">
+        <div className="geostore-footer-links flex flex-wrap justify-center items-center gap-4 px-2 text-slate-400 font-bold">
           <button
             onClick={() => setIsTermsOpen(true)}
             className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
@@ -4477,6 +4492,18 @@ export default function App() {
           </button>
 
           <span>•</span>
+          <button
+            type="button"
+            onClick={() => setActiveTab('privacy')}
+            aria-current={activeTab === 'privacy' ? 'page' : undefined}
+            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            {t.privacy}
+          </button>
+
+          <span>•</span>
+
 
           <button
             onClick={() => setIsWarrantyOpen(true)}
