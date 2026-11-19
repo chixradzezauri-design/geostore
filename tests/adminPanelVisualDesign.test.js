@@ -1367,6 +1367,17 @@ test('admin visual editor safely restores selected customized elements in the ac
   assert.match(editor, /სხვა ხედები და დანარჩენი ელემენტები უცვლელი დარჩება/);
 });
 
+test('admin visual editor can apply a saved style to every element in its module category', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const applySavedElementStyleToCategory = preset =>/);
+  assert.match(editor, /ELEMENT_CATEGORIES\.find\(item => item\.label === preset\?\.category\)/);
+  assert.match(editor, /const targets = category\.keys\.filter\(key => ADMIN_PANEL_ELEMENT_DEFINITIONS\[key\]\)/);
+  assert.match(editor, /applySavedElementStyleToTargets\(preset, targets\)/);
+  assert.match(editor, /სტილი „\$\{preset\.name\}“ გადაეტანოს/);
+  assert.match(editor, /მთელ მოდულზე/);
+  assert.match(editor, /disabled=\{!ELEMENT_CATEGORIES\.some\(category => category\.label === preset\.category\) \|\| !selectedStylePropertyKeys\.length\}/);
+});
+
 test('admin visual editor can batch-save selected element styles without adding empty or duplicate presets', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /const saveSelectedElementStylesAsPresets = \(\) =>/);
