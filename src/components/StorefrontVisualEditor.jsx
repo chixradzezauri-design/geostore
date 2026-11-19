@@ -741,7 +741,7 @@ export default function StorefrontVisualEditor({
       </section>
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
-        <aside className="gs-visual-editor-controls min-w-0 space-y-4">
+        <aside className="gs-visual-editor-controls order-2 min-w-0 space-y-4 2xl:order-1">
           <section className="rounded-2xl border border-emerald-400/25 bg-slate-900/90 p-4 space-y-3" aria-label="Preview ელემენტის არჩევა">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -1096,7 +1096,7 @@ export default function StorefrontVisualEditor({
           </div>
         </aside>
 
-        <div className="gs-visual-editor-preview-column min-w-0">
+        <div className="gs-visual-editor-preview-column order-1 min-w-0 2xl:order-2">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-black text-white">ცოცხალი Preview</h3>
