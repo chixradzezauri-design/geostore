@@ -568,7 +568,19 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
     };
   }
 
-  const stylePresets = Array.isArray(raw.stylePresets) ? raw.stylePresets.slice(0, 30).map((preset, index) => ({ id: typeof preset?.id === 'string' ? preset.id.slice(0, 80) : `admin-style-${index}`, name: typeof preset?.name === 'string' ? preset.name.trim().slice(0, 40) : '', style: isObject(preset?.style) ? Object.fromEntries(Object.entries(preset.style).filter(([key, value]) => ['fontSize', 'fontWeight', 'borderRadius', 'padding', 'textColor', 'backgroundColor', 'borderColor', 'textAlign'].includes(key) && value !== undefined)) : {} })).filter(preset => preset.name && Object.keys(preset.style).length) : [];
+  const usedPresetIds = new Set();
+  const stylePresets = Array.isArray(raw.stylePresets)
+    ? raw.stylePresets.slice(0, 30).map((preset, index) => {
+        let id = typeof preset?.id === 'string' ? preset.id.trim().slice(0, 80) : '';
+        if (!id || usedPresetIds.has(id)) id = `admin-style-${index}`;
+        while (usedPresetIds.has(id)) id = `${id}-${index}`;
+        usedPresetIds.add(id);
+        const name = typeof preset?.name === 'string' ? preset.name.trim().slice(0, 40) : '';
+        const sourceStyle = isObject(preset?.style) ? preset.style : {};
+        const style = normalizeElementStyles({ orderCard: sourceStyle }, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles, true).orderCard;
+        return { id, name, style };
+      }).filter(preset => preset.name && Object.keys(preset.style).length)
+    : [];
 
   return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets };
 }
