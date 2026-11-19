@@ -157,6 +157,39 @@ test('product detail targets support independent safe styling', () => {
   assert.deepEqual(buildStorefrontElementStyle(design, 'product.detail.purchase'), {});
 });
 
+test('element styling supports safe borders, typography, shadows and category targets', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'category.card': {
+        backgroundColor: '#101010', borderColor: '#abcdef', borderWidth: 4,
+        borderRadius: 18, boxShadow: 'strong', width: 90
+      },
+      'category.title': {
+        textColor: '#ffffff', fontSize: 22, lineHeight: 1.3,
+        letterSpacing: 2, textTransform: 'uppercase',
+        fontFamily: 'georgia'
+      },
+      'category.description': { textColor: 'url(javascript:alert(1))', textTransform: 'invalid' }
+    }
+  });
+  const card = buildStorefrontElementStyle(design, 'category.card');
+  const title = buildStorefrontElementStyle(design, 'category.title');
+  const description = buildStorefrontElementStyle(design, 'category.description');
+  assert.equal(card.backgroundColor, '#101010');
+  assert.equal(card.borderColor, '#abcdef');
+  assert.equal(card.borderWidth, '4px');
+  assert.equal(card.borderRadius, '18px');
+  assert.equal(card.boxShadow, '0 16px 40px rgba(0,0,0,.32)');
+  assert.equal(title.color, '#ffffff');
+  assert.equal(title.fontSize, '22px');
+  assert.equal(title.lineHeight, '1.3');
+  assert.equal(title.letterSpacing, '2px');
+  assert.equal(title.textTransform, 'uppercase');
+  assert.match(title.fontFamily, /Georgia/);
+  assert.equal(description.color, undefined);
+  assert.equal(description.textTransform, undefined);
+});
+
 test('element styles support bounded width, height, opacity and safe image fit controls', () => {
   const design = normalizeStorefrontVisualDesign({
     elementStyles: {
