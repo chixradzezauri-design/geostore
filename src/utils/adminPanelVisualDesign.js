@@ -13,7 +13,15 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     navActiveBackground: '#34d399',
     navActiveText: '#020617',
     navInactiveBackground: '#020617',
-    navInactiveText: '#94a3b8'
+    navInactiveText: '#94a3b8',
+    headerBackground: '#0f172a',
+    headerBorder: '#334155',
+    tableHeaderBackground: '#020617',
+    tableHeaderText: '#94a3b8',
+    inputBackground: '#020617',
+    inputText: '#f8fafc',
+    inputBorder: '#334155',
+    inputFocus: '#34d399'
   },
   layout: {
     fontSize: 13,
@@ -23,7 +31,12 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     buttonRadius: 14,
     navItemRadius: 16,
     navItemPaddingY: 12,
-    sectionGap: 24
+    sectionGap: 24,
+    headerRadius: 32,
+    headerPadding: 24,
+    tableCellPadding: 12,
+    inputRadius: 12,
+    inputHeight: 44
   },
   responsive: {
     tablet: { theme: {}, layout: {} },
@@ -40,7 +53,12 @@ const LAYOUT_LIMITS = {
   buttonRadius: [0, 28],
   navItemRadius: [0, 28],
   navItemPaddingY: [6, 20],
-  sectionGap: [12, 48]
+  sectionGap: [12, 48],
+  headerRadius: [10, 40],
+  headerPadding: [12, 32],
+  tableCellPadding: [6, 20],
+  inputRadius: [0, 20],
+  inputHeight: [36, 52]
 };
 
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
