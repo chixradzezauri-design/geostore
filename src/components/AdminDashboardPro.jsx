@@ -951,6 +951,7 @@ export default function AdminDashboardPro({
   const [adminVisualDesign, setAdminVisualDesign] = useState(() => normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN));
   const [adminVisualDesignReady, setAdminVisualDesignReady] = useState(false);
   const [adminVisualSyncStatus, setAdminVisualSyncStatus] = useState('idle');
+  const [adminVisualReloadKey, setAdminVisualReloadKey] = useState(0);
   const adminVisualSkipNextSaveRef = useRef(false);
   const adminVisualSaveQueueRef = useRef(Promise.resolve());
   const adminVisualSaveVersionRef = useRef(0);
@@ -1007,7 +1008,7 @@ export default function AdminDashboardPro({
 
     void loadSharedDesign();
     return () => { active = false; };
-  }, [adminLoggedIn, isOwner]);
+  }, [adminLoggedIn, isOwner, adminVisualReloadKey]);
 
   useEffect(() => {
     if (!adminLoggedIn || !isOwner || !adminVisualDesignReady) return;
@@ -6329,12 +6330,23 @@ export default function AdminDashboardPro({
         )}
 
         {visibleAdminTab === 'admin_visual_editor' && isOwner && (
-          <AdminPanelVisualEditor
-            design={adminVisualDesign}
-            syncStatus={adminVisualSyncStatus}
-            onChange={value => setAdminVisualDesign(normalizeAdminPanelVisualDesign(value))}
-            onReset={() => setAdminVisualDesign(normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))}
-          />
+          adminVisualDesignReady ? (
+            <AdminPanelVisualEditor
+              design={adminVisualDesign}
+              syncStatus={adminVisualSyncStatus}
+              onChange={value => setAdminVisualDesign(normalizeAdminPanelVisualDesign(value))}
+              onReset={() => setAdminVisualDesign(normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN))}
+            />
+          ) : (
+            <section role="status" aria-live="polite" className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-5 text-sm text-slate-200">
+              <p>{adminVisualSyncStatus === 'error' ? 'საერთო დიზაინის ჩატვირთვა ვერ მოხერხდა. ცვლილებების დაკარგვის თავიდან ასაცილებლად რედაქტორი დროებით დაბლოკილია.' : 'ადმინპანელის საერთო დიზაინი იტვირთება…'}</p>
+              {adminVisualSyncStatus === 'error' && (
+                <button type="button" onClick={() => setAdminVisualReloadKey(value => value + 1)} className="mt-3 rounded-xl border border-emerald-400/40 px-4 py-2 text-xs font-bold text-emerald-200">
+                  ხელახლა ცდა
+                </button>
+              )}
+            </section>
+          )
         )}
 
         {visibleAdminTab === 'banners' && (
