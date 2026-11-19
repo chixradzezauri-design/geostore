@@ -92,6 +92,42 @@
   --admin-vd-categoriesSectionBorder-active: var(--admin-vd-categoriesSectionBorder);
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-couponsSectionBackground);
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-couponsSectionBorder);
+  --admin-vd-staff-radius-active: var(--admin-vd-staff-radius);
+  --admin-vd-staff-padding-active: var(--admin-vd-staff-padding);
+  --admin-vd-staff-borderWidth-active: var(--admin-vd-staff-borderWidth);
+  --admin-vd-staff-shadowBlur-active: var(--admin-vd-staff-shadowBlur);
+  --admin-vd-inventory-radius-active: var(--admin-vd-inventory-radius);
+  --admin-vd-inventory-padding-active: var(--admin-vd-inventory-padding);
+  --admin-vd-inventory-borderWidth-active: var(--admin-vd-inventory-borderWidth);
+  --admin-vd-inventory-shadowBlur-active: var(--admin-vd-inventory-shadowBlur);
+  --admin-vd-analytics-radius-active: var(--admin-vd-analytics-radius);
+  --admin-vd-analytics-padding-active: var(--admin-vd-analytics-padding);
+  --admin-vd-analytics-borderWidth-active: var(--admin-vd-analytics-borderWidth);
+  --admin-vd-analytics-shadowBlur-active: var(--admin-vd-analytics-shadowBlur);
+  --admin-vd-orders-radius-active: var(--admin-vd-orders-radius);
+  --admin-vd-orders-padding-active: var(--admin-vd-orders-padding);
+  --admin-vd-orders-borderWidth-active: var(--admin-vd-orders-borderWidth);
+  --admin-vd-orders-shadowBlur-active: var(--admin-vd-orders-shadowBlur);
+  --admin-vd-support-radius-active: var(--admin-vd-support-radius);
+  --admin-vd-support-padding-active: var(--admin-vd-support-padding);
+  --admin-vd-support-borderWidth-active: var(--admin-vd-support-borderWidth);
+  --admin-vd-support-shadowBlur-active: var(--admin-vd-support-shadowBlur);
+  --admin-vd-discounts-radius-active: var(--admin-vd-discounts-radius);
+  --admin-vd-discounts-padding-active: var(--admin-vd-discounts-padding);
+  --admin-vd-discounts-borderWidth-active: var(--admin-vd-discounts-borderWidth);
+  --admin-vd-discounts-shadowBlur-active: var(--admin-vd-discounts-shadowBlur);
+  --admin-vd-banners-radius-active: var(--admin-vd-banners-radius);
+  --admin-vd-banners-padding-active: var(--admin-vd-banners-padding);
+  --admin-vd-banners-borderWidth-active: var(--admin-vd-banners-borderWidth);
+  --admin-vd-banners-shadowBlur-active: var(--admin-vd-banners-shadowBlur);
+  --admin-vd-categories-radius-active: var(--admin-vd-categories-radius);
+  --admin-vd-categories-padding-active: var(--admin-vd-categories-padding);
+  --admin-vd-categories-borderWidth-active: var(--admin-vd-categories-borderWidth);
+  --admin-vd-categories-shadowBlur-active: var(--admin-vd-categories-shadowBlur);
+  --admin-vd-coupons-radius-active: var(--admin-vd-coupons-radius);
+  --admin-vd-coupons-padding-active: var(--admin-vd-coupons-padding);
+  --admin-vd-coupons-borderWidth-active: var(--admin-vd-coupons-borderWidth);
+  --admin-vd-coupons-shadowBlur-active: var(--admin-vd-coupons-shadowBlur);
   background-color: var(--admin-vd-canvas-active);
   color: var(--admin-vd-text-active);
   font-size: var(--admin-vd-fontSize-active);
@@ -136,7 +172,27 @@
   border-color: var(--admin-vd-contentCardBorder-active) !important;
   border-width: var(--admin-vd-cardBorderWidth-active) !important;
   box-shadow: 0 8px var(--admin-vd-cardShadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
-}
+
+  border-radius: var(--admin-vd-staff-radius-active) !important;
+  padding: var(--admin-vd-staff-padding-active) !important;
+  border-width: var(--admin-vd-staff-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-staff-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  border-radius: var(--admin-vd-inventory-radius-active) !important;
+  padding: var(--admin-vd-inventory-padding-active) !important;
+  border-width: var(--admin-vd-inventory-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-inventory-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  border-radius: var(--admin-vd-orders-radius-active) !important;
+  padding: var(--admin-vd-orders-padding-active) !important;
+  border-width: var(--admin-vd-orders-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-orders-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  border-radius: var(--admin-vd-support-radius-active) !important;
+  padding: var(--admin-vd-support-padding-active) !important;
+  border-width: var(--admin-vd-support-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-support-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;
+  border-radius: var(--admin-vd-discounts-radius-active) !important;
+  padding: var(--admin-vd-discounts-padding-active) !important;
+  border-width: var(--admin-vd-discounts-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-discounts-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] :is(
   .admin-command-kpi, .admin-command-panel, .admin-analytics-card,
@@ -188,7 +244,11 @@
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-analytics-card {
   background-color: var(--admin-vd-analyticsSectionBackground-active) !important;
   border-color: var(--admin-vd-analyticsSectionBorder-active) !important;
-}
+
+  border-radius: var(--admin-vd-analytics-radius-active) !important;
+  padding: var(--admin-vd-analytics-padding-active) !important;
+  border-width: var(--admin-vd-analytics-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-analytics-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-orders-panel {
   background-color: var(--admin-vd-ordersSectionBackground-active) !important;
   border-color: var(--admin-vd-ordersSectionBorder-active) !important;
@@ -204,15 +264,27 @@
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-banners {
   background-color: var(--admin-vd-bannersSectionBackground-active) !important;
   border-color: var(--admin-vd-bannersSectionBorder-active) !important;
-}
+
+  border-radius: var(--admin-vd-banners-radius-active) !important;
+  padding: var(--admin-vd-banners-padding-active) !important;
+  border-width: var(--admin-vd-banners-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-banners-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-category-manager {
   background-color: var(--admin-vd-categoriesSectionBackground-active) !important;
   border-color: var(--admin-vd-categoriesSectionBorder-active) !important;
-}
+
+  border-radius: var(--admin-vd-categories-radius-active) !important;
+  padding: var(--admin-vd-categories-padding-active) !important;
+  border-width: var(--admin-vd-categories-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-categories-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .admin-coupons-panel {
   background-color: var(--admin-vd-couponsSectionBackground-active) !important;
   border-color: var(--admin-vd-couponsSectionBorder-active) !important;
-}
+
+  border-radius: var(--admin-vd-coupons-radius-active) !important;
+  padding: var(--admin-vd-coupons-padding-active) !important;
+  border-width: var(--admin-vd-coupons-borderWidth-active) !important;
+  box-shadow: 0 8px var(--admin-vd-coupons-shadowBlur-active) color-mix(in srgb, var(--admin-vd-cardShadowColor-active) 22%, transparent) !important;}
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] .text-white {
   color: var(--admin-vd-text-active) !important;
@@ -434,6 +506,42 @@
   --admin-vd-categoriesSectionBorder-active: var(--admin-vd-tablet-categoriesSectionBorder, var(--admin-vd-categoriesSectionBorder));
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-tablet-couponsSectionBackground, var(--admin-vd-couponsSectionBackground));
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-tablet-couponsSectionBorder, var(--admin-vd-couponsSectionBorder));
+    --admin-vd-staff-radius-active: var(--admin-vd-tablet-staff-radius);
+    --admin-vd-staff-padding-active: var(--admin-vd-tablet-staff-padding);
+    --admin-vd-staff-borderWidth-active: var(--admin-vd-tablet-staff-borderWidth);
+    --admin-vd-staff-shadowBlur-active: var(--admin-vd-tablet-staff-shadowBlur);
+    --admin-vd-inventory-radius-active: var(--admin-vd-tablet-inventory-radius);
+    --admin-vd-inventory-padding-active: var(--admin-vd-tablet-inventory-padding);
+    --admin-vd-inventory-borderWidth-active: var(--admin-vd-tablet-inventory-borderWidth);
+    --admin-vd-inventory-shadowBlur-active: var(--admin-vd-tablet-inventory-shadowBlur);
+    --admin-vd-analytics-radius-active: var(--admin-vd-tablet-analytics-radius);
+    --admin-vd-analytics-padding-active: var(--admin-vd-tablet-analytics-padding);
+    --admin-vd-analytics-borderWidth-active: var(--admin-vd-tablet-analytics-borderWidth);
+    --admin-vd-analytics-shadowBlur-active: var(--admin-vd-tablet-analytics-shadowBlur);
+    --admin-vd-orders-radius-active: var(--admin-vd-tablet-orders-radius);
+    --admin-vd-orders-padding-active: var(--admin-vd-tablet-orders-padding);
+    --admin-vd-orders-borderWidth-active: var(--admin-vd-tablet-orders-borderWidth);
+    --admin-vd-orders-shadowBlur-active: var(--admin-vd-tablet-orders-shadowBlur);
+    --admin-vd-support-radius-active: var(--admin-vd-tablet-support-radius);
+    --admin-vd-support-padding-active: var(--admin-vd-tablet-support-padding);
+    --admin-vd-support-borderWidth-active: var(--admin-vd-tablet-support-borderWidth);
+    --admin-vd-support-shadowBlur-active: var(--admin-vd-tablet-support-shadowBlur);
+    --admin-vd-discounts-radius-active: var(--admin-vd-tablet-discounts-radius);
+    --admin-vd-discounts-padding-active: var(--admin-vd-tablet-discounts-padding);
+    --admin-vd-discounts-borderWidth-active: var(--admin-vd-tablet-discounts-borderWidth);
+    --admin-vd-discounts-shadowBlur-active: var(--admin-vd-tablet-discounts-shadowBlur);
+    --admin-vd-banners-radius-active: var(--admin-vd-tablet-banners-radius);
+    --admin-vd-banners-padding-active: var(--admin-vd-tablet-banners-padding);
+    --admin-vd-banners-borderWidth-active: var(--admin-vd-tablet-banners-borderWidth);
+    --admin-vd-banners-shadowBlur-active: var(--admin-vd-tablet-banners-shadowBlur);
+    --admin-vd-categories-radius-active: var(--admin-vd-tablet-categories-radius);
+    --admin-vd-categories-padding-active: var(--admin-vd-tablet-categories-padding);
+    --admin-vd-categories-borderWidth-active: var(--admin-vd-tablet-categories-borderWidth);
+    --admin-vd-categories-shadowBlur-active: var(--admin-vd-tablet-categories-shadowBlur);
+    --admin-vd-coupons-radius-active: var(--admin-vd-tablet-coupons-radius);
+    --admin-vd-coupons-padding-active: var(--admin-vd-tablet-coupons-padding);
+    --admin-vd-coupons-borderWidth-active: var(--admin-vd-tablet-coupons-borderWidth);
+    --admin-vd-coupons-shadowBlur-active: var(--admin-vd-tablet-coupons-shadowBlur);
   }
 }
 
@@ -532,6 +640,42 @@
   --admin-vd-categoriesSectionBorder-active: var(--admin-vd-mobile-categoriesSectionBorder, var(--admin-vd-tablet-categoriesSectionBorder, var(--admin-vd-categoriesSectionBorder)));
   --admin-vd-couponsSectionBackground-active: var(--admin-vd-mobile-couponsSectionBackground, var(--admin-vd-tablet-couponsSectionBackground, var(--admin-vd-couponsSectionBackground)));
   --admin-vd-couponsSectionBorder-active: var(--admin-vd-mobile-couponsSectionBorder, var(--admin-vd-tablet-couponsSectionBorder, var(--admin-vd-couponsSectionBorder)));
+    --admin-vd-staff-radius-active: var(--admin-vd-mobile-staff-radius, var(--admin-vd-tablet-staff-radius, var(--admin-vd-staff-radius)));
+    --admin-vd-staff-padding-active: var(--admin-vd-mobile-staff-padding, var(--admin-vd-tablet-staff-padding, var(--admin-vd-staff-padding)));
+    --admin-vd-staff-borderWidth-active: var(--admin-vd-mobile-staff-borderWidth, var(--admin-vd-tablet-staff-borderWidth, var(--admin-vd-staff-borderWidth)));
+    --admin-vd-staff-shadowBlur-active: var(--admin-vd-mobile-staff-shadowBlur, var(--admin-vd-tablet-staff-shadowBlur, var(--admin-vd-staff-shadowBlur)));
+    --admin-vd-inventory-radius-active: var(--admin-vd-mobile-inventory-radius, var(--admin-vd-tablet-inventory-radius, var(--admin-vd-inventory-radius)));
+    --admin-vd-inventory-padding-active: var(--admin-vd-mobile-inventory-padding, var(--admin-vd-tablet-inventory-padding, var(--admin-vd-inventory-padding)));
+    --admin-vd-inventory-borderWidth-active: var(--admin-vd-mobile-inventory-borderWidth, var(--admin-vd-tablet-inventory-borderWidth, var(--admin-vd-inventory-borderWidth)));
+    --admin-vd-inventory-shadowBlur-active: var(--admin-vd-mobile-inventory-shadowBlur, var(--admin-vd-tablet-inventory-shadowBlur, var(--admin-vd-inventory-shadowBlur)));
+    --admin-vd-analytics-radius-active: var(--admin-vd-mobile-analytics-radius, var(--admin-vd-tablet-analytics-radius, var(--admin-vd-analytics-radius)));
+    --admin-vd-analytics-padding-active: var(--admin-vd-mobile-analytics-padding, var(--admin-vd-tablet-analytics-padding, var(--admin-vd-analytics-padding)));
+    --admin-vd-analytics-borderWidth-active: var(--admin-vd-mobile-analytics-borderWidth, var(--admin-vd-tablet-analytics-borderWidth, var(--admin-vd-analytics-borderWidth)));
+    --admin-vd-analytics-shadowBlur-active: var(--admin-vd-mobile-analytics-shadowBlur, var(--admin-vd-tablet-analytics-shadowBlur, var(--admin-vd-analytics-shadowBlur)));
+    --admin-vd-orders-radius-active: var(--admin-vd-mobile-orders-radius, var(--admin-vd-tablet-orders-radius, var(--admin-vd-orders-radius)));
+    --admin-vd-orders-padding-active: var(--admin-vd-mobile-orders-padding, var(--admin-vd-tablet-orders-padding, var(--admin-vd-orders-padding)));
+    --admin-vd-orders-borderWidth-active: var(--admin-vd-mobile-orders-borderWidth, var(--admin-vd-tablet-orders-borderWidth, var(--admin-vd-orders-borderWidth)));
+    --admin-vd-orders-shadowBlur-active: var(--admin-vd-mobile-orders-shadowBlur, var(--admin-vd-tablet-orders-shadowBlur, var(--admin-vd-orders-shadowBlur)));
+    --admin-vd-support-radius-active: var(--admin-vd-mobile-support-radius, var(--admin-vd-tablet-support-radius, var(--admin-vd-support-radius)));
+    --admin-vd-support-padding-active: var(--admin-vd-mobile-support-padding, var(--admin-vd-tablet-support-padding, var(--admin-vd-support-padding)));
+    --admin-vd-support-borderWidth-active: var(--admin-vd-mobile-support-borderWidth, var(--admin-vd-tablet-support-borderWidth, var(--admin-vd-support-borderWidth)));
+    --admin-vd-support-shadowBlur-active: var(--admin-vd-mobile-support-shadowBlur, var(--admin-vd-tablet-support-shadowBlur, var(--admin-vd-support-shadowBlur)));
+    --admin-vd-discounts-radius-active: var(--admin-vd-mobile-discounts-radius, var(--admin-vd-tablet-discounts-radius, var(--admin-vd-discounts-radius)));
+    --admin-vd-discounts-padding-active: var(--admin-vd-mobile-discounts-padding, var(--admin-vd-tablet-discounts-padding, var(--admin-vd-discounts-padding)));
+    --admin-vd-discounts-borderWidth-active: var(--admin-vd-mobile-discounts-borderWidth, var(--admin-vd-tablet-discounts-borderWidth, var(--admin-vd-discounts-borderWidth)));
+    --admin-vd-discounts-shadowBlur-active: var(--admin-vd-mobile-discounts-shadowBlur, var(--admin-vd-tablet-discounts-shadowBlur, var(--admin-vd-discounts-shadowBlur)));
+    --admin-vd-banners-radius-active: var(--admin-vd-mobile-banners-radius, var(--admin-vd-tablet-banners-radius, var(--admin-vd-banners-radius)));
+    --admin-vd-banners-padding-active: var(--admin-vd-mobile-banners-padding, var(--admin-vd-tablet-banners-padding, var(--admin-vd-banners-padding)));
+    --admin-vd-banners-borderWidth-active: var(--admin-vd-mobile-banners-borderWidth, var(--admin-vd-tablet-banners-borderWidth, var(--admin-vd-banners-borderWidth)));
+    --admin-vd-banners-shadowBlur-active: var(--admin-vd-mobile-banners-shadowBlur, var(--admin-vd-tablet-banners-shadowBlur, var(--admin-vd-banners-shadowBlur)));
+    --admin-vd-categories-radius-active: var(--admin-vd-mobile-categories-radius, var(--admin-vd-tablet-categories-radius, var(--admin-vd-categories-radius)));
+    --admin-vd-categories-padding-active: var(--admin-vd-mobile-categories-padding, var(--admin-vd-tablet-categories-padding, var(--admin-vd-categories-padding)));
+    --admin-vd-categories-borderWidth-active: var(--admin-vd-mobile-categories-borderWidth, var(--admin-vd-tablet-categories-borderWidth, var(--admin-vd-categories-borderWidth)));
+    --admin-vd-categories-shadowBlur-active: var(--admin-vd-mobile-categories-shadowBlur, var(--admin-vd-tablet-categories-shadowBlur, var(--admin-vd-categories-shadowBlur)));
+    --admin-vd-coupons-radius-active: var(--admin-vd-mobile-coupons-radius, var(--admin-vd-tablet-coupons-radius, var(--admin-vd-coupons-radius)));
+    --admin-vd-coupons-padding-active: var(--admin-vd-mobile-coupons-padding, var(--admin-vd-tablet-coupons-padding, var(--admin-vd-coupons-padding)));
+    --admin-vd-coupons-borderWidth-active: var(--admin-vd-mobile-coupons-borderWidth, var(--admin-vd-tablet-coupons-borderWidth, var(--admin-vd-coupons-borderWidth)));
+    --admin-vd-coupons-shadowBlur-active: var(--admin-vd-mobile-coupons-shadowBlur, var(--admin-vd-tablet-coupons-shadowBlur, var(--admin-vd-coupons-shadowBlur)));
   }
 }
 
