@@ -225,6 +225,17 @@ test('admin visual design cloud API includes normalized saved style presets', ()
   assert.match(api, /save_admin_panel_visual_design_state/);
 });
 
+test('admin style library exposes safe rename, duplicate, apply and delete actions', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const renameSavedElementStyle = id =>/);
+  assert.match(editor, /const duplicateSavedElementStyle = preset =>/);
+  assert.match(editor, /const applySavedElementStyle = preset =>/);
+  assert.match(editor, /const removeSavedElementStyle = id =>/);
+  assert.match(editor, /stylePresets: \[\.\.\.normalized\.stylePresets, \{ \.\.\.preset, id/);
+  assert.match(editor, /normalized\.responsive\?\.\[viewport\]\?\.elementStyles/);
+  assert.match(editor, /disabled=\{normalized\.stylePresets\.length >= 30\}/);
+});
+
 test('admin visual design storage failures fall back safely without throwing', () => {
   const brokenStorage = {
     getItem() { throw new Error('blocked'); },
