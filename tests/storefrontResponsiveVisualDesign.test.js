@@ -234,3 +234,73 @@ test('automatic storefront responsive styles use the editor breakpoints at table
     else globalThis.window = originalWindow;
   }
 });
+
+
+test('all supported visual style properties remain independent across elements and viewports', () => {
+  const desktopStyle = {
+    textColor: '#112233', backgroundColor: '#223344', borderColor: '#334455',
+    borderWidth: 3, lineHeight: 1.6, letterSpacing: 1.5, textTransform: 'uppercase',
+    textDecoration: 'underline', fontStyle: 'italic', fontFamily: 'georgia', boxShadow: 'soft',
+    fontSize: 31, padding: 12, paddingX: 18, paddingY: 7, marginTop: 9, marginBottom: 11,
+    minWidth: 120, maxWidth: 520, borderRadius: 14, textAlign: 'center', fontWeight: 800,
+    width: 75, minHeight: 90, opacity: 65, objectFit: 'contain', objectPositionX: 25, objectPositionY: 70
+  };
+  const tabletStyle = { ...desktopStyle, textColor: '#445566', fontSize: 26, paddingX: 14 };
+  const mobileStyle = { ...desktopStyle, textColor: '#778899', fontSize: 21, paddingX: 8 };
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'hero.title': desktopStyle,
+      'hero.subtitle': { textColor: '#abcdef' }
+    },
+    responsive: {
+      tablet: { elementStyles: { 'hero.title': tabletStyle } },
+      mobile: { elementStyles: { 'hero.title': mobileStyle } }
+    }
+  });
+
+  const desktop = buildStorefrontElementStyle(design, 'hero.title', 'desktop');
+  const tablet = buildStorefrontElementStyle(design, 'hero.title', 'tablet');
+  const mobile = buildStorefrontElementStyle(design, 'hero.title', 'mobile');
+  assert.equal(desktop.color, '#112233');
+  assert.equal(desktop.backgroundColor, '#223344');
+  assert.equal(desktop.borderColor, '#334455');
+  assert.equal(desktop.borderWidth, '3px');
+  assert.equal(desktop.lineHeight, '1.6');
+  assert.equal(desktop.letterSpacing, '1.5px');
+  assert.equal(desktop.textTransform, 'uppercase');
+  assert.equal(desktop.textDecoration, 'underline');
+  assert.equal(desktop.fontStyle, 'italic');
+  assert.equal(desktop.fontFamily, "Georgia, 'Noto Serif Georgian', serif");
+  assert.equal(desktop.boxShadow, '0 2px 10px rgba(0,0,0,.12)');
+  assert.equal(desktop.fontSize, '31px');
+  assert.equal(desktop.padding, '12px');
+  assert.equal(desktop.paddingLeft, '18px');
+  assert.equal(desktop.paddingRight, '18px');
+  assert.equal(desktop.paddingTop, '7px');
+  assert.equal(desktop.paddingBottom, '7px');
+  assert.equal(desktop.marginTop, '9px');
+  assert.equal(desktop.marginBottom, '11px');
+  assert.equal(desktop.minWidth, '120px');
+  assert.equal(desktop.maxWidth, '520px');
+  assert.equal(desktop.borderRadius, '14px');
+  assert.equal(desktop.textAlign, 'center');
+  assert.equal(desktop.fontWeight, 800);
+  assert.equal(desktop.width, '75%');
+  assert.equal(desktop.minHeight, '90px');
+  assert.equal(desktop.opacity, '0.65');
+  assert.equal(desktop.objectFit, 'contain');
+  assert.equal(desktop.objectPosition, '25% 70%');
+
+  assert.equal(tablet.color, '#445566');
+  assert.equal(tablet.fontSize, '26px');
+  assert.equal(tablet.paddingLeft, '14px');
+  assert.equal(tablet.backgroundColor, '#223344');
+  assert.equal(mobile.color, '#778899');
+  assert.equal(mobile.fontSize, '21px');
+  assert.equal(mobile.paddingLeft, '8px');
+  assert.equal(mobile.backgroundColor, '#223344');
+
+  assert.equal(buildStorefrontElementStyle(design, 'hero.subtitle', 'desktop').color, '#abcdef');
+  assert.equal(buildStorefrontElementStyle(design, 'hero.subtitle', 'tablet').color, '#abcdef');
+  assert.equal(buildStorefrontElementStyle(design, 'hero.subtitle', 'mobile').color, '#abcdef');
+});
