@@ -511,3 +511,24 @@ test('per-module border styles accept only supported CSS values and remain respo
   assert.equal(style['--admin-vd-tablet-orders-borderStyle'], 'dotted');
   assert.equal(style['--admin-vd-mobile-orders-borderStyle'], 'none');
 });
+
+
+test('order sub-element styles normalize safely and inherit independently by viewport', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    elementStyles: { orderCard: { fontSize: 18, fontWeight: 800, textAlign: 'center', backgroundColor: '#123456', borderRadius: 20, padding: 24 } },
+    responsive: {
+      tablet: { elementStyles: { orderCard: { fontSize: 16, textAlign: 'right' } } },
+      mobile: { elementStyles: { orderCard: { padding: 8 } } }
+    }
+  });
+  assert.equal(design.elementStyles.orderCard.fontSize, 18);
+  assert.equal(design.elementStyles.orderCard.fontWeight, 800);
+  assert.equal(design.elementStyles.orderCard.backgroundColor, '#123456');
+  assert.equal(design.responsive.tablet.elementStyles.orderCard.fontSize, 16);
+  assert.equal(design.responsive.tablet.elementStyles.orderCard.textAlign, 'right');
+  assert.equal(design.responsive.mobile.elementStyles.orderCard.padding, 8);
+  const style = buildAdminPanelVisualStyle(design);
+  assert.equal(style['--admin-vd-element-orderCard-fontSize'], '18px');
+  assert.equal(style['--admin-vd-element-tablet-orderCard-fontSize'], '16px');
+  assert.equal(style['--admin-vd-element-mobile-orderCard-padding'], '8px');
+});
