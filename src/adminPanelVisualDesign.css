@@ -22,6 +22,10 @@
   --admin-vd-buttonRadius-active: var(--admin-vd-buttonRadius);
   --admin-vd-navItemRadius-active: var(--admin-vd-navItemRadius);
   --admin-vd-navItemPaddingY-active: var(--admin-vd-navItemPaddingY);
+  --admin-vd-buttonFontSize-active: var(--admin-vd-buttonFontSize);
+  --admin-vd-buttonFontWeight-active: var(--admin-vd-buttonFontWeight);
+  --admin-vd-navItemFontSize-active: var(--admin-vd-navItemFontSize);
+  --admin-vd-navItemFontWeight-active: var(--admin-vd-navItemFontWeight);
   --admin-vd-sectionGap-active: var(--admin-vd-sectionGap);
   --admin-vd-headerBackground-active: var(--admin-vd-headerBackground);
   --admin-vd-headerBorder-active: var(--admin-vd-headerBorder);
@@ -226,6 +230,8 @@
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] [data-admin-visual-nav-item="true"] {
+  font-size: var(--admin-vd-navItemFontSize-active) !important;
+  font-weight: var(--admin-vd-navItemFontWeight-active) !important;
   border-radius: var(--admin-vd-navItemRadius-active) !important;
   padding-top: var(--admin-vd-navItemPaddingY-active) !important;
   padding-bottom: var(--admin-vd-navItemPaddingY-active) !important;
@@ -246,6 +252,8 @@
 }
 
 .admin-dashboard-pro[data-admin-visual-design="enabled"] button:not([data-admin-visual-nav-item="true"]) {
+  font-size: var(--admin-vd-buttonFontSize-active) !important;
+  font-weight: var(--admin-vd-buttonFontWeight-active) !important;
   border-radius: var(--admin-vd-buttonRadius-active) !important;
 }
 
@@ -343,6 +351,10 @@
     --admin-vd-buttonRadius-active: var(--admin-vd-tablet-buttonRadius, var(--admin-vd-buttonRadius));
     --admin-vd-navItemRadius-active: var(--admin-vd-tablet-navItemRadius, var(--admin-vd-navItemRadius));
     --admin-vd-navItemPaddingY-active: var(--admin-vd-tablet-navItemPaddingY, var(--admin-vd-navItemPaddingY));
+    --admin-vd-buttonFontSize-active: var(--admin-vd-tablet-buttonFontSize, var(--admin-vd-buttonFontSize));
+    --admin-vd-buttonFontWeight-active: var(--admin-vd-tablet-buttonFontWeight, var(--admin-vd-buttonFontWeight));
+    --admin-vd-navItemFontSize-active: var(--admin-vd-tablet-navItemFontSize, var(--admin-vd-navItemFontSize));
+    --admin-vd-navItemFontWeight-active: var(--admin-vd-tablet-navItemFontWeight, var(--admin-vd-navItemFontWeight));
     --admin-vd-sectionGap-active: var(--admin-vd-tablet-sectionGap, var(--admin-vd-sectionGap));
     --admin-vd-headerBackground-active: var(--admin-vd-tablet-headerBackground, var(--admin-vd-headerBackground));
     --admin-vd-headerBorder-active: var(--admin-vd-tablet-headerBorder, var(--admin-vd-headerBorder));
@@ -428,6 +440,10 @@
     --admin-vd-buttonRadius-active: var(--admin-vd-mobile-buttonRadius, var(--admin-vd-tablet-buttonRadius, var(--admin-vd-buttonRadius)));
     --admin-vd-navItemRadius-active: var(--admin-vd-mobile-navItemRadius, var(--admin-vd-tablet-navItemRadius, var(--admin-vd-navItemRadius)));
     --admin-vd-navItemPaddingY-active: var(--admin-vd-mobile-navItemPaddingY, var(--admin-vd-tablet-navItemPaddingY, var(--admin-vd-navItemPaddingY)));
+    --admin-vd-buttonFontSize-active: var(--admin-vd-mobile-buttonFontSize, var(--admin-vd-tablet-buttonFontSize, var(--admin-vd-buttonFontSize)));
+    --admin-vd-buttonFontWeight-active: var(--admin-vd-mobile-buttonFontWeight, var(--admin-vd-tablet-buttonFontWeight, var(--admin-vd-buttonFontWeight)));
+    --admin-vd-navItemFontSize-active: var(--admin-vd-mobile-navItemFontSize, var(--admin-vd-tablet-navItemFontSize, var(--admin-vd-navItemFontSize)));
+    --admin-vd-navItemFontWeight-active: var(--admin-vd-mobile-navItemFontWeight, var(--admin-vd-tablet-navItemFontWeight, var(--admin-vd-navItemFontWeight)));
     --admin-vd-sectionGap-active: var(--admin-vd-mobile-sectionGap, var(--admin-vd-tablet-sectionGap, var(--admin-vd-sectionGap)));
     --admin-vd-headerBackground-active: var(--admin-vd-mobile-headerBackground, var(--admin-vd-tablet-headerBackground, var(--admin-vd-headerBackground)));
     --admin-vd-headerBorder-active: var(--admin-vd-mobile-headerBorder, var(--admin-vd-tablet-headerBorder, var(--admin-vd-headerBorder)));
