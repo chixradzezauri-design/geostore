@@ -4992,7 +4992,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {adminContentTab === 'analytics' && !isOwner && <StaffAnalyticsSummary />}
+        {visibleAdminTab === 'analytics' && !isOwner && <StaffAnalyticsSummary />}
         {adminContentTab === 'analytics' && isOwner && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
