@@ -795,7 +795,9 @@
 }
 
 .admin-dashboard-pro.admin-dashboard-shell :is(
-  .text-\\[8px\\], .text-\\[9px\\], .text-\\[10px\\]
+  [class~="text-[8px]"],
+  [class~="text-[9px]"],
+  [class~="text-[10px]"]
 ) {
   font-size: 10px !important;
   line-height: 1.35 !important;

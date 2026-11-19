@@ -45,6 +45,13 @@ test('Stage 104 keeps the admin navigation usable on tablet and mobile', () => {
   assert.match(polish, /max-width:\s*1023px/);
 });
 
+test('Stage 101 uses valid attribute selectors for Tailwind arbitrary text-size classes', () => {
+  assert.ok(polish.includes('[class~="text-[8px]"]'));
+  assert.ok(polish.includes('[class~="text-[9px]"]'));
+  assert.ok(polish.includes('[class~="text-[10px]"]'));
+  assert.ok(!polish.includes('.text-\\\\[8px\\\\]'));
+});
+
 test('Stage 104 improves narrow-screen readability and prevents horizontal layout overflow', () => {
   assert.match(polish, /\[class~="text-\[8px\]"\]/);
   assert.match(polish, /font-size:\s*10px\s*!important/);
