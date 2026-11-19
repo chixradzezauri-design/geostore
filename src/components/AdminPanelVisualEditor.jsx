@@ -1280,6 +1280,18 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(resetAdminPanelVisualElement(normalized, viewport, element));
   };
 
+  const resetCurrentModuleElements = () => {
+    const category = ELEMENT_CATEGORIES.find(item => item.id === elementCategory);
+    if (!category) return;
+    const targets = category.keys.filter(key => customizedElementKeys.has(key));
+    if (!targets.length) return;
+    const confirmed = window.confirm(`„${category.label}“ მოდულის ${targets.length} შეცვლილი ელემენტის ${viewport} ხედის საწყის დიზაინზე დაბრუნება? სხვა მოდულები და სხვა ხედები უცვლელი დარჩება.`);
+    if (!confirmed) return;
+    const nextDesign = targets.reduce((current, key) => resetAdminPanelVisualElement(current, viewport, key), normalized);
+    commitChange(nextDesign);
+    setSelectedElementKeys(current => current.filter(key => !targets.includes(key)));
+  };
+
   const resetSelectedElements = () => {
     const targets = selectedElementKeys.filter(key => customizedElementKeys.has(key));
     if (!targets.length) return;
@@ -1629,7 +1641,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <button type="button" onClick={clearVisibleElementSelection} disabled={!visibleSelectedElementCount} className="rounded-md border border-amber-400/40 px-2 py-1 text-[10px] font-bold text-amber-200 disabled:opacity-40">ნაჩვენების მოხსნა</button>
             <button type="button" onClick={toggleVisibleElementSelection} disabled={!filteredElementEntries.length} className="rounded-md border border-violet-400/40 px-2 py-1 text-[10px] font-bold text-violet-200 disabled:opacity-40">ნაჩვენების გადართვა</button>
             <button type="button" onClick={() => setSelectedElementKeys([])} disabled={!selectedElementKeys.length} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200 disabled:opacity-40">ყველას მოხსნა</button>
-            <button type="button" onClick={resetSelectedElements} disabled={!selectedElementKeys.some(key => customizedElementKeys.has(key))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მონიშნული შეცვლილის აღდგენა ({selectedElementKeys.filter(key => customizedElementKeys.has(key)).length})</button>
+            <button type="button" onClick={resetSelectedElements} disabled={!selectedElementKeys.some(key => customizedElementKeys.has(key))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მონიშნული შეცვლილის აღდგენა ({selectedElementKeys.filter(key => customizedElementKeys.has(key)).length})</button><button type="button" onClick={resetCurrentModuleElements} disabled={!ELEMENT_CATEGORIES.some(category => category.id === elementCategory && category.keys.some(key => customizedElementKeys.has(key)))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მოდულის საწყისზე დაბრუნება</button>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
