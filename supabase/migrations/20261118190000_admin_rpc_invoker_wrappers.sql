@@ -47,7 +47,7 @@ BEGIN
 
   RETURN v_result;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION private.list_inventory_replenishment_settings(p_limit integer DEFAULT 500)
  RETURNS jsonb
@@ -83,7 +83,7 @@ BEGIN
 
   RETURN jsonb_build_object('items', v_items, 'has_more', v_has_more);
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION private.save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)
  RETURNS jsonb
@@ -156,7 +156,7 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'setting', to_jsonb(v_saved));
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION private.get_my_admin_access()
  RETURNS jsonb
@@ -229,7 +229,7 @@ BEGIN
     'permissions', v_staff.permissions
   );
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION private.get_staff_analytics_summary(p_from timestamp with time zone DEFAULT NULL::timestamp with time zone, p_to timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS jsonb
@@ -452,7 +452,7 @@ BEGIN
 
   RETURN v_summary;
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION private.has_staff_permission(p_permission text)
  RETURNS boolean
@@ -496,7 +496,7 @@ BEGIN
        AND staff.permissions->>p_permission = 'true'
   );
 END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_list_inventory_movements(p_product_id text DEFAULT NULL::text, p_before_id bigint DEFAULT NULL::bigint, p_limit integer DEFAULT 50)
  RETURNS jsonb
@@ -505,7 +505,7 @@ CREATE OR REPLACE FUNCTION public.admin_list_inventory_movements(p_product_id te
  SET search_path TO ''
 AS $function$
   SELECT private.list_inventory_movements(p_product_id, p_before_id, p_limit);
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_list_inventory_replenishment_settings(p_limit integer DEFAULT 500)
  RETURNS jsonb
@@ -514,7 +514,7 @@ CREATE OR REPLACE FUNCTION public.admin_list_inventory_replenishment_settings(p_
  SET search_path TO ''
 AS $function$
   SELECT private.list_inventory_replenishment_settings(p_limit);
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_save_inventory_replenishment_setting(p_product_id text, p_variant_id text, p_low_stock_threshold integer, p_target_stock integer)
  RETURNS jsonb
@@ -525,13 +525,13 @@ AS $function$
   SELECT private.save_inventory_replenishment_setting(
     p_product_id, p_variant_id, p_low_stock_threshold, p_target_stock
   );
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.get_my_admin_access()
  RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path TO ''
 AS $function$
   SELECT private.get_my_admin_access();
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.get_staff_analytics_summary(
   p_from timestamp with time zone DEFAULT NULL::timestamp with time zone,
@@ -540,13 +540,13 @@ CREATE OR REPLACE FUNCTION public.get_staff_analytics_summary(
 RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path TO ''
 AS $function$
   SELECT private.get_staff_analytics_summary(p_from, p_to);
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.has_staff_permission(p_permission text)
  RETURNS boolean LANGUAGE sql STABLE SECURITY INVOKER SET search_path TO ''
 AS $function$
   SELECT private.has_staff_permission(p_permission);
-$function$
+$function$;
 
 REVOKE ALL ON FUNCTION private.list_inventory_movements(text, bigint, integer) FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION private.list_inventory_replenishment_settings(integer) FROM PUBLIC, anon, authenticated, service_role;
