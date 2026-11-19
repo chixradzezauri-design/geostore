@@ -650,6 +650,9 @@ export default function App() {
   const storefrontDraftUpdatedAtRef = useRef(null);
   const storefrontDraftBaselineRef = useRef(null);
   const storefrontDraftLocalDirtyRef = useRef(false);
+  // Read the latest rendered editor values after asynchronous network responses.
+  const storefrontCurrentSnapshotRef = useRef(null);
+  storefrontCurrentSnapshotRef.current = JSON.stringify({ categories, banners: bannersList, siteSettings });
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -927,6 +930,7 @@ export default function App() {
   useEffect(() => {
     if (!hasSettingsAccess) return undefined;
     let active = true;
+    const snapshotBeforeLoad = storefrontCurrentSnapshotRef.current;
     const loadStorefrontDraft = async () => {
       try {
         const response = await fetch(
@@ -935,9 +939,12 @@ export default function App() {
         );
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
-        storefrontDraftUpdatedAtRef.current = typeof rows?.[0]?.draft_updated_at === 'string' ? rows[0].draft_updated_at : null;
         const draft = rows?.[0]?.draft_config;
-        if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
+        // A late initial response must not erase edits made while the request was pending.
+        if (!active || storefrontCurrentSnapshotRef.current !== snapshotBeforeLoad ||
+            storefrontSaveLock.current || storefrontPublishLock.current ||
+            !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
+        storefrontDraftUpdatedAtRef.current = typeof rows?.[0]?.draft_updated_at === 'string' ? rows[0].draft_updated_at : null;
         const sharedSnapshot = {
           categories: Array.isArray(draft.categories) ? draft.categories : categories,
           banners: Array.isArray(draft.banners) ? draft.banners : bannersList,
@@ -983,8 +990,8 @@ export default function App() {
         if (!row?.draft_config || typeof row.draft_config !== 'object' || Array.isArray(row.draft_config) ||
             !remoteUpdatedAt || remoteUpdatedAt === storefrontDraftUpdatedAtRef.current) return;
         // Recheck after the network request: never replace edits made while the request was in flight.
-        const latestSnapshot = JSON.stringify({ categories, banners: bannersList, siteSettings });
-        if (storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current ||
+        const latestSnapshot = storefrontCurrentSnapshotRef.current;
+        if (!active || storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current ||
             storefrontSaveLock.current || storefrontPublishLock.current) return;
         const draft = row.draft_config;
         const nextSnapshot = {
