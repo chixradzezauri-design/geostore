@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   ChevronDown, ChevronUp, Monitor, RotateCcw, RotateCw,
-  Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon, MousePointer2
+  Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon, MousePointer2, Plus, Trash2, Copy
 } from 'lucide-react';
 import StoreView from './StoreView';
 import Header from './Header';
@@ -167,6 +167,7 @@ export default function StorefrontVisualEditor({
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyRef = useRef([initialDesign]);
   const historyIndexRef = useRef(0);
+  const customIdCounter = useRef(0);
   const [previewMode, setPreviewMode] = useState('desktop');
   const [previewCategory, setPreviewCategory] = useState('ყველა');
   const [selectionMode, setSelectionMode] = useState(false);
@@ -374,6 +375,50 @@ export default function StorefrontVisualEditor({
     current.splice(from, 1);
     current.splice(to, 0, sourceId);
     commitDesign({ ...design, sectionOrder: current });
+  };
+
+
+  const nextCustomId = prefix => {
+    customIdCounter.current += 1;
+    return prefix + '-' + Date.now().toString(36) + '-' + customIdCounter.current.toString(36);
+  };
+  const addCustomSection = () => {
+    if ((design.customSections || []).length >= 12) { setSaveMessage('შეგიძლიათ მაქსიმუმ 12 საკუთარი სექციის შექმნა.'); return; }
+    const id = nextCustomId('custom-section');
+    commitDesign({ ...design, customSections: [...(design.customSections || []), {
+      id, title: 'ახალი სექცია', visible: true, backgroundColor: '#ffffff', textColor: '#29241f', padding: 24, align: 'left',
+      blocks: [{ id: nextCustomId('block'), type: 'heading', text: 'ახალი სათაური', imageUrl: '', videoUrl: '', alt: '', label: '', url: '' }]
+    }] });
+  };
+  const updateCustomSection = (sectionId, key, value) => commitDesign({ ...design, customSections: (design.customSections || []).map(section => section.id === sectionId ? { ...section, [key]: value } : section) });
+  const addCustomBlock = (sectionId, type) => commitDesign({
+    ...design, customSections: (design.customSections || []).map(section => {
+      if (section.id !== sectionId || section.blocks.length >= 10) return section;
+      return { ...section, blocks: [...section.blocks, { id: nextCustomId('block'), type, text: type === 'heading' ? 'ახალი სათაური' : 'ახალი ტექსტი', imageUrl: '', videoUrl: '', alt: '', label: 'ღილაკი', url: '' }] };
+    })
+  });
+  const updateCustomBlock = (sectionId, blockId, key, value) => commitDesign({
+    ...design, customSections: (design.customSections || []).map(section => section.id !== sectionId ? section : ({ ...section, blocks: section.blocks.map(block => block.id === blockId ? { ...block, [key]: value } : block) }))
+  });
+  const removeCustomBlock = (sectionId, blockId) => commitDesign({
+    ...design, customSections: (design.customSections || []).map(section => section.id !== sectionId ? section : ({ ...section, blocks: section.blocks.filter(block => block.id !== blockId) }))
+  });
+  const removeCustomSection = sectionId => commitDesign({ ...design, customSections: (design.customSections || []).filter(section => section.id !== sectionId) });
+  const duplicateCustomSection = sectionId => {
+    if ((design.customSections || []).length >= 12) { setSaveMessage('შეგიძლიათ მაქსიმუმ 12 საკუთარი სექციის შექმნა.'); return; }
+    const source = (design.customSections || []).find(section => section.id === sectionId);
+    if (!source) return;
+    const duplicate = { ...source, id: nextCustomId('custom-section'), title: (source.title || 'სექცია').slice(0, 90) + ' — ასლი', blocks: source.blocks.map(block => ({ ...block, id: nextCustomId('block') })) };
+    const customSections = [...design.customSections];
+    customSections.splice(customSections.findIndex(section => section.id === sectionId) + 1, 0, duplicate);
+    commitDesign({ ...design, customSections });
+  };
+  const moveCustomSection = (sectionId, direction) => {
+    const customSections = [...(design.customSections || [])];
+    const index = customSections.findIndex(section => section.id === sectionId), target = index + direction;
+    if (index < 0 || target < 0 || target >= customSections.length) return;
+    [customSections[index], customSections[target]] = [customSections[target], customSections[index]];
+    commitDesign({ ...design, customSections });
   };
 
   const applyPreset = preset => {
@@ -695,6 +740,54 @@ export default function StorefrontVisualEditor({
                   <button type="button" onClick={() => moveSection(id, 1)} disabled={index === design.sectionOrder.length - 1} aria-label={SECTION_LABELS[id] + ' ქვემოთ'} className="rounded-lg border border-slate-700 p-2 text-slate-300 disabled:opacity-30"><ChevronDown className="h-3.5 w-3.5" /></button>
                 </div>
               ))}
+            </div>
+          </details>
+
+
+          <details open className="rounded-2xl border border-emerald-400/30 bg-slate-900/90 p-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-white"><span className="flex items-center gap-2"><Layout className="h-4 w-4 text-emerald-300" /> საკუთარი სექციების კონსტრუქტორი</span><span className="text-[10px] font-semibold text-emerald-200">{(design.customSections || []).length}/12</span></summary>
+            <p className="mt-2 text-[10px] leading-4 text-slate-400">შექმენით დამატებითი კონტენტბლოკები ისე, რომ არსებული მაღაზიის სექციები და ფუნქციები უცვლელი დარჩეს. ცვლილებები საერთო ვიზუალურ მონახაზში ინახება.</p>
+            <button type="button" onClick={addCustomSection} disabled={(design.customSections || []).length >= 12} className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-3 py-2.5 text-xs font-black text-slate-950 disabled:opacity-40"><Plus className="h-4 w-4" /> ახალი სექციის დამატება</button>
+            <div className="mt-3 space-y-3">
+              {(design.customSections || []).map((section, sectionIndex) => (
+                <div key={section.id} className="rounded-xl border border-slate-700 bg-slate-950/70 p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" checked={section.visible} onChange={event => updateCustomSection(section.id, 'visible', event.target.checked)} aria-label="სექციის ჩვენება" className="h-4 w-4 accent-emerald-400" />
+                    <input value={section.title} maxLength={100} onChange={event => updateCustomSection(section.id, 'title', event.target.value)} aria-label="სექციის სახელი" className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs font-bold text-white" />
+                    <button type="button" onClick={() => moveCustomSection(section.id, -1)} disabled={sectionIndex === 0} aria-label="სექციის ზემოთ გადატანა" className="rounded-lg border border-slate-700 px-2 py-2 text-slate-300 disabled:opacity-30">↑</button>
+                    <button type="button" onClick={() => moveCustomSection(section.id, 1)} disabled={sectionIndex === design.customSections.length - 1} aria-label="სექციის ქვემოთ გადატანა" className="rounded-lg border border-slate-700 px-2 py-2 text-slate-300 disabled:opacity-30">↓</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="space-y-1 text-[10px] text-slate-300">ფონის ფერი<input type="color" value={section.backgroundColor} onChange={event => updateCustomSection(section.id, 'backgroundColor', event.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">ტექსტის ფერი<input type="color" value={section.textColor} onChange={event => updateCustomSection(section.id, 'textColor', event.target.value)} className="h-9 w-full rounded-lg border border-slate-700 bg-slate-900 p-1" /></label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="space-y-1 text-[10px] text-slate-300">შიდა დაშორება: {section.padding}px<input type="range" min="0" max="80" value={section.padding} onChange={event => updateCustomSection(section.id, 'padding', Number(event.target.value))} className="w-full accent-emerald-400" /></label>
+                    <label className="space-y-1 text-[10px] text-slate-300">ტექსტის განლაგება<select value={section.align} onChange={event => updateCustomSection(section.id, 'align', event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-xs text-white"><option value="left">მარცხნივ</option><option value="center">ცენტრში</option><option value="right">მარჯვნივ</option></select></label>
+                  </div>
+                  <div className="space-y-2">
+                    {section.blocks.map((block, blockIndex) => (
+                      <div key={block.id} className="rounded-lg border border-slate-800 bg-slate-900/80 p-2.5 space-y-2">
+                        <div className="flex items-center gap-2"><span className="flex-1 text-[10px] font-bold text-emerald-200">ელემენტი {blockIndex + 1}</span>
+                          <select value={block.type} onChange={event => updateCustomBlock(section.id, block.id, 'type', event.target.value)} aria-label="ელემენტის ტიპი" className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-[10px] text-white"><option value="heading">სათაური</option><option value="text">ტექსტი</option><option value="image">სურათი</option><option value="button">ღილაკი</option><option value="video">ვიდეო</option><option value="spacer">ცარიელი სივრცე</option></select>
+                          <button type="button" onClick={() => removeCustomBlock(section.id, block.id)} aria-label="ელემენტის წაშლა" className="rounded-lg border border-rose-500/30 p-1.5 text-rose-300"><Trash2 className="h-3.5 w-3.5" /></button>
+                        </div>
+                        {(block.type === 'heading' || block.type === 'text') && <textarea value={block.text} maxLength={block.type === 'heading' ? 120 : 600} rows={block.type === 'heading' ? 2 : 3} onChange={event => updateCustomBlock(section.id, block.id, 'text', event.target.value)} aria-label="ელემენტის ტექსტი" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white" />}
+                        {block.type === 'image' && <><input value={block.imageUrl} maxLength={2048} onChange={event => updateCustomBlock(section.id, block.id, 'imageUrl', event.target.value)} placeholder="სურათის HTTPS ბმული" aria-label="სურათის ბმული" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white" /><input value={block.alt} maxLength={160} onChange={event => updateCustomBlock(section.id, block.id, 'alt', event.target.value)} placeholder="სურათის აღწერა (alt)" aria-label="სურათის აღწერა" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white" /></>}
+                        {block.type === 'video' && <input value={block.videoUrl} maxLength={2048} onChange={event => updateCustomBlock(section.id, block.id, 'videoUrl', event.target.value)} placeholder="YouTube ან Vimeo ბმული" aria-label="ვიდეოს ბმული" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white" />}
+                        {block.type === 'button' && <><input value={block.label} maxLength={60} onChange={event => updateCustomBlock(section.id, block.id, 'label', event.target.value)} placeholder="ღილაკის ტექსტი" aria-label="ღილაკის ტექსტი" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white" /><input value={block.url} maxLength={2048} onChange={event => updateCustomBlock(section.id, block.id, 'url', event.target.value)} placeholder="HTTPS ან შიდა ბმული /..." aria-label="ღილაკის ბმული" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white" /></>}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <select defaultValue="text" aria-label="ახალი ელემენტის ტიპი" className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-[10px] text-white"><option value="heading">სათაური</option><option value="text">ტექსტი</option><option value="image">სურათი</option><option value="button">ღილაკი</option><option value="video">ვიდეო</option><option value="spacer">ცარიელი სივრცე</option></select>
+                    <button type="button" disabled={section.blocks.length >= 10} onClick={event => { const select = event.currentTarget.parentElement.querySelector('select'); addCustomBlock(section.id, select?.value || 'text'); }} className="rounded-lg border border-emerald-400/40 px-3 py-2 text-[10px] font-bold text-emerald-200 disabled:opacity-40"><Plus className="mr-1 inline h-3 w-3" /> ელემენტი</button>
+                    <button type="button" onClick={() => duplicateCustomSection(section.id)} disabled={design.customSections.length >= 12} className="rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300 disabled:opacity-40"><Copy className="mr-1 inline h-3 w-3" /> ასლი</button>
+                    <button type="button" onClick={() => removeCustomSection(section.id)} className="rounded-lg border border-rose-500/30 px-3 py-2 text-[10px] font-bold text-rose-200"><Trash2 className="mr-1 inline h-3 w-3" /> წაშლა</button>
+                  </div>
+                </div>
+              ))}
+              {(design.customSections || []).length === 0 && <p className="rounded-xl border border-dashed border-slate-700 p-3 text-center text-[10px] text-slate-500">ჯერ საკუთარი სექცია არ შეგიქმნიათ.</p>}
             </div>
           </details>
 
