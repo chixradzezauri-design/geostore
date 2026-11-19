@@ -176,3 +176,24 @@ test('storefront visual selection highlight styles cover every selectable target
     );
   }
 });
+
+
+test('every selectable storefront target accepts independent responsive element styling', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const targetMap = editor.slice(
+    editor.indexOf('const VISUAL_EDITOR_TARGETS = {'),
+    editor.indexOf('const VISUAL_EDITOR_TREE = [')
+  );
+  const targetIds = [...targetMap.matchAll(/^\s{2}'([^']+)':\s*\{/gm)].map(match => match[1]);
+  const elementStyles = Object.fromEntries(targetIds.map(id => [id, { textColor: '#123456' }]));
+  const mobileStyles = Object.fromEntries(targetIds.map(id => [id, { textColor: '#abcdef' }]));
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles,
+    responsive: { mobile: { elementStyles: mobileStyles } }
+  });
+
+  for (const targetId of targetIds) {
+    assert.equal(buildStorefrontElementStyle(design, targetId, 'desktop').color, '#123456', `desktop style not applied to ${targetId}`);
+    assert.equal(buildStorefrontElementStyle(design, targetId, 'mobile').color, '#abcdef', `mobile style not applied to ${targetId}`);
+  }
+});
