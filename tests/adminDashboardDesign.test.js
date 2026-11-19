@@ -17,8 +17,10 @@ test('all admin sections including Command Center and inventory history remain a
   assert.deepEqual(ids, [
     'command', 'analytics', 'calculator', 'expenses', 'ai_analyst', 'staff', 'orders',
     'products', 'inventory', 'replenishment', 'support', 'messages', 'discounts', 'logs', 'broadcasts',
-    'banners', 'categories', 'visual_editor', 'coupons', 'vendors', 'users', 'settings'
+    'banners', 'categories', 'visual_editor', 'admin_visual_editor', 'coupons', 'vendors', 'users', 'settings'
   ]);
+  assert.match(admin, /admin_visual_editor:\s*'owner'/);
+  assert.match(admin, /visibleAdminTab === 'admin_visual_editor' && isOwner/);
 });
 
 test('inventory history uses the protected RPC and cursor pagination', () => {
