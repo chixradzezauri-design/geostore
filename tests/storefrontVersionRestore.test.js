@@ -29,6 +29,18 @@ test('restoring a storefront version updates draft fields only and never publish
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.restore_storefront_draft_from_version\(uuid, timestamptz\) TO authenticated/);
 });
 
+test('published version comparison is read-only and compares the full draft snapshot', () => {
+  assert.match(editor, /const flattenStorefrontSnapshot =/);
+  assert.match(editor, /const compareStorefrontSnapshots =/);
+  assert.match(editor, /categories: safeCategories, banners: safeBanners, siteSettings: siteSettings/);
+  assert.match(editor, /მიმდინარე მონახაზთან შედარება/);
+  assert.match(editor, /განსხვავება არ არის/);
+  assert.match(editor, /გამოქვეყნებული:/);
+  assert.match(editor, /მონახაზი:/);
+  assert.match(editor, /selectedVersionDiff\.differences\.map/);
+  assert.match(editor, /differences\.slice\(0, 60\)/);
+});
+
 test('storefront history UI loads immutable versions and restore remains a draft-only action', () => {
   assert.match(editor, /from\('storefront_versions'\)/);
   assert.match(editor, /გამოქვეყნებული ვერსიების ისტორია/);
