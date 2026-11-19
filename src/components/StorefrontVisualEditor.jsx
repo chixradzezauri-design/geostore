@@ -196,6 +196,8 @@ export default function StorefrontVisualEditor({
 }) {
   const initialDesign = normalizeStorefrontVisualDesign(siteSettings?.visualDesign);
   const [design, setDesign] = useState(initialDesign);
+  const designRef = useRef(initialDesign);
+  const localDesignDirtyRef = useRef(false);
   const [history, setHistory] = useState([initialDesign]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyRef = useRef([initialDesign]);
@@ -306,6 +308,8 @@ export default function StorefrontVisualEditor({
 
   const commitDesign = nextValue => {
     const next = normalizeStorefrontVisualDesign(nextValue);
+    designRef.current = next;
+    localDesignDirtyRef.current = true;
     const nextHistory = [...historyRef.current.slice(0, historyIndexRef.current + 1), next].slice(-40);
     historyRef.current = nextHistory;
     historyIndexRef.current = nextHistory.length - 1;
@@ -317,6 +321,21 @@ export default function StorefrontVisualEditor({
     }
     setSaveMessage('ცვლილებები მონახაზში ჯერ არ შენახულა.');
   };
+
+  // The shared draft may arrive after this editor mounts. Hydrate only while
+  // there are no local edits, so a late network response cannot erase work.
+  useEffect(() => {
+    const incoming = normalizeStorefrontVisualDesign(siteSettings?.visualDesign);
+    if (JSON.stringify(incoming) === JSON.stringify(designRef.current)) return;
+    if (localDesignDirtyRef.current) return;
+    designRef.current = incoming;
+    historyRef.current = [incoming];
+    historyIndexRef.current = 0;
+    setHistory([incoming]);
+    setHistoryIndex(0);
+    setDesign(incoming);
+    setSelectedElement(null);
+  }, [siteSettings?.visualDesign]);
 
   const updateGroup = (group, key, value) => {
     if (previewMode !== 'desktop' && ['layout', 'theme', 'typography'].includes(group)) {
@@ -465,6 +484,8 @@ export default function StorefrontVisualEditor({
     const nextIndex = historyIndexRef.current - 1;
     const next = historyRef.current[nextIndex];
     historyIndexRef.current = nextIndex;
+    designRef.current = next;
+    localDesignDirtyRef.current = true;
     setHistoryIndex(nextIndex);
     setDesign(next);
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: next }));
@@ -476,6 +497,8 @@ export default function StorefrontVisualEditor({
     const nextIndex = historyIndexRef.current + 1;
     const next = historyRef.current[nextIndex];
     historyIndexRef.current = nextIndex;
+    designRef.current = next;
+    localDesignDirtyRef.current = true;
     setHistoryIndex(nextIndex);
     setDesign(next);
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: next }));
@@ -631,10 +654,14 @@ export default function StorefrontVisualEditor({
 
   const saveDraft = async () => {
     if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy) return;
-    const snapshot = { ...(siteSettings || {}), visualDesign: design };
-    setSiteSettings?.(current => ({ ...(current || {}), visualDesign: design }));
+    const snapshotDesign = design;
+    const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign };
+    setSiteSettings?.(current => ({ ...(current || {}), visualDesign: snapshotDesign }));
     setSaveMessage('მონახაზის შენახვა მიმდინარეობს…');
     const saved = await onSaveStorefrontDraft(snapshot);
+    if (saved === true && JSON.stringify(designRef.current) === JSON.stringify(snapshotDesign)) {
+      localDesignDirtyRef.current = false;
+    }
     setSaveMessage(saved === true
       ? 'მონახაზი წარმატებით შეინახა. მომხმარებლებისთვის გამოსაჩენად ცალკე გამოაქვეყნეთ.'
       : 'შენახვის შედეგი გადაამოწმეთ შეტყობინებაში. გამოქვეყნება ჯერ არ მომხდარა.');
