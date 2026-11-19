@@ -37,6 +37,7 @@ import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAcc
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
+import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -1333,9 +1334,11 @@ export default function App() {
       setCategoriesList(draftCategories);
       setBannersList(draftBanners);
       alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
+      return true;
     } catch (error) {
       if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
       alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+      return false;
     } finally {
       storefrontSaveLock.current = false;
       setStorefrontDraftBusy(false);
@@ -1405,6 +1408,7 @@ export default function App() {
       setCategoriesList(publishedCategories);
       setBannersList(publishedBanners);
       alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
+      return true;
     } catch (error) {
       if (!storefrontPublished && uploadedAssets.length) {
         if (publishRequestStarted) {
@@ -1416,6 +1420,7 @@ export default function App() {
         }
       }
       alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
+      return false;
     } finally {
       storefrontPublishLock.current = false;
       setStorefrontPublishBusy(false);
@@ -3178,7 +3183,7 @@ export default function App() {
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
   return (
-    <div className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`}>
+    <div className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
