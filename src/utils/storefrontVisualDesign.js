@@ -36,6 +36,7 @@ export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
 
 const isPlainObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 const clamp = (value, min, max, fallback) => {
+  if (value === null || value === undefined || value === '') return fallback;
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
 };
@@ -203,9 +204,10 @@ export function buildStorefrontVisualStyle(rawDesign) {
 
 
 export function buildStorefrontElementStyle(rawDesign, elementId) {
-  const design = normalizeStorefrontVisualDesign(rawDesign);
   if (!ELEMENT_STYLE_IDS.includes(elementId)) return {};
-  const value = design.elementStyles[elementId];
+  const raw = isPlainObject(rawDesign) ? rawDesign : {};
+  const rawElementStyles = isPlainObject(raw.elementStyles) ? raw.elementStyles : {};
+  const value = isPlainObject(rawElementStyles[elementId]) ? rawElementStyles[elementId] : {};
   const style = {};
   if (value.textColor) style.color = value.textColor;
   if (value.backgroundColor) style.backgroundColor = value.backgroundColor;

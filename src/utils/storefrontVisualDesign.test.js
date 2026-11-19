@@ -100,3 +100,12 @@ test('element-level visual styles are normalized, clamped and rendered only for 
   assert.equal(buildStorefrontElementStyle(design, 'hero.title').fontSize, '64px');
   assert.deepEqual(buildStorefrontElementStyle(design, 'unknown.target'), {});
 });
+
+test('unset element styles remain unset after repeated normalization and render no inline overrides', () => {
+  const firstPass = normalizeStorefrontVisualDesign();
+  const secondPass = normalizeStorefrontVisualDesign(firstPass);
+  assert.equal(secondPass.elementStyles['hero.title'].fontSize, null);
+  assert.equal(secondPass.elementStyles['hero.title'].padding, null);
+  assert.equal(secondPass.elementStyles['hero.title'].borderRadius, null);
+  assert.deepEqual(buildStorefrontElementStyle(secondPass, 'hero.title'), {});
+});
