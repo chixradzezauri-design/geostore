@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ADMIN_PANEL_CONTENT_FIELDS,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
@@ -465,6 +465,48 @@ const PRESETS = {
 export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
+  const historyRef = useRef({ past: [], future: [], present: normalized });
+  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
+
+  useEffect(() => {
+    const current = historyRef.current;
+    if (JSON.stringify(current.present) !== JSON.stringify(normalized)) {
+      historyRef.current = { past: [], future: [], present: normalized };
+      setHistoryState({ canUndo: false, canRedo: false });
+    }
+  }, [normalized]);
+
+  const commitChange = nextDesign => {
+    const current = historyRef.current;
+    const next = normalizeAdminPanelVisualDesign(nextDesign);
+    if (JSON.stringify(current.present) === JSON.stringify(next)) return;
+    const past = [...current.past, current.present].slice(-50);
+    historyRef.current = { past, future: [], present: next };
+    setHistoryState({ canUndo: past.length > 0, canRedo: false });
+    onChange(next);
+  };
+
+  const undoChange = () => {
+    const current = historyRef.current;
+    if (!current.past.length) return;
+    const previous = current.past[current.past.length - 1];
+    const past = current.past.slice(0, -1);
+    const future = [current.present, ...current.future].slice(0, 50);
+    historyRef.current = { past, future, present: previous };
+    setHistoryState({ canUndo: past.length > 0, canRedo: future.length > 0 });
+    onChange(previous);
+  };
+
+  const redoChange = () => {
+    const current = historyRef.current;
+    if (!current.future.length) return;
+    const next = current.future[0];
+    const future = current.future.slice(1);
+    const past = [...current.past, current.present].slice(-50);
+    historyRef.current = { past, future, present: next };
+    setHistoryState({ canUndo: past.length > 0, canRedo: future.length > 0 });
+    onChange(next);
+  };
   const active = viewport === 'desktop'
     ? { theme: normalized.theme, layout: normalized.layout, components: normalized.components, elementStyles: normalized.elementStyles }
     : {
@@ -480,14 +522,14 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
 
   const updateValue = (group, key, value) => {
     if (viewport === 'desktop') {
-      onChange(normalizeAdminPanelVisualDesign({
+      commitChange(normalizeAdminPanelVisualDesign({
         ...normalized,
         [group]: { ...normalized[group], [key]: value }
       }));
       return;
     }
 
-    onChange(normalizeAdminPanelVisualDesign({
+    commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
       responsive: {
         ...(normalized.responsive || {}),
@@ -503,7 +545,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
   };
 
   const updateContentValue = (key, value) => {
-    onChange(normalizeAdminPanelVisualDesign({
+    commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
       content: { ...normalized.content, [key]: value }
     }));
@@ -511,7 +553,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
 
   const updateComponentValue = (component, property, value) => {
     if (viewport === 'desktop') {
-      onChange(normalizeAdminPanelVisualDesign({
+      commitChange(normalizeAdminPanelVisualDesign({
         ...normalized,
         components: {
           ...normalized.components,
@@ -521,7 +563,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
       return;
     }
 
-    onChange(normalizeAdminPanelVisualDesign({
+    commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
       responsive: {
         ...(normalized.responsive || {}),
@@ -541,7 +583,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
 
   const updateElementValue = (element, property, value) => {
     if (viewport === 'desktop') {
-      onChange(normalizeAdminPanelVisualDesign({
+      commitChange(normalizeAdminPanelVisualDesign({
         ...normalized,
         elementStyles: {
           ...normalized.elementStyles,
@@ -550,7 +592,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
       }));
       return;
     }
-    onChange(normalizeAdminPanelVisualDesign({
+    commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
       responsive: {
         ...(normalized.responsive || {}),
@@ -571,10 +613,10 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
   const applyPreset = preset => {
     if (!PRESETS[preset]) return;
     if (viewport === 'desktop') {
-      onChange(normalizeAdminPanelVisualDesign({ ...normalized, theme: PRESETS[preset] }));
+      commitChange(normalizeAdminPanelVisualDesign({ ...normalized, theme: PRESETS[preset] }));
       return;
     }
-    onChange(normalizeAdminPanelVisualDesign({
+    commitChange(normalizeAdminPanelVisualDesign({
       ...normalized,
       responsive: {
         ...(normalized.responsive || {}),
@@ -587,7 +629,7 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
   };
 
   const resetViewport = () => {
-    onChange(resetAdminPanelVisualViewport(normalized, viewport));
+    commitChange(resetAdminPanelVisualViewport(normalized, viewport));
   };
 
   return (
@@ -601,7 +643,11 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
             {syncStatus === 'loading' ? 'საერთო დიზაინი იტვირთება…' : syncStatus === 'saving' ? 'ცვლილებები ყველა მოწყობილობისთვის ინახება…' : syncStatus === 'error' ? 'საერთო შენახვა ვერ მოხერხდა — ცვლილებები ჯერ სხვა მოწყობილობაზე არ გამოჩნდება.' : 'შენახულია საერთო საცავში — ხელმისაწვდომია ყველა მოწყობილობიდან.'}
           </p>
         </div>
-        <button type="button" onClick={resetViewport} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">მიმდინარე ხედის Reset</button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={undoChange} disabled={!historyState.canUndo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="ბოლო ცვლილების გაუქმება" title="Undo (Ctrl+Z)">↶ Undo</button>
+          <button type="button" onClick={redoChange} disabled={!historyState.canRedo} className="rounded-xl border border-slate-500/50 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-35" aria-label="გაუქმებული ცვლილების დაბრუნება" title="Redo (Ctrl+Y)">↷ Redo</button>
+          <button type="button" onClick={resetViewport} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">მიმდინარე ხედის Reset</button>
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">

@@ -777,3 +777,17 @@ test('mobile reset removes only mobile overrides and preserves desktop, tablet a
   assert.ok(Object.values(reset.responsive.mobile.elementStyles).every(value => Object.keys(value).length === 0));
   assert.deepEqual(reset.responsive.tablet, source.responsive.tablet);
 });
+
+
+test('visual editor exposes bounded undo/redo history and routes editor mutations through history', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const historyRef = useRef\(\{ past: \[\], future: \[\], present: normalized \}\)/);
+  assert.match(editor, /\.slice\(-50\)/);
+  assert.match(editor, /const undoChange = \(\) =>/);
+  assert.match(editor, /const redoChange = \(\) =>/);
+  assert.match(editor, /onClick=\{undoChange\} disabled=\{!historyState\.canUndo\}/);
+  assert.match(editor, /onClick=\{redoChange\} disabled=\{!historyState\.canRedo\}/);
+  assert.match(editor, /commitChange\(normalizeAdminPanelVisualDesign\(/);
+  assert.match(editor, /historyRef\.current = \{ past: \[\], future: \[\], present: normalized \}/);
+  assert.doesNotMatch(editor.slice(editor.indexOf('const updateValue'), editor.indexOf('  return (\n    <section')), /onChange\(normalizeAdminPanelVisualDesign\(/);
+});
