@@ -196,3 +196,26 @@ test('admin font family is allowlisted and responsive overrides inherit safely',
   assert.equal(style['--admin-vd-tablet-fontFamily'], ADMIN_PANEL_FONT_FAMILIES.georgian);
   assert.equal(style['--admin-vd-mobile-fontFamily'], ADMIN_PANEL_FONT_FAMILIES.serif);
 });
+
+
+test('admin typography sizes and weights are bounded and responsive', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    layout: { titleFontSize: 99, bodyFontSize: 15, headingFontWeight: 850, bodyFontWeight: 650 },
+    responsive: {
+      tablet: { layout: { titleFontSize: 24, bodyFontSize: 14, headingFontWeight: 800 } },
+      mobile: { layout: { titleFontSize: 20, bodyFontSize: 12, bodyFontWeight: 500 } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+
+  assert.equal(design.layout.titleFontSize, 32);
+  assert.equal(design.layout.bodyFontSize, 15);
+  assert.equal(design.layout.headingFontWeight, 850);
+  assert.equal(design.layout.bodyFontWeight, 650);
+  assert.equal(style['--admin-vd-titleFontSize'], '32px');
+  assert.equal(style['--admin-vd-headingFontWeight'], '850');
+  assert.equal(style['--admin-vd-tablet-titleFontSize'], '24px');
+  assert.equal(style['--admin-vd-tablet-headingFontWeight'], '800');
+  assert.equal(style['--admin-vd-mobile-titleFontSize'], '20px');
+  assert.equal(style['--admin-vd-mobile-bodyFontWeight'], '500');
+});
