@@ -18,9 +18,8 @@ ALTER TABLE private.admin_customer_crm_profiles ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE private.admin_customer_crm_profiles
   FROM PUBLIC, anon, authenticated, service_role;
 
-CREATE INDEX IF NOT EXISTS orders_user_id_created_at_idx
-  ON public.orders (user_id, created_at DESC)
-  WHERE user_id IS NOT NULL;
+-- The orders_user_id_created_at_idx index already exists with the additional
+-- id DESC tie-breaker from the order-ownership migration; do not recreate it.
 
 CREATE OR REPLACE FUNCTION private.list_admin_customers(p_limit integer DEFAULT 500)
 RETURNS TABLE (
@@ -40,8 +39,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $function$
 BEGIN
-  IF auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid
-     OR auth.jwt()->'app_metadata'->>'role' IS DISTINCT FROM 'admin' THEN
+  IF NOT public.has_staff_permission('crm') THEN
     RAISE EXCEPTION 'ადმინისტრატორის უფლება არ დადასტურდა.' USING ERRCODE = '42501';
   END IF;
 
@@ -95,8 +93,7 @@ DECLARE
   v_discount numeric(5,2) := coalesce(p_discount_percent, 0);
   v_notes text := coalesce(p_admin_notes, '');
 BEGIN
-  IF auth.uid() IS DISTINCT FROM '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid
-     OR auth.jwt()->'app_metadata'->>'role' IS DISTINCT FROM 'admin' THEN
+  IF NOT public.has_staff_permission('crm') THEN
     RAISE EXCEPTION 'ადმინისტრატორის უფლება არ დადასტურდა.' USING ERRCODE = '42501';
   END IF;
 
