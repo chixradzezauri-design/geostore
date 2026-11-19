@@ -115,55 +115,64 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "inventory": {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "analytics": {
     "radius": 24,
     "padding": 20,
     "borderWidth": 1,
-    "shadowBlur": 20
+    "shadowBlur": 20,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "orders": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 24
+    "shadowBlur": 24,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "support": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 24
+    "shadowBlur": 24,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "discounts": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 24
+    "shadowBlur": 24,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "banners": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "categories": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "coupons": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 },
   responsive: {
@@ -178,55 +187,64 @@ const COMPONENT_DEFAULTS = {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "inventory": {
     "radius": 30,
     "padding": 24,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "analytics": {
     "radius": 24,
     "padding": 20,
     "borderWidth": 1,
-    "shadowBlur": 20
+    "shadowBlur": 20,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "orders": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 24
+    "shadowBlur": 24,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "support": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 24
+    "shadowBlur": 24,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "discounts": {
     "radius": 32,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 24
+    "shadowBlur": 24,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "banners": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "categories": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   },
   "coupons": {
     "radius": 30,
     "padding": 28,
     "borderWidth": 1,
-    "shadowBlur": 22
+    "shadowBlur": 22,
+    fontSize: 13, titleFontSize: 16, textColor: '#e2e8f0', backgroundColor: '#0f172a', borderColor: '#334155'
   }
 };
 const COMPONENT_LIMITS = {
@@ -252,9 +270,13 @@ const normalizeComponents = (source, fallback, partial = false) => Object.fromEn
   Object.entries(COMPONENT_DEFAULTS).map(([component, defaults]) => {
     const values = isObject(source?.[component]) ? source[component] : {};
     const base = fallback?.[component] || defaults;
-    return [component, Object.fromEntries(Object.entries(COMPONENT_LIMITS)
+    const numeric = Object.fromEntries(Object.entries(COMPONENT_LIMITS)
       .filter(([key]) => !partial || (values[key] != null && values[key] !== ''))
-      .map(([key, bounds]) => [key, clampNumber(values[key], bounds, partial ? base[key] : defaults[key])]))];
+      .map(([key, bounds]) => [key, clampNumber(values[key], bounds, partial ? base[key] : defaults[key])]));
+    const colors = Object.fromEntries(Object.entries(COMPONENT_COLOR_DEFAULTS)
+      .filter(([key]) => !partial || (values[key] != null && values[key] !== ''))
+      .map(([key, fallback]) => [key, safeColor(values[key], partial ? (base[key] || fallback) : fallback)]));
+    return [component, { ...numeric, ...colors }];
   })
 );
 
@@ -376,7 +398,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
   for (const [prefix, values] of componentViewports) {
     for (const [component, settings] of Object.entries(values)) {
       for (const [key, value] of Object.entries(settings)) {
-        style[`--admin-vd-${prefix}${component}-${key}`] = `${value}px`;
+        style[`--admin-vd-${prefix}${component}-${key}`] = COMPONENT_COLOR_DEFAULTS[key] ? value : `${value}px`;
       }
     }
   }
