@@ -490,11 +490,28 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
   const [stylePresetSort, setStylePresetSort] = useState('newest');
   const [showFavoriteStylePresets, setShowFavoriteStylePresets] = useState(false);
   const [expandedStyleHistoryId, setExpandedStyleHistoryId] = useState(null);
+  const [expandedStyleBackupId, setExpandedStyleBackupId] = useState(null);
   const [bulkStylePresetCategory, setBulkStylePresetCategory] = useState('საერთო');
   const elementCardRefs = useRef({});
   const stylePresetFileInputRef = useRef(null);
   const stylePresetImportModeRef = useRef('merge');
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
+  const expandedStyleBackup = useMemo(
+    () => normalized.stylePresetBackups.find(backup => backup.id === expandedStyleBackupId) || null,
+    [normalized.stylePresetBackups, expandedStyleBackupId]
+  );
+  const expandedStyleBackupDiff = useMemo(() => {
+    if (!expandedStyleBackup) return { added: [], removed: [], changed: [] };
+    const currentById = new Map(normalized.stylePresets.map(preset => [preset.id, preset]));
+    const backupById = new Map(expandedStyleBackup.stylePresets.map(preset => [preset.id, preset]));
+    const added = expandedStyleBackup.stylePresets.filter(preset => !currentById.has(preset.id));
+    const removed = normalized.stylePresets.filter(preset => !backupById.has(preset.id));
+    const changed = expandedStyleBackup.stylePresets.filter(preset => {
+      const current = currentById.get(preset.id);
+      return current && JSON.stringify(current) !== JSON.stringify(preset);
+    });
+    return { added, removed, changed };
+  }, [expandedStyleBackup, normalized.stylePresets]);
   const historyRef = useRef({ past: [], future: [], present: normalized });
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
 
@@ -778,7 +795,21 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     setSelectedStylePresetIds(current => current.filter(selectedId => selectedId !== id));
   };
   const restoreAutomaticStyleBackup = backup => {
-    if (!backup || !window.confirm(`აღდგეს ${backup.stylePresets.length} სტილი ${new Date(backup.savedAt).toLocaleString('ka-GE')} მდგომარეობიდან? მიმდინარე ბიბლიოთეკაც ავტომატურად შეინახება.`)) return;
+    if (!backup) return;
+    const comparison = backup.id === expandedStyleBackupId ? expandedStyleBackupDiff : (() => {
+      const currentById = new Map(normalized.stylePresets.map(preset => [preset.id, preset]));
+      const backupById = new Map(backup.stylePresets.map(preset => [preset.id, preset]));
+      return {
+        added: backup.stylePresets.filter(preset => !currentById.has(preset.id)),
+        removed: normalized.stylePresets.filter(preset => !backupById.has(preset.id)),
+        changed: backup.stylePresets.filter(preset => {
+          const current = currentById.get(preset.id);
+          return current && JSON.stringify(current) !== JSON.stringify(preset);
+        })
+      };
+    })();
+    const summary = `დაემატება: ${comparison.added.length}, შეიცვლება: ${comparison.changed.length}, მიმდინარე ბიბლიოთეკიდან გაქრება: ${comparison.removed.length}`;
+    if (!window.confirm(`აღდგეს ${backup.stylePresets.length} სტილი ${new Date(backup.savedAt).toLocaleString('ka-GE')} მდგომარეობიდან?\n${summary}. მიმდინარე ბიბლიოთეკაც ავტომატურად შეინახება.`)) return;
     const restored = restoreAdminStylePresetBackup(normalized, backup.id);
     if (restored === normalized || restored.stylePresets === normalized.stylePresets) return;
     commitChange(restored);
@@ -1326,7 +1357,13 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
                 {normalized.stylePresetBackups.slice().reverse().map(backup => (
                   <div key={backup.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-700 bg-slate-900/70 p-2">
                     <div className="min-w-0"><p className="truncate text-[11px] font-bold text-slate-200">{backup.reason}</p><p className="text-[10px] text-slate-400">{new Date(backup.savedAt).toLocaleString('ka-GE')} · {backup.stylePresets.length} სტილი</p></div>
-                    <div className="flex flex-wrap gap-1"><button type="button" onClick={() => exportSavedElementStyles(backup.stylePresets, `geostore-admin-style-backup-${backup.id}.json`, { id: backup.id, savedAt: backup.savedAt, reason: backup.reason })} className="rounded-md border border-sky-400/40 px-2.5 py-1.5 text-[10px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => renameAutomaticStyleBackup(backup)} className="rounded-md border border-slate-600 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => restoreAutomaticStyleBackup(backup)} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200">აღდგენა</button><button type="button" onClick={() => deleteAutomaticStyleBackup(backup)} className="rounded-md border border-rose-400/40 px-2.5 py-1.5 text-[10px] font-bold text-rose-200">წაშლა</button></div>
+                    <div className="flex flex-wrap gap-1"><button type="button" onClick={() => setExpandedStyleBackupId(current => current === backup.id ? null : backup.id)} aria-expanded={expandedStyleBackupId === backup.id} className="rounded-md border border-violet-400/40 px-2.5 py-1.5 text-[10px] font-bold text-violet-200">{expandedStyleBackupId === backup.id ? 'შიგთავსის დამალვა' : 'შიგთავსის ნახვა'}</button><button type="button" onClick={() => exportSavedElementStyles(backup.stylePresets, `geostore-admin-style-backup-${backup.id}.json`, { id: backup.id, savedAt: backup.savedAt, reason: backup.reason })} className="rounded-md border border-sky-400/40 px-2.5 py-1.5 text-[10px] font-bold text-sky-200">JSON ექსპორტი</button><button type="button" onClick={() => renameAutomaticStyleBackup(backup)} className="rounded-md border border-slate-600 px-2.5 py-1.5 text-[10px] font-bold text-slate-200">სახელის შეცვლა</button><button type="button" onClick={() => restoreAutomaticStyleBackup(backup)} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200">აღდგენა</button><button type="button" onClick={() => deleteAutomaticStyleBackup(backup)} className="rounded-md border border-rose-400/40 px-2.5 py-1.5 text-[10px] font-bold text-rose-200">წაშლა</button></div>
+                    {expandedStyleBackupId === backup.id && <div className="mt-2 w-full space-y-2 rounded-lg border border-violet-400/20 bg-slate-950/70 p-3">
+                      <div className="flex flex-wrap gap-2 text-[10px]"><span className="rounded bg-slate-800 px-2 py-1 text-emerald-200">ასლში: {backup.stylePresets.length}</span><span className="rounded bg-slate-800 px-2 py-1 text-sky-200">ახალი: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.added.length : 0}</span><span className="rounded bg-slate-800 px-2 py-1 text-amber-200">შეცვლილი: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.changed.length : 0}</span><span className="rounded bg-slate-800 px-2 py-1 text-rose-200">აღდგენისას მოცილდება: {backup.id === expandedStyleBackupId ? expandedStyleBackupDiff.removed.length : 0}</span></div>
+                      <p className="text-[10px] text-slate-400">ქვემოთ ნაჩვენებია ამ ასლში შენახული სტილები. აღდგენა შეცვლის მიმდინარე სტილების ბიბლიოთეკას, მაგრამ მის ასლს წინასწარ შეინახავს.</p>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{backup.stylePresets.map(preset => <div key={preset.id} className="flex min-w-0 items-center gap-2 rounded-md border border-slate-800 p-2"><span className="h-8 w-8 shrink-0 rounded-md border border-white/20" style={{ backgroundColor: preset.style.backgroundColor || '#0f172a', color: preset.style.textColor || '#e2e8f0', borderColor: preset.style.borderColor || '#475569' }} /><span className="min-w-0"><span className="block truncate text-[10px] font-bold text-slate-200">{preset.name}</span><span className="block truncate text-[9px] text-slate-500">{preset.category} · {Object.keys(preset.style).length} პარამეტრი</span></span></div>)}</div>
+                      {backup.stylePresets.length === 0 && <p className="text-[10px] text-slate-500">ამ ასლში სტილები არ არის.</p>}
+                    </div>}
                   </div>
                 ))}
               </div>
