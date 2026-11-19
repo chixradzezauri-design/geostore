@@ -1521,6 +1521,8 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
               <option value="inventory">მარაგები</option>
               <option value="analytics">ანალიტიკა</option>
               <option value="support">მხარდაჭერა</option>
+              <option value="discounts">ფასდაკლებები</option>
+              <option value="replenishment">მარაგის შევსება</option>
               <option value="products">პროდუქტები</option>
               <option value="banners">ბანერები</option>
               <option value="categories">კატეგორიები</option>
