@@ -322,3 +322,53 @@ test('native checkbox, radio and range controls stay scoped to the admin visual 
   assert.match(css, /\.admin-dashboard-pro\[data-admin-visual-design="enabled"\] input\[type="range"\]/);
   assert.match(css, /\.admin-dashboard-pro\[data-admin-visual-design="enabled"\] select option/);
 });
+
+
+test('admin modules have independent bounded geometry and responsive inheritance', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    components: {
+      orders: { radius: 44, padding: 36, borderWidth: 3, shadowBlur: 30 },
+      support: { radius: 99, padding: 2, borderWidth: 8, shadowBlur: -4 }
+    },
+    responsive: {
+      tablet: { components: { orders: { radius: 20, padding: 18 } } },
+      mobile: { components: { support: { radius: 12, shadowBlur: 0 } } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+
+  assert.deepEqual(design.components.orders, { radius: 44, padding: 36, borderWidth: 3, shadowBlur: 30 });
+  assert.deepEqual(design.components.support, { radius: 48, padding: 4, borderWidth: 4, shadowBlur: 0 });
+  assert.deepEqual(design.responsive.tablet.components.orders, { radius: 20, padding: 18 });
+  assert.deepEqual(design.responsive.mobile.components.support, { radius: 12, shadowBlur: 0 });
+  assert.equal(style['--admin-vd-orders-radius'], '44px');
+  assert.equal(style['--admin-vd-orders-padding'], '36px');
+  assert.equal(style['--admin-vd-tablet-orders-radius'], '20px');
+  assert.equal(style['--admin-vd-tablet-orders-padding'], '18px');
+  assert.equal(style['--admin-vd-tablet-orders-borderWidth'], '3px');
+  assert.equal(style['--admin-vd-mobile-support-radius'], '12px');
+  assert.equal(style['--admin-vd-mobile-support-shadowBlur'], '0px');
+  assert.equal(style['--admin-vd-mobile-support-padding'], '4px');
+});
+
+test('module geometry remains scoped to the admin visual design and supports all editor viewports', () => {
+  const css = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
+  for (const moduleName of ['staff', 'inventory', 'analytics', 'orders', 'support', 'discounts', 'banners', 'categories', 'coupons']) {
+    assert.match(css, new RegExp('--admin-vd-' + moduleName + '-radius-active'));
+    assert.match(css, new RegExp('--admin-vd-' + moduleName + '-padding-active'));
+    assert.match(css, new RegExp('--admin-vd-' + moduleName + '-borderWidth-active'));
+    assert.match(css, new RegExp('--admin-vd-' + moduleName + '-shadowBlur-active'));
+  }
+  assert.match(css, /--admin-vd-mobile-orders-radius: var\(--admin-vd-mobile-orders-radius/);
+  assert.match(css, /--admin-vd-mobile-support-radius-active: var\(--admin-vd-mobile-support-radius, var\(--admin-vd-tablet-support-radius, var\(--admin-vd-support-radius\)\)\)/);
+});
+
+test('admin visual editor exposes independent module geometry controls for desktop, tablet and mobile', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /მოდულების ინდივიდუალური დიზაინი/);
+  assert.match(editor, /updateComponentValue/);
+  assert.match(editor, /active\.components\[component\.key\]\[property\.key\]/);
+  for (const moduleName of ['staff', 'inventory', 'analytics', 'orders', 'support', 'discounts', 'banners', 'categories', 'coupons']) {
+    assert.match(editor, new RegExp(`key: '${moduleName}'`));
+  }
+});
