@@ -12,7 +12,7 @@ import {
 test('admin visual design rejects unsafe colors and clamps layout values', () => {
   const design = normalizeAdminPanelVisualDesign({
     theme: { accent: 'url(javascript:alert(1))', panel: '#123456' },
-    layout: { fontSize: 99, cardRadius: -4, cardPadding: 100, sidebarWidth: 10, buttonRadius: 99, navItemRadius: -2, navItemPaddingY: 99, sectionGap: 2, headerRadius: 99, headerPadding: 2, tableCellPadding: 99, inputRadius: -2, inputHeight: 99, cardBorderWidth: 9, cardShadowBlur: -10 }
+    layout: { fontSize: 99, cardRadius: -4, cardPadding: 100, sidebarWidth: 10, buttonRadius: 99, navItemRadius: -2, navItemPaddingY: 99, sectionGap: 2, headerRadius: 99, headerPadding: 2, tableCellPadding: 99, inputRadius: -2, inputHeight: 99, cardBorderWidth: 9, cardShadowBlur: -10, modalRadius: 99, modalPadding: 2 }
   });
 
   assert.equal(design.theme.accent, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.theme.accent);
@@ -32,14 +32,16 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
   assert.equal(design.layout.inputHeight, 52);
   assert.equal(design.layout.cardBorderWidth, 3);
   assert.equal(design.layout.cardShadowBlur, 0);
+  assert.equal(design.layout.modalRadius, 40);
+  assert.equal(design.layout.modalPadding, 12);
 });
 
 test('tablet and mobile admin visual overrides inherit unset desktop values', () => {
   const design = normalizeAdminPanelVisualDesign({
-    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4' },
-    layout: { fontSize: 14, cardRadius: 20, sectionGap: 30, headerPadding: 28, tableCellPadding: 10, inputHeight: 48, cardBorderWidth: 2, cardShadowBlur: 30 },
+    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678' },
+    layout: { fontSize: 14, cardRadius: 20, sectionGap: 30, headerPadding: 28, tableCellPadding: 10, inputHeight: 48, cardBorderWidth: 2, cardShadowBlur: 30, modalRadius: 32, modalPadding: 30 },
     responsive: {
-      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', inputFocus: '#778899', contentCardBackground: '#8899aa' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12 } },
+      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', inputFocus: '#778899', contentCardBackground: '#8899aa', modalBackground: '#7788aa' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12, modalRadius: 18, modalPadding: 16 } },
       mobile: { theme: { panel: '#334455' }, layout: { cardPadding: 14 } }
     }
   });
@@ -71,9 +73,18 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-contentCardBorder'], '#b2c3d4');
   assert.equal(style['--admin-vd-cardBorderWidth'], '2px');
   assert.equal(style['--admin-vd-cardShadowBlur'], '30px');
+  assert.equal(style['--admin-vd-modalBackground'], '#123abc');
+  assert.equal(style['--admin-vd-modalText'], '#ffffff');
+  assert.equal(style['--admin-vd-modalBorder'], '#345678');
+  assert.equal(style['--admin-vd-modalRadius'], '32px');
+  assert.equal(style['--admin-vd-modalPadding'], '30px');
   assert.equal(style['--admin-vd-tablet-contentCardBackground'], '#8899aa');
   assert.equal(style['--admin-vd-tablet-cardBorderWidth'], '1px');
   assert.equal(style['--admin-vd-tablet-cardShadowBlur'], '12px');
+  assert.equal(style['--admin-vd-tablet-modalBackground'], '#7788aa');
+  assert.equal(style['--admin-vd-tablet-modalRadius'], '18px');
+  assert.equal(style['--admin-vd-tablet-modalPadding'], '16px');
+  assert.equal(style['--admin-vd-mobile-modalBackground'], '#123abc');
 });
 
 test('admin visual design saves and loads only the normalized visual preferences', () => {
