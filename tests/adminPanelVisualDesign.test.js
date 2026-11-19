@@ -1367,6 +1367,19 @@ test('admin visual editor safely restores selected customized elements in the ac
   assert.match(editor, /სხვა ხედები და დანარჩენი ელემენტები უცვლელი დარჩება/);
 });
 
+test('admin visual editor can batch-save selected element styles without adding empty or duplicate presets', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const saveSelectedElementStylesAsPresets = \(\) =>/);
+  assert.match(editor, /const targets = \[\.\.\.new Set\(selectedElementKeys\)\]/);
+  assert.match(editor, /const availableSlots = 30 - normalized\.stylePresets\.length/);
+  assert.match(editor, /if \(!Object\.keys\(style\)\.length\) \{ emptyCount \+= 1; return; \}/);
+  assert.match(editor, /if \(existingStyleKeys\.has\(signature\)\) \{ duplicateCount \+= 1; return; \}/);
+  assert.match(editor, /const accepted = additions\.slice\(0, availableSlots\)/);
+  assert.match(editor, /stylePresets: \[\.\.\.normalized\.stylePresets, \.\.\.accepted\]/);
+  assert.match(editor, /მონიშნული ელემენტების სტილების შენახვა/);
+  assert.match(editor, /დუბლიკატი: \$\{duplicateCount\}/);
+});
+
 test('admin visual editor exposes per-element history and restores only that element in the active viewport', () => {
   const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /expandedElementHistoryKeys, setExpandedElementHistoryKeys/);
