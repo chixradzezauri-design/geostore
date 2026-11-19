@@ -2984,10 +2984,18 @@ export default function AdminDashboardPro({
   };
 
   const handleSaveUserCrm = async (userId) => {
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     const customer = crmUsers.find(u => u.id === userId || u.email === userId);
     if (customer?.isServerCustomer) {
-      try { await persistServerCustomerProfile(customer, { discountPercent: editUserDiscount, adminNotes: editUserNotes }); }
-      catch (error) { alert(error?.message || 'CRM მონაცემების შენახვა ვერ მოხერხდა.'); return; }
+      try {
+        const saved = await persistServerCustomerProfile(customer, { discountPercent: editUserDiscount, adminNotes: editUserNotes });
+        if (!saved || !isCurrentAdminSession(requestSessionVersion)) return;
+      } catch (error) {
+        if (isCurrentAdminSession(requestSessionVersion)) alert(error?.message || 'CRM მონაცემების შენახვა ვერ მოხერხდა.');
+        return;
+      }
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       setEditingUserId(null); setEditUserDiscount(''); setEditUserNotes('');
       logActivity(`განახლდა ბაზაში შენახული CRM მონაცემები (ID: ${userId})`);
       alert('CRM მონაცემები წარმატებით შეინახა Supabase-ში!'); return;
@@ -3004,6 +3012,7 @@ export default function AdminDashboardPro({
         return u;
       }));
     }
+    if (!isCurrentAdminSession(requestSessionVersion)) return;
     setEditingUserId(null);
     setEditUserDiscount('');
     setEditUserNotes('');
