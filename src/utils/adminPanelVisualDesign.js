@@ -27,7 +27,13 @@ export const DEFAULT_ADMIN_PANEL_VISUAL_DESIGN = Object.freeze({
     modalBackground: '#0d0d10',
     modalText: '#f8fafc',
     modalBorder: '#334155',
-    modalOverlayBackground: '#020617'
+    modalOverlayBackground: '#020617',
+    staffSectionBackground: '#0f172a',
+    staffSectionBorder: '#334155',
+    inventorySectionBackground: '#0f172a',
+    inventorySectionBorder: '#334155',
+    analyticsSectionBackground: '#0f172a',
+    analyticsSectionBorder: '#334155'
   },
   layout: {
     fontSize: 13,
