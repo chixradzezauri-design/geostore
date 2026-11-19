@@ -442,7 +442,7 @@ const PRESETS = {
   light: { accent: '#0f766e', canvas: '#eef2f7', panel: '#ffffff', surface: '#f8fafc', text: '#172033', muted: '#596579', border: '#cbd5e1', navActiveBackground: '#0f766e', navActiveText: '#ffffff', navInactiveBackground: '#f8fafc', navInactiveText: '#596579', headerBackground: '#ffffff', headerBorder: '#cbd5e1', tableHeaderBackground: '#f1f5f9', tableHeaderText: '#596579', tableRowBackground: '#ffffff', tableRowHover: '#e2e8f0', filterBackground: '#ffffff', filterText: '#172033', filterBorder: '#cbd5e1', primaryButtonBackground: '#0f766e', primaryButtonText: '#ffffff', primaryButtonBorder: '#0f766e', inputBackground: '#ffffff', inputText: '#172033', inputBorder: '#cbd5e1', inputFocus: '#0f766e', contentCardBackground: '#ffffff', contentCardBorder: '#cbd5e1', cardTitleText: '#172033', cardMutedText: '#596579', cardShadowColor: '#64748b', cardHoverBorder: '#0f766e', modalBackground: '#ffffff', modalText: '#172033', modalBorder: '#cbd5e1', modalOverlayBackground: '#64748b', staffSectionBackground: '#ffffff', staffSectionBorder: '#cbd5e1', inventorySectionBackground: '#ffffff', inventorySectionBorder: '#cbd5e1', analyticsSectionBackground: '#ffffff', analyticsSectionBorder: '#cbd5e1' , ordersSectionBackground: '#ffffff', ordersSectionBorder: '#cbd5e1', supportSectionBackground: '#ffffff', supportSectionBorder: '#cbd5e1', discountsSectionBackground: '#ffffff', discountsSectionBorder: '#cbd5e1', bannersSectionBackground: '#ffffff', bannersSectionBorder: '#cbd5e1', categoriesSectionBackground: '#ffffff', categoriesSectionBorder: '#cbd5e1', couponsSectionBackground: '#ffffff', couponsSectionBorder: '#cbd5e1'}
 };
 
-export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
+export default function AdminPanelVisualEditor({ design, onChange, onReset, syncStatus = 'saved' }) {
   const [viewport, setViewport] = useState('desktop');
   const normalized = useMemo(() => normalizeAdminPanelVisualDesign(design), [design]);
   const active = viewport === 'desktop'
@@ -543,7 +543,10 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
         <div>
           <p className="text-[10px] font-black uppercase tracking-[.18em] text-emerald-300">GEOSTORE / ADMIN STUDIO</p>
           <h2 id="admin-visual-editor-title" className="mt-1 text-lg font-black text-white">ადმინ პანელის დიზაინის რედაქტორი</h2>
-          <p className="mt-1 text-xs leading-5 text-slate-400">ცვლილებები მყისიერად აისახება პანელზე და ავტომატურად ინახება ამ ბრაუზერში. მაღაზიის მომხმარებლის მხარეს არ ცვლის.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">ცვლილებები მყისიერად აისახება პანელზე და ინახება საერთო საცავში, რათა იმავე ადმინ-ანგარიშით ყველა მოწყობილობაზე გამოჩნდეს. მაღაზიის მომხმარებლის მხარეს არ ცვლის.</p>
+          <p role="status" aria-live="polite" className={`mt-2 text-[11px] font-semibold ${syncStatus === 'error' ? 'text-rose-300' : syncStatus === 'saving' || syncStatus === 'loading' ? 'text-amber-200' : 'text-emerald-300'}`}>
+            {syncStatus === 'loading' ? 'საერთო დიზაინი იტვირთება…' : syncStatus === 'saving' ? 'ცვლილებები ყველა მოწყობილობისთვის ინახება…' : syncStatus === 'error' ? 'საერთო შენახვა ვერ მოხერხდა — ცვლილებები ჯერ სხვა მოწყობილობაზე არ გამოჩნდება.' : 'შენახულია საერთო საცავში — ხელმისაწვდომია ყველა მოწყობილობიდან.'}
+          </p>
         </div>
         <button type="button" onClick={resetViewport} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">მიმდინარე ხედის Reset</button>
       </header>
@@ -685,7 +688,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onReset }) {
       </div>
 
       <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-3 text-[11px] leading-5 text-slate-300">
-        პარამეტრები მოქმედებს მხოლოდ მთავარ ადმინისტრატორზე და მხოლოდ ამ მოწყობილობის ბრაუზერში. სხვა ადმინისტრატორების ხედს და მაღაზიის საჯარო დიზაინს არ ცვლის.
+        პარამეტრები მოქმედებს მხოლოდ მთავარ ადმინისტრატორზე და იტვირთება მისი ანგარიშით ნებისმიერ მოწყობილობაზე. სხვა თანამშრომლების ხედს და მაღაზიის საჯარო დიზაინს არ ცვლის.
       </div>
     </section>
   );
