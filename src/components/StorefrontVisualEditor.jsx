@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown, ChevronUp, Monitor, RotateCcw, RotateCw,
   Save, Smartphone, Upload, Palette, Type, Layout, Image as ImageIcon, MousePointer2, Plus, Trash2, Copy
@@ -6,6 +6,7 @@ import {
 import StoreView from './StoreView';
 import Header from './Header';
 import StorefrontFooter from './StorefrontFooter';
+import { supabase } from '../supabaseClient';
 import {
   DEFAULT_STOREFRONT_VISUAL_DESIGN,
   normalizeStorefrontVisualDesign,
@@ -157,6 +158,7 @@ export default function StorefrontVisualEditor({
   formatPrice,
   isOwner = false,
   onSaveStorefrontDraft,
+  onRestoreStorefrontVersion,
   storefrontDraftBusy = false,
   onPublishStorefront,
   storefrontPublishBusy = false
@@ -174,6 +176,61 @@ export default function StorefrontVisualEditor({
   const [selectedElement, setSelectedElement] = useState(null);
   const [draggedSection, setDraggedSection] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
+  const [versionHistory, setVersionHistory] = useState([]);
+  const [versionHistoryLoading, setVersionHistoryLoading] = useState(false);
+  const [versionHistoryError, setVersionHistoryError] = useState('');
+  const [selectedVersionId, setSelectedVersionId] = useState('');
+  const [selectedVersionSnapshot, setSelectedVersionSnapshot] = useState(null);
+  const [versionRestoreBusy, setVersionRestoreBusy] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const loadVersionHistory = async () => {
+      setVersionHistoryLoading(true);
+      setVersionHistoryError('');
+      try {
+        const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at').eq('config_key', 'storefront').order('created_at', { ascending: false }).limit(20);
+        if (error) throw error;
+        if (active) setVersionHistory(Array.isArray(data) ? data : []);
+      } catch (error) {
+        if (active) setVersionHistoryError(error?.message || 'ვერსიების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
+      } finally {
+        if (active) setVersionHistoryLoading(false);
+      }
+    };
+    loadVersionHistory();
+    return () => { active = false; };
+  }, []);
+
+  const inspectStorefrontVersion = async (versionId) => {
+    setSelectedVersionId(versionId);
+    setSelectedVersionSnapshot(null);
+    setVersionHistoryError('');
+    try {
+      const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at,snapshot').eq('config_key', 'storefront').eq('id', versionId).single();
+      if (error) throw error;
+      setSelectedVersionSnapshot(data);
+    } catch (error) {
+      setVersionHistoryError(error?.message || 'არჩეული ვერსიის დეტალები ვერ ჩაიტვირთა.');
+    }
+  };
+
+  const restoreSelectedStorefrontVersion = async () => {
+    if (!selectedVersionId || !selectedVersionSnapshot?.snapshot || typeof onRestoreStorefrontVersion !== 'function' || versionRestoreBusy) return;
+    const label = selectedVersionSnapshot.version_label || 'არჩეული ვერსია';
+    if (!window.confirm('გსურთ „' + label + '“-ის მონახაზში აღდგენა? გამოქვეყნებული საიტი უცვლელი დარჩება.')) return;
+    setVersionRestoreBusy(true);
+    try {
+      const restored = await onRestoreStorefrontVersion(selectedVersionId);
+      if (restored === true) {
+        commitDesign(normalizeStorefrontVisualDesign(selectedVersionSnapshot.snapshot?.siteSettings?.visualDesign));
+        setSaveMessage('ძველი ვერსია მონახაზში აღდგა. გამოსაჩენად ცალკე გამოაქვეყნეთ.');
+      }
+    } finally {
+      setVersionRestoreBusy(false);
+    }
+  };
+
   const activeResponsive = previewMode === 'desktop' ? {} : (design.responsive?.[previewMode] || {});
   const activeLayout = { ...design.layout, ...(activeResponsive.layout || {}) };
   const activeTheme = { ...design.theme, ...(activeResponsive.theme || {}) };
@@ -545,6 +602,39 @@ export default function StorefrontVisualEditor({
         </div>
         {saveMessage && <p role="status" aria-live="polite" className="mt-3 rounded-xl bg-slate-950/70 px-3 py-2 text-xs text-emerald-200">{saveMessage}</p>}
       </header>
+
+      <section className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4 space-y-3" aria-label="გამოქვეყნებული ვერსიების ისტორია">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-black text-white">გამოქვეყნებული ვერსიების ისტორია</h3>
+            <p className="mt-1 text-[10px] leading-4 text-slate-400">შეამოწმეთ წინა გამოქვეყნებები და საჭიროებისას აღადგინეთ მონახაზში. აღდგენა საიტს არ აქვეყნებს.</p>
+          </div>
+          <span className="rounded-full border border-slate-700 px-2.5 py-1 text-[10px] font-bold text-slate-300">{versionHistory.length} / 20</span>
+        </div>
+        {versionHistoryLoading && <p role="status" className="text-xs text-slate-400">ისტორია იტვირთება…</p>}
+        {versionHistoryError && <p role="alert" className="rounded-lg border border-rose-500/30 bg-rose-950/30 p-2 text-xs text-rose-200">{versionHistoryError}</p>}
+        {!versionHistoryLoading && !versionHistory.length && !versionHistoryError && <p className="rounded-xl border border-dashed border-slate-700 p-3 text-xs text-slate-400">გამოქვეყნებული ვერსიები ჯერ არ არის.</p>}
+        {versionHistory.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            {versionHistory.map(version => (
+              <div key={version.id} className={selectedVersionId === version.id ? 'rounded-xl border border-sky-300/60 bg-sky-950/30 p-3 space-y-2' : 'rounded-xl border border-slate-700 bg-slate-950/50 p-3 space-y-2'}>
+                <div className="min-w-0">
+                  <p className="break-words text-xs font-bold text-slate-100">{version.version_label || 'გამოქვეყნებული ვერსია'}</p>
+                  <p className="mt-1 text-[10px] text-slate-400">{version.created_at ? new Date(version.created_at).toLocaleString('ka-GE') : 'თარიღი უცნობია'}</p>
+                </div>
+                <button type="button" onClick={() => inspectStorefrontVersion(version.id)} className="w-full rounded-lg border border-slate-600 px-3 py-2 text-[10px] font-bold text-slate-200 hover:border-sky-300/60">დეტალების ნახვა</button>
+                {selectedVersionId === version.id && selectedVersionSnapshot?.snapshot && (
+                  <div className="space-y-2 border-t border-slate-700 pt-2">
+                    <p className="text-[10px] text-slate-300">კატეგორიები: {Array.isArray(selectedVersionSnapshot.snapshot.categories) ? selectedVersionSnapshot.snapshot.categories.length : 0} · ბანერები: {Array.isArray(selectedVersionSnapshot.snapshot.banners) ? selectedVersionSnapshot.snapshot.banners.length : 0}</p>
+                    <p className="break-words text-[10px] text-slate-400">მაღაზია: {selectedVersionSnapshot.snapshot.siteSettings?.storeName || '—'} · მთავარი სათაური: {selectedVersionSnapshot.snapshot.siteSettings?.heroTitle || '—'}</p>
+                    <button type="button" onClick={restoreSelectedStorefrontVersion} disabled={versionRestoreBusy || storefrontDraftBusy || storefrontPublishBusy || typeof onRestoreStorefrontVersion !== 'function'} className="w-full rounded-lg bg-sky-300 px-3 py-2.5 text-[10px] font-black text-slate-950 disabled:opacity-50">{versionRestoreBusy ? 'მონახაზში აღდგენა…' : 'ამ ვერსიის მონახაზში აღდგენა'}</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid grid-cols-1 2xl:grid-cols-[minmax(300px,390px)_minmax(0,1fr)] gap-5 items-start">
         <aside className="gs-visual-editor-controls min-w-0 space-y-4">
