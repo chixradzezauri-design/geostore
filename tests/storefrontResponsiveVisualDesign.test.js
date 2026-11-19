@@ -136,3 +136,43 @@ test('custom storefront sections use the same tablet and mobile breakpoints as t
   assert.ok(!customSectionCss.includes('@media (min-width:768px) and (max-width:1023px)'));
   assert.ok(!customSectionCss.includes('@media (max-width:767px)'));
 });
+
+
+test('every storefront visual editor target exists in the rendered storefront components', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const componentPaths = [
+    '../src/components/StoreView.jsx',
+    '../src/components/Header.jsx',
+    '../src/components/StorefrontFooter.jsx'
+  ];
+  const components = await Promise.all(componentPaths.map(path => readFile(new URL(path, import.meta.url), 'utf8')));
+  const targetMap = editor.slice(
+    editor.indexOf('const VISUAL_EDITOR_TARGETS = {'),
+    editor.indexOf('const VISUAL_EDITOR_TREE = [')
+  );
+  const targetIds = [...targetMap.matchAll(/^\s{2}'([^']+)':\s*\{/gm)].map(match => match[1]);
+  const renderedTargets = new Set(
+    components.flatMap(source => [...source.matchAll(/data-visual-editor-target=["']([^"']+)["']/g)].map(match => match[1]))
+  );
+
+  assert.ok(targetIds.length >= 50, 'expected the full storefront target catalog');
+  for (const targetId of targetIds) {
+    assert.ok(renderedTargets.has(targetId), `editor target has no rendered DOM element: ${targetId}`);
+  }
+  assert.equal(targetIds.length, renderedTargets.size, 'rendered target catalog and editor target catalog should stay aligned');
+});
+
+test('storefront visual selection highlight styles cover every selectable target', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const targetMap = editor.slice(
+    editor.indexOf('const VISUAL_EDITOR_TARGETS = {'),
+    editor.indexOf('const VISUAL_EDITOR_TREE = [')
+  );
+  const targetIds = [...targetMap.matchAll(/^\s{2}'([^']+)':\s*\{/gm)].map(match => match[1]);
+  for (const targetId of targetIds) {
+    assert.ok(
+      editor.includes(`[data-visual-editor-selected="${targetId}"] [data-visual-editor-target="${targetId}"]`),
+      `missing selection outline for ${targetId}`
+    );
+  }
+});
