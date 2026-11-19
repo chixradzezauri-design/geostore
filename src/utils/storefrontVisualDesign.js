@@ -84,7 +84,8 @@ const normalizeReusableElementStyle = source => {
     minHeight: clamp(value.minHeight, 0, 600, null),
     opacity: clamp(value.opacity, 0, 100, null),
     objectFit: ['cover', 'contain', 'fill'].includes(value.objectFit) ? value.objectFit : '',
-    objectPositionX: clamp(value.objectPositionX, 0, 100, null)
+    objectPositionX: clamp(value.objectPositionX, 0, 100, null),
+    objectPositionY: clamp(value.objectPositionY, 0, 100, null)
   };
 };
 
@@ -500,6 +501,8 @@ export function buildStorefrontElementStyle(rawDesign, elementId, requestedViewp
   if (value.minHeight !== null && Number.isFinite(Number(value.minHeight))) style.minHeight = String(Math.min(600, Math.max(0, Number(value.minHeight)))) + 'px';
   if (value.opacity !== null && Number.isFinite(Number(value.opacity))) style.opacity = String(Math.min(100, Math.max(0, Number(value.opacity))) / 100);
   if (['cover', 'contain', 'fill'].includes(value.objectFit)) style.objectFit = value.objectFit;
-  if (value.objectPositionX !== null && Number.isFinite(Number(value.objectPositionX))) style.objectPosition = String(Math.min(100, Math.max(0, Number(value.objectPositionX)))) + '% center';
+  const objectPositionX = value.objectPositionX !== null && Number.isFinite(Number(value.objectPositionX)) ? Math.min(100, Math.max(0, Number(value.objectPositionX))) : null;
+  const objectPositionY = value.objectPositionY !== null && Number.isFinite(Number(value.objectPositionY)) ? Math.min(100, Math.max(0, Number(value.objectPositionY))) : null;
+  if (objectPositionX !== null || objectPositionY !== null) style.objectPosition = String(objectPositionX ?? 50) + '% ' + String(objectPositionY ?? 50) + '%';
   return style;
 }
