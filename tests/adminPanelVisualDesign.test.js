@@ -1193,3 +1193,12 @@ test('admin style library detects identical style presets without auto-deleting 
   assert.match(editor, /დუბლირებული ასლების მონიშვნა/);
   assert.match(editor, /წაშლა ავტომატურად არ ხდება/);
 });
+
+test('admin style JSON import skips duplicate style values already in the library and within the file', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /const styleKey = style => JSON\.stringify/);
+  assert.match(editor, /const knownStyleKeys = new Set\(normalized\.stylePresets\.map/);
+  assert.match(editor, /const uniqueImportedPresets = validated\.stylePresets\.filter/);
+  assert.match(editor, /duplicateCount \+= 1/);
+  assert.match(editor, /დუბლიკატი გამოტოვებულია/);
+});
