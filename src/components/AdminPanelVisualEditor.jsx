@@ -1194,6 +1194,16 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
     commitChange(resetAdminPanelVisualElement(normalized, viewport, element));
   };
 
+  const resetSelectedElements = () => {
+    const targets = selectedElementKeys.filter(key => customizedElementKeys.has(key));
+    if (!targets.length) return;
+    const confirmed = window.confirm(`არჩეული ${targets.length} შეცვლილი ელემენტის ${viewport} ხედის საწყის მდგომარეობაში აღდგენა? სხვა ხედები და დანარჩენი ელემენტები უცვლელი დარჩება.`);
+    if (!confirmed) return;
+    const nextDesign = targets.reduce((current, key) => resetAdminPanelVisualElement(current, viewport, key), normalized);
+    commitChange(nextDesign);
+    setSelectedElementKeys(current => current.filter(key => !targets.includes(key)));
+  };
+
   return (
     <section className="admin-visual-editor-panel space-y-5 rounded-3xl border border-emerald-400/25 bg-slate-900/90 p-4 sm:p-6" aria-labelledby="admin-visual-editor-title">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1533,6 +1543,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <button type="button" onClick={clearVisibleElementSelection} disabled={!visibleSelectedElementCount} className="rounded-md border border-amber-400/40 px-2 py-1 text-[10px] font-bold text-amber-200 disabled:opacity-40">ნაჩვენების მოხსნა</button>
             <button type="button" onClick={toggleVisibleElementSelection} disabled={!filteredElementEntries.length} className="rounded-md border border-violet-400/40 px-2 py-1 text-[10px] font-bold text-violet-200 disabled:opacity-40">ნაჩვენების გადართვა</button>
             <button type="button" onClick={() => setSelectedElementKeys([])} disabled={!selectedElementKeys.length} className="rounded-md border border-slate-600 px-2 py-1 text-[10px] font-bold text-slate-200 disabled:opacity-40">ყველას მოხსნა</button>
+            <button type="button" onClick={resetSelectedElements} disabled={!selectedElementKeys.some(key => customizedElementKeys.has(key))} className="rounded-md border border-rose-400/40 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-40">მონიშნული შეცვლილის აღდგენა ({selectedElementKeys.filter(key => customizedElementKeys.has(key)).length})</button>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
