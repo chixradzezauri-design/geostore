@@ -328,3 +328,23 @@ test('custom section responsive styles are safely normalized per viewport withou
   assert.equal(section.responsive.mobile.align, 'right');
   assert.equal(section.responsive.desktop, undefined);
 });
+
+
+test('custom section placement accepts supported storefront anchors and safely defaults legacy or invalid values to after-products', () => {
+  const design = normalizeStorefrontVisualDesign({
+    customSections: [
+      { id: 'hero-slot', placement: 'after-hero', blocks: [] },
+      { id: 'banner-slot', placement: 'after-banners', blocks: [] },
+      { id: 'sale-slot', placement: 'after-flash-sale', blocks: [] },
+      { id: 'category-slot', placement: 'after-categories', blocks: [] },
+      { id: 'filter-slot', placement: 'after-filters', blocks: [] },
+      { id: 'product-slot', placement: 'after-products', blocks: [] },
+      { id: 'legacy-slot', blocks: [] },
+      { id: 'invalid-slot', placement: 'before-checkout', blocks: [] }
+    ]
+  });
+  assert.deepEqual(design.customSections.map(section => section.placement), [
+    'after-hero', 'after-banners', 'after-flash-sale', 'after-categories',
+    'after-filters', 'after-products', 'after-products', 'after-products'
+  ]);
+});
