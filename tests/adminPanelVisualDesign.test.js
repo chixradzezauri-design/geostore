@@ -1211,3 +1211,14 @@ test('admin style export v2 preserves library metadata and keeps v1 imports comp
   assert.match(editor, /!\[1, 2\]\.includes\(parsed\?\.version\)/);
   assert.doesNotMatch(editor, /\\\\n\s+window\.alert/);
 });
+
+
+test('admin style backup restore explicitly confirms replacement and guards oversized backups', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /stylePresetImportModeRef\.current === 'restore'/);
+  assert.match(editor, /sourcePresets\.length > 30/);
+  assert.match(editor, /window\.confirm\(`სრული აღდგენა ჩაანაცვლებს/);
+  assert.match(editor, /stylePresets: validated\.stylePresets/);
+  assert.match(editor, /stylePresetImportModeRef\.current = 'merge'/);
+  assert.match(editor, /სრული აღდგენა/);
+});
