@@ -214,7 +214,8 @@ export function buildStorefrontElementStyle(rawDesign, elementId) {
   if (value.fontSize !== null) style.fontSize = String(value.fontSize) + 'px';
   if (value.padding !== null) style.padding = String(value.padding) + 'px';
   if (value.borderRadius !== null) style.borderRadius = String(value.borderRadius) + 'px';
-  if (value.textAlign) style.textAlign = value.textAlign;
-  if (value.fontWeight !== null) style.fontWeight = value.fontWeight;
+  if (['left', 'center', 'right'].includes(value.textAlign)) style.textAlign = value.textAlign;
+  const fontWeight = value.fontWeight == null ? null : Number(value.fontWeight);
+  if ([400, 500, 600, 700, 800, 900].includes(fontWeight)) style.fontWeight = fontWeight;
   return style;
 }

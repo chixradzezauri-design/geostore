@@ -109,3 +109,22 @@ test('unset element styles remain unset after repeated normalization and render 
   assert.equal(secondPass.elementStyles['hero.title'].borderRadius, null);
   assert.deepEqual(buildStorefrontElementStyle(secondPass, 'hero.title'), {});
 });
+
+test('element style builder independently rejects unsafe alignment and font-weight values', () => {
+  const style = buildStorefrontElementStyle({
+    elementStyles: {
+      'hero.title': {
+        textColor: 'url(javascript:alert(1))',
+        backgroundColor: '#abcdef',
+        fontSize: '22',
+        textAlign: 'url(javascript:alert(1))',
+        fontWeight: 'expression(alert(1))'
+      }
+    }
+  }, 'hero.title');
+  assert.equal(style.color, undefined);
+  assert.equal(style.backgroundColor, '#abcdef');
+  assert.equal(style.fontSize, '22px');
+  assert.equal(style.textAlign, undefined);
+  assert.equal(style.fontWeight, undefined);
+});
