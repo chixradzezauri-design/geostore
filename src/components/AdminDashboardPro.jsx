@@ -1064,7 +1064,7 @@ export default function AdminDashboardPro({
   // Keep already-open owner sessions in sync with changes saved from another device.
   // A local unsaved draft always wins over a background refresh.
   useEffect(() => {
-    if (!adminLoggedIn || !isOwner || !adminVisualDesignReady || adminVisualSyncStatus !== 'saved') return;
+    if (!adminLoggedIn || !isOwner || visibleAdminTab !== 'admin_visual_editor' || !adminVisualDesignReady || adminVisualSyncStatus !== 'saved') return;
     let active = true;
     let inFlight = false;
 
@@ -1110,6 +1110,7 @@ export default function AdminDashboardPro({
     };
     window.addEventListener('focus', refreshSharedDesign);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    void refreshSharedDesign();
     const interval = window.setInterval(refreshSharedDesign, 30000);
 
     return () => {
@@ -1118,7 +1119,7 @@ export default function AdminDashboardPro({
       window.removeEventListener('focus', refreshSharedDesign);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [adminLoggedIn, isOwner, adminVisualDesignReady, adminVisualSyncStatus]);
+  }, [adminLoggedIn, isOwner, visibleAdminTab, adminVisualDesignReady, adminVisualSyncStatus]);
 
   useEffect(() => {
     if (!adminLoggedIn) return;

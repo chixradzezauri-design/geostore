@@ -426,6 +426,8 @@ test('admin visual preferences use owner-checked shared Supabase RPCs instead of
 
 test('open admin sessions refresh shared visual settings without overwriting unsaved local drafts', () => {
   const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+  assert.match(dashboard, /visibleAdminTab !== 'admin_visual_editor'/);
+  assert.match(dashboard, /void refreshSharedDesign\(\)/);
   assert.match(dashboard, /window\.setInterval\(refreshSharedDesign, 30000\)/);
   assert.match(dashboard, /window\.addEventListener\('focus', refreshSharedDesign\)/);
   assert.match(dashboard, /document\.addEventListener\('visibilitychange', handleVisibilityChange\)/);
