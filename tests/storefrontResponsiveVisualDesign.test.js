@@ -331,3 +331,19 @@ test('direct-edit storefront text targets stay connected to rendered settings an
   assert.ok(editor.includes('const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign }'));
   assert.ok(editor.includes('onSaveStorefrontDraft(snapshot)'));
 });
+
+test('responsive-only visual element styles remain in the effective tablet and mobile editor preview', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /Object\.keys\(\{ \.\.\.\(design\.elementStyles \|\| \{\}\), \.\.\.\(activeResponsive\.elementStyles \|\| \{\}\) \}\)/);
+  assert.match(editor, /\[id, \{ \.\.\.\(design\.elementStyles\?\.\[id\] \|\| \{\}\), \.\.\.\(activeResponsive\.elementStyles\?\.\[id\] \|\| \{\}\) \}\]/);
+
+  const design = normalizeStorefrontVisualDesign({
+    ...DEFAULT_STOREFRONT_VISUAL_DESIGN,
+    responsive: {
+      tablet: { elementStyles: { 'hero.title': { fontSize: 27 } } },
+      mobile: { elementStyles: { 'hero.description': { color: '#123456' } } }
+    }
+  });
+  assert.equal(buildStorefrontElementStyle(design, 'hero.title', 'tablet').fontSize, '27px');
+  assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'mobile').color, '#123456');
+});
