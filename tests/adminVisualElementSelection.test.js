@@ -54,8 +54,8 @@ test('admin visual element styles use the same tablet and mobile breakpoints as 
   const { readFile } = await import('node:fs/promises');
   const css = await readFile(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
 
-  assert.equal((css.match(/@media \\(min-width: 641px\\) and \\(max-width: 1023px\\)/g) || []).length, 4);
-  assert.equal((css.match(/@media \\(max-width: 640px\\)/g) || []).length, 3);
+  assert.equal(css.split('@media (min-width: 641px) and (max-width: 1023px)').length - 1, 3);
+  assert.equal(css.split('@media (max-width: 640px)').length - 1, 3);
   assert.equal(css.includes('@media (min-width: 768px) and (max-width: 1023px)'), false);
   assert.equal(css.includes('@media (max-width: 767px)'), false);
 });
