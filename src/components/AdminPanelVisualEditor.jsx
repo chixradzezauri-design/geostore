@@ -3,7 +3,8 @@ import {
   ADMIN_PANEL_CONTENT_FIELDS,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   normalizeAdminPanelVisualDesign,
-  resetAdminPanelVisualViewport
+  resetAdminPanelVisualViewport,
+  resetAdminPanelVisualElement
 } from '../utils/adminPanelVisualDesign.js';
 
 const VIEWPORTS = [
@@ -699,6 +700,10 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
     commitChange(resetAdminPanelVisualViewport(normalized, viewport));
   };
 
+  const resetElement = element => {
+    commitChange(resetAdminPanelVisualElement(normalized, viewport, element));
+  };
+
   return (
     <section className="admin-visual-editor-panel space-y-5 rounded-3xl border border-emerald-400/25 bg-slate-900/90 p-4 sm:p-6" aria-labelledby="admin-visual-editor-title">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -961,6 +966,17 @@ export default function AdminPanelVisualEditor({ design, onChange, syncStatus = 
                   aria-label={item.label + ' ელემენტის არჩევა და რედაქტირება'}
                 >
                   {selectedElementKey === key ? 'არჩეულია' : 'რედაქტირება'}
+                </button>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => resetElement(key)}
+                  disabled={!customizedElementKeys.has(key)}
+                  className="rounded-lg border border-rose-400/25 px-2.5 py-1.5 text-[10px] font-semibold text-rose-200 transition hover:bg-rose-400/10 disabled:cursor-not-allowed disabled:opacity-35"
+                  aria-label={item.label + ' დიზაინის საწყის მდგომარეობაში აღდგენა'}
+                >
+                  ამ ელემენტის აღდგენა
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">

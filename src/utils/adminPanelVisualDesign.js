@@ -571,6 +571,35 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
   return { version: 1, theme, layout, components, content, elementStyles, responsive };
 }
 
+export function resetAdminPanelVisualElement(rawDesign, viewport, elementKey) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  if (!Object.prototype.hasOwnProperty.call(ADMIN_PANEL_ELEMENT_DEFINITIONS, elementKey)) return design;
+
+  if (viewport === 'desktop') {
+    return normalizeAdminPanelVisualDesign({
+      ...design,
+      elementStyles: {
+        ...design.elementStyles,
+        [elementKey]: DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles[elementKey]
+      }
+    });
+  }
+
+  if (viewport !== 'tablet' && viewport !== 'mobile') return design;
+  const responsive = { ...design.responsive };
+  const viewportSettings = { ...(responsive[viewport] || {}) };
+  const elementStyles = { ...(viewportSettings.elementStyles || {}) };
+  delete elementStyles[elementKey];
+
+  if (Object.keys(elementStyles).length) viewportSettings.elementStyles = elementStyles;
+  else delete viewportSettings.elementStyles;
+
+  if (Object.keys(viewportSettings).length) responsive[viewport] = viewportSettings;
+  else delete responsive[viewport];
+
+  return normalizeAdminPanelVisualDesign({ ...design, responsive });
+}
+
 export function resetAdminPanelVisualViewport(rawDesign, viewport) {
   const design = normalizeAdminPanelVisualDesign(rawDesign);
 

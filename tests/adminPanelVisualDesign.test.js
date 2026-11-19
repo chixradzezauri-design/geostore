@@ -847,3 +847,64 @@ test('visual editor can isolate element styles customized for the active viewpor
   assert.match(editor, /customizedElementKeys\.has\(key\) &&/);
   assert.match(editor, /შეცვლილია/);
 });
+
+
+test('resetAdminPanelVisualElement resets only the selected element in the active viewport', () => {
+  const {
+    resetAdminPanelVisualElement,
+    DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
+    normalizeAdminPanelVisualDesign
+  } = require('../src/utils/adminPanelVisualDesign.js');
+  const source = normalizeAdminPanelVisualDesign({
+    ...DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
+    elementStyles: {
+      ...DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles,
+      orderCard: { ...DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles.orderCard, fontSize: 22, textColor: '#123456' },
+      orderHeader: { ...DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles.orderHeader, fontSize: 20 }
+    },
+    responsive: {
+      tablet: {
+        elementStyles: {
+          orderCard: { fontSize: 21, textColor: '#abcdef' },
+          orderHeader: { fontSize: 19 }
+        },
+        theme: { accent: '#123456' }
+      },
+      mobile: {
+        elementStyles: {
+          orderCard: { fontSize: 18 },
+          orderHeader: { fontSize: 17 }
+        }
+      }
+    }
+  });
+
+  const desktop = resetAdminPanelVisualElement(source, 'desktop', 'orderCard');
+  assert.deepEqual(desktop.elementStyles.orderCard, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN.elementStyles.orderCard);
+  assert.equal(desktop.elementStyles.orderHeader.fontSize, 20);
+  assert.deepEqual(desktop.responsive, source.responsive);
+
+  const tablet = resetAdminPanelVisualElement(source, 'tablet', 'orderCard');
+  assert.equal(tablet.responsive.tablet.elementStyles.orderCard, undefined);
+  assert.deepEqual(tablet.responsive.tablet.elementStyles.orderHeader, source.responsive.tablet.elementStyles.orderHeader);
+  assert.deepEqual(tablet.responsive.tablet.theme, source.responsive.tablet.theme);
+  assert.deepEqual(tablet.responsive.mobile, source.responsive.mobile);
+  assert.equal(tablet.elementStyles.orderCard.fontSize, 22);
+
+  const mobile = resetAdminPanelVisualElement(source, 'mobile', 'orderCard');
+  assert.equal(mobile.responsive.mobile.elementStyles.orderCard, undefined);
+  assert.deepEqual(mobile.responsive.mobile.elementStyles.orderHeader, source.responsive.mobile.elementStyles.orderHeader);
+  assert.deepEqual(mobile.responsive.tablet, source.responsive.tablet);
+  assert.equal(mobile.elementStyles.orderCard.fontSize, 22);
+
+  const unknown = resetAdminPanelVisualElement(source, 'desktop', 'notARealElement');
+  assert.deepEqual(unknown, source);
+});
+
+test('visual editor exposes a per-element reset without resetting sibling styles', () => {
+  const editor = readFileSync(new URL('../src/components/AdminPanelVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.match(editor, /resetAdminPanelVisualElement\(normalized, viewport, element\)/);
+  assert.match(editor, /onClick=\{\(\) => resetElement\(key\)\}/);
+  assert.match(editor, /ამ ელემენტის აღდგენა/);
+  assert.match(editor, /disabled=\{!customizedElementKeys\.has\(key\)\}/);
+});
