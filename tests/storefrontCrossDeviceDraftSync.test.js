@@ -68,3 +68,11 @@ test('successful publication advances the local draft baseline as well as its ti
   assert.match(publish, /storefrontDraftBaselineRef\.current = JSON\.stringify\(\{ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings \}\)/);
   assert.match(publish, /storefrontDraftLocalDirtyRef\.current = false/);
 });
+
+test('publish rejects a stale editor snapshot before sending the publication RPC', () => {
+  const publish = app.split('const handlePublishStorefront = async () =>')[1]?.split('  useEffect(() => {')[0] || '';
+  assert.match(publish, /const publishEditorSnapshotAtStart = storefrontCurrentSnapshotRef\.current/);
+  assert.match(publish, /storefrontCurrentSnapshotRef\.current !== publishEditorSnapshotAtStart/);
+  assert.ok(publish.indexOf('storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart') < publish.indexOf('publishRequestStarted = true'));
+  assert.match(publish, /if \(!storefrontPublished && uploadedAssets\.length\)/);
+});
