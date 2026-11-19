@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ADMIN_PANEL_FONT_FAMILIES,
   ADMIN_PANEL_VISUAL_STORAGE_KEY,
   DEFAULT_ADMIN_PANEL_VISUAL_DESIGN,
   buildAdminPanelVisualStyle,
@@ -175,4 +176,23 @@ test('admin visual design storage failures fall back safely without throwing', (
 
   assert.equal(saveAdminPanelVisualDesign({}, brokenStorage), false);
   assert.deepEqual(loadAdminPanelVisualDesign(brokenStorage), normalizeAdminPanelVisualDesign(DEFAULT_ADMIN_PANEL_VISUAL_DESIGN));
+});
+
+
+test('admin font family is allowlisted and responsive overrides inherit safely', () => {
+  const design = normalizeAdminPanelVisualDesign({
+    layout: { fontFamily: 'serif' },
+    responsive: {
+      tablet: { layout: { fontFamily: 'georgian' } },
+      mobile: { layout: { fontFamily: 'not-allowed' } }
+    }
+  });
+  const style = buildAdminPanelVisualStyle(design);
+
+  assert.equal(design.layout.fontFamily, 'serif');
+  assert.equal(design.responsive.tablet.layout.fontFamily, 'georgian');
+  assert.equal(Object.hasOwn(design.responsive.mobile.layout, 'fontFamily'), false);
+  assert.equal(style['--admin-vd-fontFamily'], ADMIN_PANEL_FONT_FAMILIES.serif);
+  assert.equal(style['--admin-vd-tablet-fontFamily'], ADMIN_PANEL_FONT_FAMILIES.georgian);
+  assert.equal(style['--admin-vd-mobile-fontFamily'], ADMIN_PANEL_FONT_FAMILIES.serif);
 });
