@@ -11,7 +11,7 @@ const ELEMENT_STYLE_IDS = [
   'header.storeName', 'header.caption', 'header.menu.toggle', 'header.search', 'header.search.input',
   'header.search.button', 'header.menu', 'header.menu.heading', 'header.menu.section',
   'header.menu.sectionTitle', 'header.menu.link', 'header.menu.footer', 'header.menu.languageButton',
-  'footer', 'footer.links', 'footer.link', 'footer.copyright'
+  'footer', 'footer.links', 'footer.link', 'footer.termsLink', 'footer.privacyLink', 'footer.warrantyLink', 'footer.copyright'
 ];
 
 export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
