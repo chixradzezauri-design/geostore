@@ -196,7 +196,7 @@ export function buildAdminPanelVisualStyle(rawDesign) {
       style[`--admin-vd-${prefix}${key}`] = value;
     }
     for (const [key, value] of Object.entries(values.layout)) {
-      style[`--admin-vd-${prefix}${key}`] = key === 'modalOverlayOpacity' ? `${value}%` : key === 'fontFamily' ? (ADMIN_PANEL_FONT_FAMILIES[value] || ADMIN_PANEL_FONT_FAMILIES.system) : `${value}px`;
+      style[`--admin-vd-${prefix}${key}`] = key === 'modalOverlayOpacity' ? `${value}%` : key === 'fontFamily' ? (ADMIN_PANEL_FONT_FAMILIES[value] || ADMIN_PANEL_FONT_FAMILIES.system) : key.endsWith('FontWeight') ? String(value) : `${value}px`;
     }
   }
 
