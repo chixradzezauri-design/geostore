@@ -40,7 +40,8 @@ export const DEFAULT_STOREFRONT_VISUAL_DESIGN = Object.freeze({
   sections: { hero: true, banners: true, flashSale: true, categories: true, filters: true, products: true },
   sectionOrder: SECTION_IDS,
   productOrder: [],
-  customSections: []
+  customSections: [],
+  stylePresets: []
 });
 
 const isPlainObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -53,6 +54,40 @@ const safeColor = (value, fallback) => {
   const color = String(value ?? '').trim();
   return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : fallback;
 };
+
+const normalizeReusableElementStyle = source => {
+  const value = isPlainObject(source) ? source : {};
+  return {
+    textColor: safeColor(value.textColor, ''),
+    backgroundColor: safeColor(value.backgroundColor, ''),
+    borderColor: safeColor(value.borderColor, ''),
+    borderWidth: clamp(value.borderWidth, 0, 12, null),
+    lineHeight: clamp(value.lineHeight, 0.8, 2.5, null),
+    letterSpacing: clamp(value.letterSpacing, -2, 12, null),
+    textTransform: ['none', 'uppercase', 'lowercase', 'capitalize'].includes(value.textTransform) ? value.textTransform : '',
+    textDecoration: ['none', 'underline', 'line-through'].includes(value.textDecoration) ? value.textDecoration : '',
+    fontStyle: ['normal', 'italic'].includes(value.fontStyle) ? value.fontStyle : '',
+    fontFamily: ['inherit', 'manrope', 'georgia', 'arial'].includes(value.fontFamily) ? value.fontFamily : '',
+    boxShadow: ['none', 'soft', 'medium', 'strong'].includes(value.boxShadow) ? value.boxShadow : '',
+    fontSize: clamp(value.fontSize, 10, 64, null),
+    padding: clamp(value.padding, 0, 48, null),
+    paddingX: clamp(value.paddingX, 0, 64, null),
+    paddingY: clamp(value.paddingY, 0, 64, null),
+    marginTop: clamp(value.marginTop, 0, 120, null),
+    marginBottom: clamp(value.marginBottom, 0, 120, null),
+    minWidth: clamp(value.minWidth, 0, 800, null),
+    maxWidth: clamp(value.maxWidth, 0, 1200, null),
+    borderRadius: clamp(value.borderRadius, 0, 32, null),
+    textAlign: ['left', 'center', 'right'].includes(value.textAlign) ? value.textAlign : '',
+    fontWeight: [400, 500, 600, 700, 800, 900].includes(Number(value.fontWeight)) ? Number(value.fontWeight) : null,
+    width: clamp(value.width, 10, 100, null),
+    minHeight: clamp(value.minHeight, 0, 600, null),
+    opacity: clamp(value.opacity, 0, 100, null),
+    objectFit: ['cover', 'contain', 'fill'].includes(value.objectFit) ? value.objectFit : '',
+    objectPositionX: clamp(value.objectPositionX, 0, 100, null)
+  };
+};
+
 const safeImageUrl = value => {
   const raw = String(value ?? '').trim();
   if (!raw || raw.length > 7 * 1024 * 1024) return '';
@@ -285,6 +320,14 @@ export function normalizeStorefrontVisualDesign(rawDesign) {
     sectionOrder,
     productOrder,
     customSections: normalizeStorefrontCustomSections(raw.customSections),
+    stylePresets: (Array.isArray(raw.stylePresets) ? raw.stylePresets : []).slice(0, 20).map((preset, index) => {
+      if (!isPlainObject(preset)) return null;
+      const id = String(preset.id ?? '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) || 'style-preset-' + index;
+      const name = String(preset.name ?? '').trim().slice(0, 40);
+      const style = normalizeReusableElementStyle(preset.style);
+      const hasStyle = Object.values(style).some(value => value !== '' && value !== null);
+      return name && hasStyle ? { id, name, style } : null;
+    }).filter(Boolean),
     responsive: Object.fromEntries(['tablet', 'mobile'].map(viewport => {
       const responsive = isPlainObject(raw.responsive?.[viewport]) ? raw.responsive[viewport] : {};
       const responsiveTheme = isPlainObject(responsive.theme) ? responsive.theme : {};
