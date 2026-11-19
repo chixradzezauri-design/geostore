@@ -24,6 +24,10 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
   assert.equal(design.theme.bannersSectionBorder, '#334155');
   assert.equal(design.theme.categoriesSectionBackground, '#0f172a');
   assert.equal(design.theme.couponsSectionBorder, '#334155');
+  assert.equal(design.theme.cardTitleText, '#f8fafc');
+  assert.equal(design.theme.cardMutedText, '#94a3b8');
+  assert.equal(design.theme.cardShadowColor, '#000000');
+  assert.equal(design.theme.cardHoverBorder, '#34d399');
   assert.equal(design.theme.tableRowBackground, '#0f172a');
   assert.equal(design.theme.tableRowHover, '#172554');
   assert.equal(design.theme.filterBackground, '#020617');
@@ -54,10 +58,10 @@ test('admin visual design rejects unsafe colors and clamps layout values', () =>
 
 test('tablet and mobile admin visual overrides inherit unset desktop values', () => {
   const design = normalizeAdminPanelVisualDesign({
-    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', tableRowBackground: '#abcdef', tableRowHover: '#bcdefa', filterBackground: '#112233', filterText: '#ffffff', filterBorder: '#223344', primaryButtonBackground: '#334455', primaryButtonText: '#ffffff', primaryButtonBorder: '#445566', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', staffSectionBackground: '#aabbcc', inventorySectionBorder: '#bbccdd', analyticsSectionBackground: '#ccddee', ordersSectionBackground: '#ddeeff', supportSectionBorder: '#aabbcc', discountsSectionBackground: '#ddeeff', bannersSectionBorder: '#aabbcc', categoriesSectionBackground: '#ccddee', couponsSectionBorder: '#bbccdd', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678', modalOverlayBackground: '#123456' },
+    theme: { accent: '#112233', panel: '#223344', navActiveBackground: '#abcdef', headerBackground: '#aabbcc', tableHeaderText: '#112244', tableRowBackground: '#abcdef', tableRowHover: '#bcdefa', filterBackground: '#112233', filterText: '#ffffff', filterBorder: '#223344', primaryButtonBackground: '#334455', primaryButtonText: '#ffffff', primaryButtonBorder: '#445566', inputFocus: '#556677', contentCardBackground: '#a1b2c3', contentCardBorder: '#b2c3d4', cardTitleText: '#123456', cardMutedText: '#234567', cardShadowColor: '#345678', cardHoverBorder: '#456789', staffSectionBackground: '#aabbcc', inventorySectionBorder: '#bbccdd', analyticsSectionBackground: '#ccddee', ordersSectionBackground: '#ddeeff', supportSectionBorder: '#aabbcc', discountsSectionBackground: '#ddeeff', bannersSectionBorder: '#aabbcc', categoriesSectionBackground: '#ccddee', couponsSectionBorder: '#bbccdd', modalBackground: '#123abc', modalText: '#ffffff', modalBorder: '#345678', modalOverlayBackground: '#123456' },
     layout: { fontSize: 14, cardRadius: 20, sectionGap: 30, headerPadding: 28, tableCellPadding: 10, inputHeight: 48, cardBorderWidth: 2, cardShadowBlur: 30, modalRadius: 32, modalPadding: 30, modalOverlayOpacity: 90 },
     responsive: {
-      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', tableRowBackground: '#778899', filterBackground: '#8899aa', primaryButtonBackground: '#99aabb', inputFocus: '#778899', contentCardBackground: '#8899aa', modalBackground: '#7788aa', modalOverlayBackground: '#abcdef', staffSectionBackground: '#ddeeff' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12, modalRadius: 18, modalPadding: 16, modalOverlayOpacity: 70 } },
+      tablet: { theme: { accent: '#123456', navActiveBackground: '#445566', headerBackground: '#667788', tableRowBackground: '#778899', filterBackground: '#8899aa', primaryButtonBackground: '#99aabb', inputFocus: '#778899', contentCardBackground: '#8899aa', cardTitleText: '#abcdef', cardShadowColor: '#123abc', modalBackground: '#7788aa', modalOverlayBackground: '#abcdef', staffSectionBackground: '#ddeeff' }, layout: { fontSize: 13, navItemRadius: 8, sectionGap: 18, headerPadding: 16, inputHeight: 42, cardBorderWidth: 1, cardShadowBlur: 12, modalRadius: 18, modalPadding: 16, modalOverlayOpacity: 70 } },
       mobile: { theme: { panel: '#334455' }, layout: { cardPadding: 14 } }
     }
   });
@@ -98,6 +102,10 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-inputHeight'], '48px');
   assert.equal(style['--admin-vd-contentCardBackground'], '#a1b2c3');
   assert.equal(style['--admin-vd-contentCardBorder'], '#b2c3d4');
+  assert.equal(style['--admin-vd-cardTitleText'], '#123456');
+  assert.equal(style['--admin-vd-cardMutedText'], '#234567');
+  assert.equal(style['--admin-vd-cardShadowColor'], '#345678');
+  assert.equal(style['--admin-vd-cardHoverBorder'], '#456789');
   assert.equal(style['--admin-vd-cardBorderWidth'], '2px');
   assert.equal(style['--admin-vd-cardShadowBlur'], '30px');
   assert.equal(style['--admin-vd-modalBackground'], '#123abc');
@@ -120,6 +128,8 @@ test('tablet and mobile admin visual overrides inherit unset desktop values', ()
   assert.equal(style['--admin-vd-couponsSectionBorder'], '#bbccdd');
   assert.equal(style['--admin-vd-tablet-staffSectionBackground'], '#ddeeff');
   assert.equal(style['--admin-vd-tablet-contentCardBackground'], '#8899aa');
+  assert.equal(style['--admin-vd-tablet-cardTitleText'], '#abcdef');
+  assert.equal(style['--admin-vd-tablet-cardShadowColor'], '#123abc');
   assert.equal(style['--admin-vd-tablet-cardBorderWidth'], '1px');
   assert.equal(style['--admin-vd-tablet-cardShadowBlur'], '12px');
   assert.equal(style['--admin-vd-tablet-modalBackground'], '#7788aa');
