@@ -292,7 +292,7 @@ export default function StorefrontVisualEditor({
               <button type="button" onClick={() => setPreviewMode('mobile')} aria-pressed={previewMode === 'mobile'} className={previewMode === 'mobile' ? 'rounded-lg bg-emerald-400 px-3 py-2 text-[11px] font-bold text-slate-950' : 'rounded-lg px-3 py-2 text-[11px] font-bold text-slate-300'}><Smartphone className="mr-1 inline h-3.5 w-3.5" /> Mobile</button>
             </div>
           </div>
-          <div className={previewMode === 'mobile' ? 'gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'} style={{ maxWidth: previewMode === 'mobile' ? '420px' : '100%' }}>
+          <div className={previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : '100%' }}>
             <div className="gs-site-header gs-visual-preview-header">
               <div>{siteSettings?.topBarText || 'GEOSTORE — ტანსაცმელი, ფეხსაცმელი და აქსესუარები'}</div>
               <div className="max-w-7xl">
@@ -306,7 +306,7 @@ export default function StorefrontVisualEditor({
                 <span className="hidden text-[10px] font-semibold sm:inline">მთავარი გვერდის Preview</span>
               </div>
             </div>
-            <div className="gs-visual-preview-content geostore-fashion-store" style={previewStyle}>
+            <div className="gs-visual-preview-content">
               <StoreView
                 currentLang="ka"
                 siteSettings={siteSettings}
