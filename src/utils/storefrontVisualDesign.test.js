@@ -211,6 +211,24 @@ test('element styles support bounded width, height, opacity and safe image fit c
   assert.equal(buildStorefrontElementStyle({ elementStyles: { 'hero.title': { objectFit: 'url(javascript:1)' } } }, 'hero.title').objectFit, undefined);
 });
 
+test('banner and filter sub-elements expose independent safe visual styles', () => {
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'banner.image': { objectFit: 'cover', objectPositionX: 35, opacity: 80 },
+      'banner.description': { textColor: '#fefefe', fontSize: 18 },
+      'banner.button': { backgroundColor: '#112233', borderColor: '#abcdef', borderRadius: 14 },
+      'filters.input': { backgroundColor: '#090909', textColor: '#ffffff', borderColor: '#92785f' },
+      'filters.sortSelect': { fontSize: 16, fontWeight: 700 }
+    }
+  });
+  assert.equal(buildStorefrontElementStyle(design, 'banner.image').objectFit, 'cover');
+  assert.equal(buildStorefrontElementStyle(design, 'banner.image').objectPosition, '35% center');
+  assert.equal(buildStorefrontElementStyle(design, 'banner.description').color, '#fefefe');
+  assert.equal(buildStorefrontElementStyle(design, 'banner.button').backgroundColor, '#112233');
+  assert.equal(buildStorefrontElementStyle(design, 'filters.input').borderColor, '#92785f');
+  assert.equal(buildStorefrontElementStyle(design, 'filters.sortSelect').fontSize, '16px');
+});
+
 test('product ordering accepts unique bounded IDs and ignores empty values', () => {
   const design = normalizeStorefrontVisualDesign({
     productOrder: ['sku-2', 'sku-1', 'sku-2', '', null, 'sku-3']
