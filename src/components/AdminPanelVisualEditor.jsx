@@ -1515,9 +1515,9 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <h3 className="text-sm font-black text-white">ცოცხალი ადმინპანელის Preview</h3>
             <p className="mt-1 text-[10px] leading-4 text-slate-400">ქვემოთ ჩანს რეალური მოდული მიმდინარე მონაცემებით, მაგრამ Preview ყოველთვის მხოლოდ სანახავია — შეკვეთების, პროდუქტებისა და სხვა რეალური მოქმედებების შესრულება დაბლოკილია. ჩართეთ პირდაპირი მონიშვნა სასურველი ელემენტის ასარჩევად.</p>
           </div>
-          <label className="flex shrink-0 items-center gap-2 text-[10px] font-bold text-slate-300">
+          <label className="flex w-full min-w-0 flex-col gap-1.5 text-[10px] font-bold text-slate-300 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
             მოდული
-            <select value={previewTab} onChange={event => onPreviewTabChange?.(event.target.value)} className="max-w-44 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white">
+            <select value={previewTab} onChange={event => onPreviewTabChange?.(event.target.value)} className="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs text-white sm:w-auto sm:max-w-44">
               <option value="orders">შეკვეთები</option>
               <option value="inventory">მარაგები</option>
               <option value="analytics">ანალიტიკა</option>
@@ -1531,22 +1531,22 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             </select>
           </label>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <button type="button" aria-pressed={directSelectionMode} onClick={() => setDirectSelectionMode(value => !value)} className={directSelectionMode ? "rounded-xl bg-emerald-400 px-3 py-2 text-[11px] font-black text-slate-950" : "rounded-xl border border-emerald-400/40 px-3 py-2 text-[11px] font-bold text-emerald-200"}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <button type="button" aria-pressed={directSelectionMode} onClick={() => setDirectSelectionMode(value => !value)} className={directSelectionMode ? "min-h-11 w-full rounded-xl bg-emerald-400 px-3 py-2.5 text-[11px] font-black text-slate-950 sm:w-auto" : "min-h-11 w-full rounded-xl border border-emerald-400/40 px-3 py-2.5 text-[11px] font-bold text-emerald-200 sm:w-auto"}>
             {directSelectionMode ? 'მონიშვნის რეჟიმი ჩართულია' : 'ელემენტის პირდაპირი მონიშვნა'}
           </button>
-          <span className="text-[10px] text-slate-400">{selectedElementKey ? 'არჩეულია: ' + (ADMIN_PANEL_ELEMENT_DEFINITIONS[selectedElementKey]?.label || selectedElementKey) : 'ელემენტი ჯერ არ არის არჩეული'}</span>
+          <span role="status" aria-live="polite" className="min-w-0 break-words text-[10px] leading-4 text-slate-400">{selectedElementKey ? 'არჩეულია: ' + (ADMIN_PANEL_ELEMENT_DEFINITIONS[selectedElementKey]?.label || selectedElementKey) : 'ელემენტი ჯერ არ არის არჩეული'}</span>
         </div>
       </section>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label="მოწყობილობის დიზაინის არჩევა">
         {VIEWPORTS.map(item => (
           <button
             key={item.id}
             type="button"
             aria-pressed={viewport === item.id}
             onClick={() => setViewport(item.id)}
-            className={`rounded-xl border px-4 py-2 text-xs font-bold transition ${viewport === item.id ? 'border-emerald-300 bg-emerald-400 text-slate-950' : 'border-slate-700 bg-slate-950 text-slate-300'}`}
+            className={`flex min-h-11 min-w-0 items-center justify-center rounded-xl border px-2 py-2 text-center text-xs font-bold transition ${viewport === item.id ? 'border-emerald-300 bg-emerald-400 text-slate-950' : 'border-slate-700 bg-slate-950 text-slate-300'}`}
           >
             {item.label}
           </button>
