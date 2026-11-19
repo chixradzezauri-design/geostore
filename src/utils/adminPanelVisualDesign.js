@@ -599,7 +599,49 @@ export function normalizeAdminPanelVisualDesign(rawDesign) {
       }).filter(preset => preset.name && Object.keys(preset.style).length).slice(0, 30)
     : [];
 
-  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets };
+  const stylePresetBackups = Array.isArray(raw.stylePresetBackups)
+    ? raw.stylePresetBackups.slice(-10).map(backup => {
+        const savedAt = typeof backup?.savedAt === 'string' && Number.isFinite(Date.parse(backup.savedAt))
+          ? new Date(backup.savedAt).toISOString()
+          : null;
+        const backupPresets = Array.isArray(backup?.stylePresets)
+          ? normalizeAdminPanelVisualDesign({ stylePresets: backup.stylePresets }).stylePresets
+          : [];
+        const id = typeof backup?.id === 'string' ? backup.id.trim().slice(0, 100) : '';
+        const reason = typeof backup?.reason === 'string' ? backup.reason.trim().slice(0, 100) : 'ავტომატური დაცვა';
+        return savedAt && id && backupPresets.length
+          ? { id, savedAt, reason, stylePresets: backupPresets }
+          : null;
+      }).filter(Boolean)
+    : [];
+
+  return { version: 1, theme, layout, components, content, elementStyles, responsive, stylePresets, stylePresetBackups };
+}
+
+export function createAdminStylePresetBackup(rawDesign, reason = 'მნიშვნელოვანი ცვლილების წინ') {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  if (!design.stylePresets.length) return design;
+  const backup = {
+    id: `admin-style-backup-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    savedAt: new Date().toISOString(),
+    reason: typeof reason === 'string' ? reason.slice(0, 100) : 'ავტომატური დაცვა',
+    stylePresets: design.stylePresets
+  };
+  return normalizeAdminPanelVisualDesign({
+    ...design,
+    stylePresetBackups: [...design.stylePresetBackups, backup].slice(-10)
+  });
+}
+
+export function restoreAdminStylePresetBackup(rawDesign, backupId) {
+  const design = normalizeAdminPanelVisualDesign(rawDesign);
+  const backup = design.stylePresetBackups.find(item => item.id === backupId);
+  if (!backup) return design;
+  const protectedCurrent = createAdminStylePresetBackup(design, 'ავტომატური ასლი აღდგენამდე');
+  return normalizeAdminPanelVisualDesign({
+    ...protectedCurrent,
+    stylePresets: backup.stylePresets
+  });
 }
 
 export function resetAdminPanelVisualElement(rawDesign, viewport, elementKey) {
