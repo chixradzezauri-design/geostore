@@ -1319,7 +1319,7 @@ export default function AdminPanelVisualEditor({ design, onChange, onRetrySave, 
             <section className="space-y-2 rounded-xl border border-amber-400/25 bg-amber-950/10 p-3" aria-label="სტილების სარეზერვო ასლები">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div><h4 className="text-xs font-black text-amber-200">ავტომატური სარეზერვო ასლები</h4><p className="text-[10px] text-slate-400">წაშლამდე და აღდგენამდე შენახული ბოლო 10 მდგომარეობა. აღდგენისას მიმდინარე ვერსიაც დაცული იქნება.</p></div>
-                <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-amber-200">{normalized.stylePresetBackups.length} / 10</span><button type="button" onClick={createManualStyleBackup} disabled={!normalized.stylePresets.length || normalized.stylePresetBackups.length >= 10} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200 disabled:opacity-40">ასლის შექმნა</button></div>
+                <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-amber-200">{normalized.stylePresetBackups.length} / 10</span><button type="button" onClick={createManualStyleBackup} disabled={!normalized.stylePresets.length} className="rounded-md border border-amber-400/40 px-2.5 py-1.5 text-[10px] font-bold text-amber-200 disabled:opacity-40">ასლის შექმნა</button></div>
               </div>
               <div className="space-y-2">
                 {normalized.stylePresetBackups.length === 0 && <p className="rounded-lg border border-dashed border-slate-700 p-3 text-center text-[10px] text-slate-400">სარეზერვო ასლები ჯერ არ შექმნილა. შეგიძლიათ ხელით შექმნათ პირველი ასლი.</p>}
