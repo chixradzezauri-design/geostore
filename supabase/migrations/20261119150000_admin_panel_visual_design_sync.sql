@@ -10,20 +10,6 @@ CREATE TABLE IF NOT EXISTS private.admin_panel_visual_settings (
 
 ALTER TABLE private.admin_panel_visual_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE private.admin_panel_visual_settings FORCE ROW LEVEL SECURITY;
--- Defense-in-depth RLS: only the primary owner identity can address this row.
--- Table privileges remain revoked; application access is still through checked RPCs.
-CREATE POLICY admin_panel_visual_settings_owner_only
-  ON private.admin_panel_visual_settings
-  FOR ALL
-  TO authenticated
-  USING (
-    auth.uid() = '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid
-    AND coalesce(auth.jwt()->'app_metadata'->>'role', '') = 'admin'
-  )
-  WITH CHECK (
-    auth.uid() = '1060de3d-d28a-45f8-9a64-5e0368cffc4b'::uuid
-    AND coalesce(auth.jwt()->'app_metadata'->>'role', '') = 'admin'
-  );
 REVOKE ALL ON TABLE private.admin_panel_visual_settings FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION private.get_admin_panel_visual_design()
