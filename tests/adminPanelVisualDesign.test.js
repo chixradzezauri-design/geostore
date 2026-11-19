@@ -1525,6 +1525,10 @@ test('admin module backup JSON controls export and safely import validated modul
   assert.match(editor, /moduleBackupFileInputRef/);
   assert.match(editor, /JSON იმპორტი/);
   assert.match(editor, /JSON ექსპორტი/);
+  assert.match(editor, /ყველა ასლის JSON ექსპორტი/);
+  assert.match(editor, /geostore-all-module-design-backups\.json/);
+  assert.match(editor, /knownBackups\.has\(signature\)/);
+  assert.match(editor, /დუბლიკატი: \$\{skippedDuplicates\}/);
   assert.match(editor, /მაქსიმუმ 10 ასლის ლიმიტისთვის/);
 });
 
