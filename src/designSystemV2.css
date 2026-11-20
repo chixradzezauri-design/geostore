@@ -977,3 +977,134 @@
     text-align: start;
   }
 }
+
+
+/* Stage 12 — expense entry and calculator forms.
+ * Readable field labels and responsive input/result layout; posting, deletion,
+ * financial math and saved owner-editor colors/values remain untouched. */
+.admin-dashboard-pro.admin-dashboard-shell :is(
+  .admin-expenses,
+  .admin-expense-form,
+  .admin-expense-fields,
+  .admin-expense-field,
+  .admin-profit-calculator,
+  .admin-calculator-layout,
+  .admin-calculator-fields,
+  .admin-calculator-field-grid,
+  .admin-calculator-results
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-staff-panel,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator {
+  padding: clamp(13px, 1.65vw, 22px) !important;
+  border-radius: 20px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-form {
+  gap: 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-fields {
+  align-items: end;
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field > :is(input, select),
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields input {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  width: 100%;
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  box-sizing: border-box;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field > label,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields label {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-form :is(input, select, button):focus-visible,
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-field-grid {
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-field-grid > * {
+  min-inline-size: 0;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results {
+  padding: clamp(13px, 1.4vw, 20px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 5px 12px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div > :last-child {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-field > :is(input, select),
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-fields input {
+    font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-field-grid,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-profit-calculator .admin-calculator-results > div > :last-child {
+    text-align: start;
+  }
+}
