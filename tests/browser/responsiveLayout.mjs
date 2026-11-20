@@ -101,6 +101,29 @@ const adminAnalyticsFixture =
   ).join('') +
   '</div></div></div></div></section>';
 
+const adminFinancialDetailsFixture =
+  '<div class="grid grid-cols-1 xl:grid-cols-2 gap-5">' +
+  '<div class="admin-finance-sources-panel p-5"><div class="flex items-center justify-between gap-3"><h3>შემოსავლის წყაროები</h3>' +
+  '<span>პროდუქტი, დამატებითი მომსახურება და მიწოდება</span></div>' +
+  '<div class="admin-finance-breakdown-row flex justify-between gap-3"><span>პროდუქტის შემოსავალი გრძელი დასახელებით</span><b class="whitespace-nowrap">123456789012.34 ₾</b></div></div>' +
+  '<div class="admin-finance-expenses-panel p-5"><div class="flex items-center justify-between gap-3"><h3>ხარჯების კატეგორიები</h3>' +
+  '<span>ჩანაწერები: 120</span></div>' +
+  '<div class="admin-finance-breakdown-row flex justify-between gap-3"><span>სარეკლამო კამპანიის გრძელიდასახელებისხარჯისკატეგორია (120 ჩანაწერი)</span><b class="whitespace-nowrap">876543210987.65 ₾</b></div>' +
+  '<div class="admin-finance-recent-list"><div class="admin-finance-recent-row flex justify-between gap-3"><span>2026-11-20 · სარეკლამო კამპანია და გრძელი ხარჯის აღწერა</span><b class="whitespace-nowrap">-123456789.00 ₾</b></div></div></div>' +
+  '</div><div class="grid grid-cols-1 xl:grid-cols-2 gap-5">' +
+  '<div class="admin-finance-products-panel p-5"><div class="flex items-center justify-between gap-3"><h3>პროდუქტების მომგებიანობა</h3><span>არჩეული პერიოდი</span></div>' +
+  '<article class="admin-profitability-row"><div class="admin-profitability-heading flex justify-between gap-3"><b>გრძელიდასახელებისპროდუქტისსატესტოდატა</b><span>120 ც.</span></div>' +
+  '<p>მომწოდებელი · კატეგორია</p><div class="admin-profitability-metrics flex flex-wrap justify-between gap-2">' +
+  '<span>შემოსავალი: 123456789012.34 ₾</span><span>თვითღირებულება: არასრულია</span></div>' +
+  '<div class="admin-profitability-results flex justify-between gap-2"><b>მოგება: —</b><span>მარჟა: —</span></div>' +
+  '<p>თვითღირებულება აკლია 6 ერთეულს.</p></article></div>' +
+  '<div class="admin-finance-vendors-panel p-5"><div class="flex items-center justify-between gap-3"><h3>მომწოდებლების მომგებიანობა</h3><span>პროდუქტები და გაყიდვები</span></div>' +
+  '<article class="admin-profitability-row"><div class="admin-profitability-heading flex justify-between gap-3"><b>ძალიანგრძელიმომწოდებლისდასახელება</b><span>12 პროდუქტი · 120 ც.</span></div>' +
+  '<div class="admin-profitability-metrics flex flex-wrap justify-between gap-2">' +
+  '<span>შემოსავალი: 123456789012.34 ₾</span><span>თვითღირებულება: შეფასებულია</span></div>' +
+  '<div class="admin-profitability-results flex justify-between gap-2"><b>მოგება: 9876.54 ₾</b><span>მარჟა: 8.1%</span></div>' +
+  '<p>მიმდინარე ფასით შეფასებულია 3 ერთეული; მოგება დადასტურებული არ არის.</p></article></div></div>';
+
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
   '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
@@ -159,7 +182,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + adminAnalyticsFixture.replace('</section>', adminFinancialDetailsFixture + '</section>') + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -198,6 +221,10 @@ try {
         const analyticsControls = [...adminAnalytics.querySelectorAll('.admin-analytics-actions > select, .admin-analytics-actions > button')];
         const analyticsCards = [...adminAnalytics.querySelectorAll('.admin-analytics-card')];
         const analyticsChartScroll = adminAnalytics.querySelector('.admin-analytics-trend-scroll');
+        const financialPanels = [...adminAnalytics.querySelectorAll('.admin-finance-sources-panel, .admin-finance-expenses-panel, .admin-finance-products-panel, .admin-finance-vendors-panel')];
+        const financialRows = [...adminAnalytics.querySelectorAll('.admin-finance-breakdown-row, .admin-finance-recent-row, .admin-profitability-heading, .admin-profitability-metrics, .admin-profitability-results')];
+        const financeBreakdown = adminAnalytics.querySelector('.admin-finance-breakdown-row');
+        const financeProfitabilityHeading = adminAnalytics.querySelector('.admin-profitability-heading');
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -251,7 +278,13 @@ try {
           analyticsCardCount: analyticsCards.length,
           analyticsChartRight: analyticsChartScroll.getBoundingClientRect().right,
           analyticsChartClientWidth: analyticsChartScroll.clientWidth,
-          analyticsChartScrollWidth: analyticsChartScroll.scrollWidth
+          analyticsChartScrollWidth: analyticsChartScroll.scrollWidth,
+          financePanelCount: financialPanels.length,
+          financePanelMaxRight: Math.max(...financialPanels.map(node => node.getBoundingClientRect().right)),
+          financeRowMaxRight: Math.max(...financialRows.map(node => node.getBoundingClientRect().right)),
+          financeBreakdownColumnCount: getComputedStyle(financeBreakdown).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          financeProfitabilityColumnCount: getComputedStyle(financeProfitabilityHeading).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          financeBreakdownAmountWrap: getComputedStyle(financeBreakdown.lastElementChild).whiteSpace
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -279,6 +312,14 @@ try {
       assert.equal(layout.analyticsCardCount, 8, width + 'px all financial KPIs must remain in the DOM');
       assert.ok(layout.analyticsControlMinHeight >= 43, width + 'px analytics controls must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.analyticsChartRight <= width + 2, width + 'px chart scroll viewport overflow: ' + JSON.stringify(layout));
+      assert.equal(layout.financePanelCount, 4, width + 'px all four finance detail panels must remain visible');
+      assert.ok(layout.financePanelMaxRight <= width + 2, width + 'px financial detail panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.financeRowMaxRight <= width + 2, width + 'px financial figure row overflow: ' + JSON.stringify(layout));
+      assert.equal(layout.financeBreakdownAmountWrap, 'normal', width + 'px long currency amounts must wrap: ' + JSON.stringify(layout));
+      if (width <= 380) {
+        assert.equal(layout.financeBreakdownColumnCount, 1, width + 'px expense breakdown should stack: ' + JSON.stringify(layout));
+        assert.equal(layout.financeProfitabilityColumnCount, 1, width + 'px profit labels should stack: ' + JSON.stringify(layout));
+      }
       if (width <= 768) assert.ok(layout.analyticsChartScrollWidth > layout.analyticsChartClientWidth, width + 'px dense chart should scroll inside its own viewport: ' + JSON.stringify(layout));
       assert.ok(layout.crmActionMinHeight >= 43, width + 'px CRM customer actions must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.crmPaginationMinHeight >= 43, width + 'px CRM pagination must be touch-sized: ' + JSON.stringify(layout));
