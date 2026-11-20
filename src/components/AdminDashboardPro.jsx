@@ -5422,34 +5422,63 @@ export default function AdminDashboardPro({
             </h3>
             <div className="admin-calculator-layout grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
               <div className="admin-calculator-fields space-y-4">
+                <p id="admin-calculator-units-help" className="text-[11px] leading-relaxed text-slate-400">ყველა ფასი და ხარჯი მითითებულია ერთეულზე. ჯამური შემოსავალი და მოგება ითვალისწინებს რაოდენობას.</p>
                 <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="admin-calc-purchase-cost" className="text-slate-400 font-bold block mb-1">თვითღირებულება (₾)</label>
-                    <input id="admin-calc-purchase-cost" type="number" value={calcForm.purchaseCost} onChange={e => setCalcForm({...calcForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-purchase-cost" className="text-slate-400 font-bold block mb-1">თვითღირებულება ერთეულზე (₾)</label>
+                    <input id="admin-calc-purchase-cost" type="number" min="0" step="0.01" inputMode="decimal" aria-describedby="admin-calculator-units-help" value={calcForm.purchaseCost} onChange={e => setCalcForm({...calcForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                   <div>
-                    <label htmlFor="admin-calc-selling-price" className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (₾)</label>
-                    <input id="admin-calc-selling-price" type="number" value={calcForm.sellingPrice} onChange={e => setCalcForm({...calcForm, sellingPrice: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                    <label htmlFor="admin-calc-selling-price" className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი ერთეულზე (₾)</label>
+                    <input id="admin-calc-selling-price" type="number" min="0" step="0.01" inputMode="decimal" aria-describedby="admin-calculator-units-help" value={calcForm.sellingPrice} onChange={e => setCalcForm({...calcForm, sellingPrice: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                   </div>
                 </div>
                 <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="admin-calc-discount-percent" className="text-slate-400 font-bold block mb-1">ფასდაკლება (%)</label>
-                    <input id="admin-calc-discount-percent" type="number" value={calcForm.discountPercent} onChange={e => setCalcForm({...calcForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <input id="admin-calc-discount-percent" type="number" min="0" max="100" step="0.01" inputMode="decimal" value={calcForm.discountPercent} onChange={e => setCalcForm({...calcForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                   <div>
-                    <label htmlFor="admin-calc-shipping-cost" className="text-slate-400 font-bold block mb-1">მიწოდება / ხარჯი (₾)</label>
-                    <input id="admin-calc-shipping-cost" type="number" value={calcForm.shippingCost} onChange={e => setCalcForm({...calcForm, shippingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-shipping-cost" className="text-slate-400 font-bold block mb-1">მიწოდების ხარჯი ერთეულზე (₾)</label>
+                    <input id="admin-calc-shipping-cost" type="number" min="0" step="0.01" inputMode="decimal" aria-describedby="admin-calculator-units-help" value={calcForm.shippingCost} onChange={e => setCalcForm({...calcForm, shippingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                 </div>
+                <section className="admin-calculator-extra-fields space-y-3" aria-labelledby="admin-calc-extra-title">
+                  <div className="min-w-0 border-t border-emerald-500/15 pt-3">
+                    <h4 id="admin-calc-extra-title" className="font-black text-slate-200 text-xs">დამატებითი ხარჯები და რაოდენობა</h4>
+                    <p className="mt-1 text-[10px] leading-relaxed text-slate-400">ეს ოთხი პარამეტრი უკვე მონაწილეობს მოგების გამოთვლაში. შეცვალეთ რეალური მონაცემების მიხედვით.</p>
+                  </div>
+                  <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="admin-calc-packaging-cost" className="text-slate-400 font-bold block mb-1">შეფუთვის ხარჯი (₾/ერთ.)</label>
+                      <input id="admin-calc-packaging-cost" type="number" min="0" step="0.01" inputMode="decimal" value={calcForm.packagingCost} onChange={e => setCalcForm({...calcForm, packagingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                    <div>
+                      <label htmlFor="admin-calc-processing-fee" className="text-slate-400 font-bold block mb-1">დამუშავების საკომისიო (₾/ერთ.)</label>
+                      <input id="admin-calc-processing-fee" type="number" min="0" step="0.01" inputMode="decimal" value={calcForm.processingFee} onChange={e => setCalcForm({...calcForm, processingFee: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                  </div>
+                  <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="admin-calc-other-expenses" className="text-slate-400 font-bold block mb-1">სხვა ხარჯი (₾/ერთ.)</label>
+                      <input id="admin-calc-other-expenses" type="number" min="0" step="0.01" inputMode="decimal" value={calcForm.otherExpenses} onChange={e => setCalcForm({...calcForm, otherExpenses: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                    <div>
+                      <label htmlFor="admin-calc-quantity" className="text-slate-400 font-bold block mb-1">რაოდენობა (ცალი)</label>
+                      <input id="admin-calc-quantity" type="number" min="1" step="1" inputMode="numeric" value={calcForm.quantity} onChange={e => setCalcForm({...calcForm, quantity: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    </div>
+                  </div>
+                </section>
               </div>
               <div className="admin-calculator-results bg-slate-950/80 border border-emerald-500/30 p-6 rounded-3xl space-y-3 shadow-inner flex flex-col justify-center">
                 <h4 className="font-black text-emerald-400 text-sm mb-1">გამოთვლილი მონაცემები</h4>
-                <div className="flex justify-between"><span>ფასდაკლებული ფასი:</span><b className="text-white">{calculatedSalesMetrics.discountedPrice.toFixed(2)} ₾</b></div>
+                <div className="flex justify-between"><span>ფასდაკლებული ფასი ერთეულზე:</span><b className="text-white">{calculatedSalesMetrics.discountedPrice.toFixed(2)} ₾</b></div>
+                <div className="flex justify-between"><span>ჯამური შემოსავალი:</span><b className="text-white">{calculatedSalesMetrics.revenue.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>მთლიანი მოგება:</span><b className="text-emerald-400">{calculatedSalesMetrics.grossProfit.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>წმინდა მოგება:</span><b className="text-cyan-400 text-base">{calculatedSalesMetrics.netProfit.toFixed(2)} ₾</b></div>
                 <div className="flex justify-between"><span>მარჟა (Margin):</span><b className="text-amber-400">{calculatedSalesMetrics.profitMargin.toFixed(1)}%</b></div>
                 <div className="flex justify-between"><span>მარკაპი (Markup):</span><b className="text-indigo-400">{calculatedSalesMetrics.markup.toFixed(1)}%</b></div>
+                <p className="text-[10px] leading-relaxed text-slate-400">მთლიანი მოგება = (ფასდაკლებული ფასი − თვითღირებულება) × რაოდენობა. წმინდა მოგებას დამატებით აკლდება მიწოდება, შეფუთვა, დამუშავება და სხვა ხარჯები თითოეულ ერთეულზე.</p>
               </div>
             </div>
           </div>
