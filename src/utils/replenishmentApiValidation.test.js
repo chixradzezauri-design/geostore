@@ -89,3 +89,17 @@ test('acknowledges only exact matching product, variant and requested values', (
     { productId: 'shirt-1', variantId: 'red-m' }, 5, 20
   ), variant);
 });
+
+test('save must advance the version captured when editing began', () => {
+  const position = { productId: 'shirt-1', variantId: null };
+  const response = { success: true, setting: saved };
+  assert.throws(() => validateReplenishmentSaveResponse(
+    response, position, 5, 20, saved.updated_at
+  ), /სერვერმა შენახვა ვერ დაადასტურა/);
+  assert.equal(validateReplenishmentSaveResponse(
+    response, position, 5, 20, '2026-11-20T10:11:11.999999+00:00'
+  ), saved);
+  assert.equal(validateReplenishmentSaveResponse(
+    response, position, 5, 20, null
+  ), saved);
+});
