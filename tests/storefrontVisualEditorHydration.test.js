@@ -96,3 +96,9 @@ test('draft save cannot start while publish request is in flight', () => {
   assert.match(save, /draftSaveInFlightRef\.current \|\| publishInFlightRef\.current\) return/);
   assert.ok(save.indexOf('publishInFlightRef.current) return') < save.indexOf('draftSaveInFlightRef.current = true'));
 });
+
+test('save and publish errors are visually distinct from successful status', () => {
+  assert.match(editor, /border-rose-400\/40 bg-rose-950\/40 text-rose-200/);
+  assert.match(editor, /border-emerald-400\/20 bg-slate-950\/70 text-emerald-200/);
+  assert.match(editor, /aria-live="polite"/);
+});
