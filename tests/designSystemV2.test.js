@@ -14,6 +14,7 @@ const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.
 const browser = readFileSync(new URL('./browser/realStorefrontSmoke.mjs', import.meta.url), 'utf8');
 const layoutBrowser = readFileSync(new URL('./browser/responsiveLayout.mjs', import.meta.url), 'utf8');
 const admin = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+const adminVisualCss = readFileSync(new URL('../src/adminPanelVisualDesign.css', import.meta.url), 'utf8');
 
 test('Design System 2.0 is appended after all legacy admin and storefront styles', () => {
   assert.equal(main.match(/import '\.\/designSystemV2\.css'/g)?.length, 1);
@@ -219,4 +220,14 @@ test('stage 7 owner visual editor font precedence maintains accessible operation
   assert.match(design, /\[data-admin-visual-design="enabled"\] \.admin-products-panel \.admin-product-controls input/);
   assert.match(design, /max\(16px, var\(--admin-vd-inputFontSize-active, 16px\)\) !important/);
   assert.match(design, /@media \(max-width: 640px\)/);
+});
+
+
+test('stage 7 mobile editor input typography prevents focus zoom without locking larger designs', () => {
+  assert.match(adminVisualCss, /Design System 2\.0 — prevent iOS focus zoom/);
+  assert.match(adminVisualCss, /@media \(max-width: 640px\)/);
+  assert.match(adminVisualCss, /font-size: max\(16px, var\(--admin-vd-inputFontSize-active, 16px\)\) !important/);
+  assert.match(adminVisualCss, /input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\)/);
+  assert.match(layoutBrowser, /orderSearchFontSize >= 16/);
+  assert.match(layoutBrowser, /adminProductPriceFontSize >= 16/);
 });
