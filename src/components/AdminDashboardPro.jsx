@@ -4821,7 +4821,7 @@ export default function AdminDashboardPro({
         )}
 
         {(visibleAdminTab === 'inventory' || adminContentTab === 'inventory') && (
-          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title">
+          <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-inventory-title" aria-busy={inventoryMovementLoading}>
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[.2em] text-emerald-400">INVENTORY AUDIT</p>
@@ -4859,7 +4859,7 @@ export default function AdminDashboardPro({
                   onClick={() => void fetchInventoryMovements(null, false)}
                   disabled={inventoryMovementLoading}
                   className="min-h-11 rounded-xl border border-emerald-500/30 bg-slate-950 px-4 py-3 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/10 disabled:opacity-50"
-                >განახლება</button>
+                >{inventoryMovementLoading ? 'იტვირთება…' : 'განახლება'}</button>
               </div>
             </div>
 
@@ -4880,12 +4880,12 @@ export default function AdminDashboardPro({
 
             {inventoryMovementError && (
               <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">
-                მარაგის ისტორიის ჩატვირთვა ვერ მოხერხდა: {inventoryMovementError}
+                მარაგის ისტორიის ჩატვირთვა ვერ მოხერხდა: {inventoryMovementError}. {inventoryMovementRows.length > 0 ? 'სცადეთ „მეტი ჩანაწერის ჩატვირთვა“ ხელახლა.' : 'სცადეთ „განახლება“ ხელახლა.'}
               </div>
             )}
 
             {inventoryMovementLoading && inventoryMovementRows.length === 0 ? (
-              <div className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400">მარაგის ისტორია იტვირთება…</div>
+              <div role="status" className="rounded-2xl border border-white/5 bg-slate-950/50 p-8 text-center text-xs font-bold text-slate-400">მარაგის ისტორია იტვირთება…</div>
             ) : inventoryMovementRows.length === 0 && !inventoryMovementError ? (
               <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center">
                 <Layers className="mx-auto h-8 w-8 text-emerald-400" />
