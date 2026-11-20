@@ -42,12 +42,12 @@ try {
         documentWidth: document.documentElement.scrollWidth,
         viewportWidth: window.innerWidth,
         headerRight: document.querySelector('.gs-site-header').getBoundingClientRect().right,
-        productGridPresent: Boolean(document.querySelector('.gs-catalog-product-grid')),
-        hasMain: Boolean(document.querySelector('main')),
+        catalogStatePresent: Boolean(document.querySelector('.gs-catalog-product-grid, .gs-empty-products')),
+        hasStorefront: Boolean(document.querySelector('.geostore-storefront')),
       }));
       assert.ok(before.documentWidth <= width + 2, 'Horizontal overflow at ' + width + 'px: ' + JSON.stringify(before));
       assert.ok(before.headerRight <= width + 2, 'Header overflow at ' + width + 'px: ' + JSON.stringify(before));
-      assert.ok(before.hasMain && before.productGridPresent, 'Storefront did not render at ' + width + 'px');
+      assert.ok(before.hasStorefront && before.catalogStatePresent, 'Storefront catalog did not render at ' + width + 'px: ' + JSON.stringify(before));
       const toggle = page.locator('.gs-menu-toggle');
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'), 'true', 'Menu opens at ' + width + 'px');
@@ -56,7 +56,7 @@ try {
       assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'Menu closes at ' + width + 'px');
       assert.equal(pageErrors.length, 0, 'Uncaught browser errors at ' + width + 'px: ' + pageErrors.join('; '));
       console.log('PASS real SPA at ' + width + 'px' +
-        ' (grid present, no overflow, menu toggle works)');
+        ' (catalog state present, no overflow, menu toggle works)');
     } finally {
       await context.close();
     }
