@@ -4688,7 +4688,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {(visibleAdminTab === 'command' || (visibleAdminTab === 'command' || adminContentTab === 'command')) && (
+        {(visibleAdminTab === 'command' || adminContentTab === 'command') && (
           <section className="admin-command-center space-y-6" aria-labelledby="admin-command-title">
             <div className="admin-command-hero rounded-[2rem] border border-emerald-400/25 p-6 sm:p-8">
               <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
