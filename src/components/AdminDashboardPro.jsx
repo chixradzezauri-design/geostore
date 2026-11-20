@@ -1181,6 +1181,7 @@ export default function AdminDashboardPro({
   const PRODUCTS_PER_PAGE = 10;
   const REPLENISHMENT_PER_PAGE = 10;
   const CRM_PER_PAGE = 10;
+  const EXPENSES_PER_PAGE = 10;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
@@ -1311,6 +1312,9 @@ export default function AdminDashboardPro({
 
   const [expenses, setExpenses] = useState([]);
   const [expensesError, setExpensesError] = useState('');
+  const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
+  const [expensePage, setExpensePage] = useState(1);
   const [expenseForm, setExpenseForm] = useState({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
 
   const [aiQuery, setAiQuery] = useState('');
@@ -4532,6 +4536,28 @@ export default function AdminDashboardPro({
   const paginatedCrmUsers = filteredUsers.slice((safeCrmPage - 1) * CRM_PER_PAGE, safeCrmPage * CRM_PER_PAGE);
   const crmPaginationItems = getPaginationItems(safeCrmPage, totalCrmPages);
 
+  // Expense filters affect presentation only: the complete server ledger remains
+  // in expenses for revenue/profit reports, exports and financial reconciliation.
+  const expenseCategoryOptions = Array.from(new Set(expenses.map(exp =>
+    String(exp.category || '').trim()).filter(Boolean)
+  )).sort((a, b) => a.localeCompare(b, 'ka'));
+  const normalizedExpenseSearch = String(expenseSearchQuery || '').trim().toLocaleLowerCase();
+  const filteredExpenses = expenses.filter(exp => {
+    const category = String(exp.category || '').trim();
+    const categoryMatch = expenseCategoryFilter === 'all' || category === expenseCategoryFilter;
+    const searchMatch = !normalizedExpenseSearch || [
+      exp.description, exp.category, exp.date, exp.amount
+    ].some(value => String(value ?? '').toLocaleLowerCase().includes(normalizedExpenseSearch));
+    return categoryMatch && searchMatch;
+  });
+  const totalExpensePages = Math.max(1, Math.ceil(filteredExpenses.length / EXPENSES_PER_PAGE));
+  const safeExpensePage = Math.min(Math.max(1, expensePage), totalExpensePages);
+  const paginatedExpenses = filteredExpenses.slice(
+    (safeExpensePage - 1) * EXPENSES_PER_PAGE,
+    safeExpensePage * EXPENSES_PER_PAGE
+  );
+  const expensePaginationItems = getPaginationItems(safeExpensePage, totalExpensePages);
+
   const normalizedProductSearch = String(productSearchQuery || '').trim().toLocaleLowerCase();
   const selectedProductCategory = safeCategories.find(category => category.name === productCategoryFilter);
   const productCategoryNames = productCategoryFilter === 'ყველა'
@@ -5466,19 +5492,41 @@ export default function AdminDashboardPro({
                 <button type="submit" className="admin-expense-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება ბაზაში</button>
               </form>
             </div>
-            <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
+            <div className="admin-expense-history-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
+              <div className="admin-expense-history-heading flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 id="admin-expense-history-title" className="font-black text-white text-base">ხარჯების ისტორია ბაზიდან ({expenses.length})</h3>
+                  <p className="mt-1 text-[10px] text-slate-400">ძებნა და გვერდები მხოლოდ ამ სიას ცვლის — ფინანსური ჯამები და CSV იყენებს სრულ ისტორიას.</p>
+                </div>
+                <button type="button" onClick={() => void fetchExpenses()} className="admin-expense-refresh min-h-11 rounded-xl border border-emerald-500/25 px-4 py-2 text-xs font-bold text-emerald-300">ისტორიის განახლება</button>
+              </div>
+              <div className="admin-expense-history-filters grid grid-cols-1 sm:grid-cols-2 gap-2" role="search" aria-label="ხარჯების ისტორიის ფილტრები">
+                <div className="min-w-0">
+                  <label htmlFor="admin-expense-history-search" className="mb-1 block text-[10px] font-bold text-slate-300">მოძებნე ხარჯი</label>
+                  <input id="admin-expense-history-search" type="search" placeholder="აღწერა, კატეგორია, თარიღი ან თანხა" value={expenseSearchQuery} onChange={e => { setExpenseSearchQuery(e.target.value); setExpensePage(1); }} className="w-full min-w-0 min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-2 text-sm text-white outline-none" />
+                </div>
+                <div className="min-w-0">
+                  <label htmlFor="admin-expense-history-category" className="mb-1 block text-[10px] font-bold text-slate-300">კატეგორიის ფილტრი</label>
+                  <select id="admin-expense-history-category" value={expenseCategoryFilter} onChange={e => { setExpenseCategoryFilter(e.target.value); setExpensePage(1); }} className="w-full min-w-0 min-h-11 rounded-xl border border-emerald-500/25 bg-slate-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="all">ყველა კატეგორია</option>
+                    {expenseCategoryOptions.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400" role="status" aria-live="polite">ნაპოვნია {filteredExpenses.length} / {expenses.length} ჩანაწერი</p>
               {expensesError && (
                 <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-3 text-xs leading-relaxed text-rose-200">
                   ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა. ბოლო წარმატებით მიღებული ჩანაწერები შენარჩუნებულია. დეტალი: {expensesError}
                   <button type="button" onClick={fetchExpenses} className="ml-2 underline underline-offset-2">ხელახლა ცდა</button>
                 </div>
               )}
-              <div className="space-y-3">
-                {expenses.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-4">ხარჯები ჯერ არ არის დამატებული.</p>
+              <div className="admin-expense-history-list space-y-3" aria-labelledby="admin-expense-history-title">
+                {filteredExpenses.length === 0 ? (
+                  <p className="text-slate-500 text-xs text-center py-4">{expenses.length === 0 ? 'ხარჯები ჯერ არ არის დამატებული.' : 'მითითებული ფილტრებით ხარჯი ვერ მოიძებნა.'}</p>
                 ) : (
-                  expenses.map(exp => (
+                  paginatedExpenses.map(exp => (
                     <div key={exp.id} className="admin-expense-row bg-slate-950/60 p-4 rounded-2xl border border-emerald-500/20 text-xs shadow-inner">
                       <div className="admin-expense-details min-w-0">
                         <div className="admin-expense-heading flex flex-wrap items-start gap-x-2 gap-y-1 min-w-0">
@@ -5498,6 +5546,22 @@ export default function AdminDashboardPro({
                   ))
                 )}
               </div>
+              {filteredExpenses.length > EXPENSES_PER_PAGE && (
+                <nav aria-label="ხარჯების ისტორიის გვერდები" className="admin-expense-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                  <p className="text-[11px] text-slate-400" aria-live="polite">
+                    ნაჩვენებია {(safeExpensePage - 1) * EXPENSES_PER_PAGE + 1}–{Math.min(safeExpensePage * EXPENSES_PER_PAGE, filteredExpenses.length)} / {filteredExpenses.length}
+                  </p>
+                  <div className="admin-expense-pagination-controls flex flex-wrap items-center gap-1.5">
+                    <button type="button" onClick={() => setExpensePage(Math.max(1, safeExpensePage - 1))} disabled={safeExpensePage === 1} className="min-h-11 rounded-xl border border-emerald-500/20 px-3 py-2 text-xs font-bold text-slate-300 disabled:opacity-35">წინა</button>
+                    {expensePaginationItems.map((page, index) => page === '…' ? (
+                      <span key={`expense-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                    ) : (
+                      <button key={page} type="button" onClick={() => setExpensePage(page)} aria-current={safeExpensePage === page ? 'page' : undefined} aria-label={`ხარჯების გვერდი ${page}`} className={`min-h-11 min-w-11 rounded-xl border px-3 py-2 text-xs font-bold ${safeExpensePage === page ? 'border-emerald-400 bg-emerald-500 text-slate-950' : 'border-emerald-500/20 text-slate-300'}`}>{page}</button>
+                    ))}
+                    <button type="button" onClick={() => setExpensePage(Math.min(totalExpensePages, safeExpensePage + 1))} disabled={safeExpensePage === totalExpensePages} className="min-h-11 rounded-xl border border-emerald-500/20 px-3 py-2 text-xs font-bold text-slate-300 disabled:opacity-35">შემდეგი</button>
+                  </div>
+                </nav>
+              )}
             </div>
           </div>
         )}
