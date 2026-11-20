@@ -49,3 +49,11 @@ test('failed draft save keeps the unsaved guard and shows a retry message', () =
   assert.match(save, /ცვლილებები შეუნახავია; სცადეთ ხელახლა/);
   assert.ok(save.indexOf('catch (error)') < save.indexOf('localDesignDirtyRef.current = false'));
 });
+
+test('failed publish request reports failure without claiming success', () => {
+  const publish = editor.split('const publish = async () =>')[1]?.split('const resetDesign = () =>')[0] || '';
+  assert.match(publish, /published = await onPublishStorefront\(\)/);
+  assert.match(publish, /catch \(error\)/);
+  assert.match(publish, /გამოქვეყნება ვერ მოხერხდა/);
+  assert.ok(publish.indexOf('catch (error)') < publish.indexOf("published === true ? 'ცვლილებები გამოქვეყნებულია.'"));
+});
