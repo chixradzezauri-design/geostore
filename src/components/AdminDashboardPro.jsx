@@ -1140,6 +1140,7 @@ export default function AdminDashboardPro({
     if (!canAccessAdminTab(adminTab)) setAdminTab(getDefaultAdminTab());
   }, [adminLoggedIn, adminAccess, adminTab]); 
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [crmPage, setCrmPage] = useState(1);
   const [serverCustomers, setServerCustomers] = useState([]);
   const [crmLoading, setCrmLoading] = useState(false);
   const [crmError, setCrmError] = useState('');
@@ -1179,6 +1180,7 @@ export default function AdminDashboardPro({
   const ORDERS_PER_PAGE = 5;
   const PRODUCTS_PER_PAGE = 10;
   const REPLENISHMENT_PER_PAGE = 10;
+  const CRM_PER_PAGE = 10;
 
   // 🌟 შეკვეთის დეტალების ნახვის მოდალის სახელმწიფო (Order Details Modal)
   const [selectedOrderForModal, setSelectedOrderForModal] = useState(null);
@@ -4523,6 +4525,13 @@ export default function AdminDashboardPro({
     String(u.phone || '').toLowerCase().includes(userSearchQuery.toLowerCase())
   );
 
+  // Derived after the early login view, so no conditional React hook is introduced.
+  // Pagination affects only the rendered CRM rows, never server/customer permissions.
+  const totalCrmPages = Math.max(1, Math.ceil(filteredUsers.length / CRM_PER_PAGE));
+  const safeCrmPage = Math.min(Math.max(1, crmPage), totalCrmPages);
+  const paginatedCrmUsers = filteredUsers.slice((safeCrmPage - 1) * CRM_PER_PAGE, safeCrmPage * CRM_PER_PAGE);
+  const crmPaginationItems = getPaginationItems(safeCrmPage, totalCrmPages);
+
   const normalizedProductSearch = String(productSearchQuery || '').trim().toLocaleLowerCase();
   const selectedProductCategory = safeCategories.find(category => category.name === productCategoryFilter);
   const productCategoryNames = productCategoryFilter === 'ყველა'
@@ -6876,7 +6885,7 @@ export default function AdminDashboardPro({
                 <Users className="w-5 h-5 text-emerald-400" /> CRM მომხმარებლები — სინქრონიზებული სია ({crmUsers.length})
               </h3>
               <div className="admin-crm-search relative w-full sm:w-72">
-                <input type="text" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
+                <input type="text" aria-label="CRM მომხმარებლების ძებნა" placeholder="ძებნა სახელით, ემაილით ან ტელეფონით..." value={userSearchQuery} onChange={e => { setUserSearchQuery(e.target.value); setCrmPage(1); }} className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" />
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3" />
               </div>
             </div>
@@ -6890,8 +6899,8 @@ export default function AdminDashboardPro({
               {(!filteredUsers || filteredUsers.length === 0) ? (
                 <p className="text-slate-500 text-xs py-8 text-center">მომხმარებლები ვერ მოიძებნა.</p>
               ) : (
-                filteredUsers.map((u, i) => {
-                  const uId = u.id || u.email || i;
+                paginatedCrmUsers.map((u, i) => {
+                  const uId = u.id || u.email || (safeCrmPage - 1) * CRM_PER_PAGE + i;
                   const isEditing = editingUserId === uId;
 
                   return (
@@ -6910,6 +6919,8 @@ export default function AdminDashboardPro({
 
                         <div className="admin-crm-user-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                           <button 
+                            type="button"
+                            aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isVip ? "VIP მოხსნა" : "VIP მინიჭება"}`}
                             onClick={() => handleToggleVipUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isVip ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300 border border-emerald-500/20 hover:text-white'}`}
                             title="VIP სტატუსი"
@@ -6918,6 +6929,8 @@ export default function AdminDashboardPro({
                           </button>
 
                           <button 
+                            type="button"
+                            aria-label={`${u.name || u.email || "მომხმარებელი"} — ${u.isBlocked ? "CRM შეზღუდვის ნიშნის მოხსნა" : "CRM-ში შეზღუდულად მონიშვნა"}`}
                             onClick={() => handleToggleBlockUser(u.id || u.email)} 
                             className={`px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer transition shadow ${u.isBlocked ? 'bg-rose-500 text-white' : 'bg-slate-900 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10'}`}
                             title="მხოლოდ ლოკალური CRM ჩანაწერის ნიშანი; Auth ანგარიშს არ ბლოკავს"
@@ -6927,6 +6940,9 @@ export default function AdminDashboardPro({
                           </button>
 
                           <button 
+                            type="button"
+                            aria-label={`${u.name || u.email || "მომხმარებელი"} — პერსონალური CRM პარამეტრების რედაქტირება`}
+                            aria-expanded={isEditing}
                             onClick={() => {
                               if (isEditing) {
                                 setEditingUserId(null);
@@ -6939,14 +6955,14 @@ export default function AdminDashboardPro({
                             className="p-2 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/20 rounded-xl cursor-pointer transition"
                             title="პერსონალური ფასდაკლება & შენიშვნები"
                           >
-                            <Edit3 className="w-4 h-4" />
+                            <Edit3 className="w-4 h-4" /> <span>რედაქტირება</span>
                           </button>
 
-                          {!u.isServerCustomer && (<button onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
+                          {!u.isServerCustomer && (<button type="button" aria-label={`${u.name || u.email || "მომხმარებელი"} — ლოკალური CRM ჩანაწერის წაშლა`} onClick={() => handleDeleteUser(u.id || u.email, u.name)} 
                             className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl cursor-pointer transition"
                             title="მხოლოდ ლოკალური CRM ჩანაწერის წაშლა; Auth ანგარიშს არ შლის"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" /> <span>ლოკალური წაშლა</span>
                           </button>)}
                         </div>
                       </div>
@@ -6987,6 +7003,22 @@ export default function AdminDashboardPro({
                 })
               )}
             </div>
+            {filteredUsers.length > CRM_PER_PAGE && (
+              <nav aria-label="CRM მომხმარებლების გვერდები" className="admin-crm-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                <p className="text-[11px] text-slate-400">
+                  ნაჩვენებია {(safeCrmPage - 1) * CRM_PER_PAGE + 1}–{Math.min(safeCrmPage * CRM_PER_PAGE, filteredUsers.length)} / {filteredUsers.length}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button type="button" onClick={() => setCrmPage(Math.max(1, safeCrmPage - 1))} disabled={safeCrmPage === 1} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">წინა</button>
+                  {crmPaginationItems.map((page, index) => page === '…' ? (
+                    <span key={`crm-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                  ) : (
+                    <button key={page} type="button" onClick={() => setCrmPage(page)} aria-current={safeCrmPage === page ? 'page' : undefined} aria-label={`CRM გვერდი ${page}`} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-bold ${safeCrmPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
+                  ))}
+                  <button type="button" onClick={() => setCrmPage(Math.min(totalCrmPages, safeCrmPage + 1))} disabled={safeCrmPage === totalCrmPages} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">შემდეგი</button>
+                </div>
+              </nav>
+            )}
           </div>
         )}
 
