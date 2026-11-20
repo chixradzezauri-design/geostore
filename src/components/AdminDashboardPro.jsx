@@ -1329,16 +1329,18 @@ export default function AdminDashboardPro({
       const result = await response.json();
       if (requestId !== replenishmentRequestRef.current) return;
       setReplenishmentSettings(Array.isArray(result?.items) ? result.items : []);
+      return true;
     } catch (error) {
       if (requestId !== replenishmentRequestRef.current) return;
       setReplenishmentError(error?.message || 'შევსების პარამეტრების ჩატვირთვა ვერ მოხერხდა.');
+      return false;
     } finally {
       if (requestId === replenishmentRequestRef.current) setReplenishmentLoading(false);
     }
   };
 
   const saveInventoryReplenishmentSetting = async (position) => {
-    if (!hasProductsPermission) return;
+    if (!hasProductsPermission || replenishmentSavingKey) return;
     const draft = replenishmentDrafts[position.key] || {};
     const threshold = Number(draft.threshold ?? position.threshold);
     const target = Number(draft.target ?? position.target);
@@ -1364,7 +1366,8 @@ export default function AdminDashboardPro({
         const detail = await response.text().catch(() => '');
         throw new Error(detail || `HTTP ${response.status}`);
       }
-      await fetchInventoryReplenishmentSettings();
+      const refreshed = await fetchInventoryReplenishmentSettings();
+      if (!refreshed) throw new Error('პარამეტრები შენახულია, მაგრამ განახლებული მონაცემების ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.');
       setReplenishmentDrafts(current => {
         const next = { ...current };
         delete next[position.key];
@@ -4977,7 +4980,7 @@ export default function AdminDashboardPro({
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{position.isLowStock ? Math.max(0, Number(targetValue) - position.stock) : 0}</strong></div>
-                    <div className="admin-replenishment-save col-span-2 flex items-center xl:col-span-1"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={replenishmentSavingKey === position.key || !hasProductsPermission} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
+                    <div className="admin-replenishment-save col-span-2 flex items-center xl:col-span-1"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={Boolean(replenishmentSavingKey) || replenishmentLoading || !hasProductsPermission} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button></div>
                   </article>
                 );
               })}
