@@ -479,3 +479,31 @@
     min-block-size: 44px;
   }
 }
+
+
+/* Stage 6 — ultra-narrow compatibility with previously shipped admin rules.
+ * Match the older high-specificity important controls without replacing the
+ * intentionally single-column 320–380px product editor. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-pagination button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+@media (max-width: 639px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls input,
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-search input {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
