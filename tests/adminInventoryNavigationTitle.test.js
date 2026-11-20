@@ -212,7 +212,7 @@ test('synchronous lock prevents double-click save races before React re-renders'
   assert.match(dashboard, /const replenishmentSavingRef = useRef\(false\)/);
   assert.match(save, /if \(!hasProductsPermission \|\| replenishmentSavingRef\.current/);
   assert.match(save, /replenishmentSavingRef\.current = true/);
-  assert.match(save, /finally \{\s*replenishmentSavingRef\.current = false/);
+  assert.match(save, /finally \{\s*if \(isCurrentAdminSession\(requestSessionVersion\)\) \{\s*replenishmentSavingRef\.current = false/);
   assert.ok(save.indexOf('replenishmentSavingRef.current = true') < save.indexOf('await getSupabaseHeaders()'));
 });
 
@@ -234,10 +234,10 @@ test('conflict recovery retains drafts if server reload fails and discards only 
   assert.ok(start >= 0 && end > start);
   const recover = dashboard.slice(start, end);
   assert.match(recover, /replenishmentRecoveryRef\.current = true/);
-  assert.match(recover, /if \(await fetchInventoryReplenishmentSettings\(\) !== true\) return/);
-  assert.ok(recover.indexOf('if (await fetchInventoryReplenishmentSettings() !== true) return') < recover.indexOf('setReplenishmentDrafts(current =>'));
+  assert.match(recover, /if \(await fetchInventoryReplenishmentSettings\(\) !== true \|\| !isCurrentAdminSession\(requestSessionVersion\)\) return/);
+  assert.ok(recover.indexOf('if (await fetchInventoryReplenishmentSettings() !== true || !isCurrentAdminSession(requestSessionVersion)) return') < recover.indexOf('setReplenishmentDrafts(current =>'));
   assert.match(recover, /setReplenishmentConflictKeys\(current =>/);
-  assert.match(recover, /finally \{\s*replenishmentRecoveryRef\.current = false/);
+  assert.match(recover, /finally \{\s*if \(isCurrentAdminSession\(requestSessionVersion\)\) replenishmentRecoveryRef\.current = false/);
   assert.match(dashboard, /onClick=\{\(\) => void recoverInventoryReplenishmentConflict\(position\.key\)\}/);
   assert.match(dashboard, /სერვერის ვერსიით ჩანაცვლება/);
 });
