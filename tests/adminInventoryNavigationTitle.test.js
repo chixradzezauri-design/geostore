@@ -178,3 +178,13 @@ test('replenishment list refresh shows parsed server error messages', () => {
   assert.match(fetcher, /JSON\.parse\(detail\)\?\.message \|\| detail/);
   assert.match(fetcher, /throw new Error\(message \|\| `HTTP \$\{response\.status\}`\)/);
 });
+
+test('replenishment save requires matching server acknowledgment before clearing drafts', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /saveResult\?\.success !== true/);
+  assert.match(save, /!saveResult\?\.setting\?\.updated_at/);
+  assert.match(save, /String\(saveResult\.setting\.product_id\) !== String\(position\.productId\)/);
+  assert.ok(save.indexOf('const saveResult = await response.json()') < save.indexOf('setReplenishmentDrafts(current =>'));
+});
