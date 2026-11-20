@@ -1316,7 +1316,8 @@ export default function AdminDashboardPro({
   const [isAiThinking, setIsAiThinking] = useState(false);
 
   const fetchInventoryReplenishmentSettings = async () => {
-    if (!hasProductsPermission) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!hasProductsPermission || !isCurrentAdminSession(requestSessionVersion)) return false;
     const requestId = ++replenishmentRequestRef.current;
     setReplenishmentLoading(true);
     setReplenishmentError('');
@@ -1325,7 +1326,7 @@ export default function AdminDashboardPro({
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_inventory_replenishment_settings`, {
         method: 'POST', headers, body: JSON.stringify({ p_limit: 1000 })
       });
-      if (requestId !== replenishmentRequestRef.current) return;
+      if (requestId !== replenishmentRequestRef.current || !isCurrentAdminSession(requestSessionVersion)) return false;
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         let message = detail;
@@ -1333,25 +1334,26 @@ export default function AdminDashboardPro({
         throw new Error(message || `HTTP ${response.status}`);
       }
       const result = await response.json();
-      if (requestId !== replenishmentRequestRef.current) return;
+      if (requestId !== replenishmentRequestRef.current || !isCurrentAdminSession(requestSessionVersion)) return false;
       const settings = validateReplenishmentSettingsResponse(result);
       setReplenishmentSettings(settings);
       return true;
     } catch (error) {
-      if (requestId !== replenishmentRequestRef.current) return;
+      if (requestId !== replenishmentRequestRef.current || !isCurrentAdminSession(requestSessionVersion)) return false;
       setReplenishmentError(error?.message || 'შევსების პარამეტრების ჩატვირთვა ვერ მოხერხდა.');
       return false;
     } finally {
-      if (requestId === replenishmentRequestRef.current) setReplenishmentLoading(false);
+      if (requestId === replenishmentRequestRef.current && isCurrentAdminSession(requestSessionVersion)) setReplenishmentLoading(false);
     }
   };
 
   const recoverInventoryReplenishmentConflict = async positionKey => {
-    if (!hasProductsPermission || replenishmentLoading || replenishmentSavingRef.current || replenishmentRecoveryRef.current) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!hasProductsPermission || replenishmentLoading || replenishmentSavingRef.current || replenishmentRecoveryRef.current || !isCurrentAdminSession(requestSessionVersion)) return;
     replenishmentRecoveryRef.current = true;
     try {
       // Discard a stale local draft only after the authoritative list loaded.
-      if (await fetchInventoryReplenishmentSettings() !== true) return;
+      if (await fetchInventoryReplenishmentSettings() !== true || !isCurrentAdminSession(requestSessionVersion)) return;
       setReplenishmentDrafts(current => {
         const next = { ...current };
         delete next[positionKey];
@@ -1363,12 +1365,13 @@ export default function AdminDashboardPro({
         return next;
       });
     } finally {
-      replenishmentRecoveryRef.current = false;
+      if (isCurrentAdminSession(requestSessionVersion)) replenishmentRecoveryRef.current = false;
     }
   };
 
   const saveInventoryReplenishmentSetting = async (position) => {
-    if (!hasProductsPermission || replenishmentSavingRef.current || replenishmentSavingKey || replenishmentLoading) return;
+    const requestSessionVersion = adminSessionVersion.current;
+    if (!hasProductsPermission || replenishmentSavingRef.current || replenishmentSavingKey || replenishmentLoading || !isCurrentAdminSession(requestSessionVersion)) return;
     const draft = replenishmentDrafts[position.key] || {};
     const expectedUpdatedAt = Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt') ? draft.expectedUpdatedAt : position.updatedAt;
     if (position.hasCustomSetting && !expectedUpdatedAt) {
@@ -1393,6 +1396,7 @@ export default function AdminDashboardPro({
     const savedTarget = target;
     try {
       const headers = await getSupabaseHeaders();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_save_inventory_replenishment_setting`, {
         method: 'POST', headers,
         body: JSON.stringify({
@@ -1403,8 +1407,10 @@ export default function AdminDashboardPro({
           p_expected_updated_at: expectedUpdatedAt
         })
       });
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
+        if (!isCurrentAdminSession(requestSessionVersion)) return;
         let message = detail;
         let isConflict = false;
         try {
@@ -1418,8 +1424,10 @@ export default function AdminDashboardPro({
         throw new Error(message || `HTTP ${response.status}`);
       }
       const saveResult = await response.json();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       const savedSetting = validateReplenishmentSaveResponse(saveResult, position, savedThreshold, savedTarget, expectedUpdatedAt);
       const refreshed = await fetchInventoryReplenishmentSettings();
+      if (!isCurrentAdminSession(requestSessionVersion)) return;
       if (!refreshed) {
         // The save was confirmed. Preserve the authoritative returned version for this
         // row instead of leaving an old revision behind after a failed list refresh.
@@ -1443,10 +1451,12 @@ export default function AdminDashboardPro({
         return next;
       });
     } catch (error) {
-      setReplenishmentError(error?.message || 'შევსების პარამეტრების შენახვა ვერ მოხერხდა.');
+      if (isCurrentAdminSession(requestSessionVersion)) setReplenishmentError(error?.message || 'შევსების პარამეტრების შენახვა ვერ მოხერხდა.');
     } finally {
-      replenishmentSavingRef.current = false;
-      setReplenishmentSavingKey('');
+      if (isCurrentAdminSession(requestSessionVersion)) {
+        replenishmentSavingRef.current = false;
+        setReplenishmentSavingKey('');
+      }
     }
   };
 
@@ -2257,7 +2267,10 @@ export default function AdminDashboardPro({
     setReplenishmentLoading(false);
     setReplenishmentError('');
     setReplenishmentDrafts({});
+    setReplenishmentConflictKeys({});
     setReplenishmentSavingKey('');
+    replenishmentSavingRef.current = false;
+    replenishmentRecoveryRef.current = false;
     setSelectedOrderForModal(null);
     setOrderAdminNoteInput('');
     setReactivationOrder(null);

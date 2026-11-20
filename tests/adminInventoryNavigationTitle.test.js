@@ -246,3 +246,38 @@ test('partially successful save does not falsely claim the save itself failed', 
   assert.doesNotMatch(dashboard, /პარამეტრების შენახვა\/ჩატვირთვა ვერ მოხერხდა: \{replenishmentError\}/);
   assert.match(dashboard, /პარამეტრი შენახულია, მაგრამ სრული სიის განახლება ვერ მოხერხდა/);
 });
+
+test('replenishment reads and writes ignore late responses from previous admin sessions', () => {
+  const loadStart = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
+  const loadEnd = dashboard.indexOf('const recoverInventoryReplenishmentConflict = async', loadStart);
+  const loader = dashboard.slice(loadStart, loadEnd);
+  assert.match(loader, /const requestSessionVersion = adminSessionVersion\.current/);
+  assert.match(loader, /!hasProductsPermission \|\| !isCurrentAdminSession\(requestSessionVersion\)/);
+  assert.match(loader, /requestId !== replenishmentRequestRef\.current \|\| !isCurrentAdminSession\(requestSessionVersion\)/);
+  assert.match(loader, /requestId === replenishmentRequestRef\.current && isCurrentAdminSession\(requestSessionVersion\)/);
+
+  const saveStart = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const saveEnd = dashboard.indexOf('const fetchInventoryMovements = async', saveStart);
+  const save = dashboard.slice(saveStart, saveEnd);
+  assert.match(save, /const requestSessionVersion = adminSessionVersion\.current/);
+  assert.ok(save.split('if (!isCurrentAdminSession(requestSessionVersion)) return;').length >= 6);
+  assert.match(save, /if \(isCurrentAdminSession\(requestSessionVersion\)\) setReplenishmentError/);
+  assert.match(save, /if \(isCurrentAdminSession\(requestSessionVersion\)\) \{\s*replenishmentSavingRef\.current = false/);
+
+  const logoutStart = dashboard.indexOf('adminSessionActiveRef.current = Boolean(adminLoggedIn)');
+  const logoutEnd = dashboard.indexOf('}, [adminLoggedIn]);', logoutStart);
+  const logout = dashboard.slice(logoutStart, logoutEnd);
+  assert.match(logout, /setReplenishmentSettings\(\[\]\)/);
+  assert.match(logout, /setReplenishmentConflictKeys\(\{\}\)/);
+  assert.match(logout, /replenishmentSavingRef\.current = false/);
+  assert.match(logout, /replenishmentRecoveryRef\.current = false/);
+});
+
+test('replenishment conflict recovery never overwrites a new admin session', () => {
+  const start = dashboard.indexOf('const recoverInventoryReplenishmentConflict = async');
+  const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
+  const recovery = dashboard.slice(start, end);
+  assert.match(recovery, /const requestSessionVersion = adminSessionVersion\.current/);
+  assert.match(recovery, /await fetchInventoryReplenishmentSettings\(\) !== true \|\| !isCurrentAdminSession\(requestSessionVersion\)/);
+  assert.match(recovery, /if \(isCurrentAdminSession\(requestSessionVersion\)\) replenishmentRecoveryRef\.current = false/);
+});
