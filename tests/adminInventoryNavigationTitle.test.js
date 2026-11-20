@@ -13,3 +13,10 @@ test('command center visibility condition avoids redundant nested checks', () =>
   assert.equal(dashboard.includes("(visibleAdminTab === 'command' || (visibleAdminTab === 'command' || adminContentTab === 'command'))"), false);
   assert.equal(dashboard.includes("(visibleAdminTab === 'command' || adminContentTab === 'command')"), true);
 });
+
+test('admin navigation keeps long Georgian labels readable and focus visible', () => {
+  assert.match(dashboard, /className="flex min-w-0 items-center gap-2\.5"/);
+  assert.match(dashboard, /className="min-w-0 break-words">\{tab\.label\}/);
+  assert.match(dashboard, /focus-visible:outline-emerald-300/);
+  assert.match(dashboard, /shrink-0 px-2 py-0\.5 rounded-full/);
+});
