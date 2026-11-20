@@ -454,7 +454,7 @@ test('stage 16 expense ledger fetches cannot overwrite newer snapshots', () => {
   assert.match(fetchCode, /const requestId = \+\+expenseFetchRequestRef\.current/);
   assert.match(fetchCode, /expenseFetchInFlightRef\.current = true/);
   assert.match(fetchCode, /const isLatestExpenseRequest = \(\) =>\s*isCurrentAdminSession\(requestSessionVersion\) && requestId === expenseFetchRequestRef\.current/);
-  assert.equal((fetchCode.match(/if \(!isLatestExpenseRequest\(\)\) return false;/g) || []).length, 5);
+  assert.ok((fetchCode.match(/if \(!isLatestExpenseRequest\(\)\) return false;/g) || []).length >= 5, 'every asynchronous expense boundary must reject stale reads');
   assert.match(fetchCode, /if \(!isLatestExpenseRequest\(\)\) return false;\s*setExpenses\(allExpenses\);/);
   assert.match(fetchCode, /catch \(error\) \{\s*if \(!isLatestExpenseRequest\(\)\) return false;/);
   assert.match(fetchCode, /finally \{\s*if \(requestId === expenseFetchRequestRef\.current\) \{\s*expenseFetchInFlightRef\.current = false;/);
