@@ -4762,7 +4762,7 @@ export default function AdminDashboardPro({
                       return (
                         <button type="button" key={String(ticket.id)} onClick={() => setAdminTab('support')} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-amber-400/40">
                           <span className="min-w-0"><strong className="block truncate text-xs text-white">{ticket.subject || 'მხარდაჭერის მოთხოვნა'}</strong><span className="mt-1 block text-[10px] text-slate-400">{ticket.customerName || ticket.email || 'მომხმარებელი'}</span></span>
-                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
+                          <span className={`max-w-[45%] shrink-0 break-words rounded-full px-2 py-1 text-right text-[10px] leading-4 font-bold ${isOverdue ? 'bg-amber-400/15 text-amber-200' : 'bg-slate-800 text-slate-300'}`}>{isOverdue ? 'ვადაგადაცილებული' : ticket.status}</span>
                         </button>
                       );
                     })}
