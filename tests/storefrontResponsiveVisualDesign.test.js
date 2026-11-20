@@ -477,3 +477,10 @@ test('image and spacing reset controls use localized property labels', async () 
     assert.ok(editor.includes(key + ": '"));
   }
 });
+
+test('draft save warns about edits made while the save request was pending', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  assert.ok(editor.includes('const hasNewerLocalChanges = JSON.stringify(designRef.current) !== JSON.stringify(snapshotDesign);'));
+  assert.ok(editor.includes('saved === true && !hasNewerLocalChanges'));
+  assert.ok(editor.includes('ხელახლა შეინახეთ ბოლო ცვლილებები.'));
+});
