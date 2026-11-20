@@ -23,6 +23,7 @@ import { mergeCrmCustomersFromOrders } from '../utils/adminCrm.js';
 const StorefrontVisualEditor = React.lazy(() => import('./StorefrontVisualEditor'));
 import { fetchAdminCustomerDirectory, saveAdminCustomerCrmProfile } from '../utils/adminCustomerCrmApi.js';
 import { buildInventoryReplenishmentPlan, filterInventoryReplenishmentPlan } from '../utils/inventoryReplenishment.js';
+import { validateReplenishmentSettingsResponse, validateReplenishmentSaveResponse } from '../utils/replenishmentApiValidation.js';
 import AdminPanelVisualEditor from './AdminPanelVisualEditor';
 import { ADMIN_PANEL_VISUAL_STORAGE_KEY, buildAdminPanelVisualStyle, DEFAULT_ADMIN_PANEL_VISUAL_DESIGN, loadAdminPanelVisualDesign, normalizeAdminPanelVisualDesign, saveAdminPanelVisualDesign } from '../utils/adminPanelVisualDesign.js';
 import { fetchAdminPanelVisualDesign, saveAdminPanelVisualDesignToCloud } from '../utils/adminPanelVisualDesignApi.js';
@@ -1330,16 +1331,8 @@ export default function AdminDashboardPro({
       }
       const result = await response.json();
       if (requestId !== replenishmentRequestRef.current) return;
-      if (!Array.isArray(result?.items) || result?.has_more === true || result.items.some(item =>
-        !item || item.product_id == null || !item.updated_at ||
-        !Number.isSafeInteger(Number(item.low_stock_threshold)) ||
-        !Number.isSafeInteger(Number(item.target_stock)) ||
-        Number(item.low_stock_threshold) < 0 || Number(item.low_stock_threshold) > 100000 ||
-        Number(item.target_stock) <= Number(item.low_stock_threshold) || Number(item.target_stock) > 1000000
-      )) {
-        throw new Error('მარაგის პარამეტრების სია არასრულია ან არასწორია. მონაცემები არ განახლებულა; დაუკავშირდით ადმინისტრატორს.');
-      }
-      setReplenishmentSettings(result.items);
+      const settings = validateReplenishmentSettingsResponse(result);
+      setReplenishmentSettings(settings);
       return true;
     } catch (error) {
       if (requestId !== replenishmentRequestRef.current) return;
@@ -1354,7 +1347,7 @@ export default function AdminDashboardPro({
     if (!hasProductsPermission || replenishmentSavingKey || replenishmentLoading) return;
     const draft = replenishmentDrafts[position.key] || {};
     const expectedUpdatedAt = Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt') ? draft.expectedUpdatedAt : position.updatedAt;
-    if (position.hasCustomSetting && !expectedUpdatedAt && !Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt')) {
+    if (position.hasCustomSetting && !expectedUpdatedAt) {
       setReplenishmentError('შენახულ პარამეტრს ვერსიის ინფორმაცია აკლია. განაახლეთ მონაცემები ხელახლა შენახვამდე.');
       return;
     }
@@ -1392,11 +1385,7 @@ export default function AdminDashboardPro({
         throw new Error(message || `HTTP ${response.status}`);
       }
       const saveResult = await response.json();
-      if (saveResult?.success !== true || !saveResult?.setting?.updated_at ||
-          String(saveResult.setting.product_id) !== String(position.productId) ||
-          (saveResult.setting.variant_id ?? null) !== (position.variantId ?? null)) {
-        throw new Error('სერვერმა შენახვა ვერ დაადასტურა. განაახლეთ პარამეტრები ხელახლა შენახვამდე.');
-      }
+      validateReplenishmentSaveResponse(saveResult, position, savedThreshold, savedTarget);
       const refreshed = await fetchInventoryReplenishmentSettings();
       if (!refreshed) throw new Error('პარამეტრები შენახულია, მაგრამ განახლებული მონაცემების ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.');
       setReplenishmentDrafts(current => {
