@@ -196,7 +196,7 @@ try {
       assert.ok(layout.adminProductPaginationMinHeight >= 43, width + 'px product pages must be touch-sized: ' + JSON.stringify(layout));
       if (width <= 639) {
         assert.ok(layout.adminProductPriceFontSize >= 16, width + 'px admin product inputs must avoid iOS zoom: ' + JSON.stringify(layout));
-        assert.equal(layout.adminProductColumns, 2, width + 'px admin quick controls should use two columns');
+        assert.equal(layout.adminProductColumns, width <= 380 ? 1 : 2, width + 'px admin product controls should respect narrow layout');
       }
       if (width <= 640) assert.ok(layout.checkoutInputFontSize >= 16, width + 'px checkout should avoid iOS zoom: ' + JSON.stringify(layout));
       assert.ok(layout.kpiFontSize >= 17 && layout.kpiFontSize <= 25,
