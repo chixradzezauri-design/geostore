@@ -722,3 +722,108 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* Stage 10 — analytics and finance dashboard.
+ * Presentation only: currency values, financial calculations, reporting period,
+ * export handlers and owner editor preferences are not modified. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-heading,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis > *,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-scroll {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-toolbar {
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions {
+  flex-wrap: wrap;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-actions > :is(select, button) {
+  min-height: 44px;
+  min-inline-size: 0;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)) !important;
+  gap: 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-card {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(13px, 1.4vw, 18px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-card > .admin-analytics-value {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-card > .admin-analytics-note {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-scroll {
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-scroll:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-bars > [role="listitem"] {
+  min-inline-size: 0;
+  max-inline-size: none;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-trend-bars > [role="listitem"] > span {
+  display: block;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-toolbar .admin-analytics-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-toolbar .admin-analytics-actions > :is(select, button) {
+    width: 100%;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 185px), 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-analytics-kpis {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
