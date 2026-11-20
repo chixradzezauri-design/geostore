@@ -3,10 +3,11 @@
 export function isConfirmedExpenseInsert(rows, expected) {
   if (!Array.isArray(rows) || rows.length !== 1 || !expected || typeof expected !== 'object') return false;
   const row = rows[0];
-  if (!row || typeof row !== 'object' || Array.isArray(row)) return false;
+  const expectedId = String(expected.id ?? '').trim();
+  if (!expectedId || !row || typeof row !== 'object' || Array.isArray(row)) return false;
   const amount = Number(row.amount);
   return (
-    String(row.id ?? '') === String(expected.id ?? '') &&
+    String(row.id ?? '') === expectedId &&
     String(row.category ?? '').trim() === String(expected.category ?? '').trim() &&
     String(row.description ?? '').trim() === String(expected.description ?? '').trim() &&
     String(row.date ?? '').slice(0, 10) === String(expected.date ?? '') &&
