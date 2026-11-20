@@ -17,6 +17,7 @@ import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
 import { getAuthenticatedExpenseHeaders, requireExpensePermission, requireExpensePrincipal } from '../utils/expenseRequestSecurity.js';
+import { escapeSpreadsheetCsvCell, hasVerifiedExpenseLedgerRows } from '../utils/financeExportSafety.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
@@ -1333,6 +1334,13 @@ export default function AdminDashboardPro({
   // A slow 15-second poll must never replace a newer refresh or post-mutation ledger.
   const expenseFetchRequestRef = useRef(0);
   const expenseFetchInFlightRef = useRef(false);
+  const expenseExportInFlightRef = useRef(false);
+  const [expenseExportBusy, setExpenseExportBusy] = useState(false);
+  const expenseExportMountedRef = useRef(false);
+  useEffect(() => {
+    expenseExportMountedRef.current = true;
+    return () => { expenseExportMountedRef.current = false; };
+  }, []);
   const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
   const [expensePage, setExpensePage] = useState(1);
@@ -1688,6 +1696,9 @@ export default function AdminDashboardPro({
       if (!isLatestExpenseRequest()) return false;
       await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: finalExpenseSession.headers, fetchImpl: fetch });
       if (!isLatestExpenseRequest()) return false;
+      if (!hasVerifiedExpenseLedgerRows(allExpenses)) {
+        throw new Error('ხარჯების ისტორიაში თანხის არასწორი მნიშვნელობა ან განმეორებული ID აღმოჩნდა; ფინანსური ანგარიშები არ დასტურდება.');
+      }
       setExpenses(allExpenses);
       setExpensesError('');
       setExpensesReady(true);
@@ -2713,12 +2724,7 @@ export default function AdminDashboardPro({
   const expenseBreakdown = analyticsData.expenseBreakdown;
 
   const exportCsv = (filename, headers, rows) => {
-    const escapeCell = value => {
-      const raw = value === null || value === undefined ? '' : String(value);
-      const safe = /^[=+@\\-]/.test(raw) ? "'" + raw : raw;
-      return '"' + safe.replace(/"/g, '""') + '"';
-    };
-    const csv = [headers, ...rows].map(row => row.map(escapeCell).join(';')).join('\r\n');
+    const csv = [headers, ...rows].map(row => row.map(escapeSpreadsheetCsvCell).join(';')).join('\r\n');
     const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -2730,11 +2736,45 @@ export default function AdminDashboardPro({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  const handleExportAnalytics = () => {
-    if (!expensesVerifiedForReports) {
-      alert('ფინანსური CSV ვერ მომზადდება: ხარჯების სრული ისტორია არ არის დადასტურებული. გადაამოწმეთ ფინანსების წვდომა და განაახლეთ ხარჯების ისტორია.');
+  const handleExportAnalytics = async () => {
+    if (!expensesVerifiedForReports || expenseMutationInFlightRef.current || expenseFetchInFlightRef.current) {
+      alert('ფინანსური CSV ვერ მომზადდება: ხარჯების სრული ისტორია არ არის დადასტურებული ან ამჟამად ახლდება. გადაამოწმეთ ფინანსების წვდომა და განაახლეთ ხარჯების ისტორია.');
       return;
     }
+    if (expenseExportInFlightRef.current) return;
+    const exportSessionVersion = adminSessionVersion.current;
+    const exportRequestId = expenseFetchRequestRef.current;
+    const isCurrentExport = () =>
+      expenseExportMountedRef.current &&
+      isCurrentAdminSession(exportSessionVersion) &&
+      exportRequestId === expenseFetchRequestRef.current &&
+      !expenseMutationInFlightRef.current &&
+      !expenseFetchInFlightRef.current;
+    expenseExportInFlightRef.current = true;
+    setExpenseExportBusy(true);
+    try {
+      const { headers } = await getExpenseSessionHeaders(adminUserId);
+      if (!isCurrentExport()) return;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers, fetchImpl: fetch });
+      if (!isCurrentExport()) return;
+      // Re-read the current account after the permission RPC, so an account
+      // switch during the check cannot download the prior user's report.
+      await getExpenseSessionHeaders(adminUserId);
+      if (!isCurrentExport()) return;
+    } catch (error) {
+      if (isCurrentExport()) {
+        if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
+        setExpensesReady(false);
+        setExpensesLastVerifiedAt(null);
+        setExpensesError(error?.message || 'CSV ექსპორტის ნებართვა ვერ გადამოწმდა.');
+        alert('ფინანსური CSV ვერ მომზადდა: ანგარიშის სესია ან ხარჯების ნებართვა ვერ დადასტურდა. გადაამოწმეთ ფინანსური ისტორია.');
+      }
+      return;
+    } finally {
+      expenseExportInFlightRef.current = false;
+      if (expenseExportMountedRef.current && isCurrentAdminSession(exportSessionVersion)) setExpenseExportBusy(false);
+    }
+    if (!isCurrentExport()) return;
     const periodLabel = analyticsPeriod === 'all' ? 'all-period' : 'last-' + analyticsPeriod + '-days';
     exportCsv(`geostore-financial-summary-${periodLabel}.csv`,
       ['მაჩვენებელი', 'თანხა (GEL)'],
@@ -5359,8 +5399,8 @@ export default function AdminDashboardPro({
                   <option value="90">ბოლო 90 დღე</option>
                   <option value="365">ბოლო 12 თვე</option>
                 </select>
-                <button type="button" onClick={handleExportAnalytics} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
-                  <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
+                <button type="button" onClick={handleExportAnalytics} disabled={expenseExportBusy} aria-busy={expenseExportBusy} className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
+                  <Download className="w-4 h-4" /> {expenseExportBusy ? 'CSV ნებართვა მოწმდება…' : 'ანგარიშების CSV ექსპორტი'}
                 </button>
               </div>
             </div>

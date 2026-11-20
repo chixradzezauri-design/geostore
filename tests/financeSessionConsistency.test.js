@@ -60,3 +60,22 @@ test('expense reads and writes pin Supabase session to current App admin user', 
   const writes = admin.slice(admin.indexOf('  const handleAddExpense = async (e) => {'), admin.indexOf('  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess))'));
   assert.equal((writes.match(/getExpenseSessionHeaders\(adminUserId\)/g) || []).length, 2);
 });
+
+test('financial CSV export checks live server permission and rejects stale requests', () => {
+  const exportCode = admin.slice(admin.indexOf('  const handleExportAnalytics = async () => {'), admin.indexOf('  const handleAiAsk = async (e) => {'));
+  assert.match(exportCode, /if \(!expensesVerifiedForReports \|\| expenseMutationInFlightRef\.current \|\| expenseFetchInFlightRef\.current\)/);
+  assert.match(exportCode, /expenseExportInFlightRef\.current = true/);
+  assert.match(exportCode, /await getExpenseSessionHeaders\(adminUserId\)/);
+  assert.match(exportCode, /await requireExpensePermission\(/);
+  assert.match(exportCode, /exportRequestId === expenseFetchRequestRef\.current/);
+  assert.match(exportCode, /expenseExportMountedRef\.current/);
+  assert.ok(exportCode.indexOf('await requireExpensePermission(') < exportCode.indexOf('exportCsv('));
+  assert.match(exportCode, /if \(error\?\.expenseAccessDenied\) discardUnauthorizedExpenseData\(\)/);
+});
+
+test('expense ledger validation must complete before publishing verified reports', () => {
+  const read = admin.slice(admin.indexOf("  const fetchExpenses = async (requestMode = 'manual') => {"), admin.indexOf('  useEffect(() => {\n    // Do not poll private finance data'));
+  assert.match(read, /if \(!hasVerifiedExpenseLedgerRows\(allExpenses\)\)/);
+  assert.ok(read.indexOf('hasVerifiedExpenseLedgerRows(allExpenses)') < read.indexOf('setExpensesReady(true)'));
+  assert.match(admin, /row\.map\(escapeSpreadsheetCsvCell\)/);
+});

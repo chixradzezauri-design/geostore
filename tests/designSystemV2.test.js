@@ -425,8 +425,8 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /setExpensesReady\(false\);\s*setExpensesError\(error\?\.message/);
   assert.match(admin, /if \(!adminLoggedIn \|\| !hasExpensesPermission\) \{[\s\S]*?expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
   assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
-  assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\) \{/);
-  assert.match(admin, /const handleExportAnalytics = \(\) => \{[\s\S]*?return;\s*\}\s*const periodLabel/);
+  assert.match(admin, /const handleExportAnalytics = async \(\) => \{\s*if \(!expensesVerifiedForReports \|\| expenseMutationInFlightRef\.current/);
+  assert.match(admin, /const handleExportAnalytics = async \(\) => \{[\s\S]*?await requireExpensePermission\([\s\S]*?const periodLabel/);
   assert.match(admin, /className="admin-finance-data-warning/);
   assert.match(admin, /role=\{expensesError \|\| !hasExpensesPermission \? 'alert' : 'status'\} aria-live="polite" className="admin-finance-data-warning/);
   assert.match(admin, /!expensesVerifiedForReports \|\| financialOverview\.netProfit === null \? '—'/);
@@ -469,7 +469,7 @@ test('stage 16 expense ledger fetches cannot overwrite newer snapshots', () => {
   assert.match(admin, /if \(!isCurrentMutation\(\)\) return;/);
   assert.match(admin, /void fetchExpenses\(\);/);
   assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
-  assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\)/);
+  assert.match(admin, /const handleExportAnalytics = async \(\) => \{\s*if \(!expensesVerifiedForReports/);
 });
 
 test('stage 17 expense history displays honest loading and verified states', () => {
