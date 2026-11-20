@@ -50,7 +50,7 @@ const adminProductFixture =
 const adminOrdersFixture =
   '<section class="admin-orders-panel">' +
   '<div class="admin-orders-toolbar flex flex-col sm:flex-row gap-3">' +
-  '<div class="admin-orders-search w-full sm:w-80"><input aria-label="შეკვეთების ძებნა" type="search" /></div>' +
+  '<div class="admin-orders-search w-full sm:w-80"><input aria-label="შეკვეთების ძებნა" type="text" /></div>' +
   '<div class="admin-order-status-filters flex items-center gap-2 overflow-x-auto"><button>ყველა</button><button>მუშავდება</button></div></div>' +
   '<div class="admin-orders-list"><article class="admin-order-card">' +
   '<div class="admin-order-card-heading"><strong>შეკვეთა #1001</strong><span>120.00 ₾</span></div>' +
@@ -194,14 +194,8 @@ try {
           minOrderFilterHeight: Math.min(...orderFilterButtons.map(node => node.getBoundingClientRect().height)),
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
-          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
-          orderSearchFontRules: [...document.styleSheets].flatMap(sheet => {
-            try { return [...sheet.cssRules].flatMap(rule => rule.cssRules ? [...rule.cssRules] : [rule]); }
-            catch { return []; }
-          }).filter(rule => {
-            try { return rule.selectorText && orderSearch.matches(rule.selectorText) && rule.style.fontSize; }
-            catch { return false; }
-          }).map(rule => ({ selector: rule.selectorText.slice(0, 200), fontSize: rule.style.fontSize, priority: rule.style.getPropertyPriority('font-size') })).slice(-16)
+          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize)
+
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
