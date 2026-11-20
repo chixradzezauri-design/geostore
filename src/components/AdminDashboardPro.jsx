@@ -1340,7 +1340,7 @@ export default function AdminDashboardPro({
   };
 
   const saveInventoryReplenishmentSetting = async (position) => {
-    if (!hasProductsPermission || replenishmentSavingKey) return;
+    if (!hasProductsPermission || replenishmentSavingKey || replenishmentLoading) return;
     const draft = replenishmentDrafts[position.key] || {};
     const rawThreshold = draft.threshold ?? position.threshold;
     const rawTarget = draft.target ?? position.target;
