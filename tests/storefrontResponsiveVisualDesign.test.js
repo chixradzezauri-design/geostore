@@ -409,3 +409,16 @@ test('resetting one visual element requires confirmation before deleting viewpor
   assert.ok(reset.includes('commitDesign({ ...design, responsive })'));
   assert.ok(reset.includes('commitDesign({ ...design, elementStyles })'));
 });
+
+test('one visual style property can be reset without clearing sibling overrides', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const resetSelectedElementStyleProperty = key => {');
+  const end = editor.indexOf('const clearSelectedElementColors =', start);
+  assert.ok(start >= 0 && end > start);
+  const reset = editor.slice(start, end);
+  assert.ok(reset.includes('delete style[key]'));
+  assert.ok(reset.includes('if (Object.keys(style).length) elementStyles[selectedElement.id] = style'));
+  assert.ok(reset.includes('commitDesign({ ...design, responsive })'));
+  assert.ok(reset.includes('commitDesign({ ...design, elementStyles })'));
+  assert.ok(editor.includes('resetSelectedElementStyleProperty(event.target.value)'));
+});
