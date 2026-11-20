@@ -75,3 +75,10 @@ test('inventory pagination refuses missing and repeated cursors', () => {
   assert.match(loader, /String\(nextCursor\) !== String\(beforeId \?\? ''\)/);
   assert.match(loader, /setInventoryMovementHasMore\(canLoadNextPage\)/);
 });
+
+test('inventory history announces loading and provides a retry path for failed pages', () => {
+  assert.match(dashboard, /aria-labelledby="admin-inventory-title" aria-busy=\{inventoryMovementLoading\}/);
+  assert.match(dashboard, /role="status" className="rounded-2xl border border-white\/5/);
+  assert.match(dashboard, /inventoryMovementRows\.length > 0 \? 'სცადეთ „მეტი ჩანაწერის ჩატვირთვა“ ხელახლა\.'/);
+  assert.match(dashboard, /inventoryMovementLoading \? 'იტვირთება…' : 'განახლება'/);
+});
