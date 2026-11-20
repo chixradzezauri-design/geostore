@@ -271,3 +271,27 @@ test('stage 9 CRM customer list paginates without modifying customer authorizati
   assert.match(design, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 10 analytics controls and chart remain accessible without changing reporting logic', () => {
+  assert.match(admin, /className="admin-analytics-actions flex/);
+  assert.match(admin, /htmlFor="admin-analytics-period"/);
+  assert.match(admin, /id="admin-analytics-period" aria-label="ანალიტიკის პერიოდი"/);
+  assert.match(admin, /value=\{analyticsPeriod\} onChange=\{e => setAnalyticsPeriod\(e\.target\.value\)\}/);
+  assert.match(admin, /onClick=\{handleExportAnalytics\}/);
+  assert.match(admin, /className="admin-analytics-trend-scroll/);
+  assert.match(admin, /role="region" aria-label="გაყიდვების დინამიკის გადახვევადი გრაფიკი" tabIndex=\{0\}/);
+  assert.match(admin, /role="listitem" aria-label=\{\x60\$\{point\.label\}: \$\{point\.revenue\.toFixed\(2\)\} ₾/);
+  assert.match(admin, /financialOverview\.salesTrend\.map\(point =>/);
+  assert.match(admin, /financialOverview\.totalSalesRevenue\.toFixed\(2\)/);
+  assert.match(admin, /financialOverview\.grossProfit === null/);
+  assert.match(admin, /financialOverview\.netProfit === null/);
+  assert.match(admin, /financialOverview\.deliveredOrdersMissingStatusDate > 0/);
+  assert.equal((admin.match(/className="admin-analytics-value text-2xl/g) || []).length, 8);
+  assert.equal((admin.match(/className="admin-analytics-note text-/g) || []).length, 8);
+  assert.match(design, /Stage 10 — analytics and finance dashboard/);
+  assert.match(design, /\.admin-analytics-trend-scroll:focus-visible/);
+  assert.match(design, /repeat\(auto-fit, minmax\(min\(100%, 210px\), 1fr\)\)/);
+  assert.match(layoutBrowser, /analyticsChartClientWidth/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
