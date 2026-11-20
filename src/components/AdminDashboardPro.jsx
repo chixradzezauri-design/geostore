@@ -4590,6 +4590,7 @@ export default function AdminDashboardPro({
   const currentOrderPage = Math.max(1, orderPageByStatus[orderStatusFilter] || 1);
   const totalOrderPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE));
   const safeOrderPage = Math.min(currentOrderPage, totalOrderPages);
+  const orderPaginationItems = getPaginationItems(safeOrderPage, totalOrderPages);
   const paginatedOrders = filteredOrders.slice((safeOrderPage - 1) * ORDERS_PER_PAGE, safeOrderPage * ORDERS_PER_PAGE);
   const setCurrentOrderPage = (page) => setOrderPageByStatus(prev => ({ ...prev, [orderStatusFilter]: page }));
 
@@ -5528,6 +5529,7 @@ export default function AdminDashboardPro({
                 <input 
                   type="text" 
                   placeholder="ძებნა ნომრით, სახელით, ტელეფონით..." 
+                  aria-label="შეკვეთების ძებნა"
                   value={orderSearchQuery} 
                   onChange={e => { setOrderSearchQuery(e.target.value); setCurrentOrderPage(1); }} 
                   className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-3 text-xs text-white outline-none focus:border-emerald-400 shadow-inner" 
@@ -5535,10 +5537,12 @@ export default function AdminDashboardPro({
                 <Search className="w-4 h-4 text-emerald-400 absolute left-3.5 top-3.5" />
               </div>
 
-              <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto">
+              <div className="admin-order-status-filters flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-emerald-500/20 w-full sm:w-auto overflow-x-auto" role="group" aria-label="შეკვეთების სტატუსის ფილტრები">
                 {['ყველა', 'ახალი', 'მუშავდება', 'გაგზავნილი', 'დასრულებული', 'გაუქმებული'].map(st => (
                   <button 
                     key={st}
+                    type="button"
+                    aria-pressed={orderStatusFilter === st}
                     onClick={() => setOrderStatusFilter(st)}
                     className={`px-3 py-2 rounded-xl font-bold text-[11px] cursor-pointer transition whitespace-nowrap ${orderStatusFilter === st ? 'bg-emerald-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}`}
                   >
@@ -5555,7 +5559,7 @@ export default function AdminDashboardPro({
               ) : (
                 paginatedOrders.map(o => (
                   <div key={o.id} className="admin-order-card bg-slate-950/70 p-5 rounded-3xl border border-emerald-500/20 flex flex-col gap-4 text-xs shadow-inner hover:border-emerald-500/40 transition">
-                    <div className="admin-order-card-heading flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
+                    <div className="admin-order-card-heading flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/80 pb-3">
                       <div>
                         <span className="font-black text-emerald-400 text-sm">#{o.id}</span>
                         <span className="text-slate-400 text-[11px] ml-2">({o.date} {o.time || ''})</span>
@@ -5588,6 +5592,8 @@ export default function AdminDashboardPro({
 
                       <div className="admin-order-actions flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                         <button 
+                          type="button"
+                          aria-label={`შეკვეთა #${o.id} — სრული დეტალები`}
                           onClick={(event) => {
                             orderDetailTriggerRef.current = event.currentTarget;
                             setSelectedOrderForModal(o);
@@ -5599,7 +5605,9 @@ export default function AdminDashboardPro({
                         </button>
 
                         <button 
+                          type="button"
                           onClick={() => handlePrintInvoice(o)} 
+                          aria-label={`შეკვეთა #${o.id} — ინვოისის ბეჭდვა`}
                           title="ინვოისის ბეჭდვა"
                           className="bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/20 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs cursor-pointer shadow"
                         >
@@ -5651,16 +5659,18 @@ export default function AdminDashboardPro({
                 ))
               )}
               {filteredOrders.length > ORDERS_PER_PAGE && (
-                <div className="admin-orders-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
+                <nav aria-label="შეკვეთების გვერდები" className="admin-orders-pagination flex flex-wrap items-center justify-between gap-3 border-t border-emerald-500/20 pt-4">
                   <p className="text-[11px] text-slate-400">ნაჩვენებია {(safeOrderPage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(safeOrderPage * ORDERS_PER_PAGE, filteredOrders.length)} / {filteredOrders.length}</p>
                   <div className="flex flex-wrap items-center justify-center gap-1.5">
                     <button type="button" onClick={() => setCurrentOrderPage(Math.max(1, safeOrderPage - 1))} disabled={safeOrderPage === 1} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">წინა</button>
-                    {Array.from({ length: totalOrderPages }, (_, index) => index + 1).map(page => (
-                      <button key={page} type="button" onClick={() => setCurrentOrderPage(page)} aria-current={safeOrderPage === page ? 'page' : undefined} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-black transition ${safeOrderPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
+                    {orderPaginationItems.map((page, index) => page === '…' ? (
+                      <span key={`orders-gap-${index}`} className="px-1 text-slate-500" aria-hidden="true">…</span>
+                    ) : (
+                      <button key={page} type="button" onClick={() => setCurrentOrderPage(page)} aria-label={`შეკვეთების გვერდი ${page}`} aria-current={safeOrderPage === page ? 'page' : undefined} className={`min-w-9 px-3 py-2 rounded-xl text-xs font-black transition ${safeOrderPage === page ? 'bg-emerald-500 text-slate-950' : 'border border-emerald-500/20 text-slate-300 hover:bg-slate-900'}`}>{page}</button>
                     ))}
                     <button type="button" onClick={() => setCurrentOrderPage(Math.min(totalOrderPages, safeOrderPage + 1))} disabled={safeOrderPage === totalOrderPages} className="px-3 py-2 rounded-xl border border-emerald-500/20 text-slate-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed">შემდეგი</button>
                   </div>
-                </div>
+                </nav>
               )}
             </div>
           </div>
