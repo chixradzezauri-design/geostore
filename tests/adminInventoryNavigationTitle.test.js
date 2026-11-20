@@ -120,3 +120,8 @@ test('replenishment save rejects blank values and locks inputs during save', () 
   const card = dashboard.slice(dashboard.indexOf('<article key={position.key} className="admin-replenishment-row'), dashboard.indexOf('</article>', dashboard.indexOf('<article key={position.key} className="admin-replenishment-row'));
   assert.equal(card.split('type="number" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading}').length - 1, 2);
 });
+
+test('replenishment recommendation does not treat an empty target as zero', () => {
+  assert.match(dashboard, /const validTarget = String\(targetValue\)\.trim\(\) !== ''/);
+  assert.match(dashboard, /validTarget \? \(position\.isLowStock \? Math\.max\(0, Number\(targetValue\) - position\.stock\) : 0\) : '—'/);
+});
