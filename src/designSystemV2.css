@@ -160,9 +160,9 @@
   overscroll-behavior-x: contain;
 }
 
-.geostore-fashion-store .geostore-storefront
-  :is(.gs-size-option, .gs-color-option, .gs-product-gallery-thumb) {
-  /* Match legacy specificity: earlier important min-height rules are 40px. */
+.geostore-fashion-store .geostore-storefront .gs-product-modal-body
+  button:is(.gs-size-option, .gs-color-option, .gs-product-gallery-thumb) {
+  /* Override legacy modal-specific 34/40px important button rules. */
   min-height: var(--gs-v2-control-target) !important;
   min-block-size: var(--gs-v2-control-target) !important;
   touch-action: manipulation;
