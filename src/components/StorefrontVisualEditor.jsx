@@ -380,6 +380,13 @@ export default function StorefrontVisualEditor({
     setSelectedElement({ id: targetId, ...metadata });
   };
 
+  const handlePreviewKeyDown = event => {
+    if (!selectionMode || event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectionMode(false);
+  };
+
   const selectElementFromTree = targetId => {
     const metadata = VISUAL_EDITOR_TARGETS[targetId];
     if (!metadata) return;
@@ -1239,7 +1246,7 @@ export default function StorefrontVisualEditor({
               outline: 2px solid #34d399 !important; outline-offset: 3px; position: relative; z-index: 3;
             }
           `}</style>
-          <div onClickCapture={handlePreviewSelect} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : previewMode === 'tablet' ? '820px' : '100%' }}>
+          <div onClickCapture={handlePreviewSelect} onKeyDownCapture={handlePreviewKeyDown} tabIndex={selectionMode ? 0 : undefined} aria-label={selectionMode ? 'საიტის Preview — ელემენტის არჩევა; გამოსასვლელად Escape' : undefined} data-visual-editor-selected={selectedElement?.id || ''} className={`${previewMode === 'mobile' ? 'geostore-fashion-store gs-visual-preview-frame gs-visual-preview-frame--mobile mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl' : 'geostore-fashion-store gs-visual-preview-frame mx-auto overflow-hidden rounded-2xl border border-slate-600 bg-stone-100 shadow-2xl'}${selectionMode ? ' gs-visual-select-mode' : ''}`} style={{ ...previewStyle, maxWidth: previewMode === 'mobile' ? '420px' : previewMode === 'tablet' ? '820px' : '100%' }}>
             <Header
               siteSettings={{ ...(siteSettings || {}), visualDesign: previewDesign }}
               visualDesign={previewDesign}
