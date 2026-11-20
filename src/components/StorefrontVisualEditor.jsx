@@ -229,6 +229,7 @@ export default function StorefrontVisualEditor({
   const [design, setDesign] = useState(initialDesign);
   const designRef = useRef(initialDesign);
   const localDesignDirtyRef = useRef(false);
+  const draftSaveInFlightRef = useRef(false);
   const [history, setHistory] = useState([initialDesign]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyRef = useRef([initialDesign]);
@@ -765,7 +766,8 @@ export default function StorefrontVisualEditor({
   };
 
   const saveDraft = async () => {
-    if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy) return;
+    if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current) return;
+    draftSaveInFlightRef.current = true;
     const snapshotDesign = design;
     const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign };
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: snapshotDesign }));
@@ -776,6 +778,8 @@ export default function StorefrontVisualEditor({
     } catch (error) {
       setSaveMessage('მონახაზის შენახვა ვერ მოხერხდა. ცვლილებები შეუნახავია; სცადეთ ხელახლა.');
       return;
+    } finally {
+      draftSaveInFlightRef.current = false;
     }
     const hasNewerLocalChanges = JSON.stringify(designRef.current) !== JSON.stringify(snapshotDesign);
     if (saved === true && !hasNewerLocalChanges) {
