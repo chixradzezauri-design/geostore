@@ -38,3 +38,13 @@ test('command center shows four compact KPI cards in two columns on mobile', () 
     assert.match(dashboard, new RegExp("onClick=\\{\\(\\) => setAdminTab\\('" + section + "'\\)\\}"));
   }
 });
+
+test('command center detail panels are compact and long statuses can wrap on mobile', () => {
+  assert.match(dashboard, /admin-command-panels grid grid-cols-1 xl:grid-cols-2 gap-2\.5 sm:gap-4/);
+  assert.match(dashboard, /admin-command-panel min-w-0 rounded-2xl border/);
+  assert.match(dashboard, /max-w-\[45%\] shrink-0 break-words rounded-full/);
+  assert.match(dashboard, /max-w-\[45%\] shrink-0 break-words text-right/);
+  for (const section of ['orders', 'support', 'replenishment']) {
+    assert.match(dashboard, new RegExp("setAdminTab\\('" + section + "'\\)"));
+  }
+});
