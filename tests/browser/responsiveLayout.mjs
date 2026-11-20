@@ -132,7 +132,13 @@ const adminExpenseHistoryFixture =
   '<section class="admin-expense-history-panel p-6">' +
   '<div class="admin-expense-history-heading flex flex-wrap items-center justify-between gap-3">' +
   '<div><h3 id="fixture-expense-history-title">ხარჯების ისტორია (120)</h3><p>ძებნა მხოლოდ სიას ცვლის</p></div>' +
-  '<button class="admin-expense-refresh" type="button">ისტორიის განახლება</button></div>' +
+  '<button class="admin-expense-refresh" type="button" aria-busy="true">ახლდება… ხელახლა შემოწმება</button></div>' +
+  '<p class="admin-expense-sync-state" role="status" aria-live="polite">' +
+  'მიმდინარეობს სრული ისტორიის შემოწმება… ბოლო წარმატებული შემოწმება: ' +
+  '<time datetime="2026-11-20T15:40:00.000Z">20 ნოემბერი 2026, 19:40</time>' +
+  '<span class="block">ნაჩვენები ძველი ჩანაწერები დროებით დაუდასტურებელია.</span></p>' +
+  '<div class="admin-expense-load-error" role="alert"><span>ისტორია ვერ განახლდა.</span>' +
+  '<button type="button" class="admin-expense-error-retry" aria-busy="true">ხელახლა ცდა</button></div>' +
   '<div class="admin-expense-history-filters grid grid-cols-1 sm:grid-cols-2 gap-2" role="search">' +
   '<div><label for="fixture-expense-history-search">მოძებნე ხარჯი</label>' +
   '<input id="fixture-expense-history-search" type="search" placeholder="აღწერა, კატეგორია, თარიღი ან თანხა"></div>' +
@@ -311,6 +317,8 @@ try {
         const expenseHistoryInputs = [...expenseHistoryFilters.querySelectorAll('input, select')];
         const expenseHistoryButtons = [...expenseHistoryPanel.querySelectorAll('.admin-expense-pagination button, .admin-expense-refresh')];
         const expenseHistoryCards = [...expenseHistoryPanel.querySelectorAll('.admin-expense-row')];
+        const expenseSyncNotice = expenseHistoryPanel.querySelector('.admin-expense-sync-state');
+        const expenseRetry = expenseHistoryPanel.querySelector('.admin-expense-error-retry');
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -394,7 +402,11 @@ try {
           expenseHistoryMinButtonHeight: Math.min(...expenseHistoryButtons.map(node => node.getBoundingClientRect().height)),
           expenseHistoryFilterColumns: getComputedStyle(expenseHistoryFilters).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
           expenseHistoryRenderedRows: expenseHistoryCards.length,
-          expenseHistoryCardRight: Math.max(...expenseHistoryCards.map(node => node.getBoundingClientRect().right))
+          expenseHistoryCardRight: Math.max(...expenseHistoryCards.map(node => node.getBoundingClientRect().right)),
+          expenseSyncStatusVisible: expenseSyncNotice.getBoundingClientRect().height > 0,
+          expenseSyncStatusRight: expenseSyncNotice.getBoundingClientRect().right,
+          expenseSyncRetryHeight: expenseRetry.getBoundingClientRect().height,
+          expenseSyncRetryRight: expenseRetry.getBoundingClientRect().right
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -429,6 +441,10 @@ try {
       assert.ok(layout.expenseFormRight <= width + 2, width + 'px expense form overflow: ' + JSON.stringify(layout));
       assert.ok(layout.expenseHistoryPanelRight <= width + 2, width + 'px expense history panel overflow: ' + JSON.stringify(layout));
       assert.ok(layout.expenseHistoryCardRight <= width + 2, width + 'px expense history rows overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseSyncStatusVisible, width + 'px verification status must be visible');
+      assert.ok(layout.expenseSyncStatusRight <= width + 2, width + 'px expense verification status overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseSyncRetryHeight >= 43, width + 'px expense error retry should be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.expenseSyncRetryRight <= width + 2, width + 'px expense error retry overflow: ' + JSON.stringify(layout));
       assert.equal(layout.expenseHistoryRenderedRows, 10, width + 'px expense history fixture must show exactly one page');
       assert.ok(layout.expenseHistoryFilterMinHeight >= 43, width + 'px expense search/filter must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.expenseHistoryMinButtonHeight >= 43, width + 'px expense pagination and refresh must be touch-sized: ' + JSON.stringify(layout));
