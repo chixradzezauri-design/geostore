@@ -123,7 +123,9 @@ test('replenishment save rejects blank values and locks inputs during save', () 
 });
 
 test('replenishment recommendation does not treat an empty target as zero', () => {
-  assert.match(dashboard, /const validTarget = String\(targetValue\)\.trim\(\) !== ''/);
+  assert.match(dashboard, /const validThreshold = String\(thresholdValue\)\.trim\(\) !== ''/);
+  assert.match(dashboard, /const validTarget = validThreshold && String\(targetValue\)\.trim\(\) !== ''/);
+  assert.match(dashboard, /Number\(targetValue\) > Number\(thresholdValue\)/);
   assert.match(dashboard, /validTarget \? \(position\.isLowStock \? Math\.max\(0, Number\(targetValue\) - position\.stock\) : 0\) : '—'/);
 });
 
@@ -150,15 +152,13 @@ test('replenishment settings explain manual cross-device refresh and last-write-
   assert.match(dashboard, /მოძველებული ვერსიით შენახვა დაიბლოკება/);
 });
 
-test('replenishment settings reject incomplete or malformed server responses', () => {
+test('replenishment only displays server lists after validating their structure', () => {
   const start = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
   const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
   const fetcher = dashboard.slice(start, end);
-  assert.match(fetcher, /!Array\.isArray\(result\?\.items\) \|\| result\?\.has_more === true/);
-  assert.ok(fetcher.indexOf('throw new Error') < fetcher.indexOf('setReplenishmentSettings(result.items)'));
-  assert.match(fetcher, /setReplenishmentSettings\(result\.items\)/);
+  assert.match(fetcher, /validateReplenishmentSettingsResponse\(result\)/);
+  assert.ok(fetcher.indexOf('validateReplenishmentSettingsResponse(result)') < fetcher.indexOf('setReplenishmentSettings(settings)'));
 });
-
 test('replenishment cards visibly distinguish unsaved local edits', () => {
   assert.match(dashboard, /Object\.prototype\.hasOwnProperty\.call\(replenishmentDrafts, position\.key\)/);
   assert.match(dashboard, /hasUnsavedChanges && <div className="flex flex-wrap items-center gap-2">/);
@@ -180,16 +180,13 @@ test('replenishment list refresh shows parsed server error messages', () => {
   assert.match(fetcher, /throw new Error\(message \|\| `HTTP \$\{response\.status\}`\)/);
 });
 
-test('replenishment save requires matching server acknowledgment before clearing drafts', () => {
+test('replenishment save validates server acknowledgment before clearing drafts', () => {
   const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
   const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
   const save = dashboard.slice(start, end);
-  assert.match(save, /saveResult\?\.success !== true/);
-  assert.match(save, /!saveResult\?\.setting\?\.updated_at/);
-  assert.match(save, /String\(saveResult\.setting\.product_id\) !== String\(position\.productId\)/);
-  assert.ok(save.indexOf('const saveResult = await response.json()') < save.indexOf('setReplenishmentDrafts(current =>'));
+  assert.match(save, /validateReplenishmentSaveResponse\(saveResult, position, savedThreshold, savedTarget\)/);
+  assert.ok(save.indexOf('validateReplenishmentSaveResponse(saveResult') < save.indexOf('setReplenishmentDrafts(current =>'));
 });
-
 test('existing replenishment settings without a revision cannot be saved blindly', () => {
   const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
   const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
@@ -199,12 +196,10 @@ test('existing replenishment settings without a revision cannot be saved blindly
   assert.ok(save.indexOf('position.hasCustomSetting && !expectedUpdatedAt') < save.indexOf('setReplenishmentSavingKey(position.key)'));
 });
 
-test('replenishment refresh rejects rows missing a version or with invalid stock thresholds', () => {
+test('replenishment refresh uses strict response validation', () => {
   const start = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
   const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
   const fetcher = dashboard.slice(start, end);
-  assert.match(fetcher, /result\.items\.some\(item =>/);
-  assert.match(fetcher, /!item\.updated_at/);
-  assert.match(fetcher, /Number\(item\.target_stock\) <= Number\(item\.low_stock_threshold\)/);
-  assert.ok(fetcher.indexOf('result.items.some(item =>') < fetcher.indexOf('setReplenishmentSettings(result.items)'));
+  assert.match(fetcher, /const settings = validateReplenishmentSettingsResponse\(result\)/);
+  assert.match(fetcher, /setReplenishmentSettings\(settings\)/);
 });
