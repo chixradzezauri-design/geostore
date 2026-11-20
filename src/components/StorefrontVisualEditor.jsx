@@ -13,6 +13,32 @@ import {
   buildStorefrontVisualStyle
 } from '../utils/storefrontVisualDesign.js';
 
+const ELEMENT_STYLE_LABELS = {
+  textColor: 'ტექსტის ფერი',
+  backgroundColor: 'ფონის ფერი',
+  borderColor: 'ჩარჩოს ფერი',
+  borderWidth: 'ჩარჩოს სისქე',
+  borderRadius: 'კუთხეების მომრგვალება',
+  fontSize: 'ტექსტის ზომა',
+  fontWeight: 'ტექსტის სისქე',
+  fontFamily: 'შრიფტი',
+  lineHeight: 'სტრიქონების დაშორება',
+  letterSpacing: 'ასოების დაშორება',
+  textTransform: 'ასოების ფორმატი',
+  textAlign: 'ტექსტის განლაგება',
+  padding: 'შიდა დაშორება',
+  paddingTop: 'ზედა შიდა დაშორება',
+  paddingBottom: 'ქვედა შიდა დაშორება',
+  marginTop: 'ზედა გარე დაშორება',
+  marginBottom: 'ქვედა გარე დაშორება',
+  maxWidth: 'მაქსიმალური სიგანე',
+  minWidth: 'მინიმალური სიგანე',
+  width: 'სიგანე',
+  height: 'სიმაღლე',
+  opacity: 'გამჭვირვალობა',
+  boxShadow: 'ჩრდილი'
+};
+
 const NOOP = () => {};
 const VISUAL_EDITOR_TARGETS = {
   'hero': { label: 'მთავარი Hero ბლოკი', help: 'მთავარი ბლოკის ზომა, ფოტო და განლაგება მარცხენა პარამეტრებში შეცვალეთ.' },
@@ -1001,7 +1027,7 @@ export default function StorefrontVisualEditor({
                   ერთი პარამეტრის დაბრუნება {previewMode === 'desktop' ? 'საწყის მნიშვნელობაზე' : 'ძირითადი დიზაინიდან'}
                   <select aria-label="ელემენტის ცალკეული პარამეტრის განულება" defaultValue="" key={`${selectedElement.id}-${previewMode}`} onChange={event => { resetSelectedElementStyleProperty(event.target.value); event.target.value = ''; }} className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-2 py-2 text-[11px] text-white">
                     <option value="">აირჩიეთ პარამეტრი…</option>
-                    {Object.keys((previewMode === 'desktop' ? design.elementStyles : activeResponsive.elementStyles)?.[selectedElement.id] || {}).map(key => <option key={key} value={key}>{key}</option>)}
+                    {Object.keys((previewMode === 'desktop' ? design.elementStyles : activeResponsive.elementStyles)?.[selectedElement.id] || {}).map(key => <option key={key} value={key}>{ELEMENT_STYLE_LABELS[key] || key}</option>)}
                   </select>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
