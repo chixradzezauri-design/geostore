@@ -100,14 +100,17 @@ test('replenishment mobile cards use two columns and accessible loading feedback
   assert.match(dashboard, /replenishmentLoading && <p role="status"/);
 });
 
-test('replenishment save blocks duplicate submissions and preserves drafts on failed refresh', () => {
+test('replenishment saves preserve acknowledged revisions when full refresh fails', () => {
   const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
   const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
   const save = dashboard.slice(start, end);
   assert.match(save, /!hasProductsPermission \|\| replenishmentSavingRef\.current \|\| replenishmentSavingKey/);
+  assert.match(save, /const savedSetting = validateReplenishmentSaveResponse/);
   assert.match(save, /const refreshed = await fetchInventoryReplenishmentSettings\(\)/);
-  assert.match(save, /if \(!refreshed\) throw new Error/);
-  assert.ok(save.indexOf('if (!refreshed) throw') < save.indexOf('setReplenishmentDrafts(current =>'));
+  assert.match(save, /if \(!refreshed\) \{\s*\/\/ The save was confirmed/);
+  assert.match(save, /setReplenishmentSettings\(current => \[/);
+  assert.match(save, /savedSetting\s*\]\);/);
+  assert.ok(save.indexOf('setReplenishmentSettings(current => [') < save.indexOf('setReplenishmentDrafts(current =>'));
   assert.match(dashboard, /disabled=\{Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission \|\| hasConflict\}/);
 });
 
@@ -220,7 +223,26 @@ test('replenishment conflict responses retain local edits and require user revie
   assert.match(save, /payload\?\.code === '40001'/);
   assert.match(save, /setReplenishmentConflictKeys\(current => \(\{ \.\.\.current, \[position\.key\]: true \}\)\)/);
   assert.match(dashboard, /const hasConflict = Boolean\(replenishmentConflictKeys\[position\.key\]\)/);
-  assert.match(dashboard, /კონფლიქტი: დააჭირეთ „განახლება“, შემდეგ გააუქმეთ ძველი რედაქტირება/);
+  assert.match(dashboard, /კონფლიქტი: სერვერის ვერსიის ჩატვირთვა გააუქმებს ამ პოზიციის ძველ ადგილობრივ ცვლილებებს/);
   assert.match(dashboard, /\|\| !hasProductsPermission \|\| hasConflict/);
   assert.match(dashboard, /setReplenishmentConflictKeys\(current => \{ const next = \{ \.\.\.current \}; delete next\[position\.key\]; return next; \}\)/);
+});
+
+test('conflict recovery retains drafts if server reload fails and discards only after success', () => {
+  const start = dashboard.indexOf('const recoverInventoryReplenishmentConflict = async');
+  const end = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', start);
+  assert.ok(start >= 0 && end > start);
+  const recover = dashboard.slice(start, end);
+  assert.match(recover, /replenishmentRecoveryRef\.current = true/);
+  assert.match(recover, /if \(await fetchInventoryReplenishmentSettings\(\) !== true\) return/);
+  assert.ok(recover.indexOf('if (await fetchInventoryReplenishmentSettings() !== true) return') < recover.indexOf('setReplenishmentDrafts(current =>'));
+  assert.match(recover, /setReplenishmentConflictKeys\(current =>/);
+  assert.match(recover, /finally \{\s*replenishmentRecoveryRef\.current = false/);
+  assert.match(dashboard, /onClick=\{\(\) => void recoverInventoryReplenishmentConflict\(position\.key\)\}/);
+  assert.match(dashboard, /სერვერის ვერსიით ჩანაცვლება/);
+});
+
+test('partially successful save does not falsely claim the save itself failed', () => {
+  assert.doesNotMatch(dashboard, /პარამეტრების შენახვა\/ჩატვირთვა ვერ მოხერხდა: \{replenishmentError\}/);
+  assert.match(dashboard, /პარამეტრი შენახულია, მაგრამ სრული სიის განახლება ვერ მოხერხდა/);
 });
