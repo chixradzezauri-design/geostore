@@ -1315,6 +1315,7 @@ export default function AdminDashboardPro({
   const [expensesReady, setExpensesReady] = useState(false);
   // A slow 15-second poll must never replace a newer refresh or post-mutation ledger.
   const expenseFetchRequestRef = useRef(0);
+  const expenseFetchInFlightRef = useRef(false);
   const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
   const [expensePage, setExpensePage] = useState(1);
@@ -1594,10 +1595,14 @@ export default function AdminDashboardPro({
     };
   }, [adminLoggedIn, hasCrmPermission]);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = async (requestMode = 'manual') => {
     const requestSessionVersion = adminSessionVersion.current;
     if (!isCurrentAdminSession(requestSessionVersion) || !hasExpensesPermission) return false;
+    // A slow full-ledger fetch may exceed the polling period. Skip overlapping
+    // timer ticks; explicit refresh and post-mutation refresh can supersede it.
+    if (requestMode === 'poll' && expenseFetchInFlightRef.current) return false;
     const requestId = ++expenseFetchRequestRef.current;
+    expenseFetchInFlightRef.current = true;
     const isLatestExpenseRequest = () =>
       isCurrentAdminSession(requestSessionVersion) && requestId === expenseFetchRequestRef.current;
     try {
@@ -1642,6 +1647,8 @@ export default function AdminDashboardPro({
       setExpensesReady(false);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
       return false;
+    } finally {
+      if (requestId === expenseFetchRequestRef.current) expenseFetchInFlightRef.current = false;
     }
   };
 
@@ -1649,6 +1656,7 @@ export default function AdminDashboardPro({
     // Do not poll private finance data without a live session and expenses permission.
     if (!adminLoggedIn || !hasExpensesPermission) {
       expenseFetchRequestRef.current += 1;
+      expenseFetchInFlightRef.current = false;
       setExpenses([]);
       setExpensesError('');
       setExpensesReady(false);
@@ -1656,10 +1664,11 @@ export default function AdminDashboardPro({
     }
 
     void fetchExpenses();
-    const interval = setInterval(() => { void fetchExpenses(); }, 15000);
+    const interval = setInterval(() => { void fetchExpenses('poll'); }, 15000);
     return () => {
       clearInterval(interval);
       expenseFetchRequestRef.current += 1;
+      expenseFetchInFlightRef.current = false;
     };
   }, [adminLoggedIn, hasExpensesPermission]);
 
@@ -2259,6 +2268,7 @@ export default function AdminDashboardPro({
 
     // Clear private admin snapshots before the logged-out UI is painted.
     expenseFetchRequestRef.current += 1;
+    expenseFetchInFlightRef.current = false;
     setExpenses([]);
     setExpensesError('');
     setExpensesReady(false);
@@ -2752,6 +2762,7 @@ export default function AdminDashboardPro({
         // Reject any prior poll: local write is provisional until the complete
         // authoritative ledger has been reloaded after the server commit.
         expenseFetchRequestRef.current += 1;
+        expenseFetchInFlightRef.current = false;
         setExpensesReady(false);
         setExpensesError('');
         setExpenses(prev => [newExp, ...prev]);
@@ -2763,6 +2774,7 @@ export default function AdminDashboardPro({
         alert('შეცდომა ბაზაში შენახვისას');
       }
     } catch {
+      if (!isCurrentAdminSession(mutationSession)) return;
       alert('ქსელის შეცდომა სერვერთან მიერთებისას');
     }
   };
@@ -2786,6 +2798,7 @@ export default function AdminDashboardPro({
         throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა. სია უცვლელი დარჩა; განაახლეთ ისტორია.');
       }
       expenseFetchRequestRef.current += 1;
+      expenseFetchInFlightRef.current = false;
       setExpensesReady(false);
       setExpenses(prev => prev.filter(expense => String(expense.id) !== normalizedId));
       setExpensesError('');
