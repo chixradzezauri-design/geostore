@@ -47,6 +47,20 @@ const adminProductFixture =
   '<nav class="admin-product-pagination"><button type="button">წინა</button>' +
   '<button type="button">1</button><button type="button">შემდეგი</button></nav></section>';
 
+const adminOrdersFixture =
+  '<section class="admin-orders-panel">' +
+  '<div class="admin-orders-toolbar flex flex-col sm:flex-row gap-3">' +
+  '<div class="admin-orders-search w-full sm:w-80"><input aria-label="შეკვეთების ძებნა" type="search" /></div>' +
+  '<div class="admin-order-status-filters flex items-center gap-2 overflow-x-auto"><button>ყველა</button><button>მუშავდება</button></div></div>' +
+  '<div class="admin-orders-list"><article class="admin-order-card">' +
+  '<div class="admin-order-card-heading"><strong>შეკვეთა #1001</strong><span>120.00 ₾</span></div>' +
+  '<div class="admin-order-card-customer"><p>მყიდველი: გრძელისახელისგრძელიმომხმარებელი</p></div>' +
+  '<div class="admin-order-actions flex gap-2"><button>სრული დეტალები</button><button>ინვოისი</button>' +
+  '<div class="admin-order-status-actions flex gap-1"><button>ახალი</button><button>მუშავდება</button></div></div>' +
+  '</article></div>' +
+  '<nav class="admin-orders-pagination" aria-label="შეკვეთების გვერდები"><div class="flex gap-2">' +
+  '<button>წინა</button><button>1</button><button>შემდეგი</button></div></nav></section>';
+
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
   '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
@@ -105,7 +119,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -130,6 +144,11 @@ try {
         const adminProductButtons = [...adminProductControls.querySelectorAll('button')];
         const adminPaginationButtons = [...document.querySelectorAll('.admin-product-pagination button')];
         const adminProductPrice = adminProductControls.querySelector('input');
+        const adminOrders = document.querySelector('.admin-orders-panel');
+        const orderFilterButtons = [...adminOrders.querySelectorAll('.admin-order-status-filters button')];
+        const orderActionButtons = [...adminOrders.querySelectorAll('.admin-order-actions button')];
+        const orderPaginationButtons = [...adminOrders.querySelectorAll('.admin-orders-pagination button')];
+        const orderSearch = adminOrders.querySelector('.admin-orders-search input');
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -170,7 +189,12 @@ try {
           adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
           adminProductPaginationMinHeight: Math.min(...adminPaginationButtons.map(button => button.getBoundingClientRect().height)),
           adminProductPriceFontSize: parseFloat(getComputedStyle(adminProductPrice).fontSize),
-          adminProductColumns: getComputedStyle(adminProductControls).gridTemplateColumns.split(/\s+/).filter(Boolean).length
+          adminProductColumns: getComputedStyle(adminProductControls).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+          adminOrdersRight: adminOrders.getBoundingClientRect().right,
+          minOrderFilterHeight: Math.min(...orderFilterButtons.map(node => node.getBoundingClientRect().height)),
+          minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
+          minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
+          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize)
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -191,6 +215,11 @@ try {
       assert.ok(layout.checkoutDialogHeight <= 822, width + 'px checkout dialog height: ' + JSON.stringify(layout));
       assert.ok(layout.checkoutSubmitHeight >= 43, width + 'px checkout action must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.adminProductRowRight <= width + 2, width + 'px admin product row overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.adminOrdersRight <= width + 2, width + 'px admin orders overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.minOrderFilterHeight >= 43, width + 'px order filters should be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.minOrderActionHeight >= 43, width + 'px order actions should be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.minOrderPaginationHeight >= 43, width + 'px order pagination should be touch-sized: ' + JSON.stringify(layout));
+      if (width <= 640) assert.ok(layout.orderSearchFontSize >= 16, width + 'px order search should avoid iOS zoom: ' + JSON.stringify(layout));
       assert.ok(layout.adminProductControlsRight <= width + 2, width + 'px admin product controls overflow: ' + JSON.stringify(layout));
       assert.ok(layout.adminProductButtonMinHeight >= 43, width + 'px admin product buttons must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.adminProductPaginationMinHeight >= 43, width + 'px product pages must be touch-sized: ' + JSON.stringify(layout));
