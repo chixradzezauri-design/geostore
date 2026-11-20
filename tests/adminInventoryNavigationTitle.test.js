@@ -65,3 +65,13 @@ test('inventory history resets stale records and pagination on a fresh filter re
   assert.match(loader, /setInventoryMovementHasMore\(false\);/);
   assert.match(loader, /requestId !== inventoryMovementRequestRef\.current/);
 });
+
+test('inventory pagination refuses missing and repeated cursors', () => {
+  const start = dashboard.indexOf('const fetchInventoryMovements = async');
+  const end = dashboard.indexOf('useEffect(() => {', start);
+  const loader = dashboard.slice(start, end);
+  assert.match(loader, /const nextCursor = result\?\.next_cursor \?\? null/);
+  assert.match(loader, /result\?\.has_more === true && nextCursor !== null/);
+  assert.match(loader, /String\(nextCursor\) !== String\(beforeId \?\? ''\)/);
+  assert.match(loader, /setInventoryMovementHasMore\(canLoadNextPage\)/);
+});
