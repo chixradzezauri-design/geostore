@@ -489,6 +489,7 @@ export default function StorefrontVisualEditor({
 
   const clearViewportOverrides = () => {
     if (previewMode === 'desktop' || !design.responsive?.[previewMode]) return;
+    if (!window.confirm(`გსურთ ${previewMode === 'mobile' ? 'მობილურის' : 'ტაბლეტის'} ყველა ინდივიდუალური პარამეტრის გასუფთავება? ძირითადი დიზაინი შენარჩუნდება. ცვლილების დაბრუნება შესაძლებელია Undo ღილაკით.`)) return;
     const responsive = { ...(design.responsive || {}) };
     delete responsive[previewMode];
     commitDesign({ ...design, responsive });
