@@ -126,3 +126,12 @@ test('replenishment recommendation does not treat an empty target as zero', () =
   assert.match(dashboard, /const validTarget = String\(targetValue\)\.trim\(\) !== ''/);
   assert.match(dashboard, /validTarget \? \(position\.isLowStock \? Math\.max\(0, Number\(targetValue\) - position\.stock\) : 0\) : '—'/);
 });
+
+test('replenishment settings can be refreshed from the server without a page reload', () => {
+  const start = dashboard.indexOf('aria-labelledby="admin-replenishment-title"');
+  const end = dashboard.indexOf('admin-replenishment-row', start);
+  const panel = dashboard.slice(start, end);
+  assert.match(panel, /onClick=\{\(\) => void fetchInventoryReplenishmentSettings\(\)\}/);
+  assert.match(panel, /disabled=\{replenishmentLoading \|\| Boolean\(replenishmentSavingKey\)\}/);
+  assert.match(panel, /replenishmentLoading \? 'იტვირთება…' : 'განახლება'/);
+});
