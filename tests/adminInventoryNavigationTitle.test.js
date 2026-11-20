@@ -20,3 +20,12 @@ test('admin navigation keeps long Georgian labels readable and focus visible', (
   assert.match(dashboard, /focus-visible:outline-emerald-300/);
   assert.match(dashboard, /shrink-0 px-2 py-0\.5 rounded-full/);
 });
+
+test('compact mobile admin header preserves draft save publish and access status', () => {
+  assert.match(dashboard, /data-admin-visual-header="true" className="flex min-w-0 flex-col lg:flex-row/);
+  assert.match(dashboard, /grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex/);
+  assert.match(dashboard, /onSaveStorefrontDraft\(\)/);
+  assert.match(dashboard, /onPublishStorefront\(\)/);
+  assert.match(dashboard, /col-span-2 flex min-w-0 items-center justify-center/);
+  assert.match(dashboard, /სრული სისტემური წვდომა/);
+});
