@@ -1248,3 +1248,43 @@
     font-size: 16px !important;
   }
 }
+
+
+/* Stage 15 — incomplete expense ledger reporting guard.
+ * This only sizes the financial-integrity alert; expense permissions,
+ * financial formulas, reports and visual editor styles stay server-owned. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-retry {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-retry:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-data-warning {
+    padding: 13px !important;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-finance-retry {
+    width: 100%;
+  }
+}
