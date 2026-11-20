@@ -353,3 +353,34 @@ test('stage 12 expense and calculator forms have readable labels without changin
   assert.ok(layoutBrowser.includes('calculatorMinInputFontSize'));
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 13 expense ledger filters and pagination keep complete financial data unchanged', () => {
+  assert.match(admin, /const \[expenseSearchQuery, setExpenseSearchQuery\] = useState\(''\)/);
+  assert.match(admin, /const \[expenseCategoryFilter, setExpenseCategoryFilter\] = useState\('all'\)/);
+  assert.match(admin, /const \[expensePage, setExpensePage\] = useState\(1\)/);
+  assert.match(admin, /const EXPENSES_PER_PAGE = 10/);
+  assert.match(admin, /const expenseCategoryOptions = Array\.from\(new Set\(expenses\.map/);
+  assert.match(admin, /const filteredExpenses = expenses\.filter\(exp =>/);
+  assert.match(admin, /const totalExpensePages = Math\.max\(1, Math\.ceil\(filteredExpenses\.length \/ EXPENSES_PER_PAGE\)\)/);
+  assert.match(admin, /const safeExpensePage = Math\.min\(Math\.max\(1, expensePage\), totalExpensePages\)/);
+  assert.match(admin, /const paginatedExpenses = filteredExpenses\.slice\(/);
+  assert.match(admin, /const expensePaginationItems = getPaginationItems\(safeExpensePage, totalExpensePages\)/);
+  assert.match(admin, /htmlFor="admin-expense-history-search"/);
+  assert.match(admin, /htmlFor="admin-expense-history-category"/);
+  assert.match(admin, /setExpenseSearchQuery\(e\.target\.value\); setExpensePage\(1\)/);
+  assert.match(admin, /setExpenseCategoryFilter\(e\.target\.value\); setExpensePage\(1\)/);
+  assert.match(admin, /paginatedExpenses\.map\(exp =>/);
+  assert.match(admin, /filteredExpenses\.length === 0/);
+  assert.match(admin, /filteredExpenses\.length > EXPENSES_PER_PAGE/);
+  assert.match(admin, /aria-current=\{safeExpensePage === page \? 'page' : undefined\}/);
+  assert.match(admin, /aria-label="ხარჯების ისტორიის გვერდები"/);
+  assert.match(admin, /onClick=\{\(\) => void fetchExpenses\(\)\}/);
+  assert.match(admin, /financialOverview\.periodExpenses\.map\(item =>/);
+  assert.match(admin, /setExpenses\(allExpenses\)/);
+  assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
+  assert.match(admin, /setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\)/);
+  assert.match(design, /Stage 13 — expense ledger search and pagination/);
+  assert.match(layoutBrowser, /expenseHistoryFilterMinHeight/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
