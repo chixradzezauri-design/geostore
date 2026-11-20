@@ -161,7 +161,8 @@ test('replenishment settings reject incomplete or malformed server responses', (
 
 test('replenishment cards visibly distinguish unsaved local edits', () => {
   assert.match(dashboard, /Object\.prototype\.hasOwnProperty\.call\(replenishmentDrafts, position\.key\)/);
-  assert.match(dashboard, /hasUnsavedChanges && <span className="text-\[10px\] text-amber-200" role="status">შეუნახავი ცვლილება<\/span>/);
+  assert.match(dashboard, /hasUnsavedChanges && <div className="flex flex-wrap items-center gap-2">/);
+  assert.match(dashboard, /<span className="text-\[10px\] text-amber-200" role="status">შეუნახავი ცვლილება<\/span>/);
 });
 
 test('replenishment saves send the revision captured when editing began', () => {
