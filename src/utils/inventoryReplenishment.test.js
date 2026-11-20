@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {
   buildInventoryReplenishmentPlan,
   filterInventoryReplenishmentPlan,
-  getInventoryPositionKey
+  getInventoryPositionKey,
+  calculateReplenishmentDraftPreview
 } from './inventoryReplenishment.js';
 
 test('uses the existing product stock only for products without variants', () => {
@@ -96,4 +97,28 @@ test('preserves saved row revision for conflict-safe edits and null for new sett
   assert.equal(existing.settingId, 42);
   assert.equal(newlyCreated.updatedAt, null);
   assert.equal(newlyCreated.hasCustomSetting, false);
+});
+
+test('draft preview immediately recalculates low-stock status after a threshold edit', () => {
+  assert.deepEqual(calculateReplenishmentDraftPreview(8, 10, 20), {
+    valid: true, isLowStock: true, suggestedQuantity: 12
+  });
+  assert.deepEqual(calculateReplenishmentDraftPreview(8, 5, 20), {
+    valid: true, isLowStock: false, suggestedQuantity: 0
+  });
+  assert.deepEqual(calculateReplenishmentDraftPreview(0, 0, 1), {
+    valid: true, isLowStock: true, suggestedQuantity: 1
+  });
+});
+
+test('draft preview refuses incomplete, invalid and conflicting thresholds and targets', () => {
+  for (const [threshold, target] of [
+    ['', 20], [0, ''], [' ', 20], [5, 5], [8, 7],
+    [-1, 20], [100001, 100002], [1.5, 20], [0, 1000001], [3, 4.5]
+  ]) {
+    const preview = calculateReplenishmentDraftPreview(2, threshold, target);
+    assert.equal(preview.valid, false, 'Rejected threshold/target ' + JSON.stringify([threshold, target]));
+    assert.equal(preview.suggestedQuantity, null);
+  }
+  assert.equal(calculateReplenishmentDraftPreview(-1, 5, 20).valid, false);
 });
