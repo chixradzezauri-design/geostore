@@ -1337,3 +1337,32 @@
     margin-block-start: 8px;
   }
 }
+
+
+/* Stage 18 — expense mutation confirmations and feedback.
+ * Inline operation messages must remain readable even with long server errors.
+ * Existing editor-owned visual tokens and finance formulas are not changed. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-mutation-notice {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit:disabled,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-delete:disabled {
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-submit,
+.admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-delete {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-expenses .admin-expense-mutation-notice {
+    padding: 12px !important;
+  }
+}
