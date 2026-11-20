@@ -95,7 +95,7 @@ test('replenishment settings enforce displayed limits before sending changes', (
 test('replenishment mobile cards use two columns and accessible loading feedback', () => {
   assert.match(dashboard, /admin-replenishment-row grid min-w-0 grid-cols-2/);
   assert.match(dashboard, /admin-replenishment-product col-span-2 min-w-0 xl:col-span-1/);
-  assert.match(dashboard, /admin-replenishment-save col-span-2 flex items-center xl:col-span-1/);
+  assert.match(dashboard, /admin-replenishment-save col-span-2 flex flex-col gap-1 xl:col-span-1/);
   assert.match(dashboard, /aria-labelledby="admin-replenishment-title" aria-busy=\{replenishmentLoading\}/);
   assert.match(dashboard, /replenishmentLoading && <p role="status"/);
 });
