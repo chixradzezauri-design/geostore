@@ -341,7 +341,7 @@ test('responsive-only visual element styles remain in the effective tablet and m
     ...DEFAULT_STOREFRONT_VISUAL_DESIGN,
     responsive: {
       tablet: { elementStyles: { 'hero.title': { fontSize: 27 } } },
-      mobile: { elementStyles: { 'hero.description': { color: '#123456' } } }
+      mobile: { elementStyles: { 'hero.description': { textColor: '#123456' } } }
     }
   });
   assert.equal(buildStorefrontElementStyle(design, 'hero.title', 'tablet').fontSize, '27px');
