@@ -110,3 +110,13 @@ test('replenishment save blocks duplicate submissions and preserves drafts on fa
   assert.ok(save.indexOf('if (!refreshed) throw') < save.indexOf('setReplenishmentDrafts(current =>'));
   assert.match(dashboard, /disabled=\{Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission\}/);
 });
+
+test('replenishment save rejects blank values and locks inputs during save', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /String\(rawThreshold\)\.trim\(\) === ''/);
+  assert.match(save, /String\(rawTarget\)\.trim\(\) === ''/);
+  const card = dashboard.slice(dashboard.indexOf('<article key={position.key} className="admin-replenishment-row'), dashboard.indexOf('</article>', dashboard.indexOf('<article key={position.key} className="admin-replenishment-row'));
+  assert.equal(card.split('type="number" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading}').length - 1, 2);
+});
