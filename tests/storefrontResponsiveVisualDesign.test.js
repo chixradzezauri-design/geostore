@@ -361,3 +361,15 @@ test('clearing selected element colors is atomic and preserves non-color respons
   assert.ok(editor.includes('onClick={clearSelectedElementColors}'));
   assert.ok(!editor.includes("updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', '');"));
 });
+
+test('device-wide visual reset requires confirmation and keeps undo history', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const clearViewportOverrides = () => {');
+  const end = editor.indexOf('const handleHeroFileChange =', start);
+  assert.ok(start >= 0 && end > start);
+  const reset = editor.slice(start, end);
+  assert.ok(reset.includes('window.confirm('), 'device reset must request explicit confirmation');
+  assert.ok(reset.indexOf('window.confirm(') < reset.indexOf('delete responsive[previewMode]'), 'confirmation must happen before deletion');
+  assert.ok(reset.includes('commitDesign({ ...design, responsive })'), 'reset must remain undoable');
+  assert.ok(reset.includes("previewMode === 'desktop'"), 'desktop base design must not be cleared by device reset');
+});
