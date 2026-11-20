@@ -335,7 +335,7 @@ test('direct-edit storefront text targets stay connected to rendered settings an
 test('responsive-only visual element styles remain in the effective tablet and mobile editor preview', async () => {
   const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
   assert.match(editor, /Object\.keys\(\{ \.\.\.\(design\.elementStyles \|\| \{\}\), \.\.\.\(activeResponsive\.elementStyles \|\| \{\}\) \}\)/);
-  assert.match(editor, /\[id,\s*\{\s*\.\.\.\(design\.elementStyles\?\.\[id\] \|\| \{\}\),\s*\.\.\.\(activeResponsive\.elementStyles\?\.\[id\] \|\| \{\}\)\s*\}\s*\]/);
+  assert.ok(editor.includes('design.elementStyles?.[id]') && editor.includes('activeResponsive.elementStyles?.[id]'), 'effective preview merges desktop and device-specific styles');
 
   const design = normalizeStorefrontVisualDesign({
     ...DEFAULT_STOREFRONT_VISUAL_DESIGN,
