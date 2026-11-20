@@ -16,6 +16,7 @@ import { collectReferencedProductImageUrls, collectReferencedOrderImageUrls, col
 import { normalizeOrderItems, normalizeOrderTotal, splitOrderRevenue } from '../utils/orderSafety';
 import { getPaginationItems } from '../utils/pagination.js';
 import { isConfirmedExpenseInsert, isConfirmedExpenseDelete, isExpenseAccessDeniedStatus } from '../utils/expenseMutationSafety.js';
+import { getAuthenticatedExpenseHeaders, requireExpensePermission } from '../utils/expenseRequestSecurity.js';
 import { createSecureId } from '../utils/secureId.js';
 import { parseDeliveryFeeDrafts } from '../utils/deliveryFeeSafety.js';
 import { buildLegacyMessagesPageUrl, getLegacyMessageCursor, mergeLegacyMessagePages } from '../utils/legacyMessageHistory.js';
@@ -84,6 +85,14 @@ const getSupabaseHeaders = async () => {
     Prefer: 'return=representation'
   };
 };
+
+// Expenses never fall back to an anonymous token, unlike public storefront reads.
+const getExpenseSessionHeaders = (expectedUserId) =>
+  getAuthenticatedExpenseHeaders({
+    loadSession: () => supabase.auth.getSession(),
+    apiKey: SUPABASE_ANON_KEY,
+    expectedUserId
+  });
 
 const PRODUCT_IMAGE_BUCKET = 'storefront-media';
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -1633,6 +1642,12 @@ export default function AdminDashboardPro({
     const isLatestExpenseRequest = () =>
       isCurrentAdminSession(requestSessionVersion) && requestId === expenseFetchRequestRef.current;
     try {
+      // RLS may return HTTP 200 with [] when a staff permission is revoked.
+      // Verify authorization on the server before trusting any zero-row ledger.
+      const initialExpenseSession = await getExpenseSessionHeaders();
+      if (!isLatestExpenseRequest()) return false;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: initialExpenseSession.headers, fetchImpl: fetch });
+      if (!isLatestExpenseRequest()) return false;
       // PostgREST commonly caps one response at 1,000 rows. Fetch the complete
       // expense ledger in stable pages so older expenses are not silently
       // omitted from financial-period totals or CSV exports.
@@ -1640,7 +1655,7 @@ export default function AdminDashboardPro({
       const pageSize = 1000;
       let completed = false;
       for (let offset = 0; offset < 100000; offset += pageSize) {
-        const headers = await getSupabaseHeaders();
+        const { headers } = await getExpenseSessionHeaders(initialExpenseSession.userId);
         if (!isLatestExpenseRequest()) return false;
         headers.Range = `${offset}-${offset + pageSize - 1}`;
         headers['Range-Unit'] = 'items';
@@ -1667,6 +1682,11 @@ export default function AdminDashboardPro({
       }
       if (!completed) throw new Error('ხარჯების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
       if (!isLatestExpenseRequest()) return false;
+      // Detect permission revocation or account switching during pagination.
+      const finalExpenseSession = await getExpenseSessionHeaders(initialExpenseSession.userId);
+      if (!isLatestExpenseRequest()) return false;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: finalExpenseSession.headers, fetchImpl: fetch });
+      if (!isLatestExpenseRequest()) return false;
       setExpenses(allExpenses);
       setExpensesError('');
       setExpensesReady(true);
@@ -1674,6 +1694,7 @@ export default function AdminDashboardPro({
       return true;
     } catch (error) {
       if (!isLatestExpenseRequest()) return false;
+      if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
       console.error('GEOSTORE expense history fetch failed:', error);
       setExpensesReady(false);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
@@ -2828,8 +2849,11 @@ export default function AdminDashboardPro({
     const isCurrentMutation = () =>
       mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
-      const headers = new Headers(await getSupabaseHeaders());
+      const { headers: verifiedHeaders } = await getExpenseSessionHeaders();
       if (!isCurrentMutation()) return;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
+      if (!isCurrentMutation()) return;
+      const headers = new Headers(verifiedHeaders);
       headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses`, {
         method: 'POST',
@@ -2857,6 +2881,7 @@ export default function AdminDashboardPro({
       logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
     } catch (error) {
       if (!isCurrentMutation()) return;
+      if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
       console.error('GEOSTORE expense insert failed or not confirmed:', error);
       setExpenseMutationNotice({
         type: 'error',
@@ -2889,8 +2914,11 @@ export default function AdminDashboardPro({
     const isCurrentMutation = () =>
       mutationVersion === expenseMutationVersionRef.current && isCurrentAdminSession(mutationSession);
     try {
-      const headers = new Headers(await getSupabaseHeaders());
+      const { headers: verifiedHeaders } = await getExpenseSessionHeaders();
       if (!isCurrentMutation()) return;
+      await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers: verifiedHeaders, fetchImpl: fetch });
+      if (!isCurrentMutation()) return;
+      const headers = new Headers(verifiedHeaders);
       headers.set('Prefer', 'return=representation');
       const res = await fetch(`${SUPABASE_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(normalizedId)}&select=id`, {
         method: 'DELETE',
@@ -2917,6 +2945,7 @@ export default function AdminDashboardPro({
       logActivity(`წაიშალა ხარჯი (ID: ${normalizedId})`);
     } catch (error) {
       if (!isCurrentMutation()) return;
+      if (error?.expenseAccessDenied) discardUnauthorizedExpenseData();
       console.error('GEOSTORE expense delete failed:', error);
       setExpenseMutationNotice({
         type: 'error',

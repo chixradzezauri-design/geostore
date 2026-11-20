@@ -26,3 +26,22 @@ test('scheduled AI finance answer cannot outlive its original admin session', ()
   assert.match(ai, /if \(!isCurrentAdminSession\(requestSessionVersion\) \|\| responseVersion !== aiResponseVersionRef\.current\) return;/);
   assert.match(ai, /aiResponseInFlightRef\.current = false;/);
 });
+
+test('expense history is not verified without server permission before and after pagination', () => {
+  const read = admin.slice(admin.indexOf("  const fetchExpenses = async (requestMode = 'manual') => {"), admin.indexOf('  useEffect(() => {\n    // Do not poll private finance data'));
+  const verifier = "await requireExpensePermission({ supabaseUrl: SUPABASE_URL, headers:";
+  assert.equal(read.split(verifier).length - 1, 2);
+  assert.ok(read.indexOf('initialExpenseSession') < read.indexOf('for (let offset = 0; offset < 100000;'));
+  assert.ok(read.indexOf('finalExpenseSession') > read.indexOf('if (!completed)'));
+  assert.ok(read.indexOf('finalExpenseSession') < read.indexOf('setExpenses(allExpenses)'));
+  assert.match(read, /getExpenseSessionHeaders\(initialExpenseSession\.userId\)/);
+});
+
+test('expense writes recheck server permission before any POST/DELETE', () => {
+  const add = admin.slice(admin.indexOf('  const handleAddExpense = async (e) => {'), admin.indexOf('  const handleDeleteExpense = async (id) => {'));
+  const del = admin.slice(admin.indexOf('  const handleDeleteExpense = async (id) => {'), admin.indexOf('  if (!adminLoggedIn || !hasAnyAdminAccess(adminAccess))'));
+  for (const operation of [add, del]) {
+    assert.ok(operation.indexOf('await requireExpensePermission(') < operation.indexOf('const res = await fetch('));
+    assert.match(operation, /if \(error\?\.expenseAccessDenied\) discardUnauthorizedExpenseData\(\);/);
+  }
+});
