@@ -2579,7 +2579,8 @@ export default function AdminDashboardPro({
     const vendorProfitTotals = new Map();
 
     deliveredOrders.forEach(order => {
-      const orderTotal = normalizeOrderTotal(order.totalGEL ?? order.total_gel);
+      const rawOrderTotal = order.totalGEL ?? order.total_gel;
+      const orderTotal = normalizeOrderTotal(rawOrderTotal);
       totalSalesRevenue += orderTotal;
       const rawItems = Array.isArray(order.items) ? order.items : [];
       const invalidItemCount = rawItems.filter(item => !item || typeof item !== 'object' || Array.isArray(item)).length;
@@ -2587,7 +2588,7 @@ export default function AdminDashboardPro({
       if (invalidItemCount > 0) unknownCogsItems += invalidItemCount;
       const deliveryCharge = getFinancialDeliveryCharge(order);
       const revenueSplit = splitOrderRevenue(items, orderTotal, deliveryCharge);
-      if (!isReconciledOrderRevenue(orderTotal, revenueSplit, order.checkoutBreakdown)) {
+      if (!isReconciledOrderRevenue(rawOrderTotal, revenueSplit, order.checkoutBreakdown)) {
         unreconciledDeliveredOrders += 1;
       }
       totalDeliveryRevenue += revenueSplit.deliveryRevenue;
@@ -2700,14 +2701,14 @@ export default function AdminDashboardPro({
       incomeSources: Array.from(incomeTotals, ([label, amount]) => ({ label, amount })).sort((x, y) => y.amount - x.amount),
       productProfitability: Array.from(productProfitTotals.values()).map(item => ({
         ...item,
-        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       vendorProfitability: Array.from(vendorProfitTotals.values()).map(item => ({
         ...item,
         productCount: item.productCount.size,
-        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 ? null : item.revenue - item.cogs,
-        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
+        grossProfit: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 ? null : item.revenue - item.cogs,
+        margin: item.unknownCostItems > 0 || item.estimatedCostItems > 0 || unreconciledDeliveredOrders > 0 || item.revenue <= 0 ? null : ((item.revenue - item.cogs) / item.revenue) * 100
       })).sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity)),
       expenseBreakdown: Array.from(expenseTotals.values()).sort((x, y) => y.amount - x.amount)
     };

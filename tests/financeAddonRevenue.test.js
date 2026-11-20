@@ -33,7 +33,7 @@ test('historical order purchase-cost snapshot remains preferred over current cat
 
 test('confirmed checkout delivery and per-order revenue must reconcile before profit', () => {
   assert.match(admin, /getFinancialDeliveryCharge\(order\)/);
-  assert.match(admin, /isReconciledOrderRevenue\(orderTotal, revenueSplit, order\.checkoutBreakdown\)/);
+  assert.match(admin, /isReconciledOrderRevenue\(rawOrderTotal, revenueSplit, order\.checkoutBreakdown\)/);
   assert.match(admin, /unreconciledDeliveredOrders === 0/);
   assert.match(admin, /financialOverview\.unreconciledDeliveredOrders/);
 });

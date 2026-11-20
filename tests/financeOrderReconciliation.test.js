@@ -52,3 +52,12 @@ test('checkout summary, allocation and line totals must all match to the tetri',
   assert.equal(isReconciledOrderRevenue(checkout.totalGEL, split, { ...checkout.checkoutBreakdown, deliveryGEL: 4 }), false);
   assert.equal(isReconciledOrderRevenue(checkout.totalGEL, split, { ...checkout.checkoutBreakdown, discountGEL: 60 }), false);
 });
+
+test('reported totals retain numeric-string currency support but cannot turn malformed values into zero', () => {
+  const noRevenue = { productRevenue: 0, addonRevenue: 0, deliveryRevenue: 0, itemProductRevenue: [] };
+  assert.equal(isReconciledOrderRevenue('0.00', noRevenue), true);
+  assert.equal(isReconciledOrderRevenue('197.00', splitOrderRevenue(checkout.items, checkout.totalGEL, getFinancialDeliveryCharge(checkout)), checkout.checkoutBreakdown), true);
+  for (const invalid of [null, undefined, '', '  ', -5, '-5', 'NaN', 'Infinity', '9abc', '1.234', {}, true]) {
+    assert.equal(isReconciledOrderRevenue(invalid, noRevenue), false, JSON.stringify(invalid));
+  }
+});

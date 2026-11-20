@@ -26,12 +26,23 @@ const toCents = value => {
   return Number.isSafeInteger(cents) ? cents : null;
 };
 
+// The persisted order total may be PostgREST's numeric string. Require a
+// genuine finite amount; a missing or malformed total must not be turned
+// into zero by a presentation normalizer before finance reconciliation.
+const toOrderTotalCents = value => {
+  if (typeof value === 'number') return toCents(value);
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (!/^\d+(?:\.\d{1,2})?$/.test(raw)) return null;
+  return toCents(Number(raw));
+};
+
 // A valid order's delivered total must agree with its allocated product,
 // paid-add-on and delivery revenue (and, when available, its server checkout
 // subtotal less discount plus delivery). Legacy mismatches are disclosed;
 // they must never create a seemingly confirmed profit amount.
 export function isReconciledOrderRevenue(orderTotal, revenueSplit, breakdown = null) {
-  const total = toCents(orderTotal);
+  const total = toOrderTotalCents(orderTotal);
   const products = toCents(revenueSplit?.productRevenue);
   const addons = toCents(revenueSplit?.addonRevenue);
   const delivery = toCents(revenueSplit?.deliveryRevenue);
