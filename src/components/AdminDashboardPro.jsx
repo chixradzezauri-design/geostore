@@ -1374,7 +1374,9 @@ export default function AdminDashboardPro({
       });
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
-        throw new Error(detail || `HTTP ${response.status}`);
+        let message = detail;
+        try { message = JSON.parse(detail)?.message || detail; } catch { /* Keep plain-text errors. */ }
+        throw new Error(message || `HTTP ${response.status}`);
       }
       const refreshed = await fetchInventoryReplenishmentSettings();
       if (!refreshed) throw new Error('პარამეტრები შენახულია, მაგრამ განახლებული მონაცემების ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.');
@@ -5017,7 +5019,7 @@ export default function AdminDashboardPro({
               </div>
             )}
             <p className="text-[10px] leading-5 text-slate-500">საწყისი პარამეტრებია 5 ერთეული (დაბალი მარაგის ზღვარი) და 20 ერთეული (სამიზნე მარაგი). შენახული პარამეტრები გამოიყენება კონკრეტულ პროდუქტზე ან ვარიანტზე. რეკომენდაცია არ ქმნის შესყიდვის შეკვეთას და არ ცვლის მარაგს.</p>
-            <p className="text-[10px] leading-5 text-amber-200/90">სხვა მოწყობილობაზე შეცვლილი პარამეტრების სანახავად გამოიყენეთ „განახლება“. ერთდროული რედაქტირებისას სერვერზე ბოლოს შენახული მნიშვნელობა მოქმედებს; ცვლილებამდე განაახლეთ მონაცემები.</p>
+            <p className="text-[10px] leading-5 text-amber-200/90">სხვა მოწყობილობაზე შეცვლილი პარამეტრების სანახავად გამოიყენეთ „განახლება“. მოძველებული ვერსიით შენახვა დაიბლოკება; კონფლიქტისას განაახლეთ მონაცემები და საჭიროების შემთხვევაში გააუქმეთ ძველი ცვლილება.</p>
           </section>
         )}
 
