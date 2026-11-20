@@ -322,3 +322,34 @@ test('stage 11 finance breakdown preserves amount calculations and uncertainty n
   assert.match(layoutBrowser, /financeRowMaxRight/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 12 expense and calculator forms have readable labels without changing financial handlers', () => {
+  for (const id of ['admin-expense-category', 'admin-expense-amount', 'admin-expense-date', 'admin-expense-description',
+    'admin-calc-purchase-cost', 'admin-calc-selling-price', 'admin-calc-discount-percent', 'admin-calc-shipping-cost']) {
+    assert.ok(admin.includes('htmlFor="' + id + '"'), id + ' must have a label');
+    assert.ok(admin.includes('id="' + id + '"'), id + ' must have a matching field');
+  }
+  assert.ok(admin.includes('onSubmit={handleAddExpense}'));
+  assert.ok(admin.includes('value={expenseForm.category} onChange={e => setExpenseForm'));
+  assert.ok(admin.includes('value={expenseForm.amount} onChange={e => setExpenseForm'));
+  assert.ok(admin.includes('value={expenseForm.date} onChange={e => setExpenseForm'));
+  assert.ok(admin.includes('value={expenseForm.description} onChange={e => setExpenseForm'));
+  assert.ok(admin.includes('inputMode="decimal" min="0.01" max="1000000000" step="0.01" required'));
+  assert.ok(admin.includes('maxLength={300} required'));
+  assert.ok(admin.includes('aria-describedby="admin-expense-amount-help"'));
+  assert.ok(admin.includes('aria-describedby="admin-expense-description-help"'));
+  assert.ok(admin.includes('handleDeleteExpense(exp.id)'));
+  assert.ok(admin.includes("const validDate = Boolean(dateParts && parsedExpenseDate"));
+  assert.ok(admin.includes("if (!/^\\d+(?:\\.\\d{1,2})?$/.test(amountText)"));
+  assert.ok(admin.includes("method: 'POST'"));
+  assert.ok(admin.includes("method: 'DELETE'"));
+  assert.ok(admin.includes('calculatedSalesMetrics.discountedPrice.toFixed(2)'));
+  assert.ok(admin.includes('calculatedSalesMetrics.profitMargin.toFixed(1)'));
+  assert.ok(design.includes('Stage 12 — expense entry and calculator forms'));
+  assert.ok(design.includes('.admin-expense-submit'));
+  assert.ok(design.includes('.admin-calculator-field-grid'));
+  assert.ok(layoutBrowser.includes('expenseFormMinInputFontSize'));
+  assert.ok(layoutBrowser.includes('calculatorMinInputFontSize'));
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
