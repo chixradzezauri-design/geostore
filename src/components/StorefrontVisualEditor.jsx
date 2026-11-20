@@ -231,6 +231,7 @@ export default function StorefrontVisualEditor({
   const localDesignDirtyRef = useRef(false);
   const draftSaveInFlightRef = useRef(false);
   const publishInFlightRef = useRef(false);
+  const heroImageReadRequestRef = useRef(0);
   const [history, setHistory] = useState([initialDesign]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyRef = useRef([initialDesign]);
@@ -576,6 +577,7 @@ export default function StorefrontVisualEditor({
   };
 
   const handleHeroFileChange = event => {
+    const requestId = ++heroImageReadRequestRef.current;
     const file = event.target.files?.[0];
     if (!file) return;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -586,9 +588,12 @@ export default function StorefrontVisualEditor({
     }
     const reader = new FileReader();
     reader.onload = () => {
+      if (requestId !== heroImageReadRequestRef.current) return;
       if (typeof reader.result === 'string') updateGroup('hero', 'imageUrl', reader.result);
     };
-    reader.onerror = () => setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
+    reader.onerror = () => {
+      if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
+    };
     reader.readAsDataURL(file);
     event.target.value = '';
   };
