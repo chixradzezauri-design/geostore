@@ -230,6 +230,7 @@ export default function StorefrontVisualEditor({
   const designRef = useRef(initialDesign);
   const localDesignDirtyRef = useRef(false);
   const draftSaveInFlightRef = useRef(false);
+  const publishInFlightRef = useRef(false);
   const [history, setHistory] = useState([initialDesign]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const historyRef = useRef([initialDesign]);
@@ -793,12 +794,13 @@ export default function StorefrontVisualEditor({
   };
 
   const publish = async () => {
-    if (!isOwner || typeof onPublishStorefront !== 'function' || storefrontDraftBusy || storefrontPublishBusy) return;
+    if (!isOwner || typeof onPublishStorefront !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current || publishInFlightRef.current) return;
     if (localDesignDirtyRef.current) {
       setSaveMessage('დიზაინში შეუნახავი ცვლილებებია. ჯერ შეინახეთ მონახაზი და შემდეგ გამოაქვეყნეთ.');
       return;
     }
     if (!window.confirm('გსურთ მიმდინარე მთავარი გვერდის ცვლილებების გამოქვეყნება მომხმარებლებისთვის?')) return;
+    publishInFlightRef.current = true;
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
     let published = false;
     try {
@@ -806,6 +808,8 @@ export default function StorefrontVisualEditor({
     } catch (error) {
       setSaveMessage('გამოქვეყნება ვერ მოხერხდა. გადაამოწმეთ სერვერის მდგომარეობა და სცადეთ ხელახლა.');
       return;
+    } finally {
+      publishInFlightRef.current = false;
     }
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნება არ დადასტურდა. მომხმარებლებისთვის ცვლილებები არ ჩაითვალოს გამოქვეყნებულად; სცადეთ ხელახლა.');
     if (published === true) {
