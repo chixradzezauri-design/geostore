@@ -397,3 +397,15 @@ test('visual preview selection mode can be exited using Escape', async () => {
   assert.ok(editor.includes('onKeyDownCapture={handlePreviewKeyDown}'));
   assert.ok(editor.includes('tabIndex={selectionMode ? 0 : undefined}'));
 });
+
+test('resetting one visual element requires confirmation before deleting viewport styles', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const resetSelectedElementStyle = () => {');
+  const end = editor.indexOf('const clearViewportOverrides =', start);
+  assert.ok(start >= 0 && end > start);
+  const reset = editor.slice(start, end);
+  assert.ok(reset.includes('window.confirm('));
+  assert.ok(reset.indexOf('window.confirm(') < reset.indexOf('delete elementStyles[selectedElement.id]'));
+  assert.ok(reset.includes('commitDesign({ ...design, responsive })'));
+  assert.ok(reset.includes('commitDesign({ ...design, elementStyles })'));
+});
