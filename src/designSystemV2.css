@@ -507,3 +507,58 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+
+/* Stage 7 — admin orders readability and efficient pagination.
+ * Presentation only: order statuses, stock rules, permissions, exports,
+ * and saved admin visual-editor colors remain under their original owners. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel :is(
+  .admin-orders-toolbar, .admin-orders-search, .admin-order-status-filters,
+  .admin-orders-list, .admin-order-card, .admin-order-card-heading,
+  .admin-order-card-customer, .admin-order-card-footer, .admin-order-actions,
+  .admin-order-status-actions, .admin-orders-pagination
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-pagination button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-filters button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-actions > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-actions > button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  touch-action: manipulation;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-pagination > div {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card-heading,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card-customer {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-search input {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-status-filters {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-order-card-footer {
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-pagination {
+    gap: 10px !important;
+  }
+}
