@@ -158,3 +158,8 @@ test('replenishment settings reject incomplete or malformed server responses', (
   assert.ok(fetcher.indexOf('throw new Error') < fetcher.indexOf('setReplenishmentSettings(result.items)'));
   assert.match(fetcher, /setReplenishmentSettings\(result\.items\)/);
 });
+
+test('replenishment cards visibly distinguish unsaved local edits', () => {
+  assert.match(dashboard, /Object\.prototype\.hasOwnProperty\.call\(replenishmentDrafts, position\.key\)/);
+  assert.match(dashboard, /hasUnsavedChanges && <span className="text-\[10px\] text-amber-200" role="status">შეუნახავი ცვლილება<\/span>/);
+});
