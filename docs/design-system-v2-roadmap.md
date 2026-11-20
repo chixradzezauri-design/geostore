@@ -95,3 +95,11 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Add a manual history-refresh control and an explicit filtered/total row count. Responsive mobile search controls and pager meet 44px touch targets, with search/select font ≥16px on phones; lengthy amounts can wrap without page overflow.
 - Critically, `filteredExpenses` and `paginatedExpenses` are **render-only**. The original full `expenses` array, Supabase paginated ledger fetching, POST/DELETE handlers, financial rollups and CSV export remain untouched.
 - Extend regression tests for expense array integrity/pagination and Chromium's 320–1440px fixture with a representative 10-row, long-amount expense ledger. Authenticated CRUD and server access remain a separate verification gate. Keep PR #146 Draft and do not deploy without specific release approval.
+
+
+## Phase 14 — calculator hidden costs exposed
+- Audit found a functional clarity gap in the existing sales/profit calculator: its `calcForm` and `calculatedSalesMetrics` already included eight parameters, but only four inputs were actually rendered. Hidden defaults (packagingCost=2, processingFee=2, otherExpenses=0 and quantity=1) affected displayed profit without being editable or visible.
+- Keep all existing math and React state unchanged; expose all **four missing controlled inputs** in the same calculator. Show per-unit guidance for prices and costs, plus explicitly labelled total revenue, gross/net profit and existing margin/markup.
+- Native numeric affordances, visible labels, responsive two-column grids (one column on ≤380px) and eight-field browser fixture cover the user interface without adding persisted settings or changing formulas.
+- Calculation behavior stays: `grossProfit = (discountedPrice - pCost) * qty`; `netProfit = grossProfit - (ship + pack + proc + other) * qty`; no defaults or financial database rows changed.
+- Build/Node regression + Chromium CSS fixture 320–1440px + CodeQL + dependency audit are required on the exact PR head. Authenticated calculator review is still required before a separately approved Production release.
