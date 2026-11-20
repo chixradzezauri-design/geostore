@@ -31,3 +31,17 @@ test('restoring a saved version discards obsolete pending text edits', () => {
   assert.ok(restore);
   assert.match(restore[1], /pendingTextEditsRef\.current = \{\}/);
 });
+
+test('undo and redo increment edit revision so in-flight saves cannot clear unsaved changes', () => {
+  for (const name of ['undo', 'redo']) {
+    const handler = source.match(new RegExp(`const ${name} = \\(\\) => \\{([\\s\\S]*?)\\n  \\};`));
+    assert.ok(handler, `${name} exists`);
+    assert.match(handler[1], /localEditRevisionRef\.current \+= 1/);
+  }
+});
+
+test('browser navigation warns only while storefront draft is unsaved', () => {
+  assert.match(source, /if \(!localDesignDirtyRef\.current\) return;/);
+  assert.match(source, /window\.addEventListener\('beforeunload', warnBeforeUnload\)/);
+  assert.match(source, /window\.removeEventListener\('beforeunload', warnBeforeUnload\)/);
+});
