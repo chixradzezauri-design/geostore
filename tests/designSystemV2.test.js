@@ -462,11 +462,12 @@ test('stage 16 expense ledger fetches cannot overwrite newer snapshots', () => {
   assert.match(admin, /clearInterval\(interval\);\s*expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;/);
   assert.match(admin, /\}, \[adminLoggedIn, hasExpensesPermission\]\);/);
   assert.match(admin, /expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpenses\(\[\]\);\s*setExpensesError\(''\);\s*setExpensesReady\(false\);/);
-  assert.match(admin, /if \(res\.ok\) \{[\s\S]*?expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpensesReady\(false\);\s*setExpensesError\(''\);\s*setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
-  assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\);[\s\S]*?void fetchExpenses\(\);/);
-  assert.match(admin, /expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpensesReady\(false\);\s*setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\)/);
-  assert.match(admin, /setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\);[\s\S]*?void fetchExpenses\(\);/);
-  assert.match(admin, /if \(!isCurrentAdminSession\(mutationSession\)\) return;/);
+  assert.match(admin, /const handleAddExpense = async \(e\) => \{[\s\S]*?expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpensesReady\(false\)/);
+  assert.match(admin, /const handleDeleteExpense = async \(id\) => \{[\s\S]*?expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;\s*setExpensesReady\(false\)/);
+  assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
+  assert.match(admin, /setExpenses\(prev => prev\.filter\(expense => String\(expense\.id\) !== normalizedId\)\)/);
+  assert.match(admin, /if \(!isCurrentMutation\(\)\) return;/);
+  assert.match(admin, /void fetchExpenses\(\);/);
   assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\)/);
 });
@@ -493,4 +494,29 @@ test('stage 17 expense history displays honest loading and verified states', () 
   assert.match(design, /Stage 17 — expense verification status and retry accessibility/);
   assert.match(layoutBrowser, /expenseSyncStatusVisible/);
   assert.match(layoutBrowser, /expenseSyncRetryHeight/);
+});
+
+test('stage 18 expense mutations require exact server acknowledgment and single-flight protection', () => {
+  assert.match(admin, /isConfirmedExpenseInsert, isConfirmedExpenseDelete/);
+  assert.match(admin, /const expenseMutationInFlightRef = useRef\(false\)/);
+  assert.match(admin, /const expenseMutationVersionRef = useRef\(0\)/);
+  assert.match(admin, /const \[expenseMutationBusy, setExpenseMutationBusy\] = useState\(''\)/);
+  assert.match(admin, /if \(expenseMutationInFlightRef\.current\) return;/);
+  assert.match(admin, /if \(expenseMutationInFlightRef\.current\) return false;/);
+  assert.match(admin, /expenseMutationInFlightRef\.current = true;/);
+  assert.match(admin, /headers\.set\('Prefer', 'return=representation'\)/);
+  assert.match(admin, /if \(!isConfirmedExpenseInsert\(rows, newExp\)\)/);
+  assert.match(admin, /if \(!isConfirmedExpenseDelete\(deletedRows, normalizedId\)\)/);
+  assert.match(admin, /if \(!res\.ok\) throw new Error/);
+  assert.match(admin, /const isCurrentMutation = \(\) =>\s*mutationVersion === expenseMutationVersionRef\.current && isCurrentAdminSession\(mutationSession\)/);
+  assert.match(admin, /expenseMutationInFlightRef\.current = false;\s*setExpenseMutationBusy\(''\);\s*void fetchExpenses\(\)/);
+  assert.match(admin, /setExpenseMutationNotice\(\{ type: 'success', action: 'create'/);
+  assert.match(admin, /setExpenseMutationNotice\(\{ type: 'success', action: 'delete'/);
+  assert.match(admin, /setExpenseMutationNotice\(\{\s*type: 'error',\s*action: 'create'/);
+  assert.match(admin, /setExpenseMutationNotice\(\{\s*type: 'error',\s*action: 'delete'/);
+  assert.match(admin, /disabled=\{Boolean\(expenseMutationBusy\)\} className="admin-expense-submit/);
+  assert.match(admin, /disabled=\{Boolean\(expenseMutationBusy\)\} aria-busy=\{expenseMutationBusy ===/);
+  assert.match(admin, /role=\{expenseMutationNotice\.type === 'error' \? 'alert' : 'status'\}/);
+  assert.match(design, /Stage 18 — expense mutation confirmations and feedback/);
+  assert.match(layoutBrowser, /expenseMutationNoticeRight/);
 });
