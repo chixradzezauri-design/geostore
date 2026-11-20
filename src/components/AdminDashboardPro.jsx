@@ -1347,6 +1347,11 @@ export default function AdminDashboardPro({
   const saveInventoryReplenishmentSetting = async (position) => {
     if (!hasProductsPermission || replenishmentSavingKey || replenishmentLoading) return;
     const draft = replenishmentDrafts[position.key] || {};
+    const expectedUpdatedAt = Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt') ? draft.expectedUpdatedAt : position.updatedAt;
+    if (position.hasCustomSetting && !expectedUpdatedAt && !Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt')) {
+      setReplenishmentError('შენახულ პარამეტრს ვერსიის ინფორმაცია აკლია. განაახლეთ მონაცემები ხელახლა შენახვამდე.');
+      return;
+    }
     const rawThreshold = draft.threshold ?? position.threshold;
     const rawTarget = draft.target ?? position.target;
     const threshold = Number(rawThreshold);
@@ -1371,7 +1376,7 @@ export default function AdminDashboardPro({
           p_variant_id: position.variantId,
           p_low_stock_threshold: savedThreshold,
           p_target_stock: savedTarget,
-          p_expected_updated_at: Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt') ? draft.expectedUpdatedAt : position.updatedAt
+          p_expected_updated_at: expectedUpdatedAt
         })
       });
       if (!response.ok) {
