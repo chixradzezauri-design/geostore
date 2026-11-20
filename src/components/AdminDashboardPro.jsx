@@ -4573,7 +4573,7 @@ export default function AdminDashboardPro({
             { id: 'staff', label: '👔 თანამშრომლები & როლები', icon: UserCog },
             { id: 'orders', label: '📦 შეკვეთები', count: orders?.length || 0, icon: PackageCheck },
             { id: 'products', label: '🏷️ პროდუქტები & მახასიათებლები', count: products?.length || 0, icon: Store },
-            { id: 'inventory', label: '📚 {adminVisualDesign.content.inventoryTitle}', icon: Layers },
+            { id: 'inventory', label: `📚 ${adminVisualDesign.content.inventoryTitle}`, icon: Layers },
             { id: 'replenishment', label: '📦 მარაგის შევსების გეგმა', count: replenishmentPositions.filter(position => position.isLowStock).length, icon: Truck },
             { id: 'support', label: '💬 მხარდაჭერა', count: supportTickets?.filter(t => t.status === 'ღია' || t.status === 'მუშავდება')?.length || 0, icon: HelpCircle },
             { id: 'messages', label: '📨 მიმოწერები', count: legacyMessages?.length || 0, icon: HelpCircle },
