@@ -384,3 +384,36 @@ test('stage 13 expense ledger filters and pagination keep complete financial dat
   assert.match(layoutBrowser, /expenseHistoryFilterMinHeight/);
   assert.doesNotMatch(design, /\[data-visual-editor-target=/);
 });
+
+
+test('stage 14 calculator exposes its four pre-existing hidden inputs without changing the formula', () => {
+  const fields = [
+    ['admin-calc-purchase-cost', 'purchaseCost'],
+    ['admin-calc-selling-price', 'sellingPrice'],
+    ['admin-calc-discount-percent', 'discountPercent'],
+    ['admin-calc-shipping-cost', 'shippingCost'],
+    ['admin-calc-packaging-cost', 'packagingCost'],
+    ['admin-calc-processing-fee', 'processingFee'],
+    ['admin-calc-other-expenses', 'otherExpenses'],
+    ['admin-calc-quantity', 'quantity']
+  ];
+  for (const [id, field] of fields) {
+    assert.ok(admin.includes('htmlFor="' + id + '"'), id + ' requires a label');
+    assert.ok(admin.includes('id="' + id + '"'), id + ' requires an input');
+    assert.ok(admin.includes('value={calcForm.' + field + '} onChange={e => setCalcForm('), field + ' must remain controlled');
+    assert.ok(admin.includes('toNonNegative(calcForm.' + field + ')') || field === 'quantity', field + ' must remain in financial formula');
+  }
+  assert.match(admin, /const \[calcForm, setCalcForm\] = useState\(\{/);
+  assert.match(admin, /packagingCost: '2'/);
+  assert.match(admin, /processingFee: '2'/);
+  assert.match(admin, /quantity: '1'/);
+  assert.match(admin, /const revenue = discountedPrice \* qty/);
+  assert.match(admin, /const grossProfit = \(discountedPrice - pCost\) \* qty/);
+  assert.match(admin, /const netProfit = grossProfit - \(\(ship \+ pack \+ proc \+ other\) \* qty\)/);
+  assert.match(admin, /calculatedSalesMetrics\.revenue\.toFixed\(2\)/);
+  assert.match(admin, /className="admin-calculator-extra-fields/);
+  assert.match(admin, /aria-labelledby="admin-calc-extra-title"/);
+  assert.match(design, /Stage 14 — fully editable profit calculator inputs/);
+  assert.match(layoutBrowser, /calculatorExtraCount/);
+  assert.doesNotMatch(design, /\[data-visual-editor-target=/);
+});
