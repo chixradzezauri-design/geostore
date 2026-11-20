@@ -103,3 +103,11 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Native numeric affordances, visible labels, responsive two-column grids (one column on ≤380px) and eight-field browser fixture cover the user interface without adding persisted settings or changing formulas.
 - Calculation behavior stays: `grossProfit = (discountedPrice - pCost) * qty`; `netProfit = grossProfit - (ship + pack + proc + other) * qty`; no defaults or financial database rows changed.
 - Build/Node regression + Chromium CSS fixture 320–1440px + CodeQL + dependency audit are required on the exact PR head. Authenticated calculator review is still required before a separately approved Production release.
+
+
+## Phase 15 — verified expense ledger before finance reporting
+- Financial integrity audit found a high-impact display hazard: `analyticsData` recomputed net profit from `expenses` even when the expense ledger had never finished loading, failed mid-pagination or was unavailable to the current session. A partial or empty ledger could display a misleadingly high "net profit" or produce incomplete financial CSVs.
+- Add `expensesReady`, set only **after the full paginated Supabase ledger succeeds**. Reset verification on failed retrieval or lost expenses permission. Keep previous rows as before, but treat them as unverified rather than complete.
+- An accessible analytics warning exposes incomplete expense history and any fetch error, with a retry action. Suppress the displayed expense total and net profit until the ledger is verified; guard all four CSV exports, and make existing AI summary/profit/expense answers explicitly disclose incomplete ledger coverage.
+- Preserve the exact `analyticsData` calculations, gross profit/product margin logic, original ledger fetch pagination, row creation/deletion, report periods, owner visual design values and server permissions. Incomplete ledger records must never be silently presented as a confirmed profit.
+- Regression protects success/error/permission transitions and CSV early guard. Chromium CSS fixture covers warning text and 44px retry button on 320–1440px screens. Exact-HEAD CI plus authenticated owner data-flow checks remain required before an approved production release.
