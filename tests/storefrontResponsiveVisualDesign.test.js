@@ -460,3 +460,13 @@ test('keyboard preview selection blocks untagged button activation', async () =>
   assert.ok(handler.indexOf('event.preventDefault();', handler.indexOf("event.key !== 'Enter'")) < handler.indexOf('if (!metadata) return;'));
   assert.ok(handler.indexOf('event.stopPropagation();', handler.indexOf("event.key !== 'Enter'")) < handler.indexOf('if (!metadata) return;'));
 });
+
+test('selected preview content reads its declared design field instead of a hardcoded hero image', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const selectedElementValue = selectedElement');
+  const end = editor.indexOf('const updateSelectedElement =', start);
+  assert.ok(start >= 0 && end > start);
+  const valueSelector = editor.slice(start, end);
+  assert.ok(valueSelector.includes('design[selectedElement.group]?.[selectedElement.key]'));
+  assert.ok(!valueSelector.includes("selectedElement.group === 'hero'"));
+});
