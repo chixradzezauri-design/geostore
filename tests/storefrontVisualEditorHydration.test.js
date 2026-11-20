@@ -129,3 +129,9 @@ test('hero image file input resets even when reading throws synchronously', () =
   assert.match(handler, /catch \(error\) \{/);
   assert.match(handler, /finally \{\s*event\.target\.value = ''/);
 });
+
+test('hero image reader rejects empty or non-image data results', () => {
+  const handler = editor.split('const handleHeroFileChange = event =>')[1]?.split('const undo = () =>')[0] || '';
+  assert.match(handler, /typeof reader\.result === 'string' && reader\.result\.startsWith\('data:image\/'\)/);
+  assert.match(handler, /else \{\s*setSaveMessage\('ფოტოს წაკითხვა ვერ მოხერხდა/);
+});
