@@ -83,7 +83,7 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION private.save_inventory_replenishment_setting(text,text,integer,integer,timestamptz) FROM PUBLIC, anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION private.save_inventory_replenishment_setting(text,text,integer,integer,timestamptz) TO service_role;
+GRANT EXECUTE ON FUNCTION private.save_inventory_replenishment_setting(text,text,integer,integer,timestamptz) TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.admin_save_inventory_replenishment_setting(
   p_product_id text, p_variant_id text, p_low_stock_threshold integer,
