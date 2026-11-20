@@ -428,12 +428,12 @@ test('stage 15 financial reporting blocks unverifiable expense ledgers', () => {
   assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\) \{/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{[\s\S]*?return;\s*\}\s*const periodLabel/);
   assert.match(admin, /className="admin-finance-data-warning/);
-  assert.match(admin, /role="alert" className="admin-finance-data-warning/);
+  assert.match(admin, /role=\{expensesError \|\| !hasExpensesPermission \? 'alert' : 'status'\} aria-live="polite" className="admin-finance-data-warning/);
   assert.match(admin, /!expensesVerifiedForReports \|\| financialOverview\.netProfit === null \? '—'/);
   assert.match(admin, /expensesVerifiedForReports \? financialOverview\.totalExpenses\.toFixed\(2\)/);
   assert.match(admin, /else if \(qLower\.includes\('ხარჯი'\)\) answer = expensesVerifiedForReports/);
   assert.match(admin, /expensesError && <p className="mt-1">ჩატვირთვის შეცდომა:/);
-  assert.match(admin, /onClick=\{\(\) => void fetchExpenses\(\)\} className="admin-finance-retry/);
+  assert.match(admin, /onClick=\{\(\) => void fetchExpenses\(\)\} aria-busy=\{expensesLoading\} className="admin-finance-retry/);
   assert.match(admin, /const grossProfit = unknownCogsItems === 0 && estimatedCogsItems === 0 \? totalProductRevenue - totalCogs : null/);
   assert.match(admin, /const netProfit = grossProfit === null \? null : grossProfit \+ totalDeliveryRevenue - totalExpenses/);
   assert.match(admin, /setExpenses\(prev => \[newExp, \.\.\.prev\]\)/);
@@ -457,7 +457,7 @@ test('stage 16 expense ledger fetches cannot overwrite newer snapshots', () => {
   assert.equal((fetchCode.match(/if \(!isLatestExpenseRequest\(\)\) return false;/g) || []).length, 5);
   assert.match(fetchCode, /if \(!isLatestExpenseRequest\(\)\) return false;\s*setExpenses\(allExpenses\);/);
   assert.match(fetchCode, /catch \(error\) \{\s*if \(!isLatestExpenseRequest\(\)\) return false;/);
-  assert.match(fetchCode, /finally \{\s*if \(requestId === expenseFetchRequestRef\.current\) expenseFetchInFlightRef\.current = false;/);
+  assert.match(fetchCode, /finally \{\s*if \(requestId === expenseFetchRequestRef\.current\) \{\s*expenseFetchInFlightRef\.current = false;/);
   assert.match(admin, /setInterval\(\(\) => \{ void fetchExpenses\('poll'\); \}, 15000\)/);
   assert.match(admin, /clearInterval\(interval\);\s*expenseFetchRequestRef\.current \+= 1;\s*expenseFetchInFlightRef\.current = false;/);
   assert.match(admin, /\}, \[adminLoggedIn, hasExpensesPermission\]\);/);
@@ -469,4 +469,28 @@ test('stage 16 expense ledger fetches cannot overwrite newer snapshots', () => {
   assert.match(admin, /if \(!isCurrentAdminSession\(mutationSession\)\) return;/);
   assert.match(admin, /const expensesVerifiedForReports = hasExpensesPermission && expensesReady && !expensesError/);
   assert.match(admin, /const handleExportAnalytics = \(\) => \{\s*if \(!expensesVerifiedForReports\)/);
+});
+
+test('stage 17 expense history displays honest loading and verified states', () => {
+  assert.match(admin, /const \[expensesLoading, setExpensesLoading\] = useState\(false\)/);
+  assert.match(admin, /const \[expensesLastVerifiedAt, setExpensesLastVerifiedAt\] = useState\(null\)/);
+  const fetchCode = admin.split("const fetchExpenses = async (requestMode = 'manual') => {")[1]?.split('\n  useEffect(() => {')[0] || '';
+  assert.match(fetchCode, /expenseFetchInFlightRef\.current = true;\s*setExpensesLoading\(true\)/);
+  assert.match(fetchCode, /setExpenses\(allExpenses\);\s*setExpensesError\(''\);\s*setExpensesReady\(true\);\s*setExpensesLastVerifiedAt\(new Date\(\)\.toISOString\(\)\)/);
+  assert.match(fetchCode, /if \(requestId === expenseFetchRequestRef\.current\) \{\s*expenseFetchInFlightRef\.current = false;\s*if \(isCurrentAdminSession\(requestSessionVersion\)\) setExpensesLoading\(false\)/);
+  assert.match(admin, /setExpensesReady\(false\);\s*setExpensesLoading\(false\);\s*setExpensesLastVerifiedAt\(null\)/);
+  assert.match(admin, /className="admin-expense-sync-state/);
+  assert.match(admin, /role="status" aria-live="polite"/);
+  assert.match(admin, /expensesLoading \? 'მიმდინარეობს სრული ისტორიის შემოწმება/);
+  assert.match(admin, /expensesReady \? 'ისტორია სრულად დადასტურებულია/);
+  assert.match(admin, /!expensesReady && expenses\.length > 0/);
+  assert.match(admin, /!expensesReady && expenses\.length === 0 \? \(expensesLoading \? 'ხარჯების ისტორია იტვირთება/);
+  assert.match(admin, /expensesLastVerifiedAt && <>ბოლო წარმატებული შემოწმება:/);
+  assert.match(admin, /time dateTime=\{expensesLastVerifiedAt\}/);
+  assert.match(admin, /className="admin-expense-load-error/);
+  assert.match(admin, /aria-busy=\{expensesLoading\} className="admin-expense-refresh/);
+  assert.match(admin, /aria-busy=\{expensesLoading\} className="admin-expense-error-retry/);
+  assert.match(design, /Stage 17 — expense verification status and retry accessibility/);
+  assert.match(layoutBrowser, /expenseSyncStatusVisible/);
+  assert.match(layoutBrowser, /expenseSyncRetryHeight/);
 });
