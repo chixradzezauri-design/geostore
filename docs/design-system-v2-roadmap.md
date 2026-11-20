@@ -18,10 +18,18 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 3. Legacy CSS extraction: **Stage 4 first pass** — move the compact responsive compatibility tail from `index.css` into `responsiveCompatibility.css` at the exact original import order (no cascade reordering), with mobile/desktop browser QA. Continue isolated sections only after tests.
 4. Runtime performance: **Stage 4 first pass** — stop the storefront-wide Flash Sale 1-second rerender when no promotion is active, correctly wake future scheduled sales, pause hidden tabs and resume on visibility.
 5. Image loading: **Stage 5 first pass** — convert category decoration from CSS backgrounds to native lazy/async images with unchanged hover crop/overlay; show accessible cart/wishlist placeholders on failed image URLs. Remove only byte-for-byte adjacent duplicate CSS declarations. Web Vitals and SEO still require measured field baselines.
-6. Admin operations enhancements, export/bulk actions and permissions only after server-side safety checks.
+6. Admin operations: **Stage 6 first pass** — improve existing product-list quick edit accessibility, readable buttons, mobile controls and pagination without changing save/publish authorization. Existing CSV exports remain. Bulk actions and permissions require separate server-side safety checks.
 
 ## Acceptance and release rules
 - Existing frontend/admin behavior, saved presets, Supabase rows and RLS must remain intact.
 - `npm test`, production build, CodeQL, dependency audit and the responsive Chromium workflow should pass at the exact PR SHA.
 - Browser and authenticated admin/editor checks are separate gates. Automated unauthenticated tests are not evidence of permission-protected flows.
 - Keep this PR **Draft** and separate from completed PR #145. Do not merge or deploy it until separately reviewed and authorized; Vercel quota may prevent fresh previews.
+
+
+## Phase 6 — admin product operations, first pass
+- Ensure price, cost, stock and product-specific icon actions have meaningful accessible names; make edit/delete actions readable with text.
+- Organize the existing product-row quick actions in a two-column layout on phones, with stock and publish controls spanning the full width.
+- Keep numeric inputs legible on iOS, preserve 44px touch targets and protect long names and SKUs from forcing horizontal overflow.
+- Add a targeted Node regression test. No database, RLS, payment, cart, save or publication workflow changes.
+- Verify CI and authenticated admin editor workflow before any merge; avoid inferring authenticated coverage from public browser smoke.
