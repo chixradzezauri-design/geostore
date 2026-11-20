@@ -161,7 +161,9 @@
 }
 
 .geostore-fashion-store .geostore-storefront
-  :where(.gs-size-option, .gs-color-option, .gs-product-gallery-thumb) {
+  :is(.gs-size-option, .gs-color-option, .gs-product-gallery-thumb) {
+  /* Match legacy specificity: earlier important min-height rules are 40px. */
+  min-height: var(--gs-v2-control-target) !important;
   min-block-size: var(--gs-v2-control-target) !important;
   touch-action: manipulation;
 }
