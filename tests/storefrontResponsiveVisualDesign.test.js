@@ -437,3 +437,16 @@ test('visual selection preview highlights hovered and keyboard-focused targets',
   assert.ok(editor.includes('.gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target]:focus-visible'));
   assert.ok(editor.includes('outline: 2px dashed #10b981'));
 });
+
+test('keyboard selection supports Enter and Space without activating preview controls', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const handlePreviewKeyDown = event => {');
+  const end = editor.indexOf('const selectElementFromTree =', start);
+  assert.ok(start >= 0 && end > start);
+  const handler = editor.slice(start, end);
+  assert.ok(handler.includes("event.key !== 'Enter' && event.key !== ' '"));
+  assert.ok(handler.includes("closest?.('[data-visual-editor-target]')"));
+  assert.ok(handler.includes('if (!metadata) return;'));
+  assert.ok(handler.includes('event.preventDefault();'));
+  assert.ok(handler.includes('setSelectedElement({ id: targetId, ...metadata })'));
+});
