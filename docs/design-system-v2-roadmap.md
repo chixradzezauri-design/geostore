@@ -87,3 +87,11 @@ On phones (≤640px), the existing owner visual editor can set an operational in
 - Form layout, minimum 44px touch targets, large-number result wrapping and mobile 16px focus-safe typography are scoped to the old selectors. On ≤380px phones, calculator fields and results stack to remain readable.
 - Added Node assertions that the original mutation/calculation pathways remain present and a Chromium CSS fixture at 320–1440px to check control height, font size and horizontal overflow. Exact PR HEAD CI and authenticated admin/manual financial operations must be verified before merge.
 - **No database, RLS, staff authorization, stored visual-editor changes, live expense write/delete operations, main branch or Production deployment.** Keep Draft PR #146 pending separate release approval.
+
+
+## Phase 13 — expense ledger search and pagination
+- The expenses history workspace now offers a client-side search across description, category, expense date and amount, plus a category selector derived from the complete fetched ledger. Clearing or changing filters resets the visible page to 1.
+- Render up to 10 expense rows at a time with bounded accessible previous/next/page buttons. A clamped page index handles deleting an expense, background refreshes, and searches that shrink the result count. Empty matches have a separate explanatory message.
+- Add a manual history-refresh control and an explicit filtered/total row count. Responsive mobile search controls and pager meet 44px touch targets, with search/select font ≥16px on phones; lengthy amounts can wrap without page overflow.
+- Critically, `filteredExpenses` and `paginatedExpenses` are **render-only**. The original full `expenses` array, Supabase paginated ledger fetching, POST/DELETE handlers, financial rollups and CSV export remain untouched.
+- Extend regression tests for expense array integrity/pagination and Chromium's 320–1440px fixture with a representative 10-row, long-amount expense ledger. Authenticated CRUD and server access remain a separate verification gate. Keep PR #146 Draft and do not deploy without specific release approval.
