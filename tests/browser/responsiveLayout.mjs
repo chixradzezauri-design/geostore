@@ -7,6 +7,8 @@ const assets = resolve('dist/assets');
 const stylesheets = readdirSync(assets).filter(file => file.endsWith('.css'));
 assert.ok(stylesheets.length, 'Production build must contain CSS');
 const css = stylesheets.map(file => readFileSync(resolve(assets, file), 'utf8')).join('\n');
+const stage6CssPresent = css.includes('.admin-products-panel .admin-product-controls');
+assert.ok(stage6CssPresent, 'Stage 6 admin product rules must be included in the built stylesheet');
 const cards = Array.from({ length: 2 }, (_, i) =>
   '<article class="gs-catalog-product-card"><div class="gs-catalog-product-media">Image</div>' +
   '<div class="gs-catalog-product-info"><h3>Product ' + i + '</h3><button>დამატება</button></div></article>'
@@ -160,6 +162,10 @@ try {
           checkoutErrorRight: checkoutError.getBoundingClientRect().right,
           checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height,
           adminProductRowRight: adminProductRow.getBoundingClientRect().right,
+          adminProductWithinPanel: !!adminProductControls.closest('.admin-products-panel'),
+          adminProductWithinAdmin: !!adminProductControls.closest('.admin-dashboard-pro.admin-dashboard-shell'),
+          adminProductDisplay: getComputedStyle(adminProductControls).display,
+          adminProductPanelParent: String(adminProductControls.closest('.admin-products-panel')?.parentElement?.className || '').slice(0,180),
           adminProductControlsRight: adminProductControls.getBoundingClientRect().right,
           adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
           adminProductPaginationMinHeight: Math.min(...adminPaginationButtons.map(button => button.getBoundingClientRect().height)),
