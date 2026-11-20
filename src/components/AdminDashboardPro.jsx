@@ -1313,6 +1313,8 @@ export default function AdminDashboardPro({
   const [expenses, setExpenses] = useState([]);
   const [expensesError, setExpensesError] = useState('');
   const [expensesReady, setExpensesReady] = useState(false);
+  // A slow 15-second poll must never replace a newer refresh or post-mutation ledger.
+  const expenseFetchRequestRef = useRef(0);
   const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
   const [expensePage, setExpensePage] = useState(1);
@@ -1595,6 +1597,9 @@ export default function AdminDashboardPro({
   const fetchExpenses = async () => {
     const requestSessionVersion = adminSessionVersion.current;
     if (!isCurrentAdminSession(requestSessionVersion) || !hasExpensesPermission) return false;
+    const requestId = ++expenseFetchRequestRef.current;
+    const isLatestExpenseRequest = () =>
+      isCurrentAdminSession(requestSessionVersion) && requestId === expenseFetchRequestRef.current;
     try {
       // PostgREST commonly caps one response at 1,000 rows. Fetch the complete
       // expense ledger in stable pages so older expenses are not silently
@@ -1604,17 +1609,17 @@ export default function AdminDashboardPro({
       let completed = false;
       for (let offset = 0; offset < 100000; offset += pageSize) {
         const headers = await getSupabaseHeaders();
-        if (!isCurrentAdminSession(requestSessionVersion)) return false;
+        if (!isLatestExpenseRequest()) return false;
         headers.Range = `${offset}-${offset + pageSize - 1}`;
         headers['Range-Unit'] = 'items';
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/expenses?select=*&order=created_at.desc,id.desc`,
           { headers }
         );
-        if (!isCurrentAdminSession(requestSessionVersion)) return false;
+        if (!isLatestExpenseRequest()) return false;
         if (!res.ok) throw new Error(`ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა (HTTP ${res.status}).`);
         const page = await res.json();
-        if (!isCurrentAdminSession(requestSessionVersion)) return false;
+        if (!isLatestExpenseRequest()) return false;
         if (!Array.isArray(page)) throw new Error('ხარჯების ისტორიის მონაცემების ფორმატი არასწორია.');
         allExpenses.push(...page);
         if (page.length < pageSize) {
@@ -1626,13 +1631,13 @@ export default function AdminDashboardPro({
         }
       }
       if (!completed) throw new Error('ხარჯების სრული ისტორიის ჩატვირთვა ვერ დასრულდა.');
-      if (!isCurrentAdminSession(requestSessionVersion)) return false;
+      if (!isLatestExpenseRequest()) return false;
       setExpenses(allExpenses);
       setExpensesError('');
       setExpensesReady(true);
       return true;
     } catch (error) {
-      if (!isCurrentAdminSession(requestSessionVersion)) return false;
+      if (!isLatestExpenseRequest()) return false;
       console.error('GEOSTORE expense history fetch failed:', error);
       setExpensesReady(false);
       setExpensesError(error?.message || 'ხარჯების ისტორიის ჩატვირთვა ვერ მოხერხდა.');
@@ -1641,18 +1646,22 @@ export default function AdminDashboardPro({
   };
 
   useEffect(() => {
-    // Do not poll private finance data unless the server grants the expenses module.
-    if (!hasExpensesPermission) {
+    // Do not poll private finance data without a live session and expenses permission.
+    if (!adminLoggedIn || !hasExpensesPermission) {
+      expenseFetchRequestRef.current += 1;
       setExpenses([]);
       setExpensesError('');
       setExpensesReady(false);
       return undefined;
     }
 
-    fetchExpenses();
-    const interval = setInterval(fetchExpenses, 15000);
-    return () => clearInterval(interval);
-  }, [hasExpensesPermission]);
+    void fetchExpenses();
+    const interval = setInterval(() => { void fetchExpenses(); }, 15000);
+    return () => {
+      clearInterval(interval);
+      expenseFetchRequestRef.current += 1;
+    };
+  }, [adminLoggedIn, hasExpensesPermission]);
 
 
 
@@ -2249,8 +2258,10 @@ export default function AdminDashboardPro({
     if (adminLoggedIn) return;
 
     // Clear private admin snapshots before the logged-out UI is painted.
+    expenseFetchRequestRef.current += 1;
     setExpenses([]);
     setExpensesError('');
+    setExpensesReady(false);
     setServerCustomers([]);
     setCrmLoading(false);
     setCrmError('');
@@ -2719,6 +2730,8 @@ export default function AdminDashboardPro({
 
     const expenseId = createAdminId('exp');
     if (!expenseId) return alert(secureIdError);
+    const mutationSession = adminSessionVersion.current;
+    if (!hasExpensesPermission || !isCurrentAdminSession(mutationSession)) return;
     const newExp = {
       id: expenseId,
       category,
@@ -2734,10 +2747,17 @@ export default function AdminDashboardPro({
         body: JSON.stringify(newExp)
       });
 
+      if (!isCurrentAdminSession(mutationSession)) return;
       if (res.ok) {
+        // Reject any prior poll: local write is provisional until the complete
+        // authoritative ledger has been reloaded after the server commit.
+        expenseFetchRequestRef.current += 1;
+        setExpensesReady(false);
+        setExpensesError('');
         setExpenses(prev => [newExp, ...prev]);
         setExpenseForm({ category: 'რეკლამა & მარკეტინგი', amount: '', date: getLocalDateInputValue(), description: '' });
         logActivity(`დაემატა ახალი ხარჯი: ${newExp.description} (${newExp.amount} ₾)`);
+        void fetchExpenses();
         alert('✅ ხარჯი წარმატებით შეინახა ბაზაში!');
       } else {
         alert('შეცდომა ბაზაში შენახვისას');
@@ -2750,6 +2770,8 @@ export default function AdminDashboardPro({
   const handleDeleteExpense = async (id) => {
     const normalizedId = String(id ?? '').trim();
     if (!normalizedId || !window.confirm('ნამდვილად გსურთ ამ ხარჯის წაშლა ბაზიდან?')) return;
+    const mutationSession = adminSessionVersion.current;
+    if (!hasExpensesPermission || !isCurrentAdminSession(mutationSession)) return;
     try {
       const headers = new Headers(await getSupabaseHeaders());
       headers.set('Prefer', 'return=representation');
@@ -2759,14 +2781,19 @@ export default function AdminDashboardPro({
       });
       if (!res.ok) throw new Error(`ხარჯის წაშლა ვერ მოხერხდა (HTTP ${res.status}).`);
       const deletedRows = await res.json();
+      if (!isCurrentAdminSession(mutationSession)) return;
       if (!Array.isArray(deletedRows) || deletedRows.length !== 1 || String(deletedRows[0]?.id) !== normalizedId) {
         throw new Error('სერვერმა ერთი კონკრეტული ხარჯის წაშლა ვერ დაადასტურა. სია უცვლელი დარჩა; განაახლეთ ისტორია.');
       }
+      expenseFetchRequestRef.current += 1;
+      setExpensesReady(false);
       setExpenses(prev => prev.filter(expense => String(expense.id) !== normalizedId));
       setExpensesError('');
       logActivity(`წაიშალა ხარჯი (ID: ${normalizedId})`);
+      void fetchExpenses();
       alert('✅ ხარჯი წარმატებით წაიშალა!');
     } catch (error) {
+      if (!isCurrentAdminSession(mutationSession)) return;
       console.error('GEOSTORE expense delete failed:', error);
       alert(error?.message || 'ხარჯის წაშლისას ქსელის შეცდომა მოხდა.');
     }
