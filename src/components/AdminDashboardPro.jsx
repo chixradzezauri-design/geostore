@@ -4937,7 +4937,7 @@ export default function AdminDashboardPro({
           </section>
         )}
 
-        {(visibleAdminTab === 'replenishment' || (visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment')) && (
+        {(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment') && (
           <section className="admin-inventory-panel space-y-5 rounded-[2rem] border border-emerald-500/25 bg-slate-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl" aria-labelledby="admin-replenishment-title">
             <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 border-b border-emerald-500/20 pb-5">
               <div className="min-w-0">
