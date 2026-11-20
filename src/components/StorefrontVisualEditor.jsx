@@ -850,7 +850,7 @@ export default function StorefrontVisualEditor({
             <button type="button" onClick={resetDesign} className="rounded-xl border border-rose-400/40 px-3 py-2 text-xs font-bold text-rose-200">ვიზუალური Reset</button>
           </div>
         </div>
-        {saveMessage && <p role="status" aria-live="polite" className="mt-3 rounded-xl bg-slate-950/70 px-3 py-2 text-xs text-emerald-200">{saveMessage}</p>}
+        {saveMessage && <p role="status" aria-live="polite" className={`mt-3 rounded-xl border px-3 py-2 text-xs ${/ვერ |შეუნახავი|არ დადასტურდა|ხელახლა შეინახეთ|ჯერ შეინახეთ/.test(saveMessage) ? 'border-rose-400/40 bg-rose-950/40 text-rose-200' : 'border-emerald-400/20 bg-slate-950/70 text-emerald-200'}`}>{saveMessage}</p>}
       </header>
 
       <section className="rounded-2xl border border-sky-400/25 bg-slate-900/80 p-4 space-y-3" aria-label="გამოქვეყნებული ვერსიების ისტორია">
