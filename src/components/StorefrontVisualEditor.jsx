@@ -407,10 +407,21 @@ export default function StorefrontVisualEditor({
   };
 
   const handlePreviewKeyDown = event => {
-    if (!selectionMode || event.key !== 'Escape') return;
+    if (!selectionMode) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      setSelectionMode(false);
+      return;
+    }
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const target = event.target?.closest?.('[data-visual-editor-target]');
+    const targetId = target?.getAttribute('data-visual-editor-target');
+    const metadata = VISUAL_EDITOR_TARGETS[targetId];
+    if (!metadata) return;
     event.preventDefault();
     event.stopPropagation();
-    setSelectionMode(false);
+    setSelectedElement({ id: targetId, ...metadata });
   };
 
   const selectElementFromTree = targetId => {
