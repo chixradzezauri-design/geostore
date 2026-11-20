@@ -90,3 +90,9 @@ test('publish blocks overlapping draft saves and duplicate publish requests', ()
   assert.match(publish, /finally \{\s*publishInFlightRef\.current = false/);
   assert.ok(publish.indexOf('window.confirm(') < publish.indexOf('publishInFlightRef.current = true'));
 });
+
+test('draft save cannot start while publish request is in flight', () => {
+  const save = editor.split('const saveDraft = async () =>')[1]?.split('const publish = async () =>')[0] || '';
+  assert.match(save, /draftSaveInFlightRef\.current \|\| publishInFlightRef\.current\) return/);
+  assert.ok(save.indexOf('publishInFlightRef.current) return') < save.indexOf('draftSaveInFlightRef.current = true'));
+});
