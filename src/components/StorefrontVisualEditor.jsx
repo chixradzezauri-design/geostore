@@ -784,6 +784,10 @@ export default function StorefrontVisualEditor({
 
   const publish = async () => {
     if (!isOwner || typeof onPublishStorefront !== 'function' || storefrontDraftBusy || storefrontPublishBusy) return;
+    if (localDesignDirtyRef.current) {
+      setSaveMessage('დიზაინში შეუნახავი ცვლილებებია. ჯერ შეინახეთ მონახაზი და შემდეგ გამოაქვეყნეთ.');
+      return;
+    }
     if (!window.confirm('გსურთ მიმდინარე მთავარი გვერდის ცვლილებების გამოქვეყნება მომხმარებლებისთვის?')) return;
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
     const published = await onPublishStorefront();
