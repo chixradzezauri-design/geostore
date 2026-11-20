@@ -48,3 +48,8 @@ test('command center detail panels are compact and long statuses can wrap on mob
     assert.match(dashboard, new RegExp("setAdminTab\\('" + section + "'\\)"));
   }
 });
+
+test('replenishment section visibility has no duplicated tab condition', () => {
+  assert.equal(dashboard.includes("(visibleAdminTab === 'replenishment' || (visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment'))"), false);
+  assert.equal(dashboard.includes("(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment')"), true);
+});
