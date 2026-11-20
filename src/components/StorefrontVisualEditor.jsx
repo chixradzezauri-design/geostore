@@ -808,13 +808,16 @@ export default function StorefrontVisualEditor({
       versionInspectRequestRef.current += 1;
       setSelectedVersionId('');
       setSelectedVersionSnapshot(null);
-      const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at').eq('config_key', 'storefront').order('created_at', { ascending: false }).limit(20);
-      if (error) setVersionHistoryError(error.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
-      else {
+      try {
+        const { data, error } = await supabase.from('storefront_versions').select('id,version_label,created_at').eq('config_key', 'storefront').order('created_at', { ascending: false }).limit(20);
+        if (error) throw error;
         setVersionHistory(Array.isArray(data) ? data : []);
         setSelectedVersionId('');
         setSelectedVersionSnapshot(null);
         setVersionHistoryError('');
+      } catch (error) {
+        setVersionHistoryError(error?.message || 'ახალი ვერსიის ისტორიაში განახლება ვერ მოხერხდა.');
+        setSaveMessage('ცვლილებები გამოქვეყნებულია, თუმცა ვერსიების ისტორიის განახლება ვერ მოხერხდა.');
       }
     }
   };
