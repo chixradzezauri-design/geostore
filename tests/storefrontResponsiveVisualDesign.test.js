@@ -385,3 +385,15 @@ test('visual preview selection blocks navigation even when clicking an untagged 
   assert.ok(handler.indexOf('event.stopPropagation();') < handler.indexOf('if (!target) return;'));
   assert.ok(editor.includes('onClickCapture={handlePreviewSelect}'));
 });
+
+test('visual preview selection mode can be exited using Escape', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const handlePreviewKeyDown = event => {');
+  const end = editor.indexOf('const selectElementFromTree =', start);
+  assert.ok(start >= 0 && end > start);
+  const handler = editor.slice(start, end);
+  assert.ok(handler.includes("event.key !== 'Escape'"));
+  assert.ok(handler.includes('setSelectionMode(false)'));
+  assert.ok(editor.includes('onKeyDownCapture={handlePreviewKeyDown}'));
+  assert.ok(editor.includes('tabIndex={selectionMode ? 0 : undefined}'));
+});
