@@ -6169,6 +6169,7 @@ export default function AdminDashboardPro({
                     <input
                       type="text"
                       placeholder="ძებნა პროდუქტებში..."
+                      aria-label="პროდუქტის ძებნა"
                       value={productSearchQuery}
                       onChange={e => { setProductSearchQuery(e.target.value); setProductPage(1); }}
                       className="w-full bg-slate-950 border border-emerald-500/20 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-emerald-400 shadow-inner"
@@ -6185,7 +6186,7 @@ export default function AdminDashboardPro({
                   </div>
                 ) : paginatedProducts.map(p => (
                   <div key={p.id} className="admin-product-row bg-slate-950/60 p-4 rounded-3xl border border-emerald-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-inner">
-                    <div className="admin-product-identity flex items-center gap-3.5">
+                    <div className="admin-product-identity flex min-w-0 items-center gap-3.5">
                       {p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="w-14 h-14 object-cover bg-slate-950 p-1 rounded-2xl border border-emerald-500/20 shrink-0" /> : <div className="w-14 h-14 flex items-center justify-center bg-slate-950 rounded-2xl border border-emerald-500/20 shrink-0 text-emerald-400"><ImageIcon className="w-5 h-5" /></div>}
                       <div>
                         <h4 className="font-bold text-white text-sm">{p.name}</h4>
@@ -6204,6 +6205,7 @@ export default function AdminDashboardPro({
                           min="0"
                           step="0.01"
                           inputMode="decimal"
+                          aria-label={`თვითღირებულება: ${p.name}`}
                           value={quickProductDrafts['purchaseCost:' + String(p.id)] ?? String(p.purchaseCost !== undefined ? p.purchaseCost : (p.purchase_cost ?? 0))}
                           onChange={e => setQuickProductDrafts(prev => ({ ...prev, ['purchaseCost:' + String(p.id)]: e.target.value }))}
                           onBlur={e => {
@@ -6232,6 +6234,7 @@ export default function AdminDashboardPro({
                           min="0"
                           step="0.01"
                           inputMode="decimal"
+                          aria-label={`ფასი ლარში: ${p.name}`}
                           value={quickProductDrafts['priceGEL:' + String(p.id)] ?? String(p.priceGEL ?? p.price_gel ?? '')}
                           onChange={e => setQuickProductDrafts(prev => ({ ...prev, ['priceGEL:' + String(p.id)]: e.target.value }))}
                           onBlur={e => {
@@ -6288,6 +6291,7 @@ export default function AdminDashboardPro({
                       <button
                         type="button"
                         onClick={() => handleToggleProductPublished(p.id)}
+                        aria-label={`${(p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}: ${p.name}`}
                         disabled={Boolean(productPublishBusyIds[String(p.id)])}
                         className={`inline-flex items-center gap-1.5 rounded-2xl border px-3 py-2.5 text-[10px] font-bold transition disabled:opacity-50 disabled:cursor-wait ${(p.isPublished ?? p.is_published) === false ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' : 'border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'}`}
                         title={(p.isPublished ?? p.is_published) === false ? 'პროდუქტის მაღაზიაში გამოქვეყნება' : 'პროდუქტის მაღაზიიდან დამალვა'}
@@ -6295,8 +6299,8 @@ export default function AdminDashboardPro({
                         {(p.isPublished ?? p.is_published) === false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                         {productPublishBusyIds[String(p.id)] ? 'ინახება…' : (p.isPublished ?? p.is_published) === false ? 'გამოქვეყნება' : 'დამალვა'}
                       </button>
-                      <button type="button" onClick={() => handleEditProduct(p)} className="text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => handleDeleteProduct(p.id)} className="text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => handleEditProduct(p)} aria-label={`რედაქტირება: ${p.name}`} className="inline-flex items-center justify-center gap-2 text-sky-300 hover:text-sky-200 p-2.5 bg-sky-500/10 rounded-2xl cursor-pointer transition" title="პროდუქტის სრული რედაქტირება"><Edit3 className="w-4 h-4 shrink-0" /><span>რედაქტირება</span></button>
+                      <button type="button" onClick={() => handleDeleteProduct(p.id)} aria-label={`წაშლა: ${p.name}`} className="inline-flex items-center justify-center gap-2 text-rose-400 hover:text-rose-300 p-2.5 bg-rose-500/10 rounded-2xl cursor-pointer transition"><Trash2 className="w-4 h-4 shrink-0" /><span>წაშლა</span></button>
                     </div>
                   </div>
                 ))}
