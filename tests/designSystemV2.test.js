@@ -9,6 +9,7 @@ const modal = readFileSync(new URL('../src/components/Modals.jsx', import.meta.u
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.url), 'utf8');
 const browser = readFileSync(new URL('./browser/realStorefrontSmoke.mjs', import.meta.url), 'utf8');
+const layoutBrowser = readFileSync(new URL('./browser/responsiveLayout.mjs', import.meta.url), 'utf8');
 const admin = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 
 test('Design System 2.0 is appended after all legacy admin and storefront styles', () => {
@@ -111,7 +112,7 @@ test('cart quantity touch targets and checkout shell have responsive browser che
   assert.match(design, /\.gs-cart-quantity-controls button\s*\{\s*min-width: var\(--gs-v2-control-target\) !important/);
   assert.match(design, /\.gs-cart-coupon-form input\s*\{\s*flex: 1 1 0/);
   assert.match(design, /\.gs-commerce-overlay--checkout \.gs-checkout-dialog\s*\{\s*max-height: calc\(100dvh/);
-  assert.match(browser, /cartQtyMinHeight/);
-  assert.match(browser, /checkoutDialogRight/);
-  assert.match(browser, /checkoutInputFontSize/);
+  assert.match(layoutBrowser, /cartQtyMinHeight/);
+  assert.match(layoutBrowser, /checkoutDialogRight/);
+  assert.match(layoutBrowser, /checkoutInputFontSize/);
 });
