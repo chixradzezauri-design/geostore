@@ -5287,13 +5287,13 @@ export default function AdminDashboardPro({
               </div>
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-              <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="შემოსავლის წყაროები" className="admin-finance-sources-panel bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">შემოსავლის წყაროები</h3>
                   <span className="text-[10px] text-slate-400">პროდუქტი, დამატებითი მომსახურება და მიწოდება</span>
                 </div>
                 {incomeSources.length === 0 ? <p className="text-slate-500 text-xs py-4">შემოსავლის წყარო ჯერ არ არის.</p> : incomeSources.map(source => (
-                  <div key={source.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
+                  <div key={source.label} className="admin-finance-breakdown-row flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
                     <span className="text-slate-300">{source.label}</span>
                     <b className="text-emerald-400 whitespace-nowrap">{source.amount.toFixed(2)} ₾</b>
                   </div>
@@ -5301,21 +5301,21 @@ export default function AdminDashboardPro({
                 {financialOverview.unknownCogsItems > 0 && <p className="text-amber-300 text-[10px]">თვითღირებულება უცნობია {financialOverview.unknownCogsItems} შეკვეთის/პროდუქტის ჩანაწერზე.</p>}
                 {financialOverview.estimatedCogsItems > 0 && <p className="text-amber-300 text-[10px]">ძველი შეკვეთების {financialOverview.estimatedCogsItems} ერთეულზე გამოყენებულია პროდუქტის მიმდინარე თვითღირებულება და არა გაყიდვის დღის ისტორიული ფასი.</p>}
               </div>
-              <div className="bg-slate-900/80 border border-rose-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="გასავლები — კატეგორიების მიხედვით" className="admin-finance-expenses-panel bg-slate-900/80 border border-rose-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-rose-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">გასავლები — კატეგორიების მიხედვით</h3>
                   <span className="text-[10px] text-slate-400">ჩანაწერები: {expenses.length}</span>
                 </div>
                 {expenseBreakdown.length === 0 ? <p className="text-slate-500 text-xs py-4">არჩეულ პერიოდში ხარჯები არ არის.</p> : expenseBreakdown.map(expense => (
-                  <div key={expense.label} className="flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
+                  <div key={expense.label} className="admin-finance-breakdown-row flex justify-between gap-3 text-xs border-b border-slate-800 pb-2">
                     <span className="text-slate-300">{expense.label} <span className="text-slate-500">({expense.count} ჩანაწერი)</span></span>
                     <b className="text-rose-400 whitespace-nowrap">{expense.amount.toFixed(2)} ₾</b>
                   </div>
                 ))}
-                <div className="border-t border-rose-500/20 pt-3 space-y-2">
+                <div className="admin-finance-recent-list border-t border-rose-500/20 pt-3 space-y-2">
                   <p className="text-[10px] font-black text-slate-300">ბოლო ხარჯების ჩანაწერები</p>
                   {financialOverview.periodExpenses.slice(0,5).map(expense => (
-                    <div key={expense.id} className="flex justify-between gap-3 text-[10px]">
+                    <div key={expense.id} className="admin-finance-recent-row flex justify-between gap-3 text-[10px]">
                       <span className="text-slate-400">{expense.date || 'თარიღი უცნობია'} · {expense.description || expense.category}</span>
                       <b className="text-rose-300 whitespace-nowrap">-{(Number(expense.amount)||0).toFixed(2)} ₾</b>
                     </div>
@@ -5325,35 +5325,35 @@ export default function AdminDashboardPro({
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-              <div className="bg-slate-900/80 border border-cyan-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="პროდუქტების მომგებიანობა" className="admin-finance-products-panel bg-slate-900/80 border border-cyan-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-cyan-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">პროდუქტების მომგებიანობა</h3>
                   <span className="text-[10px] text-slate-400">არჩეული პერიოდი</span>
                 </div>
                 {financialOverview.productProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">პროდუქტის გაყიდვები არ არის.</p> : financialOverview.productProfitability.map(item => (
-                  <div key={item.key} className="border-b border-slate-800 pb-3 space-y-1.5">
-                    <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
+                  <article key={item.key} aria-label={`პროდუქტი: ${item.name}`} className="admin-profitability-row border-b border-slate-800 pb-3 space-y-1.5">
+                    <div className="admin-profitability-heading flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.quantity} ც.</span></div>
                     <p className="text-[10px] text-slate-400">{item.vendor} · {item.category}</p>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
-                    <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
+                    <div className="admin-profitability-metrics flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="admin-profitability-results flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
                     {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
-                  </div>
+                  </article>
                 ))}
               </div>
-              <div className="bg-slate-900/80 border border-indigo-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
+              <div role="region" aria-label="მომწოდებლების მომგებიანობა" className="admin-finance-vendors-panel bg-slate-900/80 border border-indigo-500/30 p-5 sm:p-7 rounded-[2rem] space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between gap-3 border-b border-indigo-500/20 pb-3">
                   <h3 className="font-black text-white text-sm">მომწოდებლების მომგებიანობა</h3>
                   <span className="text-[10px] text-slate-400">პროდუქტები და გაყიდვები</span>
                 </div>
                 {financialOverview.vendorProfitability.length === 0 ? <p className="text-slate-500 text-xs py-4">მომწოდებლის გაყიდვები არ არის.</p> : financialOverview.vendorProfitability.map(item => (
-                  <div key={item.name} className="border-b border-slate-800 pb-3 space-y-1.5">
-                    <div className="flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
-                    <div className="flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
-                    <div className="flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
+                  <article key={item.name} aria-label={`მომწოდებელი: ${item.name}`} className="admin-profitability-row border-b border-slate-800 pb-3 space-y-1.5">
+                    <div className="admin-profitability-heading flex justify-between gap-3 text-xs"><b className="text-white">{item.name}</b><span className="text-slate-400">{item.productCount} პროდუქტი · {item.quantity} ც.</span></div>
+                    <div className="admin-profitability-metrics flex flex-wrap justify-between gap-2 text-[11px]"><span className="text-slate-300">შემოსავალი: {item.revenue.toFixed(2)} ₾</span><span className="text-slate-300">თვითღირებულება: {item.unknownCostItems ? 'არასრულია' : item.estimatedCostItems ? 'შეფასებულია' : item.cogs.toFixed(2) + ' ₾'}</span></div>
+                    <div className="admin-profitability-results flex justify-between gap-2 text-xs"><b className={item.grossProfit === null ? 'text-amber-300' : item.grossProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>მოგება: {item.grossProfit === null ? '—' : item.grossProfit.toFixed(2) + ' ₾'}</b><span className="text-slate-400">მარჟა: {item.margin === null ? '—' : item.margin.toFixed(1) + '%'}</span></div>
                     {item.unknownCostItems > 0 && <p className="text-[10px] text-amber-300">თვითღირებულება აკლია {item.unknownCostItems} ერთეულს.</p>}
                     {item.estimatedCostItems > 0 && <p className="text-[10px] text-amber-300">მიმდინარე ფასით შეფასებულია {item.estimatedCostItems} ერთეული; მოგება დადასტურებული არ არის.</p>}
-                  </div>
+                  </article>
                 ))}
               </div>
             </div>
