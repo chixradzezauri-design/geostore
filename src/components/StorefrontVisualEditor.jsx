@@ -369,13 +369,14 @@ export default function StorefrontVisualEditor({
 
   const handlePreviewSelect = event => {
     if (!selectionMode) return;
+    // In selection mode, preview links and controls must not navigate or mutate storefront state.
+    event.preventDefault();
+    event.stopPropagation();
     const target = event.target?.closest?.('[data-visual-editor-target]');
     if (!target) return;
     const targetId = target.getAttribute('data-visual-editor-target');
     const metadata = VISUAL_EDITOR_TARGETS[targetId];
     if (!metadata) return;
-    event.preventDefault();
-    event.stopPropagation();
     setSelectedElement({ id: targetId, ...metadata });
   };
 
