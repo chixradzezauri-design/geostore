@@ -4726,10 +4726,10 @@ export default function AdminDashboardPro({
               </button>
             </div>
 
-            <div className="admin-command-panels grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <div className="admin-command-panel rounded-2xl border border-emerald-400/20 bg-slate-900/75 p-5 sm:p-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div><h4 className="text-sm font-black text-white">შეკვეთების რიგი</h4><p className="mt-1 text-[11px] text-slate-400">ახალი და დამუშავების პროცესში მყოფი შეკვეთები</p></div>
+            <div className="admin-command-panels grid grid-cols-1 xl:grid-cols-2 gap-2.5 sm:gap-4">
+              <div className="admin-command-panel min-w-0 rounded-2xl border border-emerald-400/20 bg-slate-900/75 p-3 sm:p-5">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">შეკვეთების რიგი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">ახალი და დამუშავების პროცესში მყოფი შეკვეთები</p></div>
                   <button type="button" onClick={() => setAdminTab('orders')} className="shrink-0 rounded-lg border border-emerald-400/25 px-3 py-2 text-[11px] font-bold text-emerald-200 hover:bg-emerald-400/10">ყველა</button>
                 </div>
                 {commandCenterPendingOrders.length === 0 ? (
@@ -4746,9 +4746,9 @@ export default function AdminDashboardPro({
                 )}
               </div>
 
-              <div className="admin-command-panel rounded-2xl border border-amber-400/20 bg-slate-900/75 p-5 sm:p-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div><h4 className="text-sm font-black text-white">მხარდაჭერის პრიორიტეტები</h4><p className="mt-1 text-[11px] text-slate-400">ღია მოთხოვნები და 24 საათზე ძველი ტიკეტები</p></div>
+              <div className="admin-command-panel min-w-0 rounded-2xl border border-amber-400/20 bg-slate-900/75 p-3 sm:p-5">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">მხარდაჭერის პრიორიტეტები</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">ღია მოთხოვნები და 24 საათზე ძველი ტიკეტები</p></div>
                   <button type="button" onClick={() => setAdminTab('support')} className="shrink-0 rounded-lg border border-amber-400/25 px-3 py-2 text-[11px] font-bold text-amber-200 hover:bg-amber-400/10">ყველა</button>
                 </div>
                 {supportTicketsError ? (
@@ -4770,9 +4770,9 @@ export default function AdminDashboardPro({
                 )}
               </div>
 
-              <div className="admin-command-panel rounded-2xl border border-rose-400/20 bg-slate-900/75 p-5 sm:p-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div><h4 className="text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 text-[11px] text-slate-400">არსებული 5 ერთეულის ზღვრის მიხედვით</p></div>
+              <div className="admin-command-panel min-w-0 rounded-2xl border border-rose-400/20 bg-slate-900/75 p-3 sm:p-5">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">მარაგის კონტროლი</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">არსებული 5 ერთეულის ზღვრის მიხედვით</p></div>
                   <button type="button" onClick={() => setAdminTab('replenishment')} className="shrink-0 rounded-lg border border-rose-400/25 px-3 py-2 text-[11px] font-bold text-rose-200 hover:bg-rose-400/10">შევსების გეგმა</button>
                 </div>
                 {commandCenterLowStockGroups.length === 0 ? (
@@ -4789,9 +4789,9 @@ export default function AdminDashboardPro({
                 )}
               </div>
 
-              <div className="admin-command-panel rounded-2xl border border-sky-400/20 bg-slate-900/75 p-5 sm:p-6">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div><h4 className="text-sm font-black text-white">ბოლო მოვლენები</h4><p className="mt-1 text-[11px] text-slate-400">შეკვეთებისა და მხარდაჭერის უახლესი ჩანაწერები</p></div>
+              <div className="admin-command-panel min-w-0 rounded-2xl border border-sky-400/20 bg-slate-900/75 p-3 sm:p-5">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0"><h4 className="text-xs sm:text-sm font-black text-white">ბოლო მოვლენები</h4><p className="mt-1 break-words text-[10px] leading-4 text-slate-400">შეკვეთებისა და მხარდაჭერის უახლესი ჩანაწერები</p></div>
                   <Activity className="h-5 w-5 text-sky-300" />
                 </div>
                 {commandCenterRecentEvents.length === 0 ? (
@@ -4801,7 +4801,7 @@ export default function AdminDashboardPro({
                     {commandCenterRecentEvents.map(event => (
                       <button type="button" key={event.id} onClick={() => setAdminTab(event.tab)} className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-700/70 bg-slate-950/45 p-3 text-left transition hover:border-sky-400/40">
                         <span className="min-w-0"><strong className="block truncate text-xs text-white">{event.title}</strong><span className="mt-1 block text-[10px] text-slate-400">{event.kind} · {event.detail}</span></span>
-                        <time className="shrink-0 text-right text-[10px] text-slate-500">{new Date(event.timestamp).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                        <time className="max-w-[45%] shrink-0 break-words text-right text-[10px] leading-4 text-slate-500">{new Date(event.timestamp).toLocaleString('ka-GE', { dateStyle: 'short', timeStyle: 'short' })}</time>
                       </button>
                     ))}
                   </div>
