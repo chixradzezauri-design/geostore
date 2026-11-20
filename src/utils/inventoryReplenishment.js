@@ -58,6 +58,7 @@ export const buildInventoryReplenishmentPlan = (products, settings = [], default
         isOutOfStock: stock === 0,
         suggestedQuantity: isLowStock ? Math.max(0, target - stock) : 0,
         settingId: saved?.id ?? null,
+        updatedAt: saved?.updated_at ?? null,
         hasCustomSetting: Boolean(saved)
       });
     });
