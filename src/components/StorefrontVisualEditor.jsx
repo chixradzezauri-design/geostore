@@ -397,6 +397,9 @@ export default function StorefrontVisualEditor({
   };
 
   const updateSiteText = (key, value) => {
+    // Text changes must obey the same save-before-publish guard as visual styles.
+    // Otherwise a text-only edit could be published without saving the draft.
+    localDesignDirtyRef.current = true;
     if (typeof setSiteSettings === 'function') setSiteSettings(current => ({ ...(current || {}), [key]: value }));
     setSaveMessage('ტექსტის ცვლილებები მონახაზში ჯერ არ შენახულა.');
   };
