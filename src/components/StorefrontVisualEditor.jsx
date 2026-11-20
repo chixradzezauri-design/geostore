@@ -796,7 +796,13 @@ export default function StorefrontVisualEditor({
     }
     if (!window.confirm('გსურთ მიმდინარე მთავარი გვერდის ცვლილებების გამოქვეყნება მომხმარებლებისთვის?')) return;
     setSaveMessage('გამოქვეყნება მიმდინარეობს…');
-    const published = await onPublishStorefront();
+    let published = false;
+    try {
+      published = await onPublishStorefront();
+    } catch (error) {
+      setSaveMessage('გამოქვეყნება ვერ მოხერხდა. გადაამოწმეთ სერვერის მდგომარეობა და სცადეთ ხელახლა.');
+      return;
+    }
     setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
     if (published === true) {
       versionInspectRequestRef.current += 1;
