@@ -80,3 +80,20 @@ test('uses collision-safe stable keys for base and variant positions', () => {
   assert.equal(getInventoryPositionKey('p1', 'v1'), '["p1","v1"]');
   assert.notEqual(getInventoryPositionKey('p1', null), getInventoryPositionKey('p1', 'v1'));
 });
+
+test('preserves saved row revision for conflict-safe edits and null for new settings', () => {
+  const plan = buildInventoryReplenishmentPlan([
+    { id: 'existing', name: 'Existing', stock: 3 },
+    { id: 'new', name: 'New', stock: 2 }
+  ], [{
+    product_id: 'existing', variant_id: null, id: 42,
+    low_stock_threshold: 5, target_stock: 20,
+    updated_at: '2026-11-20T10:00:00.123456+00:00'
+  }]);
+  const existing = plan.find(row => row.productId === 'existing');
+  const newlyCreated = plan.find(row => row.productId === 'new');
+  assert.equal(existing.updatedAt, '2026-11-20T10:00:00.123456+00:00');
+  assert.equal(existing.settingId, 42);
+  assert.equal(newlyCreated.updatedAt, null);
+  assert.equal(newlyCreated.hasCustomSetting, false);
+});
