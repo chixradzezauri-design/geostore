@@ -29,3 +29,12 @@ test('compact mobile admin header preserves draft save publish and access status
   assert.match(dashboard, /col-span-2 flex min-w-0 items-center justify-center/);
   assert.match(dashboard, /სრული სისტემური წვდომა/);
 });
+
+test('command center shows four compact KPI cards in two columns on mobile', () => {
+  assert.match(dashboard, /admin-command-kpis grid grid-cols-2 2xl:grid-cols-4 gap-2 sm:gap-3/);
+  assert.match(dashboard, /admin-command-hero rounded-2xl border border-emerald-400\/25 p-3 sm:p-5/);
+  assert.match(dashboard, /admin-command-kpi group min-w-0 text-left rounded-xl/);
+  for (const section of ['orders', 'support', 'replenishment', 'discounts']) {
+    assert.match(dashboard, new RegExp("onClick=\\{\\(\\) => setAdminTab\\('" + section + "'\\)\\}"));
+  }
+});
