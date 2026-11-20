@@ -103,7 +103,10 @@ test('remote draft conflicts notify once per remote version without replacing un
   const refresh = app.split('const refreshSharedStorefrontDraft = async () =>')[1]?.split('const handleVisibilityChange')[0] || '';
   assert.match(refresh, /storefrontRemoteConflictRef\.current !== remoteUpdatedAt/);
   assert.match(refresh, /storefrontRemoteConflictRef\.current = remoteUpdatedAt/);
-  assert.match(refresh, /showToast\('სხვა მოწყობილობაზე ახალი მონახაზია შენახული/);
+  assert.match(refresh, /setStorefrontRemoteConflict\(true\)/);
+  assert.match(app, /storefrontRemoteConflict && \(/);
+  assert.match(app, /role="alert"/);
+  assert.match(refresh, /setStorefrontRemoteConflict\(false\)/);
   assert.ok(refresh.indexOf('storefrontRemoteConflictRef.current = remoteUpdatedAt') < refresh.indexOf('setCategoriesList(nextSnapshot.categories)'));
   assert.match(refresh, /if \(storefrontDraftLocalDirtyRef\.current \|\| latestSnapshot !== storefrontDraftBaselineRef\.current\)/);
 });
