@@ -1324,7 +1324,9 @@ export default function AdminDashboardPro({
       if (requestId !== replenishmentRequestRef.current) return;
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
-        throw new Error(detail || `HTTP ${response.status}`);
+        let message = detail;
+        try { message = JSON.parse(detail)?.message || detail; } catch { /* Keep plain-text errors. */ }
+        throw new Error(message || `HTTP ${response.status}`);
       }
       const result = await response.json();
       if (requestId !== replenishmentRequestRef.current) return;
