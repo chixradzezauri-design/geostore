@@ -163,3 +163,9 @@ test('replenishment cards visibly distinguish unsaved local edits', () => {
   assert.match(dashboard, /Object\.prototype\.hasOwnProperty\.call\(replenishmentDrafts, position\.key\)/);
   assert.match(dashboard, /hasUnsavedChanges && <span className="text-\[10px\] text-amber-200" role="status">შეუნახავი ცვლილება<\/span>/);
 });
+
+test('replenishment saves send the revision captured when editing began', () => {
+  assert.match(dashboard, /p_expected_updated_at: Object\.prototype\.hasOwnProperty\.call\(draft, 'expectedUpdatedAt'\)/);
+  assert.match(dashboard, /expectedUpdatedAt: Object\.prototype\.hasOwnProperty\.call\(current\[position\.key\] \|\| \{\}, 'expectedUpdatedAt'\)/);
+  assert.match(dashboard, /ცვლილების გაუქმება/);
+});
