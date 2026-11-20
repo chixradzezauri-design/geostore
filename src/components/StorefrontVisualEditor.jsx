@@ -803,7 +803,7 @@ export default function StorefrontVisualEditor({
       setSaveMessage('გამოქვეყნება ვერ მოხერხდა. გადაამოწმეთ სერვერის მდგომარეობა და სცადეთ ხელახლა.');
       return;
     }
-    setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნების შედეგი გადაამოწმეთ შეტყობინებაში.');
+    setSaveMessage(published === true ? 'ცვლილებები გამოქვეყნებულია.' : 'გამოქვეყნება არ დადასტურდა. მომხმარებლებისთვის ცვლილებები არ ჩაითვალოს გამოქვეყნებულად; სცადეთ ხელახლა.');
     if (published === true) {
       versionInspectRequestRef.current += 1;
       setSelectedVersionId('');
