@@ -84,6 +84,10 @@ const adminAnalyticsFixture =
   '<label class="sr-only" for="fixture-analytics-period">პერიოდი</label>' +
   '<select id="fixture-analytics-period"><option>ბოლო 30 დღე</option></select>' +
   '<button type="button">ანგარიშების CSV ექსპორტი</button></div></div>' +
+  '<div role="alert" class="admin-finance-data-warning rounded-2xl border border-amber-500/30 px-4 py-3">' +
+  '<strong>ხარჯების სრული ისტორია არ არის დადასტურებული</strong>' +
+  '<p>წმინდა მოგება და ხარჯები ვერ განისაზღვრება.</p>' +
+  '<button type="button" class="admin-finance-retry">ხარჯების ისტორიის განახლება</button></div>' +
   '<div class="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">' +
   Array.from({ length: 8 }, (_, i) =>
     '<article class="admin-analytics-card p-5"><p>ფინანსური მაჩვენებელი ' + (i + 1) + '</p>' +
@@ -285,6 +289,8 @@ try {
         const analyticsControls = [...adminAnalytics.querySelectorAll('.admin-analytics-actions > select, .admin-analytics-actions > button')];
         const analyticsCards = [...adminAnalytics.querySelectorAll('.admin-analytics-card')];
         const analyticsChartScroll = adminAnalytics.querySelector('.admin-analytics-trend-scroll');
+        const financeWarning = adminAnalytics.querySelector('.admin-finance-data-warning');
+        const financeWarningButton = financeWarning.querySelector('.admin-finance-retry');
         const financialPanels = [...adminAnalytics.querySelectorAll('.admin-finance-sources-panel, .admin-finance-expenses-panel, .admin-finance-products-panel, .admin-finance-vendors-panel')];
         const financialRows = [...adminAnalytics.querySelectorAll('.admin-finance-breakdown-row, .admin-finance-recent-row, .admin-profitability-heading, .admin-profitability-metrics, .admin-profitability-results')];
         const financeBreakdown = adminAnalytics.querySelector('.admin-finance-breakdown-row');
@@ -353,6 +359,9 @@ try {
           crmSearchFontSize: parseFloat(getComputedStyle(adminCrmSearch).fontSize),
           crmActionGridColumns: getComputedStyle(adminCrmActionGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
           analyticsPanelRight: adminAnalytics.getBoundingClientRect().right,
+          financeWarningRight: financeWarning.getBoundingClientRect().right,
+          financeWarningButtonHeight: financeWarningButton.getBoundingClientRect().height,
+          financeWarningButtonRight: financeWarningButton.getBoundingClientRect().right,
           analyticsControlMinHeight: Math.min(...analyticsControls.map(node => node.getBoundingClientRect().height)),
           analyticsCardMaxRight: Math.max(...analyticsCards.map(node => node.getBoundingClientRect().right)),
           analyticsCardCount: analyticsCards.length,
@@ -409,6 +418,9 @@ try {
       assert.ok(layout.adminOrdersRight <= width + 2, width + 'px admin orders overflow: ' + JSON.stringify(layout));
       assert.ok(layout.crmPanelRight <= width + 2, width + 'px CRM panel overflow: ' + JSON.stringify(layout));
       assert.ok(layout.analyticsPanelRight <= width + 2, width + 'px analytics panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.financeWarningRight <= width + 2, width + 'px financial warning overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.financeWarningButtonRight <= width + 2, width + 'px financial warning retry overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.financeWarningButtonHeight >= 43, width + 'px financial warning retry must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.analyticsCardMaxRight <= width + 2, width + 'px analytics KPI overflow: ' + JSON.stringify(layout));
       assert.equal(layout.analyticsCardCount, 8, width + 'px all financial KPIs must remain in the DOM');
       assert.ok(layout.analyticsControlMinHeight >= 43, width + 'px analytics controls must be touch-sized: ' + JSON.stringify(layout));
