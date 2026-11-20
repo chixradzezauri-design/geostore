@@ -98,3 +98,12 @@ test('edits made during an in-flight publish stay unpublished in the editor', ()
   assert.match(publish, /storefrontDraftLocalDirtyRef\.current = editsArrivedDuringPublish/);
   assert.ok(publish.indexOf('if (editsArrivedDuringPublish)') < publish.indexOf('setCategoriesList(publishedCategories)'));
 });
+
+test('remote draft conflicts notify once per remote version without replacing unsaved local edits', () => {
+  const refresh = app.split('const refreshSharedStorefrontDraft = async () =>')[1]?.split('const handleVisibilityChange')[0] || '';
+  assert.match(refresh, /storefrontRemoteConflictRef\.current !== remoteUpdatedAt/);
+  assert.match(refresh, /storefrontRemoteConflictRef\.current = remoteUpdatedAt/);
+  assert.match(refresh, /showToast\('სხვა მოწყობილობაზე ახალი მონახაზია შენახული/);
+  assert.ok(refresh.indexOf('storefrontRemoteConflictRef.current = remoteUpdatedAt') < refresh.indexOf('setCategoriesList(nextSnapshot.categories)'));
+  assert.match(refresh, /if \(storefrontDraftLocalDirtyRef\.current \|\| latestSnapshot !== storefrontDraftBaselineRef\.current\)/);
+});
