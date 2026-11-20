@@ -305,6 +305,8 @@ export default function StorefrontVisualEditor({
         const restoredDesign = normalizeStorefrontVisualDesign(selectedVersionSnapshot.snapshot?.siteSettings?.visualDesign);
         designRef.current = restoredDesign;
         localDesignDirtyRef.current = false;
+        pendingTextEditsRef.current = {};
+        localEditRevisionRef.current += 1;
         historyRef.current = [restoredDesign];
         historyIndexRef.current = 0;
         setHistory([restoredDesign]);
