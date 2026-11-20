@@ -1242,7 +1242,16 @@ export default function StorefrontVisualEditor({
             </div>
           </div>
           <style>{`
+            .gs-visual-preview-frame.gs-visual-select-mode { cursor: crosshair; }
             .gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target] { cursor: crosshair !important; }
+            .gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target]:hover {
+              outline: 2px dashed #10b981 !important;
+              outline-offset: 2px;
+            }
+            .gs-visual-preview-frame.gs-visual-select-mode [data-visual-editor-target]:focus-visible {
+              outline: 3px solid #10b981 !important;
+              outline-offset: 3px;
+            }
             .gs-visual-preview-frame[data-visual-editor-selected="hero"] [data-visual-editor-target="hero"],
             .gs-visual-preview-frame[data-visual-editor-selected="hero.image"] [data-visual-editor-target="hero.image"],
             .gs-visual-preview-frame[data-visual-editor-selected="hero.title"] [data-visual-editor-target="hero.title"],
