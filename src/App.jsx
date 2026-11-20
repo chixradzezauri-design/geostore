@@ -3738,7 +3738,7 @@ export default function App() {
                         <p className="gs-cart-item-price text-emerald-400 font-bold">
                           {formatPrice(item.priceGEL)} × {item.quantity}
                         </p>
-                        <div className="flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
+                        <div className="gs-cart-quantity-controls flex items-center gap-2 pt-1" aria-label={currentLang === 'en' ? 'Quantity controls' : currentLang === 'ru' ? 'Управление количеством' : 'რაოდენობის მართვა'}>
                           <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) - 1)} disabled={Number(item.quantity) <= 1} aria-label={currentLang === 'en' ? 'Decrease quantity' : currentLang === 'ru' ? 'Уменьшить количество' : 'რაოდენობის შემცირება'} className="w-8 h-8 rounded-lg border border-slate-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">−</button>
                           <span className="min-w-5 text-center text-white font-semibold tabular-nums">{item.quantity}</span>
                           <button type="button" onClick={() => changeCartQuantity(item, Number(item.quantity) + 1)} aria-label={currentLang === 'en' ? 'Increase quantity' : currentLang === 'ru' ? 'Увеличить количество' : 'რაოდენობის გაზრდა'} className="w-8 h-8 rounded-lg border border-slate-700 text-white">+</button>
@@ -3766,6 +3766,7 @@ export default function App() {
 
                     <select
                       value={selectedRegion}
+                      aria-label={t.deliveryRegion}
                       onChange={(e) =>
                         setSelectedRegion(e.target.value)
                       }
@@ -3806,6 +3807,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => setAppliedCoupon(null)}
+                          aria-label={currentLang === 'en' ? 'Remove promo code' : currentLang === 'ru' ? 'Удалить промокод' : 'პრომოკოდის წაშლა'}
                           className="text-rose-400 hover:text-rose-300 p-1 cursor-pointer"
                         >
                           <X className="w-4 h-4" />
@@ -3814,10 +3816,12 @@ export default function App() {
                     ) : (
                       <form
                         onSubmit={handleApplyCoupon}
-                        className="flex gap-2"
+                        className="gs-cart-coupon-form flex gap-2"
                       >
                         <input
                           type="text"
+                          aria-label={t.promoCode}
+                          autoComplete="off"
                           placeholder="GEOSTORE2026"
                           value={promoInput}
                           onChange={(e) =>

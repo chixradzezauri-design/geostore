@@ -388,25 +388,26 @@ export default function Modals({
             role="dialog"
             aria-modal="true"
             aria-labelledby="geostore-checkout-title"
+            aria-describedby="geostore-checkout-intro"
             className="gs-commerce-dialog gs-commerce-dialog--checkout gs-checkout-dialog relative flex max-h-[min(92dvh,860px)] w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-black/10 bg-white text-neutral-950 shadow-[0_30px_100px_rgba(0,0,0,0.35)]"
           >
             <header className="gs-checkout-header flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-4 sm:px-7 sm:py-5">
-              <div>
+              <div className="gs-checkout-heading min-w-0">
                 <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.28em] text-neutral-500">GEOSTORE · CHECKOUT</p>
                 <h3 id="geostore-checkout-title" className="text-lg font-semibold tracking-tight sm:text-xl">{copy.checkoutTitle}</h3>
-                <p className="mt-1 text-[11px] text-neutral-500">{copy.checkoutIntro}</p>
+                <p id="geostore-checkout-intro" className="mt-1 text-[11px] text-neutral-500">{copy.checkoutIntro}</p>
               </div>
               <button
                 type="button"
                 aria-label={copy.close}
                 onClick={() => setIsCheckoutOpen(false)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:bg-neutral-100 hover:text-black"
+                className="gs-checkout-close grid h-11 w-11 shrink-0 place-items-center rounded-full border border-neutral-200 text-neutral-600 transition hover:bg-neutral-100 hover:text-black"
               >
                 <X className="h-4 w-4" />
               </button>
             </header>
 
-            <form onSubmit={handlePlaceOrder} aria-busy={isSubmittingOrder} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+            <form onSubmit={handlePlaceOrder} aria-busy={isSubmittingOrder} aria-describedby={checkoutError ? 'geostore-checkout-error' : undefined} className="gs-checkout-form min-h-0 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
               <div className="gs-checkout-contact-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="block space-y-1.5">
                   <span className="text-[11px] font-semibold text-neutral-700">{copy.fullName} <span className="text-neutral-400">*</span></span>
@@ -462,7 +463,7 @@ export default function Modals({
               </label>
 
               {checkoutError && (
-                <p role="alert" className="gs-checkout-error rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
+                <p id="geostore-checkout-error" role="alert" aria-atomic="true" className="gs-checkout-error rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-xs font-medium leading-relaxed text-red-700">
                   {localizeMessage(checkoutError)}
                 </p>
               )}

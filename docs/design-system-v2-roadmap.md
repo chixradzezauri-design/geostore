@@ -14,7 +14,7 @@ Improve design consistency and readability at phone (320–430px), tablet (640�
 
 ## Planned phases (not implemented yet)
 1. Product detail presentation: **Stage 2 in progress** — responsive gallery, readable mobile options, visible purchase CTA, accessible labelled modal with Escape/focus recovery. Inventory validation and cart handlers unchanged.
-2. Checkout: improve field errors, step hierarchy, responsive layout and keyboard flow without changing order/payment business logic.
+2. Cart and checkout: **Stage 3 in progress** — enlarge quantity controls, compact cart summary/coupon layout, constrain checkout modal on phone, improve checkout error semantics and keep ≥16px mobile inputs. Order/price/payment RPC logic unchanged.
 3. Extract duplicated legacy CSS into reviewed modules, one component at a time; preserve the author-defined `--gs-*`/admin visual editor variables and run visual/browser QA per extraction.
 4. Runtime performance, image decoding, Web Vitals and SEO, based on measured baselines.
 5. Admin operations enhancements, export/bulk actions and permissions only after server-side safety checks.

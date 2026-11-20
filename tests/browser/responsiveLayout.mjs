@@ -47,13 +47,43 @@ const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<span class="gs-modal-add-label">კალათაში დამატება · M / ბეჟი</span>' +
   '<span class="gs-modal-add-price">199.00 ₾</span></button></div></div></div>';
 
+const cartFixture =
+  '<div class="gs-cart-page gs-cart-layout"><div class="gs-cart-content-grid grid grid-cols-1 lg:grid-cols-3">' +
+  '<div class="gs-cart-items-list lg:col-span-2"><div class="gs-cart-item flex items-start gap-3">' +
+  '<div class="gs-cart-item-media relative flex w-20 h-20 shrink-0">სურათი</div>' +
+  '<div class="min-w-0 flex-1"><h4 class="gs-cart-item-title">ქართული პროდუქტის დასახელება</h4>' +
+  '<div class="gs-cart-quantity-controls flex items-center gap-2">' +
+  '<button type="button" class="w-8 h-8">−</button><span>2</span><button type="button" class="w-8 h-8">+</button></div></div>' +
+  '<button class="gs-cart-remove">წაშლა</button></div></div>' +
+  '<div class="gs-cart-summary"><form class="gs-cart-coupon-form flex gap-2">' +
+  '<input placeholder="GEOSTORE2026"><button type="submit">გამოყენება</button></form>' +
+  '<div class="gs-cart-totals"><div class="flex justify-between"><span>სრული თანხა</span><span>199.00 ₾</span></div></div>' +
+  '<button class="gs-cart-checkout">შეკვეთის გაფორმება</button></div></div></div>';
+
+const checkoutFixture =
+  '<div class="gs-commerce-overlay gs-commerce-overlay--checkout fixed inset-0">' +
+  '<section class="gs-commerce-dialog gs-commerce-dialog--checkout gs-checkout-dialog flex w-full max-w-xl flex-col overflow-hidden">' +
+  '<header class="gs-checkout-header flex items-center justify-between">' +
+  '<div class="gs-checkout-heading"><h3>შეკვეთის გაფორმება</h3><p>შეავსეთ ინფორმაცია</p></div>' +
+  '<button class="gs-checkout-close">×</button></header>' +
+  '<form class="gs-checkout-form space-y-4 overflow-y-auto">' +
+  '<div class="gs-checkout-contact-grid grid grid-cols-1 gap-4 sm:grid-cols-2">' +
+  '<label><span>სრული სახელი</span><input type="text" /></label>' +
+  '<label><span>ტელეფონის ნომერი</span><input type="tel" /></label></div>' +
+  '<label><span>ელ-ფოსტა</span><input type="email" /></label>' +
+  '<label><span>მიწოდების რეგიონი</span><select><option>თბილისი</option></select></label>' +
+  '<label><span>მისამართი</span><input type="text" /></label>' +
+  '<p class="gs-checkout-error" role="alert">გთხოვთ გადაამოწმოთ მონაცემები.</p>' +
+  '<div class="gs-checkout-submit-area"><button type="submit">შეკვეთის დადასტურება</button></div>' +
+  '</form></section></div>';
+
 const browser = await chromium.launch({ headless: true });
 try {
   for (const width of [320, 359, 375, 430, 640, 768, 1024, 1440]) {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', productDialog + '</main>') + admin + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', productDialog + cartFixture + '</main>') + admin + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -66,6 +96,12 @@ try {
         const productBody = document.querySelector('.gs-product-modal-body');
         const purchase = document.querySelector('.gs-modal-add-to-cart');
         const productOptions = [...document.querySelectorAll('.gs-size-option, .gs-color-option')];
+        const cartQtyButtons = [...document.querySelectorAll('.gs-cart-quantity-controls button')];
+        const cartCoupon = document.querySelector('.gs-cart-coupon-form');
+        const checkoutDialog = document.querySelector('.gs-checkout-dialog');
+        const checkoutInput = document.querySelector('.gs-checkout-form input');
+        const checkoutError = document.querySelector('.gs-checkout-error');
+        const checkoutSubmit = document.querySelector('.gs-checkout-submit-area button');
         return {
           scrollWidth: document.documentElement.scrollWidth,
           width: window.innerWidth,
@@ -84,7 +120,14 @@ try {
           purchaseRight: purchase.getBoundingClientRect().right,
           minOptionHeight: Math.min(...productOptions.map(element => element.getBoundingClientRect().height)),
           optionMetrics: productOptions.map(element => ({ type: element.className, height: element.getBoundingClientRect().height, display: getComputedStyle(element).display, minHeight: getComputedStyle(element).minHeight, minBlockSize: getComputedStyle(element).minBlockSize })),
-          purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0
+          purchaseTextVisible: purchase.querySelector('.gs-modal-add-label').getBoundingClientRect().width > 0,
+          cartQtyMinHeight: Math.min(...cartQtyButtons.map(node => node.getBoundingClientRect().height)),
+          cartCouponRight: cartCoupon.getBoundingClientRect().right,
+          checkoutDialogRight: checkoutDialog.getBoundingClientRect().right,
+          checkoutDialogHeight: checkoutDialog.getBoundingClientRect().height,
+          checkoutInputFontSize: parseFloat(getComputedStyle(checkoutInput).fontSize),
+          checkoutErrorRight: checkoutError.getBoundingClientRect().right,
+          checkoutSubmitHeight: checkoutSubmit.getBoundingClientRect().height
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -95,6 +138,13 @@ try {
       assert.ok(layout.productBodyScrollable, width + 'px product detail content should scroll');
       assert.ok(layout.minOptionHeight >= 43, width + 'px variant controls should be accessible touch targets: ' + JSON.stringify(layout.optionMetrics));
       assert.ok(layout.purchaseTextVisible, width + 'px cart CTA label must be visible');
+      assert.ok(layout.cartQtyMinHeight >= 43, width + 'px cart quantity controls must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.cartCouponRight <= width + 2, width + 'px coupon form overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.checkoutDialogRight <= width + 2, width + 'px checkout dialog overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.checkoutErrorRight <= width + 2, width + 'px checkout error overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.checkoutDialogHeight <= 822, width + 'px checkout dialog height: ' + JSON.stringify(layout));
+      assert.ok(layout.checkoutSubmitHeight >= 43, width + 'px checkout action must be touch-sized: ' + JSON.stringify(layout));
+      if (width <= 640) assert.ok(layout.checkoutInputFontSize >= 16, width + 'px checkout should avoid iOS zoom: ' + JSON.stringify(layout));
       assert.ok(layout.kpiFontSize >= 17 && layout.kpiFontSize <= 25,
         width + 'px compact KPI value should be 17–25px: ' + JSON.stringify(layout));
       if (width <= 359) assert.equal(layout.gridTracks, 1, width + 'px catalog');
