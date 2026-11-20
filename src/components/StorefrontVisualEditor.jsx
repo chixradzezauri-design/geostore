@@ -771,11 +771,14 @@ export default function StorefrontVisualEditor({
     setSiteSettings?.(current => ({ ...(current || {}), visualDesign: snapshotDesign }));
     setSaveMessage('მონახაზის შენახვა მიმდინარეობს…');
     const saved = await onSaveStorefrontDraft(snapshot);
-    if (saved === true && JSON.stringify(designRef.current) === JSON.stringify(snapshotDesign)) {
+    const hasNewerLocalChanges = JSON.stringify(designRef.current) !== JSON.stringify(snapshotDesign);
+    if (saved === true && !hasNewerLocalChanges) {
       localDesignDirtyRef.current = false;
     }
     setSaveMessage(saved === true
-      ? 'მონახაზი წარმატებით შეინახა. მომხმარებლებისთვის გამოსაჩენად ცალკე გამოაქვეყნეთ.'
+      ? (hasNewerLocalChanges
+        ? 'წინა მონახაზი შეინახა, მაგრამ შენახვისას ახალი ცვლილებებიც გაკეთდა. ხელახლა შეინახეთ ბოლო ცვლილებები.'
+        : 'მონახაზი წარმატებით შეინახა. მომხმარებლებისთვის გამოსაჩენად ცალკე გამოაქვეყნეთ.')
       : 'შენახვის შედეგი გადაამოწმეთ შეტყობინებაში. გამოქვეყნება ჯერ არ მომხდარა.');
   };
 
