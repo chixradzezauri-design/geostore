@@ -435,11 +435,9 @@ export default function StorefrontVisualEditor({
   const selectedElementValue = selectedElement
     ? selectedElement.settingKey
       ? (siteSettings?.[selectedElement.settingKey] || '')
-      : selectedElement.group === 'hero'
-        ? (design.hero?.imageUrl || '')
-        : selectedElement.group
-          ? (design[selectedElement.group]?.[selectedElement.key] || '')
-          : ''
+      : selectedElement.group
+        ? (design[selectedElement.group]?.[selectedElement.key] ?? '')
+        : ''
     : '';
 
   const updateSelectedElement = value => {
