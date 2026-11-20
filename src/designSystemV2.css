@@ -562,3 +562,15 @@
     gap: 10px !important;
   }
 }
+
+
+/* Stage 7 — input font legibility across all viewports.
+ * Some legacy mobile text-sizing selectors and media-merged declarations
+ * resolve to 11px in the compiled browser cascade. These three operational
+ * fields have a stable 16px minimum regardless of breakpoint, preventing
+ * Safari's focus zoom without touching owner-adjustable typography. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-controls input,
+.admin-dashboard-pro.admin-dashboard-shell .admin-products-panel .admin-product-search input,
+.admin-dashboard-pro.admin-dashboard-shell .admin-orders-panel .admin-orders-search input {
+  font-size: 16px !important;
+}
