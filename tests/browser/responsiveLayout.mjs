@@ -61,6 +61,21 @@ const adminOrdersFixture =
   '<nav class="admin-orders-pagination" aria-label="შეკვეთების გვერდები"><div class="flex gap-2">' +
   '<button>წინა</button><button>1</button><button>შემდეგი</button></div></nav></section>';
 
+const adminCrmFixture =
+  '<section class="admin-crm-panel"><div class="admin-crm-search">' +
+  '<input type="text" aria-label="CRM მომხმარებლების ძებნა"></div>' +
+  '<div class="admin-crm-list"><article class="admin-crm-user-card">' +
+  '<div><h4>ძალიან გრძელი ქართული მომხმარებლის სახელი სატესტო მონაცემებით</h4>' +
+  '<p>user.with.long.email.address@example.test | +995555555555</p></div>' +
+  '<div class="admin-crm-user-actions flex flex-wrap gap-2 w-full sm:w-auto justify-end">' +
+  '<button type="button">VIP მინიჭება</button><button type="button">შეზღუდულად მონიშვნა</button>' +
+  '<button type="button">რედაქტირება</button><button type="button">ლოკალური წაშლა</button>' +
+  '</div></article></div>' +
+  '<nav class="admin-crm-pagination" aria-label="CRM მომხმარებლების გვერდები">' +
+  '<p>ნაჩვენებია 1–10 / 150</p><div class="flex flex-wrap gap-2">' +
+  '<button type="button">წინა</button><button type="button">1</button><button type="button">შემდეგი</button>' +
+  '</div></nav></section>';
+
 const productDialog = '<div class="gs-product-modal fixed inset-0">' +
   '<div class="gs-product-dialog" role="dialog" aria-modal="true" aria-labelledby="fixture-product-heading">' +
   '<div class="gs-product-modal-header"><span id="fixture-product-heading">პროდუქტის დეტალური ხედი</span>' +
@@ -119,7 +134,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height: 820 } });
     try {
       await page.setContent('<!doctype html><html lang="ka"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>' +
-        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
+        storefront.replace('</main>', categoryArtworkFixture + productDialog + cartFixture + '</main>') + admin.replace('</div></section>', adminProductFixture + adminOrdersFixture + adminCrmFixture + '</div></section>') + checkoutFixture + '</body></html>', { waitUntil: 'domcontentloaded' });
       await page.addStyleTag({ content: css });
       const layout = await page.evaluate(() => {
         const grid = document.querySelector('.gs-catalog-product-grid');
@@ -149,6 +164,11 @@ try {
         const orderActionButtons = [...adminOrders.querySelectorAll('.admin-order-actions button')];
         const orderPaginationButtons = [...adminOrders.querySelectorAll('.admin-orders-pagination button')];
         const orderSearch = adminOrders.querySelector('.admin-orders-search input');
+        const adminCrm = document.querySelector('.admin-crm-panel');
+        const adminCrmActions = [...adminCrm.querySelectorAll('.admin-crm-user-actions button')];
+        const adminCrmPagination = [...adminCrm.querySelectorAll('.admin-crm-pagination button')];
+        const adminCrmSearch = adminCrm.querySelector('.admin-crm-search input');
+        const adminCrmActionGrid = adminCrm.querySelector('.admin-crm-user-actions');
 
         return {
           scrollWidth: document.documentElement.scrollWidth,
@@ -190,7 +210,12 @@ try {
           minOrderFilterHeight: Math.min(...orderFilterButtons.map(node => node.getBoundingClientRect().height)),
           minOrderActionHeight: Math.min(...orderActionButtons.map(node => node.getBoundingClientRect().height)),
           minOrderPaginationHeight: Math.min(...orderPaginationButtons.map(node => node.getBoundingClientRect().height)),
-          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize)
+          orderSearchFontSize: parseFloat(getComputedStyle(orderSearch).fontSize),
+          crmPanelRight: adminCrm.getBoundingClientRect().right,
+          crmActionMinHeight: Math.min(...adminCrmActions.map(node => node.getBoundingClientRect().height)),
+          crmPaginationMinHeight: Math.min(...adminCrmPagination.map(node => node.getBoundingClientRect().height)),
+          crmSearchFontSize: parseFloat(getComputedStyle(adminCrmSearch).fontSize),
+          crmActionGridColumns: getComputedStyle(adminCrmActionGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
@@ -212,6 +237,11 @@ try {
       assert.ok(layout.checkoutSubmitHeight >= 43, width + 'px checkout action must be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.adminProductRowRight <= width + 2, width + 'px admin product row overflow: ' + JSON.stringify(layout));
       assert.ok(layout.adminOrdersRight <= width + 2, width + 'px admin orders overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.crmPanelRight <= width + 2, width + 'px CRM panel overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.crmActionMinHeight >= 43, width + 'px CRM customer actions must be touch-sized: ' + JSON.stringify(layout));
+      assert.ok(layout.crmPaginationMinHeight >= 43, width + 'px CRM pagination must be touch-sized: ' + JSON.stringify(layout));
+      if (width <= 640) assert.ok(layout.crmSearchFontSize >= 16, width + 'px CRM search must avoid iOS focus zoom: ' + JSON.stringify(layout));
+      if (width <= 639) assert.equal(layout.crmActionGridColumns, width <= 380 ? 1 : 2, width + 'px CRM actions should use narrow safe grid: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderFilterHeight >= 43, width + 'px order filters should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderActionHeight >= 43, width + 'px order actions should be touch-sized: ' + JSON.stringify(layout));
       assert.ok(layout.minOrderPaginationHeight >= 43, width + 'px order pagination should be touch-sized: ' + JSON.stringify(layout));
