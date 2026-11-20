@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const footer = await readFile(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
 const translations = await readFile(new URL('../src/utils/translations.js', import.meta.url), 'utf8');
 const page = await readFile(new URL('../src/components/PrivacyPolicyPage.jsx', import.meta.url), 'utf8');
 
 test('privacy policy is reachable from the storefront footer as a dedicated page', () => {
   assert.match(app, /const PrivacyPolicyPage = lazy\(\(\) => import\('\.\/components\/PrivacyPolicyPage'\)\)/);
   assert.match(app, /activeTab === 'privacy'/);
-  assert.match(app, /setActiveTab\('privacy'\)/);
+  assert.match(footer, /setActiveTab\?\.\('privacy'\)/);
   assert.match(app, /onClose=\{\(\) => setActiveTab\('store'\)\}/);
 });
 
@@ -35,5 +36,5 @@ test('privacy page keeps navigation and support actions accessible', () => {
   assert.match(page, /aria-labelledby="gs-privacy-title"/);
   assert.match(page, /type="button" onClick=\{onClose\}/);
   assert.match(page, /type="button" onClick=\{onContact\}/);
-  assert.match(app, /t\.privacy/);
+  assert.match(footer, /t\.privacy/);
 });

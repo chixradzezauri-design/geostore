@@ -6,6 +6,7 @@ import React, { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'rea
 import { supabase } from './supabaseClient';
 
 import Header from './components/Header';
+import StorefrontFooter from './components/StorefrontFooter';
 const StoreView = lazy(() => import('./components/StoreView'));
 const PrivacyPolicyPage = lazy(() => import('./components/PrivacyPolicyPage'));
 
@@ -37,6 +38,7 @@ import { EMPTY_ADMIN_ACCESS, OWNER_ADMIN_ACCESS, isOwnerAdmin, normalizeAdminAcc
 import { addProductToCart, removeProductFromCart, updateProductCartQuantity, sanitizeCartSnapshot, getCartStorageKey, switchCartStorageOwner, canPersistCartForOwner, getCurrentCartItemStock, sanitizeProductCollection, getUserScopedCollectionStorageKey, switchUserScopedCollectionOwner } from './utils/cartSafety';
 import { getAvailableProductColors, getAvailableProductSizes, getCustomProductVariant, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant } from './utils/productVariants.js';
 import { matchesProductSearch } from './utils/productSearch.js';
+import { buildStorefrontVisualStyle } from './utils/storefrontVisualDesign.js';
 
 // Heavy, infrequently used screens are loaded only when the user opens them.
 const AdminDashboardPro = lazy(() => import('./components/AdminDashboardPro'));
@@ -150,17 +152,17 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Unsupported image URL protocol');
       return parsedUrl.href;
     } catch {
-      throw new Error('კატეგორიის ან ბანერის ფოტოს ბმული არასწორია. გამოიყენეთ HTTP ან HTTPS მისამართი.');
+      throw new Error('მაღაზიის ფოტოს ბმული არასწორია. გამოიყენეთ HTTP ან HTTPS მისამართი.');
     }
   }
 
   const match = value.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([a-z0-9+/=]+)$/i);
-  if (!match) throw new Error('კატეგორიის ან ბანერის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
+  if (!match) throw new Error('მაღაზიის ფოტოს ფორმატი არასწორია. გამოიყენეთ JPG, PNG, WEBP ან GIF.');
   const mimeType = match[1].toLowerCase();
   const base64 = match[2];
   const sizeBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
   if (sizeBytes <= 0 || sizeBytes > STOREFRONT_IMAGE_MAX_BYTES) {
-    throw new Error('კატეგორიის ან ბანერის თითოეული ფოტო მაქსიმუმ 5 MB უნდა იყოს.');
+    throw new Error('მაღაზიის თითოეული ფოტო მაქსიმუმ 5 MB უნდა იყოს.');
   }
 
   const binary = atob(base64);
@@ -182,7 +184,7 @@ const uploadStorefrontImage = async (imageData, folder, index, userId, uploadedA
   }
 
   const extension = STOREFRONT_IMAGE_TYPES[mimeType];
-  const safeFolder = folder === 'banners' ? 'banners' : 'categories';
+  const safeFolder = ['categories', 'banners', 'hero'].includes(folder) ? folder : 'categories';
   if (!window.crypto?.getRandomValues) throw new Error('უსაფრთხო ატვირთვისთვის ბრაუზერის კრიპტოგრაფიული ფუნქცია მიუწვდომელია.');
   const randomBytes = new Uint8Array(12);
   window.crypto.getRandomValues(randomBytes);
@@ -228,7 +230,8 @@ const cleanupStorefrontUploads = async (uploadedAssets) => {
     const safePath = String(path || '').replace(/^\/+/, '');
     const isManagedStorefrontPath =
       safePath.startsWith('storefront/categories/') ||
-      safePath.startsWith('storefront/banners/');
+      safePath.startsWith('storefront/banners/') ||
+      safePath.startsWith('storefront/hero/');
     if (!isManagedStorefrontPath) return;
 
     const encodedPath = safePath.split('/').map(encodeURIComponent).join('/');
@@ -644,6 +647,12 @@ export default function App() {
   const [storefrontPublishBusy, setStorefrontPublishBusy] = useState(false);
   const storefrontSaveLock = useRef(false);
   const storefrontPublishLock = useRef(false);
+  const storefrontDraftUpdatedAtRef = useRef(null);
+  const storefrontDraftBaselineRef = useRef(null);
+  const storefrontDraftLocalDirtyRef = useRef(false);
+  // Read the latest rendered editor values after asynchronous network responses.
+  const storefrontCurrentSnapshotRef = useRef(null);
+  storefrontCurrentSnapshotRef.current = JSON.stringify({ categories, banners: bannersList, siteSettings });
 
   const [adminLoginForm, setAdminLoginForm] = useState({
     username: '',
@@ -921,21 +930,31 @@ export default function App() {
   useEffect(() => {
     if (!hasSettingsAccess) return undefined;
     let active = true;
+    const snapshotBeforeLoad = storefrontCurrentSnapshotRef.current;
     const loadStorefrontDraft = async () => {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config`,
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config,draft_updated_at`,
           { headers: await getSupabaseHeaders({ authenticated: true }) }
         );
         if (!response.ok) throw new Error(await response.text());
         const rows = await response.json();
         const draft = rows?.[0]?.draft_config;
-        if (!active || !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
-        if (Array.isArray(draft.categories)) setCategoriesList(draft.categories);
-        if (Array.isArray(draft.banners)) setBannersList(draft.banners);
-        if (draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings)) {
-          setSiteSettings(draft.siteSettings);
-        }
+        // A late initial response must not erase edits made while the request was pending.
+        if (!active || storefrontCurrentSnapshotRef.current !== snapshotBeforeLoad ||
+            storefrontSaveLock.current || storefrontPublishLock.current ||
+            !draft || typeof draft !== 'object' || Array.isArray(draft)) return;
+        storefrontDraftUpdatedAtRef.current = typeof rows?.[0]?.draft_updated_at === 'string' ? rows[0].draft_updated_at : null;
+        const sharedSnapshot = {
+          categories: Array.isArray(draft.categories) ? draft.categories : categories,
+          banners: Array.isArray(draft.banners) ? draft.banners : bannersList,
+          siteSettings: draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings) ? draft.siteSettings : siteSettings
+        };
+        storefrontDraftBaselineRef.current = JSON.stringify(sharedSnapshot);
+        storefrontDraftLocalDirtyRef.current = false;
+        setCategoriesList(sharedSnapshot.categories);
+        setBannersList(sharedSnapshot.banners);
+        setSiteSettings(sharedSnapshot.siteSettings);
       } catch (error) {
         console.error('Storefront draft load error:', error);
       }
@@ -943,6 +962,68 @@ export default function App() {
     loadStorefrontDraft();
     return () => { active = false; };
   }, [hasSettingsAccess]);
+
+  useEffect(() => {
+    if (!hasSettingsAccess || !storefrontDraftBaselineRef.current) return;
+    const currentSnapshot = JSON.stringify({ categories, banners: bannersList, siteSettings });
+    storefrontDraftLocalDirtyRef.current = currentSnapshot !== storefrontDraftBaselineRef.current;
+  }, [hasSettingsAccess, categories, bannersList, siteSettings]);
+
+  useEffect(() => {
+    if (!hasSettingsAccess) return undefined;
+    let active = true;
+    let inFlight = false;
+    const refreshSharedStorefrontDraft = async () => {
+      if (!active || document.visibilityState !== 'visible' || inFlight ||
+          storefrontSaveLock.current || storefrontPublishLock.current ||
+          storefrontDraftLocalDirtyRef.current || !storefrontDraftBaselineRef.current) return;
+      inFlight = true;
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/storefront_config?config_key=eq.storefront&select=draft_config,draft_updated_at`,
+          { headers: await getSupabaseHeaders({ authenticated: true }) }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        const rows = await response.json();
+        const row = rows?.[0];
+        const remoteUpdatedAt = typeof row?.draft_updated_at === 'string' ? row.draft_updated_at : null;
+        if (!row?.draft_config || typeof row.draft_config !== 'object' || Array.isArray(row.draft_config) ||
+            !remoteUpdatedAt || remoteUpdatedAt === storefrontDraftUpdatedAtRef.current) return;
+        // Recheck after the network request: never replace edits made while the request was in flight.
+        const latestSnapshot = storefrontCurrentSnapshotRef.current;
+        if (!active || storefrontDraftLocalDirtyRef.current || latestSnapshot !== storefrontDraftBaselineRef.current ||
+            storefrontSaveLock.current || storefrontPublishLock.current) return;
+        const draft = row.draft_config;
+        const nextSnapshot = {
+          categories: Array.isArray(draft.categories) ? draft.categories : categories,
+          banners: Array.isArray(draft.banners) ? draft.banners : bannersList,
+          siteSettings: draft.siteSettings && typeof draft.siteSettings === 'object' && !Array.isArray(draft.siteSettings) ? draft.siteSettings : siteSettings
+        };
+        storefrontDraftUpdatedAtRef.current = remoteUpdatedAt;
+        storefrontDraftBaselineRef.current = JSON.stringify(nextSnapshot);
+        storefrontDraftLocalDirtyRef.current = false;
+        setCategoriesList(nextSnapshot.categories);
+        setBannersList(nextSnapshot.banners);
+        setSiteSettings(nextSnapshot.siteSettings);
+      } catch (error) {
+        console.warn('Shared storefront draft refresh failed:', error);
+      } finally {
+        inFlight = false;
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshSharedStorefrontDraft();
+    };
+    window.addEventListener('focus', refreshSharedStorefrontDraft);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const interval = window.setInterval(() => void refreshSharedStorefrontDraft(), 30000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshSharedStorefrontDraft);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [hasSettingsAccess, categories, bannersList, siteSettings]);
 
   useEffect(() => {
     // Settings-authorized staff load the private draft in the separate authenticated effect above.
@@ -1292,6 +1373,8 @@ export default function App() {
     storefrontSaveLock.current = true;
     setStorefrontDraftBusy(true);
     const uploadedAssets = [];
+    let draftSaveCommitted = false;
+    const saveEditorSnapshotAtStart = storefrontCurrentSnapshotRef.current;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) {
@@ -1315,27 +1398,143 @@ export default function App() {
         draftBanners.push({ ...banner, image });
       }
 
+      const draftSiteSettings = validateStorefrontSiteSettings(settingsOverride);
+      const draftHeroImage = draftSiteSettings?.visualDesign?.hero?.imageUrl;
+      if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
+        const uploadedHeroImage = await uploadStorefrontImage(draftHeroImage, 'hero', 0, session.user.id, uploadedAssets);
+        draftSiteSettings.visualDesign = {
+          ...draftSiteSettings.visualDesign,
+          hero: { ...(draftSiteSettings.visualDesign.hero || {}), imageUrl: uploadedHeroImage }
+        };
+      }
       const snapshot = {
         categories: draftCategories,
         banners: draftBanners,
-        siteSettings: validateStorefrontSiteSettings(settingsOverride)
+        siteSettings: draftSiteSettings
       };
+      // Do not commit a stale snapshot when edits arrive during image uploads.
+      if (storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart) {
+        throw new Error('მონახაზის შენახვა შეჩერდა: ატვირთვის მიმდინარეობისას ახალი ცვლილებები გაკეთდა. მიმდინარე ცვლილებები შენარჩუნებულია; სცადეთ ხელახლა შენახვა.');
+      }
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/save_storefront_draft`,
         {
           method: 'POST',
           headers: await getSupabaseHeaders({ authenticated: true }),
-          body: JSON.stringify({ p_snapshot: snapshot })
+          body: JSON.stringify({
+            p_snapshot: snapshot,
+            p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current
+          })
         }
       );
-      if (!response.ok) throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + (await response.text()));
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorCode = '';
+        try { errorCode = JSON.parse(errorText)?.code || ''; } catch {}
+        if (errorCode === '40001') {
+          throw new Error('მონახაზის კონფლიქტი: სხვა მოწყობილობაზე ახალი ვერსია შეინახა. თქვენი ცვლილებები ამჯერად არ გადაგვიწერია. განაახლეთ გვერდი, ჩაიტვირთეთ საერთო მონახაზი და შემდეგ გააკეთეთ თქვენი ცვლილებები ხელახლა.');
+        }
+        throw new Error('მონახაზის შენახვა ვერ მოხერხდა: ' + errorText);
+      }
+      // A successful RPC response means Postgres committed the draft. Never
+      // delete uploaded media after this point, even if response parsing fails.
+      draftSaveCommitted = true;
+      let savedDraftState;
+      try {
+        savedDraftState = await response.json();
+      } catch {
+        throw new Error('მონახაზი შესაძლოა შენახულია, მაგრამ სერვერის პასუხი ვერ წავიკითხეთ. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
+      }
+      const savedDraftUpdatedAt = savedDraftState?.draft_updated_at;
+      if (typeof savedDraftUpdatedAt !== 'string' || !Number.isFinite(Date.parse(savedDraftUpdatedAt))) {
+        throw new Error('მონახაზი სერვერმა შეინახა, მაგრამ მისი ახალი ვერსიის დრო ვერ დადასტურდა. ატვირთული სურათები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი საერთო მონახაზის ჩასატვირთად.');
+      }
+      storefrontDraftUpdatedAtRef.current = savedDraftUpdatedAt;
+      storefrontDraftBaselineRef.current = JSON.stringify({ categories: draftCategories, banners: draftBanners, siteSettings: draftSiteSettings });
+      const editsArrivedDuringSave = storefrontCurrentSnapshotRef.current !== saveEditorSnapshotAtStart;
+      storefrontDraftLocalDirtyRef.current = editsArrivedDuringSave;
+      if (editsArrivedDuringSave) {
+        alert('მონახაზი სერვერზე შეინახა, მაგრამ შენახვის დროს დამატებითი ცვლილებები გაკეთდა. ეს ცვლილებები რედაქტორში შენარჩუნებულია; ხელახლა შეინახეთ.');
+        return false;
+      }
 
+      // Commit the uploaded Hero URL to editor state only after the draft RPC succeeds.
+      if (typeof draftHeroImage === 'string' && draftHeroImage.startsWith('data:')) {
+        setSiteSettings(draftSiteSettings);
+      }
       setCategoriesList(draftCategories);
       setBannersList(draftBanners);
       alert('მონახაზი უსაფრთხოდ შეინახა Supabase-ში. საიტის ვიზიტორებს ცვლილებები ჯერ არ უჩანთ.');
+      return true;
     } catch (error) {
-      if (uploadedAssets.length) await cleanupStorefrontUploads(uploadedAssets);
+      if (!draftSaveCommitted && uploadedAssets.length) {
+        await cleanupStorefrontUploads(uploadedAssets);
+      } else if (draftSaveCommitted && uploadedAssets.length) {
+        console.warn('Storefront draft save was committed; uploaded assets were retained for safety.');
+      }
       alert(error.message || 'მონახაზის შენახვა ვერ მოხერხდა.');
+      return false;
+    } finally {
+      storefrontSaveLock.current = false;
+      setStorefrontDraftBusy(false);
+    }
+  };
+
+  const handleRestoreStorefrontVersion = async (versionId, versionSnapshot) => {
+    if (!hasSettingsAccess || storefrontDraftBusy || storefrontPublishBusy || storefrontSaveLock.current || storefrontPublishLock.current) return false;
+    if (storefrontDraftLocalDirtyRef.current || (storefrontDraftBaselineRef.current && JSON.stringify({ categories, banners: bannersList, siteSettings }) !== storefrontDraftBaselineRef.current)) {
+      alert('ამ მოწყობილობაზე შეუნახავი ცვლილებები გაქვთ. ჯერ შეინახეთ მონახაზი ან განაახლეთ გვერდი ცვლილებების გაუქმების შემდეგ; ძველი ვერსიის აღდგენა შეჩერებულია.');
+      return false;
+    }
+    if (!versionId || !storefrontDraftUpdatedAtRef.current) {
+      alert('მონახაზის მიმდინარე ვერსიის დრო ვერ დადასტურდა. განაახლეთ გვერდი და სცადეთ თავიდან.');
+      return false;
+    }
+    let restoredCategories;
+    let restoredBanners;
+    let restoredSettings;
+    try {
+      if (!versionSnapshot || typeof versionSnapshot !== 'object' || Array.isArray(versionSnapshot)) throw new Error('არჩეული ვერსიის მონაცემები არასწორია.');
+      restoredCategories = validateStorefrontCategorySnapshot(versionSnapshot.categories, products);
+      restoredBanners = validateStorefrontBannerSnapshot(versionSnapshot.banners);
+      restoredSettings = validateStorefrontSiteSettings(versionSnapshot.siteSettings);
+    } catch (error) {
+      alert(error?.message || 'არჩეული ვერსიის მონაცემები ვერ გადამოწმდა.');
+      return false;
+    }
+    storefrontSaveLock.current = true;
+    setStorefrontDraftBusy(true);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/restore_storefront_draft_from_version`, {
+        method: 'POST',
+        headers: await getSupabaseHeaders({ authenticated: true }),
+        body: JSON.stringify({
+          p_version_id: versionId,
+          p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current
+        })
+      });
+      if (!response.ok) {
+        const detail = await response.text();
+        let code = '';
+        try { code = JSON.parse(detail)?.code || ''; } catch {}
+        if (code === '40001') throw new Error('აღდგენა შეჩერდა: სხვა მოწყობილობაზე მონახაზი შეიცვალა. განაახლეთ გვერდი და ხელახლა აირჩიეთ ვერსია.');
+        throw new Error('ვერსიის მონახაზში აღდგენა ვერ მოხერხდა: ' + detail);
+      }
+      const result = await response.json();
+      if (String(result?.version_id || '') !== String(versionId) || typeof result?.draft_updated_at !== 'string') {
+        throw new Error('აღდგენის პასუხი არასრულია. განაახლეთ გვერდი, რათა საერთო მონახაზის მიმდინარე ვერსია ჩაიტვირთოს.');
+      }
+      storefrontDraftUpdatedAtRef.current = result.draft_updated_at;
+      storefrontDraftBaselineRef.current = JSON.stringify({ categories: restoredCategories, banners: restoredBanners, siteSettings: restoredSettings });
+      storefrontDraftLocalDirtyRef.current = false;
+      setCategoriesList(restoredCategories);
+      setBannersList(restoredBanners);
+      setSiteSettings(restoredSettings);
+      alert('ძველი ვერსია აღდგა საერთო მონახაზში. საიტზე ცვლილებები ჯერ არ გამოქვეყნებულა.');
+      return true;
+    } catch (error) {
+      alert(error?.message || 'ვერსიის აღდგენა ვერ მოხერხდა.');
+      return false;
     } finally {
       storefrontSaveLock.current = false;
       setStorefrontDraftBusy(false);
@@ -1349,6 +1548,7 @@ export default function App() {
     const uploadedAssets = [];
     let storefrontPublished = false;
     let publishRequestStarted = false;
+    const publishEditorSnapshotAtStart = storefrontCurrentSnapshotRef.current;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id || !isAuthorizedAdmin(session.user)) throw new Error('ადმინისტრატორის სესია ვერ დადასტურდა.');
@@ -1370,12 +1570,25 @@ export default function App() {
         publishedBanners.push({ ...banner, image });
       }
 
+      const publishedSiteSettings = validateStorefrontSiteSettings(siteSettings);
+      const publishedHeroImage = publishedSiteSettings?.visualDesign?.hero?.imageUrl;
+      if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
+        const uploadedHeroImage = await uploadStorefrontImage(publishedHeroImage, 'hero', 0, session.user.id, uploadedAssets);
+        publishedSiteSettings.visualDesign = {
+          ...publishedSiteSettings.visualDesign,
+          hero: { ...(publishedSiteSettings.visualDesign.hero || {}), imageUrl: uploadedHeroImage }
+        };
+      }
       const snapshot = {
         categories: publishedCategories,
         banners: publishedBanners,
-        siteSettings: validateStorefrontSiteSettings(siteSettings)
+        siteSettings: publishedSiteSettings
       };
       const versionLabel = `გამოქვეყნება ${new Date().toLocaleString('ka-GE')}`;
+      // Uploads may take time. Never publish an obsolete snapshot if the editor changed meanwhile.
+      if (storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart) {
+        throw new Error('გამოქვეყნება შეჩერდა: ატვირთვის მიმდინარეობისას რედაქტორში ცვლილებები გაკეთდა. გადაამოწმეთ მიმდინარე მონახაზი და ხელახლა გამოაქვეყნეთ.');
+      }
       publishRequestStarted = true;
       const publishResponse = await fetch(
         `${SUPABASE_URL}/rest/v1/rpc/publish_storefront_config`,
@@ -1384,27 +1597,52 @@ export default function App() {
           headers: await getSupabaseHeaders({ authenticated: true }),
           body: JSON.stringify({
             p_snapshot: snapshot,
-            p_version_label: versionLabel
+            p_version_label: versionLabel,
+            p_expected_draft_updated_at: storefrontDraftUpdatedAtRef.current
           })
         }
       );
       if (!publishResponse.ok) {
         // A definitive HTTP error means Postgres rejected and rolled back the transaction.
         publishRequestStarted = false;
-        throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + (await publishResponse.text()));
+        const publishErrorText = await publishResponse.text();
+        let publishErrorCode = '';
+        try { publishErrorCode = JSON.parse(publishErrorText)?.code || ''; } catch {}
+        if (publishErrorCode === '40001') {
+          throw new Error('გამოქვეყნება შეჩერდა: სხვა მოწყობილობაზე მონახაზი შეიცვალა. თქვენი ცვლილებები არ გადაგვიწერია. განაახლეთ საერთო მონახაზი და ხელახლა გადაამოწმეთ ცვლილებები.');
+        }
+        throw new Error('საიტის გამოქვეყნება ვერ მოხერხდა: ' + publishErrorText);
       }
       // The database transaction has committed both the published config
       // and its immutable history row. Do not clean up referenced uploads
       // if response parsing or a later UI update fails.
       storefrontPublished = true;
       const publishResult = await publishResponse.json();
-      if (!publishResult?.version_id) {
-        throw new Error('საიტი გამოქვეყნდა, თუმცა ვერსიის დადასტურების პასუხი ვერ მივიღეთ. განაახლეთ ისტორიის სია.');
+      if (
+        !publishResult?.version_id
+        || typeof publishResult?.draft_updated_at !== 'string'
+        || !Number.isFinite(Date.parse(publishResult.draft_updated_at))
+      ) {
+        throw new Error('საიტი გამოქვეყნდა, თუმცა ახალი საერთო ვერსიის დრო ვერ დადასტურდა. ატვირთული ფაილები უსაფრთხოდ დავტოვეთ; განაახლეთ გვერდი.');
+      }
+      storefrontDraftUpdatedAtRef.current = publishResult.draft_updated_at;
+      // Publishing also advances the shared draft version; keep the local baseline in sync.
+      storefrontDraftBaselineRef.current = JSON.stringify({ categories: publishedCategories, banners: publishedBanners, siteSettings: publishedSiteSettings });
+      const editsArrivedDuringPublish = storefrontCurrentSnapshotRef.current !== publishEditorSnapshotAtStart;
+      storefrontDraftLocalDirtyRef.current = editsArrivedDuringPublish;
+      if (editsArrivedDuringPublish) {
+        alert('საიტი გამოქვეყნდა, მაგრამ გამოქვეყნების დროს დამატებითი ცვლილებები გაკეთდა. ეს ცვლილებები რედაქტორში შენარჩუნებულია და ჯერ არ გამოქვეყნებულა; შეინახეთ ახალი მონახაზი.');
+        return false;
       }
 
+      // Commit the uploaded Hero URL to editor state only after publish is confirmed.
+      if (typeof publishedHeroImage === 'string' && publishedHeroImage.startsWith('data:')) {
+        setSiteSettings(publishedSiteSettings);
+      }
       setCategoriesList(publishedCategories);
       setBannersList(publishedBanners);
       alert('საიტის ცვლილებები წარმატებით გამოქვეყნდა და ვერსიის ისტორიაშიც უსაფრთხოდ შეინახა.');
+      return true;
     } catch (error) {
       if (!storefrontPublished && uploadedAssets.length) {
         if (publishRequestStarted) {
@@ -1416,6 +1654,7 @@ export default function App() {
         }
       }
       alert(error.message || 'საიტის გამოქვეყნება ვერ მოხერხდა.');
+      return false;
     } finally {
       storefrontPublishLock.current = false;
       setStorefrontPublishBusy(false);
@@ -3178,7 +3417,7 @@ export default function App() {
     `${Number(p || 0).toLocaleString('ka-GE')} ₾`;
 
   return (
-    <div className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`}>
+    <div className={`geostore-shell ${activeTab !== 'admin' ? 'geostore-fashion-store' : ''} min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20 flex flex-col justify-between w-full overflow-x-hidden`} style={activeTab !== 'admin' ? buildStorefrontVisualStyle(siteSettings?.visualDesign) : undefined}>
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-500 text-slate-950 font-black px-6 py-3 rounded-2xl shadow-2xl border border-emerald-300 animate-bounce flex items-center gap-2.5 text-xs">
           {toastMessage}
@@ -3188,6 +3427,7 @@ export default function App() {
       <div className="w-full max-w-full overflow-visible">
         <Header
           siteSettings={siteSettings}
+          visualDesign={activeTab !== 'admin' ? siteSettings?.visualDesign : null}
           setActiveTab={setActiveTab}
           activeTab={activeTab}
           wishlistCount={wishlist.length}
@@ -3324,6 +3564,7 @@ export default function App() {
             bannersList={bannersList || []}
             setBannersList={setBannersList}
             onSaveStorefrontDraft={handleSaveStorefrontDraft}
+            onRestoreStorefrontVersion={handleRestoreStorefrontVersion}
             storefrontDraftBusy={storefrontDraftBusy}
             onPublishStorefront={handlePublishStorefront}
             storefrontPublishBusy={storefrontPublishBusy}
@@ -4481,41 +4722,15 @@ export default function App() {
         </div>
       )}
 
-      <footer className="geostore-site-footer w-full mt-6 py-6 text-center space-y-3">
-        <div className="geostore-footer-links flex flex-wrap justify-center items-center gap-4 px-2 text-slate-400 font-bold">
-          <button
-            onClick={() => setIsTermsOpen(true)}
-            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <FileText className="w-4 h-4" />
-            {t.terms}
-          </button>
-
-          <span>•</span>
-          <button
-            type="button"
-            onClick={() => setActiveTab('privacy')}
-            aria-current={activeTab === 'privacy' ? 'page' : undefined}
-            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            {t.privacy}
-          </button>
-
-          <span>•</span>
-
-
-          <button
-            onClick={() => setIsWarrantyOpen(true)}
-            className="hover:text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            {t.warranty}
-          </button>
-        </div>
-
-        <p>© 2026 GEOSTORE. {t.allRightsReserved}</p>
-      </footer>
+      <StorefrontFooter
+        siteSettings={siteSettings}
+        visualDesign={activeTab !== 'admin' ? siteSettings?.visualDesign : null}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        setIsTermsOpen={setIsTermsOpen}
+        setIsWarrantyOpen={setIsWarrantyOpen}
+        currentLang={currentLang}
+      />
     </div>
   );
 }

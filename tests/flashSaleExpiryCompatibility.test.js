@@ -7,6 +7,7 @@ const migration = readFileSync(
   'utf8'
 );
 const admin = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
+const adminVisualDesign = readFileSync(new URL('../src/utils/adminPanelVisualDesign.js', import.meta.url), 'utf8');
 const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
 
@@ -37,7 +38,8 @@ test('unused parallel campaign RPCs cannot compete with product-level flash-sale
 test('admin can see how many flash-sale products remain and when the next one expires', () => {
   assert.match(admin, /flashSaleAdminSummary\.count/);
   assert.match(admin, /flashSaleAdminSummary\.nextEndsAt/);
-  assert.match(admin, /მოქმედი ფლეშ-აქცია/);
+  assert.match(admin, /adminVisualDesign\.content\.discountsActiveLabel/);
+  assert.match(adminVisualDesign, /\"discountsActiveLabel\": \"მოქმედი ფლეშ-აქცია\"/);
 });
 
 test('storefront countdown is announced accessibly without continuous screen-reader interruption', () => {

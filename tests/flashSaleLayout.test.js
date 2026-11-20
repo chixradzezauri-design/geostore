@@ -15,8 +15,8 @@ test('Flash Sale heading and badge use a stable, shrink-safe layout', () => {
 
 test('Flash Sale copy, countdown and product data remain connected to existing source', () => {
   assert.match(store, /aria-labelledby="gs-flash-sale-title"/);
-  assert.match(store, /\{storeText\.limitedOffer\}/);
-  assert.match(store, /\{storeText\.hurryDiscount\}/);
+  assert.match(store, /\{visualCopy\.flashSaleBadge \|\| storeText\.limitedOffer\}/);
+  assert.match(store, /\{visualCopy\.flashSaleSubtitle \|\| storeText\.hurryDiscount\}/);
   assert.match(store, /getFlashSaleCountdown\(flashSaleEndAt, flashSaleClock\)/);
   assert.match(store, /flashSaleProducts\.map\(prod =>/);
   assert.match(store, /getActiveFlashSaleProducts\(activeProducts, flashSaleClock\)/);
