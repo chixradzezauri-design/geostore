@@ -53,3 +53,15 @@ test('replenishment section visibility has no duplicated tab condition', () => {
   assert.equal(dashboard.includes("(visibleAdminTab === 'replenishment' || (visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment'))"), false);
   assert.equal(dashboard.includes("(visibleAdminTab === 'replenishment' || adminContentTab === 'replenishment')"), true);
 });
+
+test('inventory history resets stale records and pagination on a fresh filter request', () => {
+  const start = dashboard.indexOf('const fetchInventoryMovements = async');
+  const end = dashboard.indexOf('useEffect(() => {', start);
+  assert.ok(start >= 0 && end > start);
+  const loader = dashboard.slice(start, end);
+  assert.match(loader, /if \(!append\) \{\s*\/\/ Never show rows or pagination from a previous product after a filter change\./);
+  assert.match(loader, /setInventoryMovementRows\(\[\]\);/);
+  assert.match(loader, /setInventoryMovementCursor\(null\);/);
+  assert.match(loader, /setInventoryMovementHasMore\(false\);/);
+  assert.match(loader, /requestId !== inventoryMovementRequestRef\.current/);
+});
