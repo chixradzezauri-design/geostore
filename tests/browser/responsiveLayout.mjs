@@ -164,7 +164,7 @@ try {
           adminProductButtonMinHeight: Math.min(...adminProductButtons.map(button => button.getBoundingClientRect().height)),
           adminProductPaginationMinHeight: Math.min(...adminPaginationButtons.map(button => button.getBoundingClientRect().height)),
           adminProductPriceFontSize: parseFloat(getComputedStyle(adminProductPrice).fontSize),
-          adminProductColumns: getComputedStyle(adminProductControls).gridTemplateColumns.split(/\\s+/).filter(Boolean).length
+          adminProductColumns: getComputedStyle(adminProductControls).gridTemplateColumns.split(/\s+/).filter(Boolean).length
         };
       });
       assert.ok(layout.scrollWidth <= width + 2, width + 'px overflow ' + JSON.stringify(layout));
