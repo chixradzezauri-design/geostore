@@ -478,6 +478,7 @@ export default function StorefrontVisualEditor({
 
   const resetSelectedElementStyle = () => {
     if (!selectedElement) return;
+    if (!window.confirm(`გსურთ „${selectedElement.label}“ ელემენტის ${previewMode === 'desktop' ? 'ძირითადი' : previewMode === 'mobile' ? 'მობილურის' : 'ტაბლეტის'} სტილის განულება? სხვა ელემენტების სტილები შენარჩუნდება. დაბრუნება შესაძლებელია Undo-თი.`)) return;
     if (previewMode !== 'desktop') {
       const responsive = { ...(design.responsive || {}) };
       const viewport = { ...(responsive[previewMode] || {}) };
