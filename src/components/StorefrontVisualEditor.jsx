@@ -442,6 +442,32 @@ export default function StorefrontVisualEditor({
     });
   };
 
+  const clearSelectedElementColors = () => {
+    if (!selectedElement) return;
+    const keys = ['textColor', 'backgroundColor', 'borderColor'];
+    if (previewMode !== 'desktop') {
+      const responsive = { ...(design.responsive || {}) };
+      const viewport = { ...(responsive[previewMode] || {}) };
+      const elementStyles = { ...(viewport.elementStyles || {}) };
+      const style = { ...(elementStyles[selectedElement.id] || {}) };
+      keys.forEach(key => { delete style[key]; });
+      if (Object.keys(style).length) elementStyles[selectedElement.id] = style;
+      else delete elementStyles[selectedElement.id];
+      if (Object.keys(elementStyles).length) viewport.elementStyles = elementStyles;
+      else delete viewport.elementStyles;
+      if (Object.keys(viewport).length) responsive[previewMode] = viewport;
+      else delete responsive[previewMode];
+      commitDesign({ ...design, responsive });
+      return;
+    }
+    const elementStyles = { ...(design.elementStyles || {}) };
+    const style = { ...(elementStyles[selectedElement.id] || {}) };
+    keys.forEach(key => { delete style[key]; });
+    if (Object.keys(style).length) elementStyles[selectedElement.id] = style;
+    else delete elementStyles[selectedElement.id];
+    commitDesign({ ...design, elementStyles });
+  };
+
   const resetSelectedElementStyle = () => {
     if (!selectedElement) return;
     if (previewMode !== 'desktop') {
@@ -935,7 +961,7 @@ export default function StorefrontVisualEditor({
                   <p className="text-[9px] leading-4 text-slate-500">სტილები ინახება საერთო ვიზუალურ მონახაზში და ხელმისაწვდომია ყველა მოწყობილობაზე. მაქსიმუმ 20 ჩანაწერი.</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button type="button" onClick={() => { updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', ''); updateSelectedElementStyle('borderColor', ''); }} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
+                  <button type="button" onClick={clearSelectedElementColors} className="w-full rounded-lg border border-slate-700 px-3 py-2 text-[10px] font-bold text-slate-300">ფერების გასუფთავება</button>
                   <button type="button" onClick={resetSelectedElementStyle} className="w-full rounded-lg border border-rose-500/40 px-3 py-2 text-[10px] font-bold text-rose-200">ამ ელემენტის სტილის სრულად განულება</button>
                 </div>
                 <p className="text-[10px] leading-4 text-slate-400">{selectedElement.help} სტილები ცალკე ინახება თითოეული ელემენტისთვის.</p>
