@@ -132,6 +132,12 @@ test('hero image file input resets even when reading throws synchronously', () =
 
 test('hero image reader rejects empty or non-image data results', () => {
   const handler = editor.split('const handleHeroFileChange = event =>')[1]?.split('const undo = () =>')[0] || '';
-  assert.match(handler, /typeof reader\.result === 'string' && reader\.result\.startsWith\('data:image\/'\)/);
+  assert.match(handler, /typeof reader\.result === 'string' && reader\.result\.startsWith\(`data:\$\{file\.type\};base64,`\)/);
   assert.match(handler, /else \{\s*setSaveMessage\('ფოტოს წაკითხვა ვერ მოხერხდა/);
+});
+
+test('hero image data URL must match the selected file MIME type', () => {
+  const handler = editor.split('const handleHeroFileChange = event =>')[1]?.split('const undo = () =>')[0] || '';
+  assert.match(handler, /allowedTypes\.includes\(file\.type\)/);
+  assert.match(handler, /reader\.result\.startsWith\(`data:\$\{file\.type\};base64,`\)/);
 });
