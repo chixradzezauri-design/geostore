@@ -828,3 +828,152 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+
+/* Stage 11 — finance breakdown detail readability.
+ * Only owner analytics sections and their existing read-only figures are styled.
+ * Preserve currency amounts, COGS unknown/estimated warnings, editor tokens and calculations. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel,
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row,
+  .admin-profitability-row,
+  .admin-profitability-heading,
+  .admin-profitability-metrics,
+  .admin-profitability-results
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel
+) {
+  padding: clamp(14px, 1.65vw, 20px) !important;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel
+) > div:first-child {
+  min-inline-size: 0;
+  gap: 10px;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-sources-panel,
+  .admin-finance-expenses-panel,
+  .admin-finance-products-panel,
+  .admin-finance-vendors-panel
+) > div:first-child > * {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row
+) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row
+) > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-finance-breakdown-row,
+  .admin-finance-recent-row
+) > :last-child {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-row {
+  padding-block: 11px;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-heading,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-results,
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 6px 12px !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-profitability-heading,
+  .admin-profitability-results,
+  .admin-profitability-metrics
+) > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal !important;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+  .admin-profitability-heading,
+  .admin-profitability-results
+) > :last-child {
+  text-align: end;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-row > p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+    .admin-finance-sources-panel,
+    .admin-finance-expenses-panel,
+    .admin-finance-products-panel,
+    .admin-finance-vendors-panel
+  ) > div:first-child {
+    flex-wrap: wrap;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics .admin-profitability-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+    .admin-finance-breakdown-row,
+    .admin-finance-recent-row,
+    .admin-profitability-heading,
+    .admin-profitability-results
+  ) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-analytics :is(
+    .admin-finance-breakdown-row,
+    .admin-finance-recent-row,
+    .admin-profitability-heading,
+    .admin-profitability-results
+  ) > :last-child {
+    text-align: start;
+  }
+}
