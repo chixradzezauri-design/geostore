@@ -4629,7 +4629,7 @@ export default function AdminDashboardPro({
       {/* 🖥️ MAIN CONTENT AREA */}
       <div className="flex-1 w-full space-y-6">
 
-        <div data-admin-visual-header="true" className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900/80 border border-emerald-500/30 rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-6 gap-4 shadow-2xl backdrop-blur-3xl">
+        <div data-admin-visual-header="true" className="flex min-w-0 flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900/80 border border-emerald-500/30 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 lg:p-5 gap-3 shadow-2xl backdrop-blur-3xl">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
               {isOwner ? 'მოგესალმებით, მთავარო ადმინისტრატორ! 👋' : `მოგესალმებით, ${adminAccess?.display_name || 'თანამშრომელო'}! 👋`}
@@ -4638,13 +4638,13 @@ export default function AdminDashboardPro({
               {isOwner ? 'სრული კონტროლი GEOSTORE-ის მართვის პანელზე:' : 'თქვენთვის მინიჭებული მოდულების მართვა:'}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="grid w-full min-w-0 grid-cols-2 items-stretch gap-2 lg:flex lg:w-auto lg:flex-row lg:items-center">
             {hasModulePermission('settings') && (
               <button
                 type="button"
                 onClick={() => { if (typeof onSaveStorefrontDraft === 'function') onSaveStorefrontDraft(); }}
                 disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onSaveStorefrontDraft !== 'function'}
-                className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-wait text-white px-4 py-2.5 rounded-2xl text-xs font-black transition"
+                className="min-w-0 rounded-xl bg-slate-700 px-2.5 py-2.5 text-[11px] font-black leading-snug text-white transition hover:bg-slate-600 disabled:cursor-wait disabled:opacity-50 sm:px-4 sm:text-xs"
               >
                 {storefrontDraftBusy ? 'მონახაზის შენახვა...' : 'მონახაზის შენახვა'}
               </button>
@@ -4654,12 +4654,12 @@ export default function AdminDashboardPro({
                 type="button"
                 onClick={() => { if (typeof onPublishStorefront === 'function') onPublishStorefront(); }}
                 disabled={storefrontDraftBusy || storefrontPublishBusy || typeof onPublishStorefront !== 'function'}
-                className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-wait text-slate-950 px-4 py-2.5 rounded-2xl text-xs font-black transition"
+                className="min-w-0 rounded-xl bg-emerald-500 px-2.5 py-2.5 text-[11px] font-black leading-snug text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50 sm:px-4 sm:text-xs"
               >
                 {storefrontPublishBusy ? 'გამოქვეყნება...' : 'ცვლილებების გამოქვეყნება'}
               </button>
             )}
-            <div className="flex items-center gap-3 bg-slate-950/60 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-xs">
+            <div className="col-span-2 flex min-w-0 items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-slate-950/60 px-2.5 py-2 text-[11px] lg:col-auto lg:justify-start lg:px-3 lg:text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span className="text-slate-300 font-bold">{isOwner ? "სრული სისტემური წვდომა" : "თანამშრომლის წვდომა დადასტურებულია"}</span>
             </div>
