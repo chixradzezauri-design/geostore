@@ -104,7 +104,7 @@ test('replenishment save blocks duplicate submissions and preserves drafts on fa
   const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
   const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
   const save = dashboard.slice(start, end);
-  assert.match(save, /!hasProductsPermission \|\| replenishmentSavingKey/);
+  assert.match(save, /!hasProductsPermission \|\| replenishmentSavingRef\.current \|\| replenishmentSavingKey/);
   assert.match(save, /const refreshed = await fetchInventoryReplenishmentSettings\(\)/);
   assert.match(save, /if \(!refreshed\) throw new Error/);
   assert.ok(save.indexOf('if (!refreshed) throw') < save.indexOf('setReplenishmentDrafts(current =>'));
@@ -122,11 +122,10 @@ test('replenishment save rejects blank values and locks inputs during save', () 
   assert.equal(card.split('type="number" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading}').length - 1, 2);
 });
 
-test('replenishment recommendation does not treat an empty target as zero', () => {
-  assert.match(dashboard, /const validThreshold = String\(thresholdValue\)\.trim\(\) !== ''/);
-  assert.match(dashboard, /const validTarget = validThreshold && String\(targetValue\)\.trim\(\) !== ''/);
-  assert.match(dashboard, /Number\(targetValue\) > Number\(thresholdValue\)/);
-  assert.match(dashboard, /validTarget \? \(position\.isLowStock \? Math\.max\(0, Number\(targetValue\) - position\.stock\) : 0\) : '—'/);
+test('replenishment recommendation previews the edited threshold and target', () => {
+  assert.match(dashboard, /calculateReplenishmentDraftPreview\(position\.stock, thresholdValue, targetValue\)/);
+  assert.match(dashboard, /draftPreview\.valid \? draftPreview\.suggestedQuantity : '—'/);
+  assert.match(dashboard, /draftPreview\.isLowStock \? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'/);
 });
 
 test('replenishment settings can be refreshed from the server without a page reload', () => {
@@ -142,7 +141,7 @@ test('replenishment saves cannot start during a server refresh', () => {
   const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
   const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
   const save = dashboard.slice(start, end);
-  assert.match(save, /!hasProductsPermission \|\| replenishmentSavingKey \|\| replenishmentLoading/);
+  assert.match(save, /!hasProductsPermission \|\| replenishmentSavingRef\.current \|\| replenishmentSavingKey \|\| replenishmentLoading/);
   assert.match(save, /p_low_stock_threshold: savedThreshold/);
   assert.match(save, /p_target_stock: savedTarget/);
 });
@@ -184,7 +183,7 @@ test('replenishment save validates server acknowledgment before clearing drafts'
   const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
   const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
   const save = dashboard.slice(start, end);
-  assert.match(save, /validateReplenishmentSaveResponse\(saveResult, position, savedThreshold, savedTarget\)/);
+  assert.match(save, /validateReplenishmentSaveResponse\(saveResult, position, savedThreshold, savedTarget, expectedUpdatedAt\)/);
   assert.ok(save.indexOf('validateReplenishmentSaveResponse(saveResult') < save.indexOf('setReplenishmentDrafts(current =>'));
 });
 test('existing replenishment settings without a revision cannot be saved blindly', () => {
@@ -202,4 +201,14 @@ test('replenishment refresh uses strict response validation', () => {
   const fetcher = dashboard.slice(start, end);
   assert.match(fetcher, /const settings = validateReplenishmentSettingsResponse\(result\)/);
   assert.match(fetcher, /setReplenishmentSettings\(settings\)/);
+});
+test('synchronous lock prevents double-click save races before React re-renders', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(dashboard, /const replenishmentSavingRef = useRef\(false\)/);
+  assert.match(save, /if \(!hasProductsPermission \|\| replenishmentSavingRef\.current/);
+  assert.match(save, /replenishmentSavingRef\.current = true/);
+  assert.match(save, /finally \{\s*replenishmentSavingRef\.current = false/);
+  assert.ok(save.indexOf('replenishmentSavingRef.current = true') < save.indexOf('await getSupabaseHeaders()'));
 });
