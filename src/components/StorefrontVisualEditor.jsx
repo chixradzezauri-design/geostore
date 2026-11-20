@@ -589,7 +589,11 @@ export default function StorefrontVisualEditor({
     const reader = new FileReader();
     reader.onload = () => {
       if (requestId !== heroImageReadRequestRef.current) return;
-      if (typeof reader.result === 'string') updateGroup('hero', 'imageUrl', reader.result);
+      if (typeof reader.result === 'string' && reader.result.startsWith('data:image/')) {
+        updateGroup('hero', 'imageUrl', reader.result);
+      } else {
+        setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
+      }
     };
     reader.onerror = () => {
       if (requestId === heroImageReadRequestRef.current) setSaveMessage('ფოტოს წაკითხვა ვერ მოხერხდა. სცადეთ სხვა ფაილი.');
