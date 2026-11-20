@@ -767,7 +767,7 @@ export default function StorefrontVisualEditor({
   };
 
   const saveDraft = async () => {
-    if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current) return;
+    if (typeof onSaveStorefrontDraft !== 'function' || storefrontDraftBusy || storefrontPublishBusy || draftSaveInFlightRef.current || publishInFlightRef.current) return;
     draftSaveInFlightRef.current = true;
     const snapshotDesign = design;
     const snapshot = { ...(siteSettings || {}), visualDesign: snapshotDesign };
