@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const migration = await readFile(new URL('../supabase/migrations/20261120123000_replenishment_optimistic_concurrency.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261120122908_replenishment_optimistic_concurrency.sql', import.meta.url), 'utf8');
 
 test('versioned replenishment RPC is additive and checks saved revision under a row lock', () => {
   assert.match(migration, /p_expected_updated_at timestamptz/);
