@@ -58,6 +58,7 @@ export const buildInventoryReplenishmentPlan = (products, settings = [], default
         isOutOfStock: stock === 0,
         suggestedQuantity: isLowStock ? Math.max(0, target - stock) : 0,
         settingId: saved?.id ?? null,
+        updatedAt: saved?.updated_at ?? null,
         hasCustomSetting: Boolean(saved)
       });
     });
@@ -79,4 +80,24 @@ export const filterInventoryReplenishmentPlan = (positions, query = '') => {
     position.productName, position.productId, position.sku, position.category,
     position.variantName, position.variantId
   ].some(value => String(value || '').toLocaleLowerCase().includes(normalized)));
+};
+
+/**
+ * Preview a proposed threshold/target using the draft values, not the saved
+ * low-stock status. Null quantity indicates an invalid or incomplete draft.
+ */
+export const calculateReplenishmentDraftPreview = (stock, thresholdInput, targetInput) => {
+  const threshold = Number(thresholdInput);
+  const target = Number(targetInput);
+  const validThreshold = String(thresholdInput ?? '').trim() !== '' &&
+    Number.isSafeInteger(threshold) && threshold >= 0 && threshold <= 100000;
+  const validTarget = validThreshold && String(targetInput ?? '').trim() !== '' &&
+    Number.isSafeInteger(target) && target > threshold && target <= 1000000;
+  const validStock = Number.isSafeInteger(stock) && stock >= 0;
+  const isLowStock = validThreshold && validStock && stock <= threshold;
+  return {
+    valid: validTarget && validStock,
+    isLowStock,
+    suggestedQuantity: validTarget && validStock ? (isLowStock ? Math.max(0, target - stock) : 0) : null
+  };
 };

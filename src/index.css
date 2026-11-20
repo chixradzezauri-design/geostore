@@ -20389,3 +20389,145 @@ body .admin-dashboard-pro.admin-dashboard-shell :is(.bg-white,.bg-slate-50,.bg-s
     max-width: 100% !important;
   }
 }
+
+
+/* GEOSTORE compact responsive pass 2026-11-20: layout-only refinements.
+   Keep Visual Studio theme, typography, sizes, colors and interaction handlers
+   authoritative; these selectors only resolve density and narrow-view overflow. */
+.admin-dashboard-pro.admin-dashboard-shell {
+  min-width: 0;
+  gap: clamp(12px, 1.6vw, 22px) !important;
+  padding-bottom: clamp(24px, 4vw, 42px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+  min-width: 0 !important;
+  padding: clamp(10px, 1.2vw, 16px) !important;
+  border-radius: 18px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:first-child {
+  gap: 9px !important;
+  padding-bottom: 10px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) {
+  gap: 5px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) > button {
+  min-height: 40px !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  line-height: 1.35 !important;
+  box-shadow: none !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell > div:nth-child(2) {
+  min-width: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] {
+  min-width: 0 !important;
+  gap: clamp(8px, 1.2vw, 12px) !important;
+  padding: clamp(10px, 1.1vw, 15px) !important;
+  border-radius: 16px !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] > div:first-child,
+.admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] > div:last-child {
+  min-width: 0 !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] h2,
+.admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] p {
+  overflow-wrap: anywhere;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-hero {
+  padding: clamp(11px, 1.3vw, 17px) !important;
+}
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-kpis > *,
+.admin-dashboard-pro.admin-dashboard-shell .admin-command-panels > * {
+  min-width: 0 !important;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 1024px) {
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    position: sticky !important;
+    top: 12px !important;
+    max-height: calc(100dvh - 24px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+@media (max-width: 1023px) {
+  .admin-dashboard-pro.admin-dashboard-shell {
+    gap: 12px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child {
+    max-width: 100% !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell > div:first-child > div:nth-child(2) {
+    scroll-padding-inline: 8px;
+    overscroll-behavior-x: contain;
+  }
+}
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] {
+    padding: 10px !important;
+    gap: 9px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] > div:last-child {
+    width: 100% !important;
+    gap: 7px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] > div:last-child > button,
+  .admin-dashboard-pro.admin-dashboard-shell [data-admin-visual-header="true"] > div:last-child > div {
+    min-width: 0 !important;
+    overflow-wrap: anywhere;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpis {
+    gap: 8px !important;
+  }
+  .admin-dashboard-pro.admin-dashboard-shell .admin-command-kpis > * {
+    padding: 10px !important;
+  }
+
+  /* The footer contains decorative dot separators as direct flex/grid children.
+     Hide them on compact layouts, so the three interactive links never fall into
+     awkward blank grid cells or become narrower than their Georgian labels. */
+  .geostore-fashion-store .geostore-footer-links {
+    display: flex !important;
+    flex-flow: row wrap !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .geostore-fashion-store .geostore-footer-links > span[aria-hidden="true"] {
+    display: none !important;
+  }
+  .geostore-fashion-store .geostore-footer-links > button {
+    flex: 1 1 135px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 210px !important;
+    min-height: 40px !important;
+    padding: 7px 9px !important;
+    overflow-wrap: anywhere;
+  }
+  .geostore-fashion-store .gs-site-header-inner,
+  .geostore-fashion-store .gs-header-search-row {
+    min-width: 0 !important;
+  }
+  .geostore-fashion-store .gs-header-search,
+  .geostore-fashion-store .gs-header-search input {
+    min-width: 0 !important;
+  }
+}
+/* On phones around 320px, two catalog tiles become narrower than the content.
+   Leave the 375px+ two-column design and all product actions unchanged. */
+@media (max-width: 359px) {
+  .geostore-fashion-store .geostore-storefront .gs-catalog-product-grid,
+  .gs-visual-preview-frame--mobile .gs-catalog-product-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .geostore-fashion-store .geostore-footer-links > button {
+    flex-basis: 100% !important;
+    max-width: 240px !important;
+  }
+}
