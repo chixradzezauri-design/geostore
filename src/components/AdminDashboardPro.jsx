@@ -1411,8 +1411,11 @@ export default function AdminDashboardPro({
         ? [...current, ...rows.filter(row => !current.some(existing => String(existing.id) === String(row.id)))]
         : rows
       );
-      setInventoryMovementCursor(result?.next_cursor ?? null);
-      setInventoryMovementHasMore(result?.has_more === true);
+      const nextCursor = result?.next_cursor ?? null;
+      // A missing or unchanged cursor must not keep offering the same page forever.
+      const canLoadNextPage = result?.has_more === true && nextCursor !== null && String(nextCursor) !== String(beforeId ?? '');
+      setInventoryMovementCursor(canLoadNextPage ? nextCursor : null);
+      setInventoryMovementHasMore(canLoadNextPage);
       setInventoryMovementError('');
     } catch (error) {
       if (requestId !== inventoryMovementRequestRef.current) return;
