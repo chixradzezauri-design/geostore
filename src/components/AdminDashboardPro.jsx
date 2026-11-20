@@ -1380,6 +1380,12 @@ export default function AdminDashboardPro({
         try { message = JSON.parse(detail)?.message || detail; } catch { /* Keep plain-text errors. */ }
         throw new Error(message || `HTTP ${response.status}`);
       }
+      const saveResult = await response.json();
+      if (saveResult?.success !== true || !saveResult?.setting?.updated_at ||
+          String(saveResult.setting.product_id) !== String(position.productId) ||
+          (saveResult.setting.variant_id ?? null) !== (position.variantId ?? null)) {
+        throw new Error('სერვერმა შენახვა ვერ დაადასტურა. განაახლეთ პარამეტრები ხელახლა შენახვამდე.');
+      }
       const refreshed = await fetchInventoryReplenishmentSettings();
       if (!refreshed) throw new Error('პარამეტრები შენახულია, მაგრამ განახლებული მონაცემების ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი.');
       setReplenishmentDrafts(current => {
