@@ -1164,6 +1164,8 @@ export default function AdminDashboardPro({
   const [inventoryMovementProductFilter, setInventoryMovementProductFilter] = useState('');
   const inventoryMovementRequestRef = useRef(0);
   const [replenishmentSettings, setReplenishmentSettings] = useState([]);
+  // Prevent writes before server revisions have been loaded and validated.
+  const [replenishmentSettingsReady, setReplenishmentSettingsReady] = useState(false);
   const [replenishmentLoading, setReplenishmentLoading] = useState(false);
   const [replenishmentError, setReplenishmentError] = useState('');
   const [replenishmentQuery, setReplenishmentQuery] = useState('');
@@ -1337,6 +1339,7 @@ export default function AdminDashboardPro({
       if (requestId !== replenishmentRequestRef.current || !isCurrentAdminSession(requestSessionVersion)) return false;
       const settings = validateReplenishmentSettingsResponse(result);
       setReplenishmentSettings(settings);
+      setReplenishmentSettingsReady(true);
       return true;
     } catch (error) {
       if (requestId !== replenishmentRequestRef.current || !isCurrentAdminSession(requestSessionVersion)) return false;
@@ -1349,7 +1352,7 @@ export default function AdminDashboardPro({
 
   const recoverInventoryReplenishmentConflict = async positionKey => {
     const requestSessionVersion = adminSessionVersion.current;
-    if (!hasProductsPermission || replenishmentLoading || replenishmentSavingRef.current || replenishmentRecoveryRef.current || !isCurrentAdminSession(requestSessionVersion)) return;
+    if (!hasProductsPermission || !replenishmentSettingsReady || replenishmentLoading || replenishmentSavingRef.current || replenishmentRecoveryRef.current || !isCurrentAdminSession(requestSessionVersion)) return;
     replenishmentRecoveryRef.current = true;
     try {
       // Discard a stale local draft only after the authoritative list loaded.
@@ -1371,7 +1374,7 @@ export default function AdminDashboardPro({
 
   const saveInventoryReplenishmentSetting = async (position) => {
     const requestSessionVersion = adminSessionVersion.current;
-    if (!hasProductsPermission || replenishmentSavingRef.current || replenishmentSavingKey || replenishmentLoading || !isCurrentAdminSession(requestSessionVersion)) return;
+    if (!hasProductsPermission || replenishmentSavingRef.current || replenishmentSavingKey || replenishmentLoading || !replenishmentSettingsReady || !isCurrentAdminSession(requestSessionVersion)) return;
     const draft = replenishmentDrafts[position.key] || {};
     const expectedUpdatedAt = Object.prototype.hasOwnProperty.call(draft, 'expectedUpdatedAt') ? draft.expectedUpdatedAt : position.updatedAt;
     if (position.hasCustomSetting && !expectedUpdatedAt) {
@@ -1529,6 +1532,7 @@ export default function AdminDashboardPro({
     if (!hasProductsPermission) {
       replenishmentRequestRef.current += 1;
       setReplenishmentSettings([]);
+      setReplenishmentSettingsReady(false);
       setReplenishmentError('');
       setReplenishmentDrafts({});
       setReplenishmentConflictKeys({});
@@ -2264,6 +2268,7 @@ export default function AdminDashboardPro({
     setInventoryMovementCursor(null);
     setInventoryMovementHasMore(false);
     setReplenishmentSettings([]);
+    setReplenishmentSettingsReady(false);
     setReplenishmentLoading(false);
     setReplenishmentError('');
     setReplenishmentDrafts({});
@@ -5053,6 +5058,7 @@ export default function AdminDashboardPro({
             </div>
             {replenishmentError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs leading-5 text-rose-200">{replenishmentError}</div>}
             {replenishmentLoading && <p role="status" className="rounded-xl border border-slate-700 bg-slate-950/50 p-3 text-xs text-slate-400">შევსების პარამეტრები იტვირთება…</p>}
+            {!replenishmentSettingsReady && !replenishmentLoading && <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">სერვერის პარამეტრების ჩატვირთვა ჯერ არ დადასტურებულა. რედაქტირება დროებით შეზღუდულია — სცადეთ „განახლება“.</p>}
             <div className="space-y-3">
               {filteredReplenishmentPositions.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-emerald-500/25 bg-slate-950/40 p-8 text-center"><Truck className="mx-auto h-8 w-8 text-emerald-400" /><p className="mt-3 text-sm font-black text-white">შესაბამისი მარაგის პოზიცია ვერ მოიძებნა</p><p className="mt-1 text-xs text-slate-400">შეამოწმეთ ძიება ან დაამატეთ პროდუქტის მარაგი.</p></div>
@@ -5067,10 +5073,10 @@ export default function AdminDashboardPro({
                   <article key={position.key} className="admin-replenishment-row grid min-w-0 grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,.7fr))_auto] gap-2 sm:gap-3 rounded-2xl border border-slate-700/70 bg-slate-950/55 p-3 sm:p-4">
                     <div className="admin-replenishment-product col-span-2 min-w-0 xl:col-span-1"><strong className="block break-words text-sm font-black text-white">{position.productName}</strong><span className="mt-1 block break-words text-[10px] text-slate-400">{position.sku || position.category || 'პროდუქტი'}{position.variantName ? ' · ' + position.variantName : ' · ძირითადი მარაგი'}</span><span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black ${position.isOutOfStock ? 'bg-rose-500/15 text-rose-300' : !draftPreview.valid ? 'bg-rose-500/15 text-rose-200' : draftPreview.isLowStock ? 'bg-amber-500/15 text-amber-200' : 'bg-emerald-500/15 text-emerald-200'}`}>{position.isOutOfStock ? 'მარაგი ამოწურულია' : !draftPreview.valid ? 'გადაამოწმეთ პარამეტრები' : draftPreview.isLowStock ? 'შევსება საჭიროა' : 'მარაგი ნორმაშია'}</span></div>
                     <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400">არსებული მარაგი</label><strong className="mt-1 block text-lg font-black tabular-nums text-white">{position.stock}</strong></div>
-                    <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
-                    <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
+                    <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-threshold-${position.key}`}>დაბალი მარაგის ზღვარი</label><input id={`replenishment-threshold-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="0" max="100000" step="1" value={thresholdValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], threshold: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
+                    <div className="admin-replenishment-metric rounded-xl bg-slate-900/80 p-3"><label className="block text-[10px] text-slate-400" htmlFor={`replenishment-target-${position.key}`}>სამიზნე მარაგი</label><input id={`replenishment-target-${position.key}`} type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading} min="1" max="1000000" step="1" value={targetValue} onChange={event => setReplenishmentDrafts(current => ({ ...current, [position.key]: { ...current[position.key], target: event.target.value, expectedUpdatedAt: Object.prototype.hasOwnProperty.call(current[position.key] || {}, 'expectedUpdatedAt') ? current[position.key].expectedUpdatedAt : position.updatedAt } }))} className="mt-1 w-full min-w-0 rounded-lg border border-slate-700 disabled:opacity-60 bg-slate-950 px-2 py-2 text-sm font-bold text-white" /></div>
                     <div className="admin-replenishment-metric rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3"><label className="block text-[10px] text-slate-400">შესავსები რაოდენობა</label><strong className="mt-1 block text-lg font-black tabular-nums text-emerald-300">{draftPreview.valid ? draftPreview.suggestedQuantity : '—'}</strong></div>
-                    <div className="admin-replenishment-save col-span-2 flex flex-col gap-1 xl:col-span-1"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={Boolean(replenishmentSavingKey) || replenishmentLoading || !hasProductsPermission || hasConflict} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button>{(hasUnsavedChanges || hasConflict) && <div className="flex flex-wrap items-center gap-2">{hasConflict ? <span className="text-[10px] text-rose-300" role="alert">კონფლიქტი: სერვერის ვერსიის ჩატვირთვა გააუქმებს ამ პოზიციის ძველ ადგილობრივ ცვლილებებს</span> : <span className="text-[10px] text-amber-200" role="status">შეუნახავი ცვლილება</span>}{hasConflict ? <button type="button" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} onClick={() => void recoverInventoryReplenishmentConflict(position.key)} className="text-[10px] font-bold text-emerald-200 underline underline-offset-2 disabled:opacity-50">სერვერის ვერსიით ჩანაცვლება</button> : <button type="button" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} onClick={() => setReplenishmentDrafts(current => { const next = { ...current }; delete next[position.key]; return next; })} className="text-[10px] font-bold text-slate-300 underline underline-offset-2 disabled:opacity-50">ცვლილების გაუქმება</button>}</div>}</div>
+                    <div className="admin-replenishment-save col-span-2 flex flex-col gap-1 xl:col-span-1"><button type="button" onClick={() => void saveInventoryReplenishmentSetting(position)} disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading || !hasProductsPermission || hasConflict} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 py-3 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-50">{replenishmentSavingKey === position.key ? 'ინახება…' : 'შენახვა'}</button>{(hasUnsavedChanges || hasConflict) && <div className="flex flex-wrap items-center gap-2">{hasConflict ? <span className="text-[10px] text-rose-300" role="alert">კონფლიქტი: სერვერის ვერსიის ჩატვირთვა გააუქმებს ამ პოზიციის ძველ ადგილობრივ ცვლილებებს</span> : <span className="text-[10px] text-amber-200" role="status">შეუნახავი ცვლილება</span>}{hasConflict ? <button type="button" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} onClick={() => void recoverInventoryReplenishmentConflict(position.key)} className="text-[10px] font-bold text-emerald-200 underline underline-offset-2 disabled:opacity-50">სერვერის ვერსიით ჩანაცვლება</button> : <button type="button" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading} onClick={() => setReplenishmentDrafts(current => { const next = { ...current }; delete next[position.key]; return next; })} className="text-[10px] font-bold text-slate-300 underline underline-offset-2 disabled:opacity-50">ცვლილების გაუქმება</button>}</div>}</div>
                   </article>
                 );
               })}

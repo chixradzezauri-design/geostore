@@ -111,7 +111,7 @@ test('replenishment saves preserve acknowledged revisions when full refresh fail
   assert.match(save, /setReplenishmentSettings\(current => \[/);
   assert.match(save, /savedSetting\s*\]\);/);
   assert.ok(save.indexOf('setReplenishmentSettings(current => [') < save.indexOf('setReplenishmentDrafts(current =>'));
-  assert.match(dashboard, /disabled=\{Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission \|\| hasConflict\}/);
+  assert.match(dashboard, /disabled=\{!replenishmentSettingsReady \|\| Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission \|\| hasConflict\}/);
 });
 
 test('replenishment save rejects blank values and locks inputs during save', () => {
@@ -122,7 +122,7 @@ test('replenishment save rejects blank values and locks inputs during save', () 
   assert.match(save, /String\(rawTarget\)\.trim\(\) === ''/);
   const cardStart = dashboard.indexOf('<article key={position.key} className="admin-replenishment-row');
   const card = dashboard.slice(cardStart, dashboard.indexOf('</article>', cardStart));
-  assert.equal(card.split('type="number" disabled={Boolean(replenishmentSavingKey) || replenishmentLoading}').length - 1, 2);
+  assert.equal(card.split('type="number" disabled={!replenishmentSettingsReady || Boolean(replenishmentSavingKey) || replenishmentLoading}').length - 1, 2);
 });
 
 test('replenishment recommendation previews the edited threshold and target', () => {
@@ -280,4 +280,26 @@ test('replenishment conflict recovery never overwrites a new admin session', () 
   assert.match(recovery, /const requestSessionVersion = adminSessionVersion\.current/);
   assert.match(recovery, /await fetchInventoryReplenishmentSettings\(\) !== true \|\| !isCurrentAdminSession\(requestSessionVersion\)/);
   assert.match(recovery, /if \(isCurrentAdminSession\(requestSessionVersion\)\) replenishmentRecoveryRef\.current = false/);
+});
+
+
+test('replenishment editing stays disabled before a validated server response', () => {
+  assert.match(dashboard, /const \[replenishmentSettingsReady, setReplenishmentSettingsReady\] = useState\(false\)/);
+  const loadStart = dashboard.indexOf('const fetchInventoryReplenishmentSettings = async');
+  const recoveryStart = dashboard.indexOf('const recoverInventoryReplenishmentConflict = async', loadStart);
+  const saveStart = dashboard.indexOf('const saveInventoryReplenishmentSetting = async', recoveryStart);
+  const saveEnd = dashboard.indexOf('const fetchInventoryMovements = async', saveStart);
+  const load = dashboard.slice(loadStart, recoveryStart);
+  const save = dashboard.slice(saveStart, saveEnd);
+  const recovery = dashboard.slice(recoveryStart, saveStart);
+  assert.ok(load.indexOf('validateReplenishmentSettingsResponse(result)') < load.indexOf('setReplenishmentSettingsReady(true)'));
+  assert.match(save, /replenishmentLoading \|\| !replenishmentSettingsReady \|\| !isCurrentAdminSession/);
+  assert.match(recovery, /!hasProductsPermission \|\| !replenishmentSettingsReady/);
+  assert.match(dashboard, /!replenishmentSettingsReady && !replenishmentLoading && <p role="status"/);
+  assert.match(dashboard, /სერვერის პარამეტრების ჩატვირთვა ჯერ არ დადასტურებულა/);
+  const logoutStart = dashboard.indexOf('adminSessionActiveRef.current = Boolean(adminLoggedIn)');
+  const logoutEnd = dashboard.indexOf('}, [adminLoggedIn]);', logoutStart);
+  assert.match(dashboard.slice(logoutStart, logoutEnd), /setReplenishmentSettingsReady\(false\)/);
+  const permissionReset = dashboard.indexOf('replenishmentRequestRef.current += 1;', saveEnd);
+  assert.match(dashboard.slice(permissionReset, permissionReset + 240), /setReplenishmentSettingsReady\(false\)/);
 });
