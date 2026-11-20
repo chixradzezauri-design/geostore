@@ -40,3 +40,12 @@ test('publishing blocks unsaved local visual edits before confirmation', () => {
   assert.match(publish, /ჯერ შეინახეთ მონახაზი და შემდეგ გამოაქვეყნეთ/);
   assert.ok(publish.indexOf('if (localDesignDirtyRef.current)') < publish.indexOf('window.confirm('));
 });
+
+test('failed draft save keeps the unsaved guard and shows a retry message', () => {
+  const save = editor.split('const saveDraft = async () =>')[1]?.split('const publish = async () =>')[0] || '';
+  assert.match(save, /try \{/);
+  assert.match(save, /saved = await onSaveStorefrontDraft\(snapshot\)/);
+  assert.match(save, /catch \(error\)/);
+  assert.match(save, /ცვლილებები შეუნახავია; სცადეთ ხელახლა/);
+  assert.ok(save.indexOf('catch (error)') < save.indexOf('localDesignDirtyRef.current = false'));
+});
