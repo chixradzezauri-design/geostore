@@ -588,3 +588,64 @@
     font-size: max(16px, var(--admin-vd-inputFontSize-active, 16px)) !important;
   }
 }
+
+
+/* Stage 8 — accessible support tickets.
+ * Scoped presentation: no ticket mutation, reply transport or permissions change. */
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel :is(
+  .admin-support-ticket,
+  .admin-support-ticket-header,
+  .admin-support-ticket-meta,
+  .admin-support-ticket-controls,
+  .admin-support-status-actions,
+  .admin-support-reply-form
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel :is(
+  .admin-support-ticket-message,
+  .admin-support-ticket-reply,
+  .admin-support-ticket-meta
+) {
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls > button,
+.admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > button {
+  min-height: 44px !important;
+  min-block-size: 44px !important;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-ticket-controls {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-status-actions > button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > input {
+    min-width: 0;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .admin-dashboard-pro.admin-dashboard-shell .admin-support-panel .admin-support-reply-form > button {
+    white-space: nowrap;
+  }
+}
