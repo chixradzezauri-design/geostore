@@ -11,6 +11,9 @@ const productCompare = readFileSync(new URL('../src/components/ProductCompareMod
 const wardrobe = readFileSync(new URL('../src/components/AIDigitalWardrobe.jsx', import.meta.url), 'utf8');
 const aiAssistant = readFileSync(new URL('../src/components/AiAssistantModal.jsx', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
+const visualEditor = readFileSync(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+const designSource = readFileSync(new URL('../src/utils/storefrontVisualDesign.js', import.meta.url), 'utf8');
 
 test('storefront navigation styles do not leak into the AI assistant header', () => {
   assert.doesNotMatch(css, /\.geostore-fashion-store\s+header\b/);
@@ -102,8 +105,15 @@ test('mobile navigation retains login and registration inside the hamburger menu
   assert.match(authRule, /display:grid!important;/);
 });
 
+test('visual editor preview passes the merged responsive draft design to live storefront components', () => {
+  assert.match(visualEditor, /siteSettings=\{\{ \.\.\.\(siteSettings \|\| \{\}\), visualDesign: previewDesign \}\}/);
+  assert.match(visualEditor, /visualDesign=\{previewDesign\}/);
+  assert.match(visualEditor, /elementStyles: Object\.fromEntries\([\s\S]*?activeResponsive\.elementStyles/);
+});
+
 test('mobile footer policy links use a compact responsive layout', () => {
-  assert.match(app, /className="geostore-footer-links/);
+  assert.match(app, /<StorefrontFooter/);
+  assert.match(footer, /className="geostore-footer-links/);
   const footerStyles = css.slice(css.lastIndexOf('GEOSTORE — compact footer and floating assistance dock'));
   assert.match(footerStyles, /\.geostore-footer-links\{[\s\S]*?display:grid!important;/);
   assert.match(footerStyles, /grid-template-columns:1fr!important/);
@@ -188,4 +198,133 @@ test('stage 43 repairs the mobile size-selector header and compacts the single-i
   assert.match(stage43, /\.gs-size-selector>div:first-child\{[\s\S]*?flex-direction:row!important;/);
   assert.match(stage43, /\.gs-flash-sale-card:only-child\{[\s\S]*?grid-template-columns:minmax\(0,112px\) minmax\(0,1fr\)!important;/);
   assert.match(stage43, /\.gs-product-dialog\{[^}]*max-height:min\(92dvh,900px\)!important;/);
+});
+
+
+test('visual editor uses the real Header and Footer components and provides a navigator for all editable targets', () => {
+  assert.match(visualEditor, /import Header from '\.\/Header';/);
+  assert.match(visualEditor, /import StorefrontFooter from '\.\/StorefrontFooter';/);
+  assert.match(visualEditor, /<Header[\s\S]*?setActiveTab=\{NOOP\}[\s\S]*?setIsAuthOpen=\{NOOP\}/);
+  assert.match(visualEditor, /<StorefrontFooter[\s\S]*?setActiveTab=\{NOOP\}[\s\S]*?setIsTermsOpen=\{NOOP\}/);
+  assert.match(visualEditor, /const VISUAL_EDITOR_TREE = \[/);
+  assert.match(visualEditor, /const selectElementFromTree = targetId =>/);
+  assert.match(visualEditor, /კომპონენტების იერარქია/);
+  assert.match(visualEditor, /metadata\.label/);
+});
+
+
+test('Header and Footer copy can be edited independently without replacing locale fallbacks or navigation actions', () => {
+  assert.match(visualEditor, /'header\.caption': \{[^}]*settingKey: 'headerCaptionText'/);
+  assert.match(visualEditor, /'header\.search\.input': \{[^}]*settingKey: 'headerSearchPlaceholder'/);
+  assert.match(visualEditor, /'footer\.termsLink': \{[^}]*settingKey: 'footerTermsText'/);
+  assert.match(visualEditor, /'footer\.privacyLink': \{[^}]*settingKey: 'footerPrivacyText'/);
+  assert.match(visualEditor, /'footer\.warrantyLink': \{[^}]*settingKey: 'footerWarrantyText'/);
+  assert.match(visualEditor, /'footer\.copyright': \{[^}]*settingKey: 'footerCopyrightText'/);
+  assert.match(header, /siteSettings\?\.headerCaptionText \|\| 'CURATED FOR YOU'/);
+  assert.match(header, /siteSettings\?\.headerSearchPlaceholder \|\| t\.searchPlaceholder/);
+  assert.match(footer, /siteSettings\?\.footerTermsText \|\| t\.terms/);
+  assert.match(footer, /siteSettings\?\.footerPrivacyText \|\| t\.privacy/);
+  assert.match(footer, /siteSettings\?\.footerWarrantyText \|\| t\.warranty/);
+  assert.match(footer, /siteSettings\?\.footerCopyrightText \|\|/);
+  assert.match(footer, /setIsTermsOpen\?\.\(true\)/);
+  assert.match(footer, /setActiveTab\?\.\('privacy'\)/);
+  assert.match(footer, /setIsWarrantyOpen\?\.\(true\)/);
+});
+
+test('Header and Footer individual link targets are registered for responsive visual styling', () => {
+  assert.match(visualEditor, /'footer\.termsLink': \{/);
+  assert.match(visualEditor, /'footer\.privacyLink': \{/);
+  assert.match(visualEditor, /'footer\.warrantyLink': \{/);
+  assert.match(designSource, /'footer\.termsLink', 'footer\.privacyLink', 'footer\.warrantyLink'/);
+});
+
+
+test('visual editor element geometry controls are normalized and rendered safely', async () => {
+  const { normalizeStorefrontVisualDesign, buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'header.caption': {
+        paddingX: 18, paddingY: 12, marginTop: 14, marginBottom: 22,
+        minWidth: 120, maxWidth: 480, fontStyle: 'italic', textDecoration: 'underline'
+      }
+    },
+    responsive: {
+      mobile: {
+        elementStyles: {
+          'header.caption': { paddingX: 8, marginBottom: 6, maxWidth: 260, textDecoration: 'line-through' }
+        }
+      }
+    }
+  });
+  const desktop = buildStorefrontElementStyle(design, 'header.caption', 'desktop');
+  const mobile = buildStorefrontElementStyle(design, 'header.caption', 'mobile');
+  assert.equal(desktop.paddingLeft, '18px');
+  assert.equal(desktop.paddingRight, '18px');
+  assert.equal(desktop.paddingTop, '12px');
+  assert.equal(desktop.marginTop, '14px');
+  assert.equal(desktop.marginBottom, '22px');
+  assert.equal(desktop.minWidth, '120px');
+  assert.equal(desktop.maxWidth, '480px');
+  assert.equal(desktop.fontStyle, 'italic');
+  assert.equal(desktop.textDecoration, 'underline');
+  assert.equal(mobile.paddingLeft, '8px');
+  assert.equal(mobile.paddingTop, '12px');
+  assert.equal(mobile.marginBottom, '6px');
+  assert.equal(mobile.maxWidth, '260px');
+  assert.equal(mobile.textDecoration, 'line-through');
+});
+
+test('element-level responsive styles automatically follow the real device viewport', async () => {
+  const { buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
+  const design = {
+    elementStyles: { 'header.caption': { paddingX: 18 } },
+    responsive: {
+      tablet: { elementStyles: { 'header.caption': { paddingX: 12 } } },
+      mobile: { elementStyles: { 'header.caption': { paddingX: 8 } } }
+    }
+  };
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  try {
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 390 } });
+    assert.equal(buildStorefrontElementStyle(design, 'header.caption').paddingLeft, '8px');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 900 } });
+    assert.equal(buildStorefrontElementStyle(design, 'header.caption').paddingLeft, '12px');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { innerWidth: 1280 } });
+    assert.equal(buildStorefrontElementStyle(design, 'header.caption').paddingLeft, '18px');
+  } finally {
+    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete globalThis.window;
+  }
+});
+
+test('visual editor element geometry values are clamped and unsupported text styles are ignored', async () => {
+  const { normalizeStorefrontVisualDesign, buildStorefrontElementStyle } = await import('../src/utils/storefrontVisualDesign.js');
+  const design = normalizeStorefrontVisualDesign({
+    elementStyles: {
+      'footer.copyright': {
+        paddingX: 999, marginTop: -20, marginBottom: 999,
+        minWidth: 9999, maxWidth: 9999, fontStyle: 'oblique', textDecoration: 'blink'
+      }
+    }
+  });
+  const style = buildStorefrontElementStyle(design, 'footer.copyright');
+  assert.equal(style.paddingLeft, '64px');
+  assert.equal(style.marginTop, '0px');
+  assert.equal(style.marginBottom, '120px');
+  assert.equal(style.minWidth, '800px');
+  assert.equal(style.maxWidth, '1200px');
+  assert.equal(style.fontStyle, undefined);
+  assert.equal(style.textDecoration, undefined);
+});
+
+test('storefront visual editor navigator lists only selectable real DOM targets', () => {
+  const editor = readFileSync(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const header = readFileSync(new URL('../src/components/Header.jsx', import.meta.url), 'utf8');
+  const store = readFileSync(new URL('../src/components/StoreView.jsx', import.meta.url), 'utf8');
+  const footer = readFileSync(new URL('../src/components/StorefrontFooter.jsx', import.meta.url), 'utf8');
+  const targetBlock = editor.match(/const VISUAL_EDITOR_TARGETS = \{([\s\S]*?)\n\};/);
+  assert.ok(targetBlock, 'visual editor target registry exists');
+  const registered = [...targetBlock[1].matchAll(/^\s*'([^']+)'\s*:/gm)].map(match => match[1]);
+  const actual = [...new Set([...([header, store, footer].join('\n')).matchAll(/data-visual-editor-target=[\"']([^\"']+)[\"']/g)].map(match => match[1]))];
+  assert.deepEqual(registered.sort(), actual.sort());
 });

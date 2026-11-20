@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { validateImageFile } from '../utils/imageSafety';
 import { getPaginationItems } from '../utils/pagination.js';
+import { buildStorefrontElementStyle, normalizeStorefrontCustomSections } from '../utils/storefrontVisualDesign.js';
 import { isShoesProductCategory, supportsSizeColorInventoryCategory } from '../utils/productCategories.js';
 import { getAvailableProductColors, getAvailableProductSizes, hasProductVariantOptions, getCustomProductVariants, getCustomProductVariant, getProductAvailableStock, getProductStartingPrice, hasCustomProductVariants, hasSizeColorInventory, getProductSizeColorVariant, getAvailableSizeColorSizes, getAvailableSizeColorColors, getFirstAvailableSizeColorVariant } from '../utils/productVariants.js';
 import { getActiveFlashSaleProducts, getEarliestFlashSaleEnd, getFlashSaleCountdown } from '../utils/flashSaleTime.js';
@@ -11,9 +12,35 @@ import {
   Camera as CameraIcon, Tv, Speaker, Shirt, Briefcase, Gem, UserRound, SlidersHorizontal, ArrowUpDown, Calculator, Scale, MessageSquare, Timer, Ruler, Image as ImageIcon, Gift, PackageCheck, FileText, ShieldAlert, Compass, Footprints, ChevronDown, FolderTree, CornerDownRight 
 } from 'lucide-react';
 
+
+const buildCustomSectionResponsiveCss = section => {
+  const makeRule = viewport => {
+    const value = section.responsive?.[viewport] || {};
+    const declarations = [];
+    const colors = { backgroundColor: 'background-color', textColor: 'color' };
+    Object.entries(colors).forEach(([key, property]) => {
+      if (value[key]) declarations.push(property + ':' + value[key] + ' !important;');
+    });
+    const numeric = {
+      padding: 'padding', maxWidth: 'max-width', marginTop: 'margin-top',
+      marginBottom: 'margin-bottom', borderRadius: 'border-radius', minHeight: 'min-height'
+    };
+    Object.entries(numeric).forEach(([key, property]) => {
+      if (value[key] != null) declarations.push(property + ':' + value[key] + 'px !important;');
+    });
+    if (value.align) declarations.push('text-align:' + value.align + ' !important;');
+    return declarations.length ? '[data-gs-custom-section="' + section.id + '"]{' + declarations.join('') + '}' : '';
+  };
+  const tablet = makeRule('tablet');
+  const mobile = makeRule('mobile');
+  return (tablet ? '@media (min-width:641px) and (max-width:1023px){' + tablet + '}' : '') +
+    (mobile ? '@media (max-width:640px){' + mobile + '}' : '');
+};
+
 export default function StoreView({
   currentLang = 'ka',
   siteSettings,
+  visualEditorViewport = null,
   banners = [],
   categories = [],
   selectedCategory,
@@ -24,7 +51,8 @@ export default function StoreView({
   comparisonList = [],
   toggleComparison,
   addToCart,
-  formatPrice
+  formatPrice,
+  onProductOrderChange
 }) {
   // პროდუქტების ერთადერთი წყარო App.jsx-ია — აქ აღარ იგზავნება მეორე, დამოუკიდებელი Supabase მოთხოვნა.
   const activeProducts = initialFilteredProducts || [];
@@ -33,6 +61,9 @@ export default function StoreView({
     ka: { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'ჭკვიანი ზომის შერჩევა', styleKicker: 'შეარჩიე შენი სტილი', heroTitle: 'შენი სტილი. შენი არჩევანი.', heroSubtitle: 'აღმოაჩინე ტანსაცმლის, ფეხსაცმლისა და აქსესუარების შერჩეული კოლექცია.', productsOnDisplay: 'პროდუქტი ვიტრინაზე', addToCartShort: 'კალათაში', viewCollection: 'კოლექციის ნახვა', limitedOffer: 'დროში შეზღუდული შეთავაზება', hurryDiscount: 'იჩქარეთ, ფასდაკლება იწურება!', hours: 'საათი', minutes: 'წუთი', seconds: 'წამი', discoverCollections: 'აღმოაჩინე კოლექციები', collectionIntro: 'შერჩეული მიმართულებები — იპოვე შენი შემდეგი საყვარელი სტილი', navigation: 'ნავიგაცია:', publishReview: 'შეფასების და ფოტოს გამოქვეყნება', price: 'ფასი:', clear: 'გასუფთავება', noFilterResults: 'მითითებული ფილტრებით პროდუქტები ვერ მოიძებნა.', wishlistTitle: 'სურვილების სიაში დამატება', compareTitle: 'შედარებაში დამატება', discount: 'ფასდაკლება', viewDetails: 'დეტალურად ნახვა', productDetails: 'პროდუქტის დეტალური ხედი', vendor: 'მომწოდებელი:', variant: 'აირჩიეთ ინდივიდუალური ვარიანტი:', material: 'მასალა / შემადგენლობა', durability: 'მდგრადობა / მახასიათებელი', giftWrap: 'სასაჩუქრე პრემიუმ შეფუთვა', giftWrapInfo: 'ყუთი, ბაფთა და ბარათი (+5 ₾)', giftMessage: 'სასაჩუქრე ბარათის ტექსტი (უფასო):', giftPlaceholder: 'ჩაწერეთ თქვენი სურვილი...', vipWarranty: 'VIP დაზღვევა და გაფართოებული გარანტია (+1 წელი)', warrantyInfo: 'სრული დაცვა დაზიანებისგან (+15 ₾)', uploadPhoto: 'ატვირთეთ ფოტო:', photoSelected: 'ფოტო არჩეულია', noReviews: 'ამ პროდუქტზე ჯერ არ არის შეფასებები.', enterMeasurements: 'მიეთითეთ თქვენი პარამეტრები', height: 'თქვენი სიმაღლე (სმ):', weight: 'თქვენი წონა (კგ):', heightExample: 'მაგ: 178', weightExample: 'მაგ: 75', calculateSize: 'ზომის გამოთვლა და შერჩევა', sizeGuide: 'ზომების გიდი', sizeChart: 'ზომების ცხრილი', clothingSizes: 'ტანსაცმლის ზომები', chest: 'გულმკერდი', waist: 'წელი', understand: 'გასაგებია', subcategoryHint: 'აირჩიეთ სუბკატეგორია ▾', categoryHint: 'კატეგორიის ნახვა', subCount: 'სუბ' },
     en: { allCategories: 'All categories', fullCollection: 'Full collection', subcategories: 'Subcategories for:', close: 'Close', allItems: 'All', sort: 'Sort:', defaultSort: 'Default', priceLow: 'Price: low to high ⬆', priceHigh: 'Price: high to low ⬇', nameSort: 'Name (A-Z)', chooseSize: 'Choose size', viewAdd: 'View & add', addToCart: 'Add to cart', sizePrompt: 'Choose a size (in-stock sizes only):', recommendedSize: 'Recommended size based on your measurements:', color: 'Color:', description: 'Product description:', defaultDescription: 'Premium product of excellent quality.', inStock: 'In stock:', available: 'Available', outOfStock: 'Out of stock', deliveryFit: '(fit can be checked on delivery)', reviews: 'Customer photo reviews', leaveReview: 'Leave a review and upload a photo:', rating: 'Rating:', yourName: 'Your name *', reviewPlaceholder: 'How did you like the product?...', minPrice: 'Min', maxPrice: 'Max', smartSize: 'Smart size selection', styleKicker: 'Find your style', heroTitle: 'Your style. Your choice.', heroSubtitle: 'Discover a curated collection of clothing, footwear and accessories.', productsOnDisplay: 'products in store', addToCartShort: 'Add to cart', viewCollection: 'Explore collection', limitedOffer: 'Limited-time offer', hurryDiscount: 'Hurry, the discount is ending!', hours: 'Hours', minutes: 'Minutes', seconds: 'Seconds', discoverCollections: 'Discover collections', collectionIntro: 'Curated collections — find your next favourite style', navigation: 'Navigation:', publishReview: 'Publish review and photo', price: 'Price:', clear: 'Clear', noFilterResults: 'No products match the selected filters.', wishlistTitle: 'Add to wishlist', compareTitle: 'Add to comparison', discount: 'Sale', viewDetails: 'View details', productDetails: 'Product details', vendor: 'Vendor:', variant: 'Choose a product option:', material: 'Material / composition', durability: 'Durability / features', giftWrap: 'Premium gift wrapping', giftWrapInfo: 'Box, ribbon and card (+5 ₾)', giftMessage: 'Gift card message (free):', giftPlaceholder: 'Write your message...', vipWarranty: 'VIP protection and extended warranty (+1 year)', warrantyInfo: 'Protection against damage (+15 ₾)', uploadPhoto: 'Upload a photo:', photoSelected: 'Photo selected', noReviews: 'There are no reviews for this product yet.', enterMeasurements: 'Enter your measurements', height: 'Your height (cm):', weight: 'Your weight (kg):', heightExample: 'e.g. 178', weightExample: 'e.g. 75', calculateSize: 'Calculate & select size', sizeGuide: 'Size guide', sizeChart: 'Size chart', clothingSizes: 'Clothing sizes', chest: 'Chest', waist: 'Waist', understand: 'Got it', subcategoryHint: 'Choose a subcategory ▾', categoryHint: 'View category', subCount: 'sub' }, ru: { allCategories: 'Все категории', fullCollection: 'Полная коллекция', subcategories: 'Подкатегории:', close: 'Закрыть', allItems: 'Все', sort: 'Сортировка:', defaultSort: 'По умолчанию', priceLow: 'Цена: по возрастанию ⬆', priceHigh: 'Цена: по убыванию ⬇', nameSort: 'Название (А-Я)', chooseSize: 'Выбрать размер', viewAdd: 'Посмотреть и добавить', addToCart: 'Добавить в корзину', sizePrompt: 'Выберите размер (только в наличии):', recommendedSize: 'Рекомендуемый размер по вашим параметрам:', color: 'Цвет:', description: 'Описание товара:', defaultDescription: 'Премиальный товар отличного качества.', inStock: 'В наличии:', available: 'Доступен', outOfStock: 'Нет в наличии', deliveryFit: '(можно проверить при доставке)', reviews: 'Фотоотзывы покупателей', leaveReview: 'Оставьте отзыв и загрузите фото:', rating: 'Оценка:', yourName: 'Ваше имя *', reviewPlaceholder: 'Как вам понравился товар?...', minPrice: 'Мин', maxPrice: 'Макс', smartSize: 'Подбор размера', styleKicker: 'Найди свой стиль', heroTitle: 'Твой стиль. Твой выбор.', heroSubtitle: 'Откройте подборку одежды, обуви и аксессуаров.', productsOnDisplay: 'товаров в магазине', addToCartShort: 'В корзину', viewCollection: 'Смотреть коллекцию', limitedOffer: 'Предложение ограничено по времени', hurryDiscount: 'Поторопитесь, скидка скоро закончится!', hours: 'Часы', minutes: 'Минуты', seconds: 'Секунды', discoverCollections: 'Откройте коллекции', collectionIntro: 'Подборка направлений — найдите свой новый любимый стиль', navigation: 'Навигация:', publishReview: 'Опубликовать отзыв и фото', price: 'Цена:', clear: 'Очистить', noFilterResults: 'По выбранным фильтрам товары не найдены.', wishlistTitle: 'Добавить в избранное', compareTitle: 'Добавить к сравнению', discount: 'Скидка', viewDetails: 'Подробнее', productDetails: 'Информация о товаре', vendor: 'Поставщик:', variant: 'Выберите вариант товара:', material: 'Материал / состав', durability: 'Износостойкость / характеристики', giftWrap: 'Премиальная подарочная упаковка', giftWrapInfo: 'Коробка, лента и открытка (+5 ₾)', giftMessage: 'Текст подарочной открытки (бесплатно):', giftPlaceholder: 'Напишите пожелание...', vipWarranty: 'VIP-защита и расширенная гарантия (+1 год)', warrantyInfo: 'Полная защита от повреждений (+15 ₾)', uploadPhoto: 'Загрузить фото:', photoSelected: 'Фото выбрано', noReviews: 'Пока нет отзывов об этом товаре.', enterMeasurements: 'Укажите ваши параметры', height: 'Ваш рост (см):', weight: 'Ваш вес (кг):', heightExample: 'например, 178', weightExample: 'например, 75', calculateSize: 'Рассчитать и выбрать размер', sizeGuide: 'Таблица размеров', sizeChart: 'Таблица размеров', clothingSizes: 'Размеры одежды', chest: 'Грудь', waist: 'Талия', understand: 'Понятно', subcategoryHint: 'Выберите подкатегорию ▾', categoryHint: 'Смотреть категорию', subCount: 'подкат.' }
   })[currentLang] || { allCategories: 'ყველა კატეგორია', fullCollection: 'სრული კოლექცია', subcategories: 'სუბკატეგორიები კატეგორიისთვის:', close: 'დახურვა', allItems: 'ყველა', sort: 'დალაგება:', defaultSort: 'ნაგულისხმევი', priceLow: 'ფასით: დაბლიდან მაღლა ⬆', priceHigh: 'ფასით: მაღლიდან დაბლა ⬇', nameSort: 'დასახელებით (A-Z)', chooseSize: 'ზომის არჩევა', viewAdd: 'ნახვა და დამატება', addToCart: 'კალათაში დამატება', sizePrompt: 'აირჩიეთ ზომა (მხოლოდ მარაგშია):', recommendedSize: 'რეკომენდებული ზომა თქვენი პარამეტრებით:', color: 'ფერი:', description: 'პროდუქტის აღწერა:', defaultDescription: 'უმაღლესი ხარისხის პრემიუმ პროდუქცია.', inStock: 'მარაგშია:', available: 'ხელმისაწვდომია', outOfStock: 'მარაგში არ არის', deliveryFit: '(მორგება მიტანისას)', reviews: 'მომხმარებელთა ფოტო-შეფასებები', leaveReview: 'დატოვეთ შეფასება და ატვირთეთ ფოტო:', rating: 'შეფასება:', yourName: 'თქვენი სახელი *', reviewPlaceholder: 'როგორ მოგეწონათ პროდუქტი?...', minPrice: 'Min', maxPrice: 'Max' };
+
+  const visualCopy = siteSettings?.visualDesign?.copy || {};
+  const customSections = normalizeStorefrontCustomSections(siteSettings?.visualDesign?.customSections);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
@@ -256,6 +287,15 @@ export default function StoreView({
       });
     }
 
+    if (sortBy === 'default' && Array.isArray(siteSettings?.visualDesign?.productOrder) && siteSettings.visualDesign.productOrder.length) {
+      const orderIndex = new Map(siteSettings.visualDesign.productOrder.map((id, index) => [String(id), index]));
+      result.sort((a, b) => {
+        const aIndex = orderIndex.has(String(a.id)) ? orderIndex.get(String(a.id)) : Number.MAX_SAFE_INTEGER;
+        const bIndex = orderIndex.has(String(b.id)) ? orderIndex.get(String(b.id)) : Number.MAX_SAFE_INTEGER;
+        return aIndex - bIndex;
+      });
+    }
+
     if (sortBy === 'price-asc' || sortBy === 'price-desc') {
       const direction = sortBy === 'price-asc' ? 1 : -1;
       result.sort((a, b) => {
@@ -272,7 +312,7 @@ export default function StoreView({
     }
 
     return result;
-  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang]);
+  }, [activeProducts, selectedCategory, selectedSubCategory, minPrice, maxPrice, sortBy, mainCategories, hasInvalidPriceRange, currentLang, siteSettings?.visualDesign?.productOrder]);
 
   const totalProductPages = Math.max(1, Math.ceil(processedProducts.length / PRODUCTS_PER_PAGE));
   const safeProductPage = Math.min(Math.max(1, productPage), totalProductPages);
@@ -281,6 +321,21 @@ export default function StoreView({
     safeProductPage * PRODUCTS_PER_PAGE
   );
   const productPaginationItems = getPaginationItems(safeProductPage, totalProductPages);
+
+  const handleProductReorder = (sourceId, targetId) => {
+    if (typeof onProductOrderChange !== 'function' || sortBy !== 'default' || !sourceId || !targetId || sourceId === targetId) return;
+    const ids = activeProducts.map(product => String(product.id)).filter(Boolean);
+    const current = Array.isArray(siteSettings?.visualDesign?.productOrder)
+      ? [...siteSettings.visualDesign.productOrder]
+      : ids;
+    ids.forEach(id => { if (!current.includes(id)) current.push(id); });
+    const from = current.indexOf(String(sourceId));
+    const to = current.indexOf(String(targetId));
+    if (from < 0 || to < 0) return;
+    current.splice(from, 1);
+    current.splice(to, 0, String(sourceId));
+    onProductOrderChange(current);
+  };
   const paginationLabels = currentLang === 'en'
     ? { showing: 'Showing', of: 'of', products: 'products', previous: 'Previous', next: 'Next', aria: 'Product pages' }
     : currentLang === 'ru'
@@ -349,27 +404,52 @@ export default function StoreView({
         ? (selectedCustomVariant?.stock ?? 0)
         : Number(selectedProduct.stock ?? 0);
 
+  const renderCustomSections = placement => customSections.filter(section => section.visible && (section.placement || 'after-products') === placement).map(section => {
+    const activeSectionStyle = visualEditorViewport && visualEditorViewport !== 'desktop'
+      ? { ...section, ...(section.responsive?.[visualEditorViewport] || {}) }
+      : section;
+    const responsiveCss = !visualEditorViewport ? buildCustomSectionResponsiveCss(section) : '';
+    return (
+    <section key={section.id} data-gs-custom-section={section.id} aria-label={section.title || 'Custom storefront section'} className="gs-custom-storefront-section mx-auto w-full max-w-[var(--gs-content-width,1440px)] overflow-hidden" style={{ backgroundColor: activeSectionStyle.backgroundColor, color: activeSectionStyle.textColor, padding: activeSectionStyle.padding + 'px', textAlign: activeSectionStyle.align, maxWidth: activeSectionStyle.maxWidth + 'px', marginTop: activeSectionStyle.marginTop + 'px', marginBottom: activeSectionStyle.marginBottom + 'px', borderRadius: activeSectionStyle.borderRadius + 'px', minHeight: activeSectionStyle.minHeight ? activeSectionStyle.minHeight + 'px' : undefined }}>
+      {responsiveCss ? <style>{responsiveCss}</style> : null}
+      <div className="mx-auto flex w-full max-w-full flex-col gap-4">
+        {section.blocks.map(block => {
+          if (block.type === 'heading') return <h2 key={block.id} className="text-xl sm:text-2xl font-bold leading-tight">{block.text}</h2>;
+          if (block.type === 'text') return <p key={block.id} className="whitespace-pre-line text-sm sm:text-base leading-relaxed">{block.text}</p>;
+          if (block.type === 'image') return block.imageUrl ? <img key={block.id} src={block.imageUrl} alt={block.alt} loading="lazy" decoding="async" className="h-auto max-h-[560px] w-full rounded-xl object-cover" /> : null;
+          if (block.type === 'video') return block.videoUrl ? <div key={block.id} className="aspect-video w-full overflow-hidden rounded-xl"><iframe src={block.videoUrl} title={section.title || 'GEOSTORE video'} loading="lazy" className="h-full w-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></div> : null;
+          if (block.type === 'button') return block.url && block.label ? <a key={block.id} href={block.url} target={block.url.startsWith('http') ? '_blank' : undefined} rel={block.url.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-11 items-center justify-center self-start rounded-xl bg-[var(--gs-button-bg,#29241f)] px-5 py-3 text-sm font-bold text-[var(--gs-button-text,#ffffff)] no-underline">{block.label}</a> : null;
+          if (block.type === 'spacer') return <div key={block.id} aria-hidden="true" className="h-6 sm:h-10" />;
+          return null;
+        })}
+      </div>
+    </section>
+    );
+  });
+
   return (
     <div className="geostore-storefront space-y-6 sm:space-y-8 w-full pb-28 animate-in fade-in duration-500 overflow-x-hidden px-2 sm:px-0">
       
       {/* GEOSTORE FASHION EDITORIAL HERO */}
-      <section className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
-        <div className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
+      <section data-visual-editor-target="hero" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero')} className="gs-fashion-hero gs-editorial-hero" aria-label="GEOSTORE fashion collection">
+        <div data-visual-editor-target="hero.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.image')} className="gs-fashion-hero__image gs-editorial-hero-image" role="img" aria-label="Fashion editorial collection" />
         <div className="gs-fashion-hero__content gs-editorial-hero-content">
-          <span className="gs-fashion-eyebrow">GEOSTORE / NEW SEASON</span>
-          <p className="gs-fashion-kicker">{storeText.styleKicker}</p>
-          <h1>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
-          <p className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
+          <span className="gs-fashion-eyebrow">{visualCopy.heroEyebrow || 'GEOSTORE / NEW SEASON'}</span>
+          <p className="gs-fashion-kicker">{visualCopy.heroKicker || storeText.styleKicker}</p>
+          <h1 data-visual-editor-target="hero.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.title')}>{/მრავალვენდერიანი|მარკეტფლეისი|ტექნიკის/i.test(siteSettings?.heroTitle || '') ? storeText.heroTitle : (siteSettings?.heroTitle || storeText.heroTitle)}</h1>
+          <p data-visual-editor-target="hero.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.description')} className="gs-fashion-hero__description">{/მომწოდებლ|ბრენდები და მომწოდებლ|ტექნიკის/i.test(siteSettings?.heroSubtitle || '') ? storeText.heroSubtitle : (siteSettings?.heroSubtitle || storeText.heroSubtitle)}</p>
           <div className="gs-fashion-hero__actions gs-editorial-hero-actions">
-            <button type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">{storeText.viewCollection} <span aria-hidden="true">↗</span></button>
-            <span className="gs-fashion-hero__note">CLOTHING · SHOES · ACCESSORIES</span>
+            <button data-visual-editor-target="hero.button" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'hero.button')} type="button" onClick={() => { setSelectedCategory('ყველა'); setSelectedSubCategory(null); setOpenParentCatId(null); }} className="gs-fashion-primary">{visualCopy.heroButton || storeText.viewCollection} <span aria-hidden="true">↗</span></button>
+            <span className="gs-fashion-hero__note">{visualCopy.heroNote || 'CLOTHING · SHOES · ACCESSORIES'}</span>
           </div>
         </div>
-        <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>CURATED</span><strong>STYLE<br/>EDITION</strong><span>GEORGIA · 2026</span></div>
+        <div className="gs-fashion-hero__stamp gs-editorial-hero-stamp"><span>{visualCopy.heroStampTop || 'CURATED'}</span><strong>{visualCopy.heroStampTitle || 'STYLE\nEDITION'}</strong><span>{visualCopy.heroStampBottom || 'GEORGIA · 2026'}</span></div>
       </section>
 
+      {renderCustomSections('after-hero')}
+
       {Array.isArray(banners) && banners.length > 0 && (
-        <section className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
+        <section data-visual-editor-target="banner" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner')} className="gs-published-banners grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="GEOSTORE featured collections">
           {banners.slice(0, 4).map((banner) => {
             const imageUrl = String(banner?.image || '').trim();
             const targetUrl = String(banner?.link || '').trim();
@@ -379,15 +459,15 @@ export default function StoreView({
               if (['https:', 'http:'].includes(parsed.protocol)) safeTarget = parsed.href;
             } catch {}
             const content = (
-              <div className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
+              <div data-visual-editor-target="banner.card" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.card')} className="relative min-h-[180px] sm:min-h-[220px] overflow-hidden rounded-2xl border border-white/10 bg-[#111116]">
                 {imageUrl && (
-                  <img src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                  <img data-visual-editor-target="banner.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.image')} src={imageUrl} alt={String(banner?.title || 'GEOSTORE collection')} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/10" />
                 <div className="relative z-10 flex min-h-[180px] sm:min-h-[220px] max-w-xl flex-col justify-center p-5 sm:p-7">
-                  <h2 className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
-                  {banner?.subtitle && <p className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
-                  {safeTarget && <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">აღმოაჩინე კოლექცია ↗</span>}
+                  <h2 data-visual-editor-target="banner.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.title')} className="text-lg sm:text-2xl font-semibold tracking-tight text-white line-clamp-2">{banner?.title}</h2>
+                  {banner?.subtitle && <p data-visual-editor-target="banner.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.description')} className="mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-white/80 line-clamp-3">{banner.subtitle}</p>}
+                  {safeTarget && <span data-visual-editor-target="banner.button" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'banner.button')} className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white">{visualCopy.bannerButtonText || 'აღმოაჩინე კოლექცია'} ↗</span>}
                 </div>
               </div>
             );
@@ -398,19 +478,21 @@ export default function StoreView({
         </section>
       )}
 
+      {renderCustomSections('after-banners')}
+
       {/* ⚡ FLASH SALE COUNTDOWN SECTION */}
       {flashSaleProducts.length > 0 && (
-        <div className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
+        <div data-visual-editor-target="flashSale" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale')} className="gs-flash-sale-section bg-gradient-to-r from-amber-950/40 via-[#0e0e12] to-amber-950/40 border border-amber-500/30 rounded-[2.5rem] p-5 sm:p-8 shadow-2xl space-y-6" aria-labelledby="gs-flash-sale-title">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-amber-400 p-3 rounded-2xl text-slate-950 shadow-lg shadow-amber-500/30 animate-pulse">
                 <Timer className="w-6 h-6" />
               </div>
               <div>
-                <h3 id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
-                  ⚡ FLASH SALE <span className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{storeText.limitedOffer}</span>
+                <h3 data-visual-editor-target="flashSale.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale.title')} id="gs-flash-sale-title" className="text-base sm:text-lg font-black text-white flex items-center gap-2 flex-wrap">
+                  {visualCopy.flashSaleTitle || '⚡ FLASH SALE'} <span data-visual-editor-target="flashSale.badge" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale.badge')} className="text-amber-400 text-[10px] sm:text-xs bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">{visualCopy.flashSaleBadge || storeText.limitedOffer}</span>
                 </h3>
-                <p className="text-slate-400 text-xs">{storeText.hurryDiscount}</p>
+                <p data-visual-editor-target="flashSale.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'flashSale.description')} className="text-slate-400 text-xs">{visualCopy.flashSaleSubtitle || storeText.hurryDiscount}</p>
                 {flashSaleEndAt !== null && (
                   <p className="gs-flash-sale-deadline text-[10px] sm:text-xs text-amber-200/75 mt-1">
                     დასრულდება: {new Date(flashSaleEndAt).toLocaleString('ka-GE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -474,14 +556,16 @@ export default function StoreView({
         </div>
       )}
 
+      {renderCustomSections('after-flash-sale')}
+
       {/* 🌟 PREMIUM REDESIGNED CATEGORIES & SUBCATEGORIES DISCOVERY SECTION (WITH UPLOADED PHOTO SUPPORT) */}
-      <div className="gs-editorial-collections space-y-6">
+      <div data-visual-editor-target="categories" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories')} className="gs-editorial-collections space-y-6">
         <div className="gs-editorial-collections-heading flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2 border-b border-amber-500/20 pb-4">
           <div>
-            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-              <FolderTree className="w-4 h-4 text-amber-400" /> {storeText.discoverCollections}
+            <h3 data-visual-editor-target="categories.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories.title')} className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <FolderTree className="w-4 h-4 text-amber-400" /> {visualCopy.categoriesTitle || storeText.discoverCollections}
             </h3>
-            <p className="text-slate-400 text-xs mt-0.5">{storeText.collectionIntro}</p>
+            <p data-visual-editor-target="categories.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'categories.description')} className="text-slate-400 text-xs mt-0.5">{visualCopy.categoriesSubtitle || storeText.collectionIntro}</p>
           </div>
           <span className="text-xs text-amber-400 font-bold bg-amber-500/10 px-4 py-2 rounded-2xl border border-amber-500/30 shadow-inner">
             {processedProducts?.length || 0} {storeText.productsOnDisplay}
@@ -516,7 +600,9 @@ export default function StoreView({
 
         {/* 🌟 Premium Category Cards Grid with Uploaded Photos */}
         <div className="gs-category-grid gs-catalog-category-grid gs-editorial-category-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div 
+          <div
+            data-visual-editor-target="category.card"
+            style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
             role="button"
             tabIndex={0}
             aria-pressed={selectedCategory === 'ყველა' && !selectedSubCategory}
@@ -536,8 +622,8 @@ export default function StoreView({
               </span>
             </div>
             <div className="relative z-10">
-              <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
-              <p className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
+              <h4 data-visual-editor-target="category.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors">{storeText.allCategories}</h4>
+              <p data-visual-editor-target="category.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.description')} className="text-[10px] text-slate-400 mt-0.5">{storeText.fullCollection}</p>
             </div>
           </div>
 
@@ -551,8 +637,10 @@ export default function StoreView({
             const pCount = getCategoryProductCount(catName, false);
 
             return (
-              <div 
+              <div
                 key={catId}
+                data-visual-editor-target="category.card"
+                style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.card')}
                 role="button"
                 tabIndex={0}
                 aria-pressed={isSelected}
@@ -579,8 +667,8 @@ export default function StoreView({
                   </div>
                 </div>
                 <div className="z-10">
-                  <h4 className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
+                  <h4 data-visual-editor-target="category.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.title')} className="font-black text-white text-xs sm:text-sm group-hover:text-amber-300 transition-colors line-clamp-1">{catName}</h4>
+                  <p data-visual-editor-target="category.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'category.description')} className="text-[10px] text-slate-400 mt-0.5">{subCats.length > 0 ? storeText.subcategoryHint : storeText.categoryHint}</p>
                 </div>
               </div>
             );
@@ -622,10 +710,12 @@ export default function StoreView({
         )}
       </div>
 
+      {renderCustomSections('after-categories')}
+
       {/* Filters & Sorting */}
-      <div className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+      <div data-visual-editor-target="filters" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters')} className="gs-filter-panel gs-catalog-controls bg-[#0e0e12] border border-amber-500/20 rounded-3xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
         <div className="gs-price-filter flex items-center gap-2.5 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+          <div data-visual-editor-target="filters.priceLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.priceLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <SlidersHorizontal className="w-4 h-4 text-amber-400" /> {storeText.price}
           </div>
           <input 
@@ -637,7 +727,7 @@ export default function StoreView({
             aria-label={storeText.minPrice}
             value={minPrice}
             onChange={e => setMinPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           <span className="text-slate-500">-</span>
           <input 
@@ -649,22 +739,22 @@ export default function StoreView({
             aria-label={storeText.maxPrice}
             value={maxPrice}
             onChange={e => setMaxPrice(e.target.value === '' || Number(e.target.value) >= 0 ? e.target.value : '')}
-            className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
+            data-visual-editor-target="filters.input" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.input')} className="gs-price-input w-20 sm:w-24 bg-[#060608] border border-amber-500/20 rounded-xl p-2.5 text-white outline-none focus:border-amber-400 shadow-inner"
           />
           {(minPrice !== '' || maxPrice !== '') && (
-            <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
+            <button data-visual-editor-target="filters.clearButton" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.clearButton')} onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="text-amber-400 hover:text-amber-300 font-bold underline px-1 cursor-pointer">{storeText.clear}</button>
           )}
         </div>
 
         <div className="gs-sort-control flex items-center gap-2.5 w-full md:w-auto justify-end">
-          <div className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
+          <div data-visual-editor-target="filters.sortLabel" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.sortLabel')} className="flex items-center gap-1.5 text-slate-400 font-bold shrink-0">
             <ArrowUpDown className="w-4 h-4 text-amber-400" /> {storeText.sort}
           </div>
           <select 
             aria-label={storeText.sort}
             value={sortBy} 
             onChange={e => setSortBy(e.target.value)}
-            className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
+            data-visual-editor-target="filters.sortSelect" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'filters.sortSelect')} className="gs-sort-select bg-[#060608] border border-amber-500/20 text-white rounded-xl p-2.5 outline-none focus:border-amber-400 shadow-inner cursor-pointer font-bold w-full sm:w-auto"
           >
             <option value="default">{storeText.defaultSort}</option>
             <option value="price-asc">{storeText.priceLow}</option>
@@ -673,6 +763,8 @@ export default function StoreView({
           </select>
         </div>
       </div>
+
+      {renderCustomSections('after-filters')}
 
       {hasInvalidPriceRange && (
         <p className="gs-price-range-error" role="alert">
@@ -701,13 +793,22 @@ export default function StoreView({
             const tagsArray = Array.isArray(prod.tags) ? prod.tags : (prod.tags ? prod.tags.split(',').map(t => t.trim()) : []);
 
             return (
-              <article key={prod.id} className="gs-catalog-product-card group flex flex-col">
+              <article
+                data-visual-editor-target="product.card"
+                style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.card')}
+                key={prod.id}
+                draggable={typeof onProductOrderChange === 'function' && sortBy === 'default'}
+                onDragStart={event => { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', String(prod.id)); }}
+                onDragOver={event => { if (typeof onProductOrderChange === 'function' && sortBy === 'default') { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } }}
+                onDrop={event => { event.preventDefault(); handleProductReorder(event.dataTransfer.getData('text/plain'), String(prod.id)); }}
+                className="gs-catalog-product-card group flex flex-col"
+              >
                 
                 <div 
                   onClick={() => handleOpenProduct(prod)}
                   className="gs-catalog-product-media relative flex items-center justify-center overflow-hidden cursor-pointer group/img"
                 >
-                  {prod.image ? <img src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
+                  {prod.image ? <img data-visual-editor-target="product.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.image')} src={prod.image} alt={prod.name} loading="lazy" decoding="async" draggable={false} className="gs-catalog-product-image w-full h-full object-contain group-hover/img:scale-110 transition-transform duration-700 drop-shadow-xl" /> : <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-amber-400/70"><ImageIcon className="w-10 h-10" /><span className="text-xs font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleWishlist(prod); }} 
@@ -750,18 +851,20 @@ export default function StoreView({
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {avgRating} ({prodReviews.length})
                     </div>
                   </div>
-                  <h3 onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
+                  <h3 data-visual-editor-target="product.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.title')} onClick={() => handleOpenProduct(prod)} className="gs-catalog-product-title font-black text-white text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors cursor-pointer">{prod.name}</h3>
                   <div className="gs-catalog-product-price flex items-baseline gap-2.5 pt-0.5">
                     <p className="gs-catalog-current-price text-amber-400 font-black text-base sm:text-lg">{formatPrice(getProductStartingPrice(prod))}</p>
                     {!hasCustomProductVariants(prod) && Number(prod.oldPriceGEL) > Number(prod.priceGEL) && <p className="gs-catalog-old-price text-slate-500 font-bold text-xs line-through">{formatPrice(prod.oldPriceGEL)}</p>}
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => handleOpenProduct(prod)} 
+                <button
+                  data-visual-editor-target="product.button"
+                  style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.button')}
+                  onClick={() => handleOpenProduct(prod)}
                   className="gs-catalog-product-cta w-full font-black py-3.5 sm:py-4 text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 group/btn"
                 >
-                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd}
+                  <ShoppingBag className="w-4 h-4 text-amber-400 group-hover/btn:text-slate-950 transition-colors" /> {visualCopy.productButtonText || (isClothingOrFootwear(prod) ? storeText.chooseSize : storeText.viewAdd)}
                 </button>
               </article>
             );
@@ -802,6 +905,8 @@ export default function StoreView({
         </div>
       )}
 
+      {renderCustomSections('after-products')}
+
       {/* 🌟 100% SMOOTH & FIXED PRODUCT DETAIL MODAL */}
       {selectedProduct && (
         <div className="gs-product-modal fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
@@ -825,8 +930,8 @@ export default function StoreView({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
                 
                 <div className="gs-product-gallery space-y-4">
-                  <div className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
-                    {(activeImage || selectedProduct.image) ? <img src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
+                  <div data-visual-editor-target="product.detail.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.image')} className="gs-product-detail-image gs-product-detail-image-stage flex items-center justify-center h-60 sm:h-80">
+                    {(activeImage || selectedProduct.image) ? <img data-visual-editor-target="product.detail.image" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.image')} src={activeImage || selectedProduct.image} alt={selectedProduct.name || storeText.productDetails} decoding="async" draggable={false} className="gs-product-detail-image__media max-h-full max-w-full object-contain drop-shadow-2xl" /> : <div className="flex flex-col items-center justify-center gap-3 text-amber-400/70"><ImageIcon className="w-14 h-14" /><span className="text-sm font-black tracking-[0.2em]">GEOSTORE</span></div>}
                   </div>
                   
                   {selectedProduct.gallery && selectedProduct.gallery.length > 1 && (
@@ -846,11 +951,11 @@ export default function StoreView({
                       <span className="text-[10px] sm:text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/30 font-black px-3 py-1.5 rounded-xl uppercase tracking-wider">{selectedProduct.category}</span>
                       <span className="text-[10px] sm:text-[11px] text-slate-400 font-bold bg-[#141418] px-3 py-1.5 rounded-xl border border-amber-500/20">SKU: {selectedProduct.sku || 'N/A'}</span>
                     </div>
-                    <h2 className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
+                    <h2 data-visual-editor-target="product.detail.title" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.title')} className="gs-product-detail-title text-lg sm:text-2xl font-black text-white leading-tight pt-1">{selectedProduct.name}</h2>
                     <p className="gs-product-detail-vendor text-slate-400 text-xs">{storeText.vendor} <b className="text-amber-300">{selectedProduct.vendor || 'GEOSTORE'}</b></p>
                   </div>
 
-                  <div className="gs-product-price-panel bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
+                  <div data-visual-editor-target="product.detail.price" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.price')} className="gs-product-price-panel bg-[#141418] p-4 sm:p-5 rounded-3xl border border-amber-500/30 flex items-baseline gap-4 shadow-inner">
                     <span className="text-xl sm:text-3xl font-black text-amber-400">
                       {formatPrice(currentBasePrice + (isGiftWrapped ? 5 : 0) + (hasVipWarranty ? 15 : 0))}
                     </span>
@@ -875,7 +980,7 @@ export default function StoreView({
                   )}
 
                   {getCustomProductVariants(selectedProduct).length > 0 && (
-                    <div className="gs-custom-variant-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <div data-visual-editor-target="product.detail.variants" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.variants')} className="gs-custom-variant-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-slate-200 font-bold">{storeText.variant}</span>
                         <span className="text-amber-300 text-xs font-black">{selectedCustomVariant ? formatPrice(selectedCustomVariant.priceGEL) : ''}</span>
@@ -895,7 +1000,7 @@ export default function StoreView({
                   )}
 
                   {availableSizesForSelectedColor.length > 0 && (
-                    <div className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
+                    <div data-visual-editor-target="product.detail.variants" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.variants')} className="gs-size-selector space-y-3 bg-[#121216] p-4 rounded-3xl border border-amber-500/20">
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <span className="text-slate-300 font-bold">{storeText.sizePrompt} <b className="text-amber-400">{selectedSize}</b></span>
                         <div className="flex items-center gap-2">
@@ -917,7 +1022,9 @@ export default function StoreView({
 
                       <div className="gs-size-options-grid flex flex-wrap gap-2 w-full">
                         {availableSizesForSelectedColor.map(size => {
-                          return (
+                        
+
+  return (
                             <button
                               key={size}
                               type="button"
@@ -941,7 +1048,7 @@ export default function StoreView({
                   )}
 
                   {getAvailableProductColors(selectedProduct).length > 0 && (
-                    <div className="gs-color-selector space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
+                    <div data-visual-editor-target="product.detail.variants" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.variants')} className="gs-color-selector space-y-2.5 bg-[#121216] p-4 rounded-3xl border border-amber-500/20 w-full overflow-hidden">
                       <span className="text-slate-300 font-bold block">{storeText.color} <b className="text-amber-400">{selectedColor}</b></span>
                       <div className="flex flex-wrap gap-2.5 w-full">
                         {getAvailableProductColors(selectedProduct).map(colName => (
@@ -1032,7 +1139,7 @@ export default function StoreView({
 
                   <div className="gs-product-description-panel space-y-2 bg-[#101014] p-4 sm:p-5 rounded-3xl border border-amber-500/20 shadow-inner">
                     <span className="gs-product-description-label text-amber-300 font-bold block text-sm">{storeText.description}</span>
-                    <p className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
+                    <p data-visual-editor-target="product.detail.description" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.description')} className="gs-product-description-copy text-slate-300 leading-relaxed text-xs whitespace-pre-line">{selectedProduct.description || storeText.defaultDescription}</p>
                   </div>
 
                   <div className="gs-product-detail-availability flex items-center gap-2.5 text-slate-200 text-xs bg-amber-500/5 p-3.5 rounded-2xl border border-amber-500/20">
@@ -1122,7 +1229,7 @@ export default function StoreView({
               </div>
             </div>
 
-            <div className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
+            <div data-visual-editor-target="product.detail.purchase" style={buildStorefrontElementStyle(siteSettings?.visualDesign, 'product.detail.purchase')} className="gs-product-modal-cta gs-product-modal-purchase-bar absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-30">
               <button 
                 disabled={currentAvailableStock <= 0 || (hasCustomProductVariants(selectedProduct) && !selectedCustomVariant) || (hasSizeColorInventory(selectedProduct) && !selectedSizeColorVariant)}
                 onClick={() => { 
@@ -1155,6 +1262,10 @@ export default function StoreView({
           </div>
         </div>
       )}
+
+
+
+
 
       {/* 🌟 ჭკვიანი ზომის შერჩევის მოდალი */}
       {isSmartSizeModalOpen && (
