@@ -347,3 +347,17 @@ test('responsive-only visual element styles remain in the effective tablet and m
   assert.equal(buildStorefrontElementStyle(design, 'hero.title', 'tablet').fontSize, '27px');
   assert.equal(buildStorefrontElementStyle(design, 'hero.description', 'mobile').color, '#123456');
 });
+
+test('clearing selected element colors is atomic and preserves non-color responsive overrides', async () => {
+  const editor = await readFile(new URL('../src/components/StorefrontVisualEditor.jsx', import.meta.url), 'utf8');
+  const start = editor.indexOf('const clearSelectedElementColors = () => {');
+  const end = editor.indexOf('const resetSelectedElementStyle = () => {', start);
+  assert.ok(start >= 0 && end > start);
+  const clearColors = editor.slice(start, end);
+  assert.match(clearColors, /keys\.forEach\(key => \{ delete style\[key\]; \}\)/);
+  assert.match(clearColors, /commitDesign\(\{ \.\.\.design, responsive \}\)/);
+  assert.match(clearColors, /commitDesign\(\{ \.\.\.design, elementStyles \}\)/);
+  assert.equal((clearColors.match(/commitDesign\(/g) || []).length, 2, 'one commit per viewport branch');
+  assert.ok(editor.includes('onClick={clearSelectedElementColors}'));
+  assert.ok(!editor.includes("updateSelectedElementStyle('textColor', ''); updateSelectedElementStyle('backgroundColor', '');"));
+});
