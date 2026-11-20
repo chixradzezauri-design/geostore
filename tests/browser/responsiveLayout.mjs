@@ -162,7 +162,17 @@ const adminFinanceFormsFixture =
       '<input id="fixture-calc-' + (k * 2 + j) + '" type="number" value="100.50" /></div>'
     ).join('') + '</div>'
   ).join('') +
+  '<section class="admin-calculator-extra-fields space-y-3">' +
+  '<h4>დამატებითი ხარჯები და რაოდენობა</h4>' +
+  Array.from({ length: 2 }, (_, k) =>
+    '<div class="admin-calculator-field-grid grid grid-cols-2 gap-3">' +
+    Array.from({ length: 2 }, (_, j) =>
+      '<div><label for="fixture-calc-extra-' + (k * 2 + j) + '">შეფუთვა, დამუშავება, სხვა ხარჯი ან რაოდენობა ' + (k * 2 + j) + '</label>' +
+      '<input id="fixture-calc-extra-' + (k * 2 + j) + '" type="number" value="2" /></div>'
+    ).join('') + '</div>'
+  ).join('') + '</section>' +
   '</div><div class="admin-calculator-results"><h4>გამოთვლილი მონაცემები</h4>' +
+  '<div class="flex justify-between"><span>ჯამური შემოსავალი:</span><b>123456789.00 ₾</b></div>' +
   '<div class="flex justify-between"><span>წმინდა მოგება:</span><b>987654321.00 ₾</b></div></div></div></section>' +
   '<section class="admin-expenses"><div class="admin-staff-panel p-6">' +
   '<form class="admin-expense-form space-y-4">' +
@@ -287,6 +297,9 @@ try {
         const calcInputs = [...calcFields.querySelectorAll('input')];
         const calcGrid = calcFields.querySelector('.admin-calculator-field-grid');
         const calcResults = document.querySelector('.admin-calculator-results');
+        const calcExtra = document.querySelector('.admin-calculator-extra-fields');
+        const calcExtraInputs = [...calcExtra.querySelectorAll('input')];
+        const calcExtraLabels = [...calcExtra.querySelectorAll('label')];
         const expenseHistoryPanel = document.querySelector('.admin-expense-history-panel');
         const expenseHistoryFilters = expenseHistoryPanel.querySelector('.admin-expense-history-filters');
         const expenseHistoryInputs = [...expenseHistoryFilters.querySelectorAll('input, select')];
@@ -362,6 +375,10 @@ try {
           calculatorMinInputFontSize: Math.min(...calcInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
           calculatorColumns: getComputedStyle(calcGrid).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
           calculatorResultsRight: calcResults.getBoundingClientRect().right,
+          calculatorInputCount: calcInputs.length,
+          calculatorExtraCount: calcExtraInputs.length,
+          calculatorExtraLabelCount: calcExtraLabels.length,
+          calculatorExtraRight: calcExtra.getBoundingClientRect().right,
           expenseHistoryPanelRight: expenseHistoryPanel.getBoundingClientRect().right,
           expenseHistoryFilterMinHeight: Math.min(...expenseHistoryInputs.map(node => node.getBoundingClientRect().height)),
           expenseHistoryFilterMinFont: Math.min(...expenseHistoryInputs.map(node => parseFloat(getComputedStyle(node).fontSize))),
@@ -408,6 +425,10 @@ try {
         assert.equal(layout.expenseHistoryFilterColumns, 1, width + 'px expense history filters should stack');
       }
       assert.ok(layout.calculatorRight <= width + 2, width + 'px calculator input overflow: ' + JSON.stringify(layout));
+      assert.ok(layout.calculatorExtraRight <= width + 2, width + 'px calculator additional fields overflow: ' + JSON.stringify(layout));
+      assert.equal(layout.calculatorInputCount, 8, width + 'px all 8 calculator inputs should be visible');
+      assert.equal(layout.calculatorExtraCount, 4, width + 'px all hidden-cost variables must have inputs');
+      assert.equal(layout.calculatorExtraLabelCount, 4, width + 'px all additional inputs should have labels');
       assert.ok(layout.calculatorResultsRight <= width + 2, width + 'px calculator results overflow: ' + JSON.stringify(layout));
       assert.ok(layout.expenseFormMinInputHeight >= 43, width + 'px expense inputs must be touch sized: ' + JSON.stringify(layout));
       assert.ok(layout.expenseSubmitHeight >= 43, width + 'px expense submit must be touch sized: ' + JSON.stringify(layout));
