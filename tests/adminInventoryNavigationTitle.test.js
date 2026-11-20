@@ -99,3 +99,14 @@ test('replenishment mobile cards use two columns and accessible loading feedback
   assert.match(dashboard, /aria-labelledby="admin-replenishment-title" aria-busy=\{replenishmentLoading\}/);
   assert.match(dashboard, /replenishmentLoading && <p role="status"/);
 });
+
+test('replenishment save blocks duplicate submissions and preserves drafts on failed refresh', () => {
+  const start = dashboard.indexOf('const saveInventoryReplenishmentSetting = async');
+  const end = dashboard.indexOf('const fetchInventoryMovements = async', start);
+  const save = dashboard.slice(start, end);
+  assert.match(save, /!hasProductsPermission \|\| replenishmentSavingKey/);
+  assert.match(save, /const refreshed = await fetchInventoryReplenishmentSettings\(\)/);
+  assert.match(save, /if \(!refreshed\) throw new Error/);
+  assert.ok(save.indexOf('if (!refreshed) throw') < save.indexOf('setReplenishmentDrafts(current =>'));
+  assert.match(dashboard, /disabled=\{Boolean\(replenishmentSavingKey\) \|\| replenishmentLoading \|\| !hasProductsPermission\}/);
+});
