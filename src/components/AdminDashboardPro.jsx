@@ -5395,25 +5395,25 @@ export default function AdminDashboardPro({
               <Calculator className="w-5 h-5 text-emerald-400" /> გაყიდვებისა და მოგების კალკულატორი
             </h3>
             <div className="admin-calculator-layout grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="admin-calculator-fields space-y-4">
+                <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">თვითღირებულება (₾)</label>
-                    <input type="number" value={calcForm.purchaseCost} onChange={e => setCalcForm({...calcForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-purchase-cost" className="text-slate-400 font-bold block mb-1">თვითღირებულება (₾)</label>
+                    <input id="admin-calc-purchase-cost" type="number" value={calcForm.purchaseCost} onChange={e => setCalcForm({...calcForm, purchaseCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (₾)</label>
-                    <input type="number" value={calcForm.sellingPrice} onChange={e => setCalcForm({...calcForm, sellingPrice: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-black outline-none" />
+                    <label htmlFor="admin-calc-selling-price" className="text-slate-400 font-bold block mb-1">გასაყიდი ფასი (₾)</label>
+                    <input id="admin-calc-selling-price" type="number" value={calcForm.sellingPrice} onChange={e => setCalcForm({...calcForm, sellingPrice: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-emerald-400 font-black outline-none" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="admin-calculator-field-grid grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">ფასდაკლება (%)</label>
-                    <input type="number" value={calcForm.discountPercent} onChange={e => setCalcForm({...calcForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-discount-percent" className="text-slate-400 font-bold block mb-1">ფასდაკლება (%)</label>
+                    <input id="admin-calc-discount-percent" type="number" value={calcForm.discountPercent} onChange={e => setCalcForm({...calcForm, discountPercent: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                   <div>
-                    <label className="text-slate-400 font-bold block mb-1">მიწოდება / ხარჯი (₾)</label>
-                    <input type="number" value={calcForm.shippingCost} onChange={e => setCalcForm({...calcForm, shippingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
+                    <label htmlFor="admin-calc-shipping-cost" className="text-slate-400 font-bold block mb-1">მიწოდება / ხარჯი (₾)</label>
+                    <input id="admin-calc-shipping-cost" type="number" value={calcForm.shippingCost} onChange={e => setCalcForm({...calcForm, shippingCost: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3 rounded-xl text-white outline-none" />
                   </div>
                 </div>
               </div>
@@ -5432,24 +5432,38 @@ export default function AdminDashboardPro({
         {(visibleAdminTab === 'expenses' || adminContentTab === 'expenses') && (
           <div className="admin-expenses space-y-6">
             <div className="admin-staff-panel bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-5 shadow-2xl backdrop-blur-2xl">
-              <h3 className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
+              <h3 id="admin-expense-add-title" className="font-black text-white text-base flex items-center gap-2.5 border-b border-emerald-500/20 pb-4">
                 <Wallet className="w-5 h-5 text-emerald-400" /> ახალი ხარჯის დამატება (Supabase ბაზაში)
               </h3>
-              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <select value={expenseForm.category} onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none">
-                    <option value="რეკლამა & მარკეტინგი">რეკლამა & მარკეტინგი</option>
-                    <option value="საიტი & ჰოსტინგი">საიტი & ჰოსტინგი</option>
-                    <option value="მიწოდება">მიწოდება</option>
-                    <option value="ხელფასები">ხელფასები</option>
-                    <option value="შეფუთვა">შეფუთვა</option>
-                    <option value="სხვა ოპერაციული">სხვა ოპერაციული</option>
-                  </select>
-                  <input type="number" required placeholder="თანხა (₾)" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
-                  <input type="date" value={expenseForm.date} onChange={e => setExpenseForm({...expenseForm, date: e.target.value})} className="bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+              <form onSubmit={handleAddExpense} className="admin-expense-form space-y-4 text-xs" aria-labelledby="admin-expense-add-title">
+                <div className="admin-expense-fields grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="admin-expense-field">
+                    <label htmlFor="admin-expense-category" className="block text-slate-300 font-bold mb-1.5">კატეგორია</label>
+                    <select id="admin-expense-category" required value={expenseForm.category} onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none">
+                      <option value="რეკლამა & მარკეტინგი">რეკლამა & მარკეტინგი</option>
+                      <option value="საიტი & ჰოსტინგი">საიტი & ჰოსტინგი</option>
+                      <option value="მიწოდება">მიწოდება</option>
+                      <option value="ხელფასები">ხელფასები</option>
+                      <option value="შეფუთვა">შეფუთვა</option>
+                      <option value="სხვა ოპერაციული">სხვა ოპერაციული</option>
+                    </select>
+                  </div>
+                  <div className="admin-expense-field">
+                    <label htmlFor="admin-expense-amount" className="block text-slate-300 font-bold mb-1.5">თანხა (₾)</label>
+                    <input id="admin-expense-amount" type="number" inputMode="decimal" min="0.01" max="1000000000" step="0.01" required aria-describedby="admin-expense-amount-help" placeholder="მაგ: 150.00" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+                  </div>
+                  <div className="admin-expense-field">
+                    <label htmlFor="admin-expense-date" className="block text-slate-300 font-bold mb-1.5">თარიღი</label>
+                    <input id="admin-expense-date" type="date" required value={expenseForm.date} onChange={e => setExpenseForm({...expenseForm, date: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+                  </div>
                 </div>
-                <input type="text" required placeholder="აღწერა (მაგ: Facebook Ads)" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
-                <button type="submit" className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება ბაზაში</button>
+                <div className="admin-expense-field">
+                  <label htmlFor="admin-expense-description" className="block text-slate-300 font-bold mb-1.5">ხარჯის აღწერა</label>
+                  <input id="admin-expense-description" type="text" maxLength={300} required aria-describedby="admin-expense-description-help" placeholder="მაგ: Facebook Ads" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} className="w-full bg-slate-950 border border-emerald-500/20 p-3.5 rounded-2xl text-white outline-none" />
+                  <p id="admin-expense-description-help" className="mt-1 text-[10px] text-slate-400">მაქსიმუმ 300 სიმბოლო.</p>
+                </div>
+                <p id="admin-expense-amount-help" className="text-[10px] leading-relaxed text-slate-400">თანხა უნდა იყოს 0-ზე მეტი, მაქსიმუმ 1,000,000,000 ₾ და შეიცავდეს არაუმეტეს 2 ათწილადს.</p>
+                <button type="submit" className="admin-expense-submit bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl transition cursor-pointer shadow-lg">+ ხარჯის დამატება ბაზაში</button>
               </form>
             </div>
             <div className="bg-slate-900/80 border border-emerald-500/30 p-6 sm:p-8 rounded-[2.5rem] space-y-4 shadow-2xl backdrop-blur-2xl">
