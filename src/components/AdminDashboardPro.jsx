@@ -5116,19 +5116,22 @@ export default function AdminDashboardPro({
         {(visibleAdminTab === 'analytics' && isOwner && (adminContentTab === 'analytics' || visibleAdminTab === 'analytics') || visibleAdminTab === 'admin_visual_editor' && isOwner && adminContentTab === 'analytics') && (
           <div className="admin-analytics space-y-6">
             <div className="admin-analytics-toolbar flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/80 border border-emerald-500/25 p-4 rounded-2xl">
-              <div>
+              <div className="admin-analytics-heading min-w-0">
                 <h3 className="text-white font-black text-sm">{adminVisualDesign.content.analyticsPeriodTitle}</h3>
                 <p className="text-slate-400 text-[10px] mt-1">{adminVisualDesign.content.analyticsPeriodDescription}</p>
               </div>
-              <select value={analyticsPeriod} onChange={e => setAnalyticsPeriod(e.target.value)} className="bg-slate-950 border border-emerald-500/30 text-white rounded-xl px-4 py-3 text-xs font-bold">
-                <option value="all">მთელი პერიოდი</option>
-                <option value="30">ბოლო 30 დღე</option>
-                <option value="90">ბოლო 90 დღე</option>
-                <option value="365">ბოლო 12 თვე</option>
-              </select>
-              <button type="button" onClick={handleExportAnalytics} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
-                <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
-              </button>
+              <div className="admin-analytics-actions flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                <label className="sr-only" htmlFor="admin-analytics-period">ანალიტიკის პერიოდი</label>
+                <select id="admin-analytics-period" aria-label="ანალიტიკის პერიოდი" value={analyticsPeriod} onChange={e => setAnalyticsPeriod(e.target.value)} className="bg-slate-950 border border-emerald-500/30 text-white rounded-xl px-4 py-3 text-xs font-bold">
+                  <option value="all">მთელი პერიოდი</option>
+                  <option value="30">ბოლო 30 დღე</option>
+                  <option value="90">ბოლო 90 დღე</option>
+                  <option value="365">ბოლო 12 თვე</option>
+                </select>
+                <button type="button" onClick={handleExportAnalytics} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl px-4 py-3 text-xs font-black inline-flex items-center justify-center gap-2">
+                  <Download className="w-4 h-4" /> ანგარიშების CSV ექსპორტი
+                </button>
+              </div>
             </div>
             {(financialOverview.deliveredOrdersMissingStatusDate > 0 || financialOverview.deliveredOrdersWithoutStockTracking > 0) && (
               <div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-200">
@@ -5144,43 +5147,43 @@ export default function AdminDashboardPro({
             <div className="admin-analytics-kpis grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-5">
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-400" /> შეკვეთების ბრუნვა</p>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">მხოლოდ ჩაბარებული შეკვეთები</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-emerald-400">{financialOverview.totalSalesRevenue.toFixed(2)} ₾</p>
+                <span className="admin-analytics-note text-[10px] text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">მხოლოდ ჩაბარებული შეკვეთები</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><DollarSign className="w-4 h-4 text-cyan-400" /> მთლიანი მოგება</p>
-                <p className="text-2xl sm:text-3xl font-black text-cyan-400">{financialOverview.grossProfit === null ? '—' : financialOverview.grossProfit.toFixed(2) + ' ₾'}</p>
-                <span className="text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-cyan-400">{financialOverview.grossProfit === null ? '—' : financialOverview.grossProfit.toFixed(2) + ' ₾'}</p>
+                <span className="admin-analytics-note text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-md">{financialOverview.unknownCogsItems > 0 ? 'თვითღირებულება არასრულია' : financialOverview.estimatedCogsItems > 0 ? 'ნაწილობრივ მიმდინარე თვითღირებულებით' : 'შეკვეთაში დაფიქსირებული თვითღირებულება'}</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-400" /> სულ ხარჯები</p>
-                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.totalExpenses.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.totalExpenses.toFixed(2)} ₾</p>
+                <span className="admin-analytics-note text-[10px] text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded-md">ოპერაციული</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><PackageCheck className="w-4 h-4 text-blue-400" /> ჩაბარებული შეკვეთები</p>
-                <p className="text-2xl sm:text-3xl font-black text-blue-400">{financialOverview.deliveredOrders.length}</p>
-                <span className="text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-blue-400">{financialOverview.deliveredOrders.length}</p>
+                <span className="admin-analytics-note text-[10px] text-slate-400">მიმდინარე შეკვეთები: {financialOverview.pipelineOrders.length}</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-rose-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><X className="w-4 h-4 text-rose-400" /> გაუქმებული შეკვეთები</p>
-                <p className="text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.cancelledOrders.length}</p>
-                <span className="text-[10px] text-rose-300">ნომინალური ღირებულება: {financialOverview.cancelledOrderValue.toFixed(2)} ₾ · არ არის დადასტურებული დაბრუნება</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-rose-400">{financialOverview.cancelledOrders.length}</p>
+                <span className="admin-analytics-note text-[10px] text-rose-300">ნომინალური ღირებულება: {financialOverview.cancelledOrderValue.toFixed(2)} ₾ · არ არის დადასტურებული დაბრუნება</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> საშუალო შეკვეთა</p>
-                <p className="text-2xl sm:text-3xl font-black text-indigo-400">{financialOverview.averageOrderValue.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-indigo-400">{financialOverview.averageOrderValue.toFixed(2)} ₾</p>
+                <span className="admin-analytics-note text-[10px] text-slate-400">ჩაბარებული შეკვეთების საშუალო ღირებულება</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-violet-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /> დამატებითი მომსახურებები</p>
-                <p className="text-2xl sm:text-3xl font-black text-violet-300">{financialOverview.totalAddonRevenue.toFixed(2)} ₾</p>
-                <span className="text-[10px] text-violet-300">შეფუთვა და VIP დაზღვევა · მოგებაში არ არის ჩათვლილი</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-violet-300">{financialOverview.totalAddonRevenue.toFixed(2)} ₾</p>
+                <span className="admin-analytics-note text-[10px] text-violet-300">შეფუთვა და VIP დაზღვევა · მოგებაში არ არის ჩათვლილი</span>
               </div>
               <div className="admin-analytics-card bg-slate-900/80 border border-emerald-500/25 p-5 sm:p-6 rounded-3xl space-y-2 shadow-2xl backdrop-blur-2xl">
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2"><Sparkles className="w-4 h-4 text-amber-400" /> წმინდა მოგება (Net)</p>
-                <p className="text-2xl sm:text-3xl font-black text-amber-400">{financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
-                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
+                <p className="admin-analytics-value text-2xl sm:text-3xl font-black text-amber-400">{financialOverview.netProfit === null ? '—' : financialOverview.netProfit.toFixed(2) + ' ₾'}</p>
+                <span className="admin-analytics-note text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">{financialOverview.netProfit === null ? 'მოგება ვერ განისაზღვრება — COGS აკლია' : financialOverview.estimatedCogsItems > 0 ? 'შეფასებითი მოგება — ძველი შეკვეთების თვითღირებულება მიმდინარე ფასითაა' : 'მთლიანი მოგება + მიწოდება − ხარჯები; მომსახურების ხარჯი უცნობია'}</span>
               </div>
             </div>
 
@@ -5191,17 +5194,19 @@ export default function AdminDashboardPro({
                   <span className="text-[10px] text-slate-400">{analyticsPeriod === '30' || analyticsPeriod === '90' ? 'დღეების მიხედვით' : 'თვეების მიხედვით'}</span>
                 </div>
                 {financialOverview.salesTrend.length === 0 ? <p className="text-slate-500 text-xs py-6">არჩეულ პერიოდში ჩაბარებული გაყიდვები არ არის.</p> : (
-                  <div className="flex items-end gap-1.5 h-44 pt-3">
-                    {financialOverview.salesTrend.map(point => {
-                      const maxRevenue = Math.max(1, ...financialOverview.salesTrend.map(item => item.revenue));
-                      const height = Math.max(4, (point.revenue / maxRevenue) * 100);
-                      return (
-                        <div key={point.key} className="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1" title={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`}>
-                          <div className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
-                          <span className="text-[8px] text-slate-500 whitespace-nowrap">{point.label}</span>
-                        </div>
-                      );
-                    })}
+                  <div className="admin-analytics-trend-scroll max-w-full overflow-x-auto" role="region" aria-label="გაყიდვების დინამიკის გადახვევადი გრაფიკი" tabIndex={0}>
+                    <div className="admin-analytics-trend-bars flex items-end gap-1.5 h-44 pt-3" style={{ minWidth: `max(100%, ${financialOverview.salesTrend.length * 44}px)` }} role="list">
+                      {financialOverview.salesTrend.map(point => {
+                        const maxRevenue = Math.max(1, ...financialOverview.salesTrend.map(item => item.revenue));
+                        const height = Math.max(4, (point.revenue / maxRevenue) * 100);
+                        return (
+                          <div key={point.key} role="listitem" aria-label={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`} className="flex-1 min-w-0 h-full flex flex-col justify-end items-center gap-1" title={`${point.label}: ${point.revenue.toFixed(2)} ₾ · ${point.orders} შეკვეთა`}>
+                            <div aria-hidden="true" className="w-full rounded-t-md bg-cyan-400/80 hover:bg-cyan-300 transition-colors" style={{ height: `${height}%` }} />
+                            <span aria-hidden="true" className="text-[8px] text-slate-500 whitespace-nowrap">{point.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 <p className="text-[10px] text-slate-400">ჯამური ბრუნვა: <b className="text-cyan-300">{financialOverview.salesTrend.reduce((sum, point) => sum + point.revenue, 0).toFixed(2)} ₾</b> · ჩაბარებული შეკვეთები: {financialOverview.salesTrend.reduce((sum, point) => sum + point.orders, 0)}</p>
