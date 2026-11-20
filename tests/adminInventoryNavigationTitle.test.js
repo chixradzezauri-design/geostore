@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const dashboard = readFileSync(new URL('../src/components/AdminDashboardPro.jsx', import.meta.url), 'utf8');
 
-test('inventory tab uses the configured visual editor title, not literal template text', () => {
-  assert.doesNotMatch(dashboard, /label:\s*'📚 \\{adminVisualDesign\\.content\\.inventoryTitle\\}'/);
-  assert.match(dashboard, /label:\s*\`📚 \\$\\{adminVisualDesign\\.content\\.inventoryTitle\\}\`/);
+test('inventory tab uses configured title rather than a literal template placeholder', () => {
+  assert.equal(dashboard.includes("label: '📚 {adminVisualDesign.content.inventoryTitle}'"), false);
+  assert.equal(dashboard.includes('label: '+String.fromCharCode(96)+'📚 ${adminVisualDesign.content.inventoryTitle}'+String.fromCharCode(96)), true);
 });
