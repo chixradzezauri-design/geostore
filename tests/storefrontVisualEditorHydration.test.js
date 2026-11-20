@@ -33,3 +33,10 @@ test('only a successful save of the latest local design clears the dirty guard',
   assert.match(save, /localDesignDirtyRef\.current = false/);
   assert.ok(save.indexOf('saved === true &&') < save.indexOf('localDesignDirtyRef.current = false'));
 });
+
+test('publishing blocks unsaved local visual edits before confirmation', () => {
+  const publish = editor.split('const publish = async () =>')[1]?.split('const resetDesign = () =>')[0] || '';
+  assert.match(publish, /if \(localDesignDirtyRef\.current\)/);
+  assert.match(publish, /ჯერ შეინახეთ მონახაზი და შემდეგ გამოაქვეყნეთ/);
+  assert.ok(publish.indexOf('if (localDesignDirtyRef.current)') < publish.indexOf('window.confirm('));
+});
