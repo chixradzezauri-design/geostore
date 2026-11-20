@@ -65,3 +65,11 @@ test('published storefront stays confirmed when version history refresh fails', 
   assert.match(publish, /ცვლილებები გამოქვეყნებულია, თუმცა ვერსიების ისტორიის განახლება ვერ მოხერხდა/);
   assert.ok(publish.indexOf('if (published === true)') < publish.indexOf('if (error) throw error'));
 });
+
+test('unsuccessful save and publish responses never imply success', () => {
+  const save = editor.split('const saveDraft = async () =>')[1]?.split('const publish = async () =>')[0] || '';
+  const publish = editor.split('const publish = async () =>')[1]?.split('const resetDesign = () =>')[0] || '';
+  assert.match(save, /მონახაზი ვერ შეინახა\. ცვლილებები შეუნახავია/);
+  assert.match(publish, /გამოქვეყნება არ დადასტურდა/);
+  assert.match(publish, /published === true \?/);
+});
